@@ -46,20 +46,39 @@ class LspBridgeListener(QThread):
         if text.match(string):
             return True
         else:
-            return False        
-        
+            return False
+
+    def emit_message(self, message):
+        try:
+            # If message is not end with char '}', need remove unnecessary string (such as "Content" ),
+            # to make json load message correctly.
+            if not message.endswith("}"):
+                quote_index = message.rfind("}")
+                message = message[:quote_index + 1]
+
+            self.recv_message.emit(json.loads(message))
+        except:
+            print("* Parse server message failed.")
+            import traceback
+            traceback.print_exc()
+
     def run(self):
         while self.process.poll() is None:
             line = self.process.stdout.readline().strip()
 
-            # LSP message need read 3 times.
-            # 1. Read Content-Length
-            # 2. Drop empty line
-            # 3. Read message base on Content-Length.
-            
-            # Sometimes, Content-Length header is not starts with `Content-Length', 
-            # if line not starts with char '{', we need parse number at end of line.
-            if self.is_end_number(line) and not line.startswith("{"):
+            # print(line)
+
+            if line.startswith("{"):
+                self.emit_message(line)
+            elif self.is_end_number(line) and not line.startswith("{"):
+                # LSP message need read 3 times.
+                # 1. Read Content-Length
+                # 2. Drop empty line
+                # 3. Read message base on Content-Length.
+
+                # Sometimes, Content-Length header is not starts with `Content-Length',
+                # if line not starts with char '{', we need parse number at end of line.
+
                 # Read Content-Length.
                 splits = line.split(":")
                 length = int(splits[1].strip())
@@ -69,21 +88,10 @@ class LspBridgeListener(QThread):
 
                 # Emit message.
                 message = self.process.stdout.readline(length).strip()
-                
-                if message != "":
-                    try:
-                        # If message is not end with char '}', need remove unnecessary string (such as "Content" ), 
-                        # to make json load message correctly.
-                        if not message.endswith("}"):
-                            quote_index = message.rfind("}")
-                            message = message[:quote_index + 1]
-                        
-                        self.recv_message.emit(json.loads(message))
-                    except:
-                        print("* Parse server message failed.")
-                        import traceback
-                        traceback.print_exc()
 
+                if message != "":
+                    self.emit_message(message)
+                    
 class SendRequest(QThread):
 
     send_message = QtCore.pyqtSignal(str)
@@ -226,7 +234,7 @@ class LspServer(QObject):
                                           }
                                       })
 
-    def send_completion_request(self, request_id, filepath, row, column, char):
+    def send_change_request(self, request_id, filepath, row, column, char):
         self.send_to_notification("textDocument/didChange",
                                   {
                                       "textDocument": {
@@ -251,20 +259,38 @@ class LspServer(QObject):
                                       ]
                                   })
 
-        self.send_to_request("textDocument/completion",
-                             {
-                                 "textDocument": {
-                                     "uri": "file://" + filepath
+    def send_completion_request(self, request_id, filepath, row, column, char):
+        if char == ".":
+            self.send_to_request("textDocument/completion",
+                                 {
+                                     "textDocument": {
+                                         "uri": "file://" + filepath
+                                     },
+                                     "position": {
+                                         "line": row - 1,
+                                         "character": column
+                                     },
+                                     "context": {
+                                         "triggerKind": 2,
+                                         "triggerCharacter": char
+                                     }
                                  },
-                                 "position": {
-                                     "line": row - 1, 
-                                     "character": column
+                                 request_id)
+        else:
+            self.send_to_request("textDocument/completion",
+                                 {
+                                     "textDocument": {
+                                         "uri": "file://" + filepath
+                                     },
+                                     "position": {
+                                         "line": row - 1,
+                                         "character": column
+                                     },
+                                     "context": {
+                                         "triggerKind": 3
+                                     }
                                  },
-                                 "context": {
-                                     "triggerKind": 1
-                                 }
-                             },
-                             request_id)
+                                 request_id)
 
     def get_server_command(self):
         if self.server_type == "pyright":

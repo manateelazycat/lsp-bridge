@@ -28,6 +28,7 @@ import random
 class FileAction(QObject):
     
     completion = QtCore.pyqtSignal(int, str, str, int, int, str)
+    change = QtCore.pyqtSignal(int, str, str, int, int, str)
     
     def __init__(self, filepath):
         QObject.__init__(self)
@@ -59,6 +60,8 @@ class FileAction(QObject):
         return "{}#{}".format(self.project_path, self.lsp_server_type)
     
     def change_file(self, row, column, char):
+        self.change.emit(self.generate_request_id(), self.get_lsp_server_name(), self.filepath, row, column, char)
+        
         import time
         current_time = time.time()
         

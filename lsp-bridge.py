@@ -118,6 +118,7 @@ class LspBridge(object):
         if filepath not in self.file_action_dict:
             action = FileAction(filepath)
             action.completion.connect(self.handle_completion_request)
+            action.change.connect(self.handle_change_request)
             self.file_action_dict[filepath] = action
             
         file_action = self.file_action_dict[filepath]
@@ -151,6 +152,10 @@ class LspBridge(object):
     def handle_completion_request(self, request_id, lsp_server_name, filepath, row, column, char):
         if lsp_server_name in self.lsp_server_dict:
             self.lsp_server_dict[lsp_server_name].send_completion_request(request_id, filepath, row, column, char)
+    
+    def handle_change_request(self, request_id, lsp_server_name, filepath, row, column, char):
+        if lsp_server_name in self.lsp_server_dict:
+            self.lsp_server_dict[lsp_server_name].send_change_request(request_id, filepath, row, column, char)
     
     def cleanup(self):
         '''Do some cleanup before exit python process.'''
