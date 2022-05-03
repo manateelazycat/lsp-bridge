@@ -43,6 +43,9 @@ class LspBridge(object):
         self.file_action_dict = {}
         self.lsp_server_dict = {}
 
+        for name in ["change_file", "find_define", "find_references", "prepare_rename", "rename"]:
+            self.build_file_action_function(name)
+            
         # Init EPC client port.
         init_epc_client(int(args[0]))
 
@@ -129,36 +132,16 @@ class LspBridge(object):
             self.file_action_dict[filepath].lsp_server = server
         else:
             self.lsp_server_dict[lsp_server_name].send_did_open_notification(file_action.filepath)
-        
-    @PostGui()
-    def change_file(self, filepath, start_row, start_character, end_row, end_character, range_length, change_text, row, column, char):
-        if filepath in self.file_action_dict:
-            action = self.file_action_dict[filepath]
-            action.change_file(start_row, start_character, end_row, end_character, range_length, change_text, row, column, char)
             
-    @PostGui()
-    def find_define(self, filepath, row, column):
-        if filepath in self.file_action_dict:
-            action = self.file_action_dict[filepath]
-            action.find_define(row, column)
-    
-    @PostGui()
-    def find_references(self, filepath, row, column):
-        if filepath in self.file_action_dict:
-            action = self.file_action_dict[filepath]
-            action.find_references(row, column)
+    def build_file_action_function(self, name):
+        @PostGui()
+        def _do(*args):
+            filepath = args[0]
+            if filepath in self.file_action_dict:
+                action = self.file_action_dict[filepath]
+                getattr(action, name)(*args[1:])
 
-    @PostGui()
-    def prepare_rename(self, filepath, row, column):
-        if filepath in self.file_action_dict:
-            action = self.file_action_dict[filepath]
-            action.prepare_rename(row, column)
-            
-    @PostGui()
-    def rename(self, filepath, row, column, new_name):
-        if filepath in self.file_action_dict:
-            action = self.file_action_dict[filepath]
-            action.rename(row, column, new_name)
+        setattr(self, name, _do)
     
     def handle_server_message(self, filepath, request_type, request_id, response_result):
         if filepath in self.file_action_dict:
