@@ -27,12 +27,6 @@ import random
 
 class FileAction(QObject):
     
-    completion = QtCore.pyqtSignal(int, str, str, int, int, str)
-    findDefine = QtCore.pyqtSignal(int, str, str, int, int)
-    findReferences = QtCore.pyqtSignal(int, str, str, int, int)
-    prepareRename = QtCore.pyqtSignal(int, str, str, int, int)
-    doRename = QtCore.pyqtSignal(int, str, str, int, int, str)
-    
     def __init__(self, filepath):
         QObject.__init__(self)
         
@@ -52,7 +46,9 @@ class FileAction(QObject):
         
         self.try_completion_timer = None
         
+        self.lsp_server = None
         self.lsp_server_type = "pyright"
+        
         self.initialize_id = self.generate_request_id()
         
         dir_path = os.path.dirname(filepath)
@@ -83,40 +79,42 @@ class FileAction(QObject):
         self.last_change_column = column
         self.last_change_char = char
         
-        print("Change file: ", self.filepath, current_time)
-
         self.try_completion_timer = QTimer().singleShot(500, lambda : self.try_completion(current_time, row, column, char))
         
     def try_completion(self, time, row, column, char):
         if time == self.last_change_time and row == self.last_change_row and column == self.last_change_column and self.last_change_char == char:
-            print("Try completion: ", self.filepath)
-            
             request_id = self.generate_request_id()
             self.completion_request_list.append(request_id)
-            self.completion.emit(request_id, self.get_lsp_server_name(), self.filepath, row, column, char)
+            
+            if self.lsp_server is not None:
+                self.lsp_server.send_completion_request(request_id, self.filepath, row, column, char)
             
     def find_define(self, row, column):
         request_id = self.generate_request_id()
         self.find_define_request_list.append(request_id)
         
-        self.findDefine.emit(request_id, self.get_lsp_server_name(), self.filepath, row, column)
+        if self.lsp_server is not None:
+            self.lsp_server.send_find_define_request(request_id, self.filepath, row, column)
             
     def find_references(self, row, column):
         request_id = self.generate_request_id()
         self.find_references_request_list.append(request_id)
         
-        self.findReferences.emit(request_id, self.get_lsp_server_name(), self.filepath, row, column)
+        if self.lsp_server is not None:
+            self.lsp_server.send_find_references_request(request_id, self.filepath, row, column)
         
     def prepare_rename(self, row, column):
         request_id = self.generate_request_id()
         self.prepare_rename_request_list.append(request_id)
         
-        self.prepareRename.emit(request_id, self.get_lsp_server_name(), self.filepath, row, column)
+        if self.lsp_server is not None:
+            self.lsp_server.send_prepare_rename_request(request_id, self.filepath, row, column)
             
     def rename(self, row, column, new_name):
         request_id = self.generate_request_id()
         self.rename_request_list.append(request_id)
         
-        self.doRename.emit(request_id, self.get_lsp_server_name(), self.filepath, row, column, new_name)
+        if self.lsp_server is not None:
+            self.lsp_server.send_rename_request(request_id, self.filepath, row, column, new_name)
             
         

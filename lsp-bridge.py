@@ -117,11 +117,6 @@ class LspBridge(object):
     def open_file(self, filepath):
         if filepath not in self.file_action_dict:
             action = FileAction(filepath)
-            action.completion.connect(self.handle_completion_request)
-            action.findDefine.connect(self.handle_find_define_request)
-            action.findReferences.connect(self.handle_find_references_request)
-            action.prepareRename.connect(self.handle_prepare_name_request)
-            action.doRename.connect(self.handle_name_request)
             self.file_action_dict[filepath] = action
             
         file_action = self.file_action_dict[filepath]
@@ -130,10 +125,10 @@ class LspBridge(object):
             server = LspServer(file_action)
             server.response_message.connect(self.handle_server_message)
             self.lsp_server_dict[lsp_server_name] = server
+            
+            self.file_action_dict[filepath].lsp_server = server
         else:
             self.lsp_server_dict[lsp_server_name].send_did_open_notification(file_action.filepath)
-        
-        print("Open file: ", filepath)
         
     @PostGui()
     def change_file(self, filepath, start_row, start_character, end_row, end_character, range_length, change_text, row, column, char):
@@ -173,26 +168,6 @@ class LspBridge(object):
             action = self.file_action_dict[filepath]
             action.rename(row, column, new_name)
     
-    def handle_completion_request(self, request_id, lsp_server_name, filepath, row, column, char):
-        if lsp_server_name in self.lsp_server_dict:
-            self.lsp_server_dict[lsp_server_name].send_completion_request(request_id, filepath, row, column, char)
-
-    def handle_find_define_request(self, request_id, lsp_server_name, filepath, row, column):
-        if lsp_server_name in self.lsp_server_dict:
-            self.lsp_server_dict[lsp_server_name].send_find_define_request(request_id, filepath, row, column)
-            
-    def handle_find_references_request(self, request_id, lsp_server_name, filepath, row, column):
-        if lsp_server_name in self.lsp_server_dict:
-            self.lsp_server_dict[lsp_server_name].send_find_references_request(request_id, filepath, row, column)
-
-    def handle_prepare_name_request(self, request_id, lsp_server_name, filepath, row, column):
-        if lsp_server_name in self.lsp_server_dict:
-            self.lsp_server_dict[lsp_server_name].send_prepare_rename_request(request_id, filepath, row, column)
-
-    def handle_name_request(self, request_id, lsp_server_name, filepath, row, column, new_name):
-        if lsp_server_name in self.lsp_server_dict:
-            self.lsp_server_dict[lsp_server_name].send_rename_request(request_id, filepath, row, column, new_name)
-            
     def handle_server_message(self, filepath, request_type, request_id, response_result):
         if filepath in self.file_action_dict:
             action = self.file_action_dict[filepath]
