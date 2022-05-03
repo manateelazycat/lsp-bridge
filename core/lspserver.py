@@ -58,7 +58,6 @@ class LspBridgeListener(QThread):
 
             self.recv_message.emit(json.loads(message))
         except:
-            print("* Parse server message failed.")
             import traceback
             traceback.print_exc()
 
@@ -121,7 +120,7 @@ class SendRequest(QThread):
 
         print("\n--- Send request (1): {}".format(self.name, self.id))
 
-        # print(json.dumps(message_dict, indent = 3))
+        print(json.dumps(message_dict, indent = 3))
 
 class SendNotification(QThread):
 
@@ -150,7 +149,7 @@ class SendNotification(QThread):
 
         print("\n--- Send notification: {}".format(self.name))
 
-        # print(json.dumps(message_dict, indent = 3))
+        print(json.dumps(message_dict, indent = 3))
 
 class SendResponse(QThread):
 
@@ -180,7 +179,7 @@ class SendResponse(QThread):
 
         print("\n--- Send response: {}".format(self.name))
 
-        # print(json.dumps(message_dict, indent = 3))
+        print(json.dumps(message_dict, indent = 3))
 
 class LspServer(QObject):
 
@@ -238,7 +237,7 @@ class LspServer(QObject):
                                           }
                                       })
 
-    def send_change_notification(self, filepath, row, column, char):
+    def send_change_notification(self, filepath, start_row, start_character, end_row, end_character, range_length, change_text, row, column, char):
         self.send_to_notification("textDocument/didChange",
                                   {
                                       "textDocument": {
@@ -249,16 +248,16 @@ class LspServer(QObject):
                                           {
                                               "range": {
                                                   "start": {
-                                                      "line": row,
-                                                      "character": column - 1
+                                                      "line": start_row - 1,
+                                                      "character": start_character
                                                   },
                                                   "end": {
-                                                      "line": row,
-                                                      "character": column - 1
+                                                      "line": end_row - 1,
+                                                      "character": end_character
                                                   }
                                               },
-                                              "rangeLength": 0,
-                                              "text": char
+                                              "rangeLength": range_length,
+                                              "text": change_text
                                           }
                                       ]
                                   })
@@ -362,4 +361,3 @@ class LspServer(QObject):
         sender_thread = SendResponse(self.p, name, id, result)
         self.sender_threads.append(sender_thread)
         sender_thread.start()
-        

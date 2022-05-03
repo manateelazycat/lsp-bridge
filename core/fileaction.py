@@ -28,7 +28,6 @@ import random
 class FileAction(QObject):
     
     completion = QtCore.pyqtSignal(int, str, str, int, int, str)
-    change = QtCore.pyqtSignal(str, str, int, int, str)
     
     def __init__(self, filepath):
         QObject.__init__(self)
@@ -39,11 +38,12 @@ class FileAction(QObject):
         self.find_references_request_list = []
         self.rename_request_list = []
         
-        self.code_has_change = False
         self.last_change_time = -1
         self.last_change_row = -1
         self.last_change_column = -1
         self.last_change_char = ""
+        
+        self.try_completion_timer = None
         
         self.lsp_server_type = "pyright"
         self.initialize_id = self.generate_request_id()
@@ -60,12 +60,12 @@ class FileAction(QObject):
         return "{}#{}".format(self.project_path, self.lsp_server_type)
     
     def change_file(self, row, column, char):
-        self.change.emit(self.get_lsp_server_name(), self.filepath, row, column, char)
+        if self.try_completion_timer is not None and self.try_completion_timer.isActive():
+            self.try_completion_timer.stop()
         
         import time
         current_time = time.time()
         
-        self.code_has_change = True
         self.last_change_time = current_time
         self.last_change_row = row
         self.last_change_column = column
@@ -73,13 +73,11 @@ class FileAction(QObject):
         
         print("Change file: ", self.filepath, current_time)
 
-        QTimer().singleShot(500, lambda : self.try_completion(current_time, row, column, char))
+        self.try_completion_timer = QTimer().singleShot(500, lambda : self.try_completion(current_time, row, column, char))
         
     def try_completion(self, time, row, column, char):
         if time == self.last_change_time and row == self.last_change_row and column == self.last_change_column and self.last_change_char == char:
-            self.code_has_change = False
-            
-            print("Try completion: ", self.filepath, self.code_has_change)
+            print("Try completion: ", self.filepath)
             
             request_id = self.generate_request_id()
             self.completion_request_list.append(request_id)

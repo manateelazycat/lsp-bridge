@@ -118,7 +118,6 @@ class LspBridge(object):
         if filepath not in self.file_action_dict:
             action = FileAction(filepath)
             action.completion.connect(self.handle_completion_request)
-            action.change.connect(self.handle_change_request)
             self.file_action_dict[filepath] = action
             
         file_action = self.file_action_dict[filepath]
@@ -133,9 +132,14 @@ class LspBridge(object):
         print("Open file: ", filepath)
         
     @PostGui()
-    def change_file(self, filepath, row, column, char):
+    def change_file(self, filepath, start_row, start_character, end_row, end_character, range_length, change_text, row, column, char):
         if filepath in self.file_action_dict:
             self.file_action_dict[filepath].change_file(row, column, char)
+            
+            lsp_server_name = self.file_action_dict[filepath].get_lsp_server_name()
+            if lsp_server_name in self.lsp_server_dict:
+                self.lsp_server_dict[lsp_server_name].send_change_notification(
+                    filepath, start_row, start_character, end_row, end_character, range_length, change_text, row, column, char)
             
     @PostGui()
     def find_define(self):
@@ -153,17 +157,13 @@ class LspBridge(object):
         if lsp_server_name in self.lsp_server_dict:
             self.lsp_server_dict[lsp_server_name].send_completion_request(request_id, filepath, row, column, char)
     
-    def handle_change_request(self, lsp_server_name, filepath, row, column, char):
-        if lsp_server_name in self.lsp_server_dict:
-            self.lsp_server_dict[lsp_server_name].send_change_notification(filepath, row, column, char)
-            
     def handle_server_message(self, filepath, request_type, request_id, response_result):
         if filepath in self.file_action_dict:
             action = self.file_action_dict[filepath]
             if request_type == "completion":
-                print("***** ", action.code_has_change, request_id, action.completion_request_list[-1])
+                print("***** ", request_id, action.completion_request_list[-1])
                 
-                if not action.code_has_change and request_id == action.completion_request_list[-1]:
+                if request_id == action.completion_request_list[-1]:
                     print("Popup: ", list(map(lambda item: item["label"], response_result["items"])))
                 else:
                     print("Drop completion list, because request_id is not newest.")
@@ -192,5 +192,3 @@ if __name__ == "__main__":
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     sys.exit(app.exec())
-    
-    
