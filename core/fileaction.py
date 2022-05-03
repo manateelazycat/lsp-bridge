@@ -30,6 +30,9 @@ class FileAction(QObject):
     def __init__(self, filepath):
         QObject.__init__(self)
         
+        for name in ["find_define", "find_references", "prepare_rename", "rename"]:
+            self.build_request_function(name)
+            
         self.filepath = filepath
         self.completion_request_list = []
         self.find_define_request_list = []
@@ -90,32 +93,15 @@ class FileAction(QObject):
             if self.lsp_server is not None:
                 self.lsp_server.send_completion_request(request_id, self.filepath, row, column, char)
             
-    def find_define(self, row, column):
-        request_id = self.generate_request_id()
-        self.find_define_request_list.append(request_id)
+    def build_request_function(self, name):
+        def _do(*args):
+            request_id = self.generate_request_id()
+            getattr(self, "{}_request_list".format(name)).append(request_id)
         
-        if self.lsp_server is not None:
-            self.lsp_server.send_find_define_request(request_id, self.filepath, row, column)
-            
-    def find_references(self, row, column):
-        request_id = self.generate_request_id()
-        self.find_references_request_list.append(request_id)
-        
-        if self.lsp_server is not None:
-            self.lsp_server.send_find_references_request(request_id, self.filepath, row, column)
-        
-    def prepare_rename(self, row, column):
-        request_id = self.generate_request_id()
-        self.prepare_rename_request_list.append(request_id)
-        
-        if self.lsp_server is not None:
-            self.lsp_server.send_prepare_rename_request(request_id, self.filepath, row, column)
-            
-    def rename(self, row, column, new_name):
-        request_id = self.generate_request_id()
-        self.rename_request_list.append(request_id)
-        
-        if self.lsp_server is not None:
-            self.lsp_server.send_rename_request(request_id, self.filepath, row, column, new_name)
+            if self.lsp_server is not None:
+                args = (request_id, self.filepath) + args
+                getattr(self.lsp_server, "send_{}_request".format(name))(*args)
+
+        setattr(self, name, _do)
             
         
