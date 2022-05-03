@@ -22,6 +22,7 @@
 from PyQt6.QtCore import QObject
 from core.utils import get_command_result
 import os
+import random
 
 class FileAction(QObject):
     
@@ -36,6 +37,9 @@ class FileAction(QObject):
         self.rename_request_list = []
         
         self.lsp_server_type = "pyright"
+        self.initialize_id = random.getrandbits(32)
+        
+        print("***** ", self.initialize_id)
         
         dir_path = os.path.dirname(filepath)
         self.project_path = filepath

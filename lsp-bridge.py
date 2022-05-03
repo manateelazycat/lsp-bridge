@@ -121,7 +121,7 @@ class LspBridge(object):
         file_action = self.file_action_dict[filepath]
         lsp_server_name = file_action.get_lsp_server_name()
         if lsp_server_name not in self.lsp_server_dict:
-            self.lsp_server_dict[lsp_server_name] = LspServer(file_action.project_path, file_action.lsp_server_type, file_action.filepath)
+            self.lsp_server_dict[lsp_server_name] = LspServer(file_action)
         
         print("Open file: ", filepath)
 

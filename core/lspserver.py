@@ -155,17 +155,15 @@ class SendResponse(QThread):
 
 class LspServer(QObject):
 
-    def __init__(self, project_path, server_type, first_file_path):
+    def __init__(self, file_action):
         QObject.__init__(self)
-
-        self.project_path = project_path
-        self.server_type = server_type
-        self.first_file_path = first_file_path
+        
+        self.project_path = file_action.project_path
+        self.server_type = file_action.lsp_server_type
+        self.first_file_path = file_action.filepath
+        self.initialize_id = file_action.initialize_id
 
         self.p = subprocess.Popen(self.get_server_command(), text=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-
-        self.request_ticker = 0
-        self.initialize_id = 0
 
         self.listener_thread = LspBridgeListener(self.p)
         self.listener_thread.recv_message.connect(self.handle_server_message)
@@ -175,7 +173,10 @@ class LspServer(QObject):
 
         self.rootPath = self.project_path
         self.rootUri = "file://" + self.project_path
-
+        
+        self.send_initialize_request()
+        
+    def send_initialize_request(self):
         initialize_options = {
             "processId": os.getpid(),
             "rootPath": self.rootPath,
@@ -187,8 +188,8 @@ class LspServer(QObject):
             "capabilities": {},
             "initializationOptions": {}
         }
-        self.send_to_request("initialize", initialize_options)
-
+        self.send_to_request("initialize", initialize_options, self.initialize_id)
+        
     def get_server_command(self):
         if self.server_type == "pyright":
             return ["pyright-langserver", "--stdio"]
@@ -219,10 +220,6 @@ class LspServer(QObject):
             if message["id"] == self.initialize_id:
                 self.respond_initialize()
 
-        if "method" in message.keys():
-            if message["method"] == "client/registerCapability":
-                self.send_to_response("client/registerCapability", message["id"], None)
-
         print("\n--- Recv message")
         print(json.dumps(message, indent = 3))
 
@@ -243,15 +240,10 @@ class LspServer(QObject):
                                           })
 
 
-    def send_to_request(self, name, params):
-        if name == "initialize":
-            self.initialize_id = self.request_ticker
-
-        sender_thread = SendRequest(self.p, name, params, self.request_ticker)
+    def send_to_request(self, name, params, request_id):
+        sender_thread = SendRequest(self.p, name, params, request_id)
         self.sender_threads.append(sender_thread)
         sender_thread.start()
-
-        self.request_ticker += 1
 
     def send_to_notification(self, name, params):
         sender_thread = SendNotification(self.p, name, params)
