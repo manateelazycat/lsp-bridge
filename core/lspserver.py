@@ -184,6 +184,8 @@ class SendResponse(QThread):
 
 class LspServer(QObject):
 
+    response_message = QtCore.pyqtSignal(str, str, int, dict)
+    
     def __init__(self, file_action):
         QObject.__init__(self)
 
@@ -200,6 +202,8 @@ class LspServer(QObject):
         self.listener_thread.start()
 
         self.sender_threads = []
+        
+        self.request_dict = {}
 
         self.rootPath = self.project_path
         self.rootUri = "file://" + self.project_path
@@ -234,7 +238,7 @@ class LspServer(QObject):
                                           }
                                       })
 
-    def send_change_request(self, request_id, filepath, row, column, char):
+    def send_change_notification(self, filepath, row, column, char):
         self.send_to_notification("textDocument/didChange",
                                   {
                                       "textDocument": {
@@ -260,6 +264,11 @@ class LspServer(QObject):
                                   })
 
     def send_completion_request(self, request_id, filepath, row, column, char):
+        self.request_dict[request_id] = {
+            "filepath": filepath,
+            "type": "completion"
+        }
+        
         if char == ".":
             self.send_to_request("textDocument/completion",
                                  {
@@ -321,6 +330,13 @@ class LspServer(QObject):
         if "id" in message.keys():
             if message["id"] == self.initialize_id:
                 self.respond_initialize()
+            else:
+                if message["id"] in self.request_dict:
+                    request_type = self.request_dict[message["id"]]["type"]
+                    filepath = self.request_dict[message["id"]]["filepath"]
+                    
+                    if request_type == "completion":
+                        self.response_message.emit(filepath, "completion", message["id"], message["result"])
 
         print("\n--- Recv message")
         print(json.dumps(message, indent = 3))
@@ -346,3 +362,4 @@ class LspServer(QObject):
         sender_thread = SendResponse(self.p, name, id, result)
         self.sender_threads.append(sender_thread)
         sender_thread.start()
+        

@@ -28,7 +28,7 @@ import random
 class FileAction(QObject):
     
     completion = QtCore.pyqtSignal(int, str, str, int, int, str)
-    change = QtCore.pyqtSignal(int, str, str, int, int, str)
+    change = QtCore.pyqtSignal(str, str, int, int, str)
     
     def __init__(self, filepath):
         QObject.__init__(self)
@@ -60,7 +60,7 @@ class FileAction(QObject):
         return "{}#{}".format(self.project_path, self.lsp_server_type)
     
     def change_file(self, row, column, char):
-        self.change.emit(self.generate_request_id(), self.get_lsp_server_name(), self.filepath, row, column, char)
+        self.change.emit(self.get_lsp_server_name(), self.filepath, row, column, char)
         
         import time
         current_time = time.time()
@@ -70,9 +70,19 @@ class FileAction(QObject):
         self.last_change_row = row
         self.last_change_column = column
         self.last_change_char = char
+        
+        print("Change file: ", self.filepath, current_time)
 
         QTimer().singleShot(500, lambda : self.try_completion(current_time, row, column, char))
         
     def try_completion(self, time, row, column, char):
         if time == self.last_change_time and row == self.last_change_row and column == self.last_change_column and self.last_change_char == char:
-            self.completion.emit(self.generate_request_id(), self.get_lsp_server_name(), self.filepath, row, column, char)
+            self.code_has_change = False
+            
+            print("Try completion: ", self.filepath, self.code_has_change)
+            
+            request_id = self.generate_request_id()
+            self.completion_request_list.append(request_id)
+            self.completion.emit(request_id, self.get_lsp_server_name(), self.filepath, row, column, char)
+            
+            
