@@ -90,7 +90,7 @@ class LspBridgeListener(QThread):
 
                 if message != "":
                     self.emit_message(message)
-                    
+
 class SendRequest(QThread):
 
     send_message = QtCore.pyqtSignal(str)
@@ -183,8 +183,8 @@ class SendResponse(QThread):
 
 class LspServer(QObject):
 
-    response_message = QtCore.pyqtSignal(str, str, int, dict)
-    
+    response_message = QtCore.pyqtSignal(str, str, int, object)
+
     def __init__(self, file_action):
         QObject.__init__(self)
 
@@ -201,7 +201,7 @@ class LspServer(QObject):
         self.listener_thread.start()
 
         self.sender_threads = []
-        
+
         self.request_dict = {}
 
         self.rootPath = self.project_path
@@ -267,7 +267,7 @@ class LspServer(QObject):
             "filepath": filepath,
             "type": "completion"
         }
-        
+
         if char == ".":
             self.send_to_request("textDocument/completion",
                                  {
@@ -300,6 +300,25 @@ class LspServer(QObject):
                                  },
                                  request_id)
 
+    def send_find_define_request(self, request_id, filepath, row, column):
+        self.request_dict[request_id] = {
+            "filepath": filepath,
+            "type": "findDefine"
+        }
+
+        self.send_to_request("textDocument/declaration",
+                             {
+                                 "textDocument": {
+                                     "uri": "file://" + filepath
+                                 },
+                                 "position": {
+                                     "line": row - 1,
+                                     "character": column
+                                 }
+                             },
+                             request_id)
+
+
     def get_server_command(self):
         if self.server_type == "pyright":
             return ["pyright-langserver", "--stdio"]
@@ -326,19 +345,19 @@ class LspServer(QObject):
         self.send_to_notification("initialized", {})
 
     def handle_server_message(self, message):
+        print("\n--- Recv message")
+        print(json.dumps(message, indent = 3))
+
         if "id" in message.keys():
             if message["id"] == self.initialize_id:
                 self.respond_initialize()
             else:
                 if message["id"] in self.request_dict:
-                    request_type = self.request_dict[message["id"]]["type"]
-                    filepath = self.request_dict[message["id"]]["filepath"]
-                    
-                    if request_type == "completion":
-                        self.response_message.emit(filepath, "completion", message["id"], message["result"])
-
-        print("\n--- Recv message")
-        print(json.dumps(message, indent = 3))
+                    self.response_message.emit(
+                        self.request_dict[message["id"]]["filepath"],
+                        self.request_dict[message["id"]]["type"],
+                        message["id"], 
+                        message["result"])
 
     def handle_send_notification(self, name):
         if name == "initialized":

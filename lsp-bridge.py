@@ -118,6 +118,7 @@ class LspBridge(object):
         if filepath not in self.file_action_dict:
             action = FileAction(filepath)
             action.completion.connect(self.handle_completion_request)
+            action.findDefine.connect(self.handle_find_define_request)
             self.file_action_dict[filepath] = action
             
         file_action = self.file_action_dict[filepath]
@@ -146,8 +147,10 @@ class LspBridge(object):
                     row, column, char)
             
     @PostGui()
-    def find_define(self):
-        pass
+    def find_define(self, filepath, row, column):
+        if filepath in self.file_action_dict:
+            action = self.file_action_dict[filepath]
+            action.find_define(row, column)
     
     @PostGui()
     def find_references(self):
@@ -160,17 +163,20 @@ class LspBridge(object):
     def handle_completion_request(self, request_id, lsp_server_name, filepath, row, column, char):
         if lsp_server_name in self.lsp_server_dict:
             self.lsp_server_dict[lsp_server_name].send_completion_request(request_id, filepath, row, column, char)
-    
+
+    def handle_find_define_request(self, request_id, lsp_server_name, filepath, row, column):
+        if lsp_server_name in self.lsp_server_dict:
+            self.lsp_server_dict[lsp_server_name].send_find_define_request(request_id, filepath, row, column)
+            
     def handle_server_message(self, filepath, request_type, request_id, response_result):
         if filepath in self.file_action_dict:
             action = self.file_action_dict[filepath]
             if request_type == "completion":
-                print("***** ", request_id, action.completion_request_list[-1])
-                
                 if request_id == action.completion_request_list[-1]:
-                    print("Popup: ", list(map(lambda item: item["label"], response_result["items"])))
-                else:
-                    print("Drop completion list, because request_id is not newest.")
+                    print(list(map(lambda item: item["label"], response_result["items"])))
+            elif request_type == "findDefine":
+                if request_id == action.find_define_request_list[-1]:
+                    print(response_result)
     
     def cleanup(self):
         '''Do some cleanup before exit python process.'''
@@ -191,7 +197,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv + ["--disable-web-security"] + hardware_acceleration_args)
     screen = app.primaryScreen()
     screen_size = screen.size()
-
+    
     lspbridge = LspBridge(sys.argv[1:])
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)
