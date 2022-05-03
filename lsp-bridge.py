@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2021 Andy Stewart
+# Copyright (C) 2022 Andy Stewart
 #
 # Author:     Andy Stewart <lazycat.manatee@gmail.com>
 # Maintainer: Andy Stewart <lazycat.manatee@gmail.com>
@@ -32,11 +32,16 @@ import signal
 import sys
 import threading
 
-from core.utils import (init_epc_client, close_epc_client, eval_in_emacs, get_emacs_vars, get_emacs_func_result)
+from core.fileaction import FileAction
+from core.lspserver import LspServer
+from core.utils import (PostGui, init_epc_client, close_epc_client, eval_in_emacs, get_emacs_vars, get_emacs_func_result)
 
 class LspBridge(object):
     def __init__(self, args):
         global proxy_string
+        
+        self.file_action_dict = {}
+        self.lsp_server_dict = {}
 
         # Init EPC client port.
         init_epc_client(int(args[0]))
@@ -107,7 +112,35 @@ class LspBridge(object):
             self.disable_proxy()
         else:
             self.enable_proxy()
+            
+    @PostGui()
+    def open_file(self, filepath):
+        if filepath not in self.file_action_dict:
+            self.file_action_dict[filepath] = FileAction(filepath)
+            
+        file_action = self.file_action_dict[filepath]
+        lsp_server_name = file_action.get_lsp_server_name()
+        if lsp_server_name not in self.lsp_server_dict:
+            self.lsp_server_dict[lsp_server_name] = LspServer(file_action.project_path, file_action.lsp_server_type, file_action.filepath)
+        
+        print("Open file: ", filepath)
 
+    @PostGui()
+    def completion(self):
+        pass
+
+    @PostGui()
+    def find_define(self):
+        pass
+    
+    @PostGui()
+    def find_references(self):
+        pass
+
+    @PostGui()
+    def rename(self):
+        pass
+    
     def cleanup(self):
         '''Do some cleanup before exit python process.'''
         close_epc_client()

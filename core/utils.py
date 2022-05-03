@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2021 Andy Stewart
+# Copyright (C) 2022 Andy Stewart
 #
 # Author:     Andy Stewart <lazycat.manatee@gmail.com>
 # Maintainer: Andy Stewart <lazycat.manatee@gmail.com>
@@ -134,3 +134,9 @@ def get_emacs_func_result(method_name, args):
         result = epc_client.call_sync("eval-in-emacs", args)
         return result if result != [] else False
 
+def get_command_result(command_string):
+    import subprocess
+    process = subprocess.Popen(command_string, shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    ret = process.wait()
+    return "".join((process.stdout if ret == 0 else process.stderr).readlines()).strip()
+        

@@ -7,7 +7,7 @@
 ;; Copyright (C) 2018, Andy Stewart, all rights reserved.
 ;; Created: 2018-06-15 14:10:12
 ;; Version: 0.5
-;; Last-Updated: Sun Nov 21 04:35:02 2021 (-0500)
+;; Last-Updated: Sun Nov 21 04:35:02 2022 (-0500)
 ;;           By: Mingde (Matthew) Zeng
 ;; URL: https://github.com/manateelazycat/lsp-bridge
 ;; Keywords:
@@ -57,8 +57,6 @@
 
 ;;; Change log:
 ;;
-;; 2021/11/13
-;;      * First released.
 ;;
 
 ;;; Acknowledgements:
@@ -354,6 +352,13 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
             (lsp-bridge-color-int-to-hex (nth 0 components))
             (lsp-bridge-color-int-to-hex (nth 1 components))
             (lsp-bridge-color-int-to-hex (nth 2 components)))))
+
+(defun lsp-bridge-enable ()
+  (lsp-bridge-call-async "open_file" (buffer-file-name))
+  (message "Enable lsp bridge mode."))
+
+(defun lsp-bridge-disable ()
+  (message "Disable lsp bridge mode."))
 
 (provide 'lsp-bridge)
 
