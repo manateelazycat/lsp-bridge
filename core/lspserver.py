@@ -262,11 +262,14 @@ class LspServer(QObject):
                                       ]
                                   })
 
-    def send_completion_request(self, request_id, filepath, row, column, char):
+    def record_request_id(self, request_id, filepath, type):
         self.request_dict[request_id] = {
             "filepath": filepath,
-            "type": "completion"
+            "type": type
         }
+        
+    def send_completion_request(self, request_id, filepath, row, column, char):
+        self.record_request_id(request_id, filepath, "completion")
 
         if char == ".":
             self.send_to_request("textDocument/completion",
@@ -300,11 +303,8 @@ class LspServer(QObject):
                                  },
                                  request_id)
 
-    def send_find_define_request(self, request_id, filepath, row, column):
-        self.request_dict[request_id] = {
-            "filepath": filepath,
-            "type": "findDefine"
-        }
+    def send_find_define_request(self, request_id, filepath, type, row, column):
+        self.record_request_id(request_id, filepath, type)
 
         self.send_to_request("textDocument/declaration",
                              {
@@ -318,11 +318,8 @@ class LspServer(QObject):
                              },
                              request_id)
 
-    def send_find_references_request(self, request_id, filepath, row, column):
-        self.request_dict[request_id] = {
-            "filepath": filepath,
-            "type": "findReferences"
-        }
+    def send_find_references_request(self, request_id, filepath, type, row, column):
+        self.record_request_id(request_id, filepath, type)
 
         self.send_to_request("textDocument/references",
                              {
@@ -339,11 +336,8 @@ class LspServer(QObject):
                              },
                              request_id)
 
-    def send_prepare_rename_request(self, request_id, filepath, row, column):
-        self.request_dict[request_id] = {
-            "filepath": filepath,
-            "type": "prepareRename"
-        }
+    def send_prepare_rename_request(self, request_id, filepath, type, row, column):
+        self.record_request_id(request_id, filepath, type)
 
         self.send_to_request("textDocument/prepareRename",
                              {
@@ -357,11 +351,8 @@ class LspServer(QObject):
                              },
                              request_id)
 
-    def send_rename_request(self, request_id, filepath, row, column, new_name):
-        self.request_dict[request_id] = {
-            "filepath": filepath,
-            "type": "rename"
-        }
+    def send_rename_request(self, request_id, filepath, type, row, column, new_name):
+        self.record_request_id(request_id, filepath, type)
 
         self.send_to_request("textDocument/rename",
                              {

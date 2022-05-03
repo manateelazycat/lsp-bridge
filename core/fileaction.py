@@ -99,7 +99,7 @@ class FileAction(QObject):
             getattr(self, "{}_request_list".format(name)).append(request_id)
         
             if self.lsp_server is not None:
-                args = (request_id, self.filepath) + args
+                args = (request_id, self.filepath, name) + args
                 getattr(self.lsp_server, "send_{}_request".format(name))(*args)
 
         setattr(self, name, _do)

@@ -149,13 +149,13 @@ class LspBridge(object):
             if request_type == "completion":
                 if request_id == action.completion_request_list[-1]:
                     print(list(map(lambda item: item["label"], response_result["items"])))
-            elif request_type == "findDefine":
+            elif request_type == "find_define":
                 if request_id == action.find_define_request_list[-1]:
                     print(response_result)
-            elif request_type == "findReferences":
+            elif request_type == "find_references":
                 if request_id == action.find_references_request_list[-1]:
                     print(response_result)
-            elif request_type == "prepareRename":
+            elif request_type == "prepare_rename":
                 if request_id == action.prepare_rename_request_list[-1]:
                     print(response_result)
             elif request_type == "rename":
