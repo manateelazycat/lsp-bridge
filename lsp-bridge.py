@@ -151,7 +151,16 @@ class LspBridge(object):
                     print(list(map(lambda item: item["label"], response_result["items"])))
             elif request_type == "find_define":
                 if request_id == action.find_define_request_list[-1]:
-                    print(response_result)
+                    try:
+                        file_info = response_result[0]
+                        filepath = file_info["uri"][len("file://"):]
+                        row = file_info["range"]["start"]["line"]
+                        column = file_info["range"]["start"]["character"]
+                        eval_in_emacs("lsp-bridge-jump-to-define", [filepath, row, column])
+                    except:
+                        print("* Failed information about find_define response.")
+                        import traceback
+                        traceback.print_exc()
             elif request_type == "find_references":
                 if request_id == action.find_references_request_list[-1]:
                     print(response_result)

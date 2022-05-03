@@ -82,6 +82,18 @@
   "LSPBRIDGE group."
   :group 'applications)
 
+(defcustom lsp-bridge-flash-line-delay .3
+  "How many seconds to flash `lsp-bridge-font-lock-flash' after navigation.
+
+Setting this to nil or 0 will turn off the indicator."
+  :type 'number
+  :group 'lsp-bridge)
+
+(defface lsp-bridge-font-lock-flash
+  '((t (:inherit highlight)))
+  "Face to flash the current line."
+  :group 'lsp-bridge)
+
 (defvar lsp-bridge-server nil
   "The LSPBRIDGE Server.")
 
@@ -426,6 +438,15 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
   (lsp-bridge-call-async "prepare_rename" (buffer-file-name) (line-number-at-pos) (current-column))
   (let ((new-name (read-string "Rename to: ")))
     (lsp-bridge-call-async "rename" (buffer-file-name) (line-number-at-pos) (current-column) new-name)))
+
+(defun lsp-bridge-jump-to-define (filepath row column)
+  (interactive)
+  (find-file filepath)
+  (goto-line (+ (string-to-number row) 1))
+  (move-to-column (string-to-number column))
+  (let ((pulse-iterations 1)
+        (pulse-delay lsp-bridge-flash-line-delay))
+    (pulse-momentary-highlight-one-line (point) 'lsp-bridge-font-lock-flash)))
 
 (provide 'lsp-bridge)
 
