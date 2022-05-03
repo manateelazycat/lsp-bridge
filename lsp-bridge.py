@@ -120,6 +120,8 @@ class LspBridge(object):
             action.completion.connect(self.handle_completion_request)
             action.findDefine.connect(self.handle_find_define_request)
             action.findReferences.connect(self.handle_find_references_request)
+            action.prepareRename.connect(self.handle_prepare_name_request)
+            action.doRename.connect(self.handle_name_request)
             self.file_action_dict[filepath] = action
             
         file_action = self.file_action_dict[filepath]
@@ -160,8 +162,16 @@ class LspBridge(object):
             action.find_references(row, column)
 
     @PostGui()
-    def rename(self):
-        pass
+    def prepare_rename(self, filepath, row, column):
+        if filepath in self.file_action_dict:
+            action = self.file_action_dict[filepath]
+            action.prepare_rename(row, column)
+            
+    @PostGui()
+    def rename(self, filepath, row, column, new_name):
+        if filepath in self.file_action_dict:
+            action = self.file_action_dict[filepath]
+            action.rename(row, column, new_name)
     
     def handle_completion_request(self, request_id, lsp_server_name, filepath, row, column, char):
         if lsp_server_name in self.lsp_server_dict:
@@ -174,6 +184,14 @@ class LspBridge(object):
     def handle_find_references_request(self, request_id, lsp_server_name, filepath, row, column):
         if lsp_server_name in self.lsp_server_dict:
             self.lsp_server_dict[lsp_server_name].send_find_references_request(request_id, filepath, row, column)
+
+    def handle_prepare_name_request(self, request_id, lsp_server_name, filepath, row, column):
+        if lsp_server_name in self.lsp_server_dict:
+            self.lsp_server_dict[lsp_server_name].send_prepare_rename_request(request_id, filepath, row, column)
+
+    def handle_name_request(self, request_id, lsp_server_name, filepath, row, column, new_name):
+        if lsp_server_name in self.lsp_server_dict:
+            self.lsp_server_dict[lsp_server_name].send_rename_request(request_id, filepath, row, column, new_name)
             
     def handle_server_message(self, filepath, request_type, request_id, response_result):
         if filepath in self.file_action_dict:
@@ -186,6 +204,12 @@ class LspBridge(object):
                     print(response_result)
             elif request_type == "findReferences":
                 if request_id == action.find_references_request_list[-1]:
+                    print(response_result)
+            elif request_type == "prepareRename":
+                if request_id == action.prepare_rename_request_list[-1]:
+                    print(response_result)
+            elif request_type == "rename":
+                if request_id == action.rename_request_list[-1]:
                     print(response_result)
     
     def cleanup(self):

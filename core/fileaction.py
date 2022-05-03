@@ -30,6 +30,8 @@ class FileAction(QObject):
     completion = QtCore.pyqtSignal(int, str, str, int, int, str)
     findDefine = QtCore.pyqtSignal(int, str, str, int, int)
     findReferences = QtCore.pyqtSignal(int, str, str, int, int)
+    prepareRename = QtCore.pyqtSignal(int, str, str, int, int)
+    doRename = QtCore.pyqtSignal(int, str, str, int, int, str)
     
     def __init__(self, filepath):
         QObject.__init__(self)
@@ -38,6 +40,7 @@ class FileAction(QObject):
         self.completion_request_list = []
         self.find_define_request_list = []
         self.find_references_request_list = []
+        self.prepare_rename_request_list = []
         self.rename_request_list = []
         
         self.last_change_time = -1
@@ -104,4 +107,16 @@ class FileAction(QObject):
         
         self.findReferences.emit(request_id, self.get_lsp_server_name(), self.filepath, row, column)
         
+    def prepare_rename(self, row, column):
+        request_id = self.generate_request_id()
+        self.prepare_rename_request_list.append(request_id)
+        
+        self.prepareRename.emit(request_id, self.get_lsp_server_name(), self.filepath, row, column)
             
+    def rename(self, row, column, new_name):
+        request_id = self.generate_request_id()
+        self.rename_request_list.append(request_id)
+        
+        self.doRename.emit(request_id, self.get_lsp_server_name(), self.filepath, row, column, new_name)
+            
+        

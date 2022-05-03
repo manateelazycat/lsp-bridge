@@ -339,6 +339,43 @@ class LspServer(QObject):
                              },
                              request_id)
 
+    def send_prepare_rename_request(self, request_id, filepath, row, column):
+        self.request_dict[request_id] = {
+            "filepath": filepath,
+            "type": "prepareRename"
+        }
+
+        self.send_to_request("textDocument/prepareRename",
+                             {
+                                 "textDocument": {
+                                     "uri": "file://" + filepath
+                                 },
+                                 "position": {
+                                     "line": row - 1,
+                                     "character": column
+                                 }
+                             },
+                             request_id)
+
+    def send_rename_request(self, request_id, filepath, row, column, new_name):
+        self.request_dict[request_id] = {
+            "filepath": filepath,
+            "type": "rename"
+        }
+
+        self.send_to_request("textDocument/rename",
+                             {
+                                 "textDocument": {
+                                     "uri": "file://" + filepath
+                                 },
+                                 "position": {
+                                     "line": row - 1,
+                                     "character": column
+                                 },
+                                 "newName": new_name
+                             },
+                             request_id)
+
     def get_server_command(self):
         if self.server_type == "pyright":
             return ["pyright-langserver", "--stdio"]
