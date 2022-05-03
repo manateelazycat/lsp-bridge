@@ -116,7 +116,9 @@ class LspBridge(object):
     @PostGui()
     def open_file(self, filepath):
         if filepath not in self.file_action_dict:
-            self.file_action_dict[filepath] = FileAction(filepath)
+            action = FileAction(filepath)
+            action.completion.connect(self.handle_completion_request)
+            self.file_action_dict[filepath] = action
             
         file_action = self.file_action_dict[filepath]
         lsp_server_name = file_action.get_lsp_server_name()
@@ -128,15 +130,11 @@ class LspBridge(object):
         print("Open file: ", filepath)
         
     @PostGui()
-    def change_file(self, filepath):
+    def change_file(self, filepath, row, column, char):
         if filepath in self.file_action_dict:
-            self.file_action_dict[filepath].code_has_change = True
+            self.file_action_dict[filepath].change_file(row, column, char)
             
         print("Change file: ", filepath)
-
-    @PostGui()
-    def completion(self):
-        pass
 
     @PostGui()
     def find_define(self):
@@ -149,6 +147,10 @@ class LspBridge(object):
     @PostGui()
     def rename(self):
         pass
+    
+    def handle_completion_request(self, request_id, lsp_server_name, filepath, row, column, char):
+        if lsp_server_name in self.lsp_server_dict:
+            self.lsp_server_dict[lsp_server_name].send_completion_request(request_id, filepath, row, column, char)
     
     def cleanup(self):
         '''Do some cleanup before exit python process.'''
@@ -174,3 +176,4 @@ if __name__ == "__main__":
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     sys.exit(app.exec())
+    

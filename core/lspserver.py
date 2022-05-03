@@ -41,16 +41,25 @@ class LspBridgeListener(QThread):
 
         self.process = process
 
+    def is_end_number(self, string):
+        text = re.compile(r".*[0-9]$")
+        if text.match(string):
+            return True
+        else:
+            return False        
+        
     def run(self):
         while self.process.poll() is None:
-            line = self.process.stdout.readline()
-            message = line
+            line = self.process.stdout.readline().strip()
 
             # LSP message need read 3 times.
             # 1. Read Content-Length
             # 2. Drop empty line
             # 3. Read message base on Content-Length.
-            if match := re.search("(.*)Content-Length:", line):
+            
+            # Sometimes, Content-Length header is not starts with `Content-Length', 
+            # if line not starts with char '{', we need parse number at end of line.
+            if self.is_end_number(line) and not line.startswith("{"):
                 # Read Content-Length.
                 splits = line.split(":")
                 length = int(splits[1].strip())
@@ -60,8 +69,15 @@ class LspBridgeListener(QThread):
 
                 # Emit message.
                 message = self.process.stdout.readline(length).strip()
+                
                 if message != "":
                     try:
+                        # If message is not end with char '}', need remove unnecessary string (such as "Content" ), 
+                        # to make json load message correctly.
+                        if not message.endswith("}"):
+                            quote_index = message.rfind("}")
+                            message = message[:quote_index + 1]
+                        
                         self.recv_message.emit(json.loads(message))
                     except:
                         print("* Parse server message failed.")
@@ -162,13 +178,13 @@ class LspServer(QObject):
 
     def __init__(self, file_action):
         QObject.__init__(self)
-        
+
         self.project_path = file_action.project_path
         self.server_type = file_action.lsp_server_type
         self.first_file_path = file_action.filepath
         self.initialize_id = file_action.initialize_id
 
-        self.p = subprocess.Popen(self.get_server_command(), text=True, 
+        self.p = subprocess.Popen(self.get_server_command(), text=True,
                                   stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
         self.listener_thread = LspBridgeListener(self.p)
@@ -179,9 +195,9 @@ class LspServer(QObject):
 
         self.rootPath = self.project_path
         self.rootUri = "file://" + self.project_path
-        
+
         self.send_initialize_request()
-        
+
     def send_initialize_request(self):
         initialize_options = {
             "processId": os.getpid(),
@@ -195,10 +211,10 @@ class LspServer(QObject):
             "initializationOptions": {}
         }
         self.send_to_request("initialize", initialize_options, self.initialize_id)
-        
+
     def send_did_open_notification(self, filepath):
         print("Send didOpen notification: ", filepath)
-        
+
         with open(filepath) as f:
             self.send_to_notification("textDocument/didOpen",
                                       {
@@ -209,7 +225,47 @@ class LspServer(QObject):
                                               "text": f.read()
                                           }
                                       })
-        
+
+    def send_completion_request(self, request_id, filepath, row, column, char):
+        self.send_to_notification("textDocument/didChange",
+                                  {
+                                      "textDocument": {
+                                          "uri": "file://" + filepath,
+                                          "version": 1
+                                      },
+                                      "contentChanges": [
+                                          {
+                                              "range": {
+                                                  "start": {
+                                                      "line": row,
+                                                      "character": column - 1
+                                                  },
+                                                  "end": {
+                                                      "line": row,
+                                                      "character": column - 1
+                                                  }
+                                              },
+                                              "rangeLength": 0,
+                                              "text": char
+                                          }
+                                      ]
+                                  })
+
+        self.send_to_request("textDocument/completion",
+                             {
+                                 "textDocument": {
+                                     "uri": "file://" + filepath
+                                 },
+                                 "position": {
+                                     "line": row - 1, 
+                                     "character": column
+                                 },
+                                 "context": {
+                                     "triggerKind": 1
+                                 }
+                             },
+                             request_id)
+
     def get_server_command(self):
         if self.server_type == "pyright":
             return ["pyright-langserver", "--stdio"]
@@ -246,7 +302,7 @@ class LspServer(QObject):
     def handle_send_notification(self, name):
         if name == "initialized":
             self.send_to_notification("workspace/didChangeConfiguration", self.get_server_workspace_change_configuration())
-            
+
             self.send_did_open_notification(self.first_file_path)
 
     def send_to_request(self, name, params, request_id):

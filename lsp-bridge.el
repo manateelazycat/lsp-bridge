@@ -363,7 +363,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
   (message "Disable lsp bridge mode."))
 
 (defun lsp-bridge-monitor-input (_begin _end _length)
-  (lsp-bridge-call-async "change_file" (buffer-file-name)))
+  (lsp-bridge-call-async "change_file" (buffer-file-name) (line-number-at-pos) (current-column) (char-to-string (char-before))))
 
 (provide 'lsp-bridge)
 
