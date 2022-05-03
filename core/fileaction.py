@@ -39,8 +39,6 @@ class FileAction(QObject):
         self.lsp_server_type = "pyright"
         self.initialize_id = random.getrandbits(32)
         
-        print("***** ", self.initialize_id)
-        
         dir_path = os.path.dirname(filepath)
         self.project_path = filepath
         if get_command_result("cd {} ; git rev-parse --is-inside-work-tree".format(dir_path)) == "true":

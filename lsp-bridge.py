@@ -122,8 +122,17 @@ class LspBridge(object):
         lsp_server_name = file_action.get_lsp_server_name()
         if lsp_server_name not in self.lsp_server_dict:
             self.lsp_server_dict[lsp_server_name] = LspServer(file_action)
+        else:
+            self.lsp_server_dict[lsp_server_name].send_did_open_notification(file_action.filepath)
         
         print("Open file: ", filepath)
+        
+    @PostGui()
+    def change_file(self, filepath):
+        if filepath in self.file_action_dict:
+            self.file_action_dict[filepath].code_has_change = True
+            
+        print("Change file: ", filepath)
 
     @PostGui()
     def completion(self):

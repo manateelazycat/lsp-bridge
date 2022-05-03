@@ -354,11 +354,16 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
             (lsp-bridge-color-int-to-hex (nth 2 components)))))
 
 (defun lsp-bridge-enable ()
+  (add-hook 'after-change-functions 'lsp-bridge-monitor-input nil t)
+
   (lsp-bridge-call-async "open_file" (buffer-file-name))
   (message "Enable lsp bridge mode."))
 
 (defun lsp-bridge-disable ()
   (message "Disable lsp bridge mode."))
+
+(defun lsp-bridge-monitor-input (_begin _end _length)
+  (lsp-bridge-call-async "change_file" (buffer-file-name)))
 
 (provide 'lsp-bridge)
 

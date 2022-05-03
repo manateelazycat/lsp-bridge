@@ -61,7 +61,12 @@ class LspBridgeListener(QThread):
                 # Emit message.
                 message = self.process.stdout.readline(length).strip()
                 if message != "":
-                    self.recv_message.emit(json.loads(message))
+                    try:
+                        self.recv_message.emit(json.loads(message))
+                    except:
+                        print("* Parse server message failed.")
+                        import traceback
+                        traceback.print_exc()
 
 class SendRequest(QThread):
 
@@ -163,7 +168,8 @@ class LspServer(QObject):
         self.first_file_path = file_action.filepath
         self.initialize_id = file_action.initialize_id
 
-        self.p = subprocess.Popen(self.get_server_command(), text=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self.p = subprocess.Popen(self.get_server_command(), text=True, 
+                                  stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
         self.listener_thread = LspBridgeListener(self.p)
         self.listener_thread.recv_message.connect(self.handle_server_message)
@@ -189,6 +195,20 @@ class LspServer(QObject):
             "initializationOptions": {}
         }
         self.send_to_request("initialize", initialize_options, self.initialize_id)
+        
+    def send_did_open_notification(self, filepath):
+        print("Send didOpen notification: ", filepath)
+        
+        with open(filepath) as f:
+            self.send_to_notification("textDocument/didOpen",
+                                      {
+                                          "textDocument": {
+                                              "uri": "file://" + filepath,
+                                              "languageId": "python",
+                                              "version": 0,
+                                              "text": f.read()
+                                          }
+                                      })
         
     def get_server_command(self):
         if self.server_type == "pyright":
@@ -226,19 +246,8 @@ class LspServer(QObject):
     def handle_send_notification(self, name):
         if name == "initialized":
             self.send_to_notification("workspace/didChangeConfiguration", self.get_server_workspace_change_configuration())
-
-            filepath = self.first_file_path
-            with open(filepath) as f:
-                self.send_to_notification("textDocument/didOpen",
-                                          {
-                                              "textDocument": {
-                                                  "uri": "file://" + filepath,
-                                                  "languageId": "python",
-                                                  "version": 0,
-                                                  "text": f.read()
-                                              }
-                                          })
-
+            
+            self.send_did_open_notification(self.first_file_path)
 
     def send_to_request(self, name, params, request_id):
         sender_thread = SendRequest(self.p, name, params, request_id)
