@@ -67,7 +67,7 @@ class FileAction(QObject):
     
     def change_file(self, start_row, start_character, end_row, end_character, range_length, change_text, row, column, char):
         if self.lsp_server is not None:
-            self.lsp_server.send_change_notification(
+            self.lsp_server.send_did_change_notification(
                 self.filepath, self.version, start_row, start_character, end_row, end_character, range_length, change_text)
         
         self.version += 1 

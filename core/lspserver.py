@@ -193,11 +193,10 @@ class LspServer(QObject):
         self.first_file_path = file_action.filepath
         self.initialize_id = file_action.initialize_id
 
-        self.p = subprocess.Popen(self.get_server_command(), text=True,
-                                  stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self.p = subprocess.Popen(self.get_server_command(), text=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
         self.listener_thread = LspBridgeListener(self.p)
-        self.listener_thread.recv_message.connect(self.handle_server_message)
+        self.listener_thread.recv_message.connect(self.handle_recv_message)
         self.listener_thread.start()
 
         self.sender_threads = []
@@ -224,8 +223,6 @@ class LspServer(QObject):
         self.send_to_request("initialize", initialize_options, self.initialize_id)
 
     def send_did_open_notification(self, filepath):
-        print("Send didOpen notification: ", filepath)
-
         with open(filepath) as f:
             self.send_to_notification("textDocument/didOpen",
                                       {
@@ -237,7 +234,7 @@ class LspServer(QObject):
                                           }
                                       })
 
-    def send_change_notification(self, filepath, version, start_row, start_character, end_row, end_character, range_length, text):
+    def send_did_change_notification(self, filepath, version, start_row, start_character, end_row, end_character, range_length, text):
         self.send_to_notification("textDocument/didChange",
                                   {
                                       "textDocument": {
@@ -389,16 +386,13 @@ class LspServer(QObject):
                 "venvPath": ""
             }}
 
-    def respond_initialize(self):
-        self.send_to_notification("initialized", {})
-
-    def handle_server_message(self, message):
+    def handle_recv_message(self, message):
         print("\n--- Recv message")
         print(json.dumps(message, indent = 3))
 
         if "id" in message.keys():
             if message["id"] == self.initialize_id:
-                self.respond_initialize()
+                self.send_to_notification("initialized", {})
             else:
                 if message["id"] in self.request_dict:
                     self.response_message.emit(
