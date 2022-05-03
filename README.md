@@ -10,9 +10,7 @@ Its design concept is:
 1. Install PyQt6: ```pip install PyQt6 PyQt6-Qt6 PyQt6-sip PyQt6-WebEngine PyQt6-WebEngine-Qt6```
 2. Install [python-epc](https://github.com/tkf/python-epc): ```pip install epc```
 3. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
-4. In your `~/.emacs`, add the following lines:
-```elisp
-(add-to-list 'load-path "<path-to-lsp-bridge>") ; add lsp-bridge to your load-path
+4. Add follow code in your ~/.emacs: ```(add-to-list 'load-path "<path-to-lsp-bridge>")```
 
 ### Proxy
 If you need to use a proxy to access the internet, one can configure the proxy settings.
