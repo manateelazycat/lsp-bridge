@@ -318,6 +318,26 @@ class LspServer(QObject):
                              },
                              request_id)
 
+    def send_find_references_request(self, request_id, filepath, row, column):
+        self.request_dict[request_id] = {
+            "filepath": filepath,
+            "type": "findReferences"
+        }
+
+        self.send_to_request("textDocument/references",
+                             {
+                                 "textDocument": {
+                                     "uri": "file://" + filepath
+                                 },
+                                 "position": {
+                                     "line": row - 1,
+                                     "character": column
+                                 },
+                                 "context": {
+                                     "includeDeclaration": False
+                                 }
+                             },
+                             request_id)
 
     def get_server_command(self):
         if self.server_type == "pyright":
@@ -356,7 +376,7 @@ class LspServer(QObject):
                     self.response_message.emit(
                         self.request_dict[message["id"]]["filepath"],
                         self.request_dict[message["id"]]["type"],
-                        message["id"], 
+                        message["id"],
                         message["result"])
 
     def handle_send_notification(self, name):

@@ -119,6 +119,7 @@ class LspBridge(object):
             action = FileAction(filepath)
             action.completion.connect(self.handle_completion_request)
             action.findDefine.connect(self.handle_find_define_request)
+            action.findReferences.connect(self.handle_find_references_request)
             self.file_action_dict[filepath] = action
             
         file_action = self.file_action_dict[filepath]
@@ -153,8 +154,10 @@ class LspBridge(object):
             action.find_define(row, column)
     
     @PostGui()
-    def find_references(self):
-        pass
+    def find_references(self, filepath, row, column):
+        if filepath in self.file_action_dict:
+            action = self.file_action_dict[filepath]
+            action.find_references(row, column)
 
     @PostGui()
     def rename(self):
@@ -168,6 +171,10 @@ class LspBridge(object):
         if lsp_server_name in self.lsp_server_dict:
             self.lsp_server_dict[lsp_server_name].send_find_define_request(request_id, filepath, row, column)
             
+    def handle_find_references_request(self, request_id, lsp_server_name, filepath, row, column):
+        if lsp_server_name in self.lsp_server_dict:
+            self.lsp_server_dict[lsp_server_name].send_find_references_request(request_id, filepath, row, column)
+            
     def handle_server_message(self, filepath, request_type, request_id, response_result):
         if filepath in self.file_action_dict:
             action = self.file_action_dict[filepath]
@@ -176,6 +183,9 @@ class LspBridge(object):
                     print(list(map(lambda item: item["label"], response_result["items"])))
             elif request_type == "findDefine":
                 if request_id == action.find_define_request_list[-1]:
+                    print(response_result)
+            elif request_type == "findReferences":
+                if request_id == action.find_references_request_list[-1]:
                     print(response_result)
     
     def cleanup(self):

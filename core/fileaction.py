@@ -29,6 +29,7 @@ class FileAction(QObject):
     
     completion = QtCore.pyqtSignal(int, str, str, int, int, str)
     findDefine = QtCore.pyqtSignal(int, str, str, int, int)
+    findReferences = QtCore.pyqtSignal(int, str, str, int, int)
     
     def __init__(self, filepath):
         QObject.__init__(self)
@@ -96,5 +97,11 @@ class FileAction(QObject):
         self.find_define_request_list.append(request_id)
         
         self.findDefine.emit(request_id, self.get_lsp_server_name(), self.filepath, row, column)
+            
+    def find_references(self, row, column):
+        request_id = self.generate_request_id()
+        self.find_references_request_list.append(request_id)
+        
+        self.findReferences.emit(request_id, self.get_lsp_server_name(), self.filepath, row, column)
         
             

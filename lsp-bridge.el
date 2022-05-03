@@ -417,6 +417,10 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
   (interactive)
   (lsp-bridge-call-async "find_define" (buffer-file-name) (line-number-at-pos) (current-column)))
 
+(defun lsp-bridge-find-references ()
+  (interactive)
+  (lsp-bridge-call-async "find_references" (buffer-file-name) (line-number-at-pos) (current-column)))
+
 (provide 'lsp-bridge)
 
 ;;; lsp-bridge.el ends here
