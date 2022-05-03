@@ -1,0 +1,7 @@
+*.elc
+*.pyc
+/.log/
+node_modules/
+dist/
+tags
+
