@@ -43,6 +43,8 @@ class FileAction(QObject):
         self.last_change_column = -1
         self.last_change_char = ""
         
+        self.version = 1
+        
         self.try_completion_timer = None
         
         self.lsp_server_type = "pyright"
@@ -59,7 +61,12 @@ class FileAction(QObject):
     def get_lsp_server_name(self):
         return "{}#{}".format(self.project_path, self.lsp_server_type)
     
+    def get_version(self):
+        return self.version
+    
     def change_file(self, row, column, char):
+        self.version += 1 
+        
         if self.try_completion_timer is not None and self.try_completion_timer.isActive():
             self.try_completion_timer.stop()
         

@@ -374,6 +374,8 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
     (- (point) (line-beginning-position))))
 
 (defun lsp-bridge-monitor-before-change (begin end)
+  (setq-local lsp-bridge--before-change-begin-pos begin)
+  (setq-local lsp-bridge--before-change-end-pos end)
   (setq-local lsp-bridge--before-change-end-pos-row (lsp-bridge-point-row end))
   (setq-local lsp-bridge--before-change-end-pos-character (lsp-bridge-point-character end)))
 

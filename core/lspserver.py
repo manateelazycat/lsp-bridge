@@ -237,12 +237,12 @@ class LspServer(QObject):
                                           }
                                       })
 
-    def send_change_notification(self, filepath, start_row, start_character, end_row, end_character, range_length, change_text, row, column, char):
+    def send_change_notification(self, filepath, version, start_row, start_character, end_row, end_character, range_length, change_text, row, column, char):
         self.send_to_notification("textDocument/didChange",
                                   {
                                       "textDocument": {
                                           "uri": "file://" + filepath,
-                                          "version": 1
+                                          "version": version
                                       },
                                       "contentChanges": [
                                           {
