@@ -237,7 +237,7 @@ class LspServer(QObject):
                                           }
                                       })
 
-    def send_change_notification(self, filepath, version, start_row, start_character, end_row, end_character, range_length, change_text, row, column, char):
+    def send_change_notification(self, filepath, version, start_row, start_character, end_row, end_character, range_length, text):
         self.send_to_notification("textDocument/didChange",
                                   {
                                       "textDocument": {
@@ -257,7 +257,7 @@ class LspServer(QObject):
                                                   }
                                               },
                                               "rangeLength": range_length,
-                                              "text": change_text
+                                              "text": text
                                           }
                                       ]
                                   })

@@ -134,15 +134,7 @@ class LspBridge(object):
     def change_file(self, filepath, start_row, start_character, end_row, end_character, range_length, change_text, row, column, char):
         if filepath in self.file_action_dict:
             action = self.file_action_dict[filepath]
-            action.change_file(row, column, char)
-            
-            lsp_server_name = action.get_lsp_server_name()
-            if lsp_server_name in self.lsp_server_dict:
-                self.lsp_server_dict[lsp_server_name].send_change_notification(
-                    filepath, action.get_version(),
-                    start_row, start_character, end_row, end_character, 
-                    range_length, change_text, 
-                    row, column, char)
+            action.change_file(start_row, start_character, end_row, end_character, range_length, change_text, row, column, char)
             
     @PostGui()
     def find_define(self, filepath, row, column):
