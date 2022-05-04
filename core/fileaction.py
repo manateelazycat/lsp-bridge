@@ -44,6 +44,7 @@ class FileAction(QObject):
         self.last_change_row = -1
         self.last_change_column = -1
         self.last_change_char = ""
+        self.last_line_text = ""
         
         self.version = 1
         
@@ -65,7 +66,11 @@ class FileAction(QObject):
     def get_lsp_server_name(self):
         return "{}#{}".format(self.project_path, self.lsp_server_type)
     
-    def change_file(self, start_row, start_character, end_row, end_character, range_length, change_text, row, column, char):
+    def filter_completion_items(self, items):
+        completion_prefix_string = self.last_line_text[self.last_line_text.rfind(".") + 1:]
+        return list(filter(lambda item: item.startswith(completion_prefix_string), items))
+    
+    def change_file(self, start_row, start_character, end_row, end_character, range_length, change_text, row, column, char, line_text):
         if self.lsp_server is not None:
             self.lsp_server.send_did_change_notification(
                 self.filepath, self.version, start_row, start_character, end_row, end_character, range_length, change_text)
@@ -82,6 +87,7 @@ class FileAction(QObject):
         self.last_change_row = row
         self.last_change_column = column
         self.last_change_char = char
+        self.last_line_text = line_text
         
         self.try_completion_timer = QTimer().singleShot(500, lambda : self.try_completion(current_time, row, column, char))
         

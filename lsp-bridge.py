@@ -148,7 +148,8 @@ class LspBridge(object):
             action = self.file_action_dict[filepath]
             if request_type == "completion":
                 if request_id == action.completion_request_list[-1]:
-                    print(list(map(lambda item: item["label"], response_result["items"])))
+                    print("***** ", list(map(lambda item: item["label"], response_result["items"])))
+                    print("***** ", action.filter_completion_items(list(map(lambda item: item["label"], response_result["items"]))))
             elif request_type == "find_define":
                 if request_id == action.find_define_request_list[-1]:
                     try:
