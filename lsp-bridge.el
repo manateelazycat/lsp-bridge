@@ -352,12 +352,28 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
             (lsp-bridge-color-int-to-hex (nth 1 components))
             (lsp-bridge-color-int-to-hex (nth 2 components)))))
 
+(defvar lsp-bridge--last-buffer nil)
+
+;;;###autoload
+(defun lsp-bridge-monitor-window-buffer-change ()
+  (unless (eq (current-buffer)
+              lsp-bridge--last-buffer)
+    (lsp-bridge-hide-completion-window))
+  (unless (or (minibufferp)
+              (string-equal (buffer-name) "*Messages*"))
+    (setq lsp-bridge--last-buffer (current-buffer))))
+
+;;;###autoload
+(add-hook 'post-command-hook 'lsp-bridge-monitor-window-buffer-change)
+
 (defun lsp-bridge-enable ()
   (setq-local lsp-bridge-last-position 0)
 
   (add-hook 'before-change-functions #'lsp-bridge-monitor-before-change nil t)
   (add-hook 'after-change-functions #'lsp-bridge-monitor-after-change nil t)
-  (add-hook 'post-command-hook #'lsp-bridge-monitor-move nil t)
+  (add-hook 'post-command-hook #'lsp-bridge-monitor-post-command nil t)
+
+  (add-function :after after-focus-change-function 'lsp-bridge-hide-completion-window)
 
   (lsp-bridge-call-async "open_file" (buffer-file-name))
   (message "Enable lsp bridge mode."))
@@ -369,14 +385,32 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
   (let ((prev-char (char-before)))
     (if prev-char (char-to-string prev-char) "")))
 
-(defun lsp-bridge-monitor-move ()
+(defun lsp-bridge-monitor-post-command ()
   (unless (equal (point) lsp-bridge-last-position)
     (let* ((pos (window-absolute-pixel-position))
            (x (car pos))
            (y (cdr pos))
            (y-offset (line-pixel-height)))
       (lsp-bridge-call-async "change_cursor" (buffer-file-name) x (+ y y-offset))
-      (setq-local lsp-bridge-last-position (point)))))
+      (setq-local lsp-bridge-last-position (point))))
+
+  (when (string-equal (format "%s" this-command) "keyboard-quit")
+    (lsp-bridge-hide-completion-window))
+
+  (when lsp-bridge-completion-window-visible-p
+    ;; (message (format "**** %s" (key-description (this-command-keys-vector))))
+    ))
+
+(defvar lsp-bridge-completion-window-visible-p nil)
+
+(defun lsp-bridge-hide-completion-window ()
+  (lsp-bridge-call-async "hide_completion"))
+
+(defun lsp-bridge-record-show-status ()
+  (setq lsp-bridge-completion-window-visible-p t))
+
+(defun lsp-bridge-record-hide-status ()
+  (setq lsp-bridge-completion-window-visible-p nil))
 
 (defun lsp-bridge-point-row (pos)
   (save-excursion

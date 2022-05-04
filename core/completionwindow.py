@@ -25,7 +25,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QStandardItem, QStandardItemModel, QFont
 from PyQt6.QtWidgets import (QApplication, QWidget, QListView, QLabel, QVBoxLayout)
 
-from core.utils import get_emacs_func_result
+from core.utils import get_emacs_func_result, eval_in_emacs
 
 COMPLETION_ITEM_KIND_ICON_DICT = {
     1: "text.svg",
@@ -79,13 +79,18 @@ class CompletionWindow(QWidget):
 
         self.completion_items = []
 
-    def updatePosition(self, x, y):
-        self.move(int(x / self.scale), int(y / self.scale))
-        self.show()
+    def update_position(self, x, y):
+        if len(self.completion_items) > 0:
+            self.move(int(x / self.scale), int(y / self.scale))
+            self.show()
         
-    def updateItems(self, completion_items):
+        eval_in_emacs("lsp-bridge-record-show-status", [])
+        
+    def update_items(self, completion_items):
+        if len(completion_items) == 0:
+            self.hide_window()
+        
         self.completion_items = completion_items
-        
         self.model.clear()
         
         for item in completion_items:
@@ -93,4 +98,8 @@ class CompletionWindow(QWidget):
                 QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons", COMPLETION_ITEM_KIND_ICON_DICT[item["type"]])), 
                 item["label"])
             self.model.appendRow(item)
-            
+
+    def hide_window(self):
+        self.hide()
+        
+        eval_in_emacs("lsp-bridge-record-hide-status", [])

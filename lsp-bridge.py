@@ -123,8 +123,8 @@ class LspBridge(object):
     def open_file(self, filepath):
         if filepath not in self.file_action_dict:
             action = FileAction(filepath)
-            action.popupCompletionItems.connect(self.completion_window.updateItems)
-            action.updatePosition.connect(self.completion_window.updatePosition)
+            action.popupCompletionItems.connect(self.completion_window.update_items)
+            action.updatePosition.connect(self.completion_window.update_position)
             self.file_action_dict[filepath] = action
             
         file_action = self.file_action_dict[filepath]
@@ -147,6 +147,10 @@ class LspBridge(object):
                 getattr(action, name)(*args[1:])
 
         setattr(self, name, _do)
+        
+    @PostGui()
+    def hide_completion(self):
+        self.completion_window.hide_window()
     
     def handle_server_message(self, filepath, request_type, request_id, response_result):
         if filepath in self.file_action_dict:
