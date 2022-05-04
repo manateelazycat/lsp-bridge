@@ -209,22 +209,9 @@ Turn on this option will improve start speed."
   (lsp-bridge-epc-call-sync lsp-bridge-epc-process (read method) args))
 
 (defun lsp-bridge--follow-system-dpi ()
-  (if (and (getenv "WAYLAND_DISPLAY") (not (string= (getenv "WAYLAND_DISPLAY") "")))
-      (progn
-        ;; We need manually set scale factor when at Gnome/Wayland environment.
-        ;; It is important to set QT_AUTO_SCREEN_SCALE_FACTOR=0
-        ;; otherwise Qt which explicitly force high DPI enabling get scaled TWICE.
-        (setenv "QT_AUTO_SCREEN_SCALE_FACTOR" "0")
-        ;; Set LSPBRIDGE application scale factor.
-        (setenv "QT_SCALE_FACTOR" "1")
-        ;; Force xwayland to ensure SWay works.
-        (setenv "QT_QPA_PLATFORM" "xcb"))
-    (setq process-environment
-          (seq-filter
-           (lambda (var)
-             (and (not (string-match-p "QT_SCALE_FACTOR" var))
-                  (not (string-match-p "QT_SCREEN_SCALE_FACTOR" var))))
-           process-environment))))
+  (let ((screen-zoom (if (> (frame-pixel-width) 3000) 2 1)))
+    ;; Set LSPBRIDGE application scale factor.
+    (setenv "QT_FONT_DPI" (number-to-string (* 96 screen-zoom)))))
 
 (defun lsp-bridge-restart-process ()
   "Stop and restart LSPBRIDGE process."
@@ -384,8 +371,12 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
 
 (defun lsp-bridge-monitor-move ()
   (unless (equal (point) lsp-bridge-last-position)
-    (lsp-bridge-call-async "change_cursor" (buffer-file-name))
-    (setq-local lsp-bridge-last-position (point))))
+    (let* ((pos (window-absolute-pixel-position))
+           (x (car pos))
+           (y (cdr pos))
+           (y-offset (line-pixel-height)))
+      (lsp-bridge-call-async "change_cursor" (buffer-file-name) x (+ y y-offset))
+      (setq-local lsp-bridge-last-position (point)))))
 
 (defun lsp-bridge-point-row (pos)
   (save-excursion

@@ -34,6 +34,7 @@ import threading
 
 from core.fileaction import FileAction
 from core.lspserver import LspServer
+from core.completionwindow import CompletionWindow
 from core.utils import (PostGui, init_epc_client, close_epc_client, eval_in_emacs, get_emacs_vars, get_emacs_func_result)
 
 class LspBridge(object):
@@ -45,6 +46,8 @@ class LspBridge(object):
 
         for name in ["change_file", "find_define", "find_references", "prepare_rename", "rename", "change_cursor"]:
             self.build_file_action_function(name)
+            
+        self.completion_window = CompletionWindow()
             
         # Init EPC client port.
         init_epc_client(int(args[0]))
@@ -120,6 +123,8 @@ class LspBridge(object):
     def open_file(self, filepath):
         if filepath not in self.file_action_dict:
             action = FileAction(filepath)
+            action.popupCompletionItems.connect(self.completion_window.updateItems)
+            action.updatePosition.connect(self.completion_window.updatePosition)
             self.file_action_dict[filepath] = action
             
         file_action = self.file_action_dict[filepath]
@@ -146,7 +151,7 @@ class LspBridge(object):
     def handle_server_message(self, filepath, request_type, request_id, response_result):
         if filepath in self.file_action_dict:
             self.file_action_dict[filepath].handle_response_message(request_id, request_type, response_result)
-    
+
     def cleanup(self):
         '''Do some cleanup before exit python process.'''
         close_epc_client()
