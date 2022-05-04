@@ -43,7 +43,7 @@ class LspBridge(object):
         self.file_action_dict = {}
         self.lsp_server_dict = {}
 
-        for name in ["change_file", "find_define", "find_references", "prepare_rename", "rename"]:
+        for name in ["change_file", "find_define", "find_references", "prepare_rename", "rename", "change_cursor"]:
             self.build_file_action_function(name)
             
         # Init EPC client port.
@@ -145,32 +145,7 @@ class LspBridge(object):
     
     def handle_server_message(self, filepath, request_type, request_id, response_result):
         if filepath in self.file_action_dict:
-            action = self.file_action_dict[filepath]
-            if request_type == "completion":
-                if request_id == action.completion_request_list[-1]:
-                    print("***** ", list(map(lambda item: item["label"], response_result["items"])))
-                    print("***** ", action.filter_completion_items(list(map(lambda item: item["label"], response_result["items"]))))
-            elif request_type == "find_define":
-                if request_id == action.find_define_request_list[-1]:
-                    try:
-                        file_info = response_result[0]
-                        filepath = file_info["uri"][len("file://"):]
-                        row = file_info["range"]["start"]["line"]
-                        column = file_info["range"]["start"]["character"]
-                        eval_in_emacs("lsp-bridge-jump-to-define", [filepath, row, column])
-                    except:
-                        print("* Failed information about find_define response.")
-                        import traceback
-                        traceback.print_exc()
-            elif request_type == "find_references":
-                if request_id == action.find_references_request_list[-1]:
-                    print(response_result)
-            elif request_type == "prepare_rename":
-                if request_id == action.prepare_rename_request_list[-1]:
-                    print(response_result)
-            elif request_type == "rename":
-                if request_id == action.rename_request_list[-1]:
-                    print(response_result)
+            self.file_action_dict[filepath].handle_response_message(request_id, request_type, response_result)
     
     def cleanup(self):
         '''Do some cleanup before exit python process.'''

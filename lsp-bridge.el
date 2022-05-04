@@ -366,14 +366,26 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
             (lsp-bridge-color-int-to-hex (nth 2 components)))))
 
 (defun lsp-bridge-enable ()
-  (add-hook 'before-change-functions 'lsp-bridge-monitor-before-change nil t)
-  (add-hook 'after-change-functions 'lsp-bridge-monitor-after-change nil t)
+  (setq-local lsp-bridge-last-position 0)
+
+  (add-hook 'before-change-functions #'lsp-bridge-monitor-before-change nil t)
+  (add-hook 'after-change-functions #'lsp-bridge-monitor-after-change nil t)
+  (add-hook 'post-command-hook #'lsp-bridge-monitor-move nil t)
 
   (lsp-bridge-call-async "open_file" (buffer-file-name))
   (message "Enable lsp bridge mode."))
 
 (defun lsp-bridge-disable ()
   (message "Disable lsp bridge mode."))
+
+(defun lsp-bridge-char-before ()
+  (let ((prev-char (char-before)))
+    (if prev-char (char-to-string prev-char) "")))
+
+(defun lsp-bridge-monitor-move ()
+  (unless (equal (point) lsp-bridge-last-position)
+    (lsp-bridge-call-async "change_cursor" (buffer-file-name))
+    (setq-local lsp-bridge-last-position (point))))
 
 (defun lsp-bridge-point-row (pos)
   (save-excursion
@@ -402,7 +414,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
                            0
                            (buffer-substring-no-properties begin end)
                            (line-number-at-pos) (current-column)
-                           (char-to-string (char-before))
+                           (lsp-bridge-char-before)
                            (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
    ;; Delete operation.
    ((eq begin end)
@@ -413,7 +425,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
                            length
                            ""
                            (line-number-at-pos) (current-column)
-                           (char-to-string (char-before))
+                           (lsp-bridge-char-before)
                            (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
    ;; Change operation.
    (t
@@ -425,7 +437,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
                            (buffer-substring-no-properties begin end)
                            (line-number-at-pos)
                            (current-column)
-                           (char-to-string (char-before))
+                           (lsp-bridge-char-before)
                            (buffer-substring-no-properties (line-beginning-position) (line-end-position))))))
 
 (defun lsp-bridge-find-define ()
@@ -447,6 +459,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
   (find-file filepath)
   (goto-line (+ (string-to-number row) 1))
   (move-to-column (string-to-number column))
+  (require 'pulse)
   (let ((pulse-iterations 1)
         (pulse-delay lsp-bridge-flash-line-delay))
     (pulse-momentary-highlight-one-line (point) 'lsp-bridge-font-lock-flash)))

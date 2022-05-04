@@ -265,8 +265,8 @@ class LspServer(QObject):
             "type": type
         }
         
-    def send_completion_request(self, request_id, filepath, row, column, char):
-        self.record_request_id(request_id, filepath, "completion")
+    def send_completion_request(self, request_id, filepath, type, row, column, char):
+        self.record_request_id(request_id, filepath, type)
 
         if char == ".":
             self.send_to_request("textDocument/completion",
