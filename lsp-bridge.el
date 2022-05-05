@@ -193,12 +193,6 @@ Available options:
 Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buffer content when next crash."
   :type 'boolean)
 
-(defcustom lsp-bridge-start-python-process-when-require t
-  "Start LSPBRIDGE python process when require `lsp-bridge', default is turn on.
-
-Turn on this option will improve start speed."
-  :type 'boolean)
-
 (defun lsp-bridge-call-async (method &rest args)
   "Call Python EPC function METHOD and ARGS asynchronously."
   (lsp-bridge-deferred-chain
@@ -271,14 +265,6 @@ Turn on this option will improve start speed."
   (and (eq system-type 'gnu/linux)
        (string-match-p ".exe" lsp-bridge-python-command)))
 
-(run-with-idle-timer
- 1 nil
- #'(lambda ()
-     ;; Start LSPBRIDGE python process when load `lsp-bridge'.
-     ;; It will improve start speed.
-     (when lsp-bridge-start-python-process-when-require
-       (lsp-bridge-start-process))))
-
 (defvar lsp-bridge-stop-process-hook nil)
 
 (defun lsp-bridge-kill-process ()
@@ -325,8 +311,8 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
                                 :connection (lsp-bridge-epc-connect "localhost" lsp-bridge-epc-port)
                                 ))
   (lsp-bridge-epc-init-epc-layer lsp-bridge-epc-process)
-  (when lsp-bridge--first-start-args
-    (funcall lsp-bridge--first-start-callback lsp-bridge--first-start-args))
+  (dolist (file-info lsp-bridge--first-start-args)
+    (lsp-bridge-open-file file-info))
   (setq lsp-bridge--first-start-args nil))
 
 (defun lsp-bridge-get-cursor-coordinate ()
@@ -343,15 +329,6 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
   (if (derived-mode-p 'eaf-mode)
       30
     (line-pixel-height)))
-
-(defun lsp-bridge-start (first-start-callback args)
-  (setq lsp-bridge--first-start-callback first-start-callback)
-
-  (if (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-      (funcall first-start-callback args)
-
-    (setq lsp-bridge--first-start-args args)
-    (lsp-bridge-start-process)))
 
 (defun lsp-bridge-get-theme-mode ()
   (format "%s" (frame-parameter nil 'background-mode)))
@@ -375,7 +352,9 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
 (defun lsp-bridge-monitor-window-buffer-change ()
   (unless (eq (current-buffer)
               lsp-bridge--last-buffer)
-    (lsp-bridge-hide-completion-window))
+    (when (and (boundp 'lsp-bridge-completion-window-visible-p)
+               lsp-bridge-completion-window-visible-p)
+      (lsp-bridge-hide-completion-window)))
   (unless (or (minibufferp)
               (string-equal (buffer-name) "*Messages*"))
     (setq lsp-bridge--last-buffer (current-buffer))))
@@ -384,21 +363,27 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
 (add-hook 'post-command-hook 'lsp-bridge-monitor-window-buffer-change)
 
 (defun lsp-bridge-enable ()
-  (setq-local lsp-bridge-last-position 0)
-  (setq-local lsp-bridge-completion-window-visible-p nil)
+  (if (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+      (lsp-bridge-open-file (buffer-file-name))
+    (push (buffer-file-name) lsp-bridge--first-start-args)
+    (lsp-bridge-start-process)))
 
-  (add-hook 'before-change-functions #'lsp-bridge-monitor-before-change nil t)
-  (add-hook 'after-change-functions #'lsp-bridge-monitor-after-change nil t)
-  (add-hook 'post-command-hook #'lsp-bridge-monitor-post-command nil t)
-  (add-hook 'pre-command-hook #'lsp-bridge-monitor-pre-command nil t)
+(defun lsp-bridge-open-file (filename)
+  (dolist (buffer (buffer-list))
+    (when (string-equal (buffer-file-name buffer) filename)
+      (with-current-buffer buffer
+        (setq-local lsp-bridge-last-position 0)
+        (setq-local lsp-bridge-completion-window-visible-p nil)
 
-  (add-function :after after-focus-change-function 'lsp-bridge-hide-completion-window)
+        (add-hook 'before-change-functions #'lsp-bridge-monitor-before-change nil t)
+        (add-hook 'after-change-functions #'lsp-bridge-monitor-after-change nil t)
+        (add-hook 'post-command-hook #'lsp-bridge-monitor-post-command nil t)
+        (add-hook 'pre-command-hook #'lsp-bridge-monitor-pre-command nil t)
 
-  (lsp-bridge-call-async "open_file" (buffer-file-name))
-  (message "Enable lsp bridge mode."))
+        (add-function :after after-focus-change-function 'lsp-bridge-hide-completion-window)
 
-(defun lsp-bridge-disable ()
-  (message "Disable lsp bridge mode."))
+        (lsp-bridge-call-async "open_file" filename)
+        ))))
 
 (defun lsp-bridge-char-before ()
   (let ((prev-char (char-before)))
