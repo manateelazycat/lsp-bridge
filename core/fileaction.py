@@ -21,14 +21,14 @@
 
 from PyQt6 import QtCore
 from PyQt6.QtCore import QObject, QTimer
-from core.utils import get_command_result, eval_in_emacs
+from core.utils import get_command_result, eval_in_emacs, generate_request_id
 import os
 import random
 
 class FileAction(QObject):
 
-    updatePosition = QtCore.pyqtSignal(str, int, int)
-    popupCompletionItems = QtCore.pyqtSignal(str, str, list)
+    update_position = QtCore.pyqtSignal(str, int, int)
+    popup_completion_items = QtCore.pyqtSignal(str, str, list)
     
     def __init__(self, filepath):
         QObject.__init__(self)
@@ -62,15 +62,12 @@ class FileAction(QObject):
         self.lsp_server = None
         self.lsp_server_type = "pyright"
 
-        self.initialize_id = self.generate_request_id()
+        self.initialize_id = generate_request_id()
 
         dir_path = os.path.dirname(filepath)
         self.project_path = filepath
         if get_command_result("cd {} ; git rev-parse --is-inside-work-tree".format(dir_path)) == "true":
             self.project_path = get_command_result("cd {} ; git rev-parse --show-toplevel".format(dir_path))
-
-    def generate_request_id(self):
-        return abs(random.getrandbits(16))
 
     def get_lsp_server_name(self):
         return "{}#{}".format(self.project_path, self.lsp_server_type)
@@ -103,13 +100,13 @@ class FileAction(QObject):
         self.popup_x = x
         self.popup_y = y
         
-        self.updatePosition.emit(self.filepath, self.popup_x, self.popup_y)
+        self.update_position.emit(self.filepath, self.popup_x, self.popup_y)
 
         self.last_change_cursor_time = current_time
 
     def build_request_function(self, name):
         def _do(*args):
-            request_id = self.generate_request_id()
+            request_id = generate_request_id()
             getattr(self, "{}_request_list".format(name)).append(request_id)
             
             self.request_dict[request_id] = {
@@ -148,7 +145,7 @@ class FileAction(QObject):
                         "label": item["label"],
                         "type": item["kind"]
                     })
-            self.popupCompletionItems.emit(self.filepath, self.completion_prefix_string, completion_items)
+            self.popup_completion_items.emit(self.filepath, self.completion_prefix_string, completion_items)
             
     def handle_find_define_response(self, request_id, response_result):
         if (request_id == self.find_define_request_list[-1] and 

@@ -123,8 +123,8 @@ class LspBridge(object):
     def open_file(self, filepath):
         if filepath not in self.file_action_dict:
             action = FileAction(filepath)
-            action.popupCompletionItems.connect(self.completion_window.update_items)
-            action.updatePosition.connect(self.completion_window.update_position)
+            action.popup_completion_items.connect(self.completion_window.update_items)
+            action.update_position.connect(self.completion_window.update_position)
             self.file_action_dict[filepath] = action
             
         file_action = self.file_action_dict[filepath]
@@ -132,11 +132,24 @@ class LspBridge(object):
         if lsp_server_name not in self.lsp_server_dict:
             server = LspServer(file_action)
             server.response_message.connect(self.handle_server_message)
+            server.exit_process.connect(self.handle_server_exit)
             self.lsp_server_dict[lsp_server_name] = server
             
             self.file_action_dict[filepath].lsp_server = server
         else:
             self.lsp_server_dict[lsp_server_name].send_did_open_notification(file_action.filepath)
+            
+    @PostGui()
+    def close_file(self, filepath):
+        if filepath in self.file_action_dict:
+            action = FileAction(filepath)
+            
+            lsp_server_name = action.get_lsp_server_name()
+            if lsp_server_name in self.lsp_server_dict:
+                lsp_server = self.lsp_server_dict[lsp_server_name]
+                lsp_server.close_file(filepath)
+                
+            del self.file_action_dict[filepath]
             
     def build_file_action_function(self, name):
         @PostGui()
@@ -179,6 +192,11 @@ class LspBridge(object):
     def handle_server_message(self, filepath, request_type, request_id, response_result):
         if filepath in self.file_action_dict:
             self.file_action_dict[filepath].handle_response_message(request_id, request_type, response_result)
+            
+    def handle_server_exit(self, server_name):
+        if server_name in self.lsp_server_dict:
+            print("Exit server: ", server_name)
+            del self.lsp_server_dict[server_name]
 
     def cleanup(self):
         '''Do some cleanup before exit python process.'''

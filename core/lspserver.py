@@ -27,6 +27,8 @@ from subprocess import PIPE
 from PyQt6.QtCore import QObject, QThread, QTimer
 from PyQt6 import QtCore
 
+from core.utils import generate_request_id
+
 class JsonEncoder(json.JSONEncoder):
 
     def default(self, o): # pylint: disable=E0202
@@ -65,7 +67,7 @@ class LspBridgeListener(QThread):
         while self.process.poll() is None:
             line = self.process.stdout.readline().strip()
 
-            # print(line)
+            # print("#### ", line)
 
             if line.startswith("{"):
                 self.emit_message(line)
@@ -184,6 +186,7 @@ class SendResponse(QThread):
 class LspServer(QObject):
 
     response_message = QtCore.pyqtSignal(str, str, int, object)
+    exit_process = QtCore.pyqtSignal(str)
 
     def __init__(self, file_action):
         QObject.__init__(self)
@@ -192,6 +195,8 @@ class LspServer(QObject):
         self.server_type = file_action.lsp_server_type
         self.first_file_path = file_action.filepath
         self.initialize_id = file_action.initialize_id
+        self.server_name = file_action.get_lsp_server_name()
+        self.shutdown_id = -1
 
         self.p = subprocess.Popen(self.get_server_command(), text=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
@@ -200,8 +205,8 @@ class LspServer(QObject):
         self.listener_thread.start()
 
         self.sender_threads = []
-
         self.request_dict = {}
+        self.open_file_dict = {}
 
         self.rootPath = self.project_path
         self.rootUri = "file://" + self.project_path
@@ -223,6 +228,8 @@ class LspServer(QObject):
         self.send_to_request("initialize", initialize_options, self.initialize_id)
 
     def send_did_open_notification(self, filepath):
+        self.open_file_dict[filepath] = ""
+        
         with open(filepath) as f:
             self.send_to_notification("textDocument/didOpen",
                                       {
@@ -363,6 +370,13 @@ class LspServer(QObject):
                                  "newName": new_name
                              },
                              request_id)
+        
+    def send_shutdown_request(self):
+        self.shutdown_id = generate_request_id()
+        self.send_to_request("shutdown", {}, self.shutdown_id)
+        
+    def send_exit_notification(self):
+        self.send_to_notification("exit", {})
 
     def get_server_command(self):
         if self.server_type == "pyright":
@@ -422,3 +436,16 @@ class LspServer(QObject):
         sender_thread = SendResponse(self.p, name, id, result)
         self.sender_threads.append(sender_thread)
         sender_thread.start()
+
+    def close_file(self, filepath):
+        if filepath in self.open_file_dict:
+            del self.open_file_dict[filepath]
+        
+        if len(self.open_file_dict.keys()) == 0:
+            self.send_shutdown_request()
+            self.send_exit_notification()
+            
+            self.exit_process.emit(self.server_name)
+            
+            os.kill(self.p.pid, 9) 
+        

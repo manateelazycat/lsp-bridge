@@ -139,3 +139,7 @@ def get_command_result(command_string):
     process = subprocess.Popen(command_string, shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     ret = process.wait()
     return "".join((process.stdout if ret == 0 else process.stderr).readlines()).strip()
+
+def generate_request_id():
+    import random
+    return abs(random.getrandbits(16))

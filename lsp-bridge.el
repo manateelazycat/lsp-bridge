@@ -389,6 +389,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
         (add-hook 'after-change-functions #'lsp-bridge-monitor-after-change nil t)
         (add-hook 'post-command-hook #'lsp-bridge-monitor-post-command nil t)
         (add-hook 'pre-command-hook #'lsp-bridge-monitor-pre-command nil t)
+        (add-hook 'kill-buffer-hook #'lsp-bridge-monitor-kill-buffer nil t)
 
         (add-function :after after-focus-change-function 'lsp-bridge-hide-completion-window)
 
@@ -432,6 +433,9 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
           (when (string-equal key-name name)
             (setq this-command 'ignore)
             (funcall func)))))))
+
+(defun lsp-bridge-monitor-kill-buffer ()
+  (lsp-bridge-call-async "close_file" (buffer-file-name)))
 
 (defun lsp-bridge-complete-selection ()
   (interactive)
