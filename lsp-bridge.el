@@ -368,10 +368,12 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
 
 (defun lsp-bridge-enable ()
   (setq-local lsp-bridge-last-position 0)
+  (setq-local lsp-bridge-completion-window-visible-p nil)
 
   (add-hook 'before-change-functions #'lsp-bridge-monitor-before-change nil t)
   (add-hook 'after-change-functions #'lsp-bridge-monitor-after-change nil t)
   (add-hook 'post-command-hook #'lsp-bridge-monitor-post-command nil t)
+  (add-hook 'pre-command-hook #'lsp-bridge-monitor-pre-command nil t)
 
   (add-function :after after-focus-change-function 'lsp-bridge-hide-completion-window)
 
@@ -395,22 +397,66 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
       (setq-local lsp-bridge-last-position (point))))
 
   (when (string-equal (format "%s" this-command) "keyboard-quit")
-    (lsp-bridge-hide-completion-window))
+    (lsp-bridge-hide-completion-window)))
 
-  (when lsp-bridge-completion-window-visible-p
-    ;; (message (format "**** %s" (key-description (this-command-keys-vector))))
+
+(defvar lsp-bridge-mode-map
+  '(
+    ("TAB" . lsp-bridge-complete-selection)
+    ("M-h" . lsp-bridge-complete-selection)
+    ("M-H" . lsp-bridge-complete-common)
+    ("M-n" . lsp-bridge-select-next)
+    ("M-p" . lsp-bridge-select-previous)
+    ("M-," . lsp-bridge-select-last)
+    ("M-." . lsp-bridge-select-first)
     ))
 
-(defvar lsp-bridge-completion-window-visible-p nil)
+(defun lsp-bridge-monitor-pre-command ()
+  (when lsp-bridge-completion-window-visible-p
+    (let ((key-name (key-description (this-command-keys-vector))))
+      (dolist (key-info lsp-bridge-mode-map)
+        (let ((name (car key-info))
+              (func (cdr key-info)))
+          (when (string-equal key-name name)
+            (setq this-command 'ignore)
+            (funcall func)))))))
+
+(defun lsp-bridge-complete-selection ()
+  (interactive)
+  (lsp-bridge-call-async "complete_completion_selection"))
+
+(defun lsp-bridge-complete-common ()
+  (interactive)
+  (lsp-bridge-call-async "complete_completion_common"))
+
+(defun lsp-bridge-select-next ()
+  (interactive)
+  (lsp-bridge-call-async "select_completion_next"))
+
+(defun lsp-bridge-select-previous ()
+  (interactive)
+  (lsp-bridge-call-async "select_completion_previous"))
+
+(defun lsp-bridge-select-last ()
+  (interactive)
+  (lsp-bridge-call-async "select_completion_last"))
+
+(defun lsp-bridge-select-first ()
+  (interactive)
+  (lsp-bridge-call-async "select_completion_first"))
 
 (defun lsp-bridge-hide-completion-window ()
-  (lsp-bridge-call-async "hide_completion"))
+  (lsp-bridge-call-async "hide_completion_window"))
 
-(defun lsp-bridge-record-show-status ()
-  (setq lsp-bridge-completion-window-visible-p t))
+(defun lsp-bridge-record-show-status (filepath)
+  (dolist (buffer (buffer-list))
+    (when (string-equal (buffer-file-name buffer) filepath)
+      (setq-local lsp-bridge-completion-window-visible-p t))))
 
-(defun lsp-bridge-record-hide-status ()
-  (setq lsp-bridge-completion-window-visible-p nil))
+(defun lsp-bridge-record-hide-status (filepath)
+  (dolist (buffer (buffer-list))
+    (when (string-equal (buffer-file-name buffer) filepath)
+      (setq-local lsp-bridge-completion-window-visible-p nil))))
 
 (defun lsp-bridge-point-row (pos)
   (save-excursion

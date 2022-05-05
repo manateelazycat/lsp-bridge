@@ -27,8 +27,8 @@ import random
 
 class FileAction(QObject):
 
-    updatePosition = QtCore.pyqtSignal(int, int)
-    popupCompletionItems = QtCore.pyqtSignal(list)
+    updatePosition = QtCore.pyqtSignal(str, int, int)
+    popupCompletionItems = QtCore.pyqtSignal(str, str, list)
     
     def __init__(self, filepath):
         QObject.__init__(self)
@@ -50,8 +50,10 @@ class FileAction(QObject):
         
         self.last_change_cursor_time = -1
         
-        self.popup_x = 0
-        self.popup_y = 0
+        self.completion_prefix_string = ""
+        
+        self.popup_x = -1
+        self.popup_y = -1
 
         self.version = 1
 
@@ -72,10 +74,6 @@ class FileAction(QObject):
 
     def get_lsp_server_name(self):
         return "{}#{}".format(self.project_path, self.lsp_server_type)
-
-    def is_match_input_prefix(self, item):
-        completion_prefix_string = self.last_change_file_line_text[self.last_change_file_line_text.rfind(".") + 1:]
-        return item.startswith(completion_prefix_string)
 
     def change_file(self, start_row, start_character, end_row, end_character, range_length, change_text, row, column, before_char, line_text):
         if self.lsp_server is not None:
@@ -102,7 +100,7 @@ class FileAction(QObject):
         self.popup_x = x
         self.popup_y = y
         
-        self.updatePosition.emit(self.popup_x, self.popup_y)
+        self.updatePosition.emit(self.filepath, self.popup_x, self.popup_y)
 
         self.last_change_cursor_time = current_time
 
@@ -138,14 +136,16 @@ class FileAction(QObject):
         if (request_id == self.completion_request_list[-1] and 
             self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and 
             self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
+            self.completion_prefix_string = self.last_change_file_line_text[self.last_change_file_line_text.rfind(".") + 1:]
+        
             completion_items = []
             for item in response_result["items"]:
-                if self.is_match_input_prefix(item["label"]):
+                if item["label"].startswith(self.completion_prefix_string) and item["label"] != self.completion_prefix_string:
                     completion_items.append({
                         "label": item["label"],
                         "type": item["kind"]
                     })
-            self.popupCompletionItems.emit(completion_items)
+            self.popupCompletionItems.emit(self.filepath, self.completion_prefix_string, completion_items)
             
     def handle_find_define_response(self, request_id, response_result):
         if (request_id == self.find_define_request_list[-1] and 

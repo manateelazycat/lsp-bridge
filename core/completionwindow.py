@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys,os
+import sys, os
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QStandardItem, QStandardItemModel, QFont
@@ -64,6 +64,12 @@ class CompletionWindow(QWidget):
         self.setContentsMargins(0, 0, 0, 0)
         self.installEventFilter(self)
         
+        self.index = 0
+        self.x = 0
+        self.y = 0
+        self.filepath = ""
+        self.prefix_string = ""
+        
         self.dpi = int(os.environ["QT_FONT_DPI"])
         self.scale = 2 if self.dpi > 96 else 1
         
@@ -79,16 +85,30 @@ class CompletionWindow(QWidget):
 
         self.completion_items = []
 
-    def update_position(self, x, y):
+    def update_position(self, filepath, x, y):
+        self.filepath = filepath
+        
+        self.x = int(x / self.scale)
+        self.y = int(y / self.scale)
+        self.move(self.x, self.y)
+        
         if len(self.completion_items) > 0:
-            self.move(int(x / self.scale), int(y / self.scale))
             self.show()
         
-        eval_in_emacs("lsp-bridge-record-show-status", [])
+        if len(self.completion_items) > 0:
+            eval_in_emacs("lsp-bridge-record-show-status", [self.filepath])
+        else:
+            eval_in_emacs("lsp-bridge-record-hide-status", [self.filepath])
         
-    def update_items(self, completion_items):
+    def update_items(self, filepath, prefix_string, completion_items):
+        self.filepath = filepath
+        self.prefix_string = prefix_string
+        
         if len(completion_items) == 0:
-            self.hide_window()
+            self.hide_completion_window()
+        else:
+            self.move(self.x, self.y)
+            self.show()
         
         self.completion_items = completion_items
         self.model.clear()
@@ -98,8 +118,50 @@ class CompletionWindow(QWidget):
                 QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons", COMPLETION_ITEM_KIND_ICON_DICT[item["type"]])), 
                 item["label"])
             self.model.appendRow(item)
+            
+        if len(self.completion_items) > 0:
+            self.index = 0
+            self.listview.setCurrentIndex(self.model.index(self.index, 0))
 
-    def hide_window(self):
+    def hide_completion_window(self):
         self.hide()
+        self.completion_items = []
         
-        eval_in_emacs("lsp-bridge-record-hide-status", [])
+        eval_in_emacs("lsp-bridge-record-hide-status", [self.filepath])
+
+    def complete_completion_selection(self):
+        current_item = self.completion_items[self.index]["label"]
+        eval_in_emacs("insert", [current_item[len(self.prefix_string):]])
+        
+        self.hide_completion_window()
+
+    def complete_completion_common(self):
+        insert_items = list(map(lambda item: item["label"], self.completion_items))
+        common = os.path.commonprefix(insert_items)
+        if common == self.prefix_string:
+            eval_in_emacs("message", ["No common part found."])
+        else:
+            eval_in_emacs("insert", [common[len(self.prefix_string):]])
+            
+    def select_completion_next(self):
+        if self.index < len(self.completion_items) - 1:
+            self.index += 1
+            
+        self.listview.setCurrentIndex(self.model.index(self.index, 0))
+
+    def select_completion_previous(self):
+        if self.index > 0:
+            self.index -= 1
+            
+        self.listview.setCurrentIndex(self.model.index(self.index, 0))
+    
+    def select_completion_first(self):
+        self.index = 0
+            
+        self.listview.setCurrentIndex(self.model.index(self.index, 0))
+
+    def select_completion_last(self):
+        self.index = len(self.completion_items) - 1
+            
+        self.listview.setCurrentIndex(self.model.index(self.index, 0))
+    

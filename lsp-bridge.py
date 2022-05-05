@@ -46,7 +46,7 @@ class LspBridge(object):
 
         for name in ["change_file", "find_define", "find_references", "prepare_rename", "rename", "change_cursor"]:
             self.build_file_action_function(name)
-            
+
         self.completion_window = CompletionWindow()
             
         # Init EPC client port.
@@ -149,9 +149,33 @@ class LspBridge(object):
         setattr(self, name, _do)
         
     @PostGui()
-    def hide_completion(self):
-        self.completion_window.hide_window()
-    
+    def hide_completion_window(self):
+        self.completion_window.hide_completion_window()
+
+    @PostGui()
+    def complete_completion_selection(self):
+        self.completion_window.complete_completion_selection()
+
+    @PostGui()
+    def complete_completion_common(self):
+        self.completion_window.complete_completion_common()
+        
+    @PostGui()
+    def select_completion_next(self):
+        self.completion_window.select_completion_next()
+
+    @PostGui()
+    def select_completion_previous(self):
+        self.completion_window.select_completion_previous()
+        
+    @PostGui()
+    def select_completion_last(self):
+        self.completion_window.select_completion_last()
+
+    @PostGui()
+    def select_completion_first(self):
+        self.completion_window.select_completion_first()
+        
     def handle_server_message(self, filepath, request_type, request_id, response_result):
         if filepath in self.file_action_dict:
             self.file_action_dict[filepath].handle_response_message(request_id, request_type, response_result)
