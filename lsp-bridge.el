@@ -227,9 +227,17 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 (defun lsp-bridge-restart-process ()
   "Stop and restart LSPBRIDGE process."
   (interactive)
+
+  ;; Record lsp-bridge buffer for re-open.
+  (setq lsp-bridge--first-start-args nil)
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (boundp 'lsp-bridge-flag)
+        (push (buffer-file-name) lsp-bridge--first-start-args))))
+
   (lsp-bridge-kill-process)
   (lsp-bridge-start-process)
-  (message "Lsp-Bridge process restarted."))
+  (message "LSPBRIDGE process restarted."))
 
 (defun lsp-bridge-start-process ()
   "Start LSPBRIDGE process if it isn't started."
@@ -288,6 +296,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     ;; Kill *lsp-bridge* buffer.
     (when (get-buffer lsp-bridge-name)
       (kill-buffer lsp-bridge-name))
+    (setq lsp-bridge-epc-process nil)
     (message "[LSPBRIDGE] Process terminated.")))
 
 (defun lsp-bridge--decode-string (str)
@@ -372,6 +381,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
   (dolist (buffer (buffer-list))
     (when (string-equal (buffer-file-name buffer) filename)
       (with-current-buffer buffer
+        (setq-local lsp-bridge-flag t)
         (setq-local lsp-bridge-last-position 0)
         (setq-local lsp-bridge-completion-window-visible-p nil)
 
@@ -390,17 +400,17 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
     (if prev-char (char-to-string prev-char) "")))
 
 (defun lsp-bridge-monitor-post-command ()
-  (unless (equal (point) lsp-bridge-last-position)
-    (let* ((pos (window-absolute-pixel-position))
-           (x (car pos))
-           (y (cdr pos))
-           (y-offset (line-pixel-height)))
-      (lsp-bridge-call-async "change_cursor" (buffer-file-name) x (+ y y-offset))
-      (setq-local lsp-bridge-last-position (point))))
+  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+    (unless (equal (point) lsp-bridge-last-position)
+      (let* ((pos (window-absolute-pixel-position))
+             (x (car pos))
+             (y (cdr pos))
+             (y-offset (line-pixel-height)))
+        (lsp-bridge-call-async "change_cursor" (buffer-file-name) x (+ y y-offset))
+        (setq-local lsp-bridge-last-position (point))))
 
-  (when (string-equal (format "%s" this-command) "keyboard-quit")
-    (lsp-bridge-hide-completion-window)))
-
+    (when (string-equal (format "%s" this-command) "keyboard-quit")
+      (lsp-bridge-hide-completion-window))))
 
 (defvar lsp-bridge-mode-map
   '(
