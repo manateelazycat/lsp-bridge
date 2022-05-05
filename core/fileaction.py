@@ -91,7 +91,10 @@ class FileAction(QObject):
         self.last_change_file_time = current_time
         self.last_change_file_line_text = line_text
 
-        self.try_completion_timer = QTimer().singleShot(100, lambda : self.completion(row, column, before_char))
+        self.try_completion_timer = QTimer()
+        self.try_completion_timer.setSingleShot(True)
+        self.try_completion_timer.timeout.connect(lambda : self.completion(row, column, before_char))
+        self.try_completion_timer.start(100)
 
     def change_cursor(self, x, y):
         import time

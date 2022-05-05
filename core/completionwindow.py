@@ -21,7 +21,7 @@
 
 import sys, os
 from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QIcon, QStandardItem, QStandardItemModel, QFont
 from PyQt6.QtWidgets import (QApplication, QWidget, QListView, QLabel, QVBoxLayout)
 
@@ -84,13 +84,15 @@ class CompletionWindow(QWidget):
         self.setLayout(self.layout)
 
         self.completion_items = []
+        
+        self.try_hide_timer = None
 
     def update_position(self, filepath, x, y):
         self.filepath = filepath
         
-        self.x = int(x / self.scale)
-        self.y = int(y / self.scale)
-        self.move(self.x, self.y)
+        x = int(x / self.scale)
+        y = int(y / self.scale)
+        self.move(x, y)
         
         if len(self.completion_items) > 0:
             self.show()
@@ -99,8 +101,23 @@ class CompletionWindow(QWidget):
             eval_in_emacs("lsp-bridge-record-show-status", [self.filepath])
         else:
             eval_in_emacs("lsp-bridge-record-hide-status", [self.filepath])
+            
+        if y != self.y or abs(x - self.x) > 30:
+            self.hide_completion_window()
+        else:
+            self.try_hide_timer = QTimer()
+            self.try_hide_timer.setSingleShot(True)
+            self.try_hide_timer.timeout.connect(self.hide_completion_window)
+            self.try_hide_timer.start(200)
+        
+        self.x = x
+        self.y = y
         
     def update_items(self, filepath, prefix_string, completion_items):
+        if self.try_hide_timer is not None and self.try_hide_timer.isActive():
+            self.try_hide_timer.stop()
+            self.try_hide_timer = None
+        
         self.filepath = filepath
         self.prefix_string = prefix_string
         
