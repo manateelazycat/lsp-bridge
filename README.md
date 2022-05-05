@@ -10,7 +10,31 @@ Its design concept is:
 1. Install PyQt6: ```pip install PyQt6 PyQt6-Qt6 PyQt6-sip PyQt6-WebEngine PyQt6-WebEngine-Qt6```
 2. Install [python-epc](https://github.com/tkf/python-epc): ```pip install epc```
 3. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
-4. Add follow code in your ~/.emacs: ```(add-to-list 'load-path "<path-to-lsp-bridge>")```
+4. Add follow code in your ~/.emacs: 
+
+```
+(add-to-list 'load-path "<path-to-lsp-bridge>")
+
+(dolist (hook (list
+               'python-mode-hook
+               ))
+  (add-hook hook (lambda ()
+                   (require 'lsp-bridge)
+                   (lsp-bridge-enable)
+                   )))
+```
+
+### Keys
+
+| Key   | Event                         |
+| :---- | :------                       |
+| `TAB` | lsp-bridge-complete-selection |
+| `M-h` | lsp-bridge-complete-selection |
+| `M-H` | lsp-bridge-complete-common    |
+| `M-n` | lsp-bridge-select-next        |
+| `M-p` | lsp-bridge-select-previous    |
+| `M-,` | lsp-bridge-select-last        |
+| `M-.` | lsp-bridge-select-first       |
 
 ### Proxy
 If you need to use a proxy to access the internet, one can configure the proxy settings.
