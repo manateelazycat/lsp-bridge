@@ -210,8 +210,25 @@ Turn on this option will improve start speed."
 
 (defun lsp-bridge--follow-system-dpi ()
   (let ((screen-zoom (if (> (frame-pixel-width) 3000) 2 1)))
-    ;; Set LSPBRIDGE application scale factor.
-    (setenv "QT_FONT_DPI" (number-to-string (* 96 screen-zoom)))))
+    (setenv "QT_AUTO_SCREEN_SCALE_FACTOR" "0")
+
+    (setenv "QT_SCALE_FACTOR" "1")
+    (setenv "QT_FONT_DPI" (number-to-string (* 96 screen-zoom)))
+
+    ;; Use XCB for input event transfer.
+    (unless (eq system-type 'darwin)
+      (setenv "QT_QPA_PLATFORM" "xcb"))
+
+    ;; Turn on DEBUG info when `lsp-bridge-enable-debug' is non-nil.
+    (when lsp-bridge-enable-debug
+      (setenv "QT_DEUG_PLUGINS" "1"))
+
+    (setq process-environment
+          (seq-filter
+           (lambda (var)
+             (and (not (string-match-p "QT_SCALE_FACTOR" var))
+                  (not (string-match-p "QT_SCREEN_SCALE_FACTOR" var))))
+           process-environment))))
 
 (defun lsp-bridge-restart-process ()
   "Stop and restart LSPBRIDGE process."
