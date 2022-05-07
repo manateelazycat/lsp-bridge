@@ -184,35 +184,37 @@ class LspServer(object):
     def __init__(self, message_queue, file_action):
         object.__init__(self)
         
+        # Init.
         self.message_queue = message_queue
         
-
         self.project_path = file_action.project_path
         self.server_type = file_action.lsp_server_type
         self.first_file_path = file_action.filepath
         self.initialize_id = file_action.initialize_id
         self.server_name = file_action.get_lsp_server_name()
         self.shutdown_id = -1
-        
+        self.sender_threads = []
+        self.request_dict = {}
+        self.open_file_dict = {} # contain file opened in current project
+        self.rootPath = self.project_path
+
+        # All LSP server response running in ls_message_thread.
         self.lsp_message_queue = queue.Queue()
         self.ls_message_thread = threading.Thread(target=self.lsp_message_dispatcher)
         self.ls_message_thread.start()
 
+        # Start LSP sever.
         self.p = subprocess.Popen(self.get_server_command(),
-                                  bufsize=100000000,
+                                  bufsize=100000000, # we need make buffer size big enough, avoid pipe hang by big data response from LSP server 
                                   text=True,
                                   stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
+        # A separate thread is used to read the message returned by the LSP server.
         self.listener_thread = LspBridgeListener(self.p, self.lsp_message_queue)
         self.listener_thread.start()
 
-        self.sender_threads = []
-        self.request_dict = {}
-        self.open_file_dict = {}
-
-        self.rootPath = self.project_path
-        self.rootUri = "file://" + self.project_path
-
+        # STEP 1: Say hello to LSP server.
+        # Send 'initialize' request.
         self.send_initialize_request()
         
     def lsp_message_dispatcher(self):
@@ -234,7 +236,7 @@ class LspServer(object):
                 "name": "emacs",
                 "version": "GNU Emacs 28.1 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.24.33, cairo version 1.17.6)\n of 2022-04-04"
             },
-            "rootUri": self.rootUri,
+            "rootUri": "file://" + self.project_path,
             "capabilities": {},
             "initializationOptions": {}
         }
@@ -267,6 +269,9 @@ class LspServer(object):
 
 
     def send_did_change_notification(self, filepath, version, start_row, start_character, end_row, end_character, range_length, text):
+        # STEP 5: Tell LSP server file content is changed.
+        # This step is very IMPORTANT, make sure LSP server contain same content as client,
+        # otherwise LSP server won't response client request, such as completion, find-define, find-references and rename etc.
         self.send_to_notification("textDocument/didChange",
                                   {
                                       "textDocument": {
@@ -300,6 +305,7 @@ class LspServer(object):
     def send_completion_request(self, request_id, filepath, type, row, column, char):
         self.record_request_id(request_id, filepath, type)
 
+        # STEP 6: Calculate completion candidates for current point.
         if char == ".":
             self.send_to_request("textDocument/completion",
                                  {
@@ -437,6 +443,8 @@ class LspServer(object):
 
         if "id" in message.keys():
             if message["id"] == self.initialize_id:
+                # STEP 2: tell LSP server that client is ready.
+                # We need wait LSP server response 'initialize', then we send 'initialized' notification.
                 self.send_to_notification("initialized", {})
             else:
                 if message["id"] in self.request_dict:
@@ -450,7 +458,14 @@ class LspServer(object):
 
     def handle_send_notification(self, name, params):
         if name == "initialized":
+            # STEP 3: Configure LSP server parameters.
+            # After 'initialized' message finish, we should send 'workspace/didChangeConfiguration' notification.
+            # The setting parameters of each language server are different.
             self.send_to_notification("workspace/didChangeConfiguration", self.get_server_workspace_change_configuration())
+            
+            # STEP 4: Tell LSP server open file.
+            # We need send 'textDocument/didOpen' notification, 
+            # then LSP server will return file information, such as completion, find-define, find-references and rename etc.
             self.send_did_open_notification(self.first_file_path)
         elif name == "textDocument/didOpen":
             fileuri = params["textDocument"]["uri"]
@@ -463,6 +478,7 @@ class LspServer(object):
             })
 
     def send_to_request(self, name, params, request_id):
+        # Request message must be contain unique request id.
         sender_thread = SendRequest(self.p, name, params, request_id)
         self.sender_threads.append(sender_thread)
         sender_thread.start()
@@ -478,10 +494,12 @@ class LspServer(object):
         sender_thread.start()
 
     def close_file(self, filepath):
+        # Send didClose notification when client close file.
         if filepath in self.open_file_dict:
             self.send_did_close_notification(filepath)
             del self.open_file_dict[filepath]
 
+        # We need shutdown LSP server when last file closed, to save system memory.
         if len(self.open_file_dict.keys()) == 0:
             self.send_shutdown_request()
             self.send_exit_notification()
@@ -490,5 +508,6 @@ class LspServer(object):
                 "name": "server_process_exit",
                 "content": self.server_name
             })
-            
+        
+            # Don't need wait LSP server response, kill immediately.
             os.kill(self.p.pid, 9)

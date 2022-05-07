@@ -23,15 +23,18 @@ from core.utils import get_command_result, eval_in_emacs, generate_request_id
 import os
 import random
 import threading
+import time
 
 class FileAction(object):
 
     def __init__(self, filepath):
         object.__init__(self)
         
+        # Build request functions.
         for name in ["find_define", "find_references", "prepare_rename", "rename", "completion"]:
             self.build_request_function(name)
             
+        # Init.
         self.request_dict = {}
 
         self.filepath = filepath
@@ -40,10 +43,9 @@ class FileAction(object):
         self.find_references_request_list = []
         self.prepare_rename_request_list = []
         self.rename_request_list = []
-
+        
         self.last_change_file_time = -1
         self.last_change_file_line_text = ""
-        
         self.last_change_cursor_time = -1
         
         self.completion_prefix_string = ""
@@ -55,17 +57,22 @@ class FileAction(object):
         self.lsp_server = None
         self.lsp_server_type = "pyright"
 
+        # Generate initialize request id.
         self.initialize_id = generate_request_id()
 
+        # Project path is same as file path if open an isolated file.
+        # Otherwise use git root patch as project path.
         dir_path = os.path.dirname(filepath)
         self.project_path = filepath
         if get_command_result("cd {} ; git rev-parse --is-inside-work-tree".format(dir_path)) == "true":
             self.project_path = get_command_result("cd {} ; git rev-parse --show-toplevel".format(dir_path))
 
     def get_lsp_server_name(self):
+        # We use project path and LSP server type as unique name.
         return "{}#{}".format(self.project_path, self.lsp_server_type)
 
     def change_file(self, start_row, start_character, end_row, end_character, range_length, change_text, row, column, before_char, line_text):
+        # Send didChange request to LSP server.
         if self.lsp_server is not None:
             self.lsp_server.send_did_change_notification(
                 self.filepath, self.version, start_row, start_character, end_row, end_character, range_length, change_text)
@@ -75,29 +82,28 @@ class FileAction(object):
 
         self.version += 1
 
+        # Try cancel expired completion timer.
         if self.try_completion_timer is not None and self.try_completion_timer.is_alive():
             self.try_completion_timer.cancel()
 
-        import time
-        current_time = time.time()
-
-        self.last_change_file_time = current_time
+        # Record last change information.
+        self.last_change_file_time = time.time()
         self.last_change_file_line_text = line_text
 
+        # Send textDocument/completion 100ms later.
         self.try_completion_timer = threading.Timer(0.1, lambda : self.completion(row, column, before_char))
         self.try_completion_timer.start()
 
     def change_cursor(self):
-        import time
-        current_time = time.time()
-        
-        self.last_change_cursor_time = current_time
+        # Record change cursor time.
+        self.last_change_cursor_time = time.time()
 
     def build_request_function(self, name):
         def _do(*args):
             request_id = generate_request_id()
             getattr(self, "{}_request_list".format(name)).append(request_id)
             
+            # Cache last change information to compare after receive LSP server response message.
             self.request_dict[request_id] = {
                 "last_change_file_time": self.last_change_file_time,
                 "last_change_cursor_time": self.last_change_cursor_time
@@ -122,6 +128,7 @@ class FileAction(object):
             self.handle_rename_response(request_id, response_result)
                 
     def handle_completion_response(self, request_id, response_result):
+        # Stop send completion items to client if request id expired, or change file, or move cursor.
         if (request_id == self.completion_request_list[-1] and 
             self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and 
             self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
@@ -132,6 +139,7 @@ class FileAction(object):
             eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, completion_items])
             
     def handle_find_define_response(self, request_id, response_result):
+        # Stop send jump define if request id expired, or change file, or move cursor.
         if (request_id == self.find_define_request_list[-1] and 
             self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and 
             self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
