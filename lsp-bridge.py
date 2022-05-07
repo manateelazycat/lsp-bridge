@@ -30,7 +30,7 @@ import queue
 
 from core.fileaction import FileAction
 from core.lspserver import LspServer
-from core.utils import (PostGui, init_epc_client, close_epc_client, eval_in_emacs, get_emacs_vars)
+from core.utils import (init_epc_client, close_epc_client, eval_in_emacs, get_emacs_vars)
 
 class LspBridge(object):
     def __init__(self, args):
@@ -63,6 +63,10 @@ class LspBridge(object):
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.start()
         
+        self.postgui_queue = queue.Queue()
+        self.postgui_thread = threading.Thread(target=self.postgui_dispatcher)
+        self.postgui_thread.start()
+        
         self.message_queue = queue.Queue()
         self.message_thread = threading.Thread(target=self.message_dispatcher)
         self.message_thread.start()
@@ -70,6 +74,20 @@ class LspBridge(object):
         # Pass epc port and webengine codec information to Emacs when first start LspBridge.
         eval_in_emacs('lsp-bridge--first-start', [self.server.server_address[1]])
         
+    def postgui_dispatcher(self):
+        while True:
+            message = self.postgui_queue.get(True)
+            
+            if message["name"] == "open_file":
+                self._open_file(message["content"])
+            elif message["name"] == "close_file":
+                self._close_file(message["content"])
+            elif message["name"] == "action_func":
+                (func_name, func_args) = message["content"]
+                getattr(self, func_name)(*func_args)
+            
+            self.postgui_queue.task_done()
+            
     def message_dispatcher(self):
         while True:
             message = self.message_queue.get(True)
@@ -82,8 +100,13 @@ class LspBridge(object):
             
             self.message_queue.task_done()
 
-    @PostGui()
     def open_file(self, filepath):
+        self.postgui_queue.put({
+            "name": "open_file",
+            "content": filepath
+        })
+        
+    def _open_file(self, filepath):
         # Build file action.
         if filepath not in self.file_action_dict:
             action = FileAction(filepath)
@@ -102,8 +125,13 @@ class LspBridge(object):
         # Add lsp server in file action for send message to lsp server.
         file_action.lsp_server = self.lsp_server_dict[lsp_server_name]
             
-    @PostGui()
     def close_file(self, filepath):
+        self.postgui_queue.put({
+            "name": "close_file",
+            "content": filepath
+        })
+        
+    def _close_file(self, filepath):
         if filepath in self.file_action_dict:
             action = FileAction(filepath)
             
@@ -115,7 +143,6 @@ class LspBridge(object):
             del self.file_action_dict[filepath]
             
     def build_file_action_function(self, name):
-        @PostGui()
         def _do(*args):
             filepath = args[0]
             if filepath in self.file_action_dict:
@@ -125,8 +152,16 @@ class LspBridge(object):
                 self.action_cache_dict[filepath] = (name, ) + args[1:]
                 self.open_file(filepath)
                 print("Cache action {}, wait for file {} to open it before executing.".format(name, filepath))
-
-        setattr(self, name, _do)
+                
+        setattr(self, "_{}".format(name), _do)
+        
+        def _do_wrap(*args):
+            self.postgui_queue.put({
+                "name": "action_func",
+                "content": ("_{}".format(name), args)
+            })
+            
+        setattr(self, name, _do_wrap)
         
     def handle_server_message(self, filepath, request_type, request_id, response_result):
         if filepath in self.file_action_dict:
