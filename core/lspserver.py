@@ -23,9 +23,10 @@ import os
 import subprocess
 import json
 import re
+import threading
+import queue
 from subprocess import PIPE
 from PyQt6.QtCore import QThread
-from PyQt6 import QtCore
 
 from core.utils import generate_request_id
 
@@ -36,12 +37,11 @@ class JsonEncoder(json.JSONEncoder):
 
 class LspBridgeListener(QThread):
 
-    recv_message = QtCore.pyqtSignal(dict)
-
-    def __init__(self, process):
+    def __init__(self, process, lsp_message_queue):
         QThread.__init__(self)
 
         self.process = process
+        self.lsp_message_queue = lsp_message_queue
 
     def is_end_number(self, string):
         text = re.compile(r".*[0-9]$")
@@ -58,7 +58,10 @@ class LspBridgeListener(QThread):
                 quote_index = message.rfind("}")
                 message = message[:quote_index + 1]
 
-            self.recv_message.emit(json.loads(message))
+            self.lsp_message_queue.put({
+                "name": "lsp_recv_message",
+                "content": json.loads(message)
+            })
         except:
             import traceback
             traceback.print_exc()
@@ -122,12 +125,11 @@ class SendRequest(QThread):
 
 class SendNotification(QThread):
 
-    send_notification = QtCore.pyqtSignal(str, dict)
-
-    def __init__(self, process, name, params):
+    def __init__(self, process, lsp_message_queue, name, params):
         QThread.__init__(self)
 
         self.process = process
+        self.lsp_message_queue = lsp_message_queue
         self.name = name
         self.params = params
 
@@ -143,8 +145,11 @@ class SendNotification(QThread):
         self.process.stdin.write(json_message)
         self.process.stdin.flush()
 
-        self.send_notification.emit(self.name, self.params)
-
+        self.lsp_message_queue.put({
+            "name": "lsp_send_notification",
+            "content": (self.name, self.params)
+        })
+        
         print("\n--- Send notification: {}".format(self.name))
 
         print(json.dumps(message_dict, indent = 3))
@@ -181,6 +186,7 @@ class LspServer(object):
         object.__init__(self)
         
         self.message_queue = message_queue
+        
 
         self.project_path = file_action.project_path
         self.server_type = file_action.lsp_server_type
@@ -188,14 +194,17 @@ class LspServer(object):
         self.initialize_id = file_action.initialize_id
         self.server_name = file_action.get_lsp_server_name()
         self.shutdown_id = -1
+        
+        self.lsp_message_queue = queue.Queue()
+        self.ls_message_thread = threading.Thread(target=self.lsp_message_dispatcher)
+        self.ls_message_thread.start()
 
         self.p = subprocess.Popen(self.get_server_command(),
                                   bufsize=100000000,
                                   text=True,
                                   stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
-        self.listener_thread = LspBridgeListener(self.p)
-        self.listener_thread.recv_message.connect(self.handle_recv_message)
+        self.listener_thread = LspBridgeListener(self.p, self.lsp_message_queue)
         self.listener_thread.start()
 
         self.sender_threads = []
@@ -206,6 +215,17 @@ class LspServer(object):
         self.rootUri = "file://" + self.project_path
 
         self.send_initialize_request()
+        
+    def lsp_message_dispatcher(self):
+        while True:
+            message = self.lsp_message_queue.get(True)
+            
+            if message["name"] == "lsp_recv_message":
+                self.handle_recv_message(message["content"])
+            elif message["name"] == "lsp_send_notification":
+                self.handle_send_notification(*message["content"])
+            
+            self.lsp_message_queue.task_done()
 
     def send_initialize_request(self):
         initialize_options = {
@@ -449,8 +469,7 @@ class LspServer(object):
         sender_thread.start()
 
     def send_to_notification(self, name, params):
-        sender_thread = SendNotification(self.p, name, params)
-        sender_thread.send_notification.connect(self.handle_send_notification)
+        sender_thread = SendNotification(self.p, self.lsp_message_queue, name, params)
         self.sender_threads.append(sender_thread)
         sender_thread.start()
 
