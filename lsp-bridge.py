@@ -34,7 +34,6 @@ import threading
 
 from core.fileaction import FileAction
 from core.lspserver import LspServer
-from core.completionwindow import CompletionWindow
 from core.utils import (PostGui, init_epc_client, close_epc_client, eval_in_emacs, get_emacs_vars, get_emacs_func_result)
 
 class LspBridge(object):
@@ -47,8 +46,6 @@ class LspBridge(object):
         for name in ["change_file", "find_define", "find_references", "prepare_rename", "rename", "change_cursor"]:
             self.build_file_action_function(name)
 
-        self.completion_window = CompletionWindow()
-            
         # Init EPC client port.
         init_epc_client(int(args[0]))
 
@@ -123,8 +120,6 @@ class LspBridge(object):
     def open_file(self, filepath):
         if filepath not in self.file_action_dict:
             action = FileAction(filepath)
-            action.popup_completion_items.connect(self.completion_window.update_items)
-            action.update_position.connect(self.completion_window.update_position)
             self.file_action_dict[filepath] = action
             
         file_action = self.file_action_dict[filepath]
@@ -160,34 +155,6 @@ class LspBridge(object):
                 getattr(action, name)(*args[1:])
 
         setattr(self, name, _do)
-        
-    @PostGui()
-    def hide_completion_window(self):
-        self.completion_window.hide_completion_window()
-
-    @PostGui()
-    def complete_completion_selection(self):
-        self.completion_window.complete_completion_selection()
-
-    @PostGui()
-    def complete_completion_common(self):
-        self.completion_window.complete_completion_common()
-        
-    @PostGui()
-    def select_completion_next(self):
-        self.completion_window.select_completion_next()
-
-    @PostGui()
-    def select_completion_previous(self):
-        self.completion_window.select_completion_previous()
-        
-    @PostGui()
-    def select_completion_last(self):
-        self.completion_window.select_completion_last()
-
-    @PostGui()
-    def select_completion_first(self):
-        self.completion_window.select_completion_first()
         
     def handle_server_message(self, filepath, request_type, request_id, response_result):
         if filepath in self.file_action_dict:

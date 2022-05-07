@@ -27,9 +27,6 @@ import random
 
 class FileAction(QObject):
 
-    update_position = QtCore.pyqtSignal(str, int, int)
-    popup_completion_items = QtCore.pyqtSignal(str, str, list)
-    
     def __init__(self, filepath):
         QObject.__init__(self)
 
@@ -52,9 +49,6 @@ class FileAction(QObject):
         
         self.completion_prefix_string = ""
         
-        self.popup_x = -1
-        self.popup_y = -1
-
         self.version = 1
 
         self.try_completion_timer = None
@@ -93,15 +87,10 @@ class FileAction(QObject):
         self.try_completion_timer.timeout.connect(lambda : self.completion(row, column, before_char))
         self.try_completion_timer.start(100)
 
-    def change_cursor(self, x, y):
+    def change_cursor(self):
         import time
         current_time = time.time()
         
-        self.popup_x = x
-        self.popup_y = y
-        
-        self.update_position.emit(self.filepath, self.popup_x, self.popup_y)
-
         self.last_change_cursor_time = current_time
 
     def build_request_function(self, name):
@@ -141,11 +130,9 @@ class FileAction(QObject):
             completion_items = []
             for item in response_result["items"]:
                 if item["label"].startswith(self.completion_prefix_string) and item["label"] != self.completion_prefix_string:
-                    completion_items.append({
-                        "label": item["label"],
-                        "type": item["kind"]
-                    })
-            self.popup_completion_items.emit(self.filepath, self.completion_prefix_string, completion_items)
+                    completion_items.append(item["label"])
+                    
+            eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, completion_items])
             
     def handle_find_define_response(self, request_id, response_result):
         if (request_id == self.find_define_request_list[-1] and 
