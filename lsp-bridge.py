@@ -26,10 +26,11 @@ import platform
 import signal
 import sys
 import threading
+import queue
 
 from core.fileaction import FileAction
 from core.lspserver import LspServer
-from core.utils import (PostGui, init_epc_client, close_epc_client, eval_in_emacs, get_emacs_vars, get_emacs_func_result)
+from core.utils import (PostGui, init_epc_client, close_epc_client, eval_in_emacs, get_emacs_vars)
 
 class LspBridge(object):
     def __init__(self, args):
@@ -61,11 +62,25 @@ class LspBridge(object):
         # Start EPC server with sub-thread, avoid block Qt main loop.
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.start()
-
-        self.get_emacs_func_result = get_emacs_func_result
-
+        
+        self.message_queue = queue.Queue()
+        self.message_thread = threading.Thread(target=self.message_dispatcher)
+        self.message_thread.start()
+        
         # Pass epc port and webengine codec information to Emacs when first start LspBridge.
         eval_in_emacs('lsp-bridge--first-start', [self.server.server_address[1]])
+        
+    def message_dispatcher(self):
+        while True:
+            message = self.message_queue.get(True)
+            if message["name"] == "server_file_opened":
+                self.handle_server_file_opened(message["content"])
+            elif message["name"] == "server_process_exit":
+                self.handle_server_process_exit(message["content"])
+            elif message["name"] == "server_response_message":
+                self.handle_server_message(*message["content"])
+            
+            self.message_queue.task_done()
 
     @PostGui()
     def open_file(self, filepath):
@@ -78,10 +93,7 @@ class LspBridge(object):
         file_action = self.file_action_dict[filepath]
         lsp_server_name = file_action.get_lsp_server_name()
         if lsp_server_name not in self.lsp_server_dict:
-            server = LspServer(file_action) # lsp server will initialize and didOpen for first file
-            server.response_message.connect(self.handle_server_message)
-            server.exit_process.connect(self.handle_server_exit)
-            server.file_opened.connect(self.handle_server_file_opened)
+            server = LspServer(self.message_queue, file_action) # lsp server will initialize and didOpen for first file
             self.lsp_server_dict[lsp_server_name] = server
         else:
             # Did open file if lsp server has exists, usually other file in same project has opened. 
@@ -118,13 +130,13 @@ class LspBridge(object):
         
     def handle_server_message(self, filepath, request_type, request_id, response_result):
         if filepath in self.file_action_dict:
-            self.file_action_dict[filepath].handle_response_message(request_id, request_type, response_result)
+            self.file_action_dict[filepath].handle_server_response_message(request_id, request_type, response_result)
         else:
             # Please report bug if you got this message.
             print("IMPOSSIBLE HERE: handle_server_message ", filepath, request_type, request_id, response_result)
             
             
-    def handle_server_exit(self, server_name):
+    def handle_server_process_exit(self, server_name):
         if server_name in self.lsp_server_dict:
             print("Exit server: ", server_name)
             del self.lsp_server_dict[server_name]

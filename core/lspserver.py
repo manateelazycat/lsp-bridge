@@ -24,7 +24,7 @@ import subprocess
 import json
 import re
 from subprocess import PIPE
-from PyQt6.QtCore import QObject, QThread
+from PyQt6.QtCore import QThread
 from PyQt6 import QtCore
 
 from core.utils import generate_request_id
@@ -175,14 +175,12 @@ class SendResponse(QThread):
 
         print(json.dumps(message_dict, indent = 3))
 
-class LspServer(QObject):
+class LspServer(object):
 
-    response_message = QtCore.pyqtSignal(str, str, int, object)
-    exit_process = QtCore.pyqtSignal(str)
-    file_opened = QtCore.pyqtSignal(str)
-
-    def __init__(self, file_action):
-        QObject.__init__(self)
+    def __init__(self, message_queue, file_action):
+        object.__init__(self)
+        
+        self.message_queue = message_queue
 
         self.project_path = file_action.project_path
         self.server_type = file_action.lsp_server_type
@@ -191,9 +189,9 @@ class LspServer(QObject):
         self.server_name = file_action.get_lsp_server_name()
         self.shutdown_id = -1
 
-        self.p = subprocess.Popen(self.get_server_command(), 
+        self.p = subprocess.Popen(self.get_server_command(),
                                   bufsize=100000000,
-                                  text=True, 
+                                  text=True,
                                   stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
         self.listener_thread = LspBridgeListener(self.p)
@@ -226,7 +224,7 @@ class LspServer(QObject):
     def send_did_open_notification(self, filepath):
         if filepath not in self.open_file_dict:
             self.open_file_dict[filepath] = ""
-            
+
             with open(filepath) as f:
                 self.send_to_notification("textDocument/didOpen",
                                           {
@@ -415,7 +413,7 @@ class LspServer(QObject):
             print("\n--- Recv message: ", method_name)
         else:
             print("\n--- Recv message")
-            
+
         print(json.dumps(message, indent = 3))
 
         if "id" in message.keys():
@@ -423,11 +421,13 @@ class LspServer(QObject):
                 self.send_to_notification("initialized", {})
             else:
                 if message["id"] in self.request_dict:
-                    self.response_message.emit(
-                        self.request_dict[message["id"]]["filepath"],
-                        self.request_dict[message["id"]]["type"],
-                        message["id"],
-                        message["result"])
+                    self.message_queue.put({
+                        "name": "server_response_message",
+                        "content": (self.request_dict[message["id"]]["filepath"],
+                                    self.request_dict[message["id"]]["type"],
+                                    message["id"],
+                                    message["result"])
+                    })
 
     def handle_send_notification(self, name, params):
         if name == "initialized":
@@ -437,7 +437,11 @@ class LspServer(QObject):
             fileuri = params["textDocument"]["uri"]
             if fileuri.startswith("file://"):
                 fileuri = fileuri[len("file://"):]
-            self.file_opened.emit(fileuri)
+
+            self.message_queue.put({
+                "name": "server_file_opened",
+                "content": fileuri
+            })
 
     def send_to_request(self, name, params, request_id):
         sender_thread = SendRequest(self.p, name, params, request_id)
@@ -464,6 +468,9 @@ class LspServer(QObject):
             self.send_shutdown_request()
             self.send_exit_notification()
 
-            self.exit_process.emit(self.server_name)
-            
+            self.message_queue.put({
+                "name": "server_process_exit",
+                "content": self.server_name
+            })
+
             os.kill(self.p.pid, 9)

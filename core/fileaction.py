@@ -111,7 +111,7 @@ class FileAction(QObject):
 
         setattr(self, name, _do)
 
-    def handle_response_message(self, request_id, request_type, response_result):
+    def handle_server_response_message(self, request_id, request_type, response_result):
         if request_type == "completion":
             self.handle_completion_response(request_id, response_result)
         elif request_type == "find_define":
@@ -128,11 +128,8 @@ class FileAction(QObject):
             self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and 
             self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
             self.completion_prefix_string = self.last_change_file_line_text[self.last_change_file_line_text.rfind(".") + 1:]
-        
-            completion_items = []
-            for item in response_result["items"]:
-                if item["label"].startswith(self.completion_prefix_string) and item["label"] != self.completion_prefix_string:
-                    completion_items.append(item["label"])
+            completion_items = list(filter(lambda label: label.startswith(self.completion_prefix_string), 
+                                           list(map(lambda item: item["label"], response_result["items"]))))
                     
             eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, completion_items])
             
