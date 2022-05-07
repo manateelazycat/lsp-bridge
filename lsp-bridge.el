@@ -254,10 +254,6 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
   "Decode string STR with UTF-8 coding using Base64."
   (decode-coding-string (base64-decode-string str) 'utf-8))
 
-(defun lsp-bridge--encode-string (str)
-  "Encode string STR with UTF-8 coding using Base64."
-  (base64-encode-string (encode-coding-string str 'utf-8)))
-
 (defun lsp-bridge--first-start (lsp-bridge-epc-port)
   "Call `lsp-bridge--open-internal' upon receiving `start_finish' signal from server.
 
@@ -274,37 +270,6 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
   (dolist (file-info lsp-bridge--first-start-args)
     (lsp-bridge-open-file file-info))
   (setq lsp-bridge--first-start-args nil))
-
-(defun lsp-bridge-get-cursor-coordinate ()
-  (if (derived-mode-p 'eaf-mode)
-      (mouse-absolute-pixel-position)
-    (window-absolute-pixel-position)))
-
-(defun lsp-bridge-get-cursor-x-offset ()
-  (if (derived-mode-p 'eaf-mode)
-      30
-    0))
-
-(defun lsp-bridge-get-cursor-y-offset ()
-  (if (derived-mode-p 'eaf-mode)
-      30
-    (line-pixel-height)))
-
-(defun lsp-bridge-get-theme-mode ()
-  (format "%s" (frame-parameter nil 'background-mode)))
-
-(defun lsp-bridge-get-theme-background ()
-  (lsp-bridge-color-name-to-hex (face-attribute 'default :background)))
-
-(defun lsp-bridge-color-int-to-hex (int)
-  (substring (format (concat "%0" (int-to-string 4) "X") int) (- 2)))
-
-(defun lsp-bridge-color-name-to-hex (color)
-  (let ((components (x-color-values color)))
-    (concat "#"
-            (lsp-bridge-color-int-to-hex (nth 0 components))
-            (lsp-bridge-color-int-to-hex (nth 1 components))
-            (lsp-bridge-color-int-to-hex (nth 2 components)))))
 
 (defvar lsp-bridge--last-buffer nil)
 
