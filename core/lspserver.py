@@ -24,7 +24,7 @@ import subprocess
 import json
 import re
 from subprocess import PIPE
-from PyQt6.QtCore import QObject, QThread, QTimer
+from PyQt6.QtCore import QObject, QThread
 from PyQt6 import QtCore
 
 from core.utils import generate_request_id
@@ -95,8 +95,6 @@ class LspBridgeListener(QThread):
 
 class SendRequest(QThread):
 
-    send_message = QtCore.pyqtSignal(str)
-
     def __init__(self, process, name, params, id):
         QThread.__init__(self)
 
@@ -117,8 +115,6 @@ class SendRequest(QThread):
 
         self.process.stdin.write(json_message)
         self.process.stdin.flush()
-
-        self.send_message.emit(self.name)
 
         print("\n--- Send request (1): {}".format(self.name, self.id))
 
@@ -155,8 +151,6 @@ class SendNotification(QThread):
 
 class SendResponse(QThread):
 
-    send_response = QtCore.pyqtSignal(str)
-
     def __init__(self, process, name, id, result):
         QThread.__init__(self)
 
@@ -176,8 +170,6 @@ class SendResponse(QThread):
 
         self.process.stdin.write(json_message)
         self.process.stdin.flush()
-
-        self.send_response.emit(self.name)
 
         print("\n--- Send response: {}".format(self.name))
 

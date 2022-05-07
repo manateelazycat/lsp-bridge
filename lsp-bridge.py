@@ -118,17 +118,7 @@ class LspBridge(object):
         close_epc_client()
 
 if __name__ == "__main__":
-    hardware_acceleration_args = []
-    if platform.system() != "Windows":
-        hardware_acceleration_args += [
-            "--ignore-gpu-blocklist",
-            "--enable-gpu-rasterization",
-            "--enable-native-gpu-memory-buffers"]
-
-    app = QApplication(sys.argv + ["--disable-web-security"] + hardware_acceleration_args)
-    screen = app.primaryScreen()
-    screen_size = screen.size()
-    
+    app = QApplication(sys.argv)
     lspbridge = LspBridge(sys.argv[1:])
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)
