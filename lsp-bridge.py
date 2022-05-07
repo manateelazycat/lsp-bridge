@@ -37,6 +37,7 @@ class LspBridge(object):
         
         self.file_action_dict = {}
         self.lsp_server_dict = {}
+        self.action_cache_dict = {}
 
         for name in ["change_file", "find_define", "find_references", "prepare_rename", "rename", "change_cursor"]:
             self.build_file_action_function(name)
@@ -80,6 +81,7 @@ class LspBridge(object):
             server = LspServer(file_action) # lsp server will initialize and didOpen for first file
             server.response_message.connect(self.handle_server_message)
             server.exit_process.connect(self.handle_server_exit)
+            server.file_opened.connect(self.handle_server_file_opened)
             self.lsp_server_dict[lsp_server_name] = server
         else:
             # Did open file if lsp server has exists, usually other file in same project has opened. 
@@ -108,19 +110,37 @@ class LspBridge(object):
                 action = self.file_action_dict[filepath]
                 getattr(action, name)(*args[1:])
             else:
-                # Please report bug if you got this message.
-                print("IMPOSSIBLE HERE: build_file_action_function '{}' {} {}".format(filepath, name, self.file_action_dict))
+                self.action_cache_dict[filepath] = (name, ) + args[1:]
+                self.open_file(filepath)
+                print("Cache action {}, wait for file {} to open it before executing.".format(name, filepath))
 
         setattr(self, name, _do)
         
     def handle_server_message(self, filepath, request_type, request_id, response_result):
         if filepath in self.file_action_dict:
             self.file_action_dict[filepath].handle_response_message(request_id, request_type, response_result)
+        else:
+            # Please report bug if you got this message.
+            print("IMPOSSIBLE HERE: handle_server_message ", filepath, request_type, request_id, response_result)
+            
             
     def handle_server_exit(self, server_name):
         if server_name in self.lsp_server_dict:
             print("Exit server: ", server_name)
             del self.lsp_server_dict[server_name]
+            
+    def handle_server_file_opened(self, filepath):
+        if filepath in self.action_cache_dict:
+            cache = self.action_cache_dict[filepath]
+            action_name = cache[0]
+            action_args = cache[1:]
+            
+            if filepath in self.file_action_dict:
+                getattr(self.file_action_dict[filepath], action_name)(*action_args)
+                print("Execute action {} for file {}".format(action_name, filepath))
+            else:
+                # Please report bug if you got this message.
+                print("IMPOSSIBLE HERE: handle_server_file_opened '{}' {} {}".format(filepath, action_name, self.file_action_dict))
 
     def cleanup(self):
         '''Do some cleanup before exit python process.'''

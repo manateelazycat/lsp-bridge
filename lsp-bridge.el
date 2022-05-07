@@ -152,8 +152,6 @@ Setting this to nil or 0 will turn off the indicator."
 (defvar lsp-bridge-internal-process-prog nil)
 (defvar lsp-bridge-internal-process-args nil)
 
-(defvar lsp-bridge--first-start-args nil)
-
 (defcustom lsp-bridge-name "*lsp-bridge*"
   "Name of LSPBRIDGE buffer."
   :type 'string)
@@ -264,16 +262,10 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
                                 :port lsp-bridge-epc-port
                                 :connection (lsp-bridge-epc-connect "localhost" lsp-bridge-epc-port)
                                 ))
-  (lsp-bridge-epc-init-epc-layer lsp-bridge-epc-process)
-  (dolist (file-info lsp-bridge--first-start-args)
-    (lsp-bridge-open-file file-info))
-  (setq lsp-bridge--first-start-args nil))
+  (lsp-bridge-epc-init-epc-layer lsp-bridge-epc-process))
 
 (defun lsp-bridge-enable ()
-  (if (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-      (lsp-bridge-open-file (buffer-file-name))
-    (push (buffer-file-name) lsp-bridge--first-start-args)
-    (lsp-bridge-start-process)))
+  (lsp-bridge-open-file (buffer-file-name)))
 
 (defun lsp-bridge-open-file (filename)
   (dolist (buffer (buffer-list))
@@ -288,7 +280,9 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
         (add-hook 'post-command-hook #'lsp-bridge-monitor-post-command nil t)
         (add-hook 'kill-buffer-hook #'lsp-bridge-monitor-kill-buffer nil t)
 
-        (lsp-bridge-call-async "open_file" filename)
+        (if (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+            (lsp-bridge-call-async "open_file" filename)
+          (lsp-bridge-start-process))
         ))))
 
 (defun lsp-bridge-char-before ()

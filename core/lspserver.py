@@ -122,7 +122,7 @@ class SendRequest(QThread):
 
 class SendNotification(QThread):
 
-    send_notification = QtCore.pyqtSignal(str)
+    send_notification = QtCore.pyqtSignal(str, dict)
 
     def __init__(self, process, name, params):
         QThread.__init__(self)
@@ -143,7 +143,7 @@ class SendNotification(QThread):
         self.process.stdin.write(json_message)
         self.process.stdin.flush()
 
-        self.send_notification.emit(self.name)
+        self.send_notification.emit(self.name, self.params)
 
         print("\n--- Send notification: {}".format(self.name))
 
@@ -179,6 +179,7 @@ class LspServer(QObject):
 
     response_message = QtCore.pyqtSignal(str, str, int, object)
     exit_process = QtCore.pyqtSignal(str)
+    file_opened = QtCore.pyqtSignal(str)
 
     def __init__(self, file_action):
         QObject.__init__(self)
@@ -223,18 +224,21 @@ class LspServer(QObject):
         self.send_to_request("initialize", initialize_options, self.initialize_id)
 
     def send_did_open_notification(self, filepath):
-        self.open_file_dict[filepath] = ""
-
-        with open(filepath) as f:
-            self.send_to_notification("textDocument/didOpen",
-                                      {
-                                          "textDocument": {
-                                              "uri": "file://" + filepath,
-                                              "languageId": "python",
-                                              "version": 0,
-                                              "text": f.read()
-                                          }
-                                      })
+        if filepath not in self.open_file_dict:
+            self.open_file_dict[filepath] = ""
+            
+            with open(filepath) as f:
+                self.send_to_notification("textDocument/didOpen",
+                                          {
+                                              "textDocument": {
+                                                  "uri": "file://" + filepath,
+                                                  "languageId": "python",
+                                                  "version": 0,
+                                                  "text": f.read()
+                                              }
+                                          })
+        else:
+            print("File {} has opened in server {}".format(filepath, self.server_name))
 
     def send_did_close_notification(self, filepath):
         self.send_to_notification("textDocument/didClose",
@@ -425,11 +429,15 @@ class LspServer(QObject):
                         message["id"],
                         message["result"])
 
-    def handle_send_notification(self, name):
+    def handle_send_notification(self, name, params):
         if name == "initialized":
             self.send_to_notification("workspace/didChangeConfiguration", self.get_server_workspace_change_configuration())
-
             self.send_did_open_notification(self.first_file_path)
+        elif name == "textDocument/didOpen":
+            fileuri = params["textDocument"]["uri"]
+            if fileuri.startswith("file://"):
+                fileuri = fileuri[len("file://"):]
+            self.file_opened.emit(fileuri)
 
     def send_to_request(self, name, params, request_id):
         sender_thread = SendRequest(self.p, name, params, request_id)
