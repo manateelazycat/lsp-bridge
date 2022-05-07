@@ -33,6 +33,8 @@ from core.utils import (PostGui, init_epc_client, close_epc_client, eval_in_emac
 
 class LspBridge(object):
     def __init__(self, args):
+        object.__init__(self)
+        
         self.file_action_dict = {}
         self.lsp_server_dict = {}
 
@@ -66,21 +68,25 @@ class LspBridge(object):
 
     @PostGui()
     def open_file(self, filepath):
+        # Build file action.
         if filepath not in self.file_action_dict:
             action = FileAction(filepath)
             self.file_action_dict[filepath] = action
             
+        # Build LSP server.
         file_action = self.file_action_dict[filepath]
         lsp_server_name = file_action.get_lsp_server_name()
         if lsp_server_name not in self.lsp_server_dict:
-            server = LspServer(file_action)
+            server = LspServer(file_action) # lsp server will initialize and didOpen for first file
             server.response_message.connect(self.handle_server_message)
             server.exit_process.connect(self.handle_server_exit)
             self.lsp_server_dict[lsp_server_name] = server
-            
-            self.file_action_dict[filepath].lsp_server = server
         else:
+            # Did open file if lsp server has exists, usually other file in same project has opened. 
             self.lsp_server_dict[lsp_server_name].send_did_open_notification(file_action.filepath)
+        
+        # Add lsp server in file action for send message to lsp server.
+        file_action.lsp_server = self.lsp_server_dict[lsp_server_name]
             
     @PostGui()
     def close_file(self, filepath):
@@ -101,6 +107,9 @@ class LspBridge(object):
             if filepath in self.file_action_dict:
                 action = self.file_action_dict[filepath]
                 getattr(action, name)(*args[1:])
+            else:
+                # Please report bug if you got this message.
+                print("IMPOSSIBLE HERE: build_file_action_function '{}' {} {}".format(filepath, name, self.file_action_dict))
 
         setattr(self, name, _do)
         

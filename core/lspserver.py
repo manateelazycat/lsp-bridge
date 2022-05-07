@@ -118,7 +118,7 @@ class SendRequest(QThread):
 
         print("\n--- Send request (1): {}".format(self.name, self.id))
 
-        # print(json.dumps(message_dict, indent = 3))
+        print(json.dumps(message_dict, indent = 3))
 
 class SendNotification(QThread):
 
@@ -147,7 +147,7 @@ class SendNotification(QThread):
 
         print("\n--- Send notification: {}".format(self.name))
 
-        # print(json.dumps(message_dict, indent = 3))
+        print(json.dumps(message_dict, indent = 3))
 
 class SendResponse(QThread):
 
@@ -173,7 +173,7 @@ class SendResponse(QThread):
 
         print("\n--- Send response: {}".format(self.name))
 
-        # print(json.dumps(message_dict, indent = 3))
+        print(json.dumps(message_dict, indent = 3))
 
 class LspServer(QObject):
 
@@ -457,5 +457,5 @@ class LspServer(QObject):
             self.send_exit_notification()
 
             self.exit_process.emit(self.server_name)
-
+            
             os.kill(self.p.pid, 9)

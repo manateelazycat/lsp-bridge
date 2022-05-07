@@ -69,6 +69,9 @@ class FileAction(QObject):
         if self.lsp_server is not None:
             self.lsp_server.send_did_change_notification(
                 self.filepath, self.version, start_row, start_character, end_row, end_character, range_length, change_text)
+        else:
+            # Please report bug if you got this message.
+            print("IMPOSSIBLE HERE: change_file ", self.filepath, self.lsp_server)
 
         self.version += 1
 
