@@ -232,7 +232,7 @@ class LspServer(QObject):
 
     def send_did_open_notification(self, filepath):
         self.open_file_dict[filepath] = ""
-        
+
         with open(filepath) as f:
             self.send_to_notification("textDocument/didOpen",
                                       {
@@ -243,6 +243,15 @@ class LspServer(QObject):
                                               "text": f.read()
                                           }
                                       })
+
+    def send_did_close_notification(self, filepath):
+        self.send_to_notification("textDocument/didClose",
+                                  {
+                                      "textDocument": {
+                                          "uri": "file://" + filepath,
+                                      }
+                                  })
+
 
     def send_did_change_notification(self, filepath, version, start_row, start_character, end_row, end_character, range_length, text):
         self.send_to_notification("textDocument/didChange",
@@ -274,7 +283,7 @@ class LspServer(QObject):
             "filepath": filepath,
             "type": type
         }
-        
+
     def send_completion_request(self, request_id, filepath, type, row, column, char):
         self.record_request_id(request_id, filepath, type)
 
@@ -373,11 +382,11 @@ class LspServer(QObject):
                                  "newName": new_name
                              },
                              request_id)
-        
+
     def send_shutdown_request(self):
         self.shutdown_id = generate_request_id()
         self.send_to_request("shutdown", {}, self.shutdown_id)
-        
+
     def send_exit_notification(self):
         self.send_to_notification("exit", {})
 
@@ -404,7 +413,13 @@ class LspServer(QObject):
             }}
 
     def handle_recv_message(self, message):
-        print("\n--- Recv message")
+        method_name = ""
+        if "method" in message.keys():
+            method_name = message["method"]
+            print("\n--- Recv message: ", method_name)
+        else:
+            print("\n--- Recv message")
+            
         print(json.dumps(message, indent = 3))
 
         if "id" in message.keys():
@@ -442,13 +457,13 @@ class LspServer(QObject):
 
     def close_file(self, filepath):
         if filepath in self.open_file_dict:
+            self.send_did_close_notification(filepath)
             del self.open_file_dict[filepath]
-        
+
         if len(self.open_file_dict.keys()) == 0:
             self.send_shutdown_request()
             self.send_exit_notification()
-            
+
             self.exit_process.emit(self.server_name)
-            
-            os.kill(self.p.pid, 9) 
-        
+
+            os.kill(self.p.pid, 9)
