@@ -198,7 +198,10 @@ class LspServer(QObject):
         self.server_name = file_action.get_lsp_server_name()
         self.shutdown_id = -1
 
-        self.p = subprocess.Popen(self.get_server_command(), text=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self.p = subprocess.Popen(self.get_server_command(), 
+                                  bufsize=100000000,
+                                  text=True, 
+                                  stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
         self.listener_thread = LspBridgeListener(self.p)
         self.listener_thread.recv_message.connect(self.handle_recv_message)
