@@ -1,19 +1,30 @@
 # lsp-bridge
 lsp-bridge's goal is to become the fastest LSP client in the Emacs.
 
-Its design concept is:
-1. High-Performance LSP client: use python threading technology build cache bridge between Emacs and LSP server, you will never feel stuck when you write the code
-2. Integration Emacs ecological: focus on code-completion, find-define, find-references and rename-refacotry, focus on keyboard operation, not copy user experience of VSCode
-3. Provide modern UI: we use Qt technology build completion UI, to provide fantastic icon, both-end text alignment, web document preview, etc.
+lsp-bridge use python threading technology build cache bridge between Emacs and LSP server, you will never feel stuck when you write the code.
+
+<img src="./screenshot.png">
 
 ## Installation
-1. Install PyQt6: ```pip install PyQt6 PyQt6-Qt6 PyQt6-sip PyQt6-WebEngine PyQt6-WebEngine-Qt6```
+1. Install PyQt6: ```pip install PyQt6 PyQt6-Qt6 PyQt6-sip```
 2. Install [python-epc](https://github.com/tkf/python-epc): ```pip install epc```
-3. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
-4. Add follow code in your ~/.emacs: 
+3. Install [company-mode](https://github.com/company-mode/company-mode)
+4. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
+5. Add follow code in your ~/.emacs: 
 
 ```
 (add-to-list 'load-path "<path-to-lsp-bridge>")
+
+(require 'company)
+(require 'lsp-bridge)
+
+(setq company-minimum-prefix-length 1) ; pop up a completion menu by tapping a character
+(setq company-show-numbers t) ; number the candidates (use M-1, M-2 etc to select completions).
+(setq company-require-match nil) ; allow input string that do not match candidate words
+(setq company-idle-delay 0) ; trigger completion immediately.
+(setq company-backends '((company-lsp-bridge)))
+
+(global-company-mode)
 
 (dolist (hook (list
                'python-mode-hook
@@ -22,33 +33,8 @@ Its design concept is:
                    (require 'lsp-bridge)
                    (lsp-bridge-enable)
                    )))
-```
-
-### Keys
-
-| Key   | Event                         |
-| :---- | :------                       |
-| `TAB` | lsp-bridge-complete-selection |
-| `M-h` | lsp-bridge-complete-selection |
-| `M-H` | lsp-bridge-complete-common    |
-| `M-n` | lsp-bridge-select-next        |
-| `M-p` | lsp-bridge-select-previous    |
-| `M-,` | lsp-bridge-select-last        |
-| `M-.` | lsp-bridge-select-first       |
-
-### Proxy
-If you need to use a proxy to access the internet, one can configure the proxy settings.
-
-```Elisp
-(setq lsp-bridge-proxy-type "http")
-(setq lsp-bridge-proxy-host "127.0.0.1")
-(setq lsp-bridge-proxy-port "1080")
-```
-
-If you use Socks5 as a local proxy, one can set proxy type with:
-
-```Elisp
-(setq lsp-bridge-proxy-type "socks5")
+                   
+                   
 ```
 
 ## Report bug

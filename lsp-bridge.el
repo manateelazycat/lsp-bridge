@@ -164,30 +164,6 @@ Setting this to nil or 0 will turn off the indicator."
   "The Python interpreter used to run lsp-bridge.py."
   :type 'string)
 
-(defcustom lsp-bridge-proxy-host ""
-  "Proxy Host used by LSPBRIDGE Browser."
-  :type 'string)
-
-(defcustom lsp-bridge-proxy-port ""
-  "Proxy Port used by LSPBRIDGE Browser."
-  :type 'string)
-
-(defcustom lsp-bridge-proxy-type ""
-  "Proxy Type used by LSPBRIDGE Browser.  The value is either \"http\" or \"socks5\"."
-  :type 'string)
-
-(defcustom lsp-bridge-popup-pos "point-bottom-right"
-  "The position to display the poweb popup.
-
-Available options:
-- \"point-bottom\": bottom of the cursor
-- \"point-bottom-right\": bottom-right of the cursor
-- \"top-left\": top-left of the screen
-- \"top-right\": top-right of the screen
-- \"bottom-left\": bottom-left: of the screen
-- \"bottom-right\": bottom-right of the screen"
-  :type 'string)
-
 (defcustom lsp-bridge-enable-debug nil
   "If you got segfault error, please turn this option.
 Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buffer content when next crash."

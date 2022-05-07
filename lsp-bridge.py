@@ -19,11 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# NOTE
-# QtWebEngine will throw error "ImportError: QtWebEngineWidgets must be imported before a QCoreApplication instance is created"
-from PyQt6.QtWebEngineWidgets import QWebEngineView
-
-from PyQt6.QtNetwork import QNetworkProxy, QNetworkProxyFactory
 from PyQt6.QtWidgets import QApplication
 from epc.server import ThreadingEPCServer
 import os
@@ -38,8 +33,6 @@ from core.utils import (PostGui, init_epc_client, close_epc_client, eval_in_emac
 
 class LspBridge(object):
     def __init__(self, args):
-        global proxy_string
-        
         self.file_action_dict = {}
         self.lsp_server_dict = {}
 
@@ -71,51 +64,6 @@ class LspBridge(object):
         # Pass epc port and webengine codec information to Emacs when first start LspBridge.
         eval_in_emacs('lsp-bridge--first-start', [self.server.server_address[1]])
 
-        # Disable use system proxy, avoid page slow when no network connected.
-        QNetworkProxyFactory.setUseSystemConfiguration(False)
-
-        # Set Network proxy.
-        (proxy_host, proxy_port, proxy_type) = get_emacs_vars([
-            "lsp-bridge-proxy-host",
-            "lsp-bridge-proxy-port",
-            "lsp-bridge-proxy-type"])
-
-        self.proxy = (proxy_type, proxy_host, proxy_port)
-        self.is_proxy = False
-
-    def enable_proxy(self):
-        global proxy_string
-
-        proxy_string = "{0}://{1}:{2}".format(self.proxy[0], self.proxy[1], self.proxy[2])
-
-        proxy = QNetworkProxy()
-        if self.proxy[0] == "socks5":
-            proxy.setType(QNetworkProxy.Socks5Proxy)
-        elif self.proxy[0] == "http":
-            proxy.setType(QNetworkProxy.HttpProxy)
-        proxy.setHostName(self.proxy[1])
-        proxy.setPort(int(self.proxy[2]))
-
-        self.is_proxy = True
-        QNetworkProxy.setApplicationProxy(proxy)
-
-    def disable_proxy(self):
-        global proxy_string
-
-        proxy_string = ""
-
-        proxy = QNetworkProxy()
-        proxy.setType(QNetworkProxy.NoProxy)
-
-        self.is_proxy = False
-        QNetworkProxy.setApplicationProxy(proxy)
-
-    def toggle_proxy(self):
-        if self.is_proxy:
-            self.disable_proxy()
-        else:
-            self.enable_proxy()
-            
     @PostGui()
     def open_file(self, filepath):
         if filepath not in self.file_action_dict:
@@ -170,10 +118,6 @@ class LspBridge(object):
         close_epc_client()
 
 if __name__ == "__main__":
-    proxy_string = ""
-
-    destroy_view_list = []
-
     hardware_acceleration_args = []
     if platform.system() != "Windows":
         hardware_acceleration_args += [
