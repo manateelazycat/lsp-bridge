@@ -19,26 +19,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import subprocess
-import json
-import re
-import threading
-import queue
-from subprocess import PIPE
-from PyQt6.QtCore import QThread
-
 from core.utils import generate_request_id
+from subprocess import PIPE
+from threading import Thread
+import json
+import os
+import queue
+import re
+import subprocess
+import threading
 
 class JsonEncoder(json.JSONEncoder):
 
     def default(self, o): # pylint: disable=E0202
         return o.__dict__
 
-class LspBridgeListener(QThread):
+class LspBridgeListener(Thread):
 
     def __init__(self, process, lsp_message_queue):
-        QThread.__init__(self)
+        Thread.__init__(self)
 
         self.process = process
         self.lsp_message_queue = lsp_message_queue
@@ -96,11 +95,11 @@ class LspBridgeListener(QThread):
                 if message != "":
                     self.emit_message(message)
 
-class SendRequest(QThread):
+class SendRequest(Thread):
 
     def __init__(self, process, name, params, id):
-        QThread.__init__(self)
-
+        Thread.__init__(self)
+        
         self.process = process
         self.name = name
         self.params = params
@@ -123,10 +122,10 @@ class SendRequest(QThread):
 
         print(json.dumps(message_dict, indent = 3))
 
-class SendNotification(QThread):
+class SendNotification(Thread):
 
     def __init__(self, process, lsp_message_queue, name, params):
-        QThread.__init__(self)
+        Thread.__init__(self)
 
         self.process = process
         self.lsp_message_queue = lsp_message_queue
@@ -154,10 +153,10 @@ class SendNotification(QThread):
 
         print(json.dumps(message_dict, indent = 3))
 
-class SendResponse(QThread):
+class SendResponse(Thread):
 
     def __init__(self, process, name, id, result):
-        QThread.__init__(self)
+        Thread.__init__(self)
 
         self.process = process
         self.name = name
