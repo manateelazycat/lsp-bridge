@@ -317,7 +317,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
 (defun lsp-bridge-get-completion-items ()
   (when (boundp 'lsp-bridge-completion-items)
     (let ((prefix (company-grab-symbol)))
-      (remove-if-not
+      (cl-remove-if-not
        (lambda (c)
          (string-prefix-p prefix c))
        lsp-bridge-completion-items))))
