@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from PyQt6.QtWidgets import QApplication
 from core.fileaction import FileAction
 from core.lspserver import LspServer
 from core.utils import (init_epc_client, close_epc_client, eval_in_emacs, get_emacs_vars)
@@ -73,6 +72,9 @@ class LspBridge(object):
         
         # Pass epc port and webengine codec information to Emacs when first start LspBridge.
         eval_in_emacs('lsp-bridge--first-start', [self.server.server_address[1]])
+        
+        # postgui_thread nevert exit, simulation event loop.
+        self.postgui_thread.join()
         
     def postgui_dispatcher(self):
         while True:
@@ -194,8 +196,4 @@ class LspBridge(object):
         close_epc_client()
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
     LspBridge(sys.argv[1:])
-
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
-    sys.exit(app.exec())

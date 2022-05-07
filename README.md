@@ -6,11 +6,10 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 <img src="./screenshot.png">
 
 ## Installation
-1. Install PyQt6: ```pip install PyQt6 PyQt6-Qt6 PyQt6-sip```
-2. Install [python-epc](https://github.com/tkf/python-epc): ```pip install epc```
-3. Install [company-mode](https://github.com/company-mode/company-mode)
-4. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
-5. Add follow code in your ~/.emacs: 
+1. Install [python-epc](https://github.com/tkf/python-epc): ```pip install epc```
+2. Install [company-mode](https://github.com/company-mode/company-mode)
+3. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
+4. Add follow code in your ~/.emacs: 
 
 ```
 (add-to-list 'load-path "<path-to-lsp-bridge>")

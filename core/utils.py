@@ -114,5 +114,3 @@ def get_command_result(command_string):
 def generate_request_id():
     import random
     return abs(random.getrandbits(16))
-
-

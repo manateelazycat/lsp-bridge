@@ -490,5 +490,5 @@ class LspServer(object):
                 "name": "server_process_exit",
                 "content": self.server_name
             })
-
+            
             os.kill(self.p.pid, 9)
