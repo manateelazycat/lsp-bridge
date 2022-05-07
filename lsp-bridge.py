@@ -148,7 +148,7 @@ class LspBridge(object):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    lspbridge = LspBridge(sys.argv[1:])
+    LspBridge(sys.argv[1:])
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     sys.exit(app.exec())

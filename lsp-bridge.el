@@ -177,20 +177,17 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 (defun lsp-bridge-restart-process ()
   "Stop and restart LSPBRIDGE process."
   (interactive)
-
-  ;; Record lsp-bridge buffer for re-open.
-  (setq lsp-bridge--first-start-args nil)
-  (dolist (buffer (buffer-list))
-    (with-current-buffer buffer
-      (when (boundp 'lsp-bridge-flag)
-        (push (buffer-file-name) lsp-bridge--first-start-args))))
+  (setq lsp-bridge-is-starting nil)
 
   (lsp-bridge-kill-process)
   (lsp-bridge-start-process)
   (message "LSPBRIDGE process restarted."))
 
+(defvar lsp-bridge-is-starting nil)
+
 (defun lsp-bridge-start-process ()
   "Start LSPBRIDGE process if it isn't started."
+  (setq lsp-bridge-is-starting t)
   (unless (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     ;; start epc server and set `lsp-bridge-server-port'
     (lsp-bridge--start-epc-server)
@@ -262,7 +259,8 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
                                 :port lsp-bridge-epc-port
                                 :connection (lsp-bridge-epc-connect "localhost" lsp-bridge-epc-port)
                                 ))
-  (lsp-bridge-epc-init-epc-layer lsp-bridge-epc-process))
+  (lsp-bridge-epc-init-epc-layer lsp-bridge-epc-process)
+  (setq lsp-bridge-is-starting nil))
 
 (defun lsp-bridge-enable ()
   (lsp-bridge-open-file (buffer-file-name)))
@@ -280,8 +278,8 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
         (add-hook 'post-command-hook #'lsp-bridge-monitor-post-command nil t)
         (add-hook 'kill-buffer-hook #'lsp-bridge-monitor-kill-buffer nil t)
 
-        (if (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-            (lsp-bridge-call-async "open_file" filename)
+        ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
+        (unless lsp-bridge-is-starting
           (lsp-bridge-start-process))
         ))))
 
@@ -296,7 +294,8 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
       (setq-local lsp-bridge-last-position (point)))))
 
 (defun lsp-bridge-monitor-kill-buffer ()
-  (lsp-bridge-call-async "close_file" (buffer-file-name)))
+  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+    (lsp-bridge-call-async "close_file" (buffer-file-name))))
 
 (defun lsp-bridge-record-completion-items (filepath items)
   (dolist (buffer (buffer-list))
@@ -340,41 +339,42 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
   (setq-local lsp-bridge--before-change-end-pos-character (lsp-bridge-point-character end)))
 
 (defun lsp-bridge-monitor-after-change (begin end length)
-  (cond
-   ;; Add operation.
-   ((zerop length)
-    (lsp-bridge-call-async "change_file"
-                           (buffer-file-name)
-                           (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
-                           (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
-                           0
-                           (buffer-substring-no-properties begin end)
-                           (line-number-at-pos) (current-column)
-                           (lsp-bridge-char-before)
-                           (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
-   ;; Delete operation.
-   ((eq begin end)
-    (lsp-bridge-call-async "change_file"
-                           (buffer-file-name)
-                           (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
-                           lsp-bridge--before-change-end-pos-row lsp-bridge--before-change-end-pos-character
-                           length
-                           ""
-                           (line-number-at-pos) (current-column)
-                           (lsp-bridge-char-before)
-                           (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
-   ;; Change operation.
-   (t
-    (lsp-bridge-call-async "change_file"
-                           (buffer-file-name)
-                           (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
-                           lsp-bridge--before-change-end-pos-row lsp-bridge--before-change-end-pos-character
-                           length
-                           (buffer-substring-no-properties begin end)
-                           (line-number-at-pos)
-                           (current-column)
-                           (lsp-bridge-char-before)
-                           (buffer-substring-no-properties (line-beginning-position) (line-end-position))))))
+  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+    (cond
+     ;; Add operation.
+     ((zerop length)
+      (lsp-bridge-call-async "change_file"
+                             (buffer-file-name)
+                             (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
+                             (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
+                             0
+                             (buffer-substring-no-properties begin end)
+                             (line-number-at-pos) (current-column)
+                             (lsp-bridge-char-before)
+                             (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+     ;; Delete operation.
+     ((eq begin end)
+      (lsp-bridge-call-async "change_file"
+                             (buffer-file-name)
+                             (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
+                             lsp-bridge--before-change-end-pos-row lsp-bridge--before-change-end-pos-character
+                             length
+                             ""
+                             (line-number-at-pos) (current-column)
+                             (lsp-bridge-char-before)
+                             (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+     ;; Change operation.
+     (t
+      (lsp-bridge-call-async "change_file"
+                             (buffer-file-name)
+                             (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
+                             lsp-bridge--before-change-end-pos-row lsp-bridge--before-change-end-pos-character
+                             length
+                             (buffer-substring-no-properties begin end)
+                             (line-number-at-pos)
+                             (current-column)
+                             (lsp-bridge-char-before)
+                             (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))))
 
 (defun lsp-bridge-find-define ()
   (interactive)
