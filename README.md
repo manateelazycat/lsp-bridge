@@ -30,7 +30,6 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                'python-mode-hook
                ))
   (add-hook hook (lambda ()
-                   (require 'lsp-bridge)
                    (lsp-bridge-enable)
                    )))
 ```
