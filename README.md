@@ -33,8 +33,6 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                    (require 'lsp-bridge)
                    (lsp-bridge-enable)
                    )))
-                   
-                   
 ```
 
 ## Report bug
