@@ -19,16 +19,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt6.QtCore import QObject, QTimer
 from core.utils import get_command_result, eval_in_emacs, generate_request_id
 import os
 import random
+import threading
 
-class FileAction(QObject):
+class FileAction(object):
 
     def __init__(self, filepath):
-        QObject.__init__(self)
-
+        object.__init__(self)
+        
         for name in ["find_define", "find_references", "prepare_rename", "rename", "completion"]:
             self.build_request_function(name)
             
@@ -75,8 +75,8 @@ class FileAction(QObject):
 
         self.version += 1
 
-        if self.try_completion_timer is not None and self.try_completion_timer.isActive():
-            self.try_completion_timer.stop()
+        if self.try_completion_timer is not None and self.try_completion_timer.is_alive():
+            self.try_completion_timer.cancel()
 
         import time
         current_time = time.time()
@@ -84,10 +84,8 @@ class FileAction(QObject):
         self.last_change_file_time = current_time
         self.last_change_file_line_text = line_text
 
-        self.try_completion_timer = QTimer()
-        self.try_completion_timer.setSingleShot(True)
-        self.try_completion_timer.timeout.connect(lambda : self.completion(row, column, before_char))
-        self.try_completion_timer.start(100)
+        self.try_completion_timer = threading.Timer(0.1, lambda : self.completion(row, column, before_char))
+        self.try_completion_timer.start()
 
     def change_cursor(self):
         import time
