@@ -19,18 +19,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt6.QtWidgets import QApplication
-from epc.server import ThreadingEPCServer
-import os
-import platform
-import signal
-import sys
-import threading
-import queue
 
+from PyQt6.QtWidgets import QApplication
 from core.fileaction import FileAction
 from core.lspserver import LspServer
 from core.utils import (init_epc_client, close_epc_client, eval_in_emacs, get_emacs_vars)
+from epc.server import ThreadingEPCServer
+import os
+import platform
+import queue
+import signal
+import sys
+import threading
 
 class LspBridge(object):
     def __init__(self, args):

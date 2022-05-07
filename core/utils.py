@@ -21,7 +21,6 @@
 
 from epc.client import EPCClient
 import base64
-import functools
 
 epc_client = None
 
@@ -99,7 +98,7 @@ def get_emacs_func_result(method_name, args):
         args = list(map(convert_arg_to_str, args))
         # Make argument encode with Base64, avoid string quote problem pass to elisp side.
         args = list(map(string_to_base64, args))
-
+        
         args.insert(0, method_name)
 
         # Call eval-in-emacs elisp function synchronously and return the result
