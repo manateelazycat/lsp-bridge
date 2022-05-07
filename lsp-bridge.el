@@ -154,8 +154,6 @@ Setting this to nil or 0 will turn off the indicator."
 
 (defvar lsp-bridge--first-start-args nil)
 
-(defvar lsp-bridge--first-start-callback nil)
-
 (defcustom lsp-bridge-name "*lsp-bridge*"
   "Name of LSPBRIDGE buffer."
   :type 'string)
@@ -270,8 +268,6 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
   (dolist (file-info lsp-bridge--first-start-args)
     (lsp-bridge-open-file file-info))
   (setq lsp-bridge--first-start-args nil))
-
-(defvar lsp-bridge--last-buffer nil)
 
 (defun lsp-bridge-enable ()
   (if (lsp-bridge-epc-live-p lsp-bridge-epc-process)
