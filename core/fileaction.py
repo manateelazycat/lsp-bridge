@@ -36,26 +36,30 @@ class FileAction(object):
             
         # Init.
         self.filepath = filepath
-        self.lang_server = lang_server
         self.request_dict = {}
         self.completion_request_list = []
         self.find_define_request_list = []
         self.find_references_request_list = []
         self.prepare_rename_request_list = []
         self.rename_request_list = []
-        
         self.last_change_file_time = -1
         self.last_change_file_line_text = ""
         self.last_change_cursor_time = -1
-        
         self.completion_prefix_string = ""
-        
         self.version = 1
-
         self.try_completion_timer = None
         
+        # Read language server information.
         self.lang_server_info = None
-        with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), "langserver", "{}.json".format(self.lang_server))) as f:
+        self.lang_server_info_path = ""
+        if os.path.exists(lang_server):
+            # If lang_server is real file path, we load the LSP server configuration from the user specified file.
+            self.lang_server_info_path = lang_server
+        else:
+            # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
+            self.lang_server_info_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "langserver", "{}.json".format(lang_server))
+            
+        with open(self.lang_server_info_path) as f:
             import json
             self.lang_server_info = json.load(f)
         
