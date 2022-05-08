@@ -160,6 +160,13 @@ Setting this to nil or 0 will turn off the indicator."
   "The Python interpreter used to run lsp-bridge.py."
   :type 'string)
 
+(defcustom lsp-bridge-current-python-command ""
+  "The Python interpreter for project, maybe a venv path."
+  :type 'string)
+
+(defun lsp-bridge-set-current-python-command ()
+  (setq lsp-bridge-current-python-command (executable-find "python")))
+
 (defcustom lsp-bridge-enable-debug nil
   "If you got segfault error, please turn this option.
 Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buffer content when next crash."

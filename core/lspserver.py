@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from core.utils import generate_request_id
+from core.utils import generate_request_id, get_emacs_var, eval_in_emacs
 from subprocess import PIPE
 from threading import Thread
 import json
@@ -427,6 +427,7 @@ class LspServer(object):
 
     def get_server_workspace_change_configuration(self):
         if self.server_type == "pyright":
+            eval_in_emacs("lsp-bridge-set-current-python-command", [])
             return {"settings": {
                 "analysis": {
                     "autoImportCompletions": True,
@@ -439,7 +440,7 @@ class LspServer(object):
                     "autoSearchPaths": True,
                     "extraPaths": []
                 },
-                "pythonPath": "/usr/bin/python",
+                "pythonPath": get_emacs_var("lsp-bridge-current-python-command"),
                 "venvPath": ""
             }}
         elif self.server_type == "solargraph":
