@@ -100,13 +100,14 @@ class LspBridgeListener(Thread):
 
 class SendRequest(Thread):
 
-    def __init__(self, process, name, params, id):
+    def __init__(self, process, name, params, id, enable_log):
         Thread.__init__(self)
         
         self.process = process
         self.name = name
         self.params = params
         self.id = id
+        self.enable_log = enable_log
 
     def run(self):
         message_dict = {}
@@ -122,18 +123,20 @@ class SendRequest(Thread):
         self.process.stdin.flush()
 
         print("\n--- Send request (1): {}".format(self.name, self.id))
-
-        print(json.dumps(message_dict, indent = 3))
+        
+        if self.enable_log:
+            print(json.dumps(message_dict, indent = 3))
 
 class SendNotification(Thread):
 
-    def __init__(self, process, lsp_message_queue, name, params):
+    def __init__(self, process, lsp_message_queue, name, params, enable_log):
         Thread.__init__(self)
 
         self.process = process
         self.lsp_message_queue = lsp_message_queue
         self.name = name
         self.params = params
+        self.enable_log = enable_log
 
     def run(self):
         message_dict = {}
@@ -153,18 +156,20 @@ class SendNotification(Thread):
         })
         
         print("\n--- Send notification: {}".format(self.name))
-
-        print(json.dumps(message_dict, indent = 3))
+        
+        if self.enable_log:
+            print(json.dumps(message_dict, indent = 3))
 
 class SendResponse(Thread):
 
-    def __init__(self, process, name, id, result):
+    def __init__(self, process, name, id, result, enable_log):
         Thread.__init__(self)
 
         self.process = process
         self.name = name
         self.id = id
         self.result = result
+        self.enable_log = enable_log
 
     def run(self):
         message_dict = {}
@@ -179,18 +184,19 @@ class SendResponse(Thread):
         self.process.stdin.flush()
 
         print("\n--- Send response: {}".format(self.name))
-
-        print(json.dumps(message_dict, indent = 3))
+        
+        if self.enable_log:
+            print(json.dumps(message_dict, indent = 3))
 
 class LspServer(object):
 
-    def __init__(self, message_queue, file_action):
+    def __init__(self, message_queue, file_action, enable_log):
         object.__init__(self)
         
         # Init.
         self.message_queue = message_queue
-        
         self.project_path = file_action.project_path
+        self.enable_log = enable_log
         self.server_type = file_action.lang_server_info["name"]
         self.server_info = file_action.lang_server_info
         self.first_file_path = file_action.filepath
@@ -441,7 +447,8 @@ class LspServer(object):
         else:
             print("\n--- Recv message")
 
-        print(json.dumps(message, indent = 3))
+        if self.enable_log:
+            print(json.dumps(message, indent = 3))
 
         if "id" in message.keys():
             if message["id"] == self.initialize_id:
@@ -481,17 +488,17 @@ class LspServer(object):
 
     def send_to_request(self, name, params, request_id):
         # Request message must be contain unique request id.
-        sender_thread = SendRequest(self.p, name, params, request_id)
+        sender_thread = SendRequest(self.p, name, params, request_id, self.enable_log)
         self.sender_threads.append(sender_thread)
         sender_thread.start()
 
     def send_to_notification(self, name, params):
-        sender_thread = SendNotification(self.p, self.lsp_message_queue, name, params)
+        sender_thread = SendNotification(self.p, self.lsp_message_queue, name, params, self.enable_log)
         self.sender_threads.append(sender_thread)
         sender_thread.start()
 
     def send_to_response(self, name, id, result):
-        sender_thread = SendResponse(self.p, name, id, result)
+        sender_thread = SendResponse(self.p, name, id, result, self.enable_log)
         self.sender_threads.append(sender_thread)
         sender_thread.start()
 

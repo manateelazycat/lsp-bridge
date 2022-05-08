@@ -63,6 +63,9 @@ class LspBridge(object):
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.start()
         
+        # Init emacs option.
+        (self.enable_lsp_server_log, ) = get_emacs_vars(["lsp-bridge-enable-log"])
+        
         # All Emacs request running in postgui_thread. 
         self.postgui_queue = queue.Queue()
         self.postgui_thread = threading.Thread(target=self.postgui_dispatcher)
@@ -123,7 +126,8 @@ class LspBridge(object):
         file_action = self.file_action_dict[filepath]
         lsp_server_name = file_action.get_lsp_server_name()
         if lsp_server_name not in self.lsp_server_dict:
-            server = LspServer(self.message_queue, file_action) # lsp server will send initialize and didOpen when open first file in project
+            # lsp server will send initialize and didOpen when open first file in project.
+            server = LspServer(self.message_queue, file_action, self.enable_lsp_server_log)
             self.lsp_server_dict[lsp_server_name] = server
         else:
             # Send didOpen notification to LSP server.

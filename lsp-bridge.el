@@ -166,6 +166,10 @@ Setting this to nil or 0 will turn off the indicator."
 Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buffer content when next crash."
   :type 'boolean)
 
+(defcustom lsp-bridge-enable-log nil
+  "Enable this option to print log message in `*lsp-bridge*' buffer, default only print message header."
+  :type 'boolean)
+
 (defcustom lsp-bridge-lang-server-list
   '(
     (python-mode . "pyright")
@@ -307,9 +311,9 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
 (defun lsp-bridge--get-lang-server-by-file-func (filepath)
   (let (lang-server)
     (dolist (buffer (buffer-list))
-     (when (string-equal (buffer-file-name buffer) filepath)
-       (with-current-buffer buffer
-         (setq lang-server (lsp-bridge-get-lang-server)))))
+      (when (string-equal (buffer-file-name buffer) filepath)
+        (with-current-buffer buffer
+          (setq lang-server (lsp-bridge-get-lang-server)))))
     lang-server))
 
 (defun lsp-bridge-char-before ()
