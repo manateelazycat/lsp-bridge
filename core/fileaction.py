@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from core.utils import get_command_result, eval_in_emacs, generate_request_id
+from core.utils import get_command_result, eval_in_emacs, generate_request_id, get_emacs_var
 import os
 import random
 import threading
@@ -55,7 +55,7 @@ class FileAction(object):
         self.try_completion_timer = None
 
         self.lsp_server = None
-        self.lsp_server_type = "pyright"
+        self.lsp_server_type = get_emacs_var("lsp-bridge-lsp-server-type")
 
         # Generate initialize request id.
         self.initialize_id = generate_request_id()

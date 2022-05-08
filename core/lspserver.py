@@ -28,6 +28,12 @@ import queue
 import re
 import subprocess
 import threading
+import traceback
+
+LSP_TYPE_LANGUAGE_TYPE_DICT = {
+    "pyright": "python",
+    "solargraph": "ruby"
+}
 
 class JsonEncoder(json.JSONEncoder):
 
@@ -62,38 +68,40 @@ class LspBridgeListener(Thread):
                 "content": json.loads(message)
             })
         except:
-            import traceback
             traceback.print_exc()
 
     def run(self):
         while self.process.poll() is None:
-            line = self.process.stdout.readline().strip()
+            try:
+                line = self.process.stdout.readline().strip()
 
-            # print("#### ", line)
+                # print("#### ", line)
 
-            if line.startswith("{"):
-                self.emit_message(line)
-            elif self.is_end_number(line) and not line.startswith("{"):
-                # LSP message need read 3 times.
-                # 1. Read Content-Length
-                # 2. Drop empty line
-                # 3. Read message base on Content-Length.
+                if line.startswith("{"):
+                    self.emit_message(line)
+                elif self.is_end_number(line) and not line.startswith("{"):
+                    # LSP message need read 3 times.
+                    # 1. Read Content-Length
+                    # 2. Drop empty line
+                    # 3. Read message base on Content-Length.
 
-                # Sometimes, Content-Length header is not starts with `Content-Length',
-                # if line not starts with char '{', we need parse number at end of line.
+                    # Sometimes, Content-Length header is not starts with `Content-Length',
+                    # if line not starts with char '{', we need parse number at end of line.
 
-                # Read Content-Length.
-                splits = line.split(":")
-                length = int(splits[1].strip())
+                    # Read Content-Length.
+                    splits = line.split(":")
+                    length = int(splits[1].strip())
 
-                # Drop empty line.
-                self.process.stdout.readline()
+                    # Drop empty line.
+                    self.process.stdout.readline()
 
-                # Emit message.
-                message = self.process.stdout.readline(length).strip()
+                    # Emit message.
+                    message = self.process.stdout.readline(length).strip()
 
-                if message != "":
-                    self.emit_message(message)
+                    if message != "":
+                        self.emit_message(message)
+            except:
+                traceback.print_exc()
 
 class SendRequest(Thread):
 
@@ -220,13 +228,15 @@ class LspServer(object):
     def lsp_message_dispatcher(self):
         while True:
             message = self.lsp_message_queue.get(True)
+            try:
+                if message["name"] == "lsp_recv_message":
+                    self.handle_recv_message(message["content"])
+                elif message["name"] == "lsp_send_notification":
+                    self.handle_send_notification(*message["content"])
             
-            if message["name"] == "lsp_recv_message":
-                self.handle_recv_message(message["content"])
-            elif message["name"] == "lsp_send_notification":
-                self.handle_send_notification(*message["content"])
-            
-            self.lsp_message_queue.task_done()
+                self.lsp_message_queue.task_done()
+            except:
+                traceback.print_exc()
 
     def send_initialize_request(self):
         initialize_options = {
@@ -251,7 +261,7 @@ class LspServer(object):
                                           {
                                               "textDocument": {
                                                   "uri": "file://" + filepath,
-                                                  "languageId": "python",
+                                                  "languageId": LSP_TYPE_LANGUAGE_TYPE_DICT[self.server_type],
                                                   "version": 0,
                                                   "text": f.read()
                                               }
@@ -412,6 +422,8 @@ class LspServer(object):
     def get_server_command(self):
         if self.server_type == "pyright":
             return ["pyright-langserver", "--stdio"]
+        elif self.server_type == "solargraph":
+            return ["solargraph", "stdio"]
 
     def get_server_workspace_change_configuration(self):
         if self.server_type == "pyright":
@@ -430,6 +442,23 @@ class LspServer(object):
                 "pythonPath": "/usr/bin/python",
                 "venvPath": ""
             }}
+        elif self.server_type == "solargraph":
+            {"settings": {
+                "solargraph": {
+                    "logLevel": "warn",
+                    "folding": True,
+                    "references": True,
+                    "rename": True,
+                    "definitions": True,
+                    "symbols": True,
+                    "formatting": True,
+                    "autoformat": True,
+                    "diagnostics": True,
+                    "hover": True,
+                    "completion": True,
+                    "useBundler": False
+                }
+            }}
 
     def handle_recv_message(self, message):
         method_name = ""
@@ -447,7 +476,7 @@ class LspServer(object):
                 # We need wait LSP server response 'initialize', then we send 'initialized' notification.
                 self.send_to_notification("initialized", {})
             else:
-                if message["id"] in self.request_dict:
+                if message["id"] in self.request_dict and not "error" in message:
                     self.message_queue.put({
                         "name": "server_response_message",
                         "content": (self.request_dict[message["id"]]["filepath"],
