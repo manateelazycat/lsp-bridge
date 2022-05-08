@@ -40,7 +40,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 2. Add ```(mode . server_name)``` in lsp-bridge-lang-server-list, such as ```(python-mode . "pyright")```
 3. Then add ```(lsp-bridge-enable)``` in mode-hook for test.
 
-Welcome send PR to help use improve support for LSP servers, thank you!
+Welcome send PR to help us improve support for LSP servers, thank you!
 
 ## Todo
 - [ ] Find references UI: use [color-rg](https://github.com/manateelazycat/color-rg) or xref
