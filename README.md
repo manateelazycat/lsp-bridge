@@ -17,10 +17,9 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 (require 'company)
 (require 'lsp-bridge)
 
-(setq company-minimum-prefix-length 1) ; pop up a completion menu by tapping a character
-(setq company-show-numbers t) ; number the candidates (use M-1, M-2 etc to select completions).
-(setq company-require-match nil) ; allow input string that do not match candidate words
-(setq company-idle-delay 0) ; trigger completion immediately.
+(setq company-minimum-prefix-length 1)
+(setq company-require-match nil)
+(setq company-idle-delay 0.2)
 (setq company-backends '((company-lsp-bridge)))
 
 (global-company-mode)
