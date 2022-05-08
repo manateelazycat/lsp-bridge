@@ -165,6 +165,10 @@ Setting this to nil or 0 will turn off the indicator."
 Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buffer content when next crash."
   :type 'boolean)
 
+(defcustom lsp-bridge-lsp-server-type "pyright"
+  "Set the default lsp server type."
+  :type 'string)
+
 (defun lsp-bridge-call-async (method &rest args)
   "Call Python EPC function METHOD and ARGS asynchronously."
   (lsp-bridge-deferred-chain

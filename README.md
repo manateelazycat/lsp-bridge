@@ -24,8 +24,18 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 
 (global-company-mode)
 
+;; For python and pyright
 (dolist (hook (list
                'python-mode-hook
+               ))
+  (add-hook hook (lambda ()
+                   (lsp-bridge-enable)
+                   )))
+
+;; Or for ruby and solargraph
+(setq lsp-bridge-lsp-server-type "solargraph")
+(dolist (hook (list
+               'ruby-mode-hook
                ))
   (add-hook hook (lambda ()
                    (lsp-bridge-enable)
@@ -37,7 +47,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 - [ ] Implement rename UI
 - [ ] Use capf implement completion-at-point: to support other completion UI, such as [Corfu](https://github.com/minad/corfu)
 - [ ] Popup web document window by [Popweb](https://github.com/manateelazycat/popweb)
-- [ ] To support other LSP server, only support pyright now
+- [ ] To support other LSP server, only support pyright, solargraph now
 
 ## Report bug
 Please use `emacs -q` and load a minimal setup with only lsp-bridge to verify that the bug is reproducible. If `emacs -q` works fine, probably something is wrong with your Emacs config.
