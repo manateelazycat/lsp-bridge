@@ -70,7 +70,6 @@ def eval_in_emacs(method_name, args):
         # Call eval-in-emacs elisp function.
         epc_client.call("eval-in-emacs", args)
 
-
 def convert_emacs_bool(symbol_value, symbol_is_boolean):
     if symbol_is_boolean == "t":
         return symbol_value == True
@@ -95,15 +94,9 @@ def get_emacs_func_result(method_name, args):
     if epc_client == None:
         print("Please call init_epc_client first before callling eval_in_emacs.")
     else:
-        args = list(map(convert_arg_to_str, args))
-        # Make argument encode with Base64, avoid string quote problem pass to elisp side.
-        args = list(map(string_to_base64, args))
-        
-        args.insert(0, method_name)
-
         # Call eval-in-emacs elisp function synchronously and return the result
-        result = epc_client.call_sync("eval-in-emacs", args)
-        return result if result != [] else False
+        result = epc_client.call_sync(method_name, args)
+        return result
 
 def get_command_result(command_string):
     import subprocess

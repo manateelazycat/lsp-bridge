@@ -1,0 +1,21 @@
+{
+  "name": "solargraph",
+  "languageId": "ruby",
+  "command": ["solargraph", "stdio"],
+  "settings": {
+    "solargraph": {
+      "logLevel": "warn",
+      "folding": true,
+      "references": true,
+      "rename": true,
+      "definitions": true,
+      "symbols": true,
+      "formatting": true,
+      "autoformat": true,
+      "diagnostics": true,
+      "hover": true,
+      "completion": true,
+      "useBundler": false
+    }
+  }
+}

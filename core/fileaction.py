@@ -27,7 +27,7 @@ import time
 
 class FileAction(object):
 
-    def __init__(self, filepath):
+    def __init__(self, filepath, lang_server):
         object.__init__(self)
         
         # Build request functions.
@@ -35,9 +35,9 @@ class FileAction(object):
             self.build_request_function(name)
             
         # Init.
-        self.request_dict = {}
-
         self.filepath = filepath
+        self.lang_server = lang_server
+        self.request_dict = {}
         self.completion_request_list = []
         self.find_define_request_list = []
         self.find_references_request_list = []
@@ -53,9 +53,13 @@ class FileAction(object):
         self.version = 1
 
         self.try_completion_timer = None
-
+        
+        self.lang_server_info = None
+        with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), "langserver", "{}.json".format(self.lang_server))) as f:
+            import json
+            self.lang_server_info = json.load(f)
+        
         self.lsp_server = None
-        self.lsp_server_type = get_emacs_var("lsp-bridge-lsp-server-type")
 
         # Generate initialize request id.
         self.initialize_id = generate_request_id()
@@ -69,7 +73,7 @@ class FileAction(object):
 
     def get_lsp_server_name(self):
         # We use project path and LSP server type as unique name.
-        return "{}#{}".format(self.project_path, self.lsp_server_type)
+        return "{}#{}".format(self.project_path, self.lang_server_info["name"])
 
     def change_file(self, start_row, start_character, end_row, end_character, range_length, change_text, row, column, before_char, line_text):
         # Send didChange request to LSP server.

@@ -30,11 +30,6 @@ import subprocess
 import threading
 import traceback
 
-LSP_TYPE_LANGUAGE_TYPE_DICT = {
-    "pyright": "python",
-    "solargraph": "ruby"
-}
-
 class JsonEncoder(json.JSONEncoder):
 
     def default(self, o): # pylint: disable=E0202
@@ -196,7 +191,8 @@ class LspServer(object):
         self.message_queue = message_queue
         
         self.project_path = file_action.project_path
-        self.server_type = file_action.lsp_server_type
+        self.server_type = file_action.lang_server_info["name"]
+        self.server_info = file_action.lang_server_info
         self.first_file_path = file_action.filepath
         self.initialize_id = file_action.initialize_id
         self.server_name = file_action.get_lsp_server_name()
@@ -261,7 +257,7 @@ class LspServer(object):
                                           {
                                               "textDocument": {
                                                   "uri": "file://" + filepath,
-                                                  "languageId": LSP_TYPE_LANGUAGE_TYPE_DICT[self.server_type],
+                                                  "languageId": self.server_info["languageId"],
                                                   "version": 0,
                                                   "text": f.read()
                                               }
@@ -420,45 +416,12 @@ class LspServer(object):
         self.send_to_notification("exit", {})
 
     def get_server_command(self):
-        if self.server_type == "pyright":
-            return ["pyright-langserver", "--stdio"]
-        elif self.server_type == "solargraph":
-            return ["solargraph", "stdio"]
+        return self.server_info["command"]
 
     def get_server_workspace_change_configuration(self):
-        if self.server_type == "pyright":
-            return {"settings": {
-                "analysis": {
-                    "autoImportCompletions": True,
-                    "typeshedPaths": [],
-                    "stubPath": "",
-                    "useLibraryCodeForTypes": True,
-                    "diagnosticMode": "openFilesOnly",
-                    "typeCheckingMode": "basic",
-                    "logLevel": "verbose",
-                    "autoSearchPaths": True,
-                    "extraPaths": []
-                },
-                "pythonPath": "/usr/bin/python",
-                "venvPath": ""
-            }}
-        elif self.server_type == "solargraph":
-            {"settings": {
-                "solargraph": {
-                    "logLevel": "warn",
-                    "folding": True,
-                    "references": True,
-                    "rename": True,
-                    "definitions": True,
-                    "symbols": True,
-                    "formatting": True,
-                    "autoformat": True,
-                    "diagnostics": True,
-                    "hover": True,
-                    "completion": True,
-                    "useBundler": False
-                }
-            }}
+        return {
+            "settings": self.server_info["settings"]
+        }
 
     def handle_recv_message(self, message):
         method_name = ""
@@ -537,6 +500,6 @@ class LspServer(object):
                 "name": "server_process_exit",
                 "content": self.server_name
             })
-        
+            
             # Don't need wait LSP server response, kill immediately.
             os.kill(self.p.pid, 9)

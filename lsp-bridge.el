@@ -111,6 +111,7 @@ Setting this to nil or 0 will turn off the indicator."
                (lsp-bridge-epc-define-method mngr 'eval-in-emacs 'eval-in-emacs-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-var 'lsp-bridge--get-emacs-var-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-vars 'lsp-bridge--get-emacs-vars-func)
+               (lsp-bridge-epc-define-method mngr 'get-lang-server 'lsp-bridge--get-lang-server-by-file-func)
                ))))
     (if lsp-bridge-server
         (setq lsp-bridge-server-port (process-contact lsp-bridge-server :service))
@@ -165,9 +166,13 @@ Setting this to nil or 0 will turn off the indicator."
 Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buffer content when next crash."
   :type 'boolean)
 
-(defcustom lsp-bridge-lsp-server-type "pyright"
-  "Set the default lsp server type."
-  :type 'string)
+(defcustom lsp-bridge-lang-server-list
+  '(
+    (python-mode . "pyright")
+    (ruby-mode . "solargraph")
+    )
+  "The lang server rule for file mode."
+  :type 'cons)
 
 (defun lsp-bridge-call-async (method &rest args)
   "Call Python EPC function METHOD and ARGS asynchronously."
@@ -273,20 +278,37 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
   (dolist (buffer (buffer-list))
     (when (string-equal (buffer-file-name buffer) filename)
       (with-current-buffer buffer
-        (setq-local lsp-bridge-flag t)
-        (setq-local lsp-bridge-last-position 0)
-        (setq-local lsp-bridge-completion-items nil)
-        (setq-local lsp-bridge-filepath filename)
+        (let ((lang-server (lsp-bridge-get-lang-server)))
+          (if lang-server
+              (progn
+                (setq-local lsp-bridge-flag t)
+                (setq-local lsp-bridge-last-position 0)
+                (setq-local lsp-bridge-completion-items nil)
+                (setq-local lsp-bridge-filepath filename)
 
-        (add-hook 'before-change-functions #'lsp-bridge-monitor-before-change nil t)
-        (add-hook 'after-change-functions #'lsp-bridge-monitor-after-change nil t)
-        (add-hook 'post-command-hook #'lsp-bridge-monitor-post-command nil t)
-        (add-hook 'kill-buffer-hook #'lsp-bridge-monitor-kill-buffer nil t)
+                (add-hook 'before-change-functions #'lsp-bridge-monitor-before-change nil t)
+                (add-hook 'after-change-functions #'lsp-bridge-monitor-after-change nil t)
+                (add-hook 'post-command-hook #'lsp-bridge-monitor-post-command nil t)
+                (add-hook 'kill-buffer-hook #'lsp-bridge-monitor-kill-buffer nil t)
 
-        ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
-        (unless lsp-bridge-is-starting
-          (lsp-bridge-start-process))
-        ))))
+                ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
+                (unless lsp-bridge-is-starting
+                  (lsp-bridge-start-process)))
+            (message "lsp-bridge not support %s now." (prin1 major-mode))))))))
+
+(defun lsp-bridge-get-lang-server ()
+  (let ((langserver-info (assoc major-mode lsp-bridge-lang-server-list)))
+    (if langserver-info
+        (cdr langserver-info)
+      nil)))
+
+(defun lsp-bridge--get-lang-server-by-file-func (filepath)
+  (let (lang-server)
+    (dolist (buffer (buffer-list))
+     (when (string-equal (buffer-file-name buffer) filepath)
+       (with-current-buffer buffer
+         (setq lang-server (lsp-bridge-get-lang-server)))))
+    lang-server))
 
 (defun lsp-bridge-char-before ()
   (let ((prev-char (char-before)))

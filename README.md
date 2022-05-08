@@ -27,24 +27,16 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 ;; For python and pyright
 (dolist (hook (list
                'python-mode-hook
-               ))
-  (add-hook hook (lambda ()
-                   (lsp-bridge-enable)
-                   )))
-
-;; Or for ruby and solargraph
-(setq lsp-bridge-lsp-server-type "solargraph")
-(dolist (hook (list
                'ruby-mode-hook
                ))
   (add-hook hook (lambda ()
                    (lsp-bridge-enable)
                    )))
+
 ```
 
 ## Todo
 - [ ] Find references UI: use [color-rg](https://github.com/manateelazycat/color-rg) or xref
-- [ ] Implement rename UI
 - [ ] Use capf implement completion-at-point: to support other completion UI, such as [Corfu](https://github.com/minad/corfu)
 - [ ] Popup web document window by [Popweb](https://github.com/manateelazycat/popweb)
 - [ ] To support other LSP server, only support pyright, solargraph now
