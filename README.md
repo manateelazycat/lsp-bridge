@@ -35,6 +35,13 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 
 ```
 
+## Customize language server configuration
+lsp-bridge load lang server configuration from directory lsp-bridge/langserver. 
+
+But default configuration maybe not works with your environment, you can change ```lsp-bridge-lang-server-list``` to customize language server configuration.
+
+Example, we can change ```(python-mode . "pyright")``` to ```(python-mode . "/my_directory/pyright.json")``` then lsp-bridge will load configuration from ```/my_directory/pyright.json``` instead load from ```lsp-bridge/langserver/pyright.json```.
+
 ## Add support for new language?
 1. Create settings file under lsp-bridge/langserver, such as ```pyright.json``` is use for pyright.
 2. Add ```(mode . server_name)``` in lsp-bridge-lang-server-list, such as ```(python-mode . "pyright")```
