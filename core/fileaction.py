@@ -143,16 +143,20 @@ class FileAction(object):
         if (request_id == self.find_define_request_list[-1] and 
             self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and 
             self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
-            try:
-                file_info = response_result[0]
-                filepath = file_info["uri"][len("file://"):]
-                row = file_info["range"]["start"]["line"]
-                column = file_info["range"]["start"]["character"]
-                eval_in_emacs("lsp-bridge-jump-to-define", [filepath, row, column])
-            except:
-                print("* Failed information about find_define response.")
-                import traceback
-                traceback.print_exc()
+            
+            if response_result:
+                try:
+                    file_info = response_result[0]
+                    filepath = file_info["uri"][len("file://"):]
+                    row = file_info["range"]["start"]["line"]
+                    column = file_info["range"]["start"]["character"]
+                    eval_in_emacs("lsp-bridge-jump-to-define", [filepath, row, column])
+                except:
+                    print("* Failed information about find_define response.")
+                    import traceback
+                    traceback.print_exc()
+            else:
+                eval_in_emacs("message", ["Can't find define."])
                 
     def handle_find_references_response(self, request_id, response_result):
         if request_id == self.find_references_request_list[-1]:
