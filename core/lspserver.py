@@ -416,7 +416,17 @@ class LspServer(object):
         self.send_to_notification("exit", {})
 
     def get_server_command(self):
-        return self.server_info["command"]
+        command_info = self.server_info["command"]
+        if type(command_info) == list:
+            # Just return command list if 'command' content is list.
+            return command_info
+        elif type(command_info) == dict:
+            if os.name in command_info:
+                # Return command match current OS.
+                return command_info[os.name]
+            else:
+                # Return default command if current OS command not found.
+                return command_info["default"]
 
     def get_server_workspace_change_configuration(self):
         return {
