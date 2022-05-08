@@ -32,6 +32,13 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                    )))
 ```
 
+## Todo
+- [ ] Find references UI: use [color-rg](https://github.com/manateelazycat/color-rg) or xref
+- [ ] Implement rename UI
+- [ ] Use capf implement completion-at-point: to support other completion UI, such as [Corfu](https://github.com/minad/corfu)
+- [ ] Popup web document window by [Popweb](https://github.com/manateelazycat/popweb)
+- [ ] To support other LSP server, only support pyright now
+
 ## Report bug
 Please use `emacs -q` and load a minimal setup with only lsp-bridge to verify that the bug is reproducible. If `emacs -q` works fine, probably something is wrong with your Emacs config.
 
