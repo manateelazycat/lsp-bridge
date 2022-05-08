@@ -170,6 +170,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
   '(
     (python-mode . "pyright")
     (ruby-mode . "solargraph")
+    (rust-mode . "rust-analyzer")
     )
   "The lang server rule for file mode."
   :type 'cons)

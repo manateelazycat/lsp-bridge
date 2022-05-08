@@ -347,7 +347,7 @@ class LspServer(object):
     def send_find_define_request(self, request_id, filepath, type, row, column):
         self.record_request_id(request_id, filepath, type)
 
-        self.send_to_request("textDocument/declaration",
+        self.send_to_request("textDocument/definition",
                              {
                                  "textDocument": {
                                      "uri": "file://" + filepath
