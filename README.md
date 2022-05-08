@@ -50,9 +50,10 @@ Example, we can change ```(python-mode . "pyright")``` to ```(python-mode . "/my
 Welcome send PR to help us improve support for LSP servers, thank you!
 
 ## Todo
+- [ ] Research how to make company-mode update the completion items after lsp-bridge receive completion message
 - [ ] Find references UI: use [color-rg](https://github.com/manateelazycat/color-rg) or xref
-- [ ] Use capf implement completion-at-point: to support other completion UI, such as [Corfu](https://github.com/minad/corfu)
 - [ ] Popup web document window by [Popweb](https://github.com/manateelazycat/popweb)
+- [ ] Use capf implement completion-at-point: to support other completion UI, such as [Corfu](https://github.com/minad/corfu)
 - [ ] To support other LSP server, only support pyright, solargraph now
 
 ## Report bug
