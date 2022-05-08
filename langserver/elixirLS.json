@@ -1,0 +1,20 @@
+{
+  "name": "elixirLS",
+  "languageId": "elixir",
+  "command": {
+    "posix": ["language_server.sh"],
+    "nt": ["language_server.bat"],
+    "default": ["language_server.sh"]
+  },
+  "settings": {
+    "elixirLS": {
+      "dialyzerEnabled": true,
+      "dialyzerWarnOpts": [],
+      "dialyzerFormat": "dialyxir_short",
+      "fetchDeps": true,
+      "suggestSpecs": true,
+      "signatureAfterComplete": true,
+      "enableTestLenses": false
+    }
+  }
+}
