@@ -276,6 +276,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
         (setq-local lsp-bridge-flag t)
         (setq-local lsp-bridge-last-position 0)
         (setq-local lsp-bridge-completion-items nil)
+        (setq-local lsp-bridge-filepath filename)
 
         (add-hook 'before-change-functions #'lsp-bridge-monitor-before-change nil t)
         (add-hook 'after-change-functions #'lsp-bridge-monitor-after-change nil t)
@@ -294,12 +295,12 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
 (defun lsp-bridge-monitor-post-command ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (unless (equal (point) lsp-bridge-last-position)
-      (lsp-bridge-call-async "change_cursor" (buffer-file-name))
+      (lsp-bridge-call-async "change_cursor" lsp-bridge-filepath)
       (setq-local lsp-bridge-last-position (point)))))
 
 (defun lsp-bridge-monitor-kill-buffer ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (lsp-bridge-call-async "close_file" (buffer-file-name))))
+    (lsp-bridge-call-async "close_file" lsp-bridge-filepath)))
 
 (defun lsp-bridge-record-completion-items (filepath items)
   (dolist (buffer (buffer-list))
@@ -348,7 +349,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
      ;; Add operation.
      ((zerop length)
       (lsp-bridge-call-async "change_file"
-                             (buffer-file-name)
+                             lsp-bridge-filepath
                              (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
                              (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
                              0
@@ -359,7 +360,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
      ;; Delete operation.
      ((eq begin end)
       (lsp-bridge-call-async "change_file"
-                             (buffer-file-name)
+                             lsp-bridge-filepath
                              (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
                              lsp-bridge--before-change-end-pos-row lsp-bridge--before-change-end-pos-character
                              length
@@ -370,7 +371,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
      ;; Change operation.
      (t
       (lsp-bridge-call-async "change_file"
-                             (buffer-file-name)
+                             lsp-bridge-filepath
                              (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
                              lsp-bridge--before-change-end-pos-row lsp-bridge--before-change-end-pos-character
                              length
@@ -382,17 +383,46 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
 
 (defun lsp-bridge-find-define ()
   (interactive)
-  (lsp-bridge-call-async "find_define" (buffer-file-name) (line-number-at-pos) (current-column)))
+  (lsp-bridge-call-async "find_define" lsp-bridge-filepath (line-number-at-pos) (current-column)))
 
 (defun lsp-bridge-find-references ()
   (interactive)
-  (lsp-bridge-call-async "find_references" (buffer-file-name) (line-number-at-pos) (current-column)))
+  (lsp-bridge-call-async "find_references" lsp-bridge-filepath (line-number-at-pos) (current-column)))
 
 (defun lsp-bridge-rename ()
   (interactive)
-  (lsp-bridge-call-async "prepare_rename" (buffer-file-name) (line-number-at-pos) (current-column))
+  (lsp-bridge-call-async "prepare_rename" lsp-bridge-filepath (line-number-at-pos) (current-column))
   (let ((new-name (read-string "Rename to: ")))
-    (lsp-bridge-call-async "rename" (buffer-file-name) (line-number-at-pos) (current-column) new-name)))
+    (lsp-bridge-call-async "rename" lsp-bridge-filepath (line-number-at-pos) (current-column) new-name)))
+
+(defun lsp-bridge-rename-highlight (filepath line bound-start bound-end)
+  (dolist (buf (buffer-list))
+    (when (string-equal (buffer-file-name buf) filepath)
+      (with-current-buffer buf
+        (let* ((highlight-line (+ 1 (string-to-number line)))
+               (start-pos (lsp-bridge-get-pos buf highlight-line (string-to-number bound-start)))
+               (end-pos (lsp-bridge-get-pos buf highlight-line (string-to-number bound-end))))
+          (require 'pulse)
+          (let ((pulse-iterations 1)
+                (pulse-delay lsp-bridge-flash-line-delay))
+            (pulse-momentary-highlight-region start-pos end-pos 'lsp-bridge-font-lock-flash)))))))
+
+(defun lsp-bridge-get-pos (buf line column)
+  (with-current-buffer buf
+    (save-excursion
+      (goto-line line)
+      (move-to-column column)
+      (point))))
+
+(defun lsp-bridge-rename-finish (rename-files counter)
+  (save-excursion
+    (dolist (filepath rename-files)
+      (dolist (buf (buffer-list))
+        (when (string-equal (buffer-file-name buf) filepath)
+          (with-current-buffer buf
+            (revert-buffer :ignore-auto :noconfirm))))))
+
+  (message "Rename %s places in %s files." counter (length rename-files)))
 
 (defun lsp-bridge-jump-to-define (filepath row column)
   (interactive)

@@ -164,8 +164,77 @@ class FileAction(object):
             
     def handle_prepare_rename_response(self, request_id, response_result):
         if request_id == self.prepare_rename_request_list[-1]:
-            print(response_result)
+            eval_in_emacs("lsp-bridge-rename-highlight", [
+                self.filepath,
+                response_result["start"]["line"],
+                response_result["start"]["character"],
+                response_result["end"]["character"]
+            ])
             
     def handle_rename_response(self, request_id, response_result):
         if request_id == self.rename_request_list[-1]:
-            print(response_result)
+            if response_result:
+                try:
+                    counter = 0
+                    rename_files = []
+                    for rename_info in response_result["documentChanges"]:
+                        (rename_file, rename_counter) = self.rename_symbol_in_file(rename_info)
+                        rename_files.append(rename_file)
+                        counter += rename_counter
+                        
+                    eval_in_emacs("lsp-bridge-rename-finish", [rename_files, counter])
+                except:
+                    print("* Failed information about rename response.")
+                    import traceback
+                    traceback.print_exc()
+            
+    def rename_symbol_in_file(self, rename_info):
+        rename_file = rename_info["textDocument"]["uri"]
+        if rename_file.startswith("file://"):
+            rename_file = rename_file[len("file://"):]
+            
+        lines = []
+        rename_counter = 0
+        
+        with open(rename_file, "r") as f:
+            lines = f.readlines()
+            
+            line_offset_dict = {}
+            
+            edits = rename_info["edits"]
+            for edit_info in edits:
+                # Get replace line.
+                replace_line = edit_info["range"]["start"]["line"]
+                
+                # Get current line offset, if previous edit is same as current line.
+                # We need add changed offset to make sure current edit has right column.
+                replace_line_offset = 0
+                if replace_line in line_offset_dict:
+                    replace_line_offset = line_offset_dict[replace_line]
+                else:
+                    line_offset_dict[replace_line] = 0
+                
+                # Calculate replace column offset.
+                replace_column_start = edit_info["range"]["start"]["character"] + replace_line_offset
+                replace_column_end = edit_info["range"]["end"]["character"] + replace_line_offset
+                
+                # Get current line.
+                line_content = lines[replace_line]
+                
+                # Get new changed offset.
+                new_text = edit_info["newText"]
+                replace_offset = len(new_text) - (replace_column_end - replace_column_start)
+                
+                # Overlapping new changed offset.
+                line_offset_dict[replace_line] = line_offset_dict[replace_line] + replace_offset
+                
+                # Replace current line.
+                new_line_content = line_content[:replace_column_start] + new_text + line_content[replace_column_end:]
+                lines[replace_line] = new_line_content
+                
+                rename_counter += 1
+                
+        with open(rename_file, "w") as f:
+            f.writelines(lines)
+            
+        return (rename_file, rename_counter)
