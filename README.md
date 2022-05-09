@@ -66,12 +66,9 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 6. hls (haskell)
 
 ## Todo
-
-- [ ] Research how to make company-mode update the completion items after lsp-bridge receive completion message
 - [ ] Find references UI: use [color-rg](https://github.com/manateelazycat/color-rg) or xref
 - [ ] Popup web document window by [Popweb](https://github.com/manateelazycat/popweb)
-- [ ] Use capf implement completion-at-point: to support other completion UI, such as [Corfu](https://github.com/minad/corfu)
-- [ ] To support other LSP server
+- [ ] To support more LSP servers
 
 ## Report bug
 
