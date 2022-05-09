@@ -29,7 +29,6 @@ import queue
 import signal
 import sys
 import threading
-import urllib
 
 class LspBridge(object):
     def __init__(self, args):
@@ -87,13 +86,10 @@ class LspBridge(object):
         while True:
             message = self.postgui_queue.get(True)
             
-            # File path from LSP maybe contain quoted char, for example '@' quoted to '%40'
-            _file_path = urllib.parse.unquote(message["content"])
-            
             if message["name"] == "open_file":
-                self._open_file(_file_path)
+                self._open_file(message["content"])
             elif message["name"] == "close_file":
-                self._close_file(_file_path)
+                self._close_file(message["content"])
             elif message["name"] == "action_func":
                 (func_name, func_args) = message["content"]
                 getattr(self, func_name)(*func_args)
