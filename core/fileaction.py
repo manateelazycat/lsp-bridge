@@ -152,12 +152,16 @@ class FileAction(object):
             eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, common_part, completion_items])
 
     def calc_completion_prefix_string(self):
-        string_after_dot = self.last_change_file_line_text[self.last_change_file_line_text.rfind(".") + 1:]
-        split_strings = string_after_dot.split()
-        if len(split_strings) > 0:
-            return split_strings[-1]
-        else:
+        if self.last_change_file_line_text.endswith(" "):
+            # Return "" if have blank character before cursor.
             return ""
+        else:
+            string_after_dot = self.last_change_file_line_text[self.last_change_file_line_text.rfind(".") + 1:]
+            split_strings = string_after_dot.split()
+            if len(split_strings) > 0:
+                return split_strings[-1]
+            else:
+                return ""
 
     def handle_find_define_response(self, request_id, response_result):
         # Stop send jump define if request id expired, or change file, or move cursor.
