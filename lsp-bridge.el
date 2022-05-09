@@ -309,8 +309,6 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
                 (add-hook 'post-command-hook #'lsp-bridge-monitor-post-command nil t)
                 (add-hook 'kill-buffer-hook #'lsp-bridge-monitor-kill-buffer nil t)
 
-                (add-function :after after-focus-change-function 'lbcf-hide)
-
                 ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
                 (unless lsp-bridge-is-starting
                   (lsp-bridge-start-process)))

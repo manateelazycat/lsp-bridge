@@ -112,6 +112,7 @@
       (setq lbcf--frame (make-frame
                          `((parent-frame . (window-frame))
                            (background-color . ,background-color)
+                           (skip-taskbar . t)
                            (minibuffer . nil)
                            (no-accept-focus . t)
                            (no-focus-on-map . t)
