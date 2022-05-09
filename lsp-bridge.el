@@ -481,7 +481,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
                              (buffer-substring-no-properties begin end)
                              (line-number-at-pos) (current-column)
                              (lsp-bridge-char-before)
-                             (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+                             (buffer-substring-no-properties (line-beginning-position) (point))))
      ;; Delete operation.
      ((eq begin end)
       (lsp-bridge-call-async "change_file"
@@ -492,7 +492,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
                              ""
                              (line-number-at-pos) (current-column)
                              (lsp-bridge-char-before)
-                             (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+                             (buffer-substring-no-properties (line-beginning-position) (point))))
      ;; Change operation.
      (t
       (lsp-bridge-call-async "change_file"
@@ -504,7 +504,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
                              (line-number-at-pos)
                              (current-column)
                              (lsp-bridge-char-before)
-                             (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))))
+                             (buffer-substring-no-properties (line-beginning-position) (point)))))))
 
 (defun lsp-bridge-find-define ()
   (interactive)
