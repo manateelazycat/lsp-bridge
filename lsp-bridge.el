@@ -400,6 +400,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
 (defvar lsp-bridge-mode-map
   '(
     ("TAB" . lsp-bridge-complete-selection)
+    ("RET" . lsp-bridge-complete-selection)
     ("M-h" . lsp-bridge-complete-selection)
     ("M-H" . lsp-bridge-complete-common)
     ("M-n" . lsp-bridge-select-next)

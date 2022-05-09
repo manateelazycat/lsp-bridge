@@ -41,6 +41,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 | Key   | Event                         |
 | :---- | :---------------------------- |
 | `TAB` | lsp-bridge-complete-selection |
+| `RET` | lsp-bridge-complete-selection |
 | `M-h` | lsp-bridge-complete-selection |
 | `M-H` | lsp-bridge-complete-common    |
 | `M-n` | lsp-bridge-select-next        |
