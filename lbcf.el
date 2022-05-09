@@ -107,6 +107,10 @@
 
 (defun lbcf-show (candidates)
   (let* ((popup-info (lbcf-get-frame-popup-pos candidates))
+         (x (nth 0 popup-info))
+         (y (nth 1 popup-info))
+         (width (nth 2 popup-info))
+         (height (nth 3 popup-info))
          (background-color (lbcf-get-frame-background-color)))
     (unless lbcf--frame
       (setq lbcf--frame (make-frame
@@ -142,9 +146,19 @@
     (let ((win (frame-root-window lbcf--frame)))
       (set-window-buffer win (lbcf--make-buffer candidates))
       (set-window-dedicated-p win t))
-    (set-frame-size lbcf--frame (nth 2 popup-info) (nth 3 popup-info) t)
-    (set-frame-position lbcf--frame (nth 0 popup-info) (nth 1 popup-info))
-    (make-frame-visible lbcf--frame)))
+    (set-frame-size lbcf--frame width height t)
+    (if (frame-visible-p lbcf--frame)
+        ;; Avoid flicker when frame is already visible.
+        ;; Redisplay, wait for resize and then move the frame.
+        (unless (equal (frame-position lbcf--frame) (cons x y))
+          (redisplay 'force)
+          (sleep-for 0.01)
+          (set-frame-position lbcf--frame x y))
+      ;; Force redisplay, otherwise the popup sometimes does not display content.
+      (set-frame-position lbcf--frame x y)
+      (redisplay 'force)
+      (make-frame-visible lbcf--frame))
+    ))
 
 (defun lbcf-get-frame-popup-pos (candidates)
   (let* ((edge (window-inside-pixel-edges))
