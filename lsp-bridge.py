@@ -145,7 +145,7 @@ class LspBridge(object):
         
     def _close_file(self, filepath):
         if filepath in self.file_action_dict:
-            action = FileAction(filepath)
+            action = self.file_action_dict[filepath]
             
             lsp_server_name = action.get_lsp_server_name()
             if lsp_server_name in self.lsp_server_dict:
