@@ -1,0 +1,9 @@
+{
+    "name": "metals",
+    "languageId": "scala",
+    "command": [
+        "metals",
+        "-J-Dmetals.allow-multiline-string-formatting=off"
+    ],
+    "settings": {}
+}

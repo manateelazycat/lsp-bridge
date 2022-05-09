@@ -24,6 +24,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                'go-mode-hook
                'haskell-mode-hook
                'haskell-literate-mode-hook
+               'scala-mode-hook
                ))
   (add-hook hook (lambda ()
                    (lsp-bridge-enable)
@@ -34,7 +35,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 ### Keys
 
 | Key   | Event                         |
-| :---- | :------                       |
+| :---- | :---------------------------- |
 | `TAB` | lsp-bridge-complete-selection |
 | `M-h` | lsp-bridge-complete-selection |
 | `M-H` | lsp-bridge-complete-common    |
@@ -68,8 +69,10 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 5. gopls (go)
 6. hls (haskell)
 7. clangd (c++)
+8. metals (scala)
 
 ## Todo
+
 - [ ] Find references UI: use [color-rg](https://github.com/manateelazycat/color-rg) or xref
 - [ ] Popup web document window by [Popweb](https://github.com/manateelazycat/popweb)
 - [ ] To support more LSP servers

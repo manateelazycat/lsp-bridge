@@ -180,6 +180,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     (elixir-mode . "elixirLS")
     (go-mode . "gopls")
     (haskell-mode . "hls")
+    (scala-mode . "metals")
     )
   "The lang server rule for file mode."
   :type 'cons)
