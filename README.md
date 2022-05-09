@@ -9,22 +9,13 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 ## Installation
 
 1. Install [python-epc](https://github.com/tkf/python-epc): `pip install epc`
-2. Install [company-mode](https://github.com/company-mode/company-mode)
-3. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
-4. Add follow code in your ~/.emacs:
+2. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
+3. Add follow code in your ~/.emacs:
 
 ```
 (add-to-list 'load-path "<path-to-lsp-bridge>")
 
-(require 'company)
 (require 'lsp-bridge)
-
-(setq company-minimum-prefix-length 1)
-(setq company-require-match nil)
-(setq company-idle-delay 0.2)
-(setq company-backends '((company-lsp-bridge)))
-
-(global-company-mode)
 
 ;; For python and pyright
 (dolist (hook (list
@@ -39,6 +30,18 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                    )))
 
 ```
+
+### Keys
+
+| Key   | Event                         |
+| :---- | :------                       |
+| `TAB` | lsp-bridge-complete-selection |
+| `M-h` | lsp-bridge-complete-selection |
+| `M-H` | lsp-bridge-complete-common    |
+| `M-n` | lsp-bridge-select-next        |
+| `M-p` | lsp-bridge-select-previous    |
+| `M-,` | lsp-bridge-select-last        |
+| `M-.` | lsp-bridge-select-first       |
 
 ## Customize language server configuration
 
