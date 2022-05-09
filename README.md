@@ -72,6 +72,7 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 5. gopls (go)
 6. hls (haskell)
 7. clangd (c++)
+8. dart_analysis_server (dart)
 
 ## Todo
 - [ ] Find references UI: use [color-rg](https://github.com/manateelazycat/color-rg) or xref
