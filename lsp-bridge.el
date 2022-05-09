@@ -182,6 +182,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     (go-mode . "gopls")
     (haskell-mode . "hls")
     (dart-mode . "dart_analysis_server")
+    (scala-mode . "metals")
     )
   "The lang server rule for file mode."
   :type 'cons)
