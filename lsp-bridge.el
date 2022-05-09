@@ -335,9 +335,23 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
 (defun lsp-bridge-monitor-post-command ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (unless (equal (point) lsp-bridge-last-position)
+      (let* ((last-pos-line (lsp-bridge-point-row lsp-bridge-last-position))
+             (last-pos-column (lsp-bridge-point-column lsp-bridge-last-position))
+             (current-pos-line (lsp-bridge-point-row (point)))
+             (current-pos-column (lsp-bridge-point-column (point))))
+        (cond
+         ;; Hide completion frame when user move cursor to different line.
+         ((not (eq last-pos-line current-pos-line))
+          (lbcf-hide))
+         ;; Hide completion frame when user move cursor backward.
+         ((and (eq last-pos-line current-pos-line)
+               (< current-pos-column last-pos-column))
+          (lbcf-hide))))
+
       (lsp-bridge-call-async "change_cursor" lsp-bridge-filepath)
       (setq-local lsp-bridge-last-position (point))))
 
+  ;; Hide completion frame when user press Ctrl + G.
   (when (string-equal (format "%s" this-command) "keyboard-quit")
     (lbcf-hide)))
 
@@ -351,19 +365,24 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
       (setq-local lsp-bridge-completion-items items)
       (setq-local lsp-bridge-completion-prefix prefix)
       (setq-local lsp-bridge-completion-common common)
-      (cond ((and (>= (length items) 1)
-                  (not (string-equal (car items) ""))
-                  (not (string-equal prefix (nth 0 items))))
-             (lbcf-show lsp-bridge-completion-items))
-            (t
-             (lbcf-hide))))))
+      (cond
+       ;; Show completion frame when receive completion items.
+       ((and (>= (length items) 1)      ; items is more than one
+             (not (string-equal (car items) "")) ; not empty items list
+             (not (string-equal prefix (nth 0 items)))) ; prefix is not same last item
+        (lbcf-show lsp-bridge-completion-items))
+       ;; Otherwise hide completion frame.
+       (t
+        (lbcf-hide))))))
 
 (defvar lsp-bridge--last-buffer nil)
 
 (defun lsp-bridge-monitor-window-buffer-change ()
+  ;; Hide completion frame when buffer or window changed.
   (unless (eq (current-buffer)
               lsp-bridge--last-buffer)
     (lbcf-hide))
+
   (unless (or (minibufferp)
               (string-equal (buffer-name) "*Messages*"))
     (setq lsp-bridge--last-buffer (current-buffer))))
@@ -383,6 +402,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
     ))
 
 (defun lsp-bridge-monitor-pre-command ()
+  ;; Intercept keys if it match `lsp-bridge-mode-map'.
   (when (and lbcf--frame
              (frame-visible-p lbcf--frame))
     (let ((key-name (key-description (this-command-keys-vector))))
@@ -423,6 +443,11 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
   (save-excursion
     (goto-char pos)
     (line-number-at-pos)))
+
+(defun lsp-bridge-point-column (pos)
+  (save-excursion
+    (goto-char pos)
+    (current-column)))
 
 (defun lsp-bridge-point-character (pos)
   (save-excursion

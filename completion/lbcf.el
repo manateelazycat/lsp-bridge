@@ -268,7 +268,8 @@
   :group 'insert-translated-name)
 
 (defun lbcf-hide ()
-  (when (frame-visible-p lbcf--frame)
+  (when (and lbcf--frame
+             (frame-visible-p lbcf--frame))
     (make-frame-invisible lbcf--frame)))
 
 (provide 'lbcf)
