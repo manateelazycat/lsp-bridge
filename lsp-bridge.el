@@ -176,6 +176,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     (ruby-mode . "solargraph")
     (rust-mode . "rust-analyzer")
     (elixir-mode . "elixirLS")
+    (go-mode . "gopls")
     )
   "The lang server rule for file mode."
   :type 'cons)

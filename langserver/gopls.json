@@ -1,0 +1,20 @@
+{
+  "name": "gopls",
+  "languageId": "go",
+  "command": ["gopls"],
+  "settings": {
+    "gopls": {
+      "usePlaceholders": true,
+      "hoverKind": "SynopsisDocumentation",
+      "buildFlags": [],
+      "linkTarget": "pkg.go.dev",
+      "linksInHover": true,
+      "gofumpt": true,
+      "local": "",
+      "directoryFilters": [],
+      "importShortcut": "Both",
+      "symbolMatcher": "Fuzzy",
+      "symbolStyle": "Dynamic"
+    }
+  }
+}

@@ -54,6 +54,7 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 2. solargraph (ruby)
 3. rust-analyzer (rust)
 4. elixirLS (elixir) Note: please ensure export `elixir-ls` release directory in your system PATH at first.
+5. gopls (golang)
 
 ## Todo
 - [ ] Research how to make company-mode update the completion items after lsp-bridge receive completion message
