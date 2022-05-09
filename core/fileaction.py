@@ -140,11 +140,21 @@ class FileAction(object):
         if (request_id == self.completion_request_list[-1] and 
             self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and 
             self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
-            self.completion_prefix_string = self.last_change_file_line_text[self.last_change_file_line_text.rfind(".") + 1:]
+            
+            self.completion_prefix_string = self.calc_completion_prefix_string()
+            
             completion_items = list(filter(lambda label: label.startswith(self.completion_prefix_string), 
                                            list(map(lambda item: item["label"], response_result["items"]))))
                     
             eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, completion_items])
+            
+    def calc_completion_prefix_string(self):
+        string_after_dot = self.last_change_file_line_text[self.last_change_file_line_text.rfind(".") + 1:]
+        split_strings = string_after_dot.split()
+        if len(split_strings) > 0:
+            return split_strings[-1]
+        else:
+            return ""
             
     def handle_find_define_response(self, request_id, response_result):
         # Stop send jump define if request id expired, or change file, or move cursor.
