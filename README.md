@@ -28,6 +28,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 (dolist (hook (list
                'python-mode-hook
                'ruby-mode-hook
+               'go-mode-hook
                ))
   (add-hook hook (lambda ()
                    (lsp-bridge-enable)
@@ -54,6 +55,7 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 2. solargraph (ruby)
 3. rust-analyzer (rust)
 4. elixirLS (elixir) Note: please ensure export `elixir-ls` release directory in your system PATH at first.
+5. gopls (go)
 
 ## Todo
 - [ ] Research how to make company-mode update the completion items after lsp-bridge receive completion message
