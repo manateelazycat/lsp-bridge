@@ -64,6 +64,7 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 4. elixirLS (elixir) Note: please ensure export `elixir-ls` release directory in your system PATH at first.
 5. gopls (go)
 6. hls (haskell)
+7. clangd (c++)
 
 ## Todo
 

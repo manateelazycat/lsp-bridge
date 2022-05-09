@@ -1,0 +1,13 @@
+{
+    "name": "clangd",
+    "languageId": "c++",
+    "command": [
+        "clangd",
+        "--all-scopes-completion",
+        "--cland-tidy",
+        "--enable-config",
+        "--header-insertion-decorators=0",
+        "--inlay-hints"
+    ],
+    "settings": {}
+}
