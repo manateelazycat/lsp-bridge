@@ -181,6 +181,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     (elixir-mode . "elixirLS")
     (go-mode . "gopls")
     (haskell-mode . "hls")
+    (dart-mode . "dart_analysis_server")
     (scala-mode . "metals")
     )
   "The lang server rule for file mode."
@@ -189,7 +190,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 (defun lsp-bridge-call-async (method &rest args)
   "Call Python EPC function METHOD and ARGS asynchronously."
   (lsp-bridge-deferred-chain
-   (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) args)))
+    (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) args)))
 
 (defun lsp-bridge-call-sync (method &rest args)
   "Call Python EPC function METHOD and ARGS synchronously."

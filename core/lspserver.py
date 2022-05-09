@@ -85,13 +85,21 @@ class LspBridgeListener(Thread):
 
                     # Read Content-Length.
                     splits = line.split(":")
-                    length = int(splits[1].strip())
+                    try:
+                        length = int(splits[1].strip())
 
-                    # Drop empty line.
-                    self.process.stdout.readline()
+                        # Drop empty line.
+                        self.process.stdout.readline()
 
-                    # Emit message.
-                    message = self.process.stdout.readline(length).strip()
+                        # Emit message.
+                        message = self.process.stdout.readline(length).strip()
+                    except:
+                        # Some server, like dart_analysis_server, sends message with different format:
+                        # Content-Type: application/vscode-jsonrpc; charset=utf-8
+                        #
+                        # {...}Content-Length: <length>
+                        self.process.stdout.readline()
+                        message = self.process.stdout.readline().strip()
 
                     if message != "":
                         self.emit_message(message)
@@ -102,7 +110,7 @@ class SendRequest(Thread):
 
     def __init__(self, process, name, params, id, enable_log):
         Thread.__init__(self)
-        
+
         self.process = process
         self.name = name
         self.params = params
@@ -123,7 +131,7 @@ class SendRequest(Thread):
         self.process.stdin.flush()
 
         print("\n--- Send request (1): {}".format(self.name, self.id))
-        
+
         if self.enable_log:
             print(json.dumps(message_dict, indent = 3))
 
@@ -154,9 +162,9 @@ class SendNotification(Thread):
             "name": "lsp_send_notification",
             "content": (self.name, self.params)
         })
-        
+
         print("\n--- Send notification: {}".format(self.name))
-        
+
         if self.enable_log:
             print(json.dumps(message_dict, indent = 3))
 
@@ -184,7 +192,7 @@ class SendResponse(Thread):
         self.process.stdin.flush()
 
         print("\n--- Send response: {}".format(self.name))
-        
+
         if self.enable_log:
             print(json.dumps(message_dict, indent = 3))
 
@@ -192,7 +200,7 @@ class LspServer(object):
 
     def __init__(self, message_queue, file_action, enable_log):
         object.__init__(self)
-        
+
         # Init.
         self.message_queue = message_queue
         self.project_path = file_action.project_path
@@ -215,7 +223,7 @@ class LspServer(object):
 
         # Start LSP sever.
         self.p = subprocess.Popen(self.get_server_command(),
-                                  bufsize=100000000, # we need make buffer size big enough, avoid pipe hang by big data response from LSP server 
+                                  bufsize=100000000, # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
                                   text=True,
                                   stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
@@ -226,7 +234,7 @@ class LspServer(object):
         # STEP 1: Say hello to LSP server.
         # Send 'initialize' request.
         self.send_initialize_request()
-        
+
     def lsp_message_dispatcher(self):
         while True:
             message = self.lsp_message_queue.get(True)
@@ -235,7 +243,7 @@ class LspServer(object):
                     self.handle_recv_message(message["content"])
                 elif message["name"] == "lsp_send_notification":
                     self.handle_send_notification(*message["content"])
-            
+
                 self.lsp_message_queue.task_done()
             except:
                 traceback.print_exc()
@@ -471,9 +479,9 @@ class LspServer(object):
             # After 'initialized' message finish, we should send 'workspace/didChangeConfiguration' notification.
             # The setting parameters of each language server are different.
             self.send_to_notification("workspace/didChangeConfiguration", self.get_server_workspace_change_configuration())
-            
+
             # STEP 4: Tell LSP server open file.
-            # We need send 'textDocument/didOpen' notification, 
+            # We need send 'textDocument/didOpen' notification,
             # then LSP server will return file information, such as completion, find-define, find-references and rename etc.
             self.send_did_open_notification(self.first_file_path)
         elif name == "textDocument/didOpen":
@@ -517,6 +525,6 @@ class LspServer(object):
                 "name": "server_process_exit",
                 "content": self.server_name
             })
-            
+
             # Don't need wait LSP server response, kill immediately.
             os.kill(self.p.pid, 9)

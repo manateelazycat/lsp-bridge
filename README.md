@@ -73,7 +73,8 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 5. gopls (go)
 6. hls (haskell)
 7. clangd (c++)
-8. metals (scala)
+8. dart_analysis_server (dart)
+9. metals (scala)
 
 ## Todo
 
