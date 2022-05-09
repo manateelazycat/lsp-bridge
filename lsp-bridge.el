@@ -182,6 +182,8 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     (go-mode . "gopls")
     (haskell-mode . "hls")
     (scala-mode . "metals")
+    (typescript-mode . "typescript")
+    (js2-mode . "typescript")
     )
   "The lang server rule for file mode."
   :type 'cons)
