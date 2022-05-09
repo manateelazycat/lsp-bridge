@@ -28,7 +28,10 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                'go-mode-hook
                'haskell-mode-hook
                'haskell-literate-mode-hook
+               'dart-mode-hook
                'scala-mode-hook
+               'typescript-mode-hook
+               'js2-mode-hook
                ))
   (add-hook hook (lambda ()
                    (lsp-bridge-enable)
@@ -67,15 +70,16 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 
 ## Supported language servers
 
-1. pyright (python)
-2. solargraph (ruby)
-3. rust-analyzer (rust)
-4. elixirLS (elixir) Note: please ensure export `elixir-ls` release directory in your system PATH at first.
-5. gopls (go)
-6. hls (haskell)
-7. clangd (c++)
+1. clangd (c++)
+2. pyright (python)
+3. solargraph (ruby)
+4. rust-analyzer (rust)
+5. elixirLS (elixir) Note: please ensure export `elixir-ls` release directory in your system PATH at first.
+6. gopls (go)
+7. hls (haskell)
 8. dart_analysis_server (dart)
 9. metals (scala)
+10. typescript (typescript, javascript)
 
 ## Todo
 
