@@ -148,8 +148,12 @@ class FileAction(object):
                                            list(map(lambda item: item["label"], response_result["items"] if "items" in response_result else response_result))))
 
             common_part = os.path.commonprefix(completion_items)
-
-            eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, common_part, completion_items])
+            
+            if len(completion_items) == 1 and (self.completion_prefix_string == common_part == completion_items[0]):
+                # Clear completion items if user input last item.
+                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, common_part, []])
+            else:
+                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, common_part, completion_items])
 
     def calc_completion_prefix_string(self):
         if self.last_change_file_line_text.endswith(" "):
