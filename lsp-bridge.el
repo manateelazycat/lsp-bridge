@@ -415,7 +415,8 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
 
 (defun lsp-bridge-complete-selection ()
   (interactive)
-  (insert (string-remove-prefix lsp-bridge-completion-prefix (lbcf-get-select-item))))
+  (insert (string-remove-prefix lsp-bridge-completion-prefix (lbcf-get-select-item)))
+  (lbcf-hide))
 
 (defun lsp-bridge-complete-common ()
   (interactive)
