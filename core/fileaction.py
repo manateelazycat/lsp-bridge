@@ -52,7 +52,7 @@ class FileAction(object):
         # Read language server information.
         self.lang_server_info = None
         self.lang_server_info_path = ""
-        if os.path.exists(lang_server):
+        if os.path.exists(lang_server) and os.path.sep in lang_server:
             # If lang_server is real file path, we load the LSP server configuration from the user specified file.
             self.lang_server_info_path = lang_server
         else:
@@ -145,8 +145,10 @@ class FileAction(object):
             
             completion_items = list(filter(lambda label: label.startswith(self.completion_prefix_string), 
                                            list(map(lambda item: item["label"], response_result["items"]))))
+            
+            common_part = os.path.commonprefix(completion_items)
                     
-            eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, completion_items])
+            eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, common_part, completion_items])
             
     def calc_completion_prefix_string(self):
         string_after_dot = self.last_change_file_line_text[self.last_change_file_line_text.rfind(".") + 1:]

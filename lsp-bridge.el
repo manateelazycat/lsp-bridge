@@ -75,6 +75,7 @@
 (require 'map)
 (require 'seq)
 (require 'subr-x)
+(require 'lbcf)
 
 (require 'lsp-bridge-epc)
 
@@ -291,12 +292,17 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
                 (setq-local lsp-bridge-flag t)
                 (setq-local lsp-bridge-last-position 0)
                 (setq-local lsp-bridge-completion-items nil)
+                (setq-local lsp-bridge-completion-prefix nil)
+                (setq-local lsp-bridge-completion-common nil)
                 (setq-local lsp-bridge-filepath filename)
 
                 (add-hook 'before-change-functions #'lsp-bridge-monitor-before-change nil t)
                 (add-hook 'after-change-functions #'lsp-bridge-monitor-after-change nil t)
+                (add-hook 'pre-command-hook #'lsp-bridge-monitor-pre-command nil t)
                 (add-hook 'post-command-hook #'lsp-bridge-monitor-post-command nil t)
                 (add-hook 'kill-buffer-hook #'lsp-bridge-monitor-kill-buffer nil t)
+
+                (add-function :after after-focus-change-function 'lbcf-hide)
 
                 ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
                 (unless lsp-bridge-is-starting
@@ -325,36 +331,88 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (unless (equal (point) lsp-bridge-last-position)
       (lsp-bridge-call-async "change_cursor" lsp-bridge-filepath)
-      (setq-local lsp-bridge-last-position (point)))))
+      (setq-local lsp-bridge-last-position (point))))
+
+  (when (string-equal (format "%s" this-command) "keyboard-quit")
+    (lbcf-hide)))
 
 (defun lsp-bridge-monitor-kill-buffer ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (lsp-bridge-call-async "close_file" lsp-bridge-filepath)))
 
-(defun lsp-bridge-record-completion-items (filepath items)
+(defun lsp-bridge-record-completion-items (filepath prefix common items)
   (dolist (buffer (buffer-list))
     (when (string-equal (buffer-file-name buffer) filepath)
-      (setq-local lsp-bridge-completion-items items))))
+      (setq-local lsp-bridge-completion-items items)
+      (setq-local lsp-bridge-completion-prefix prefix)
+      (setq-local lsp-bridge-completion-common common)
+      (cond ((and (>= (length items) 1)
+                  (not (string-equal (car items) ""))
+                  (not (string-equal prefix (nth 0 items))))
+             (lbcf-show lsp-bridge-completion-items))
+            (t
+             (lbcf-hide))))))
 
-(defun company-lsp-bridge (command &optional arg &rest ignored)
-  (interactive (list 'interactive))
-  (cl-case command
-    (interactive (company-begin-backend 'company-lsp-bridge))
-    (prefix (company-grab-symbol))
-    (candidates
-     (lsp-bridge-get-completion-items))
-    (duplicates t)
-    (ignore-case t)
-    (no-cache t)
-    (sorted t)))
+(defvar lsp-bridge--last-buffer nil)
 
-(defun lsp-bridge-get-completion-items ()
-  (when (boundp 'lsp-bridge-completion-items)
-    (let ((prefix (company-grab-symbol)))
-      (cl-remove-if-not
-       (lambda (c)
-         (string-prefix-p prefix c))
-       lsp-bridge-completion-items))))
+(defun lsp-bridge-monitor-window-buffer-change ()
+  (unless (eq (current-buffer)
+              lsp-bridge--last-buffer)
+    (lbcf-hide))
+  (unless (or (minibufferp)
+              (string-equal (buffer-name) "*Messages*"))
+    (setq lsp-bridge--last-buffer (current-buffer))))
+
+;;;###autoload
+(add-hook 'post-command-hook 'lsp-bridge-monitor-window-buffer-change)
+
+(defvar lsp-bridge-mode-map
+  '(
+    ("TAB" . lsp-bridge-complete-selection)
+    ("M-h" . lsp-bridge-complete-selection)
+    ("M-H" . lsp-bridge-complete-common)
+    ("M-n" . lsp-bridge-select-next)
+    ("M-p" . lsp-bridge-select-previous)
+    ("M-," . lsp-bridge-select-last)
+    ("M-." . lsp-bridge-select-first)
+    ))
+
+(defun lsp-bridge-monitor-pre-command ()
+  (when (and lbcf--frame
+             (frame-visible-p lbcf--frame))
+    (let ((key-name (key-description (this-command-keys-vector))))
+      (dolist (key-info lsp-bridge-mode-map)
+        (let ((name (car key-info))
+              (func (cdr key-info)))
+          (when (string-equal key-name name)
+            (setq this-command 'ignore)
+            (funcall func)))))))
+
+(defun lsp-bridge-complete-selection ()
+  (interactive)
+  (insert (string-remove-prefix lsp-bridge-completion-prefix (lbcf-get-select-item))))
+
+(defun lsp-bridge-complete-common ()
+  (interactive)
+  (if (string-equal lsp-bridge-completion-prefix lsp-bridge-completion-common)
+      (message "No common part found.")
+    (insert (string-remove-prefix lsp-bridge-completion-prefix lsp-bridge-completion-common))))
+
+(defun lsp-bridge-select-next ()
+  (interactive)
+  (lbcf-select-next))
+
+(defun lsp-bridge-select-previous ()
+  (interactive)
+  (lbcf-select-prev))
+
+(defun lsp-bridge-select-last ()
+  (interactive)
+  (lbcf-select-first))
+
+(defun lsp-bridge-select-first ()
+  (interactive)
+  (lbcf-select-last))
 
 (defun lsp-bridge-point-row (pos)
   (save-excursion
