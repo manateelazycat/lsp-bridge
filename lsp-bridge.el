@@ -309,6 +309,8 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
                 (add-hook 'post-command-hook #'lsp-bridge-monitor-post-command nil t)
                 (add-hook 'kill-buffer-hook #'lsp-bridge-monitor-kill-buffer nil t)
 
+                (add-function :after after-focus-change-function 'lbcf-hide)
+
                 ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
                 (unless lsp-bridge-is-starting
                   (lsp-bridge-start-process)))
@@ -358,7 +360,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
 (defun lsp-bridge-monitor-kill-buffer ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (lsp-bridge-call-async "close_file" lsp-bridge-filepath))
-  
+
   ;; Hide completion frame when buffer cloesed.
   (lbcf-hide))
 
@@ -369,6 +371,10 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
       (setq-local lsp-bridge-completion-prefix prefix)
       (setq-local lsp-bridge-completion-common common)
       (cond
+       ;; Hide completion frame if only blank before cursor.
+       ((and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
+             (string-equal prefix ""))
+        (lbcf-hide))
        ;; Show completion frame when receive completion items.
        ((and (>= (length items) 1)      ; items is more than one
              (not (string-equal (car items) "")) ; not empty items list
