@@ -359,7 +359,10 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
 
 (defun lsp-bridge-monitor-kill-buffer ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (lsp-bridge-call-async "close_file" lsp-bridge-filepath)))
+    (lsp-bridge-call-async "close_file" lsp-bridge-filepath))
+  
+  ;; Hide completion frame when buffer cloesed.
+  (lbcf-hide))
 
 (defun lsp-bridge-record-completion-items (filepath prefix common items)
   (dolist (buffer (buffer-list))
