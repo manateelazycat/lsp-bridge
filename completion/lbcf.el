@@ -82,6 +82,7 @@
 ;;; Require
 
 ;;; Code:
+(require 'cl-lib)
 
 (defvar lbcf--frame nil)
 
@@ -168,7 +169,7 @@
     "#f0f0f0"))
 
 (defun lbcf-get-frame-width (candidates)
-  (* (reduce #'max (mapcar #'length candidates)) (default-font-width)))
+  (* (cl-reduce #'max (mapcar #'length candidates)) (default-font-width)))
 
 (defun lbcf-get-frame-height (candidates)
   (* (min (length candidates) 10) (default-font-height)))
