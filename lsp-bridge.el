@@ -360,8 +360,8 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
        (string-empty-p (format "%s" (car list)))))
 
 (defun lsp-bridge-record-completion-items (filepath prefix common items kinds annotions)
-  ;; (message "*** '%s' '%s' '%s'" prefix common items)      
-  
+  ;; (message "*** '%s' '%s' '%s'" prefix common items)
+
   (dolist (buffer (buffer-list))
     (when (string-equal (buffer-file-name buffer) filepath)
       ;; Save completion items.
@@ -382,7 +382,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
         ;; Hide completion frame if only blank before cursor.
         (unless (and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
                      (string-equal prefix ""))
-          
+
           ;; Popup completion frame.
           (pcase (while-no-input ;; Interruptible capf query
                  (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
@@ -407,7 +407,9 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
           :company-kind
           (lambda (candidate)
             "Set icon here"
-            (intern (downcase (get-text-property 0 'kind candidate))))
+            (let ((kind (get-text-property 0 'kind candidate)))
+              (and kind
+                   (intern (downcase kind)))))
           :annotation-function
           (lambda (candidate)
             "Extract annotation from CANDIDATE."
