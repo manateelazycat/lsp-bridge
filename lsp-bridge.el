@@ -379,7 +379,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
        ;; Show completion frame when receive completion items.
        ((and (>= (length items) 1)      ; items is more than one
              (not (string-equal (car items) ""))) ; not empty items list
-        (lbcf-show items prefix common))
+        (lbcf-show lsp-bridge-completion-items))
        ;; Otherwise hide completion frame.
        (t
         (lbcf-hide))))))
@@ -413,8 +413,8 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 
 (defun lsp-bridge-monitor-pre-command ()
   ;; Intercept keys if it match `lsp-bridge-mode-map'.
-  (when (and (company-box--get-frame)
-             (frame-visible-p (company-box--get-frame)))
+  (when (and lbcf--frame
+             (frame-visible-p lbcf--frame))
     (let ((key-name (key-description (this-command-keys-vector))))
       (dolist (key-info lsp-bridge-mode-map)
         (let ((name (car key-info))
