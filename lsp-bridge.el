@@ -341,9 +341,16 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (lsp-bridge-call-async "close_file" lsp-bridge-filepath)))
 
-(defun lsp-bridge-record-completion-items (filepath prefix common items)
+(defun lsp-bridge-record-completion-items (filepath prefix common items kinds annotions)
   (dolist (buffer (buffer-list))
     (when (string-equal (buffer-file-name buffer) filepath)
+      ;;  HACK: bad codes need to be writed
+      (when (length= items (length kinds))
+        (cl-mapcar (lambda (item value)
+                     (put-text-property 0 1 'kind value item)) items kinds))
+      (when (length= items (length annotions))
+        (cl-mapcar (lambda (item value)
+                     (put-text-property 0 1 'annotation value item)) items annotions))
       (setq-local lsp-bridge-completion-items items)
       (setq-local lsp-bridge-completion-prefix prefix)
       (setq-local lsp-bridge-completion-common common)
@@ -371,11 +378,19 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
         )))))
 
 (defun lsp-bridge-capf ()
-  (let ((bounds (bounds-of-thing-at-point 'symbol)))
-    (list (or (car bounds) (point))
-          (or (cdr bounds) (point))
-          lsp-bridge-completion-items
-          :exclusive 'no)))
+    (let ((bounds (bounds-of-thing-at-point 'symbol)))
+      (list (or (car bounds) (point))
+              (or (cdr bounds) (point))
+            lsp-bridge-completion-items
+            :exclusive 'no
+            :company-kind
+            (lambda (candidate)
+              "Set icon here"
+              (intern (downcase (get-text-property 0 'kind candidate))))
+            :annotation-function
+            (lambda (candidate)
+              "Extract annotation from CANDIDATE."
+              (get-text-property 0 'annotation candidate)))))
 
 (defun lsp-bridge-point-row (pos)
   (save-excursion
