@@ -4,10 +4,9 @@
     "command": [
         "clangd",
         "--all-scopes-completion",
-        "--cland-tidy",
+        "--clang-tidy",
         "--enable-config",
-        "--header-insertion-decorators=0",
-        "--inlay-hints"
+        "--header-insertion-decorators=0"
     ],
     "settings": {}
 }
