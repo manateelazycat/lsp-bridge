@@ -297,18 +297,23 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 (defvar-local lsp-bridge-completion-common nil)
 (defvar-local lsp-bridge-filepath "")
 
+(defmacro lsp-bridge--with-file-buffer (filepath &rest body)
+  "Evaluate BODY in buffer with FILEPATH."
+  (declare (indent 1))
+  `(let ((buffer (get-file-buffer ,filepath)))
+     (when buffer
+       (with-current-buffer buffer
+         ,@body))))
+
 
 (defun lsp-bridge-get-lang-server ()
   "Get lang server for current buffer."
   (alist-get major-mode lsp-bridge-lang-server-list))
 
 (defun lsp-bridge--get-lang-server-by-file-func (filepath)
-  (let (lang-server)
-    (dolist (buffer (buffer-list))
-      (when (string-equal (buffer-file-name buffer) filepath)
-        (with-current-buffer buffer
-          (setq lang-server (lsp-bridge-get-lang-server)))))
-    lang-server))
+  "Get lang server for FILEPATH."
+  (lsp-bridge--with-file-buffer filepath
+    (lsp-bridge-get-lang-server)))
 
 (defun lsp-bridge-char-before ()
   (let ((prev-char (char-before)))
@@ -325,40 +330,39 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     (lsp-bridge-call-async "close_file" lsp-bridge-filepath)))
 
 (defun lsp-bridge-record-completion-items (filepath prefix common items kinds annotions)
-  (dolist (buffer (buffer-list))
-    (when (string-equal (buffer-file-name buffer) filepath)
-      ;;  HACK: bad codes need to be writed
-      (when (length= items (length kinds))
-        (cl-mapcar (lambda (item value)
-                     (put-text-property 0 1 'kind value item)) items kinds))
-      (when (length= items (length annotions))
-        (cl-mapcar (lambda (item value)
-                     (put-text-property 0 1 'annotation value item)) items annotions))
-      (setq-local lsp-bridge-completion-items items)
-      (setq-local lsp-bridge-completion-prefix prefix)
-      (setq-local lsp-bridge-completion-common common)
-      ;; (message "*** '%s' '%s' '%s'" prefix common items)
-      (cond
-       ;; Hide completion frame if only blank before cursor.
-       ((and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
-             (string-equal prefix "")))
-       ;; Show completion frame when receive completion items.
-       ((and (>= (length items) 1)      ; items is more than one
-             (not (string-equal (car items) ""))) ; not empty items list
-        (pcase (while-no-input ;; Interruptible capf query
-                 (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
-          (`(,fun ,beg ,end ,table . ,plist)
-           (let ((completion-in-region-mode-predicate
-                  (lambda () (eq beg (car-safe (funcall fun)))))
-                 (completion-extra-properties plist))
-             (setq completion-in-region--data
-                   (list (if (markerp beg) beg (copy-marker beg))
-                         (copy-marker end t)
-                         table
-                         (plist-get plist :predicate)))
-             (corfu--setup)
-             (corfu--update))))
-        )))))
+  (lsp-bridge--with-file-buffer filepath
+    ;;  HACK: bad codes need to be writed
+    (when (length= items (length kinds))
+      (cl-mapcar (lambda (item value)
+                    (put-text-property 0 1 'kind value item)) items kinds))
+    (when (length= items (length annotions))
+      (cl-mapcar (lambda (item value)
+                    (put-text-property 0 1 'annotation value item)) items annotions))
+    (setq-local lsp-bridge-completion-items items)
+    (setq-local lsp-bridge-completion-prefix prefix)
+    (setq-local lsp-bridge-completion-common common)
+    ;; (message "*** '%s' '%s' '%s'" prefix common items)
+    (cond
+      ;; Hide completion frame if only blank before cursor.
+      ((and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
+            (string-equal prefix "")))
+      ;; Show completion frame when receive completion items.
+      ((and (>= (length items) 1)      ; items is more than one
+            (not (string-equal (car items) ""))) ; not empty items list
+      (pcase (while-no-input ;; Interruptible capf query
+                (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
+        (`(,fun ,beg ,end ,table . ,plist)
+          (let ((completion-in-region-mode-predicate
+                (lambda () (eq beg (car-safe (funcall fun)))))
+                (completion-extra-properties plist))
+            (setq completion-in-region--data
+                  (list (if (markerp beg) beg (copy-marker beg))
+                        (copy-marker end t)
+                        table
+                        (plist-get plist :predicate)))
+            (corfu--setup)
+            (corfu--update))))
+      ))))
 
 (defun lsp-bridge-capf ()
   (let ((bounds (bounds-of-thing-at-point 'symbol)))
@@ -390,11 +394,17 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     (goto-char pos)
     (- (point) (line-beginning-position))))
 
+
+(defvar-local lsp-bridge--before-change-begin-pos 0)
+(defvar-local lsp-bridge--before-change-end-pos 0)
+(defvar-local lsp-bridge--before-change-end-pos-row 0)
+(defvar-local lsp-bridge--before-change-end-pos-character 0)
+
 (defun lsp-bridge-monitor-before-change (begin end)
-  (setq-local lsp-bridge--before-change-begin-pos begin)
-  (setq-local lsp-bridge--before-change-end-pos end)
-  (setq-local lsp-bridge--before-change-end-pos-row (lsp-bridge-point-row end))
-  (setq-local lsp-bridge--before-change-end-pos-character (lsp-bridge-point-character end)))
+  (setq lsp-bridge--before-change-begin-pos begin)
+  (setq lsp-bridge--before-change-end-pos end)
+  (setq lsp-bridge--before-change-end-pos-row (lsp-bridge-point-row end))
+  (setq lsp-bridge--before-change-end-pos-character (lsp-bridge-point-character end)))
 
 (defun lsp-bridge-monitor-after-change (begin end length)
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
@@ -429,8 +439,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
                              lsp-bridge--before-change-end-pos-row lsp-bridge--before-change-end-pos-character
                              length
                              (buffer-substring-no-properties begin end)
-                             (line-number-at-pos)
-                             (current-column)
+                             (line-number-at-pos) (current-column)
                              (lsp-bridge-char-before)
                              (buffer-substring-no-properties (line-beginning-position) (point)))))))
 
@@ -449,16 +458,14 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     (lsp-bridge-call-async "rename" lsp-bridge-filepath (line-number-at-pos) (current-column) new-name)))
 
 (defun lsp-bridge-rename-highlight (filepath line bound-start bound-end)
-  (dolist (buf (buffer-list))
-    (when (string-equal (buffer-file-name buf) filepath)
-      (with-current-buffer buf
-        (let* ((highlight-line (1+ (string-to-number line)))
-               (start-pos (lsp-bridge-get-pos buf highlight-line (string-to-number bound-start)))
-               (end-pos (lsp-bridge-get-pos buf highlight-line (string-to-number bound-end))))
-          (require 'pulse)
-          (let ((pulse-iterations 1)
-                (pulse-delay lsp-bridge-flash-line-delay))
-            (pulse-momentary-highlight-region start-pos end-pos 'lsp-bridge-font-lock-flash)))))))
+  (lsp-bridge--with-file-buffer filepath
+    (let* ((highlight-line (1+ (string-to-number line)))
+            (start-pos (lsp-bridge-get-pos buf highlight-line (string-to-number bound-start)))
+            (end-pos (lsp-bridge-get-pos buf highlight-line (string-to-number bound-end))))
+      (require 'pulse)
+      (let ((pulse-iterations 1)
+            (pulse-delay lsp-bridge-flash-line-delay))
+        (pulse-momentary-highlight-region start-pos end-pos 'lsp-bridge-font-lock-flash)))))
 
 (defun lsp-bridge-get-pos (buf line column)
   (with-current-buffer buf
@@ -470,10 +477,8 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 (defun lsp-bridge-rename-finish (rename-files counter)
   (save-excursion
     (dolist (filepath rename-files)
-      (dolist (buf (buffer-list))
-        (when (string-equal (buffer-file-name buf) filepath)
-          (with-current-buffer buf
-            (revert-buffer :ignore-auto :noconfirm))))))
+      (lsp-bridge--with-file-buffer filepath
+        (revert-buffer :ignore-auto :noconfirm))))
 
   (message "Rename %s places in %s files." counter (length rename-files)))
 
@@ -502,6 +507,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     (lsp-bridge--disable)))
 
 (defun lsp-bridge--enable ()
+  "Enable LSP Bridge mode."
   (cond
    ((not buffer-file-name)
     (message "LSP Bridge can't be enabled in non-file buffers.")
@@ -521,6 +527,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
       (lsp-bridge-start-process)))))
 
 (defun lsp-bridge--disable ()
+  "Disable LSP Bridge mode."
   (dolist (hook lsp-bridge--internal-hooks)
     (remove-hook (car hook) (cdr hook) t)))
 
