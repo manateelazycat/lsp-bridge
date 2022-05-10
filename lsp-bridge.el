@@ -406,28 +406,36 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (lsp-bridge-call-async "close_file" lsp-bridge-filepath)))
 
+(defun lsp-bridge-is-empty-list (list)
+  (and (eq (length list) 1)
+       (string-empty-p (format "%s" (car list)))))
+
 (defun lsp-bridge-record-completion-items (filepath prefix common items kinds annotions)
+  ;; (message "*** '%s' '%s' '%s'" prefix common items)      
+  
   (dolist (buffer (buffer-list))
     (when (string-equal (buffer-file-name buffer) filepath)
-      ;;  HACK: bad codes need to be writed
-      (when (length= items (length kinds))
-        (cl-mapcar (lambda (item value)
-                     (put-text-property 0 1 'kind value item)) items kinds))
-      (when (length= items (length annotions))
-        (cl-mapcar (lambda (item value)
-                     (put-text-property 0 1 'annotation value item)) items annotions))
+      ;; Save completion items.
       (setq-local lsp-bridge-completion-items items)
       (setq-local lsp-bridge-completion-prefix prefix)
       (setq-local lsp-bridge-completion-common common)
-      ;; (message "*** '%s' '%s' '%s'" prefix common items)
-      (cond
-       ;; Hide completion frame if only blank before cursor.
-       ((and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
-             (string-equal prefix "")))
-       ;; Show completion frame when receive completion items.
-       ((and (>= (length items) 1)      ; items is more than one
-             (not (string-equal (car items) ""))) ; not empty items list
-        (pcase (while-no-input ;; Interruptible capf query
+
+      ;; Don't popup completion frame if completion items is empty.
+      (unless (lsp-bridge-is-empty-list items)
+        ;; Add kind and annotion information in completion item text.
+        (when (length= items (length kinds))
+          (cl-mapcar (lambda (item value)
+                       (put-text-property 0 1 'kind value item)) items kinds))
+        (when (length= items (length annotions))
+          (cl-mapcar (lambda (item value)
+                       (put-text-property 0 1 'annotation value item)) items annotions))
+
+        ;; Hide completion frame if only blank before cursor.
+        (unless (and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
+                     (string-equal prefix ""))
+          
+          ;; Popup completion frame.
+          (pcase (while-no-input ;; Interruptible capf query
                  (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
           (`(,fun ,beg ,end ,table . ,plist)
            (let ((completion-in-region-mode-predicate
@@ -439,8 +447,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
                          table
                          (plist-get plist :predicate)))
              (corfu--setup)
-             (corfu--update))))
-        )))))
+             (corfu--update)))))))))
 
 (defun lsp-bridge-capf ()
   (let ((bounds (bounds-of-thing-at-point 'symbol)))
