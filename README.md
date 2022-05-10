@@ -20,6 +20,14 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 (require 'lsp-bridge)
 
 (global-corfu-mode)
+(setq corfu-auto-prefix 0)
+
+(dolist (hook (list
+               'emacs-lisp-mode-hook
+               ))
+  (add-hook hook (lambda ()
+                   (setq-local corfu-auto t)
+                   )))
 
 (dolist (hook (list
                'c-mode-hook
@@ -39,9 +47,9 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                'js-mode-hook
                ))
   (add-hook hook (lambda ()
+                   (setq-local corfu-auto nil)
                    (lsp-bridge-enable)
                    )))
-
 ```
 
 ## Customize language server configuration
