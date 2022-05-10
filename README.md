@@ -32,6 +32,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                'scala-mode-hook
                'typescript-mode-hook
                'js2-mode-hook
+               'js-mode-hook
                ))
   (add-hook hook (lambda ()
                    (lsp-bridge-enable)

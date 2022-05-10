@@ -2,10 +2,7 @@
   "name": "typescript",
   "languageId": "typescript",
     "command": [
-        "node",
-        "~/.nvm/versions/node/v16.13.0/bin/typescript-language-server",
-        "--tsserver-path",
-        "~/.nvm/versions/node/v16.13.0/bin/tsserver",
+        "typescript-language-server",
         "--stdio"
     ],
   "settings": {}
