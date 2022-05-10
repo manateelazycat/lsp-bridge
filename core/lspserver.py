@@ -19,7 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from core.utils import generate_request_id
+from sys import flags, stderr
+from core.utils import path_as_key, generate_request_id, path_to_uri, uri_to_path
 from subprocess import PIPE
 from threading import Thread
 import json
@@ -128,7 +129,7 @@ class SendRequest(Thread):
         message_dict["id"] = self.id
 
         json_string = json.dumps(message_dict, cls=JsonEncoder, separators=(',', ':'))
-        json_message = "Content-Length: {}\r\n\r\n{}\n".format(len(json_string) + 1, json_string)
+        json_message = "Content-Length: {}\r\n\r\n{}".format(len(json_string), json_string)
 
         self.process.stdin.write(json_message)
         self.process.stdin.flush()
@@ -156,7 +157,7 @@ class SendNotification(Thread):
         message_dict["params"] = self.params
 
         json_string = json.dumps(message_dict, cls=JsonEncoder, separators=(',', ':'))
-        json_message = "Content-Length: {}\r\n\r\n{}\n".format(len(json_string) + 1, json_string)
+        json_message = "Content-Length: {}\r\n\r\n{}".format(len(json_string), json_string)
 
         self.process.stdin.write(json_message)
         self.process.stdin.flush()
@@ -189,7 +190,7 @@ class SendResponse(Thread):
         message_dict["result"] = self.result
 
         json_string = json.dumps(message_dict, cls=JsonEncoder, separators=(',', ':'))
-        json_message = "Content-Length: {}\r\n\r\n{}\n".format(len(json_string) + 1, json_string)
+        json_message = "Content-Length: {}\r\n\r\n{}".format(len(json_string), json_string)
 
         self.process.stdin.write(json_message)
         self.process.stdin.flush()
@@ -228,7 +229,9 @@ class LspServer(object):
         self.p = subprocess.Popen(self.get_server_command(),
                                   bufsize=100000000, # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
                                   text=True,
-                                  stdin=PIPE, stdout=PIPE, stderr=PIPE)
+                                  cwd=self.project_path,
+                                  encoding="utf-8",
+                                  stdin=PIPE, stdout=PIPE, stderr=stderr)
 
         # A separate thread is used to read the message returned by the LSP server.
         self.listener_thread = LspBridgeListener(self.p, self.lsp_message_queue)
@@ -259,21 +262,22 @@ class LspServer(object):
                 "name": "emacs",
                 "version": "GNU Emacs 28.1 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.24.33, cairo version 1.17.6)\n of 2022-04-04"
             },
-            "rootUri": "file://" + self.project_path,
+            "rootUri": path_to_uri(self.project_path),
             "capabilities": {},
             "initializationOptions": {}
         }
         self.send_to_request("initialize", initialize_options, self.initialize_id)
 
     def send_did_open_notification(self, filepath):
-        if filepath not in self.open_file_dict:
-            self.open_file_dict[filepath] = ""
+        filekey = path_as_key(filepath)
+        if filekey not in self.open_file_dict:
+            self.open_file_dict[filekey] = ""
 
             with open(filepath) as f:
                 self.send_to_notification("textDocument/didOpen",
                                           {
                                               "textDocument": {
-                                                  "uri": "file://" + filepath,
+                                                  "uri": path_to_uri(filepath),
                                                   "languageId": self.server_info["languageId"],
                                                   "version": 0,
                                                   "text": f.read()
@@ -286,7 +290,7 @@ class LspServer(object):
         self.send_to_notification("textDocument/didClose",
                                   {
                                       "textDocument": {
-                                          "uri": "file://" + filepath,
+                                          "uri": path_to_uri(filepath),
                                       }
                                   })
 
@@ -298,7 +302,7 @@ class LspServer(object):
         self.send_to_notification("textDocument/didChange",
                                   {
                                       "textDocument": {
-                                          "uri": "file://" + filepath,
+                                          "uri": path_to_uri(filepath),
                                           "version": version
                                       },
                                       "contentChanges": [
@@ -333,7 +337,7 @@ class LspServer(object):
             self.send_to_request("textDocument/completion",
                                  {
                                      "textDocument": {
-                                         "uri": "file://" + filepath
+                                         "uri": path_to_uri(filepath)
                                      },
                                      "position": {
                                          "line": row - 1,
@@ -349,7 +353,7 @@ class LspServer(object):
             self.send_to_request("textDocument/completion",
                                  {
                                      "textDocument": {
-                                         "uri": "file://" + filepath
+                                         "uri": path_to_uri(filepath)
                                      },
                                      "position": {
                                          "line": row - 1,
@@ -367,7 +371,7 @@ class LspServer(object):
         self.send_to_request("textDocument/definition",
                              {
                                  "textDocument": {
-                                     "uri": "file://" + filepath
+                                     "uri": path_to_uri(filepath)
                                  },
                                  "position": {
                                      "line": row - 1,
@@ -382,7 +386,7 @@ class LspServer(object):
         self.send_to_request("textDocument/references",
                              {
                                  "textDocument": {
-                                     "uri": "file://" + filepath
+                                     "uri": path_to_uri(filepath)
                                  },
                                  "position": {
                                      "line": row - 1,
@@ -400,7 +404,7 @@ class LspServer(object):
         self.send_to_request("textDocument/prepareRename",
                              {
                                  "textDocument": {
-                                     "uri": "file://" + filepath
+                                     "uri": path_to_uri(filepath)
                                  },
                                  "position": {
                                      "line": row - 1,
@@ -415,7 +419,7 @@ class LspServer(object):
         self.send_to_request("textDocument/rename",
                              {
                                  "textDocument": {
-                                     "uri": "file://" + filepath
+                                     "uri": path_to_uri(filepath)
                                  },
                                  "position": {
                                      "line": row - 1,
@@ -490,7 +494,7 @@ class LspServer(object):
         elif name == "textDocument/didOpen":
             fileuri = params["textDocument"]["uri"]
             if fileuri.startswith("file://"):
-                fileuri = fileuri[len("file://"):]
+                fileuri = uri_to_path(fileuri)
 
             self.message_queue.put({
                 "name": "server_file_opened",
@@ -515,9 +519,10 @@ class LspServer(object):
 
     def close_file(self, filepath):
         # Send didClose notification when client close file.
-        if filepath in self.open_file_dict:
+        filekey = path_as_key(filepath)
+        if filekey in self.open_file_dict:
             self.send_did_close_notification(filepath)
-            del self.open_file_dict[filepath]
+            del self.open_file_dict[filekey]
 
         # We need shutdown LSP server when last file closed, to save system memory.
         if len(self.open_file_dict.keys()) == 0:

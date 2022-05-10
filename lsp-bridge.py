@@ -21,7 +21,7 @@
 
 from core.fileaction import FileAction
 from core.lspserver import LspServer
-from core.utils import (init_epc_client, close_epc_client, eval_in_emacs, get_emacs_vars, get_emacs_func_result)
+from core.utils import (path_as_key, init_epc_client, close_epc_client, eval_in_emacs, get_emacs_vars, get_emacs_func_result)
 from epc.server import ThreadingEPCServer
 import os
 import platform
@@ -117,13 +117,14 @@ class LspBridge(object):
         
     def _open_file(self, filepath):
         # Create file action.
-        if filepath not in self.file_action_dict:
+        filekey = path_as_key(filepath)
+        if filekey not in self.file_action_dict:
             lang_server = get_emacs_func_result("get-lang-server", [filepath])
             action = FileAction(filepath, lang_server)
-            self.file_action_dict[filepath] = action
+            self.file_action_dict[filekey] = action
             
         # Create LSP server.
-        file_action = self.file_action_dict[filepath]
+        file_action = self.file_action_dict[filekey]
         lsp_server_name = file_action.get_lsp_server_name()
         if lsp_server_name not in self.lsp_server_dict:
             # lsp server will send initialize and didOpen when open first file in project.
@@ -144,25 +145,27 @@ class LspBridge(object):
         })
         
     def _close_file(self, filepath):
-        if filepath in self.file_action_dict:
-            action = self.file_action_dict[filepath]
+        filekey = path_as_key(filepath)
+        if filekey in self.file_action_dict:
+            action = self.file_action_dict[filekey]
             
             lsp_server_name = action.get_lsp_server_name()
             if lsp_server_name in self.lsp_server_dict:
                 lsp_server = self.lsp_server_dict[lsp_server_name]
                 lsp_server.close_file(filepath)
                 
-            del self.file_action_dict[filepath]
+            del self.file_action_dict[filekey]
             
     def build_file_action_function(self, name):
         def _do(*args):
             filepath = args[0]
-            if filepath in self.file_action_dict:
-                action = self.file_action_dict[filepath]
+            filekey = path_as_key(filepath)
+            if filekey in self.file_action_dict:
+                action = self.file_action_dict[filekey]
                 getattr(action, name)(*args[1:])
             else:
                 # Cache file action wait for file to open it.
-                self.action_cache_dict[filepath] = (name, ) + args[1:]
+                self.action_cache_dict[filekey] = (name, ) + args[1:]
                 self.open_file(filepath)
                 print("Cache action {}, wait for file {} to open it before executing.".format(name, filepath))
                 
@@ -178,8 +181,9 @@ class LspBridge(object):
         setattr(self, name, _do_wrap)
         
     def handle_server_message(self, filepath, request_type, request_id, response_result):
-        if filepath in self.file_action_dict:
-            self.file_action_dict[filepath].handle_server_response_message(request_id, request_type, response_result)
+        filekey = path_as_key(filepath)
+        if filekey in self.file_action_dict:
+            self.file_action_dict[filekey].handle_server_response_message(request_id, request_type, response_result)
         else:
             # Please report bug if you got this message.
             print("IMPOSSIBLE HERE: handle_server_message ", filepath, request_type, request_id, response_result)
@@ -190,14 +194,15 @@ class LspBridge(object):
             del self.lsp_server_dict[server_name]
             
     def handle_server_file_opened(self, filepath):
-        if filepath in self.action_cache_dict:
-            cache = self.action_cache_dict[filepath]
+        filekey = path_as_key(filepath)
+        if filekey in self.action_cache_dict:
+            cache = self.action_cache_dict[filekey]
             action_name = cache[0]
             action_args = cache[1:]
             
-            if filepath in self.file_action_dict:
+            if filekey in self.file_action_dict:
                 # Execute file action after file opened.
-                getattr(self.file_action_dict[filepath], action_name)(*action_args)
+                getattr(self.file_action_dict[filekey], action_name)(*action_args)
                 print("Execute action {} for file {}".format(action_name, filepath))
             else:
                 # Please report bug if you got this message.
