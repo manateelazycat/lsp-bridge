@@ -285,8 +285,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
                                 :connection (lsp-bridge-epc-connect "localhost" lsp-bridge-epc-port)
                                 ))
   (lsp-bridge-epc-init-epc-layer lsp-bridge-epc-process)
-  (setq lsp-bridge-is-starting nil)
-  (lbcf-initalize))
+  (setq lsp-bridge-is-starting nil))
 
 (defun lsp-bridge-enable ()
   (lsp-bridge-open-file (buffer-file-name)))
