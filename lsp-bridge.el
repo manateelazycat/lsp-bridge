@@ -195,6 +195,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     (js-mode . "typescript")
     (tuareg-mode . "ocamllsp")
     (erlang-mode . "erlang_ls")
+    ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . "texlab")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -328,7 +329,11 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
             (message "lsp-bridge not support %s now." (prin1 major-mode))))))))
 
 (defun lsp-bridge-get-lang-server ()
-  (let ((langserver-info (assoc major-mode lsp-bridge-lang-server-list)))
+  (let ((langserver-info (cl-find-if (lambda (pair)
+                                       (let ((mode (car pair)))
+                                         (if (symbolp mode)
+                                             (eq major-mode mode)
+                                           (member major-mode mode)))) lsp-bridge-lang-server-list)))
     (if langserver-info
         (cdr langserver-info)
       nil)))
