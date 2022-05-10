@@ -75,6 +75,7 @@
 (require 'map)
 (require 'seq)
 (require 'subr-x)
+(require 'lbcf)
 
 (require 'lsp-bridge-epc)
 
@@ -172,11 +173,20 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 
 (defcustom lsp-bridge-lang-server-list
   '(
+    (c-mode . "clangd")
+    (c++-mode . "clangd")
     (python-mode . "pyright")
     (ruby-mode . "solargraph")
     (rust-mode . "rust-analyzer")
     (elixir-mode . "elixirLS")
     (go-mode . "gopls")
+    (haskell-mode . "hls")
+    (dart-mode . "dart_analysis_server")
+    (scala-mode . "metals")
+    (typescript-mode . "typescript")
+    (js2-mode . "typescript")
+    (js-mode . "typescript")
+    (tuareg-mode . "ocamllsp")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -289,10 +299,13 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
                 (setq-local lsp-bridge-flag t)
                 (setq-local lsp-bridge-last-position 0)
                 (setq-local lsp-bridge-completion-items nil)
+                (setq-local lsp-bridge-completion-prefix nil)
+                (setq-local lsp-bridge-completion-common nil)
                 (setq-local lsp-bridge-filepath filename)
 
                 (add-hook 'before-change-functions #'lsp-bridge-monitor-before-change nil t)
                 (add-hook 'after-change-functions #'lsp-bridge-monitor-after-change nil t)
+                (add-hook 'pre-command-hook #'lsp-bridge-monitor-pre-command nil t)
                 (add-hook 'post-command-hook #'lsp-bridge-monitor-post-command nil t)
                 (add-hook 'kill-buffer-hook #'lsp-bridge-monitor-kill-buffer nil t)
 
@@ -322,42 +335,128 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 (defun lsp-bridge-monitor-post-command ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (unless (equal (point) lsp-bridge-last-position)
+      (let* ((last-pos-line (lsp-bridge-point-row lsp-bridge-last-position))
+             (last-pos-column (lsp-bridge-point-column lsp-bridge-last-position))
+             (current-pos-line (lsp-bridge-point-row (point)))
+             (current-pos-column (lsp-bridge-point-column (point))))
+        (cond
+         ;; Hide completion frame when user move cursor to different line.
+         ((not (eq last-pos-line current-pos-line))
+          (lbcf-hide))
+         ;; Hide completion frame when user move cursor backward.
+         ((and (eq last-pos-line current-pos-line)
+               (< current-pos-column last-pos-column))
+          (lbcf-hide))))
+
       (lsp-bridge-call-async "change_cursor" lsp-bridge-filepath)
-      (setq-local lsp-bridge-last-position (point)))))
+      (setq-local lsp-bridge-last-position (point))))
+
+  ;; Hide completion frame when user press Ctrl + G.
+  (when (string-equal (format "%s" this-command) "keyboard-quit")
+    (lbcf-hide)))
 
 (defun lsp-bridge-monitor-kill-buffer ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (lsp-bridge-call-async "close_file" lsp-bridge-filepath)))
+    (lsp-bridge-call-async "close_file" lsp-bridge-filepath))
 
-(defun lsp-bridge-record-completion-items (filepath items)
+  ;; Hide completion frame when buffer cloesed.
+  (lbcf-hide))
+
+(defun lsp-bridge-record-completion-items (filepath prefix common items)
   (dolist (buffer (buffer-list))
     (when (string-equal (buffer-file-name buffer) filepath)
-      (setq-local lsp-bridge-completion-items items))))
+      (setq-local lsp-bridge-completion-items items)
+      (setq-local lsp-bridge-completion-prefix prefix)
+      (setq-local lsp-bridge-completion-common common)
+      ;; (message "*** '%s' '%s' '%s'" prefix common items)
+      (cond
+       ;; Hide completion frame if only blank before cursor.
+       ((and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
+             (string-equal prefix ""))
+        (lbcf-hide))
+       ;; Show completion frame when receive completion items.
+       ((and (>= (length items) 1)      ; items is more than one
+             (not (string-equal (car items) ""))) ; not empty items list
+        (lbcf-show lsp-bridge-completion-items))
+       ;; Otherwise hide completion frame.
+       (t
+        (lbcf-hide))))))
 
-(defun company-lsp-bridge (command &optional arg &rest ignored)
-  (interactive (list 'interactive))
-  (cl-case command
-    (interactive (company-begin-backend 'company-lsp-bridge))
-    (prefix (company-grab-symbol))
-    (candidates
-     (lsp-bridge-get-completion-items))
-    (duplicates t)
-    (ignore-case t)
-    (no-cache t)
-    (sorted t)))
+(defvar lsp-bridge--last-buffer nil)
 
-(defun lsp-bridge-get-completion-items ()
-  (when (boundp 'lsp-bridge-completion-items)
-    (let ((prefix (company-grab-symbol)))
-      (cl-remove-if-not
-       (lambda (c)
-         (string-prefix-p prefix c))
-       lsp-bridge-completion-items))))
+(defun lsp-bridge-monitor-window-buffer-change ()
+  ;; Hide completion frame when buffer or window changed.
+  (unless (eq (current-buffer)
+              lsp-bridge--last-buffer)
+    (lbcf-hide))
+
+  (unless (or (minibufferp)
+              (string-equal (buffer-name) "*Messages*"))
+    (setq lsp-bridge--last-buffer (current-buffer))))
+
+;;;###autoload
+(add-hook 'post-command-hook 'lsp-bridge-monitor-window-buffer-change)
+
+(defvar lsp-bridge-mode-map
+  '(
+    ("TAB" . lsp-bridge-complete-selection)
+    ("RET" . lsp-bridge-complete-selection)
+    ("M-h" . lsp-bridge-complete-selection)
+    ("M-H" . lsp-bridge-complete-common)
+    ("M-n" . lsp-bridge-select-next)
+    ("M-p" . lsp-bridge-select-previous)
+    ("M-," . lsp-bridge-select-last)
+    ("M-." . lsp-bridge-select-first)
+    ))
+
+(defun lsp-bridge-monitor-pre-command ()
+  ;; Intercept keys if it match `lsp-bridge-mode-map'.
+  (when (and lbcf--frame
+             (frame-visible-p lbcf--frame))
+    (let ((key-name (key-description (this-command-keys-vector))))
+      (dolist (key-info lsp-bridge-mode-map)
+        (let ((name (car key-info))
+              (func (cdr key-info)))
+          (when (string-equal key-name name)
+            (setq this-command 'ignore)
+            (funcall func)))))))
+
+(defun lsp-bridge-complete-selection ()
+  (interactive)
+  (insert (string-remove-prefix lsp-bridge-completion-prefix (lbcf-get-select-item)))
+  (lbcf-hide))
+
+(defun lsp-bridge-complete-common ()
+  (interactive)
+  (if (string-equal lsp-bridge-completion-prefix lsp-bridge-completion-common)
+      (message "No common part found.")
+    (insert (string-remove-prefix lsp-bridge-completion-prefix lsp-bridge-completion-common))))
+
+(defun lsp-bridge-select-next ()
+  (interactive)
+  (lbcf-select-next))
+
+(defun lsp-bridge-select-previous ()
+  (interactive)
+  (lbcf-select-prev))
+
+(defun lsp-bridge-select-last ()
+  (interactive)
+  (lbcf-select-first))
+
+(defun lsp-bridge-select-first ()
+  (interactive)
+  (lbcf-select-last))
 
 (defun lsp-bridge-point-row (pos)
   (save-excursion
     (goto-char pos)
     (line-number-at-pos)))
+
+(defun lsp-bridge-point-column (pos)
+  (save-excursion
+    (goto-char pos)
+    (current-column)))
 
 (defun lsp-bridge-point-character (pos)
   (save-excursion
@@ -383,7 +482,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
                              (buffer-substring-no-properties begin end)
                              (line-number-at-pos) (current-column)
                              (lsp-bridge-char-before)
-                             (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+                             (buffer-substring-no-properties (line-beginning-position) (point))))
      ;; Delete operation.
      ((eq begin end)
       (lsp-bridge-call-async "change_file"
@@ -394,7 +493,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
                              ""
                              (line-number-at-pos) (current-column)
                              (lsp-bridge-char-before)
-                             (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+                             (buffer-substring-no-properties (line-beginning-position) (point))))
      ;; Change operation.
      (t
       (lsp-bridge-call-async "change_file"
@@ -406,7 +505,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
                              (line-number-at-pos)
                              (current-column)
                              (lsp-bridge-char-before)
-                             (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))))
+                             (buffer-substring-no-properties (line-beginning-position) (point)))))))
 
 (defun lsp-bridge-find-define ()
   (interactive)

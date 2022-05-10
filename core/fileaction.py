@@ -29,11 +29,11 @@ class FileAction(object):
 
     def __init__(self, filepath, lang_server):
         object.__init__(self)
-        
+
         # Build request functions.
         for name in ["find_define", "find_references", "prepare_rename", "rename", "completion"]:
             self.build_request_function(name)
-            
+
         # Init.
         self.filepath = filepath
         self.request_dict = {}
@@ -43,26 +43,26 @@ class FileAction(object):
         self.prepare_rename_request_list = []
         self.rename_request_list = []
         self.last_change_file_time = -1
-        self.last_change_file_line_text = ""
+        self.last_change_file_before_cursor_text = ""
         self.last_change_cursor_time = -1
         self.completion_prefix_string = ""
         self.version = 1
         self.try_completion_timer = None
-        
+
         # Read language server information.
         self.lang_server_info = None
         self.lang_server_info_path = ""
-        if os.path.exists(lang_server):
+        if os.path.exists(lang_server) and os.path.sep in lang_server:
             # If lang_server is real file path, we load the LSP server configuration from the user specified file.
             self.lang_server_info_path = lang_server
         else:
             # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
             self.lang_server_info_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "langserver", "{}.json".format(lang_server))
-            
+
         with open(self.lang_server_info_path) as f:
             import json
             self.lang_server_info = json.load(f)
-        
+
         self.lsp_server = None
 
         # Generate initialize request id.
@@ -79,7 +79,7 @@ class FileAction(object):
         # We use project path and LSP server type as unique name.
         return "{}#{}".format(self.project_path, self.lang_server_info["name"])
 
-    def change_file(self, start_row, start_character, end_row, end_character, range_length, change_text, row, column, before_char, line_text):
+    def change_file(self, start_row, start_character, end_row, end_character, range_length, change_text, row, column, before_char, before_cursor_text):
         # Send didChange request to LSP server.
         if self.lsp_server is not None:
             self.lsp_server.send_did_change_notification(
@@ -96,7 +96,7 @@ class FileAction(object):
 
         # Record last change information.
         self.last_change_file_time = time.time()
-        self.last_change_file_line_text = line_text
+        self.last_change_file_before_cursor_text = before_cursor_text
 
         # Send textDocument/completion 100ms later.
         self.try_completion_timer = threading.Timer(0.1, lambda : self.completion(row, column, before_char))
@@ -110,7 +110,7 @@ class FileAction(object):
         def _do(*args):
             request_id = generate_request_id()
             getattr(self, "{}_request_list".format(name)).append(request_id)
-            
+
             # Cache last change information to compare after receive LSP server response message.
             self.request_dict[request_id] = {
                 "last_change_file_time": self.last_change_file_time,
@@ -134,34 +134,53 @@ class FileAction(object):
             self.handle_prepare_rename_response(request_id, response_result)
         elif request_type == "rename":
             self.handle_rename_response(request_id, response_result)
-                
+
     def handle_completion_response(self, request_id, response_result):
         # Stop send completion items to client if request id expired, or change file, or move cursor.
-        if (request_id == self.completion_request_list[-1] and 
-            self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and 
+        if (request_id == self.completion_request_list[-1] and
+            self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and
             self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
-            
+
+            # Calcuate completion prefix string.
             self.completion_prefix_string = self.calc_completion_prefix_string()
+
+            # Get completion items.
+            completion_items = []
+            if "items" in response_result:
+                completion_items = list(filter(lambda label: label.startswith(self.completion_prefix_string),
+                                               list(map(lambda item: item["label"], response_result["items"]))))
+            else:
+                # Some server, like dart_analysis_server, returns candidates list instead of dict.
+                completion_items = response_result
+
+            # Calcuate completion common string.
+            completion_common_string = os.path.commonprefix(completion_items)
             
-            completion_items = list(filter(lambda label: label.startswith(self.completion_prefix_string), 
-                                           list(map(lambda item: item["label"], response_result["items"]))))
-                    
-            eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, completion_items])
-            
+            # Push completion items to Emacs.
+            if len(completion_items) == 1 and (self.completion_prefix_string == completion_common_string == completion_items[0]):
+                # Clear completion items if user input last completion item.
+                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, completion_common_string, []])
+            else:
+                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, completion_common_string, completion_items])
+
     def calc_completion_prefix_string(self):
-        string_after_dot = self.last_change_file_line_text[self.last_change_file_line_text.rfind(".") + 1:]
-        split_strings = string_after_dot.split()
-        if len(split_strings) > 0:
-            return split_strings[-1]
-        else:
+        if self.last_change_file_before_cursor_text.endswith(" "):
+            # Return "" if have blank character before cursor.
             return ""
-            
+        else:
+            string_after_dot = self.last_change_file_before_cursor_text[self.last_change_file_before_cursor_text.rfind(".") + 1:]
+            split_strings = string_after_dot.split()
+            if len(split_strings) > 0:
+                return split_strings[-1]
+            else:
+                return ""
+
     def handle_find_define_response(self, request_id, response_result):
         # Stop send jump define if request id expired, or change file, or move cursor.
-        if (request_id == self.find_define_request_list[-1] and 
-            self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and 
+        if (request_id == self.find_define_request_list[-1] and
+            self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and
             self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
-            
+
             if response_result:
                 try:
                     file_info = response_result[0]
@@ -175,11 +194,11 @@ class FileAction(object):
                     traceback.print_exc()
             else:
                 eval_in_emacs("message", ["Can't find define."])
-                
+
     def handle_find_references_response(self, request_id, response_result):
         if request_id == self.find_references_request_list[-1]:
             print(response_result)
-            
+
     def handle_prepare_rename_response(self, request_id, response_result):
         if request_id == self.prepare_rename_request_list[-1]:
             eval_in_emacs("lsp-bridge-rename-highlight", [
@@ -188,7 +207,7 @@ class FileAction(object):
                 response_result["start"]["character"],
                 response_result["end"]["character"]
             ])
-            
+
     def handle_rename_response(self, request_id, response_result):
         if request_id == self.rename_request_list[-1]:
             if response_result:
@@ -199,13 +218,13 @@ class FileAction(object):
                         (rename_file, rename_counter) = self.rename_symbol_in_file(rename_info)
                         rename_files.append(rename_file)
                         counter += rename_counter
-                        
+
                     eval_in_emacs("lsp-bridge-rename-finish", [rename_files, counter])
                 except:
                     print("* Failed information about rename response.")
                     import traceback
                     traceback.print_exc()
-            
+
     def rename_symbol_in_file(self, rename_info):
         rename_file = rename_info["textDocument"]["uri"]
         if rename_file.startswith("file://"):
@@ -213,17 +232,17 @@ class FileAction(object):
             
         lines = []
         rename_counter = 0
-        
+
         with open(rename_file, "r") as f:
             lines = f.readlines()
-            
+
             line_offset_dict = {}
-            
+
             edits = rename_info["edits"]
             for edit_info in edits:
                 # Get replace line.
                 replace_line = edit_info["range"]["start"]["line"]
-                
+
                 # Get current line offset, if previous edit is same as current line.
                 # We need add changed offset to make sure current edit has right column.
                 replace_line_offset = 0
@@ -231,28 +250,28 @@ class FileAction(object):
                     replace_line_offset = line_offset_dict[replace_line]
                 else:
                     line_offset_dict[replace_line] = 0
-                
+
                 # Calculate replace column offset.
                 replace_column_start = edit_info["range"]["start"]["character"] + replace_line_offset
                 replace_column_end = edit_info["range"]["end"]["character"] + replace_line_offset
-                
+
                 # Get current line.
                 line_content = lines[replace_line]
-                
+
                 # Get new changed offset.
                 new_text = edit_info["newText"]
                 replace_offset = len(new_text) - (replace_column_end - replace_column_start)
-                
+
                 # Overlapping new changed offset.
                 line_offset_dict[replace_line] = line_offset_dict[replace_line] + replace_offset
-                
+
                 # Replace current line.
                 new_line_content = line_content[:replace_column_start] + new_text + line_content[replace_column_end:]
                 lines[replace_line] = new_line_content
-                
+
                 rename_counter += 1
-                
+
         with open(rename_file, "w") as f:
             f.writelines(lines)
-            
+
         return (rename_file, rename_counter)
