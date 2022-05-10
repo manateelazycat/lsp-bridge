@@ -229,7 +229,6 @@ class LspServer(object):
         self.p = subprocess.Popen(self.get_server_command(),
                                   bufsize=100000000, # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
                                   text=True,
-                                  cwd=self.project_path,
                                   encoding="utf-8",
                                   stdin=PIPE, stdout=PIPE, stderr=stderr)
 
