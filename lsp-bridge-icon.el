@@ -1,21 +1,21 @@
-;;; kind-all-the-icons.el  -*- lexical-binding: t; -*-
+;;; lsp-bridge-icon.el  -*- lexical-binding: t; -*-
 
 (require 'all-the-icons)
 
-(defvar kind-all-the-icons--cache nil
+(defvar lsp-bridge-icon--cache nil
   "The cache of styled and padded label (text or icon).
 An alist.")
 
-(defun kind-all-the-icons-reset-cache ()
-  "Remove all cached icons from `kind-all-the-icons-mapping'."
+(defun lsp-bridge-icon-reset-cache ()
+  "Remove all cached icons from `lsp-bridge-icon-mapping'."
   (interactive)
-  (setq kind-all-the-icons--cache nil))
+  (setq lsp-bridge-icon--cache nil))
 
-(defun kind-all-the-icons--set-default-clear-cache (&rest args)
-  (kind-all-the-icons-reset-cache)
+(defun lsp-bridge-icon--set-default-clear-cache (&rest args)
+  (lsp-bridge-icon-reset-cache)
   (apply #'set-default args))
 
-(defvar kind-all-the-icons--icons
+(defvar lsp-bridge-icon--icons
   `((unknown . ,(all-the-icons-material "find_in_page" :height 0.8 :v-adjust -0.15))
     (text . ,(all-the-icons-faicon "text-width" :height 0.8 :v-adjust -0.02))
     (method . ,(all-the-icons-faicon "cube" :height 0.8 :v-adjust -0.02 :face 'all-the-icons-purple))
@@ -61,35 +61,36 @@ An alist.")
     (t . ,(all-the-icons-material "find_in_page" :height 0.8 :v-adjust -0.15))))
 
 
-(defsubst kind-all-the-icons--metadata-get (metadata type-name)
+(defsubst lsp-bridge-icon--metadata-get (metadata type-name)
   (or
    (plist-get completion-extra-properties (intern (format ":%s" type-name)))
    (cdr (assq (intern type-name) metadata))))
 
-(defun kind-all-the-icons-formatted (kind)
+(defun lsp-bridge-icon-formatted (kind)
   "Format icon kind with all-the-icons"
-  (or (alist-get kind kind-all-the-icons--cache)
-      (let ((map (assq kind kind-all-the-icons--icons)))
+  (or (alist-get kind lsp-bridge-icon--cache)
+      (let ((map (assq kind lsp-bridge-icon--icons)))
         (let*  ((icon (if map
                           (cdr map)
-                        (cdr (assq t kind-all-the-icons--icons))))
+                        (cdr (assq t lsp-bridge-icon--icons))))
                 (half (/ (default-font-width) 2))
                 (pad (propertize " " 'display `(space :width (,half))))
                 (disp (concat pad icon pad)))
-          (setf (alist-get kind kind-all-the-icons--cache) disp)
+          (setf (alist-get kind lsp-bridge-icon--cache) disp)
           disp))))
 
-(defun kind-all-the-icons-margin-formatter (metadata)
+(defun lsp-bridge-icon-margin-formatter (metadata)
   "Return a margin-formatter function which produces kind icons.
 METADATA is the completion metadata supplied by the caller (see
 info node `(elisp)Programmed Completion').  To use, add this
 function to the relevant margin-formatters list."
-  (if-let ((kind-func (kind-all-the-icons--metadata-get metadata "company-kind")))
+  (if-let ((kind-func (lsp-bridge-icon--metadata-get metadata "company-kind")))
       (lambda (cand)
         (if-let ((kind (funcall kind-func cand)))
-            (kind-all-the-icons-formatted kind)
-          (kind-all-the-icons-formatted t))))) ;; as a backup
+            (lsp-bridge-icon-formatted kind)
+          (lsp-bridge-icon-formatted t))))) ;; as a backup
 
+(add-to-list 'corfu-margin-formatters #'lsp-bridge-icon-margin-formatter)
 
-(provide 'kind-all-the-icons)
-;;; kind-all-the-icons.el ends here
+(provide 'lsp-bridge-icon)
+;;; lsp-bridge-icon.el ends here

@@ -1,0 +1,8 @@
+{
+  "name": "texlab",
+  "languageId": "tex",
+  "command": {
+    "default": ["texlab"]
+  },
+  "settings": {}
+}

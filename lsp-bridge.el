@@ -79,9 +79,13 @@
 (require 'lsp-bridge-epc)
 (require 'corfu)
 (require 'corfu-info)
-(require 'kind-all-the-icons)
+(require 'corfu-history)
 
-(add-to-list 'corfu-margin-formatters #'kind-all-the-icons-margin-formatter)
+;; Add completion history.
+(corfu-history-mode t)
+
+;; Set auto prefix.
+(setq corfu-auto-prefix 0)
 
 (defgroup lsp-bridge nil
   "LSPBRIDGE group."
@@ -192,6 +196,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     (js-mode . "typescript")
     (tuareg-mode . "ocamllsp")
     (erlang-mode . "erlang_ls")
+    ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . "texlab")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -308,7 +313,14 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 
 (defun lsp-bridge-get-lang-server ()
   "Get lang server for current buffer."
-  (alist-get major-mode lsp-bridge-lang-server-list))
+  (let ((langserver-info (cl-find-if (lambda (pair)
+                                       (let ((mode (car pair)))
+                                         (if (symbolp mode)
+                                             (eq major-mode mode)
+                                           (member major-mode mode)))) lsp-bridge-lang-server-list)))
+    (if langserver-info
+        (cdr langserver-info)
+      nil)))
 
 (defun lsp-bridge--get-lang-server-by-file-func (filepath)
   "Get lang server for FILEPATH."
@@ -329,40 +341,47 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (lsp-bridge-call-async "close_file" lsp-bridge-filepath)))
 
+(defun lsp-bridge-is-empty-list (list)
+  (and (eq (length list) 1)
+       (string-empty-p (format "%s" (car list)))))
+
 (defun lsp-bridge-record-completion-items (filepath prefix common items kinds annotions)
+  ;; (message "*** '%s' '%s' '%s'" prefix common items)
+
   (lsp-bridge--with-file-buffer filepath
-    ;;  HACK: bad codes need to be writed
-    (when (length= items (length kinds))
-      (cl-mapcar (lambda (item value)
-                    (put-text-property 0 1 'kind value item)) items kinds))
-    (when (length= items (length annotions))
-      (cl-mapcar (lambda (item value)
-                    (put-text-property 0 1 'annotation value item)) items annotions))
+    ;; Save completion items.
     (setq-local lsp-bridge-completion-items items)
     (setq-local lsp-bridge-completion-prefix prefix)
     (setq-local lsp-bridge-completion-common common)
-    ;; (message "*** '%s' '%s' '%s'" prefix common items)
-    (cond
+
+    ;; Don't popup completion frame if completion items is empty.
+    (unless (lsp-bridge-is-empty-list items)
+      ;; Add kind and annotion information in completion item text.
+      (when (length= items (length kinds))
+        (cl-mapcar (lambda (item value)
+                     (put-text-property 0 1 'kind value item)) items kinds))
+      (when (length= items (length annotions))
+        (cl-mapcar (lambda (item value)
+                     (put-text-property 0 1 'annotation value item)) items annotions))
+
       ;; Hide completion frame if only blank before cursor.
-      ((and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
-            (string-equal prefix "")))
-      ;; Show completion frame when receive completion items.
-      ((and (>= (length items) 1)      ; items is more than one
-            (not (string-equal (car items) ""))) ; not empty items list
-      (pcase (while-no-input ;; Interruptible capf query
-                (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
+      (unless (and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
+                   (string-equal prefix ""))
+
+        ;; Popup completion frame.
+        (pcase (while-no-input ;; Interruptible capf query
+               (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
         (`(,fun ,beg ,end ,table . ,plist)
-          (let ((completion-in-region-mode-predicate
+         (let ((completion-in-region-mode-predicate
                 (lambda () (eq beg (car-safe (funcall fun)))))
-                (completion-extra-properties plist))
-            (setq completion-in-region--data
-                  (list (if (markerp beg) beg (copy-marker beg))
-                        (copy-marker end t)
-                        table
-                        (plist-get plist :predicate)))
-            (corfu--setup)
-            (corfu--update))))
-      ))))
+               (completion-extra-properties plist))
+           (setq completion-in-region--data
+                 (list (if (markerp beg) beg (copy-marker beg))
+                       (copy-marker end t)
+                       table
+                       (plist-get plist :predicate)))
+           (corfu--setup)
+           (corfu--update))))))))
 
 (defun lsp-bridge-capf ()
   (let ((bounds (bounds-of-thing-at-point 'symbol)))
@@ -373,7 +392,9 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
           :company-kind
           (lambda (candidate)
             "Set icon here"
-            (intern (downcase (get-text-property 0 'kind candidate))))
+            (let ((kind (get-text-property 0 'kind candidate)))
+              (and kind
+                   (intern (downcase kind)))))
           :annotation-function
           (lambda (candidate)
             "Extract annotation from CANDIDATE."
@@ -521,6 +542,10 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 
     (setq lsp-bridge-filepath buffer-file-name)
     (setq lsp-bridge-last-position 0)
+
+    ;; Add fuzzy match.
+    (when (functionp 'lsp-bridge-orderless-setup)
+                      (lsp-bridge-orderless-setup))
 
     ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
     (unless lsp-bridge-is-starting
