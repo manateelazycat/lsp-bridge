@@ -79,6 +79,83 @@
 (require 'corfu)
 (require 'corfu-info)
 (require 'kind-all-the-icons)
+(require 'orderless)
+(require 'corfu-history)
+
+(defvar +orderless-dispatch-alist
+  '((?% . char-fold-to-regexp)
+    (?! . orderless-without-literal)
+    (?`. orderless-initialism)
+    (?= . orderless-literal)
+    (?~ . orderless-flex)))
+
+;; Recognizes the following patterns:
+;; * ~flex flex~
+;; * =literal literal=
+;; * %char-fold char-fold%
+;; * `initialism initialism`
+;; * !without-literal without-literal!
+;; * .ext (file extension)
+;; * regexp$ (regexp matching at end)
+(defun +orderless-dispatch (pattern index _total)
+  (cond
+   ;; Ensure that $ works with Consult commands, which add disambiguation suffixes
+   ((string-suffix-p "$" pattern)
+    `(orderless-regexp . ,(concat (substring pattern 0 -1) "[\x100000-\x10FFFD]*$")))
+   ;; File extensions
+   ((and
+     ;; Completing filename or eshell
+     (or minibuffer-completing-file-name
+         (derived-mode-p 'eshell-mode))
+     ;; File extension
+     (string-match-p "\\`\\.." pattern))
+    `(orderless-regexp . ,(concat "\\." (substring pattern 1) "[\x100000-\x10FFFD]*$")))
+   ;; Ignore single !
+   ((string= "!" pattern) `(orderless-literal . ""))
+   ;; Prefix and suffix
+   ((if-let (x (assq (aref pattern 0) +orderless-dispatch-alist))
+        (cons (cdr x) (substring pattern 1))
+      (when-let (x (assq (aref pattern (1- (length pattern))) +orderless-dispatch-alist))
+        (cons (cdr x) (substring pattern 0 -1)))))))
+
+;; Define orderless style with initialism by default
+(orderless-define-completion-style +orderless-with-initialism
+  (orderless-matching-styles '(orderless-initialism orderless-literal orderless-regexp)))
+
+;; You may want to combine the `orderless` style with `substring` and/or `basic`.
+;; There are many details to consider, but the following configurations all work well.
+;; Personally I (@minad) use option 3 currently. Also note that you may want to configure
+;; special styles for special completion categories, e.g., partial-completion for files.
+;;
+;; 1. (setq completion-styles '(orderless))
+;; This configuration results in a very coherent completion experience,
+;; since orderless is used always and exclusively. But it may not work
+;; in all scenarios. Prefix expansion with TAB is not possible.
+;;
+;; 2. (setq completion-styles '(substring orderless))
+;; By trying substring before orderless, TAB expansion is possible.
+;; The downside is that you can observe the switch from substring to orderless
+;; during completion, less coherent.
+;;
+;; 3. (setq completion-styles '(orderless basic))
+;; Certain dynamic completion tables (completion-table-dynamic)
+;; do not work properly with orderless. One can add basic as a fallback.
+;; Basic will only be used when orderless fails, which happens only for
+;; these special tables.
+;;
+;; 4. (setq completion-styles '(substring orderless basic))
+;; Combine substring, orderless and basic.
+;;
+
+(defun lsp-bridge-orderless-dispatch-flex-first (_pattern index _total)
+  "orderless-flex for corfu."
+  (and (eq index 0) 'orderless-flex))
+
+(defun lsp-bridge-setup-corfu ()
+  "Setup corfu."
+  (setq-local orderless-matching-styles '(orderless-flex)
+              orderless-style-dispatchers nil)
+  (add-hook 'orderless-style-dispatchers #'lsp-bridge-orderless-dispatch-flex-first nil 'local))
 
 (add-to-list 'corfu-margin-formatters #'kind-all-the-icons-margin-formatter)
 
@@ -306,6 +383,21 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
                 (setq-local lsp-bridge-completion-prefix nil)
                 (setq-local lsp-bridge-completion-common nil)
                 (setq-local lsp-bridge-filepath filename)
+
+                (setq completion-styles '(orderless partial-completion)
+                      completion-category-defaults nil
+                      completion-category-overrides '((file (styles partial-completion)) ;; partial-completion is tried first
+                                                      ;; enable initialism by default for symbols
+                                                      (command (styles +orderless-with-initialism))
+                                                      (variable (styles +orderless-with-initialism))
+                                                      (symbol (styles +orderless-with-initialism)))
+                      orderless-component-separator #'orderless-escapable-split-on-space ;; allow escaping space with backslash!
+                      orderless-style-dispatchers '(+orderless-dispatch))
+
+                ;; add fuzzy match
+                (lsp-bridge-setup-corfu)
+                ;; add completion history
+                (corfu-history-mode t)
 
                 (add-hook 'before-change-functions #'lsp-bridge-monitor-before-change nil t)
                 (add-hook 'after-change-functions #'lsp-bridge-monitor-after-change nil t)
