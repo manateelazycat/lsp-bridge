@@ -146,22 +146,34 @@ class FileAction(object):
 
             # Get completion items.
             completion_items = []
-            if "items" in response_result:
-                completion_items = list(filter(lambda label: label.startswith(self.completion_prefix_string),
-                                               list(map(lambda item: item["label"], response_result["items"]))))
-            else:
-                # Some server, like dart_analysis_server, returns candidates list instead of dict.
+            kinds = []
+            annotations = []
+
+            #  TODO: should we transform the map here or in emacs?
+            kind_map = ["", "Text", "Method", "Function", "Constructor", "Field",
+                        "Variable", "Class", "Interface", "Module", "Property",
+                        "Unit" , "Value" , "Enum", "Keyword" , "Snippet", "Color",
+                        "File", "Reference", "Folder", "EnumMember", "Constant",
+                        "Struct", "Event", "Operator", "TypeParameter"]
+
+            # Some server, like dart_analysis_server, returns candidates list instead of dict.
+            if type(response_result) == list:
                 completion_items = response_result
+            else:
+                completion_items = list(map(lambda item: item["label"], response_result["items"]))
+                #  TODO: just a demo here
+                kinds = list(map(lambda item: kind_map[item["kind"]], response_result["items"]))
+                annotations = kinds
 
             # Calcuate completion common string.
             completion_common_string = os.path.commonprefix(completion_items)
-            
+
             # Push completion items to Emacs.
             if len(completion_items) == 1 and (self.completion_prefix_string == completion_common_string == completion_items[0]):
                 # Clear completion items if user input last completion item.
-                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, completion_common_string, []])
+                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, completion_common_string, [], [], []])
             else:
-                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, completion_common_string, completion_items])
+                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, completion_common_string, completion_items, kinds, annotations])
 
     def calc_completion_prefix_string(self):
         if self.last_change_file_before_cursor_text.endswith(" "):
@@ -229,7 +241,7 @@ class FileAction(object):
         rename_file = rename_info["textDocument"]["uri"]
         if rename_file.startswith("file://"):
             rename_file = uri_to_path(rename_file)
-            
+
         lines = []
         rename_counter = 0
 
