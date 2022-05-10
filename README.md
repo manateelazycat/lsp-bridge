@@ -49,19 +49,6 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 
 ```
 
-### Keys
-
-| Key   | Event                         |
-| :---- | :---------------------------- |
-| `TAB` | lsp-bridge-complete-selection |
-| `RET` | lsp-bridge-complete-selection |
-| `M-h` | lsp-bridge-complete-selection |
-| `M-H` | lsp-bridge-complete-common    |
-| `M-n` | lsp-bridge-select-next        |
-| `M-p` | lsp-bridge-select-previous    |
-| `M-,` | lsp-bridge-select-last        |
-| `M-.` | lsp-bridge-select-first       |
-
 ## Customize language server configuration
 
 lsp-bridge load lang server configuration from directory lsp-bridge/langserver.
