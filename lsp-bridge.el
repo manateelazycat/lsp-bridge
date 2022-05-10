@@ -378,19 +378,19 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
         )))))
 
 (defun lsp-bridge-capf ()
-    (let ((bounds (bounds-of-thing-at-point 'symbol)))
-      (list (or (car bounds) (point))
-              (or (cdr bounds) (point))
-            lsp-bridge-completion-items
-            :exclusive 'no
-            :company-kind
-            (lambda (candidate)
-              "Set icon here"
-              (intern (downcase (get-text-property 0 'kind candidate))))
-            :annotation-function
-            (lambda (candidate)
-              "Extract annotation from CANDIDATE."
-              (get-text-property 0 'annotation candidate)))))
+  (let ((bounds (bounds-of-thing-at-point 'symbol)))
+    (list (or (car bounds) (point))
+          (or (cdr bounds) (point))
+          lsp-bridge-completion-items
+          :exclusive 'no
+          :company-kind
+          (lambda (candidate)
+            "Set icon here"
+            (intern (downcase (get-text-property 0 'kind candidate))))
+          :annotation-function
+          (lambda (candidate)
+            "Extract annotation from CANDIDATE."
+            (concat "   " (get-text-property 0 'annotation candidate))))))
 
 (defun lsp-bridge-point-row (pos)
   (save-excursion
