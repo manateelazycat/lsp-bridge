@@ -284,7 +284,8 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
                                 :connection (lsp-bridge-epc-connect "localhost" lsp-bridge-epc-port)
                                 ))
   (lsp-bridge-epc-init-epc-layer lsp-bridge-epc-process)
-  (setq lsp-bridge-is-starting nil))
+  (setq lsp-bridge-is-starting nil)
+  (lbcf-initalize))
 
 (defun lsp-bridge-enable ()
   (lsp-bridge-open-file (buffer-file-name)))
