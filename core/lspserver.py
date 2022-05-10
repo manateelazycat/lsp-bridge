@@ -105,6 +105,9 @@ class LspBridgeListener(Thread):
                         self.emit_message(message)
             except:
                 traceback.print_exc()
+        print("\n--- Lsp server exited, exit code: {}".format(self.process.returncode))
+        print(self.process.stdout.read())
+        print(self.process.stderr.read())
 
 class SendRequest(Thread):
 
