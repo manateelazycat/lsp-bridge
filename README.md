@@ -52,7 +52,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                ))
   (add-hook hook (lambda ()
                    (setq-local corfu-auto nil)  ;; let lsp-bridge control when popup completion frame
-                   (lsp-bridge-enable)
+                   (lsp-bridge-mode 1)
                    )))
 ```
 
