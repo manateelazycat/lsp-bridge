@@ -180,8 +180,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 
 (defcustom lsp-bridge-lang-server-list
   '(
-    (c-mode . "clangd")
-    (c++-mode . "clangd")
+    ((c-mode c++-mode) . "clangd")
     (python-mode . "pyright")
     (ruby-mode . "solargraph")
     (rust-mode . "rust-analyzer")
@@ -190,9 +189,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     (haskell-mode . "hls")
     (dart-mode . "dart_analysis_server")
     (scala-mode . "metals")
-    (typescript-mode . "typescript")
-    (js2-mode . "typescript")
-    (js-mode . "typescript")
+    ((typescript-mode js2-mode js-mode) . "typescript")
     (tuareg-mode . "ocamllsp")
     (erlang-mode . "erlang_ls")
     ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . "texlab")
