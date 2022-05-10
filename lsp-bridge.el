@@ -287,7 +287,8 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
                                 :connection (lsp-bridge-epc-connect "localhost" lsp-bridge-epc-port)
                                 ))
   (lsp-bridge-epc-init-epc-layer lsp-bridge-epc-process)
-  (setq lsp-bridge-is-starting nil))
+  (setq lsp-bridge-is-starting nil)
+  (lbcf-initalize))
 
 (defun lsp-bridge-enable ()
   (lsp-bridge-open-file (buffer-file-name)))
@@ -380,7 +381,7 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
        ;; Show completion frame when receive completion items.
        ((and (>= (length items) 1)      ; items is more than one
              (not (string-equal (car items) ""))) ; not empty items list
-        (lbcf-show lsp-bridge-completion-items))
+        (lbcf-show items prefix common))
        ;; Otherwise hide completion frame.
        (t
         (lbcf-hide))))))
@@ -414,8 +415,8 @@ WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
 
 (defun lsp-bridge-monitor-pre-command ()
   ;; Intercept keys if it match `lsp-bridge-mode-map'.
-  (when (and lbcf--frame
-             (frame-visible-p lbcf--frame))
+  (when (and (company-box--get-frame)
+             (frame-visible-p (company-box--get-frame)))
     (let ((key-name (key-description (this-command-keys-vector))))
       (dolist (key-info lsp-bridge-mode-map)
         (let ((name (car key-info))
