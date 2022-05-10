@@ -78,8 +78,6 @@
 (require 'lsp-bridge-epc)
 (require 'corfu)
 (require 'corfu-info)
-(require 'kind-all-the-icons)
-(require 'orderless)
 (require 'corfu-history)
 
 ;; Add completion history.
@@ -87,45 +85,6 @@
 
 ;; Set auto prefix.
 (setq corfu-auto-prefix 0)
-
-(defvar +orderless-dispatch-alist
-  '((?% . char-fold-to-regexp)
-    (?! . orderless-without-literal)
-    (?`. orderless-initialism)
-    (?= . orderless-literal)
-    (?~ . orderless-flex)))
-
-(defun +orderless-dispatch (pattern index _total)
-  (cond
-   ;; Ensure that $ works with Consult commands, which add disambiguation suffixes
-   ((string-suffix-p "$" pattern)
-    `(orderless-regexp . ,(concat (substring pattern 0 -1) "[\x100000-\x10FFFD]*$")))
-   ;; File extensions
-   ((and
-     ;; Completing filename or eshell
-     (or minibuffer-completing-file-name
-         (derived-mode-p 'eshell-mode))
-     ;; File extension
-     (string-match-p "\\`\\.." pattern))
-    `(orderless-regexp . ,(concat "\\." (substring pattern 1) "[\x100000-\x10FFFD]*$")))
-   ;; Ignore single !
-   ((string= "!" pattern) `(orderless-literal . ""))
-   ;; Prefix and suffix
-   ((if-let (x (assq (aref pattern 0) +orderless-dispatch-alist))
-        (cons (cdr x) (substring pattern 1))
-      (when-let (x (assq (aref pattern (1- (length pattern))) +orderless-dispatch-alist))
-        (cons (cdr x) (substring pattern 0 -1)))))))
-
-;; Define orderless style with initialism by default
-(orderless-define-completion-style +orderless-with-initialism
-  (orderless-matching-styles '(orderless-initialism orderless-literal orderless-regexp)))
-
-(defun lsp-bridge-orderless-dispatch-flex-first (_pattern index _total)
-  "orderless-flex for corfu."
-  (and (eq index 0) 'orderless-flex))
-
-;; Icon.
-(add-to-list 'corfu-margin-formatters #'kind-all-the-icons-margin-formatter)
 
 (defgroup lsp-bridge nil
   "LSPBRIDGE group."
@@ -353,18 +312,8 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
                 (setq-local lsp-bridge-filepath filename)
 
                 ;; Add fuzzy match.
-                (setq-local completion-styles '(orderless partial-completion)
-                            completion-category-defaults nil
-                            completion-category-overrides '((file (styles partial-completion)) ;; partial-completion is tried first
-                                                            ;; enable initialism by default for symbols
-                                                            (command (styles +orderless-with-initialism))
-                                                            (variable (styles +orderless-with-initialism))
-                                                            (symbol (styles +orderless-with-initialism)))
-                            orderless-component-separator #'orderless-escapable-split-on-space ;; allow escaping space with backslash!
-                            orderless-style-dispatchers '(+orderless-dispatch)
-                            orderless-matching-styles '(orderless-flex)
-                            orderless-style-dispatchers nil)
-                (add-hook 'orderless-style-dispatchers #'lsp-bridge-orderless-dispatch-flex-first nil t)
+                (when (boundp 'lsp-bridge-orderless-setup)
+                  (lsp-bridge-orderless-setup))
 
                 ;; Monitor event.
                 (add-hook 'before-change-functions #'lsp-bridge-monitor-before-change nil t)

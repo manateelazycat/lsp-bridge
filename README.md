@@ -18,10 +18,13 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 ```
 (add-to-list 'load-path "<path-to-lsp-bridge>")
 
-(require 'lsp-bridge)
+(require 'lsp-bridge)             ;; load lsp-bridge
+(global-corfu-mode)               ;; use corfu as completion ui
 
-(global-corfu-mode)
+(require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
+(require 'lsp-bridge-icon)        ;; show icon for completion items, optional
 
+;; Enable auto completion in elisp mode.
 (dolist (hook (list
                'emacs-lisp-mode-hook
                ))
@@ -29,6 +32,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                    (setq-local corfu-auto t)
                    )))
 
+;; Enable lsp-bridge.
 (dolist (hook (list
                'c-mode-hook
                'c++-mode-hook
@@ -47,7 +51,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                'js-mode-hook
                ))
   (add-hook hook (lambda ()
-                   (setq-local corfu-auto nil)
+                   (setq-local corfu-auto nil)  ;; let lsp-bridge control when popup completion frame
                    (lsp-bridge-enable)
                    )))
 ```
