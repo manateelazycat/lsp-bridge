@@ -75,8 +75,6 @@
 (require 'map)
 (require 'seq)
 (require 'subr-x)
-(require 'lbcf)
-
 (require 'lsp-bridge-epc)
 
 (defgroup lsp-bridge nil
@@ -306,9 +304,9 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 
                 (add-hook 'before-change-functions #'lsp-bridge-monitor-before-change nil t)
                 (add-hook 'after-change-functions #'lsp-bridge-monitor-after-change nil t)
-                (add-hook 'pre-command-hook #'lsp-bridge-monitor-pre-command nil t)
                 (add-hook 'post-command-hook #'lsp-bridge-monitor-post-command nil t)
                 (add-hook 'kill-buffer-hook #'lsp-bridge-monitor-kill-buffer nil t)
+                (add-hook 'completion-at-point-functions #'lsp-bridge-capf nil t)
 
                 ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
                 (unless lsp-bridge-is-starting
@@ -336,32 +334,12 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 (defun lsp-bridge-monitor-post-command ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (unless (equal (point) lsp-bridge-last-position)
-      (let* ((last-pos-line (lsp-bridge-point-row lsp-bridge-last-position))
-             (last-pos-column (lsp-bridge-point-column lsp-bridge-last-position))
-             (current-pos-line (lsp-bridge-point-row (point)))
-             (current-pos-column (lsp-bridge-point-column (point))))
-        (cond
-         ;; Hide completion frame when user move cursor to different line.
-         ((not (eq last-pos-line current-pos-line))
-          (lbcf-hide))
-         ;; Hide completion frame when user move cursor backward.
-         ((and (eq last-pos-line current-pos-line)
-               (< current-pos-column last-pos-column))
-          (lbcf-hide))))
-
       (lsp-bridge-call-async "change_cursor" lsp-bridge-filepath)
-      (setq-local lsp-bridge-last-position (point))))
-
-  ;; Hide completion frame when user press Ctrl + G.
-  (when (string-equal (format "%s" this-command) "keyboard-quit")
-    (lbcf-hide)))
+      (setq-local lsp-bridge-last-position (point)))))
 
 (defun lsp-bridge-monitor-kill-buffer ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (lsp-bridge-call-async "close_file" lsp-bridge-filepath))
-
-  ;; Hide completion frame when buffer cloesed.
-  (lbcf-hide))
+    (lsp-bridge-call-async "close_file" lsp-bridge-filepath)))
 
 (defun lsp-bridge-record-completion-items (filepath prefix common items)
   (dolist (buffer (buffer-list))
@@ -373,81 +351,31 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
       (cond
        ;; Hide completion frame if only blank before cursor.
        ((and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
-             (string-equal prefix ""))
-        (lbcf-hide))
+             (string-equal prefix "")))
        ;; Show completion frame when receive completion items.
        ((and (>= (length items) 1)      ; items is more than one
              (not (string-equal (car items) ""))) ; not empty items list
-        (lbcf-show lsp-bridge-completion-items))
-       ;; Otherwise hide completion frame.
-       (t
-        (lbcf-hide))))))
+        (pcase (while-no-input ;; Interruptible capf query
+                 (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
+          (`(,fun ,beg ,end ,table . ,plist)
+           (let ((completion-in-region-mode-predicate
+                  (lambda () (eq beg (car-safe (funcall fun)))))
+                 (completion-extra-properties plist))
+             (setq completion-in-region--data
+                   (list (if (markerp beg) beg (copy-marker beg))
+                         (copy-marker end t)
+                         table
+                         (plist-get plist :predicate)))
+             (corfu--setup)
+             (corfu--update))))
+        )))))
 
-(defvar lsp-bridge--last-buffer nil)
-
-(defun lsp-bridge-monitor-window-buffer-change ()
-  ;; Hide completion frame when buffer or window changed.
-  (unless (eq (current-buffer)
-              lsp-bridge--last-buffer)
-    (lbcf-hide))
-
-  (unless (or (minibufferp)
-              (string-equal (buffer-name) "*Messages*"))
-    (setq lsp-bridge--last-buffer (current-buffer))))
-
-;;;###autoload
-(add-hook 'post-command-hook 'lsp-bridge-monitor-window-buffer-change)
-
-(defvar lsp-bridge-mode-map
-  '(
-    ("TAB" . lsp-bridge-complete-selection)
-    ("RET" . lsp-bridge-complete-selection)
-    ("M-h" . lsp-bridge-complete-selection)
-    ("M-H" . lsp-bridge-complete-common)
-    ("M-n" . lsp-bridge-select-next)
-    ("M-p" . lsp-bridge-select-previous)
-    ("M-," . lsp-bridge-select-last)
-    ("M-." . lsp-bridge-select-first)
-    ))
-
-(defun lsp-bridge-monitor-pre-command ()
-  ;; Intercept keys if it match `lsp-bridge-mode-map'.
-  (when (and lbcf--frame
-             (frame-visible-p lbcf--frame))
-    (let ((key-name (key-description (this-command-keys-vector))))
-      (dolist (key-info lsp-bridge-mode-map)
-        (let ((name (car key-info))
-              (func (cdr key-info)))
-          (when (string-equal key-name name)
-            (setq this-command 'ignore)
-            (funcall func)))))))
-
-(defun lsp-bridge-complete-selection ()
-  (interactive)
-  (insert (string-remove-prefix lsp-bridge-completion-prefix (lbcf-get-select-item)))
-  (lbcf-hide))
-
-(defun lsp-bridge-complete-common ()
-  (interactive)
-  (if (string-equal lsp-bridge-completion-prefix lsp-bridge-completion-common)
-      (message "No common part found.")
-    (insert (string-remove-prefix lsp-bridge-completion-prefix lsp-bridge-completion-common))))
-
-(defun lsp-bridge-select-next ()
-  (interactive)
-  (lbcf-select-next))
-
-(defun lsp-bridge-select-previous ()
-  (interactive)
-  (lbcf-select-prev))
-
-(defun lsp-bridge-select-last ()
-  (interactive)
-  (lbcf-select-first))
-
-(defun lsp-bridge-select-first ()
-  (interactive)
-  (lbcf-select-last))
+(defun lsp-bridge-capf ()
+  (let ((bounds (bounds-of-thing-at-point 'symbol)))
+    (list (or (car bounds) (point))
+          (or (cdr bounds) (point))
+          lsp-bridge-completion-items
+          :exclusive 'no)))
 
 (defun lsp-bridge-point-row (pos)
   (save-excursion
