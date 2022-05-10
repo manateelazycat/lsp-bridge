@@ -141,19 +141,27 @@ class FileAction(object):
             self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and
             self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
 
+            # Calcuate completion prefix string.
             self.completion_prefix_string = self.calc_completion_prefix_string()
 
-            # Some server, like dart_analysis_server, returns candidates list instead of dict.
-            completion_items = list(filter(lambda label: label.startswith(self.completion_prefix_string),
-                                           list(map(lambda item: item["label"], response_result["items"] if "items" in response_result else response_result))))
-
-            common_part = os.path.commonprefix(completion_items)
-            
-            if len(completion_items) == 1 and (self.completion_prefix_string == common_part == completion_items[0]):
-                # Clear completion items if user input last item.
-                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, common_part, []])
+            # Get completion items.
+            completion_items = []
+            if "items" in response_result:
+                completion_items = list(filter(lambda label: label.startswith(self.completion_prefix_string),
+                                               list(map(lambda item: item["label"], response_result["items"]))))
             else:
-                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, common_part, completion_items])
+                # Some server, like dart_analysis_server, returns candidates list instead of dict.
+                completion_items = response_result
+
+            # Calcuate completion common string.
+            completion_common_string = os.path.commonprefix(completion_items)
+            
+            # Push completion items to Emacs.
+            if len(completion_items) == 1 and (self.completion_prefix_string == completion_common_string == completion_items[0]):
+                # Clear completion items if user input last completion item.
+                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, completion_common_string, []])
+            else:
+                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, completion_common_string, completion_items])
 
     def calc_completion_prefix_string(self):
         if self.last_change_file_before_cursor_text.endswith(" "):
