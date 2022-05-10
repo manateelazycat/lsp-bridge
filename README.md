@@ -10,22 +10,17 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 
 1. Install [python-epc](https://github.com/tkf/python-epc): `pip install epc`
 2. Install [corfu](https://github.com/minad/corfu)
-3. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
-4. Add follow code in your ~/.emacs:
+3. Install [all-the-icons](https://github.com/domtronn/all-the-icons.el)
+4. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
+5. Add follow code in your ~/.emacs:
 
 ```
 (add-to-list 'load-path "<path-to-lsp-bridge>")
 
-(require 'corfu)
-(require 'corfu-info)
 (require 'lsp-bridge)
 
-;; Corfu configuration.
 (global-corfu-mode)
-(setq corfu-auto nil)
-(setq corfu-auto-prefix 0)
 
-;; lsp-bridge configuration.
 (dolist (hook (list
                'c-mode-hook
                'c++-mode-hook

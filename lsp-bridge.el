@@ -76,6 +76,13 @@
 (require 'seq)
 (require 'subr-x)
 (require 'lsp-bridge-epc)
+(require 'corfu)
+(require 'corfu-info)
+(require 'kind-all-the-icons)
+
+(setq corfu-auto nil)
+(setq corfu-auto-prefix 0)
+(add-to-list 'corfu-margin-formatters #'kind-all-the-icons-margin-formatter)
 
 (defgroup lsp-bridge nil
   "LSPBRIDGE group."
