@@ -25,6 +25,12 @@ import random
 import threading
 import time
 
+KIND_MAP = ["", "Text", "Method", "Function", "Constructor", "Field",
+            "Variable", "Class", "Interface", "Module", "Property",
+            "Unit" , "Value" , "Enum", "Keyword" , "Snippet", "Color",
+            "File", "Reference", "Folder", "EnumMember", "Constant",
+            "Struct", "Event", "Operator", "TypeParameter"]
+            
 class FileAction(object):
 
     def __init__(self, filepath, lang_server):
@@ -149,21 +155,11 @@ class FileAction(object):
             kinds = []
             annotations = []
 
-            #  TODO: should we transform the map here or in emacs?
-            kind_map = ["", "Text", "Method", "Function", "Constructor", "Field",
-                        "Variable", "Class", "Interface", "Module", "Property",
-                        "Unit" , "Value" , "Enum", "Keyword" , "Snippet", "Color",
-                        "File", "Reference", "Folder", "EnumMember", "Constant",
-                        "Struct", "Event", "Operator", "TypeParameter"]
-
-            # Some server, like dart_analysis_server, returns candidates list instead of dict.
-            if type(response_result) == list:
-                completion_items = response_result
-            else:
-                completion_items = list(map(lambda item: item["label"], response_result["items"]))
-                #  TODO: just a demo here
-                kinds = list(map(lambda item: kind_map[item["kind"]], response_result["items"]))
-                annotations = kinds
+            for item in response_result["items"] if "items" in response_result else response_result:
+                completion_items.append(item["label"])
+                kinds.append(KIND_MAP[item["kind"]])
+                
+            annotations = kinds
 
             # Calcuate completion common string.
             completion_common_string = os.path.commonprefix(completion_items)
@@ -171,9 +167,11 @@ class FileAction(object):
             # Push completion items to Emacs.
             if len(completion_items) == 1 and (self.completion_prefix_string == completion_common_string == completion_items[0]):
                 # Clear completion items if user input last completion item.
-                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, completion_common_string, [], [], []])
+                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, 
+                                                                     completion_common_string, [], [], []])
             else:
-                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, completion_common_string, completion_items, kinds, annotations])
+                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, 
+                                                                     completion_common_string, completion_items, kinds, annotations])
 
     def calc_completion_prefix_string(self):
         if self.last_change_file_before_cursor_text.endswith(" "):
