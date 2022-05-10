@@ -30,6 +30,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                'haskell-literate-mode-hook
                'dart-mode-hook
                'scala-mode-hook
+               'tuareg-mode-hook
                'typescript-mode-hook
                'js2-mode-hook
                'js-mode-hook
@@ -81,6 +82,7 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 8. dart_analysis_server (dart)
 9. metals (scala)
 10. typescript (typescript, javascript)
+11. ocaml (ocamllsp)
 
 ## Todo
 
