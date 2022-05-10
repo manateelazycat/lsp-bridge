@@ -122,6 +122,6 @@
               orderless-style-dispatchers nil)
   (add-hook 'orderless-style-dispatchers #'lsp-bridge-orderless-dispatch-flex-first nil t))
 
-(provide 'lsp-bridge)
+(provide 'lsp-bridge-orderless)
 
 ;;; lsp-bridge-orderless.el ends here
