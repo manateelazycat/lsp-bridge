@@ -97,10 +97,17 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'number
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-completion-stop-commands '(corfu-complete)
+  "If last command is match this option, stop popup completion ui."
+  :type 'cons
+  :group 'lsp-bridge)
+
 (defface lsp-bridge-font-lock-flash
   '((t (:inherit highlight)))
   "Face to flash the current line."
   :group 'lsp-bridge)
+
+(defvar lsp-bridge-last-change-command nil)
 
 (defvar lsp-bridge-server nil
   "The LSPBRIDGE Server.")
@@ -371,8 +378,12 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
       (setq-local lsp-bridge-completion-prefix prefix)
       (setq-local lsp-bridge-completion-common common)
 
-      ;; Don't popup completion frame if completion items is empty.
-      (unless (lsp-bridge-is-empty-list items)
+      ;; Try popup completion frame.
+      (unless (or
+               ;; Don't popup completion frame if completion items is empty.
+               (lsp-bridge-is-empty-list items)
+               ;; If last command is match `lsp-bridge-completion-stop-commands'
+               (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands))
         ;; Add kind and annotion information in completion item text.
         (when (length= items (length kinds))
           (cl-mapcar (lambda (item value)
@@ -387,18 +398,18 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 
           ;; Popup completion frame.
           (pcase (while-no-input ;; Interruptible capf query
-                 (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
-          (`(,fun ,beg ,end ,table . ,plist)
-           (let ((completion-in-region-mode-predicate
-                  (lambda () (eq beg (car-safe (funcall fun)))))
-                 (completion-extra-properties plist))
-             (setq completion-in-region--data
-                   (list (if (markerp beg) beg (copy-marker beg))
-                         (copy-marker end t)
-                         table
-                         (plist-get plist :predicate)))
-             (corfu--setup)
-             (corfu--update)))))))))
+                   (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
+            (`(,fun ,beg ,end ,table . ,plist)
+             (let ((completion-in-region-mode-predicate
+                    (lambda () (eq beg (car-safe (funcall fun)))))
+                   (completion-extra-properties plist))
+               (setq completion-in-region--data
+                     (list (if (markerp beg) beg (copy-marker beg))
+                           (copy-marker end t)
+                           table
+                           (plist-get plist :predicate)))
+               (corfu--setup)
+               (corfu--update)))))))))
 
 (defun lsp-bridge-capf ()
   (let ((bounds (bounds-of-thing-at-point 'symbol)))
@@ -439,6 +450,10 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
   (setq-local lsp-bridge--before-change-end-pos-character (lsp-bridge-point-character end)))
 
 (defun lsp-bridge-monitor-after-change (begin end length)
+  ;; Record last command to `lsp-bridge-last-change-command'.
+  (setq lsp-bridge-last-change-command this-command)
+
+  ;; Send change_file request.
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (cond
      ;; Add operation.
