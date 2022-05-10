@@ -187,6 +187,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     (js2-mode . "typescript")
     (js-mode . "typescript")
     (tuareg-mode . "ocamllsp")
+    (erlang-mode . "erlang_ls")
     )
   "The lang server rule for file mode."
   :type 'cons)
