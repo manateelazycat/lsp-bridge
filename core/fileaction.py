@@ -19,18 +19,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from core.utils import get_command_result, eval_in_emacs, generate_request_id, get_emacs_var, uri_to_path
 import os
 import random
 import threading
 import time
+
+from core.utils import (eval_in_emacs, generate_request_id, get_command_result,
+                        get_emacs_var, uri_to_path)
 
 KIND_MAP = ["", "Text", "Method", "Function", "Constructor", "Field",
             "Variable", "Class", "Interface", "Module", "Property",
             "Unit" , "Value" , "Enum", "Keyword" , "Snippet", "Color",
             "File", "Reference", "Folder", "EnumMember", "Constant",
             "Struct", "Event", "Operator", "TypeParameter"]
-            
+
 class FileAction(object):
 
     def __init__(self, filepath, lang_server):
@@ -154,12 +156,16 @@ class FileAction(object):
             completion_items = []
             kinds = []
             annotations = []
+            documents = []
 
-            for item in response_result["items"] if "items" in response_result else response_result:
-                completion_items.append(item["label"])
-                kinds.append(KIND_MAP[item["kind"]])
-                
-            annotations = kinds
+            if response_result is not None:
+                for item in response_result["items"] if "items" in response_result else response_result:
+                    completion_items.append(item["label"])
+                    kinds.append(KIND_MAP[item["kind"]])
+                    annotations.append(item["detail"] if "detail" in item else kinds[-1])
+                    annotations[-1] = annotations[-1].replace(" ", "") #  HACK: space makes the number of args for emacs wrong
+                    #  TODO: the situtation for documentation is complex
+                    # documents.append(item["documentation"] if "documentation" in item else "")
 
             # Calcuate completion common string.
             completion_common_string = os.path.commonprefix(completion_items)
@@ -167,10 +173,10 @@ class FileAction(object):
             # Push completion items to Emacs.
             if len(completion_items) == 1 and (self.completion_prefix_string == completion_common_string == completion_items[0]):
                 # Clear completion items if user input last completion item.
-                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, 
+                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string,
                                                                      completion_common_string, [], [], []])
             else:
-                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string, 
+                eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string,
                                                                      completion_common_string, completion_items, kinds, annotations])
 
     def calc_completion_prefix_string(self):
