@@ -312,7 +312,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
                 (setq-local lsp-bridge-filepath filename)
 
                 ;; Add fuzzy match.
-                (when (boundp 'lsp-bridge-orderless-setup)
+                (when (functionp 'lsp-bridge-orderless-setup)
                   (lsp-bridge-orderless-setup))
 
                 ;; Monitor event.
