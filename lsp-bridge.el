@@ -11,7 +11,8 @@
 ;;           By: Mingde (Matthew) Zeng
 ;; URL: https://github.com/manateelazycat/lsp-bridge
 ;; Keywords:
-;; Compatibility: emacs-version >= 27
+;; Compatibility: emacs-version >= 28
+;; Package-Requires: ((emacs "28.1"))
 ;;
 ;; Features that might be required by this library:
 ;;
@@ -204,6 +205,8 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
   "Call Python EPC function METHOD and ARGS synchronously."
   (lsp-bridge-epc-call-sync lsp-bridge-epc-process (read method) args))
 
+(defvar lsp-bridge-is-starting nil)
+
 (defun lsp-bridge-restart-process ()
   "Stop and restart LSPBRIDGE process."
   (interactive)
@@ -212,8 +215,6 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
   (lsp-bridge-kill-process)
   (lsp-bridge-start-process)
   (message "LSPBRIDGE process restarted."))
-
-(defvar lsp-bridge-is-starting nil)
 
 (defun lsp-bridge-start-process ()
   "Start LSPBRIDGE process if it isn't started."
@@ -290,39 +291,16 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
   (lsp-bridge-epc-init-epc-layer lsp-bridge-epc-process)
   (setq lsp-bridge-is-starting nil))
 
-(defun lsp-bridge-enable ()
-  (lsp-bridge-open-file (buffer-file-name)))
+(defvar-local lsp-bridge-last-position 0)
+(defvar-local lsp-bridge-completion-items nil)
+(defvar-local lsp-bridge-completion-prefix nil)
+(defvar-local lsp-bridge-completion-common nil)
+(defvar-local lsp-bridge-filepath "")
 
-(defun lsp-bridge-open-file (filename)
-  (dolist (buffer (buffer-list))
-    (when (string-equal (buffer-file-name buffer) filename)
-      (with-current-buffer buffer
-        (let ((lang-server (lsp-bridge-get-lang-server)))
-          (if lang-server
-              (progn
-                (setq-local lsp-bridge-flag t)
-                (setq-local lsp-bridge-last-position 0)
-                (setq-local lsp-bridge-completion-items nil)
-                (setq-local lsp-bridge-completion-prefix nil)
-                (setq-local lsp-bridge-completion-common nil)
-                (setq-local lsp-bridge-filepath filename)
-
-                (add-hook 'before-change-functions #'lsp-bridge-monitor-before-change nil t)
-                (add-hook 'after-change-functions #'lsp-bridge-monitor-after-change nil t)
-                (add-hook 'post-command-hook #'lsp-bridge-monitor-post-command nil t)
-                (add-hook 'kill-buffer-hook #'lsp-bridge-monitor-kill-buffer nil t)
-                (add-hook 'completion-at-point-functions #'lsp-bridge-capf nil t)
-
-                ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
-                (unless lsp-bridge-is-starting
-                  (lsp-bridge-start-process)))
-            (message "lsp-bridge not support %s now." (prin1 major-mode))))))))
 
 (defun lsp-bridge-get-lang-server ()
-  (let ((langserver-info (assoc major-mode lsp-bridge-lang-server-list)))
-    (if langserver-info
-        (cdr langserver-info)
-      nil)))
+  "Get lang server for current buffer."
+  (alist-get major-mode lsp-bridge-lang-server-list))
 
 (defun lsp-bridge--get-lang-server-by-file-func (filepath)
   (let (lang-server)
@@ -474,7 +452,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
   (dolist (buf (buffer-list))
     (when (string-equal (buffer-file-name buf) filepath)
       (with-current-buffer buf
-        (let* ((highlight-line (+ 1 (string-to-number line)))
+        (let* ((highlight-line (1+ (string-to-number line)))
                (start-pos (lsp-bridge-get-pos buf highlight-line (string-to-number bound-start)))
                (end-pos (lsp-bridge-get-pos buf highlight-line (string-to-number bound-end))))
           (require 'pulse)
@@ -502,12 +480,49 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 (defun lsp-bridge-jump-to-define (filepath row column)
   (interactive)
   (find-file filepath)
-  (goto-line (+ (string-to-number row) 1))
+  (goto-line (1+ (string-to-number row)))
   (move-to-column (string-to-number column))
   (require 'pulse)
   (let ((pulse-iterations 1)
         (pulse-delay lsp-bridge-flash-line-delay))
     (pulse-momentary-highlight-one-line (point) 'lsp-bridge-font-lock-flash)))
+
+(defconst lsp-bridge--internal-hooks
+  '((before-change-functions . lsp-bridge-monitor-before-change)
+    (after-change-functions . lsp-bridge-monitor-after-change)
+    (post-command-hook . lsp-bridge-monitor-post-command)
+    (kill-buffer-hook . lsp-bridge-monitor-kill-buffer)
+    (completion-at-point-functions . lsp-bridge-capf)))
+
+(define-minor-mode lsp-bridge-mode
+  "LSP Bridge mode."
+  :init-value nil
+  (if lsp-bridge-mode
+      (lsp-bridge--enable)
+    (lsp-bridge--disable)))
+
+(defun lsp-bridge--enable ()
+  (cond
+   ((not buffer-file-name)
+    (message "LSP Bridge can't be enabled in non-file buffers.")
+    (setq lsp-bridge-mode nil))
+   ((not (lsp-bridge-get-lang-server))
+    (message "LSP Bridge doesn't support current language.")
+    (setq lsp-bridge-mode nil))
+   (t
+    (dolist (hook lsp-bridge--internal-hooks)
+      (add-hook (car hook) (cdr hook) nil t))
+
+    (setq lsp-bridge-filepath buffer-file-name)
+    (setq lsp-bridge-last-position 0)
+
+    ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
+    (unless lsp-bridge-is-starting
+      (lsp-bridge-start-process)))))
+
+(defun lsp-bridge--disable ()
+  (dolist (hook lsp-bridge--internal-hooks)
+    (remove-hook (car hook) (cdr hook) t)))
 
 (provide 'lsp-bridge)
 
