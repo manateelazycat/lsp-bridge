@@ -21,6 +21,9 @@
 
 from epc.client import EPCClient
 import base64
+import sys
+import pathlib
+from urllib.parse import urlparse
 
 epc_client = None
 
@@ -98,12 +101,34 @@ def get_emacs_func_result(method_name, args):
         result = epc_client.call_sync(method_name, args)
         return result
 
-def get_command_result(command_string):
+def get_command_result(command_string, cwd):
     import subprocess
-    process = subprocess.Popen(command_string, shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(command_string, cwd=cwd, shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     ret = process.wait()
     return "".join((process.stdout if ret == 0 else process.stderr).readlines()).strip()
 
 def generate_request_id():
     import random
     return abs(random.getrandbits(16))
+
+def path_to_uri(path):
+    uri = pathlib.Path(path).as_uri()
+    # from urllib.parse import quote
+    # return quote(uri)
+    return uri
+
+def uri_to_path(uri):
+    # from urllib.parse import unquote
+    # uri = unquote(uri)
+    parsed = urlparse(uri)
+    path = parsed.path
+    if sys.platform == "win32":
+        path = parsed.path[1:]
+    return path
+
+def path_as_key(path):
+    key = path
+    # NOTE: (buffer-file-name) return "d:/Case/a.go", gopls return "file:///D:/Case/a.go"
+    if sys.platform == "win32":
+        key = path.lower()
+    return key

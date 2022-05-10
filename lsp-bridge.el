@@ -264,9 +264,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
   (decode-coding-string (base64-decode-string str) 'utf-8))
 
 (defun lsp-bridge--first-start (lsp-bridge-epc-port)
-  "Call `lsp-bridge--open-internal' upon receiving `start_finish' signal from server.
-
-WEBENGINE-INCLUDE-PRIVATE-CODEC is only useful when app-name is video-player."
+  "Call `lsp-bridge--open-internal' upon receiving `start_finish' signal from server."
   ;; Make EPC process.
   (setq lsp-bridge-epc-process (make-lsp-bridge-epc-manager
                                 :server-process lsp-bridge-internal-process

@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from core.utils import get_command_result, eval_in_emacs, generate_request_id, get_emacs_var
+from core.utils import get_command_result, eval_in_emacs, generate_request_id, get_emacs_var, uri_to_path
 import os
 import random
 import threading
@@ -72,8 +72,8 @@ class FileAction(object):
         # Otherwise use git root patch as project path.
         dir_path = os.path.dirname(filepath)
         self.project_path = filepath
-        if get_command_result("cd {} ; git rev-parse --is-inside-work-tree".format(dir_path)) == "true":
-            self.project_path = get_command_result("cd {} ; git rev-parse --show-toplevel".format(dir_path))
+        if get_command_result("git rev-parse --is-inside-work-tree", dir_path) == "true":
+            self.project_path = get_command_result("git rev-parse --show-toplevel", dir_path)
 
     def get_lsp_server_name(self):
         # We use project path and LSP server type as unique name.
@@ -165,7 +165,7 @@ class FileAction(object):
             if response_result:
                 try:
                     file_info = response_result[0]
-                    filepath = file_info["uri"][len("file://"):]
+                    filepath = uri_to_path(file_info["uri"])
                     row = file_info["range"]["start"]["line"]
                     column = file_info["range"]["start"]["character"]
                     eval_in_emacs("lsp-bridge-jump-to-define", [filepath, row, column])
@@ -209,7 +209,7 @@ class FileAction(object):
     def rename_symbol_in_file(self, rename_info):
         rename_file = rename_info["textDocument"]["uri"]
         if rename_file.startswith("file://"):
-            rename_file = rename_file[len("file://"):]
+            rename_file = uri_to_path(rename_file)
             
         lines = []
         rename_counter = 0
