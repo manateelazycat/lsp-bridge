@@ -165,7 +165,7 @@ class FileAction(object):
             if response_result is not None:
                 for item in response_result["items"] if "items" in response_result else response_result:
                     completion_items.append(item["label"])
-                    kinds.append(KIND_MAP[item["kind"]])
+                    kinds.append(KIND_MAP[item["kind"] if "kind" in item else 0])
                     annotations.append(item["detail"] if "detail" in item else kinds[-1])
                     annotations[-1] = annotations[-1].replace(" ", "") #  HACK: space makes the number of args for emacs wrong
                     #  TODO: the situtation for documentation is complex
