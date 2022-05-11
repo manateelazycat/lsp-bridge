@@ -45,10 +45,16 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                'haskell-literate-mode-hook
                'dart-mode-hook
                'scala-mode-hook
-               'tuareg-mode-hook
                'typescript-mode-hook
                'js2-mode-hook
                'js-mode-hook
+               'tuareg-mode-hook
+               'latex-mode-hook
+               'Tex-latex-mode-hook
+               'texmode-hook
+               'context-mode-hook
+               'texinfo-mode-hook
+               'bibtex-mode-hook
                ))
   (add-hook hook (lambda ()
                    (setq-local corfu-auto nil)  ;; let lsp-bridge control when popup completion frame
