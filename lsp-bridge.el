@@ -7,7 +7,7 @@
 ;; Copyright (C) 2018, Andy Stewart, all rights reserved.
 ;; Created: 2018-06-15 14:10:12
 ;; Version: 0.5
-;; Last-Updated: Wed May 11 01:32:21 2022 (-0400)
+;; Last-Updated: Wed May 11 02:37:21 2022 (-0400)
 ;;           By: Mingde (Matthew) Zeng
 ;; URL: https://github.com/manateelazycat/lsp-bridge
 ;; Keywords:
@@ -115,6 +115,14 @@ Setting this to nil or 0 will turn off the indicator."
   "The LSP-Bridge Server.")
 
 (defvar lsp-bridge-python-file (expand-file-name "lsp-bridge.py" (file-name-directory load-file-name)))
+
+(defvar lsp-bridge-mark-ring nil
+  "The list of saved lsp-bridge marks, most recent first.")
+
+(defcustom lsp-bridge-mark-ring-max 16
+  "Maximum size of lsp-bridge mark ring.  \
+Start discarding off end if gets this big."
+  :type 'integer)
 
 (defvar lsp-bridge-server-port nil)
 
@@ -485,6 +493,31 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   (interactive)
   (lsp-bridge-call-async "find_define" lsp-bridge-filepath (line-number-at-pos) (current-column)))
 
+(defun lsp-bridge-return-from-def ()
+  "Pop off lsp-bridge-mark-ring and jump to the top location."
+  (interactive)
+  ;; Pop entries that refer to non-existent buffers.
+  (while (and lsp-bridge-mark-ring (not (marker-buffer (car lsp-bridge-mark-ring))))
+    (setq lsp-bridge-mark-ring (cdr lsp-bridge-mark-ring)))
+  (or lsp-bridge-mark-ring
+      (error "[LSP-Bridge] No lsp-bridge mark set"))
+  (let* ((this-buffer (current-buffer))
+         (marker (pop lsp-bridge-mark-ring))
+	     (buffer (marker-buffer marker))
+	     (position (marker-position marker)))
+    ;; (setq lsp-bridge-mark-ring (nconc (cdr lsp-bridge-mark-ring) (list marker)))
+    (message "back to buffer %s at marker %s in position %s" (buffer-name buffer) marker position)
+    (set-buffer buffer)
+    (or (and (>= position (point-min))
+	         (<= position (point-max)))
+	    (if widen-automatically
+	        (widen)
+	      (error "[LSP-Bridge] mark position is outside accessible part of buffer %s"
+                 (buffer-name buffer))))
+    (goto-char position)
+    (unless (equal buffer this-buffer)
+      (switch-to-buffer buffer))))
+
 (defun lsp-bridge-find-references ()
   (interactive)
   (lsp-bridge-call-async "find_references" lsp-bridge-filepath (line-number-at-pos) (current-column)))
@@ -526,7 +559,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defun lsp-bridge--jump-to-def (filepath row column)
   (interactive)
-
+  (message "jumping to def")
+  (set-marker (mark-marker) (point) (current-buffer))
+  (add-to-history 'lsp-bridge-mark-ring (copy-marker (mark-marker)) lsp-bridge-mark-ring-max t)
   (find-file filepath)
   (goto-line (1+ (string-to-number row)))
   (move-to-column (string-to-number column))
