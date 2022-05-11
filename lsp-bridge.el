@@ -98,10 +98,17 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'number
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-completion-stop-commands '(corfu-complete)
+  "If last command is match this option, stop popup completion ui."
+  :type 'cons
+  :group 'lsp-bridge)
+
 (defface lsp-bridge-font-lock-flash
   '((t (:inherit highlight)))
   "Face to flash the current line."
   :group 'lsp-bridge)
+
+(defvar lsp-bridge-last-change-command nil)
 
 (defvar lsp-bridge-server nil
   "The LSPBRIDGE Server.")
@@ -181,8 +188,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 
 (defcustom lsp-bridge-lang-server-list
   '(
-    (c-mode . "clangd")
-    (c++-mode . "clangd")
+    ((c-mode c++-mode) . "clangd")
     (python-mode . "pyright")
     (ruby-mode . "solargraph")
     (rust-mode . "rust-analyzer")
@@ -191,9 +197,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     (haskell-mode . "hls")
     (dart-mode . "dart_analysis_server")
     (scala-mode . "metals")
-    (typescript-mode . "typescript")
-    (js2-mode . "typescript")
-    (js-mode . "typescript")
+    ((typescript-mode js2-mode js-mode) . "typescript")
     (tuareg-mode . "ocamllsp")
     (erlang-mode . "erlang_ls")
     ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . "texlab")
@@ -354,8 +358,12 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
     (setq-local lsp-bridge-completion-prefix prefix)
     (setq-local lsp-bridge-completion-common common)
 
-    ;; Don't popup completion frame if completion items is empty.
-    (unless (lsp-bridge-is-empty-list items)
+    ;; Try popup completion frame.
+    (unless (or
+               ;; Don't popup completion frame if completion items is empty.
+               (lsp-bridge-is-empty-list items)
+               ;; If last command is match `lsp-bridge-completion-stop-commands'
+               (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands))
       ;; Add kind and annotion information in completion item text.
       (when (length= items (length kinds))
         (cl-mapcar (lambda (item value)
@@ -382,6 +390,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
                        (plist-get plist :predicate)))
            (corfu--setup)
            (corfu--update))))))))
+
 
 (defun lsp-bridge-capf ()
   (let ((bounds (bounds-of-thing-at-point 'symbol)))
@@ -428,6 +437,10 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
   (setq lsp-bridge--before-change-end-pos-character (lsp-bridge-point-character end)))
 
 (defun lsp-bridge-monitor-after-change (begin end length)
+  ;; Record last command to `lsp-bridge-last-change-command'.
+  (setq lsp-bridge-last-change-command this-command)
+
+  ;; Send change_file request.
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (cond
      ;; Add operation.
