@@ -33,6 +33,10 @@ KIND_MAP = ["", "Text", "Method", "Function", "Constructor", "Field",
             "File", "Reference", "Folder", "EnumMember", "Constant",
             "Struct", "Event", "Operator", "TypeParameter"]
 
+REFERENCE_PATH = '\033[95m'
+REFERENCE_TEXT = '\033[94m'
+REFERENCE_ENDC = '\033[0m'
+
 class FileAction(object):
 
     def __init__(self, filepath, lang_server):
@@ -161,7 +165,7 @@ class FileAction(object):
             if response_result is not None:
                 for item in response_result["items"] if "items" in response_result else response_result:
                     completion_items.append(item["label"])
-                    kinds.append(KIND_MAP[item["kind"]])
+                    kinds.append(KIND_MAP[item.get("kind", 0)])
                     annotations.append(item.get("detail", kinds[-1]))
                     annotations[-1] = annotations[-1].replace(" ", "") #  HACK: space makes the number of args for emacs wrong
                     #  TODO: the situtation for documentation is complex
@@ -206,8 +210,36 @@ class FileAction(object):
                 eval_in_emacs("message", ["Can't find define."])
 
     def handle_find_references_response(self, request_id, response_result):
+        import linecache
+
         if request_id == self.find_references_request_list[-1]:
-            print(response_result)
+            references_dict = {}
+            for uri_info in response_result:
+                path = uri_to_path(uri_info["uri"])
+                if path in references_dict:
+                    references_dict[path].append(uri_info["range"])
+                else:
+                    references_dict[path] = [uri_info["range"]]
+
+            references_counter = 0
+            references_content = ""
+            for i, (path, ranges) in enumerate(references_dict.items()):
+                references_content += "\n" + REFERENCE_PATH + path + REFERENCE_ENDC + "\n"
+
+                for range in ranges:
+                    with open(path) as f:
+                        line = range["start"]["line"]
+                        start_column = range["start"]["character"]
+                        end_column = range["end"]["character"]
+                        line_content = linecache.getline(path, range["start"]["line"] + 1)
+
+                        references_content += "{}:{}:{}".format(
+                            line + 1,
+                            start_column,
+                            line_content[:start_column] + REFERENCE_TEXT + line_content[start_column:end_column] + REFERENCE_ENDC + line_content[end_column:])
+                        references_counter += 1
+
+            eval_in_emacs("lsp-bridge-popup-references", [references_content, references_counter])
 
     def handle_prepare_rename_response(self, request_id, response_result):
         if request_id == self.prepare_rename_request_list[-1]:
@@ -224,7 +256,8 @@ class FileAction(object):
                 try:
                     counter = 0
                     rename_files = []
-                    for rename_info in response_result["documentChanges"]:
+
+                    for rename_info in response_result["documentChanges"] if "documentChanges" in response_result else response_result["changes"]:
                         (rename_file, rename_counter) = self.rename_symbol_in_file(rename_info)
                         rename_files.append(rename_file)
                         counter += rename_counter

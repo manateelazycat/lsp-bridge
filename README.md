@@ -36,6 +36,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 (dolist (hook (list
                'c-mode-hook
                'c++-mode-hook
+               'java-mode-hook
                'python-mode-hook
                'ruby-mode-hook
                'rust-mode-hook
@@ -45,10 +46,16 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                'haskell-literate-mode-hook
                'dart-mode-hook
                'scala-mode-hook
-               'tuareg-mode-hook
                'typescript-mode-hook
                'js2-mode-hook
                'js-mode-hook
+               'tuareg-mode-hook
+               'latex-mode-hook
+               'Tex-latex-mode-hook
+               'texmode-hook
+               'context-mode-hook
+               'texinfo-mode-hook
+               'bibtex-mode-hook
                ))
   (add-hook hook (lambda ()
                    (setq-local corfu-auto nil)  ;; let lsp-bridge control when popup completion frame
@@ -59,6 +66,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 ## Commands
 
 * lsp-bridge-find-define: jump to the definition position
+* lsp-bridge-find-references: traversing access code references (fork from color-rg.el)
 * lsp-bridge-rename: renate the cursor content
 * lsp-bridge-restart-process: restart lsp-bridge process (only used for development)
 
@@ -80,7 +88,7 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 
 ## Supported language servers
 
-1. clangd (c++)
+1. clangd (c, c++)
 2. pyright (python)
 3. solargraph (ruby)
 4. rust-analyzer (rust)
@@ -90,11 +98,13 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 8. dart_analysis_server (dart)
 9. metals (scala)
 10. typescript (typescript, javascript)
-11. ocaml (ocamllsp)
+11. ocamllsp (ocaml)
+12. erlang_ls (erlang)
+13. texlab (latex)
+14. eclipse.jdt.ls (java) Note: please ensure export `org.eclipse.jdt.ls.product/target/repository/bin` in your system PATH at first.
 
 ## Todo
 
-- [ ] Find references UI: use [color-rg](https://github.com/manateelazycat/color-rg) or xref
 - [ ] Popup web document window by [Popweb](https://github.com/manateelazycat/popweb)
 - [ ] To support more LSP servers
 
