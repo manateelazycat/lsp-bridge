@@ -66,6 +66,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 ## Commands
 
 * lsp-bridge-find-define: jump to the definition position
+* lsp-bridge-find-references: traversing access code references (fork from color-rg.el)
 * lsp-bridge-rename: renate the cursor content
 * lsp-bridge-restart-process: restart lsp-bridge process (only used for development)
 
@@ -104,7 +105,6 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 
 ## Todo
 
-- [ ] Find references UI: use [color-rg](https://github.com/manateelazycat/color-rg) or xref
 - [ ] Popup web document window by [Popweb](https://github.com/manateelazycat/popweb)
 - [ ] To support more LSP servers
 

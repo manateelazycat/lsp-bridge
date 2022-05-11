@@ -77,6 +77,7 @@
 (require 'seq)
 (require 'subr-x)
 (require 'lsp-bridge-epc)
+(require 'lsp-bridge-ref)
 (require 'corfu)
 (require 'corfu-info)
 (require 'corfu-history)
@@ -361,10 +362,10 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 
     ;; Try popup completion frame.
     (unless (or
-               ;; Don't popup completion frame if completion items is empty.
-               (lsp-bridge-is-empty-list items)
-               ;; If last command is match `lsp-bridge-completion-stop-commands'
-               (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands))
+             ;; Don't popup completion frame if completion items is empty.
+             (lsp-bridge-is-empty-list items)
+             ;; If last command is match `lsp-bridge-completion-stop-commands'
+             (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands))
       ;; Add kind and annotion information in completion item text.
       (when (length= items (length kinds))
         (cl-mapcar (lambda (item value)
@@ -379,18 +380,18 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 
         ;; Popup completion frame.
         (pcase (while-no-input ;; Interruptible capf query
-               (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
-        (`(,fun ,beg ,end ,table . ,plist)
-         (let ((completion-in-region-mode-predicate
-                (lambda () (eq beg (car-safe (funcall fun)))))
-               (completion-extra-properties plist))
-           (setq completion-in-region--data
-                 (list (if (markerp beg) beg (copy-marker beg))
-                       (copy-marker end t)
-                       table
-                       (plist-get plist :predicate)))
-           (corfu--setup)
-           (corfu--update))))))))
+                 (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
+          (`(,fun ,beg ,end ,table . ,plist)
+           (let ((completion-in-region-mode-predicate
+                  (lambda () (eq beg (car-safe (funcall fun)))))
+                 (completion-extra-properties plist))
+             (setq completion-in-region--data
+                   (list (if (markerp beg) beg (copy-marker beg))
+                         (copy-marker end t)
+                         table
+                         (plist-get plist :predicate)))
+             (corfu--setup)
+             (corfu--update))))))))
 
 
 (defun lsp-bridge-capf ()
@@ -486,6 +487,10 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
   (interactive)
   (lsp-bridge-call-async "find_references" lsp-bridge-filepath (line-number-at-pos) (current-column)))
 
+(defun lsp-bridge-popup-references (references-content references-counter)
+  (lsp-bridge-ref-popup references-content references-counter)
+  (message "Found %s references" references-counter))
+
 (defun lsp-bridge-rename ()
   (interactive)
   (lsp-bridge-call-async "prepare_rename" lsp-bridge-filepath (line-number-at-pos) (current-column))
@@ -495,8 +500,8 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 (defun lsp-bridge-rename-highlight (filepath line bound-start bound-end)
   (lsp-bridge--with-file-buffer filepath
     (let* ((highlight-line (1+ (string-to-number line)))
-            (start-pos (lsp-bridge-get-pos buf highlight-line (string-to-number bound-start)))
-            (end-pos (lsp-bridge-get-pos buf highlight-line (string-to-number bound-end))))
+           (start-pos (lsp-bridge-get-pos buf highlight-line (string-to-number bound-start)))
+           (end-pos (lsp-bridge-get-pos buf highlight-line (string-to-number bound-end))))
       (require 'pulse)
       (let ((pulse-iterations 1)
             (pulse-delay lsp-bridge-flash-line-delay))
@@ -559,7 +564,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 
     ;; Add fuzzy match.
     (when (functionp 'lsp-bridge-orderless-setup)
-                      (lsp-bridge-orderless-setup))
+      (lsp-bridge-orderless-setup))
 
     ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
     (unless lsp-bridge-is-starting
