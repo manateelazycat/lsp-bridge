@@ -25,7 +25,7 @@ import threading
 import time
 
 from core.utils import (eval_in_emacs, generate_request_id, get_command_result,
-                        get_emacs_var, uri_to_path)
+                        get_emacs_var, uri_to_path, path_as_key)
 
 KIND_MAP = ["", "Text", "Method", "Function", "Constructor", "Field",
             "Variable", "Class", "Interface", "Module", "Property",
@@ -89,7 +89,7 @@ class FileAction(object):
 
     def get_lsp_server_name(self):
         # We use project path and LSP server type as unique name.
-        return "{}#{}".format(self.project_path, self.lang_server_info["name"])
+        return "{}#{}".format(path_as_key(self.project_path), self.lang_server_info["name"])
 
     def change_file(self, start_row, start_character, end_row, end_character, range_length, change_text, row, column, before_char, before_cursor_text):
         # Send didChange request to LSP server.
@@ -165,8 +165,8 @@ class FileAction(object):
             if response_result is not None:
                 for item in response_result["items"] if "items" in response_result else response_result:
                     completion_items.append(item["label"])
-                    kinds.append(KIND_MAP[item["kind"] if "kind" in item else 0])
-                    annotations.append(item["detail"] if "detail" in item else kinds[-1])
+                    kinds.append(KIND_MAP[item.get("kind", 0)])
+                    annotations.append(item.get("detail", kinds[-1]))
                     annotations[-1] = annotations[-1].replace(" ", "") #  HACK: space makes the number of args for emacs wrong
                     #  TODO: the situtation for documentation is complex
                     # documents.append(item["documentation"] if "documentation" in item else "")
@@ -184,16 +184,10 @@ class FileAction(object):
                                                                      completion_common_string, completion_items, kinds, annotations])
 
     def calc_completion_prefix_string(self):
-        if self.last_change_file_before_cursor_text.endswith(" "):
-            # Return "" if have blank character before cursor.
-            return ""
-        else:
-            string_after_dot = self.last_change_file_before_cursor_text[self.last_change_file_before_cursor_text.rfind(".") + 1:]
-            split_strings = string_after_dot.split()
-            if len(split_strings) > 0:
-                return split_strings[-1]
-            else:
-                return ""
+        ret = self.last_change_file_before_cursor_text
+        for c in self.lsp_server.trigger_characters + [" "]:
+            ret = ret.rpartition(c)[2]
+        return ret
 
     def handle_find_define_response(self, request_id, response_result):
         # Stop send jump define if request id expired, or change file, or move cursor.
@@ -217,7 +211,7 @@ class FileAction(object):
 
     def handle_find_references_response(self, request_id, response_result):
         import linecache
-        
+
         if request_id == self.find_references_request_list[-1]:
             references_dict = {}
             for uri_info in response_result:
@@ -226,25 +220,25 @@ class FileAction(object):
                     references_dict[path].append(uri_info["range"])
                 else:
                     references_dict[path] = [uri_info["range"]]
-                    
+
             references_counter = 0
             references_content = ""
             for i, (path, ranges) in enumerate(references_dict.items()):
                 references_content += "\n" + REFERENCE_PATH + path + REFERENCE_ENDC + "\n"
-                
+
                 for range in ranges:
                     with open(path) as f:
                         line = range["start"]["line"]
                         start_column = range["start"]["character"]
                         end_column = range["end"]["character"]
                         line_content = linecache.getline(path, range["start"]["line"] + 1)
-                        
+
                         references_content += "{}:{}:{}".format(
                             line + 1,
                             start_column,
                             line_content[:start_column] + REFERENCE_TEXT + line_content[start_column:end_column] + REFERENCE_ENDC + line_content[end_column:])
                         references_counter += 1
-                        
+
             eval_in_emacs("lsp-bridge-popup-references", [references_content, references_counter])
 
     def handle_prepare_rename_response(self, request_id, response_result):
@@ -262,7 +256,7 @@ class FileAction(object):
                 try:
                     counter = 0
                     rename_files = []
-                    
+
                     for rename_info in response_result["documentChanges"] if "documentChanges" in response_result else response_result["changes"]:
                         (rename_file, rename_counter) = self.rename_symbol_in_file(rename_info)
                         rename_files.append(rename_file)

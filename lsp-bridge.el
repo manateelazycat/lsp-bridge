@@ -149,7 +149,7 @@ Setting this to nil or 0 will turn off the indicator."
                      (read (substring arg 1)))
                     ((and (string-prefix-p "(" arg)
                           (string-suffix-p ")" arg)) ;; list
-                     (split-string (substring arg 1 -1) " "))
+                     (mapcar 'lsp-bridge--decode-string (split-string (substring arg 1 -1) " ")))
                     (t arg))))
           (cdr args))))
 
