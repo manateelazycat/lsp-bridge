@@ -85,9 +85,6 @@
 ;; Add completion history.
 (corfu-history-mode t)
 
-;; Set auto prefix.
-(setq corfu-auto-prefix 0)
-
 (defgroup lsp-bridge nil
   "LSP-Bridge group."
   :group 'applications)
@@ -587,6 +584,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
     (setq lsp-bridge-filepath buffer-file-name)
     (setq lsp-bridge-last-position 0)
+    (setq-local corfu-auto-prefix 0)
 
     ;; Add fuzzy match.
     (when (functionp 'lsp-bridge-orderless-setup)
