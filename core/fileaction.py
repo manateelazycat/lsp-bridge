@@ -207,7 +207,7 @@ class FileAction(object):
                     filepath = uri_to_path(file_info["uri"])
                     row = file_info["range"]["start"]["line"]
                     column = file_info["range"]["start"]["character"]
-                    eval_in_emacs("lsp-bridge-jump-to-define", [filepath, row, column])
+                    eval_in_emacs("lsp-bridge--jump-to-def", [filepath, row, column])
                 except:
                     print("* Failed information about find_define response.")
                     import traceback

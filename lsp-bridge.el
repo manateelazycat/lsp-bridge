@@ -7,7 +7,7 @@
 ;; Copyright (C) 2018, Andy Stewart, all rights reserved.
 ;; Created: 2018-06-15 14:10:12
 ;; Version: 0.5
-;; Last-Updated: Wed May 11 01:24:10 2022 (-0400)
+;; Last-Updated: Wed May 11 01:32:21 2022 (-0400)
 ;;           By: Mingde (Matthew) Zeng
 ;; URL: https://github.com/manateelazycat/lsp-bridge
 ;; Keywords:
@@ -479,7 +479,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                              (lsp-bridge-char-before)
                              (buffer-substring-no-properties (line-beginning-position) (point)))))))
 
-(defun lsp-bridge-find-define ()
+(defalias 'lsp-bridge-find-define #'lsp-bridge-find-def)
+
+(defun lsp-bridge-find-def ()
   (interactive)
   (lsp-bridge-call-async "find_define" lsp-bridge-filepath (line-number-at-pos) (current-column)))
 
@@ -520,10 +522,11 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
       (lsp-bridge--with-file-buffer filepath
         (revert-buffer :ignore-auto :noconfirm))))
 
-  (message "Rename %s places in %s files." counter (length rename-files)))
+  (message "[LSP-Bridge] Rename %s places in %s files." counter (length rename-files)))
 
-(defun lsp-bridge-jump-to-define (filepath row column)
+(defun lsp-bridge--jump-to-def (filepath row column)
   (interactive)
+
   (find-file filepath)
   (goto-line (1+ (string-to-number row)))
   (move-to-column (string-to-number column))
