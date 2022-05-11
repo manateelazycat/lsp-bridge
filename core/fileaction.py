@@ -25,7 +25,7 @@ import threading
 import time
 
 from core.utils import (eval_in_emacs, generate_request_id, get_command_result,
-                        get_emacs_var, uri_to_path)
+                        get_emacs_var, uri_to_path, path_as_key)
 
 KIND_MAP = ["", "Text", "Method", "Function", "Constructor", "Field",
             "Variable", "Class", "Interface", "Module", "Property",
@@ -85,7 +85,7 @@ class FileAction(object):
 
     def get_lsp_server_name(self):
         # We use project path and LSP server type as unique name.
-        return "{}#{}".format(self.project_path, self.lang_server_info["name"])
+        return "{}#{}".format(path_as_key(self.project_path), self.lang_server_info["name"])
 
     def change_file(self, start_row, start_character, end_row, end_character, range_length, change_text, row, column, before_char, before_cursor_text):
         # Send didChange request to LSP server.
@@ -162,7 +162,7 @@ class FileAction(object):
                 for item in response_result["items"] if "items" in response_result else response_result:
                     completion_items.append(item["label"])
                     kinds.append(KIND_MAP[item["kind"]])
-                    annotations.append(item["detail"] if "detail" in item else kinds[-1])
+                    annotations.append(item.get("detail", kinds[-1]))
                     annotations[-1] = annotations[-1].replace(" ", "") #  HACK: space makes the number of args for emacs wrong
                     #  TODO: the situtation for documentation is complex
                     # documents.append(item["documentation"] if "documentation" in item else "")
@@ -180,16 +180,10 @@ class FileAction(object):
                                                                      completion_common_string, completion_items, kinds, annotations])
 
     def calc_completion_prefix_string(self):
-        if self.last_change_file_before_cursor_text.endswith(" "):
-            # Return "" if have blank character before cursor.
-            return ""
-        else:
-            string_after_dot = self.last_change_file_before_cursor_text[self.last_change_file_before_cursor_text.rfind(".") + 1:]
-            split_strings = string_after_dot.split()
-            if len(split_strings) > 0:
-                return split_strings[-1]
-            else:
-                return ""
+        ret = self.last_change_file_before_cursor_text
+        for c in self.lsp_server.trigger_characters + [" "]:
+            ret = ret.rpartition(c)[2]
+        return ret
 
     def handle_find_define_response(self, request_id, response_result):
         # Stop send jump define if request id expired, or change file, or move cursor.

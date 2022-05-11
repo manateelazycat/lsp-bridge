@@ -218,12 +218,15 @@ class LspServer(object):
         self.sender_threads = []
         self.request_dict = {}
         self.open_file_dict = {} # contain file opened in current project
-        self.rootPath = self.project_path
+        self.root_path = self.project_path
 
         # All LSP server response running in ls_message_thread.
         self.lsp_message_queue = queue.Queue()
         self.ls_message_thread = threading.Thread(target=self.lsp_message_dispatcher)
         self.ls_message_thread.start()
+
+        # LSP server information.
+        self.trigger_characters = list()
 
         # Start LSP sever.
         self.p = subprocess.Popen(self.get_server_command(),
@@ -254,27 +257,17 @@ class LspServer(object):
                 traceback.print_exc()
 
     def send_initialize_request(self):
-        capabilities = {}
-        if "capabilities" in self.server_info:
-            capabilities = self.server_info["capabilities"]
-
-        initialization_options = {}
-        if "initializationOptions" in self.server_info:
-            initialization_options = self.server_info["initializationOptions"]
-        
-        self.send_to_request("initialize",
-                             {
-                                 "processId": os.getpid(),
-                                 "rootPath": self.rootPath,
-                                 "clientInfo": {
-                                     "name": "emacs",
-                                     "version": "GNU Emacs 28.1 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.24.33, cairo version 1.17.6)\n of 2022-04-04"
-                                 },
-                                 "rootUri": path_to_uri(self.project_path),
-                                 "capabilities": capabilities,
-                                 "initializationOptions": initialization_options
-                             },
-                             self.initialize_id)
+        self.send_to_request("initialize", {
+            "processId": os.getpid(),
+            "rootPath": self.root_path,
+            "clientInfo": {
+                "name": "emacs",
+                "version": "GNU Emacs 28.1 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.24.33, cairo version 1.17.6)\n of 2022-04-04"
+            },
+            "rootUri": path_to_uri(self.project_path),
+            "capabilities": self.server_info.get("capabilities", {}),
+            "initializationOptions": self.server_info.get("initializationOptions", {})
+        }, self.initialize_id)
 
     def send_did_open_notification(self, filepath):
         filekey = path_as_key(filepath)
@@ -477,6 +470,7 @@ class LspServer(object):
             if message["id"] == self.initialize_id:
                 # STEP 2: tell LSP server that client is ready.
                 # We need wait LSP server response 'initialize', then we send 'initialized' notification.
+                self.trigger_characters = message["result"]["capabilities"]["completionProvider"]["triggerCharacters"]
                 self.send_to_notification("initialized", {})
             else:
                 if message["id"] in self.request_dict and not "error" in message:
@@ -533,7 +527,7 @@ class LspServer(object):
             del self.open_file_dict[filekey]
 
         # We need shutdown LSP server when last file closed, to save system memory.
-        if len(self.open_file_dict.keys()) == 0:
+        if len(self.open_file_dict) == 0:
             self.send_shutdown_request()
             self.send_exit_notification()
 
