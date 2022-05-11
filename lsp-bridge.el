@@ -7,7 +7,7 @@
 ;; Copyright (C) 2018, Andy Stewart, all rights reserved.
 ;; Created: 2018-06-15 14:10:12
 ;; Version: 0.5
-;; Last-Updated: Wed May 11 02:37:21 2022 (-0400)
+;; Last-Updated: Wed May 11 02:44:16 2022 (-0400)
 ;;           By: Mingde (Matthew) Zeng
 ;; URL: https://github.com/manateelazycat/lsp-bridge
 ;; Keywords:
@@ -505,8 +505,6 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
          (marker (pop lsp-bridge-mark-ring))
 	     (buffer (marker-buffer marker))
 	     (position (marker-position marker)))
-    ;; (setq lsp-bridge-mark-ring (nconc (cdr lsp-bridge-mark-ring) (list marker)))
-    (message "back to buffer %s at marker %s in position %s" (buffer-name buffer) marker position)
     (set-buffer buffer)
     (or (and (>= position (point-min))
 	         (<= position (point-max)))
