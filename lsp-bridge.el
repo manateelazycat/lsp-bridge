@@ -572,8 +572,11 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (kill-buffer-hook . lsp-bridge-monitor-kill-buffer)
     (completion-at-point-functions . lsp-bridge-capf)))
 
+(defvar lsp-bridge-mode-map (make-sparse-keymap))
+
 (define-minor-mode lsp-bridge-mode
   "LSP Bridge mode."
+  :keymap lsp-bridge-mode-map
   :init-value nil
   (if lsp-bridge-mode
       (lsp-bridge--enable)
