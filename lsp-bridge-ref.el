@@ -201,7 +201,7 @@ used to restore window configuration after apply changed.")
 (defvar lsp-bridge-ref-regexp-split-line "\n\n"
   "Regexp to match empty line between two files.")
 
-(defvar lsp-bridge-ref-regexp-position "^\\([1-9][0-9]*\\):\\([1-9][0-9]*\\):"
+(defvar lsp-bridge-ref-regexp-position "^\\([0-9][0-9]*\\):\\([0-9][0-9]*\\):"
   "Regexp to match line/column string.")
 
 (defvar lsp-bridge-ref-changed-lines nil
