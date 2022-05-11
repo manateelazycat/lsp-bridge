@@ -387,7 +387,9 @@ user more freedom to use rg with special arguments."
                                          'face nil 'font-lock-face 'lsp-bridge-ref-font-lock-match))
                      t t))
 
-    (lsp-bridge-ref-update-header-line))
+    (lsp-bridge-ref-update-header-line)
+
+    (read-only-mode 1))
 
   ;; Pop search buffer.
   (delete-other-windows)
