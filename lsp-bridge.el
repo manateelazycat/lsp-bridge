@@ -149,18 +149,8 @@ Start discarding off end if gets this big."
   (cl-loop repeat 600
            do (sleep-for 0.1)))
 
-(defun eval-in-emacs-func (&rest args)
-  (apply (read (car args))
-         (mapcar
-          (lambda (arg)
-            (let ((arg (lsp-bridge--decode-string arg)))
-              (cond ((string-prefix-p "'" arg) ;; single quote
-                     (read (substring arg 1)))
-                    ((and (string-prefix-p "(" arg)
-                          (string-suffix-p ")" arg)) ;; list
-                     (split-string (substring arg 1 -1) " "))
-                    (t arg))))
-          (cdr args))))
+(defun eval-in-emacs-func (sexp-string)
+  (eval (read sexp-string)))
 
 (defun lsp-bridge--get-emacs-var-func (var-name)
   (let* ((var-symbol (intern var-name))
