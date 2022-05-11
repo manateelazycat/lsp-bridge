@@ -337,7 +337,7 @@ class LspServer(object):
         self.record_request_id(request_id, filepath, type)
 
         # STEP 6: Calculate completion candidates for current point.
-        if char == ".":
+        if char in self.trigger_characters:
             self.send_to_request("textDocument/completion",
                                  {
                                      "textDocument": {
