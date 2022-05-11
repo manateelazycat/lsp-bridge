@@ -383,13 +383,20 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
         (cl-mapcar (lambda (item value)
                      (put-text-property 0 1 'annotation value item)) items annotions))
 
-      ;; Hide completion frame if only blank before cursor.
-      (unless (and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
-                   (string-equal prefix ""))
+      ;; Try to popup completion frame.
+      (when (and (not (lsp-bridge-is-blank-before-cursor-p)) ;hide completion frame if only blank before cursor
+                 (not (lsp-bridge-is-at-sentence-ending-p))) ;hide completion if cursor after special chars
 
         ;; Popup completion frame.
         (corfu--auto-complete lsp-bridge-last-change-tick)
         ))))
+
+(defun lsp-bridge-is-at-sentence-ending-p ()
+  (member (char-to-string (char-before)) (list ":" ";" ")")))
+
+(defun lsp-bridge-is-blank-before-cursor-p ()
+  (and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
+       (string-equal prefix "")))
 
 (defun lsp-bridge-capf ()
   (let ((bounds (bounds-of-thing-at-point 'symbol)))
@@ -493,14 +500,14 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
       (error "[LSP-Bridge] No lsp-bridge mark set"))
   (let* ((this-buffer (current-buffer))
          (marker (pop lsp-bridge-mark-ring))
-	     (buffer (marker-buffer marker))
-	     (position (marker-position marker)))
+         (buffer (marker-buffer marker))
+         (position (marker-position marker)))
     (set-buffer buffer)
     (or (and (>= position (point-min))
-	         (<= position (point-max)))
-	    (if widen-automatically
-	        (widen)
-	      (error "[LSP-Bridge] mark position is outside accessible part of buffer %s"
+             (<= position (point-max)))
+        (if widen-automatically
+            (widen)
+          (error "[LSP-Bridge] mark position is outside accessible part of buffer %s"
                  (buffer-name buffer))))
     (goto-char position)
     (unless (equal buffer this-buffer)
