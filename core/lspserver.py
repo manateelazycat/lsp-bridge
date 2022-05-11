@@ -76,6 +76,20 @@ class LspBridgeListener(Thread):
 
                 if line.startswith("{"):
                     self.emit_message(line)
+                    
+                    # We need check ending of line, avoid miss next message. ;)
+                    if self.is_end_number(line):
+                        length_index = line.rfind(":")
+                        length = int(line[length_index + 1:])
+
+                        # Drop empty line.
+                        self.process.stdout.readline()
+
+                        # Emit message.
+                        message = self.process.stdout.readline(length).strip()
+                        
+                        if message != "":
+                            self.emit_message(message)
                 elif self.is_end_number(line) and not line.startswith("{"):
                     # LSP message need read 3 times.
                     # 1. Read Content-Length
