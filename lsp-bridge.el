@@ -110,6 +110,7 @@ Setting this to nil or 0 will turn off the indicator."
   :group 'lsp-bridge)
 
 (defvar lsp-bridge-last-change-command nil)
+(defvar lsp-bridge-last-change-tick nil)
 
 (defvar lsp-bridge-server nil
   "The LSP-Bridge Server.")
@@ -387,20 +388,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                    (string-equal prefix ""))
 
         ;; Popup completion frame.
-        (pcase (while-no-input ;; Interruptible capf query
-                 (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
-          (`(,fun ,beg ,end ,table . ,plist)
-           (let ((completion-in-region-mode-predicate
-                  (lambda () (eq beg (car-safe (funcall fun)))))
-                 (completion-extra-properties plist))
-             (setq completion-in-region--data
-                   (list (if (markerp beg) beg (copy-marker beg))
-                         (copy-marker end t)
-                         table
-                         (plist-get plist :predicate)))
-             (corfu--setup)
-             (corfu--update))))))))
-
+        (corfu--auto-complete lsp-bridge-last-change-tick)
+        ))))
 
 (defun lsp-bridge-capf ()
   (let ((bounds (bounds-of-thing-at-point 'symbol)))
@@ -449,6 +438,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defun lsp-bridge-monitor-after-change (begin end length)
   ;; Record last command to `lsp-bridge-last-change-command'.
   (setq lsp-bridge-last-change-command this-command)
+  (setq lsp-bridge-last-change-tick (corfu--auto-tick))
 
   ;; Send change_file request.
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
