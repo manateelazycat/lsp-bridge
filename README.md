@@ -36,6 +36,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 (dolist (hook (list
                'c-mode-hook
                'c++-mode-hook
+               'java-mode-hook
                'python-mode-hook
                'ruby-mode-hook
                'rust-mode-hook
@@ -96,9 +97,10 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 8. dart_analysis_server (dart)
 9. metals (scala)
 10. typescript (typescript, javascript)
-11. ocaml (ocamllsp)
+11. ocamllsp (ocaml)
 12. erlang_ls (erlang)
 13. texlab (latex)
+14. eclipse.jdt.ls (java) Note: please ensure export `org.eclipse.jdt.ls.product/target/repository/bin` in your system PATH at first.
 
 ## Todo
 

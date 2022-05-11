@@ -189,6 +189,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 (defcustom lsp-bridge-lang-server-list
   '(
     ((c-mode c++-mode) . "clangd")
+    (java-mode . "jdtls")
     (python-mode . "pyright")
     (ruby-mode . "solargraph")
     (rust-mode . "rust-analyzer")
