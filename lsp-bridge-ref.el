@@ -348,6 +348,9 @@ user more freedom to use rg with special arguments."
     (setq lsp-bridge-ref-window-configuration-before-search (current-window-configuration))
     (setq lsp-bridge-ref-buffer-point-before-search (point)))
 
+  ;; Init edit mode.
+  (setf (lsp-bridge-ref-search-mode lsp-bridge-ref-cur-search) "View")
+
   ;; Reset visit temp buffers.
   (setq lsp-bridge-ref-temp-visit-buffers nil)
   ;; Reset hit count.
