@@ -131,7 +131,7 @@ Start discarding off end if gets this big."
           (lsp-bridge-epc-server-start
            (lambda (mngr)
              (let ((mngr mngr))
-               (lsp-bridge-epc-define-method mngr 'eval-in-emacs 'lsp-bridge-eval-in-emacs-func)
+               (lsp-bridge-epc-define-method mngr 'eval-in-emacs 'lsp-bridge--eval-in-emacs-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-var 'lsp-bridge--get-emacs-var-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-vars 'lsp-bridge--get-emacs-vars-func)
                (lsp-bridge-epc-define-method mngr 'get-lang-server 'lsp-bridge--get-lang-server-by-file-func)
@@ -146,7 +146,7 @@ Start discarding off end if gets this big."
   (cl-loop repeat 600
            do (sleep-for 0.1)))
 
-(defun lsp-bridge-eval-in-emacs-func (sexp-string)
+(defun lsp-bridge--eval-in-emacs-func (sexp-string)
   (eval (read sexp-string)))
 
 (defun lsp-bridge--get-emacs-var-func (var-name)
