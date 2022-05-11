@@ -7,7 +7,7 @@
 ;; Copyright (C) 2018, Andy Stewart, all rights reserved.
 ;; Created: 2018-06-15 14:10:12
 ;; Version: 0.5
-;; Last-Updated: Sun Nov 21 04:35:02 2022 (-0500)
+;; Last-Updated: Wed May 11 02:37:21 2022 (-0400)
 ;;           By: Mingde (Matthew) Zeng
 ;; URL: https://github.com/manateelazycat/lsp-bridge
 ;; Keywords:
@@ -89,7 +89,7 @@
 (setq corfu-auto-prefix 0)
 
 (defgroup lsp-bridge nil
-  "LSPBRIDGE group."
+  "LSP-Bridge group."
   :group 'applications)
 
 (defcustom lsp-bridge-flash-line-delay .3
@@ -112,9 +112,17 @@ Setting this to nil or 0 will turn off the indicator."
 (defvar lsp-bridge-last-change-command nil)
 
 (defvar lsp-bridge-server nil
-  "The LSPBRIDGE Server.")
+  "The LSP-Bridge Server.")
 
 (defvar lsp-bridge-python-file (expand-file-name "lsp-bridge.py" (file-name-directory load-file-name)))
+
+(defvar lsp-bridge-mark-ring nil
+  "The list of saved lsp-bridge marks, most recent first.")
+
+(defcustom lsp-bridge-mark-ring-max 16
+  "Maximum size of lsp-bridge mark ring.  \
+Start discarding off end if gets this big."
+  :type 'integer)
 
 (defvar lsp-bridge-server-port nil)
 
@@ -132,7 +140,7 @@ Setting this to nil or 0 will turn off the indicator."
                ))))
     (if lsp-bridge-server
         (setq lsp-bridge-server-port (process-contact lsp-bridge-server :service))
-      (error "[LSPBRIDGE] lsp-bridge-server failed to start")))
+      (error "[LSP-Bridge] lsp-bridge-server failed to start")))
   lsp-bridge-server)
 
 (when noninteractive
@@ -171,7 +179,7 @@ Setting this to nil or 0 will turn off the indicator."
 (defvar lsp-bridge-internal-process-args nil)
 
 (defcustom lsp-bridge-name "*lsp-bridge*"
-  "Name of LSPBRIDGE buffer."
+  "Name of LSP-Bridge buffer."
   :type 'string)
 
 (defcustom lsp-bridge-python-command (if (memq system-type '(cygwin windows-nt ms-dos)) "python.exe" "python3")
@@ -180,7 +188,7 @@ Setting this to nil or 0 will turn off the indicator."
 
 (defcustom lsp-bridge-enable-debug nil
   "If you got segfault error, please turn this option.
-Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buffer content when next crash."
+Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buffer content when next crash."
   :type 'boolean)
 
 (defcustom lsp-bridge-enable-log nil
@@ -219,16 +227,16 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 (defvar lsp-bridge-is-starting nil)
 
 (defun lsp-bridge-restart-process ()
-  "Stop and restart LSPBRIDGE process."
+  "Stop and restart LSP-Bridge process."
   (interactive)
   (setq lsp-bridge-is-starting nil)
 
   (lsp-bridge-kill-process)
   (lsp-bridge-start-process)
-  (message "LSPBRIDGE process restarted."))
+  (message "[LSP-Bridge] Process restarted."))
 
 (defun lsp-bridge-start-process ()
-  "Start LSPBRIDGE process if it isn't started."
+  "Start LSP-Bridge process if it isn't started."
   (setq lsp-bridge-is-starting t)
   (unless (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     ;; start epc server and set `lsp-bridge-server-port'
@@ -262,7 +270,7 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 (defvar lsp-bridge-stop-process-hook nil)
 
 (defun lsp-bridge-kill-process ()
-  "Stop LSPBRIDGE process and kill all LSPBRIDGE buffers."
+  "Stop LSP-Bridge process and kill all LSP-Bridge buffers."
   (interactive)
 
   ;; Run stop process hooks.
@@ -272,18 +280,18 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
   (lsp-bridge--kill-python-process))
 
 (defun lsp-bridge--kill-python-process ()
-  "Kill LSPBRIDGE background python process."
+  "Kill LSP-Bridge background python process."
   (interactive)
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    ;; Cleanup before exit LSPBRIDGE server process.
+    ;; Cleanup before exit LSP-Bridge server process.
     (lsp-bridge-call-async "cleanup")
-    ;; Delete LSPBRIDGE server process.
+    ;; Delete LSP-Bridge server process.
     (lsp-bridge-epc-stop-epc lsp-bridge-epc-process)
     ;; Kill *lsp-bridge* buffer.
     (when (get-buffer lsp-bridge-name)
       (kill-buffer lsp-bridge-name))
     (setq lsp-bridge-epc-process nil)
-    (message "[LSPBRIDGE] Process terminated.")))
+    (message "[LSP-Bridge] Process terminated.")))
 
 (defun lsp-bridge--decode-string (str)
   "Decode string STR with UTF-8 coding using Base64."
@@ -479,9 +487,36 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
                              (lsp-bridge-char-before)
                              (buffer-substring-no-properties (line-beginning-position) (point)))))))
 
-(defun lsp-bridge-find-define ()
+(defalias 'lsp-bridge-find-define #'lsp-bridge-find-def)
+
+(defun lsp-bridge-find-def ()
   (interactive)
   (lsp-bridge-call-async "find_define" lsp-bridge-filepath (line-number-at-pos) (current-column)))
+
+(defun lsp-bridge-return-from-def ()
+  "Pop off lsp-bridge-mark-ring and jump to the top location."
+  (interactive)
+  ;; Pop entries that refer to non-existent buffers.
+  (while (and lsp-bridge-mark-ring (not (marker-buffer (car lsp-bridge-mark-ring))))
+    (setq lsp-bridge-mark-ring (cdr lsp-bridge-mark-ring)))
+  (or lsp-bridge-mark-ring
+      (error "[LSP-Bridge] No lsp-bridge mark set"))
+  (let* ((this-buffer (current-buffer))
+         (marker (pop lsp-bridge-mark-ring))
+	     (buffer (marker-buffer marker))
+	     (position (marker-position marker)))
+    ;; (setq lsp-bridge-mark-ring (nconc (cdr lsp-bridge-mark-ring) (list marker)))
+    (message "back to buffer %s at marker %s in position %s" (buffer-name buffer) marker position)
+    (set-buffer buffer)
+    (or (and (>= position (point-min))
+	         (<= position (point-max)))
+	    (if widen-automatically
+	        (widen)
+	      (error "[LSP-Bridge] mark position is outside accessible part of buffer %s"
+                 (buffer-name buffer))))
+    (goto-char position)
+    (unless (equal buffer this-buffer)
+      (switch-to-buffer buffer))))
 
 (defun lsp-bridge-find-references ()
   (interactive)
@@ -520,10 +555,13 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
       (lsp-bridge--with-file-buffer filepath
         (revert-buffer :ignore-auto :noconfirm))))
 
-  (message "Rename %s places in %s files." counter (length rename-files)))
+  (message "[LSP-Bridge] Rename %s places in %s files." counter (length rename-files)))
 
-(defun lsp-bridge-jump-to-define (filepath row column)
+(defun lsp-bridge--jump-to-def (filepath row column)
   (interactive)
+  (message "jumping to def")
+  (set-marker (mark-marker) (point) (current-buffer))
+  (add-to-history 'lsp-bridge-mark-ring (copy-marker (mark-marker)) lsp-bridge-mark-ring-max t)
   (find-file filepath)
   (goto-line (1+ (string-to-number row)))
   (move-to-column (string-to-number column))
@@ -550,10 +588,10 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
   "Enable LSP Bridge mode."
   (cond
    ((not buffer-file-name)
-    (message "LSP Bridge can't be enabled in non-file buffers.")
+    (message "[LSP-Bridge] cannot be enabled in non-file buffers.")
     (setq lsp-bridge-mode nil))
    ((not (lsp-bridge-get-lang-server))
-    (message "LSP Bridge doesn't support current language.")
+    (message "[LSP-Bridge] doesn't support the language of the current buffer.")
     (setq lsp-bridge-mode nil))
    (t
     (dolist (hook lsp-bridge--internal-hooks)
@@ -568,7 +606,8 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 
     ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
     (unless lsp-bridge-is-starting
-      (lsp-bridge-start-process)))))
+      (lsp-bridge-start-process)
+      (message "[LSP-Bridge] Configuring LSP \"%s\" server for %s" (lsp-bridge-get-lang-server) (file-name-nondirectory lsp-bridge-filepath))))))
 
 (defun lsp-bridge--disable ()
   "Disable LSP Bridge mode."
