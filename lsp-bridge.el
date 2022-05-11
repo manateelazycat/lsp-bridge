@@ -500,8 +500,8 @@ Then LSPBRIDGE will start by gdb, please send new issue with `*lsp-bridge*' buff
 (defun lsp-bridge-rename-highlight (filepath line bound-start bound-end)
   (lsp-bridge--with-file-buffer filepath
     (let* ((highlight-line (1+ (string-to-number line)))
-           (start-pos (lsp-bridge-get-pos buf highlight-line (string-to-number bound-start)))
-           (end-pos (lsp-bridge-get-pos buf highlight-line (string-to-number bound-end))))
+           (start-pos (lsp-bridge-get-pos buffer highlight-line (string-to-number bound-start)))
+           (end-pos (lsp-bridge-get-pos buffer highlight-line (string-to-number bound-end))))
       (require 'pulse)
       (let ((pulse-iterations 1)
             (pulse-delay lsp-bridge-flash-line-delay))
