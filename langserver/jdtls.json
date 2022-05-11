@@ -1,0 +1,16 @@
+{
+  "name": "jdtls",
+  "languageId": "java",
+  "command": [
+    "jdtls"
+  ],
+  "settings": {
+    "java": {
+      "completion" : {
+        "guessMethodArguments": true,
+        "overwrite": true,
+        "enabled": true
+      }
+    }
+  }
+}
