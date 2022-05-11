@@ -281,10 +281,6 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (setq lsp-bridge-epc-process nil)
     (message "[LSP-Bridge] Process terminated.")))
 
-(defun lsp-bridge--decode-string (str)
-  "Decode string STR with UTF-8 coding using Base64."
-  (decode-coding-string (base64-decode-string str) 'utf-8))
-
 (defun lsp-bridge--first-start (lsp-bridge-epc-port)
   "Call `lsp-bridge--open-internal' upon receiving `start_finish' signal from server."
   ;; Make EPC process.
@@ -407,16 +403,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (goto-char pos)
     (line-number-at-pos)))
 
-(defun lsp-bridge-point-column (pos)
-  (save-excursion
-    (goto-char pos)
-    (current-column)))
-
 (defun lsp-bridge-point-character (pos)
   (save-excursion
     (goto-char pos)
     (- (point) (line-beginning-position))))
-
 
 (defvar-local lsp-bridge--before-change-begin-pos 0)
 (defvar-local lsp-bridge--before-change-end-pos 0)
