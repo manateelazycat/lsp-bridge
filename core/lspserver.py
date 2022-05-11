@@ -23,6 +23,7 @@ from sys import flags, stderr
 from core.utils import path_as_key, generate_request_id, path_to_uri, uri_to_path
 from subprocess import PIPE
 from threading import Thread
+import io
 import json
 import os
 import queue
@@ -228,9 +229,11 @@ class LspServer(object):
         # Start LSP sever.
         self.p = subprocess.Popen(self.get_server_command(),
                                   bufsize=100000000, # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
-                                  text=True,
-                                  encoding="utf-8",
                                   stdin=PIPE, stdout=PIPE, stderr=stderr)
+
+        # https://github.com/python/cpython/blob/87f849c775ca54f56ad60ebf96822b93bbd0029a/Lib/subprocess.py#L992
+        self.p.stdin = io.TextIOWrapper(self.p.stdin, newline='', encoding="utf-8", write_through=True)
+        self.p.stdout = io.TextIOWrapper(self.p.stdout, newline='', encoding="utf-8")
 
         # A separate thread is used to read the message returned by the LSP server.
         self.listener_thread = LspBridgeListener(self.p, self.lsp_message_queue)
