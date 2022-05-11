@@ -384,7 +384,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                      (put-text-property 0 1 'annotation value item)) items annotions))
 
       ;; Try to popup completion frame.
-      (when (and (not (lsp-bridge-is-blank-before-cursor-p)) ;hide completion frame if only blank before cursor
+      (when (and (not (lsp-bridge-is-blank-before-cursor-p prefix)) ;hide completion frame if only blank before cursor
                  (not (lsp-bridge-is-at-sentence-ending-p))) ;hide completion if cursor after special chars
 
         ;; Popup completion frame.
@@ -394,7 +394,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defun lsp-bridge-is-at-sentence-ending-p ()
   (member (char-to-string (char-before)) (list ":" ";" ")")))
 
-(defun lsp-bridge-is-blank-before-cursor-p ()
+(defun lsp-bridge-is-blank-before-cursor-p (prefix)
   (and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
        (string-equal prefix "")))
 
