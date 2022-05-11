@@ -43,23 +43,20 @@ def close_epc_client():
     if epc_client != None:
         epc_client.close()
 
-def string_to_base64(text):
-    return str(base64.b64encode(text.encode("utf-8")), "utf-8")
-
 def convert_arg_to_str(arg):
     if type(arg) == str:
         return arg
-    elif type(arg) == list:
-        arg = " ".join(map(string_to_base64, arg))
-        arg = "(" + arg + ")"
-        return arg
-    elif type(arg) == int:
-        return str(arg)
     elif type(arg) == bool:
-        return str(arg).upper()
-    else:
-        print("Can't convert type:", type(arg))
-        return str(arg)
+        arg = str(arg).upper()
+    elif type(arg) == list:
+        new_arg = ""
+        for a in arg:
+            new_arg = new_arg + " " + convert_arg_to_str(a)
+        arg = "(" + new_arg[1:] + ")"
+    return arg
+
+def string_to_base64(text):
+    return str(base64.b64encode(str(text).encode("utf-8")), "utf-8")
 
 def eval_in_emacs(method_name, args):
     global epc_client
@@ -67,8 +64,8 @@ def eval_in_emacs(method_name, args):
     if epc_client == None:
         print("Please call init_epc_client first before callling eval_in_emacs.")
     else:
-        # Make argument encode with Base64, avoid string quote problem pass to elisp side.
         args = list(map(convert_arg_to_str, args))
+        # Make argument encode with Base64, avoid string quote problem pass to elisp side.
         args = list(map(string_to_base64, args))
 
         args.insert(0, method_name)

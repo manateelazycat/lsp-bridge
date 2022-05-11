@@ -157,7 +157,7 @@ Start discarding off end if gets this big."
                      (read (substring arg 1)))
                     ((and (string-prefix-p "(" arg)
                           (string-suffix-p ")" arg)) ;; list
-                     (mapcar 'lsp-bridge--decode-string (split-string (substring arg 1 -1) " ")))
+                     (split-string (substring arg 1 -1) " "))
                     (t arg))))
           (cdr args))))
 
