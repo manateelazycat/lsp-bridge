@@ -106,7 +106,9 @@ def get_emacs_func_result(method_name, args):
 
 def get_command_result(command_string, cwd):
     import subprocess
-    return subprocess.check_output(command_string, cwd=cwd, shell=True, stderr=subprocess.STDOUT).decode("utf-8").strip()
+    process = subprocess.Popen(command_string, cwd=cwd, shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    ret = process.wait()
+    return "".join((process.stdout if ret == 0 else process.stderr).readlines()).strip()
 
 def generate_request_id():
     import random
