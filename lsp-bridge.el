@@ -506,9 +506,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defun lsp-bridge-rename-highlight (filepath line bound-start bound-end)
   (lsp-bridge--with-file-buffer filepath
-    (let* ((highlight-line (1+ (string-to-number line)))
-           (start-pos (lsp-bridge-get-pos buffer highlight-line (string-to-number bound-start)))
-           (end-pos (lsp-bridge-get-pos buffer highlight-line (string-to-number bound-end))))
+    (let* ((highlight-line (1+ line))
+           (start-pos (lsp-bridge-get-pos buffer highlight-line bound-start))
+           (end-pos (lsp-bridge-get-pos buffer highlight-line bound-end)))
       (require 'pulse)
       (let ((pulse-iterations 1)
             (pulse-delay lsp-bridge-flash-line-delay))
@@ -535,8 +535,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   (set-marker (mark-marker) (point) (current-buffer))
   (add-to-history 'lsp-bridge-mark-ring (copy-marker (mark-marker)) lsp-bridge-mark-ring-max t)
   (find-file filepath)
-  (goto-line (1+ (string-to-number row)))
-  (move-to-column (string-to-number column))
+  (goto-line (1+ row))
+  (move-to-column column)
   (require 'pulse)
   (let ((pulse-iterations 1)
         (pulse-delay lsp-bridge-flash-line-delay))
