@@ -262,7 +262,8 @@ class FileAction(object):
                 try:
                     counter = 0
                     rename_files = []
-                    for rename_info in response_result["documentChanges"]:
+                    
+                    for rename_info in response_result["documentChanges"] if "documentChanges" in response_result else response_result["changes"]:
                         (rename_file, rename_counter) = self.rename_symbol_in_file(rename_info)
                         rename_files.append(rename_file)
                         counter += rename_counter
