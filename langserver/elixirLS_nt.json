@@ -1,7 +1,7 @@
 {
   "name": "elixirLS",
   "languageId": "elixir",
-  "command": ["language_server.sh"],
+  "command": ["language_server.bat"],
   "settings": {
     "elixirLS": {
       "dialyzerEnabled": true,

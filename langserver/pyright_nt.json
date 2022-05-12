@@ -1,7 +1,7 @@
 {
   "name": "pyright",
   "languageId": "python",
-  "command": ["pyright-langserver", "--stdio"],
+  "command": ["pyright-langserver.cmd", "--stdio"],
   "settings": {
     "analysis": {
       "autoImportCompletions": true,

@@ -228,7 +228,7 @@ class LspServer(object):
         self.trigger_characters = list()
 
         # Start LSP sever.
-        self.p = subprocess.Popen(self.get_server_command(),
+        self.p = subprocess.Popen(self.server_info["command"],
                                   bufsize=100000000, # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
                                   stdin=PIPE, stdout=PIPE, stderr=stderr)
 
@@ -437,19 +437,6 @@ class LspServer(object):
 
     def send_exit_notification(self):
         self.send_to_notification("exit", {})
-
-    def get_server_command(self):
-        command_info = self.server_info["command"]
-        if type(command_info) == list:
-            # Just return command list if 'command' content is list.
-            return command_info
-        elif type(command_info) == dict:
-            if os.name in command_info:
-                # Return command match current OS.
-                return command_info[os.name]
-            else:
-                # Return default command if current OS command not found.
-                return command_info["default"]
 
     def get_server_workspace_change_configuration(self):
         return {

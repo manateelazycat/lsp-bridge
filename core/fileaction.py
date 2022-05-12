@@ -64,22 +64,29 @@ class FileAction(object):
 
         # Read language server information.
         self.lang_server_info = None
-        self.lang_server_info_path = ""
-        if os.path.exists(lang_server) and os.path.sep in lang_server:
-            # If lang_server is real file path, we load the LSP server configuration from the user specified file.
-            self.lang_server_info_path = lang_server
-        else:
-            # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
-            self.lang_server_info_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "langserver", "{}.json".format(lang_server))
-
-        with open(self.lang_server_info_path) as f:
-            import json
-            self.lang_server_info = json.load(f)
+        self.load_lang_server_info(lang_server)
 
         self.lsp_server = None
 
         # Generate initialize request id.
         self.initialize_id = generate_request_id()
+        
+    def load_lang_server_info(self, lang_server):
+        lang_server_info_path = ""
+        if os.path.exists(lang_server) and os.path.sep in lang_server:
+            # If lang_server is real file path, we load the LSP server configuration from the user specified file.
+            lang_server_info_path = lang_server
+        else:
+            # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
+            lang_server_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "langserver")
+            lang_server_file_path_current = os.path.join(lang_server_dir, "{}_{}.json".format(lang_server, os.name))
+            lang_server_file_path_default = os.path.join(lang_server_dir, "{}.json".format(lang_server))
+            
+            lang_server_info_path = lang_server_file_path_current if os.path.exists(lang_server_file_path_current) else lang_server_file_path_default
+            
+        with open(lang_server_info_path) as f:
+            import json
+            self.lang_server_info = json.load(f)
 
     def get_lsp_server_name(self):
         # We use project path and LSP server type as unique name.
