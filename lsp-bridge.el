@@ -199,6 +199,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (tuareg-mode . "ocamllsp")
     (erlang-mode . "erlang_ls")
     ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . "texlab")
+    ((clojure-mode clojurec-mode clojurescript-mode clojurex-mode) . "clojure-lsp")
     )
   "The lang server rule for file mode."
   :type 'cons)

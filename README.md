@@ -56,6 +56,10 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                'context-mode-hook
                'texinfo-mode-hook
                'bibtex-mode-hook
+	       'clojure-mode-hook
+	       'clojurec-mode-hook
+	       'clojurescript-mode-hook
+	       'clojurex-mode-hook
                ))
   (add-hook hook (lambda ()
                    (setq-local corfu-auto nil)  ;; let lsp-bridge control when popup completion frame
@@ -103,6 +107,7 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 12. erlang_ls (erlang)
 13. texlab (latex)
 14. eclipse.jdt.ls (java) Note: please ensure export `org.eclipse.jdt.ls.product/target/repository/bin` in your system PATH at first.
+15. clojure-lsp (clojure)
 
 ## Todo
 
