@@ -134,7 +134,7 @@ Start discarding off end if gets this big."
                (lsp-bridge-epc-define-method mngr 'eval-in-emacs 'lsp-bridge--eval-in-emacs-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-var 'lsp-bridge--get-emacs-var-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-vars 'lsp-bridge--get-emacs-vars-func)
-               (lsp-bridge-epc-define-method mngr 'get-lang-server 'lsp-bridge--get-lang-server-by-file-func)
+               (lsp-bridge-epc-define-method mngr 'get-lang-server 'lsp-bridge--get-lang-server-func)
                ))))
     (if lsp-bridge-server
         (setq lsp-bridge-server-port (process-contact lsp-bridge-server :service))
@@ -183,7 +183,14 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Enable this option to print log message in `*lsp-bridge*' buffer, default only print message header."
   :type 'boolean)
 
-(defcustom lsp-bridge-lang-server-list
+(defcustom lsp-bridge-lang-server-extension-list
+  '(
+    (("vue") . "volar")
+    )
+  "The lang server rule for file extension."
+  :type 'cons)
+
+(defcustom lsp-bridge-lang-server-mode-list
   '(
     ((c-mode c++-mode) . "clangd")
     (java-mode . "jdtls")
@@ -205,6 +212,54 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     )
   "The lang server rule for file mode."
   :type 'cons)
+
+(defvar lsp-bridge-get-lang-server-by-project nil
+  "Get lang server with project path and file path.")
+
+(defun lsp-bridge--get-lang-server-func (project-path filepath)
+  "Get lang server with project path, file path or file extension."
+  (let (lang-server-by-project
+        lang-server-by-extension)
+    ;; Step 1: Search lang server base on project rule provide by `lsp-bridge-get-lang-server-by-project'.
+    (when lsp-bridge-get-lang-server-by-project
+      (setq lang-server-by-project (funcall lsp-bridge-get-lang-server-by-project project-path filepath)))
+
+    (if lang-server-by-project
+        lang-server-by-project
+      ;; Step 2: search lang server base on extension rule provide by `lsp-bridge-lang-server-extension-list'.
+      (setq lang-server-by-extension (lsp-bridge-get-lang-server-by-extension filepath))
+      (if lang-server-by-extension
+          lang-server-by-extension
+        ;; Step 3: search lang server base on mode rule provide by `lsp-bridge-lang-server-extension-list'.
+        (lsp-bridge--with-file-buffer filepath
+          (lsp-bridge-get-lang-server-by-mode))))))
+
+(defun lsp-bridge-get-lang-server-by-extension (filepath)
+  "Get lang server for file extension."
+  (let* ((file-extension (file-name-extension filepath))
+         (langserver-info (cl-find-if
+                           (lambda (pair)
+                             (let ((extension (car pair)))
+                               (if (eq (type-of extension) 'string)
+                                   (string-equal file-extension extension)
+                                 (member file-extension extension))))
+                           lsp-bridge-lang-server-extension-list)))
+    (if langserver-info
+        (cdr langserver-info)
+      nil)))
+
+(defun lsp-bridge-get-lang-server-by-mode ()
+  "Get lang server for file mode."
+  (let ((langserver-info (cl-find-if
+                          (lambda (pair)
+                            (let ((mode (car pair)))
+                              (if (symbolp mode)
+                                  (eq major-mode mode)
+                                (member major-mode mode))))
+                          lsp-bridge-lang-server-mode-list)))
+    (if langserver-info
+        (cdr langserver-info)
+      nil)))
 
 (defun lsp-bridge-call-async (method &rest args)
   "Call Python EPC function METHOD and ARGS asynchronously."
@@ -310,23 +365,6 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
      (when buffer
        (with-current-buffer buffer
          ,@body))))
-
-
-(defun lsp-bridge-get-lang-server ()
-  "Get lang server for current buffer."
-  (let ((langserver-info (cl-find-if (lambda (pair)
-                                       (let ((mode (car pair)))
-                                         (if (symbolp mode)
-                                             (eq major-mode mode)
-                                           (member major-mode mode)))) lsp-bridge-lang-server-list)))
-    (if langserver-info
-        (cdr langserver-info)
-      nil)))
-
-(defun lsp-bridge--get-lang-server-by-file-func (filepath)
-  "Get lang server for FILEPATH."
-  (lsp-bridge--with-file-buffer filepath
-    (lsp-bridge-get-lang-server)))
 
 (defun lsp-bridge-char-before ()
   (let ((prev-char (char-before)))
@@ -568,7 +606,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
    ((not buffer-file-name)
     (message "[LSP-Bridge] cannot be enabled in non-file buffers.")
     (setq lsp-bridge-mode nil))
-   ((not (lsp-bridge-get-lang-server))
+   ((not (or
+          (lsp-bridge-get-lang-server-by-extension (buffer-file-name))
+          (lsp-bridge-get-lang-server-by-mode)))
     (message "[LSP-Bridge] doesn't support the language of the current buffer.")
     (setq lsp-bridge-mode nil))
    (t
@@ -586,7 +626,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
     (unless lsp-bridge-is-starting
       (lsp-bridge-start-process)
-      (message "[LSP-Bridge] Configuring LSP \"%s\" server for %s" (lsp-bridge-get-lang-server) (file-name-nondirectory lsp-bridge-filepath))))))
+      (message "[LSP-Bridge] Configuring LSP \"%s\" server for %s" (lsp-bridge-get-lang-server-by-mode) (file-name-nondirectory lsp-bridge-filepath))))))
 
 (defun lsp-bridge--disable ()
   "Disable LSP Bridge mode."

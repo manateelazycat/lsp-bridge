@@ -115,3 +115,12 @@ def path_as_key(path):
     if sys.platform == "win32":
         key = path.lower()
     return key
+
+def get_project_path(filepath):
+    import os
+    dir_path = os.path.dirname(filepath)
+    if get_command_result("git rev-parse --is-inside-work-tree", dir_path) == "true":
+        return get_command_result("git rev-parse --show-toplevel", dir_path)
+    else:
+        return filepath
+    

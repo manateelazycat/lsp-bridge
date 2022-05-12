@@ -21,7 +21,8 @@
 
 from core.fileaction import FileAction
 from core.lspserver import LspServer
-from core.utils import (path_as_key, init_epc_client, close_epc_client, eval_in_emacs, get_emacs_vars, get_emacs_func_result)
+from core.utils import (path_as_key, init_epc_client, close_epc_client, eval_in_emacs, 
+                        get_emacs_vars, get_emacs_func_result, get_project_path)
 from epc.server import ThreadingEPCServer
 import os
 import platform
@@ -119,8 +120,9 @@ class LspBridge(object):
         # Create file action.
         filekey = path_as_key(filepath)
         if filekey not in self.file_action_dict:
-            lang_server = get_emacs_func_result("get-lang-server", [filepath])
-            action = FileAction(filepath, lang_server)
+            project_path = get_project_path(filepath)
+            lang_server = get_emacs_func_result("get-lang-server", [project_path, filepath])
+            action = FileAction(filepath, project_path, lang_server)
             self.file_action_dict[filekey] = action
             
         # Create LSP server.

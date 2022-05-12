@@ -39,7 +39,7 @@ REFERENCE_ENDC = '\033[0m'
 
 class FileAction(object):
 
-    def __init__(self, filepath, lang_server):
+    def __init__(self, filepath, project_path, lang_server):
         object.__init__(self)
 
         # Build request functions.
@@ -48,6 +48,7 @@ class FileAction(object):
 
         # Init.
         self.filepath = filepath
+        self.project_path = project_path
         self.request_dict = {}
         self.completion_request_list = []
         self.find_define_request_list = []
@@ -79,13 +80,6 @@ class FileAction(object):
 
         # Generate initialize request id.
         self.initialize_id = generate_request_id()
-
-        # Project path is same as file path if open an isolated file.
-        # Otherwise use git root patch as project path.
-        dir_path = os.path.dirname(filepath)
-        self.project_path = filepath
-        if get_command_result("git rev-parse --is-inside-work-tree", dir_path) == "true":
-            self.project_path = get_command_result("git rev-parse --show-toplevel", dir_path)
 
     def get_lsp_server_name(self):
         # We use project path and LSP server type as unique name.

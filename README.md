@@ -79,12 +79,12 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 * lsp-bridge-restart-process: restart lsp-bridge process (only used for development)
 
 ## Customize language server configuration
+lsp-bridge default configuration for lang server store at [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
 
-lsp-bridge load lang server configuration from directory lsp-bridge/langserver.
-
-But default configuration maybe not works with your environment, you can change `lsp-bridge-lang-server-list` to customize language server configuration.
-
-Example, we can change `(python-mode . "pyright")` to `(python-mode . "/my_directory/pyright.json")` then lsp-bridge will load configuration from `/my_directory/pyright.json` instead load from `lsp-bridge/langserver/pyright.json`.
+Any way you can customize server configuration with below priority:
+1. ```lsp-bridge-get-lang-server-by-project```: write your own function to get server configuration base on project-path and file-path, default this function is nil
+2. ```lsp-bridge-lang-server-extension-list```: get server configuration base on file extension, such as, we launch ```volar``` server instead ```javascript``` server when we open *.vue file
+3. ```lsp-bridge-lang-server-mode-list```: get server configuration base on major-mode
 
 ## Add support for new language?
 
