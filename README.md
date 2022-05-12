@@ -47,8 +47,10 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                'dart-mode-hook
                'scala-mode-hook
                'typescript-mode-hook
+               'typescript-tsx-mode-hook
                'js2-mode-hook
                'js-mode-hook
+               'rjsx-mode-hook
                'tuareg-mode-hook
                'latex-mode-hook
                'Tex-latex-mode-hook
