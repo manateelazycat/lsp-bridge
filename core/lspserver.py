@@ -275,16 +275,22 @@ class LspServer(object):
         if filekey not in self.open_file_dict:
             self.open_file_dict[filekey] = ""
 
-            with open(filepath) as f:
-                self.send_to_notification("textDocument/didOpen",
-                                          {
-                                              "textDocument": {
-                                                  "uri": path_to_uri(filepath),
-                                                  "languageId": self.server_info["languageId"],
-                                                  "version": 0,
-                                                  "text": f.read()
-                                              }
-                                          })
+            try:
+                with open(filepath) as f:
+                    text = f.read()
+            except FileNotFoundError:
+                print(f"Open new file {filepath}")
+                text = ""
+
+            self.send_to_notification(
+                "textDocument/didOpen", {
+                    "textDocument": {
+                        "uri": path_to_uri(filepath),
+                        "languageId": self.server_info["languageId"],
+                        "version": 0,
+                        "text": text,
+                    }
+                })
         else:
             print("File {} has opened in server {}".format(filepath, self.server_name))
 
