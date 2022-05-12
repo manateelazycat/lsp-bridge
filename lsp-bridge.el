@@ -11,8 +11,8 @@
 ;;           By: Mingde (Matthew) Zeng
 ;; URL: https://github.com/manateelazycat/lsp-bridge
 ;; Keywords:
-;; Compatibility: emacs-version >= 28
-;; Package-Requires: ((emacs "28.1"))
+;; Compatibility: emacs-version >= 27
+;; Package-Requires: ((emacs "27"))
 ;;
 ;; Features that might be required by this library:
 ;;
@@ -359,10 +359,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
              ;; If last command is match `lsp-bridge-completion-stop-commands'
              (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands))
       ;; Add kind and annotion information in completion item text.
-      (when (length= items (length kinds))
+      (when (eq (length items) (length kinds))
         (cl-mapcar (lambda (item value)
                      (put-text-property 0 1 'kind value item)) items kinds))
-      (when (length= items (length annotions))
+      (when (eq (length items) (length annotions))
         (cl-mapcar (lambda (item value)
                      (put-text-property 0 1 'annotation value item)) items annotions))
 
