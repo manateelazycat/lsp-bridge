@@ -89,7 +89,7 @@ Any way you can customize server configuration with below priority:
 
 ## Add support for new language?
 
-1. Create settings file under lsp-bridge/langserver, such as `pyright.json` is use for pyright.
+1. Create settings file under lsp-bridge/langserver, such as `pyright.json` is use for pyright (windows platform need use `pyright_nt.json`).
 2. Add `(mode . server_name)` in lsp-bridge-lang-server-list, such as `(python-mode . "pyright")`
 3. Then add `(lsp-bridge-enable)` in mode-hook for test.
 
