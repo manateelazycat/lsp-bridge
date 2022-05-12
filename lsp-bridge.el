@@ -606,17 +606,12 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
    ((not buffer-file-name)
     (message "[LSP-Bridge] cannot be enabled in non-file buffers.")
     (setq lsp-bridge-mode nil))
-   ((not (or
-          (lsp-bridge-get-lang-server-by-extension (buffer-file-name))
-          (lsp-bridge-get-lang-server-by-mode)))
-    (message "[LSP-Bridge] doesn't support the language of the current buffer.")
-    (setq lsp-bridge-mode nil))
    (t
     ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
     ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
     (unless (file-exists-p (buffer-file-name))
       (save-buffer))
-    
+
     (dolist (hook lsp-bridge--internal-hooks)
       (add-hook (car hook) (cdr hook) nil t))
 
@@ -631,7 +626,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
     (unless lsp-bridge-is-starting
       (lsp-bridge-start-process)
-      (message "[LSP-Bridge] Configuring LSP \"%s\" server for %s" (lsp-bridge-get-lang-server-by-mode) (file-name-nondirectory lsp-bridge-filepath))))))
+      (message "[LSP-Bridge] Start lsp server")))))
 
 (defun lsp-bridge--disable ()
   "Disable LSP Bridge mode."
