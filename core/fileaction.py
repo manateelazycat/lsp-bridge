@@ -92,11 +92,11 @@ class FileAction(object):
         # We use project path and LSP server type as unique name.
         return "{}#{}".format(path_as_key(self.project_path), self.lang_server_info["name"])
 
-    def change_file(self, start_row, start_character, end_row, end_character, range_length, change_text, row, column, before_char, before_cursor_text):
+    def change_file(self, start, end, range_length, change_text, position, before_char, before_cursor_text):
         # Send didChange request to LSP server.
         if self.lsp_server is not None:
             self.lsp_server.send_did_change_notification(
-                self.filepath, self.version, start_row, start_character, end_row, end_character, range_length, change_text)
+                self.filepath, self.version, start, end, range_length, change_text)
         else:
             # Please report bug if you got this message.
             print("IMPOSSIBLE HERE: change_file ", self.filepath, self.lsp_server)
@@ -112,7 +112,7 @@ class FileAction(object):
         self.last_change_file_before_cursor_text = before_cursor_text
 
         # Send textDocument/completion 100ms later.
-        self.try_completion_timer = threading.Timer(0.1, lambda : self.completion(row, column, before_char))
+        self.try_completion_timer = threading.Timer(0.1, lambda : self.completion(position, before_char))
         self.try_completion_timer.start()
 
     def change_cursor(self):
@@ -186,7 +186,7 @@ class FileAction(object):
 
     def calc_completion_prefix_string(self):
         ret = self.last_change_file_before_cursor_text
-        for c in self.lsp_server.trigger_characters + [" "]:
+        for c in self.lsp_server.trigger_characters + [" " + '\t']:
             ret = ret.rpartition(c)[2]
         return ret
 

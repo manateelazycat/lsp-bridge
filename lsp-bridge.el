@@ -381,8 +381,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (lsp-bridge-call-async "close_file" lsp-bridge-filepath)))
 
 (defun lsp-bridge-is-empty-list (list)
-  (and (eq (length list) 1)
-       (string-empty-p (format "%s" (car list)))))
+  (or (and (eq (length list) 1)
+           (string-empty-p (format "%s" (car list))))
+      (and (eq (length list) 0))))
 
 (defun lsp-bridge-record-completion-items (filepath prefix common items kinds annotions)
   ;; (message "*** '%s' '%s' '%s'" prefix common items)
@@ -439,26 +440,29 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
             "Extract annotation from CANDIDATE."
             (concat "   " (get-text-property 0 'annotation candidate))))))
 
-(defun lsp-bridge-point-row (pos)
+(defun lsp-bridge--point-position (pos)
+  "Get position of POS."
   (save-excursion
     (goto-char pos)
-    (line-number-at-pos)))
+    (lsp-bridge--position)))
 
-(defun lsp-bridge-point-character (pos)
-  (save-excursion
-    (goto-char pos)
-    (- (point) (line-beginning-position))))
+(defun lsp-bridge--calculate-column ()
+  "Calculate character offset of cursor in current line."
+  (/ (- (length (encode-coding-region (line-beginning-position)
+                                      (min (point) (point-max)) 'utf-16 t))
+        2)
+     2))
 
-(defvar-local lsp-bridge--before-change-begin-pos 0)
-(defvar-local lsp-bridge--before-change-end-pos 0)
-(defvar-local lsp-bridge--before-change-end-pos-row 0)
-(defvar-local lsp-bridge--before-change-end-pos-character 0)
+(defun lsp-bridge--position ()
+  "Get position of cursor."
+  (list :line (1- (line-number-at-pos)) :character (lsp-bridge--calculate-column)))
+
+(defvar-local lsp-bridge--before-change-begin-pos nil)
+(defvar-local lsp-bridge--before-change-end-pos nil)
 
 (defun lsp-bridge-monitor-before-change (begin end)
-  (setq lsp-bridge--before-change-begin-pos begin)
-  (setq lsp-bridge--before-change-end-pos end)
-  (setq lsp-bridge--before-change-end-pos-row (lsp-bridge-point-row end))
-  (setq lsp-bridge--before-change-end-pos-character (lsp-bridge-point-character end)))
+  (setq lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
+  (setq lsp-bridge--before-change-end-pos (lsp-bridge--point-position end)))
 
 (defun lsp-bridge-monitor-after-change (begin end length)
   ;; Record last command to `lsp-bridge-last-change-command'.
@@ -467,46 +471,21 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
   ;; Send change_file request.
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (cond
-     ;; Add operation.
-     ((zerop length)
-      (lsp-bridge-call-async "change_file"
-                             lsp-bridge-filepath
-                             (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
-                             (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
-                             0
-                             (buffer-substring-no-properties begin end)
-                             (line-number-at-pos) (current-column)
-                             (lsp-bridge-char-before)
-                             (buffer-substring-no-properties (line-beginning-position) (point))))
-     ;; Delete operation.
-     ((eq begin end)
-      (lsp-bridge-call-async "change_file"
-                             lsp-bridge-filepath
-                             (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
-                             lsp-bridge--before-change-end-pos-row lsp-bridge--before-change-end-pos-character
-                             length
-                             ""
-                             (line-number-at-pos) (current-column)
-                             (lsp-bridge-char-before)
-                             (buffer-substring-no-properties (line-beginning-position) (point))))
-     ;; Change operation.
-     (t
-      (lsp-bridge-call-async "change_file"
-                             lsp-bridge-filepath
-                             (lsp-bridge-point-row begin) (lsp-bridge-point-character begin)
-                             lsp-bridge--before-change-end-pos-row lsp-bridge--before-change-end-pos-character
-                             length
-                             (buffer-substring-no-properties begin end)
-                             (line-number-at-pos) (current-column)
-                             (lsp-bridge-char-before)
-                             (buffer-substring-no-properties (line-beginning-position) (point)))))))
+    (lsp-bridge-call-async "change_file"
+                            lsp-bridge-filepath
+                            lsp-bridge--before-change-begin-pos
+                            lsp-bridge--before-change-end-pos
+                            length
+                            (buffer-substring-no-properties begin end)
+                            (lsp-bridge--position)
+                            (lsp-bridge-char-before)
+                            (buffer-substring-no-properties (line-beginning-position) (point)))))
 
 (defalias 'lsp-bridge-find-define #'lsp-bridge-find-def)
 
 (defun lsp-bridge-find-def ()
   (interactive)
-  (lsp-bridge-call-async "find_define" lsp-bridge-filepath (line-number-at-pos) (current-column)))
+  (lsp-bridge-call-async "find_define" lsp-bridge-filepath (lsp-bridge--position)))
 
 (defun lsp-bridge-return-from-def ()
   "Pop off lsp-bridge-mark-ring and jump to the top location."
@@ -533,7 +512,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defun lsp-bridge-find-references ()
   (interactive)
-  (lsp-bridge-call-async "find_references" lsp-bridge-filepath (line-number-at-pos) (current-column)))
+  (lsp-bridge-call-async "find_references" lsp-bridge-filepath (lsp-bridge--position)))
 
 (defun lsp-bridge-popup-references (references-content references-counter)
   (lsp-bridge-ref-popup references-content references-counter)
@@ -541,9 +520,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defun lsp-bridge-rename ()
   (interactive)
-  (lsp-bridge-call-async "prepare_rename" lsp-bridge-filepath (line-number-at-pos) (current-column))
+  (lsp-bridge-call-async "prepare_rename" lsp-bridge-filepath (lsp-bridge--position))
   (let ((new-name (read-string "Rename to: ")))
-    (lsp-bridge-call-async "rename" lsp-bridge-filepath (line-number-at-pos) (current-column) new-name)))
+    (lsp-bridge-call-async "rename" lsp-bridge-filepath (lsp-bridge--position) new-name)))
 
 (defun lsp-bridge-rename-highlight (filepath line bound-start bound-end)
   (lsp-bridge--with-file-buffer filepath

@@ -18,19 +18,21 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+from typing import Dict, Optional
 
 from epc.client import EPCClient
+import sexpdata
 import sys
 import os
 import pathlib
 from urllib.parse import urlparse
 
-epc_client = None
+epc_client: Optional[EPCClient] = None
 
 def init_epc_client(emacs_server_port):
     global epc_client
 
-    if epc_client == None:
+    if epc_client is None:
         try:
             epc_client = EPCClient(("localhost", emacs_server_port), log_traceback=True)
         except ConnectionRefusedError:
@@ -40,25 +42,43 @@ def init_epc_client(emacs_server_port):
 def close_epc_client():
     global epc_client
 
-    if epc_client != None:
+    if epc_client is not None:
         epc_client.close()
+
 
 def eval_in_emacs(method_name, args):
     global epc_client
 
-    if epc_client == None:
+    if epc_client is None:
         print("Please call init_epc_client first before callling eval_in_emacs.")
     else:
-        import sexpdata
-
         args = [sexpdata.Symbol(method_name)] + list(map(sexpdata.Quoted, args))
-
+        sexp = sexpdata.dumps(args)
+        print("Eval in Emacs:", sexp)
         # Call eval-in-emacs elisp function.
-        epc_client.call("eval-in-emacs", [sexpdata.dumps(args)])
+        epc_client.call("eval-in-emacs", [sexp])
+
+
+def epc_arg_transformer(arg):
+    # Transform [Symbol(":a"), 1, Symbol(":b"), 2] to dict(a=1, b=2)
+    if type(arg) != list or len(arg) % 2 != 0:
+        return arg
+
+    for i, v in enumerate(arg):
+        if i % 2 == 1:
+            continue
+        if type(v) != sexpdata.Symbol or not v.value().startswith(":"):
+            return arg
+
+    ret = dict()
+    for i in range(0, len(arg), 2):
+        ret[arg[i].value()[1:]] = arg[i + 1]
+    return ret
+
 
 def convert_emacs_bool(symbol_value, symbol_is_boolean):
     if symbol_is_boolean == "t":
-        return symbol_value == True
+        return symbol_value is True
     else:
         return symbol_value
 
@@ -70,15 +90,15 @@ def get_emacs_vars(args):
 def get_emacs_var(var_name):
     global epc_client
 
-    (symbol_value, symbol_is_boolean) = epc_client.call_sync("get-emacs-var", [var_name])
+    symbol_value, symbol_is_boolean = epc_client.call_sync("get-emacs-var", [var_name])
 
     return convert_emacs_bool(symbol_value, symbol_is_boolean)
 
 def get_emacs_func_result(method_name, args):
     global epc_client
 
-    if epc_client == None:
-        print("Please call init_epc_client first before callling eval_in_emacs.")
+    if epc_client is None:
+        print("Please call init_epc_client first before calling eval_in_emacs.")
     else:
         # Call eval-in-emacs elisp function synchronously and return the result
         result = epc_client.call_sync(method_name, args)
@@ -86,7 +106,8 @@ def get_emacs_func_result(method_name, args):
 
 def get_command_result(command_string, cwd):
     import subprocess
-    process = subprocess.Popen(command_string, cwd=cwd, shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(command_string, cwd=cwd, shell=True, text=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     ret = process.wait()
     return "".join((process.stdout if ret == 0 else process.stderr).readlines()).strip()
 

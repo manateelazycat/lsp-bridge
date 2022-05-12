@@ -297,8 +297,7 @@ class LspServer(object):
                                       }
                                   })
 
-
-    def send_did_change_notification(self, filepath, version, start_row, start_character, end_row, end_character, range_length, text):
+    def send_did_change_notification(self, filepath, version, start, end, range_length, text):
         # STEP 5: Tell LSP server file content is changed.
         # This step is very IMPORTANT, make sure LSP server contain same content as client,
         # otherwise LSP server won't response client request, such as completion, find-define, find-references and rename etc.
@@ -311,14 +310,8 @@ class LspServer(object):
                                       "contentChanges": [
                                           {
                                               "range": {
-                                                  "start": {
-                                                      "line": start_row - 1,
-                                                      "character": start_character
-                                                  },
-                                                  "end": {
-                                                      "line": end_row - 1,
-                                                      "character": end_character
-                                                  }
+                                                  "start": start,
+                                                  "end": end
                                               },
                                               "rangeLength": range_length,
                                               "text": text
@@ -332,7 +325,7 @@ class LspServer(object):
             "type": type
         }
 
-    def send_completion_request(self, request_id, filepath, type, row, column, char):
+    def send_completion_request(self, request_id, filepath, type, position, char):
         self.record_request_id(request_id, filepath, type)
 
         # STEP 6: Calculate completion candidates for current point.
@@ -342,10 +335,7 @@ class LspServer(object):
                                      "textDocument": {
                                          "uri": path_to_uri(filepath)
                                      },
-                                     "position": {
-                                         "line": row - 1,
-                                         "character": column
-                                     },
+                                     "position": position,
                                      "context": {
                                          "triggerKind": 2,
                                          "triggerCharacter": char
@@ -358,17 +348,14 @@ class LspServer(object):
                                      "textDocument": {
                                          "uri": path_to_uri(filepath)
                                      },
-                                     "position": {
-                                         "line": row - 1,
-                                         "character": column
-                                     },
+                                     "position": position,
                                      "context": {
                                          "triggerKind": 3
                                      }
                                  },
                                  request_id)
 
-    def send_find_define_request(self, request_id, filepath, type, row, column):
+    def send_find_define_request(self, request_id, filepath, type, position):
         self.record_request_id(request_id, filepath, type)
 
         self.send_to_request("textDocument/definition",
@@ -376,14 +363,11 @@ class LspServer(object):
                                  "textDocument": {
                                      "uri": path_to_uri(filepath)
                                  },
-                                 "position": {
-                                     "line": row - 1,
-                                     "character": column
-                                 }
+                                 "position": position,
                              },
                              request_id)
 
-    def send_find_references_request(self, request_id, filepath, type, row, column):
+    def send_find_references_request(self, request_id, filepath, type, positon):
         self.record_request_id(request_id, filepath, type)
 
         self.send_to_request("textDocument/references",
@@ -391,17 +375,14 @@ class LspServer(object):
                                  "textDocument": {
                                      "uri": path_to_uri(filepath)
                                  },
-                                 "position": {
-                                     "line": row - 1,
-                                     "character": column
-                                 },
+                                 "position": positon,
                                  "context": {
                                      "includeDeclaration": False
                                  }
                              },
                              request_id)
 
-    def send_prepare_rename_request(self, request_id, filepath, type, row, column):
+    def send_prepare_rename_request(self, request_id, filepath, type, position):
         self.record_request_id(request_id, filepath, type)
 
         self.send_to_request("textDocument/prepareRename",
@@ -409,14 +390,11 @@ class LspServer(object):
                                  "textDocument": {
                                      "uri": path_to_uri(filepath)
                                  },
-                                 "position": {
-                                     "line": row - 1,
-                                     "character": column
-                                 }
+                                 "position": position,
                              },
                              request_id)
 
-    def send_rename_request(self, request_id, filepath, type, row, column, new_name):
+    def send_rename_request(self, request_id, filepath, type, position, new_name):
         self.record_request_id(request_id, filepath, type)
 
         self.send_to_request("textDocument/rename",
@@ -424,10 +402,7 @@ class LspServer(object):
                                  "textDocument": {
                                      "uri": path_to_uri(filepath)
                                  },
-                                 "position": {
-                                     "line": row - 1,
-                                     "character": column
-                                 },
+                                 "position": position,
                                  "newName": new_name
                              },
                              request_id)
@@ -463,7 +438,7 @@ class LspServer(object):
                 self.trigger_characters = message["result"]["capabilities"]["completionProvider"]["triggerCharacters"]
                 self.send_to_notification("initialized", {})
             else:
-                if message["id"] in self.request_dict and not "error" in message:
+                if message["id"] in self.request_dict and "error" not in message:
                     self.message_queue.put({
                         "name": "server_response_message",
                         "content": (self.request_dict[message["id"]]["filepath"],

@@ -21,8 +21,8 @@
 
 from core.fileaction import FileAction
 from core.lspserver import LspServer
-from core.utils import (path_as_key, init_epc_client, close_epc_client, eval_in_emacs, 
-                        get_emacs_vars, get_emacs_func_result, get_project_path)
+from core.utils import (path_as_key, init_epc_client, close_epc_client, eval_in_emacs,
+                        get_emacs_vars, get_emacs_func_result, get_project_path, epc_arg_transformer)
 from epc.server import ThreadingEPCServer
 import os
 import platform
@@ -172,12 +172,12 @@ class LspBridge(object):
                 print("Cache action {}, wait for file {} to open it before executing.".format(name, filepath))
                 
         setattr(self, "_{}".format(name), _do)
-        
+
         def _do_wrap(*args):
             # We need post function postgui_thread, otherwise long-time calculation will block Emacs.
             self.postgui_queue.put({
                 "name": "action_func",
-                "content": ("_{}".format(name), args)
+                "content": ("_{}".format(name), list(map(epc_arg_transformer, args)))
             })
             
         setattr(self, name, _do_wrap)
