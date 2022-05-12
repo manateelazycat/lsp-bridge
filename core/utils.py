@@ -20,8 +20,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from epc.client import EPCClient
-import base64
 import sys
+import os
 import pathlib
 from urllib.parse import urlparse
 
@@ -94,19 +94,39 @@ def generate_request_id():
     import random
     return abs(random.getrandbits(16))
 
+# modified from Lib/pathlib.py
+def _make_uri_win32(path):
+    from urllib.parse import quote_from_bytes as urlquote_from_bytes
+    # Under Windows, file URIs use the UTF-8 encoding.
+    drive = path.drive
+    if len(drive) == 2 and drive[1] == ':':
+        # It's a path on a local drive => 'file:///c:/a/b'
+        rest = path.as_posix()[2:].lstrip('/')
+        return 'file:///%s%%3A/%s' % (
+            drive[0], urlquote_from_bytes(rest.encode('utf-8')))
+    else:
+        # It's a path on a network drive => 'file://host/share/a/b'
+        return 'file:' + urlquote_from_bytes(path.as_posix().encode('utf-8'))
+
 def path_to_uri(path):
-    uri = pathlib.Path(path).as_uri()
-    # from urllib.parse import quote
-    # return quote(uri)
+    path = pathlib.Path(path)
+    if os.name != "nt":
+        uri = path.as_uri()
+    else:
+        if not path.is_absolute():
+            raise ValueError("relative path can't be expressed as a file URI")
+        # encode uri to 'file:///c%3A/project/xxx.js' like vscode does
+        uri = _make_uri_win32(path)
     return uri
 
 def uri_to_path(uri):
-    # from urllib.parse import unquote
-    # uri = unquote(uri)
+    from urllib.parse import unquote
+    # parse first, '#' may be part of filepath(encoded)
     parsed = urlparse(uri)
-    path = parsed.path
+    # for example, ts-ls return 'file:///c%3A/lib/ref.js'
+    path = unquote(parsed.path)
     if sys.platform == "win32":
-        path = parsed.path[1:]
+        path = path[1:]
     return path
 
 def path_as_key(path):
