@@ -612,6 +612,11 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (message "[LSP-Bridge] doesn't support the language of the current buffer.")
     (setq lsp-bridge-mode nil))
    (t
+    ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
+    ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
+    (unless (file-exists-p (buffer-file-name))
+      (save-buffer))
+    
     (dolist (hook lsp-bridge--internal-hooks)
       (add-hook (car hook) (cdr hook) nil t))
 
