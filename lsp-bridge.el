@@ -216,6 +216,14 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defvar lsp-bridge-get-lang-server-by-project nil
   "Get lang server with project path and file path.")
 
+(defmacro lsp-bridge--with-file-buffer (filepath &rest body)
+  "Evaluate BODY in buffer with FILEPATH."
+  (declare (indent 1))
+  `(let ((buffer (get-file-buffer ,filepath)))
+     (when buffer
+       (with-current-buffer buffer
+         ,@body))))
+
 (defun lsp-bridge--get-lang-server-func (project-path filepath)
   "Get lang server with project path, file path or file extension."
   (let (lang-server-by-project
@@ -357,14 +365,6 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defvar-local lsp-bridge-completion-prefix nil)
 (defvar-local lsp-bridge-completion-common nil)
 (defvar-local lsp-bridge-filepath "")
-
-(defmacro lsp-bridge--with-file-buffer (filepath &rest body)
-  "Evaluate BODY in buffer with FILEPATH."
-  (declare (indent 1))
-  `(let ((buffer (get-file-buffer ,filepath)))
-     (when buffer
-       (with-current-buffer buffer
-         ,@body))))
 
 (defun lsp-bridge-char-before ()
   (let ((prev-char (char-before)))
