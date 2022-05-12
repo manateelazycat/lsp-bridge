@@ -63,6 +63,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                'clojurescript-mode-hook
                'clojurex-mode-hook
                'sh-mode-hook
+               'web-mode-hook
                ))
   (add-hook hook (lambda ()
                    (setq-local corfu-auto nil)  ;; let lsp-bridge control when popup completion frame
