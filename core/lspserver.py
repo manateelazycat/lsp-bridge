@@ -44,6 +44,7 @@ class LspBridgeListener(Thread):
 
         self.process = process
         self.lsp_message_queue = lsp_message_queue
+        self.previous_message_ending_length = None
 
     def is_end_number(self, string):
         text = re.compile(r".*[0-9]$")
@@ -52,73 +53,56 @@ class LspBridgeListener(Thread):
         else:
             return False
 
-    def emit_message(self, message):
-        try:
-            # If message is not end with char '}', need remove unnecessary string (such as "Content" ),
-            # to make json load message correctly.
-            if not message.endswith("}"):
-                quote_index = message.rfind("}")
-                message = message[:quote_index + 1]
+    def emit_message(self, line):
+        if line != "":
+            try:
+                # Copy message with line.
+                message = line
+                
+                # Try strip string before char '{'.
+                if not message.startswith("{"):
+                    message = message[message.find("{"):]
+                
+                # Try strip string after char '}'.
+                if not message.endswith("}"):
+                    message = message[:message.rfind("}") + 1]
+            
+                # Send message.
+                self.lsp_message_queue.put({
+                    "name": "lsp_recv_message",
+                    "content": json.loads(message)
+                })
+                
+                # Record content length for next line.
+                self.previous_message_ending_length = int(line[line.rfind(":") + 1:]) if self.is_end_number(line) else None
+            except:
+                traceback.print_exc()
 
-            self.lsp_message_queue.put({
-                "name": "lsp_recv_message",
-                "content": json.loads(message)
-            })
-        except:
-            traceback.print_exc()
-
+    def parse_content_length_message(self, length):
+        # Drop empty line.
+        self.process.stdout.readline().strip()
+        
+        # Read message by given length.
+        self.emit_message(self.process.stdout.readline(length).strip())
+            
     def run(self):
         while self.process.poll() is None:
             try:
-                line = self.process.stdout.readline().strip()
-
-                # print("#### ", line)
-
-                if line.startswith("{"):
-                    self.emit_message(line)
-                    
-                    # We need check ending of line, avoid miss next message. ;)
-                    if self.is_end_number(line):
-                        length_index = line.rfind(":")
-                        length = int(line[length_index + 1:])
-
-                        # Drop empty line.
-                        self.process.stdout.readline()
-
-                        # Emit message.
-                        message = self.process.stdout.readline(length).strip()
-                        
-                        if message != "":
-                            self.emit_message(message)
-                elif self.is_end_number(line) and not line.startswith("{"):
-                    # LSP message need read 3 times.
-                    # 1. Read Content-Length
-                    # 2. Drop empty line
-                    # 3. Read message base on Content-Length.
-
-                    # Sometimes, Content-Length header is not starts with `Content-Length',
-                    # if line not starts with char '{', we need parse number at end of line.
-
-                    # Read Content-Length.
-                    splits = line.split(":")
-                    try:
-                        length = int(splits[1].strip())
-
-                        # Drop empty line.
-                        self.process.stdout.readline()
-
-                        # Emit message.
-                        message = self.process.stdout.readline(length).strip()
-                    except:
-                        # Some server, like dart_analysis_server, sends message with different format:
-                        # Content-Type: application/vscode-jsonrpc; charset=utf-8
-                        #
-                        # {...}Content-Length: <length>
-                        self.process.stdout.readline()
-                        message = self.process.stdout.readline().strip()
-
-                    if message != "":
-                        self.emit_message(message)
+                # Continue to parse content by previous message ending length.
+                if self.previous_message_ending_length != None:
+                    self.parse_content_length_message(self.previous_message_ending_length)
+                else:
+                    line = self.process.stdout.readline().strip()
+                
+                    # Parse next line if current line is empty line.
+                    if line == "":
+                        self.emit_message(self.process.stdout.readline().strip())
+                    # Continue to parse content by current line length. 
+                    elif self.is_end_number(line):
+                        self.parse_content_length_message(int(line[line.rfind(":") + 1:]))
+                    # Parse current line if it's not empty line and not ending with line number.
+                    else:
+                        self.emit_message(line)
             except:
                 traceback.print_exc()
         print("\n--- Lsp server exited, exit code: {}".format(self.process.returncode))
@@ -149,7 +133,7 @@ class SendRequest(Thread):
         self.process.stdin.write(json_message)
         self.process.stdin.flush()
 
-        print("\n--- Send request (1): {}".format(self.name, self.id))
+        print("\n--- Send request {}: {}".format(self.name, self.id))
 
         if self.enable_log:
             print(json.dumps(message_dict, indent = 3))
@@ -475,8 +459,9 @@ class LspServer(object):
     def handle_recv_message(self, message):
         method_name = ""
         if "method" in message.keys():
-            method_name = message["method"]
-            print("\n--- Recv message: ", method_name)
+            print("\n--- Recv message: ", message["method"])
+        if "id" in message.keys():
+            print("\n--- Recv message: ", message["id"])
         else:
             print("\n--- Recv message")
 
