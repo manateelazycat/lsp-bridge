@@ -112,6 +112,7 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 14. eclipse.jdt.ls (java) Note: please ensure export `org.eclipse.jdt.ls.product/target/repository/bin` in your system PATH at first.
 15. clojure-lsp (clojure)
 16. bash-language-server (bash)
+17. volar (vue)
 
 ## Todo
 
