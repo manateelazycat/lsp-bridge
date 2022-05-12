@@ -1,0 +1,9 @@
+{
+  "name": "javascript",
+  "languageId": "javascript",
+    "command": [
+        "typescript-language-server",
+        "--stdio"
+    ],
+  "settings": {}
+}
