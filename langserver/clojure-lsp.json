@@ -1,0 +1,8 @@
+{
+  "name": "clojure-lsp",
+  "languageId": "clojure",
+    "command": [
+        "clojure-lsp"
+    ],
+  "settings": {}
+}
