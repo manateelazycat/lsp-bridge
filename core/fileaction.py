@@ -328,14 +328,17 @@ class FileAction(object):
         import linecache
         
         if request_id == self.hover_request_list[-1]:
-            line = response_result["range"]["start"]["line"]
-            start_column = response_result["range"]["start"]["character"]
-            end_column = response_result["range"]["end"]["character"]
-            
-            line_content = linecache.getline(self.filepath, line + 1)
-            
-            eval_in_emacs("lsp-bridge-popup-documentation", [response_result["contents"]["kind"], 
-                                                                    line_content[start_column:end_column], 
-                                                                    response_result["contents"]["value"]])
+            if response_result is None:
+                eval_in_emacs("message", ["No documentation here."])
+            else:
+                line = response_result["range"]["start"]["line"]
+                start_column = response_result["range"]["start"]["character"]
+                end_column = response_result["range"]["end"]["character"]
+                
+                line_content = linecache.getline(self.filepath, line + 1)
+                
+                eval_in_emacs("lsp-bridge-popup-documentation", [response_result["contents"]["kind"], 
+                                                                        line_content[start_column:end_column], 
+                                                                        response_result["contents"]["value"]])
 
     
