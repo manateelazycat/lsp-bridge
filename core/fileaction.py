@@ -202,9 +202,13 @@ class FileAction(object):
             if response_result:
                 try:
                     file_info = response_result[0]
-                    filepath = uri_to_path(file_info["uri"])
-                    row = file_info["range"]["start"]["line"]
-                    column = file_info["range"]["start"]["character"]
+                    # volar return only LocationLink (using targetUri)
+                    fileuri = file_info["uri"] if "uri" in file_info else file_info["targetUri"]
+                    filepath = uri_to_path(fileuri)
+                    range1 = file_info["range"] if "range" in file_info else file_info["targetRange"]
+                    startpos = range1["start"]
+                    row = startpos["line"]
+                    column = startpos["character"]
                     eval_in_emacs("lsp-bridge--jump-to-def", [filepath, row, column])
                 except:
                     logger.info("* Failed information about find_define response.")
