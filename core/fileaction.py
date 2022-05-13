@@ -328,9 +328,7 @@ class FileAction(object):
         import linecache
 
         if request_id == self.hover_request_list[-1]:
-            if response_result is None or "range" not in response_result:
-                eval_in_emacs("message", ["No documentation here."])
-            elif "range" in response_result and "contents" in response_result:
+            if "range" in response_result and "contents" in response_result:
                 line = response_result["range"]["start"]["line"]
                 start_column = response_result["range"]["start"]["character"]
                 end_column = response_result["range"]["end"]["character"]
@@ -342,6 +340,8 @@ class FileAction(object):
                 eval_in_emacs("lsp-bridge-popup-documentation", [kind,
                                                                 line_content[start_column:end_column],
                                                                 value])
+            else:
+                eval_in_emacs("message", ["No documentation here."])
     def parse_hover_contents(self, contents, kind = "", value = ""):
         content_type = type(contents)
         if content_type == str:
