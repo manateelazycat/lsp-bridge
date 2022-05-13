@@ -20,7 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from sys import flags, stderr
-from core.utils import (path_as_key, generate_request_id, path_to_uri, uri_to_path, eval_in_emacs)
+from core.utils import *
 from subprocess import PIPE
 from threading import Thread
 import io
@@ -39,12 +39,11 @@ class JsonEncoder(json.JSONEncoder):
 
 class LspBridgeListener(Thread):
 
-    def __init__(self, process, lsp_message_queue, enable_log):
+    def __init__(self, process, lsp_message_queue):
         Thread.__init__(self)
 
         self.process = process
         self.lsp_message_queue = lsp_message_queue
-        self.enable_log = enable_log
         self.previous_message_ending_length = None
 
     def is_beginning_number(self, string):
@@ -87,27 +86,23 @@ class LspBridgeListener(Thread):
             # So we need read the remaining length characters in the second line, and skip the third line.
             old_length = length
             length = int(str(length) + second_line)
-            if self.enable_log:
-                print("### Adjust length from {} to {}".format(old_length, length))
+            logger.debug("### Adjust length from {} to {}".format(old_length, length))
             
             # Drop third empty line.
             third_line = self.process.stdout.readline().strip()
-            
-            if self.enable_log:
-                if third_line != "":
-                    print("### NOTE: It's a bug, third line should be empty line: '{}'".format(third_line))
+
+            if third_line != "":
+                logger.debug("### NOTE: It's a bug, third line should be empty line: '{}'".format(third_line))
         else:
             # Drop second empty line.
-            if self.enable_log:
-                if second_line != "":
-                    print("### NOTE: It's a bug, second line should be empty line: '{}'".format(second_line))
-                else:
-                    print("### recv 2, skip empty line")
+            if second_line != "":
+                logger.error("### NOTE: It's a bug, second line should be empty line: '{}'".format(second_line))
+            else:
+                logger.debug("### recv 2, skip empty line")
         
         # Read message by given length.
         message = self.process.stdout.readline(length).strip()
-        if self.enable_log:
-            print("### recv 3:", message)
+        logger.debug("### recv 3: %s", message)
         self.emit_message(message)
             
     def run(self):
@@ -119,8 +114,7 @@ class LspBridgeListener(Thread):
                 else:
                     line = self.process.stdout.readline().strip()
                     
-                    if self.enable_log:
-                        print("### recv 1: ", line)
+                    logger.debug("### recv 1: %s", line)
                 
                     # Parse next line if current line is empty line.
                     if line == "":
@@ -133,21 +127,20 @@ class LspBridgeListener(Thread):
                         self.emit_message(line)
             except:
                 traceback.print_exc()
-        print("\n--- Lsp server exited, exit code: {}".format(self.process.returncode))
-        print(self.process.stdout.read())
+        logger.info("\n--- Lsp server exited, exit code: {}".format(self.process.returncode))
+        logger.info(self.process.stdout.read())
         if self.process.stderr:
-            print(self.process.stderr.read())
+            logger.info(self.process.stderr.read())
 
 class SendRequest(Thread):
 
-    def __init__(self, process, name, params, id, enable_log):
+    def __init__(self, process, name, params, id):
         Thread.__init__(self)
 
         self.process = process
         self.name = name
         self.params = params
         self.id = id
-        self.enable_log = enable_log
 
     def run(self):
         message_dict = {}
@@ -162,21 +155,19 @@ class SendRequest(Thread):
         self.process.stdin.write(json_message)
         self.process.stdin.flush()
 
-        print("\n--- Send request {}: {}".format(self.name, self.id))
+        logger.info("\n--- Send request {}: {}".format(self.name, self.id))
 
-        if self.enable_log:
-            print(json.dumps(message_dict, indent = 3))
+        logger.debug(json.dumps(message_dict, indent = 3))
 
 class SendNotification(Thread):
 
-    def __init__(self, process, lsp_message_queue, name, params, enable_log):
+    def __init__(self, process, lsp_message_queue, name, params):
         Thread.__init__(self)
 
         self.process = process
         self.lsp_message_queue = lsp_message_queue
         self.name = name
         self.params = params
-        self.enable_log = enable_log
 
     def run(self):
         message_dict = {}
@@ -195,21 +186,19 @@ class SendNotification(Thread):
             "content": (self.name, self.params)
         })
 
-        print("\n--- Send notification: {}".format(self.name))
+        logger.info("\n--- Send notification: {}".format(self.name))
 
-        if self.enable_log:
-            print(json.dumps(message_dict, indent = 3))
+        logger.debug(json.dumps(message_dict, indent = 3))
 
 class SendResponse(Thread):
 
-    def __init__(self, process, name, id, result, enable_log):
+    def __init__(self, process, name, id, result):
         Thread.__init__(self)
 
         self.process = process
         self.name = name
         self.id = id
         self.result = result
-        self.enable_log = enable_log
 
     def run(self):
         message_dict = {}
@@ -223,20 +212,18 @@ class SendResponse(Thread):
         self.process.stdin.write(json_message)
         self.process.stdin.flush()
 
-        print("\n--- Send response: {}".format(self.name))
+        logger.info("\n--- Send response: {}".format(self.name))
 
-        if self.enable_log:
-            print(json.dumps(message_dict, indent = 3))
+        logger.debug(json.dumps(message_dict, indent = 3))
 
 class LspServer(object):
 
-    def __init__(self, message_queue, file_action, enable_log):
+    def __init__(self, message_queue, file_action):
         object.__init__(self)
 
         # Init.
         self.message_queue = message_queue
         self.project_path = file_action.project_path
-        self.enable_log = enable_log
         self.server_type = file_action.lang_server_info["name"]
         self.server_info = file_action.lang_server_info
         self.first_file_path = file_action.filepath
@@ -269,7 +256,7 @@ class LspServer(object):
         self.p.stdout = io.TextIOWrapper(self.p.stdout, newline='', encoding="utf-8")
 
         # A separate thread is used to read the message returned by the LSP server.
-        self.listener_thread = LspBridgeListener(self.p, self.lsp_message_queue, enable_log)
+        self.listener_thread = LspBridgeListener(self.p, self.lsp_message_queue)
         self.listener_thread.start()
 
         # STEP 1: Say hello to LSP server.
@@ -318,7 +305,7 @@ class LspServer(object):
                                               }
                                           })
         else:
-            print("File {} has opened in server {}".format(filepath, self.server_name))
+            logger.info("File {} has opened in server {}".format(filepath, self.server_name))
 
     def send_did_close_notification(self, filepath):
         self.send_to_notification("textDocument/didClose",
@@ -473,14 +460,13 @@ class LspServer(object):
     def handle_recv_message(self, message):
         method_name = ""
         if "method" in message.keys():
-            print("\n--- Recv message: ", message["method"])
+            logger.info("\n--- Recv message: %s", message["method"])
         if "id" in message.keys():
-            print("\n--- Recv message: ", message["id"])
+            logger.info("\n--- Recv message: %s", message["id"])
         else:
-            print("\n--- Recv message")
+            logger.info("\n--- Recv message")
 
-        if self.enable_log:
-            print(json.dumps(message, indent = 3))
+        logger.debug(json.dumps(message, indent = 3))
 
         if "id" in message.keys():
             if message["id"] == self.initialize_id:
@@ -524,17 +510,17 @@ class LspServer(object):
 
     def send_to_request(self, name, params, request_id):
         # Request message must be contain unique request id.
-        sender_thread = SendRequest(self.p, name, params, request_id, self.enable_log)
+        sender_thread = SendRequest(self.p, name, params, request_id)
         self.sender_threads.append(sender_thread)
         sender_thread.start()
 
     def send_to_notification(self, name, params):
-        sender_thread = SendNotification(self.p, self.lsp_message_queue, name, params, self.enable_log)
+        sender_thread = SendNotification(self.p, self.lsp_message_queue, name, params)
         self.sender_threads.append(sender_thread)
         sender_thread.start()
 
     def send_to_response(self, name, id, result):
-        sender_thread = SendResponse(self.p, name, id, result, self.enable_log)
+        sender_thread = SendResponse(self.p, name, id, result)
         self.sender_threads.append(sender_thread)
         sender_thread.start()
 

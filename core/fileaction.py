@@ -24,8 +24,7 @@ import random
 import threading
 import time
 
-from core.utils import (eval_in_emacs, generate_request_id, get_command_result,
-                        get_emacs_var, uri_to_path, path_as_key)
+from core.utils import *
 
 KIND_MAP = ["", "Text", "Method", "Function", "Constructor", "Field",
             "Variable", "Class", "Interface", "Module", "Property",
@@ -94,7 +93,7 @@ class FileAction(object):
                 self.filepath, self.version, start, end, range_length, change_text)
         else:
             # Please report bug if you got this message.
-            print("IMPOSSIBLE HERE: change_file ", self.filepath, self.lsp_server)
+            logger.info("IMPOSSIBLE HERE: change_file %s %s", self.filepath, self.lsp_server)
 
         self.version += 1
 
@@ -208,7 +207,7 @@ class FileAction(object):
                     column = file_info["range"]["start"]["character"]
                     eval_in_emacs("lsp-bridge--jump-to-def", [filepath, row, column])
                 except:
-                    print("* Failed information about find_define response.")
+                    logger.info("* Failed information about find_define response.")
                     import traceback
                     traceback.print_exc()
             else:
@@ -269,7 +268,7 @@ class FileAction(object):
 
                     eval_in_emacs("lsp-bridge-rename-finish", [rename_files, counter])
                 except:
-                    print("* Failed information about rename response.")
+                    logger.info("* Failed information about rename response.")
                     import traceback
                     traceback.print_exc()
 

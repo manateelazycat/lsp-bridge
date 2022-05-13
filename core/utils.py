@@ -25,9 +25,14 @@ import sexpdata
 import sys
 import os
 import pathlib
+import logging
 from urllib.parse import urlparse
 
 epc_client: Optional[EPCClient] = None
+
+logger = logging.getLogger("lsp-bridge")
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler())
 
 def init_epc_client(emacs_server_port):
     global epc_client
@@ -46,15 +51,18 @@ def close_epc_client():
         epc_client.close()
 
 
-def eval_in_emacs(method_name, args):
+def eval_in_emacs(method_name, *args):
     global epc_client
+
+    if len(args) == 1 and type(args[0]) == list:
+        args = args[0]
 
     if epc_client is None:
         print("Please call init_epc_client first before callling eval_in_emacs.")
     else:
         args = [sexpdata.Symbol(method_name)] + list(map(sexpdata.Quoted, args))
         sexp = sexpdata.dumps(args)
-        # print("Eval in Emacs:", sexp)
+        logger.debug("Eval in Emacs: %s", sexp)
         # Call eval-in-emacs elisp function.
         epc_client.call("eval-in-emacs", [sexp])
 
