@@ -54,10 +54,9 @@ def eval_in_emacs(method_name, args):
     else:
         args = [sexpdata.Symbol(method_name)] + list(map(sexpdata.Quoted, args))
         sexp = sexpdata.dumps(args)
-        print("Eval in Emacs:", sexp)
+        # print("Eval in Emacs:", sexp)
         # Call eval-in-emacs elisp function.
         epc_client.call("eval-in-emacs", [sexp])
-
 
 def epc_arg_transformer(arg):
     # Transform [Symbol(":a"), 1, Symbol(":b"), 2] to dict(a=1, b=2)
