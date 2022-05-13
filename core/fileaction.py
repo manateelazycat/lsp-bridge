@@ -45,7 +45,7 @@ class FileAction(object):
         # Build request functions.
         for name in ["find_define", "find_references", "prepare_rename", "rename", "completion", "hover"]:
             self.build_request_function(name)
-
+            
         # Init.
         self.filepath = filepath
         self.project_path = project_path

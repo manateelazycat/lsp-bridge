@@ -39,19 +39,21 @@ class JsonEncoder(json.JSONEncoder):
 
 class LspBridgeListener(Thread):
 
-    def __init__(self, process, lsp_message_queue):
+    def __init__(self, process, lsp_message_queue, enable_log):
         Thread.__init__(self)
 
         self.process = process
         self.lsp_message_queue = lsp_message_queue
+        self.enable_log = enable_log
         self.previous_message_ending_length = None
 
+    def is_beginning_number(self, string):
+        text = re.compile(r"^[0-9].*")
+        return text.match(string)
+        
     def is_end_number(self, string):
         text = re.compile(r".*[0-9]$")
-        if text.match(string):
-            return True
-        else:
-            return False
+        return text.match(string)
 
     def emit_message(self, line):
         if line != "":
@@ -79,11 +81,34 @@ class LspBridgeListener(Thread):
                 traceback.print_exc()
 
     def parse_content_length_message(self, length):
-        # Drop empty line.
-        self.process.stdout.readline().strip()
+        second_line = self.process.stdout.readline().strip()
+        if self.is_beginning_number(second_line):
+            # If second line is start with number, it means that the previous message was cut into two halves because the size of the buffer.
+            # So we need read the remaining length characters in the second line, and skip the third line.
+            old_length = length
+            length = int(str(length) + second_line)
+            if self.enable_log:
+                print("### Adjust length from {} to {}".format(old_length, length))
+            
+            # Drop third empty line.
+            third_line = self.process.stdout.readline().strip()
+            
+            if self.enable_log:
+                if third_line != "":
+                    print("### NOTE: It's a bug, third line should be empty line: '{}'".format(third_line))
+        else:
+            # Drop second empty line.
+            if self.enable_log:
+                if second_line != "":
+                    print("### NOTE: It's a bug, second line should be empty line: '{}'".format(second_line))
+                else:
+                    print("### recv 2, skip empty line")
         
         # Read message by given length.
-        self.emit_message(self.process.stdout.readline(length).strip())
+        message = self.process.stdout.readline(length).strip()
+        if self.enable_log:
+            print("### recv 3:", message)
+        self.emit_message(message)
             
     def run(self):
         while self.process.poll() is None:
@@ -93,6 +118,9 @@ class LspBridgeListener(Thread):
                     self.parse_content_length_message(self.previous_message_ending_length)
                 else:
                     line = self.process.stdout.readline().strip()
+                    
+                    if self.enable_log:
+                        print("### recv 1: ", line)
                 
                     # Parse next line if current line is empty line.
                     if line == "":
@@ -241,7 +269,7 @@ class LspServer(object):
         self.p.stdout = io.TextIOWrapper(self.p.stdout, newline='', encoding="utf-8")
 
         # A separate thread is used to read the message returned by the LSP server.
-        self.listener_thread = LspBridgeListener(self.p, self.lsp_message_queue)
+        self.listener_thread = LspBridgeListener(self.p, self.lsp_message_queue, enable_log)
         self.listener_thread.start()
 
         # STEP 1: Say hello to LSP server.
