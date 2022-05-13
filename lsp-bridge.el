@@ -593,7 +593,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode)))
          (background-color (if (string-equal theme-mode "dark")
                                "#191a1b"
-                             "#f0f0f0")))
+                             "#f0f0f0"))
+         (max-width (* 0.382 (window-pixel-width)))
+         (max-height (* 0.382 (window-pixel-height))))
     (with-current-buffer (get-buffer-create lsp-bridge-lookup-doc-tooltip)
       (erase-buffer)
       (text-scale-set lsp-bridge-lookup-doc-tooltip-text-scale)
@@ -604,7 +606,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
       (posframe-show lsp-bridge-lookup-doc-tooltip
                      :position (point)
                      :internal-border-width lsp-bridge-lookup-doc-tooltip-border-width
-                     :background-color background-color))))
+                     :background-color background-color
+                     :max-width max-width
+                     :max-height max-height))))
 
 (defconst lsp-bridge--internal-hooks
   '((before-change-functions . lsp-bridge-monitor-before-change)
