@@ -326,19 +326,39 @@ class FileAction(object):
 
     def handle_hover_response(self, request_id, response_result):
         import linecache
-        
+
         if request_id == self.hover_request_list[-1]:
-            if response_result is None:
-                eval_in_emacs("message", ["No documentation here."])
-            else:
+            if "range" in response_result and "contents" in response_result:
                 line = response_result["range"]["start"]["line"]
                 start_column = response_result["range"]["start"]["character"]
                 end_column = response_result["range"]["end"]["character"]
-                
-                line_content = linecache.getline(self.filepath, line + 1)
-                
-                eval_in_emacs("lsp-bridge-popup-documentation", [response_result["contents"]["kind"], 
-                                                                        line_content[start_column:end_column], 
-                                                                        response_result["contents"]["value"]])
 
-    
+                line_content = linecache.getline(self.filepath, line + 1)
+                contents = response_result["contents"]
+                (kind, value) = self.parse_hover_contents(contents)
+
+                eval_in_emacs("lsp-bridge-popup-documentation", [kind,
+                                                                 line_content[start_column:end_column],
+                                                                 value])
+            else:
+                eval_in_emacs("message", ["No documentation here."])
+
+    def parse_hover_contents(self, contents, kind = "", value = ""):
+        content_type = type(contents)
+        if content_type == str:
+            kind = ""
+            value += contents
+        elif content_type == dict:
+            if "kind" in contents:
+                kind = contents["kind"]
+            elif "language" in contents:
+                kind = contents["language"]
+            value += contents["value"]
+        elif content_type == list:
+            for item in contents:
+                (k, v) = self.parse_hover_contents(item)
+                if kind == "" and k != "":
+                    kind = k
+                value += v + "\n"
+
+        return (kind, value)
