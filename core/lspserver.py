@@ -300,6 +300,14 @@ class LspServer(object):
                                       }
                                   })
 
+    def send_did_save_notification(self, filepath):
+        self.send_to_notification("textDocument/didSave",
+                                  {
+                                      "textDocument": {
+                                          "uri": path_to_uri(filepath)
+                                      }
+                                  })
+        
     def send_did_change_notification(self, filepath, version, start, end, range_length, text):
         # STEP 5: Tell LSP server file content is changed.
         # This step is very IMPORTANT, make sure LSP server contain same content as client,

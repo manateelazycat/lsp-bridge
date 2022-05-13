@@ -482,6 +482,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                            (lsp-bridge-char-before)
                            (buffer-substring-no-properties (line-beginning-position) (point)))))
 
+(defun lsp-bridge-monitor-after-save ()
+  (lsp-bridge-call-async "save_file" lsp-bridge-filepath))
+
 (defalias 'lsp-bridge-find-define #'lsp-bridge-find-def)
 
 (defun lsp-bridge-find-def ()
@@ -567,6 +570,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   '((before-change-functions . lsp-bridge-monitor-before-change)
     (after-change-functions . lsp-bridge-monitor-after-change)
     (post-command-hook . lsp-bridge-monitor-post-command)
+    (after-save-hook . lsp-bridge-monitor-after-save)
     (kill-buffer-hook . lsp-bridge-monitor-kill-buffer)
     (completion-at-point-functions . lsp-bridge-capf)))
 

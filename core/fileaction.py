@@ -118,6 +118,9 @@ class FileAction(object):
     def change_cursor(self):
         # Record change cursor time.
         self.last_change_cursor_time = time.time()
+        
+    def save_file(self):
+        self.lsp_server.send_did_save_notification(self.filepath)
 
     def build_request_function(self, name):
         def _do(*args):
