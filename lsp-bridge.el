@@ -417,7 +417,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
         ))))
 
 (defun lsp-bridge-is-at-sentence-ending-p ()
-  (member (char-to-string (char-before)) (list ":" ";" ")")))
+  (member (char-to-string (char-before)) (list ":" ";" ")" ",")))
 
 (defun lsp-bridge-is-blank-before-cursor-p (prefix)
   (and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
