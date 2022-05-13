@@ -81,6 +81,7 @@
 (require 'corfu)
 (require 'corfu-info)
 (require 'corfu-history)
+(require 'posframe)
 
 ;; Add completion history.
 (corfu-history-mode t)
@@ -99,6 +100,21 @@ Setting this to nil or 0 will turn off the indicator."
 (defcustom lsp-bridge-completion-stop-commands '(corfu-complete)
   "If last command is match this option, stop popup completion ui."
   :type 'cons
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-lookup-doc-tooltip " *lsp-bridge-hover*"
+  "Buffer for display hover information."
+  :type 'string
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-lookup-doc-tooltip-text-scale 1.5
+  "The text scale for lsp-bridge hover tooltip."
+  :type 'float
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-lookup-doc-tooltip-border-width 20
+  "The border width of lsp-bridge hover tooltip, in pixels."
+  :type 'integer
   :group 'lsp-bridge)
 
 (defface lsp-bridge-font-lock-flash
@@ -374,7 +390,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (unless (equal (point) lsp-bridge-last-position)
       (lsp-bridge-call-async "change_cursor" lsp-bridge-filepath)
-      (setq-local lsp-bridge-last-position (point)))))
+      (setq-local lsp-bridge-last-position (point))))
+
+  ;; Hide hover tooltip.
+  (posframe-hide lsp-bridge-lookup-doc-tooltip))
 
 (defun lsp-bridge-monitor-kill-buffer ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
@@ -538,7 +557,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
             (pulse-delay lsp-bridge-flash-line-delay))
         (pulse-momentary-highlight-region start-pos end-pos 'lsp-bridge-font-lock-flash)))))
 
-(defun lsp-bridge-hover ()
+(defun lsp-bridge-lookup-documentation ()
   (interactive)
   (lsp-bridge-call-async "hover" lsp-bridge-filepath (lsp-bridge--position)))
 
@@ -569,6 +588,23 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   (let ((pulse-iterations 1)
         (pulse-delay lsp-bridge-flash-line-delay))
     (pulse-momentary-highlight-one-line (point) 'lsp-bridge-font-lock-flash)))
+
+(defun lsp-bridge-popup-documentation (kind name value)
+  (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode)))
+         (background-color (if (string-equal theme-mode "dark")
+                               "#191a1b"
+                             "#f0f0f0")))
+    (with-current-buffer (get-buffer-create lsp-bridge-lookup-doc-tooltip)
+      (erase-buffer)
+      (text-scale-set lsp-bridge-lookup-doc-tooltip-text-scale)
+      (insert (propertize name 'face 'font-lock-function-name-face))
+      (insert "\n\n")
+      (insert (propertize value 'face 'font-lock-doc-face)))
+    (when (posframe-workable-p)
+      (posframe-show lsp-bridge-lookup-doc-tooltip
+                     :position (point)
+                     :internal-border-width lsp-bridge-lookup-doc-tooltip-border-width
+                     :background-color background-color))))
 
 (defconst lsp-bridge--internal-hooks
   '((before-change-functions . lsp-bridge-monitor-before-change)

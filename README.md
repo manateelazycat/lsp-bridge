@@ -8,12 +8,10 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 
 ## Installation
 
-1. Install [python-epc](https://github.com/tkf/python-epc): `pip install epc`
-2. Install [corfu](https://github.com/minad/corfu)
-3. Install [all-the-icons](https://github.com/domtronn/all-the-icons.el)
-4. Install [Orderless](https://github.com/oantolin/orderless)
-5. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
-6. Add follow code in your ~/.emacs:
+1. Install Python dependences: [python-epc](https://github.com/tkf/python-epc): `pip install epc`
+2. Install Elisp dependences: [corfu](https://github.com/minad/corfu) ,[all-the-icons](https://github.com/domtronn/all-the-icons.el), [Orderless](https://github.com/oantolin/orderless), [posframe](https://github.com/tumashu/posframe)
+3. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
+4. Add follow code in your ~/.emacs:
 
 ```
 (add-to-list 'load-path "<path-to-lsp-bridge>")
@@ -76,6 +74,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 * lsp-bridge-find-def: jump to the definition position
 * lsp-bridge-return-from-def: return to location before lsp-bridge-find-def
 * lsp-bridge-find-references: traversing across code references (fork from color-rg.el)
+* lsp-bridge-lookup-documentation: lookup documentation of cursor 
 * lsp-bridge-rename: rename the cursor content
 * lsp-bridge-restart-process: restart lsp-bridge process (only used for development)
 

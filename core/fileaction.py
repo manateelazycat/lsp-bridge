@@ -149,6 +149,8 @@ class FileAction(object):
             self.handle_prepare_rename_response(request_id, response_result)
         elif request_type == "rename":
             self.handle_rename_response(request_id, response_result)
+        elif request_type == "hover":
+            self.handle_hover_response(request_id, response_result)
 
     def handle_completion_response(self, request_id, response_result):
         # Stop send completion items to client if request id expired, or change file, or move cursor.
@@ -321,3 +323,19 @@ class FileAction(object):
             f.writelines(lines)
 
         return (rename_file, rename_counter)
+
+    def handle_hover_response(self, request_id, response_result):
+        import linecache
+        
+        if request_id == self.hover_request_list[-1]:
+            line = response_result["range"]["start"]["line"]
+            start_column = response_result["range"]["start"]["character"]
+            end_column = response_result["range"]["end"]["character"]
+            
+            line_content = linecache.getline(self.filepath, line + 1)
+            
+            eval_in_emacs("lsp-bridge-popup-documentation", [response_result["contents"]["kind"], 
+                                                                    line_content[start_column:end_column], 
+                                                                    response_result["contents"]["value"]])
+
+    
