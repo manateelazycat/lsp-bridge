@@ -338,10 +338,11 @@ class FileAction(object):
                 (kind, value) = self.parse_hover_contents(contents)
 
                 eval_in_emacs("lsp-bridge-popup-documentation", [kind,
-                                                                line_content[start_column:end_column],
-                                                                value])
+                                                                 line_content[start_column:end_column],
+                                                                 value])
             else:
                 eval_in_emacs("message", ["No documentation here."])
+
     def parse_hover_contents(self, contents, kind = "", value = ""):
         content_type = type(contents)
         if content_type == str:
