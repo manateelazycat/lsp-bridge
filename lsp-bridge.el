@@ -421,7 +421,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defun lsp-bridge-is-blank-before-cursor-p (prefix)
   (and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
-       (string-equal prefix "")))
+       (string-match "\\s-*" prefix)
+       ))
 
 (defun lsp-bridge-capf ()
   (let ((bounds (bounds-of-thing-at-point 'symbol)))
@@ -472,14 +473,14 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   ;; Send change_file request.
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (lsp-bridge-call-async "change_file"
-                            lsp-bridge-filepath
-                            lsp-bridge--before-change-begin-pos
-                            lsp-bridge--before-change-end-pos
-                            length
-                            (buffer-substring-no-properties begin end)
-                            (lsp-bridge--position)
-                            (lsp-bridge-char-before)
-                            (buffer-substring-no-properties (line-beginning-position) (point)))))
+                           lsp-bridge-filepath
+                           lsp-bridge--before-change-begin-pos
+                           lsp-bridge--before-change-end-pos
+                           length
+                           (buffer-substring-no-properties begin end)
+                           (lsp-bridge--position)
+                           (lsp-bridge-char-before)
+                           (buffer-substring-no-properties (line-beginning-position) (point)))))
 
 (defalias 'lsp-bridge-find-define #'lsp-bridge-find-def)
 
