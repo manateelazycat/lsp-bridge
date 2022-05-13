@@ -417,6 +417,18 @@ class LspServer(object):
                                  "newName": new_name
                              },
                              request_id)
+        
+    def send_hover_request(self, request_id, filepath, type, position):
+        self.record_request_id(request_id, filepath, type)
+
+        self.send_to_request("textDocument/hover",
+                             {
+                                 "textDocument": {
+                                     "uri": path_to_uri(filepath)
+                                 },
+                                 "position": position
+                             },
+                             request_id)
 
     def send_shutdown_request(self):
         self.shutdown_id = generate_request_id()

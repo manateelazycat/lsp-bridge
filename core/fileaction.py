@@ -43,18 +43,13 @@ class FileAction(object):
         object.__init__(self)
 
         # Build request functions.
-        for name in ["find_define", "find_references", "prepare_rename", "rename", "completion"]:
+        for name in ["find_define", "find_references", "prepare_rename", "rename", "completion", "hover"]:
             self.build_request_function(name)
 
         # Init.
         self.filepath = filepath
         self.project_path = project_path
         self.request_dict = {}
-        self.completion_request_list = []
-        self.find_define_request_list = []
-        self.find_references_request_list = []
-        self.prepare_rename_request_list = []
-        self.rename_request_list = []
         self.last_change_file_time = -1
         self.last_change_file_before_cursor_text = ""
         self.last_change_cursor_time = -1
@@ -137,6 +132,10 @@ class FileAction(object):
                 args = (request_id, self.filepath, name) + args
                 getattr(self.lsp_server, "send_{}_request".format(name))(*args)
 
+        # Init request list variable.
+        setattr(self, "{}_request_list".format(name), [])
+        
+        # Init request method.
         setattr(self, name, _do)
 
     def handle_server_response_message(self, request_id, request_type, response_result):

@@ -538,6 +538,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
             (pulse-delay lsp-bridge-flash-line-delay))
         (pulse-momentary-highlight-region start-pos end-pos 'lsp-bridge-font-lock-flash)))))
 
+(defun lsp-bridge-hover ()
+  (interactive)
+  (lsp-bridge-call-async "hover" lsp-bridge-filepath (lsp-bridge--position)))
+
 (defun lsp-bridge-get-pos (buf line column)
   (with-current-buffer buf
     (save-excursion
