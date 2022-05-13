@@ -97,7 +97,7 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'number
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-completion-stop-commands '(corfu-complete)
+(defcustom lsp-bridge-completion-stop-commands '(corfu-complete corfu-insert)
   "If last command is match this option, stop popup completion ui."
   :type 'cons
   :group 'lsp-bridge)
