@@ -107,7 +107,7 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'string
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-lookup-doc-tooltip-text-scale 1.5
+(defcustom lsp-bridge-lookup-doc-tooltip-text-scale 1.2
   "The text scale for lsp-bridge hover tooltip."
   :type 'float
   :group 'lsp-bridge)
