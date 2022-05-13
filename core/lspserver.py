@@ -20,7 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from sys import flags, stderr
-from core.utils import path_as_key, generate_request_id, path_to_uri, uri_to_path
+from core.utils import (path_as_key, generate_request_id, path_to_uri, uri_to_path, eval_in_emacs)
 from subprocess import PIPE
 from threading import Thread
 import io
@@ -232,6 +232,9 @@ class LspServer(object):
         self.p = subprocess.Popen(self.server_info["command"],
                                   bufsize=100000000, # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
                                   stdin=PIPE, stdout=PIPE, stderr=stderr)
+        
+        # Notify user server is start.
+        eval_in_emacs("message", ["[lsp-bridge] Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path)])
 
         # https://github.com/python/cpython/blob/87f849c775ca54f56ad60ebf96822b93bbd0029a/Lib/subprocess.py#L992
         self.p.stdin = io.TextIOWrapper(self.p.stdin, newline='', encoding="utf-8", write_through=True)
@@ -458,6 +461,9 @@ class LspServer(object):
             # We need send 'textDocument/didOpen' notification,
             # then LSP server will return file information, such as completion, find-define, find-references and rename etc.
             self.send_did_open_notification(self.first_file_path)
+            
+            # Notify user server is ready.
+            eval_in_emacs("message", ["[lsp-bridge] Start LSP server ({}) for {} complete, enjoy hacking!".format(self.server_info["name"], self.root_path)])
         elif name == "textDocument/didOpen":
             fileuri = params["textDocument"]["uri"]
             if fileuri.startswith("file://"):
