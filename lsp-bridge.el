@@ -107,13 +107,23 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'string
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-lookup-doc-tooltip-text-scale 1.2
+(defcustom lsp-bridge-lookup-doc-tooltip-text-scale 0.5
   "The text scale for lsp-bridge hover tooltip."
   :type 'float
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-lookup-doc-tooltip-border-width 20
   "The border width of lsp-bridge hover tooltip, in pixels."
+  :type 'integer
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-lookup-doc-tooltip-max-width 150
+  "The max width of lsp-bridge hover tooltip."
+  :type 'integer
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-lookup-doc-tooltip-max-height 20
+  "The max width of lsp-bridge hover tooltip."
   :type 'integer
   :group 'lsp-bridge)
 
@@ -393,7 +403,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
       (setq-local lsp-bridge-last-position (point))))
 
   ;; Hide hover tooltip.
-  (posframe-hide lsp-bridge-lookup-doc-tooltip))
+  (lsp-bridge-hide-doc-tooltip))
 
 (defun lsp-bridge-monitor-kill-buffer ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
@@ -593,9 +603,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode)))
          (background-color (if (string-equal theme-mode "dark")
                                "#191a1b"
-                             "#f0f0f0"))
-         (max-width (* 0.382 (window-pixel-width)))
-         (max-height (* 0.382 (window-pixel-height))))
+                             "#f0f0f0")))
     (with-current-buffer (get-buffer-create lsp-bridge-lookup-doc-tooltip)
       (erase-buffer)
       (text-scale-set lsp-bridge-lookup-doc-tooltip-text-scale)
@@ -607,8 +615,26 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                      :position (point)
                      :internal-border-width lsp-bridge-lookup-doc-tooltip-border-width
                      :background-color background-color
-                     :max-width max-width
-                     :max-height max-height))))
+                     :max-width lsp-bridge-lookup-doc-tooltip-max-width
+                     :max-height lsp-bridge-lookup-doc-tooltip-max-height))))
+
+(defun lsp-bridge-hide-doc-tooltip ()
+  (posframe-hide lsp-bridge-lookup-doc-tooltip))
+
+(defvar lsp-bridge--last-buffer nil)
+
+(defun lsp-bridge-monitor-window-buffer-change ()
+  ;; Hide completion frame when buffer or window changed.
+  (unless (eq (current-buffer)
+              lsp-bridge--last-buffer)
+    (lsp-bridge-hide-doc-tooltip))
+
+  (unless (or (minibufferp)
+              (string-equal (buffer-name) "*Messages*"))
+    (setq lsp-bridge--last-buffer (current-buffer))))
+
+;;;###autoload
+(add-hook 'post-command-hook 'lsp-bridge-monitor-window-buffer-change)
 
 (defconst lsp-bridge--internal-hooks
   '((before-change-functions . lsp-bridge-monitor-before-change)
