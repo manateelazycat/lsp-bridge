@@ -8,7 +8,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 
 ## Installation
 
-1. Install Python dependences: [python-epc](https://github.com/tkf/python-epc): `pip install epc`
+1. Install Python dependences: [python-epc](https://github.com/tkf/python-epc)
 2. Install Elisp dependences: [corfu](https://github.com/minad/corfu) ,[all-the-icons](https://github.com/domtronn/all-the-icons.el), [Orderless](https://github.com/oantolin/orderless), [posframe](https://github.com/tumashu/posframe)
 3. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
 4. Add follow code in your ~/.emacs:
@@ -81,9 +81,9 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 ## Customize language server configuration
 lsp-bridge default configuration for lang server store at [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
 
-Any way you can customize server configuration with below priority:
+Anyway you can customize server configuration with below priority:
 1. ```lsp-bridge-get-lang-server-by-project```: write your own function to get server configuration base on project-path and file-path, default this function is nil
-2. ```lsp-bridge-lang-server-extension-list```: get server configuration base on file extension, such as, we launch ```volar``` server instead ```javascript``` server when we open *.vue file
+2. ```lsp-bridge-lang-server-extension-list```: get server configuration base on file extension, such as, we launch ```volar``` server instead ```javascript``` server when open *.vue file
 3. ```lsp-bridge-lang-server-mode-list```: get server configuration base on major-mode
 
 ## Add support for new language?
