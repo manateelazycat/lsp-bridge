@@ -655,6 +655,10 @@ If optional MARKER, return a marker instead"
     (unless (equal buffer this-buffer)
       (switch-to-buffer buffer))))
 
+(defun lsp-bridge-find-impl ()
+  (interactive)
+  (lsp-bridge-call-async "find_implementation" lsp-bridge-filepath (lsp-bridge--position)))
+
 (defun lsp-bridge-find-references ()
   (interactive)
   (lsp-bridge-call-async "find_references" lsp-bridge-filepath (lsp-bridge--position)))

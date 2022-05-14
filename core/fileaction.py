@@ -42,7 +42,7 @@ class FileAction(object):
         object.__init__(self)
 
         # Build request functions.
-        for name in ["find_define", "find_references", "prepare_rename", "rename", "completion", "hover"]:
+        for name in ["find_define", "find_implementation", "find_references", "prepare_rename", "rename", "completion", "hover"]:
             self.build_request_function(name)
 
         # Init.
@@ -143,6 +143,8 @@ class FileAction(object):
             self.handle_completion_response(request_id, response_result)
         elif request_type == "find_define":
             self.handle_find_define_response(request_id, response_result)
+        elif request_type == "find_implementation":
+            self.handle_find_implementation_response(request_id, response_result)
         elif request_type == "find_references":
             self.handle_find_references_response(request_id, response_result)
         elif request_type == "prepare_rename":
@@ -238,6 +240,30 @@ class FileAction(object):
                     traceback.print_exc()
             else:
                 eval_in_emacs("message", ["[LSP-Bridge] Can't find define."])
+
+    def handle_find_implementation_response(self, request_id, response_result):
+        # Stop send jump define if request id expired, or change file, or move cursor.
+        if (request_id == self.find_implementation_request_list[-1] and
+            self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and
+            self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
+
+            if response_result:
+                try:
+                    file_info = response_result[0]
+                    # volar return only LocationLink (using targetUri)
+                    fileuri = file_info["uri"] if "uri" in file_info else file_info["targetUri"]
+                    filepath = uri_to_path(fileuri)
+                    range1 = file_info["range"] if "range" in file_info else file_info["targetRange"]
+                    startpos = range1["start"]
+                    row = startpos["line"]
+                    column = startpos["character"]
+                    eval_in_emacs("lsp-bridge--jump-to-def", [filepath, row, column])
+                except:
+                    logger.info("* Failed information about find_implementation response.")
+                    import traceback
+                    traceback.print_exc()
+            else:
+                eval_in_emacs("message", ["[LSP-Bridge] Can't find implementation."])
 
     def handle_find_references_response(self, request_id, response_result):
         import linecache
