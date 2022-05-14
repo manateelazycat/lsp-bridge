@@ -31,7 +31,7 @@ import re
 import subprocess
 import threading
 import traceback
-
+import tokenize
 
 DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
 
@@ -270,7 +270,7 @@ class LspServer(object):
         if filekey not in self.open_file_dict:
             self.open_file_dict[filekey] = ""
 
-            with open(filepath) as f:
+            with tokenize.open(filepath) as f:
                 self.send_to_notification("textDocument/didOpen",
                                           {
                                               "textDocument": {
