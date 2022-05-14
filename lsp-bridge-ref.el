@@ -73,7 +73,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Group ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defgroup lsp-bridge-ref nil
   "Search and refacotry code base on ripgrep."
-  :group 'lsp-bridge-ref)
+  :group 'lsp-bridge)
 
 (defcustom lsp-bridge-ref-buffer "*lsp-bridge-ref*"
   "The buffer name of search result."
