@@ -189,7 +189,7 @@ class FileAction(object):
 
     def calc_completion_prefix_string(self):
         ret = self.last_change_file_before_cursor_text
-        for c in self.lsp_server.trigger_characters + [" " + '\t']:
+        for c in self.lsp_server.completion_trigger_characters + [" " + '\t']:
             ret = ret.rpartition(c)[2]
         return ret
 

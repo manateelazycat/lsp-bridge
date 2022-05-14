@@ -241,7 +241,7 @@ class LspServer(object):
         self.ls_message_thread.start()
 
         # LSP server information.
-        self.trigger_characters = list()
+        self.completion_trigger_characters = list()
 
         # Start LSP sever.
         self.p = subprocess.Popen(self.server_info["command"],
@@ -357,7 +357,7 @@ class LspServer(object):
         self.record_request_id(request_id, method, filepath, type)
 
         # STEP 6: Calculate completion candidates for current point.
-        if char in self.trigger_characters:
+        if char in self.completion_trigger_characters:
             self.send_to_request(method,
                                  {
                                      "textDocument": {
@@ -493,7 +493,13 @@ class LspServer(object):
             if message["id"] == self.initialize_id:
                 # STEP 2: tell LSP server that client is ready.
                 # We need wait LSP server response 'initialize', then we send 'initialized' notification.
-                self.trigger_characters = message["result"]["capabilities"]["completionProvider"]["triggerCharacters"]
+                try:
+                    # We pick up completion trigger characters from server.
+                    # But some LSP server haven't this value, such as html/css LSP server. 
+                    self.completion_trigger_characters = message["result"]["capabilities"]["completionProvider"]["triggerCharacters"]
+                except:
+                    pass
+                
                 self.send_to_notification("initialized", {})
             else:
                 if "error" in message.keys():
