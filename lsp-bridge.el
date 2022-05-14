@@ -174,11 +174,6 @@ Start discarding off end if gets this big."
       (error "[LSP-Bridge] lsp-bridge-server failed to start")))
   lsp-bridge-server)
 
-(when noninteractive
-  ;; Start "event loop".
-  (cl-loop repeat 600
-           do (sleep-for 0.1)))
-
 (defun lsp-bridge--eval-in-emacs-func (sexp-string)
   (eval (read sexp-string)))
 

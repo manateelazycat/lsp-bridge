@@ -30,6 +30,7 @@ import logging
 from urllib.parse import urlparse
 
 epc_client: Optional[EPCClient] = None
+test_interceptor = None
 
 logger = logging.getLogger("lsp-bridge")
 logger.setLevel(logging.INFO)
@@ -52,15 +53,29 @@ def close_epc_client():
         epc_client.close()
 
 
-def eval_in_emacs(method_name, *args):
+def eval_sexp_in_emacs(sexp: str):
+    global epc_client
+
+    if epc_client is None:
+        logger.error("Please call init_epc_client first before calling eval_in_emacs.")
+    else:
+        logger.debug("Eval in Emacs: %s", sexp)
+        # Call eval-in-emacs elisp function.
+        epc_client.call("eval-in-emacs", [sexp])
+
+
+def eval_in_emacs(method_name, *args, no_intercept=False):
     global epc_client
 
     if len(args) == 1 and type(args[0]) == list:
         args = args[0]
 
     if epc_client is None:
-        print("Please call init_epc_client first before callling eval_in_emacs.")
+        logger.error("Please call init_epc_client first before calling eval_in_emacs.")
     else:
+        if test_interceptor and not no_intercept:
+            test_interceptor(method_name, args)
+
         args = [sexpdata.Symbol(method_name)] + list(map(sexpdata.Quoted, args))
         sexp = sexpdata.dumps(args)
         logger.debug("Eval in Emacs: %s", sexp)

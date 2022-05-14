@@ -1,0 +1,48 @@
+name: test
+on: [ push, pull_request, workflow_dispatch ]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        emacs_version:
+          - 27.2
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install emacs
+        uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs_version }}
+
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+          architecture: "x64"
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.17.0'
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get install clangd-12
+          sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
+          pip install epc pyright
+          go install golang.org/x/tools/gopls@latest
+
+      - name: test
+        run: |
+          echo ${PATH}
+          python3 -m test.test
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        if: ${{ failure() }}
+        with:
+          name: test-log
+          path: test.log
+          retention-days: 3
