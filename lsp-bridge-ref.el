@@ -556,8 +556,8 @@ user more freedom to use rg with special arguments."
               (setq remove-counter (+ 1 remove-counter))
               )))
         (if match-regexp
-            (message (format "Remove %s lines not match regexp '%s'." remove-counter filter-regexp))
-          (message (format "Remove %s lines match regexp '%s'." remove-counter filter-regexp)))
+            (message (format "[LSP-Bridge] Remove %s lines not match regexp '%s'." remove-counter filter-regexp))
+          (message (format "[LSP-Bridge] Remove %s lines match regexp '%s'." remove-counter filter-regexp)))
         )))
   ;; Update hit number in header line.
   (lsp-bridge-ref-update-header-line-hits))
@@ -576,7 +576,7 @@ user more freedom to use rg with special arguments."
         (end-of-line)
         (add-to-list 'file-extensions (lsp-bridge-ref-file-extension filename))))
     (if (< (length file-extensions) 2)
-        (message (format "Has one type files now."))
+        (message (format "[LSP-Bridge] Has one type files now."))
       (setq filter-extension (ido-completing-read (if match-files
                                                       "Only display file suffix with: "
                                                     "Remove file suffix with: ")
@@ -651,7 +651,7 @@ user more freedom to use rg with special arguments."
             (lsp-bridge-ref-switch-to-view-mode)
             (setf (lsp-bridge-ref-search-keyword lsp-bridge-ref-cur-search) replace-text)
             )))
-      (message "Replace %s lines" changed-line-number))))
+      (message "[LSP-Bridge] Replace %s lines" changed-line-number))))
 
 (defun lsp-bridge-ref-filter-match-results ()
   (interactive)
@@ -703,7 +703,7 @@ user more freedom to use rg with special arguments."
         (progn
           (goto-char next-position)
           (lsp-bridge-ref-open-file))
-      (message "Reach to last line."))))
+      (message "[LSP-Bridge] Reach to last line."))))
 
 (defun lsp-bridge-ref-jump-prev-keyword ()
   (interactive)
@@ -725,7 +725,7 @@ user more freedom to use rg with special arguments."
         (progn
           (goto-char prev-match-pos)
           (lsp-bridge-ref-open-file))
-      (message "Reach to first line."))))
+      (message "[LSP-Bridge] Reach to first line."))))
 
 (defun lsp-bridge-ref-jump-next-file ()
   (interactive)
@@ -735,7 +735,7 @@ user more freedom to use rg with special arguments."
           (goto-char next-position)
           (forward-line)
           (lsp-bridge-ref-open-file))
-      (message "Reach to last file."))))
+      (message "[LSP-Bridge] Reach to last file."))))
 
 (defun lsp-bridge-ref-jump-prev-file ()
   (interactive)
@@ -763,7 +763,7 @@ user more freedom to use rg with special arguments."
           (goto-char prev-match-pos)
           (forward-line)
           (lsp-bridge-ref-open-file))
-      (message "Reach to first file."))))
+      (message "[LSP-Bridge] Reach to first file."))))
 
 (defun lsp-bridge-ref-insert-current-line ()
   (interactive)
@@ -844,7 +844,7 @@ user more freedom to use rg with special arguments."
       (require 'which-func)
       (let ((function-name (which-function)))
         (when function-name
-          (message "Located in function: %s"
+          (message "[LSP-Bridge] Located in function: %s"
                    (propertize
                     function-name
                     'face 'lsp-bridge-ref-font-lock-function-location
@@ -920,7 +920,7 @@ Function `move-to-column' can't handle mixed string of Chinese and English corre
   ;; Add change monitor.
   (add-hook 'after-change-functions 'lsp-bridge-ref-after-change-function nil t)
   ;; Message to user.
-  (message "Switch to edit mode: press C-c C-c to apply change, press C-c C-q cancel edit"))
+  (message "[LSP-Bridge] Switch to edit mode: press C-c C-c to apply change, press C-c C-q cancel edit"))
 
 (defun lsp-bridge-ref-quit ()
   (interactive)
@@ -1019,7 +1019,7 @@ Function `move-to-column' can't handle mixed string of Chinese and English corre
       (set-window-configuration lsp-bridge-ref-window-configuration-before-apply)
       (setq lsp-bridge-ref-window-configuration-before-apply nil))
     ;; Message to user.
-    (message (format "Apply %s lines" (length lsp-bridge-ref-changed-lines))))
+    (message (format "[LSP-Bridge] Apply %s lines" (length lsp-bridge-ref-changed-lines))))
   (lsp-bridge-ref-switch-to-view-mode))
 
 (provide 'lsp-bridge-ref)

@@ -249,7 +249,7 @@ class LspServer(object):
                                   stdin=PIPE, stdout=PIPE, stderr=stderr)
         
         # Notify user server is start.
-        eval_in_emacs("message", ["[lsp-bridge] Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path)])
+        eval_in_emacs("message", ["[LSP-Bridge] Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path)])
 
         # https://github.com/python/cpython/blob/87f849c775ca54f56ad60ebf96822b93bbd0029a/Lib/subprocess.py#L992
         self.p.stdin = io.TextIOWrapper(self.p.stdin, newline='', encoding="utf-8", write_through=True)
@@ -529,7 +529,7 @@ class LspServer(object):
             self.send_did_open_notification(self.first_file_path)
             
             # Notify user server is ready.
-            eval_in_emacs("message", ["[lsp-bridge] Start LSP server ({}) for {} complete, enjoy hacking!".format(self.server_info["name"], self.root_path)])
+            eval_in_emacs("message", ["[LSP-Bridge] Start LSP server ({}) for {} complete, enjoy hacking!".format(self.server_info["name"], self.root_path)])
         elif name == "textDocument/didOpen":
             fileuri = params["textDocument"]["uri"]
             if fileuri.startswith("file://"):

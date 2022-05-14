@@ -551,7 +551,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defun lsp-bridge-popup-references (references-content references-counter)
   (lsp-bridge-ref-popup references-content references-counter)
-  (message "Found %s references" references-counter))
+  (message "[LSP-Bridge] Found %s references" references-counter))
 
 (defun lsp-bridge-rename ()
   (interactive)
@@ -590,7 +590,6 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defun lsp-bridge--jump-to-def (filepath row column)
   (interactive)
-  (message "jumping to def")
   (set-marker (mark-marker) (point) (current-buffer))
   (add-to-history 'lsp-bridge-mark-ring (copy-marker (mark-marker)) lsp-bridge-mark-ring-max t)
   (find-file filepath)

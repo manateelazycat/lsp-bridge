@@ -215,7 +215,7 @@ class FileAction(object):
                     import traceback
                     traceback.print_exc()
             else:
-                eval_in_emacs("message", ["Can't find define."])
+                eval_in_emacs("message", ["[LSP-Bridge] Can't find define."])
 
     def handle_find_references_response(self, request_id, response_result):
         import linecache
@@ -344,7 +344,7 @@ class FileAction(object):
                                                                  line_content[start_column:end_column],
                                                                  value])
             else:
-                eval_in_emacs("message", ["No documentation here."])
+                eval_in_emacs("message", ["[LSP-Bridge] No documentation here."])
 
     def parse_hover_contents(self, contents, kind = "", value = ""):
         content_type = type(contents)
