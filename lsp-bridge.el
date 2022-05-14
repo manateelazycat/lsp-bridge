@@ -449,62 +449,23 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defun lsp-bridge-capf ()
   "Capf function similar to eglot's 'eglot-completion-at-point'."
-  (let* ((sort-completions
-          (lambda (completions)
-            (cl-sort completions
-                     #'string-lessp
-                     :key (lambda (c)
-                            (or (plist-get
-                                 (get-text-property 0 'lsp-bridge--lsp-item c)
-                                 :sortText)
-                                "")))))
-         resp items (cached-proxies :none)
-         (proxies
+  (let* (items
+         (candidates
           (lambda ()
-            (if (listp cached-proxies) cached-proxies
-              (setq items lsp-bridge-completion-items)
-              (setq cached-proxies
-                    (mapcar
-                     (lambda (item)
-                       (let* ((label (plist-get item :label))
-                              (insertText (or (plist-get item :insertText) ""))
-                              (insertTextFormat (plist-get item :insertTextFormat))
-                              (proxy
-                               (cond ((and (eql insertTextFormat 2)
-                                           nil)
-                                      (string-trim-left label))
-                                     ((and insertText
-                                           (not (string-empty-p insertText)))
-                                      insertText)
-                                     (t
-                                      (string-trim-left label)))))
-                         (unless (zerop (length proxy))
-                           (put-text-property 0 1 'lsp-bridge--lsp-item item proxy))
-                         proxy))
-                     items)))))
-         (resolved (make-hash-table))
+            (setq items lsp-bridge-completion-items)
+            (mapcar
+             (lambda (item)
+               (let* ((label (plist-get item :label))
+                      (candidate (string-trim-left label)))
+                 (unless (zerop (length candidate))
+                   (put-text-property 0 1 'lsp-bridge--lsp-item item candidate))
+                 candidate))
+             items)))
          (bounds (bounds-of-thing-at-point 'symbol)))
     (list
      (or (car bounds) (point))
      (or (cdr bounds) (point))
-     (lambda (probe pred action)
-       (cond
-        ;; ((eq action 'metadata) metadata)               ; metadata
-        ((eq action 'lambda)                           ; test-completion
-         (test-completion probe (funcall proxies)))
-        ((eq (car-safe action) 'boundaries) nil)       ; boundaries
-        ((null action)                                 ; try-completion
-         (try-completion probe (funcall proxies)))
-        ((eq action t)                                 ; all-completions
-         (all-completions
-          ""
-          (funcall proxies)
-          (lambda (proxy)
-            (let* ((item (get-text-property 0 'lsp-bridge--lsp-item proxy))
-                   (filterText (plist-get item :filterText)))
-              (and (or (null pred) (funcall pred proxy))
-                   (string-prefix-p
-                    probe (or filterText proxy) completion-ignore-case))))))))
+     (funcall candidates)
      :annotation-function
      (lambda (candidate)
        (let* ((item (get-text-property 0 'lsp-bridge--lsp-item candidate))
@@ -532,16 +493,17 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
          (with-current-buffer
              (if (minibufferp) (window-buffer (minibuffer-selected-window))
                (current-buffer))
-           (let* ((item (get-text-property 0 'lsp-bridge--lsp-item (cl-find candidate (funcall proxies) :test #'string=)))
+           ;; When selecting from the *Completions*
+           ;; buffer, `candidate' won't have any properties.
+           ;; A lookup should fix that (github#148)
+           (let* ((item (get-text-property 0 'lsp-bridge--lsp-item (cl-find candidate (funcall candidates) :test #'string=)))
                   (additionalTextEdits (plist-get item :additionalTextEdits)))
              (when (cl-plusp (length additionalTextEdits))
                (lsp-bridge--apply-text-edits additionalTextEdits)))))))))
 
 ;; Copy from eglot
 (defun lsp-bridge--apply-text-edits (edits &optional version)
-  (let* ((change-group (prepare-change-group))
-         (howmany (length edits))
-         (done 0))
+  (let* ((change-group (prepare-change-group)))
     (mapc (pcase-lambda (`(,newText ,beg . ,end))
             (let ((source (current-buffer)))
               (with-temp-buffer
@@ -551,7 +513,6 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                     (save-excursion
                       (save-restriction
                         (narrow-to-region beg end)
-
                         ;; On emacs versions < 26.2,
                         ;; `replace-buffer-contents' is buggy - it calls
                         ;; change functions with invalid arguments - so we
@@ -569,28 +530,20 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                           (replace-buffer-contents temp)
                           (run-hook-with-args 'after-change-functions
                                               beg (+ beg (length newText))
-                                              length))))
-                    (cl-incf done)
-                    )))))
+                                              length)))))))))
           (mapcar
            (lambda (edit) ()
              (let* ((range (plist-get edit :range))
                     (newText (plist-get edit :newText)))
-               (cons newText (lsp-bridge--range-region range 'markers))
-               )
-             )
-           (reverse edits)
-           )
-          )
-    (undo-amalgamate-change-group change-group)
-    ))
+               (cons newText (lsp-bridge--range-region range 'markers))))
+           (reverse edits)))
+    (undo-amalgamate-change-group change-group)))
 
 ;; Copy from eglot
 (defun lsp-bridge--range-region (range &optional markers)
   "Return region (BEG . END) that represents LSP RANGE.
 If optional MARKERS, make markers."
-  (let* ((st (plist-get range :start))
-         (beg (lsp-bridge--lsp-position-to-point st markers))
+  (let* ((beg (lsp-bridge--lsp-position-to-point (plist-get range :start) markers))
          (end (lsp-bridge--lsp-position-to-point (plist-get range :end) markers)))
     (cons beg end)))
 
@@ -612,8 +565,7 @@ If optional MARKER, return a marker instead"
              "Caution: LSP server sent invalid character position %s. Using 0 instead."
              col)
             (setq col 0))
-          (lsp--bridge-move-to-column col)
-          ))
+          (lsp--bridge-move-to-column col)))
       (if marker (copy-marker (point-marker)) (point)))))
 
 ;; Copy from eglot
