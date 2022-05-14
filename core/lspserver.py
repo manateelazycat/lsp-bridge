@@ -49,7 +49,6 @@ class LspBridgeListener(Thread):
         self.process = process
         self.reader = io.BufferedReader(io.FileIO(self.process.stdout.fileno()), buffer_size=DEFAULT_BUFFER_SIZE)
         self.lsp_message_queue = lsp_message_queue
-        self.previous_message_ending_length = None
 
     def run(self):
         while self.process.poll() is None:
