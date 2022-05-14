@@ -24,6 +24,7 @@ from epc.client import EPCClient
 import sexpdata
 import sys
 import os
+import platform
 import pathlib
 import logging
 from urllib.parse import urlparse
@@ -139,7 +140,7 @@ def _make_uri_win32(path):
 
 def path_to_uri(path):
     path = pathlib.Path(path)
-    if os.name != "nt":
+    if get_os_name() != "windows":
         uri = path.as_uri()
     else:
         if not path.is_absolute():
@@ -182,3 +183,6 @@ def get_emacs_version():
         return get_emacs_func_result("get-emacs-version", [])
     else:
         return emacs_version
+
+def get_os_name():
+    return platform.system().lower()

@@ -396,6 +396,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defvar-local lsp-bridge-last-position 0)
 (defvar-local lsp-bridge-completion-items nil)
+(defvar-local lsp-bridge-completion-insert-texts nil)
 (defvar-local lsp-bridge-completion-prefix nil)
 (defvar-local lsp-bridge-completion-common nil)
 (defvar-local lsp-bridge-filepath "")
@@ -428,8 +429,13 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
     (setq-local lsp-bridge-completion-items items)
+    (setq-local lsp-bridge-completion-insert-texts (make-hash-table :test 'equal))
     (setq-local lsp-bridge-completion-prefix prefix)
     (setq-local lsp-bridge-completion-common common)
+
+    ;; We build (label . insertText) pair for replace label with insertText when call `exit-function'.
+    (dolist (item items)
+      (puthash (plist-get item :label) (plist-get item :insertText) lsp-bridge-completion-insert-texts))
 
     ;; Try popup completion frame.
     (unless (or
@@ -459,10 +465,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   (let* ((candidates
           (mapcar
            (lambda (item)
-             (let* ((candidate (plist-get item :label)))
-               (unless (zerop (length candidate))
-                 (put-text-property 0 1 'lsp-bridge--lsp-item item candidate))
-               candidate))
+             (let* ((candidate-label (plist-get item :label)))
+               (unless (zerop (length candidate-label))
+                 (put-text-property 0 1 'lsp-bridge--lsp-item item candidate-label))
+               candidate-label))
            lsp-bridge-completion-items))
          (bounds (bounds-of-thing-at-point 'symbol)))
     (list
@@ -477,26 +483,34 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
          (when annotation
            (concat " "
                    (propertize annotation
-                               'face 'font-lock-function-name-face)))))
+                               'face 'font-lock-doc-face)))))
      :company-kind
      (lambda (candidate)
        "Set icon here"
-       (when-let* ((lsp-item (get-text-property 0 'lsp-bridge--lsp-item candidate))
-                   (kind (plist-get lsp-item :kind)))
+       (when-let* ((item (get-text-property 0 'lsp-bridge--lsp-item candidate))
+                   (kind (plist-get item :kind)))
          (intern (downcase kind))))
      :exit-function
      (lambda (candidate status)
        (when (memq status '(finished exact))
-         (with-current-buffer
-             (if (minibufferp) (window-buffer (minibuffer-selected-window))
-               (current-buffer))
-           ;; When selecting from the *Completions*
-           ;; buffer, `candidate' won't have any properties.
-           ;; A lookup should fix that (github#148)
-           (let* ((item (get-text-property 0 'lsp-bridge--lsp-item (cl-find candidate candidates :test #'string=)))
-                  (additionalTextEdits (if lsp-bridge-enable-auto-import (plist-get item :additionalTextEdits) nil)))
-             (when (cl-plusp (length additionalTextEdits))
-               (lsp-bridge--apply-text-edits additionalTextEdits)))))))))
+         (let ((label candidate)
+               (insert-text (gethash candidate lsp-bridge-completion-insert-texts)))
+           ;; Remove candidate label and insert candidate insertText
+           (delete-region (- (point) (length label)) (point))
+           (insert insert-text)
+
+           ;; Do auto-imprt action.
+           (with-current-buffer
+               (if (minibufferp) (window-buffer (minibuffer-selected-window))
+                 (current-buffer))
+             ;; When selecting from the *Completions*
+             ;; buffer, `candidate' won't have any properties.
+             ;; A lookup should fix that (github#148)
+             (let* ((item (get-text-property 0 'lsp-bridge--lsp-item (cl-find candidate candidates :test #'string=)))
+                    (additionalTextEdits (if lsp-bridge-enable-auto-import (plist-get item :additionalTextEdits) nil)))
+               (when (cl-plusp (length additionalTextEdits))
+                 (lsp-bridge--apply-text-edits additionalTextEdits))))
+           ))))))
 
 ;; Copy from eglot
 (defun lsp-bridge--apply-text-edits (edits &optional version)

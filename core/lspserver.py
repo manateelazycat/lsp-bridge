@@ -50,39 +50,54 @@ class LspBridgeListener(Thread):
         self.reader = io.BufferedReader(io.FileIO(self.process.stdout.fileno()), buffer_size=DEFAULT_BUFFER_SIZE)
         self.lsp_message_queue = lsp_message_queue
 
-    def run(self):
-        while self.process.poll() is None:
+    def emit_message(self, line):
+        if line != "":
             try:
-                # Forward to Content-Length.
-                while self.reader.peek()[0] != ord('C'):
-                    self.reader.read(1)
-
-                # Read Content-Length
-                line = self.reader.readline()
-                logger.debug('### content-length: ' + repr(line))
-                length = int(line[line.rfind(b":") + 1:].strip())
-                self.reader.readline()
-                message = self.reader.read(length)
-
-                # Make sure the message is intact
-                if len(message) != length:
-                    logger.info('The server has died before we can receive a complete message')
-                    break
-
-                # The message is good.
-                message = message.decode()
-                logger.debug('### recv: %s', message)
+                # Send message.
                 self.lsp_message_queue.put({
-                    'name': 'lsp_recv_message',
-                    'content': json.loads(message)
+                    "name": "lsp_recv_message",
+                    "content": json.loads(line)
                 })
-
+                
             except:
                 traceback.print_exc()
 
-        # Poll again to update the returncode.
-        self.process.poll()
+    def run(self):
+        content_length = None
+        buffer = bytearray()
+        while self.process.poll() is None:
+            try:
+                if content_length is None:
+                    match = re.search(b"Content-Length: [0-9]+\r\n\r\n", buffer)
+                    if match is not None:
+                        end = match.end()
+                        parts = match.group(0).decode("utf-8").strip().split(": ")
+                        content_length = int(parts[1])
 
+                        buffer = buffer[end:]
+                    else:
+                        line = self.process.stdout.readline()
+                        buffer = buffer + line
+                else:
+                    if len(buffer) < content_length:
+                        # 这个检查算是个防御吧，实际应该用不到了。先保留，后续再看。
+                        match = re.search(b"Content-Length: [0-9]+\r\n\r\n", buffer)
+                        if match is not None:
+                            start = match.start()
+                            msg = buffer[0:start]
+                            buffer = buffer[start :]
+                            content_length = None
+                            self.emit_message(msg.decode("utf-8"))
+                        else:
+                            line = self.process.stdout.readline(content_length - len(buffer))
+                            buffer = buffer + line
+                    else:
+                        msg = buffer[0 : content_length]
+                        buffer = buffer[content_length :]
+                        content_length = None
+                        self.emit_message(msg.decode("utf-8"))
+            except:
+                traceback.print_exc()
         logger.info("\n--- Lsp server exited, exit code: {}".format(self.process.returncode))
         logger.info(self.process.stdout.read())
         if self.process.stderr:
@@ -99,6 +114,9 @@ class SendRequest(Thread):
         self.id = id
 
     def run(self):
+        if self.process.returncode is not None:
+            return
+
         message_dict = {}
         message_dict["jsonrpc"] = "2.0"
         message_dict["method"] = self.name
@@ -108,7 +126,7 @@ class SendRequest(Thread):
         json_string = json.dumps(message_dict, cls=JsonEncoder, separators=(',', ':'))
         json_message = "Content-Length: {}\r\n\r\n{}".format(len(json_string), json_string)
 
-        self.process.stdin.write(json_message)
+        self.process.stdin.write(json_message.encode("utf-8"))
         self.process.stdin.flush()
 
         logger.info("\n--- Send request ({}): {}".format(self.id, self.name))
@@ -126,6 +144,9 @@ class SendNotification(Thread):
         self.params = params
 
     def run(self):
+        if self.process.returncode is not None:
+            return
+
         message_dict = {}
         message_dict["jsonrpc"] = "2.0"
         message_dict["method"] = self.name
@@ -134,7 +155,7 @@ class SendNotification(Thread):
         json_string = json.dumps(message_dict, cls=JsonEncoder, separators=(',', ':'))
         json_message = "Content-Length: {}\r\n\r\n{}".format(len(json_string), json_string)
 
-        self.process.stdin.write(json_message)
+        self.process.stdin.write(json_message.encode("utf-8"))
         self.process.stdin.flush()
 
         self.lsp_message_queue.put({
@@ -157,6 +178,9 @@ class SendResponse(Thread):
         self.result = result
 
     def run(self):
+        if self.process.returncode is not None:
+            return
+
         message_dict = {}
         message_dict["jsonrpc"] = "2.0"
         message_dict["id"] = self.id
@@ -165,7 +189,7 @@ class SendResponse(Thread):
         json_string = json.dumps(message_dict, cls=JsonEncoder, separators=(',', ':'))
         json_message = "Content-Length: {}\r\n\r\n{}".format(len(json_string), json_string)
 
-        self.process.stdin.write(json_message)
+        self.process.stdin.write(json_message.encode("utf-8"))
         self.process.stdin.flush()
 
         logger.info("\n--- Send response ({}): {}".format(self.id, self.name))
@@ -206,10 +230,6 @@ class LspServer(object):
 
         # Notify user server is start.
         eval_in_emacs("message", ["[LSP-Bridge] Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path)])
-
-        # https://github.com/python/cpython/blob/87f849c775ca54f56ad60ebf96822b93bbd0029a/Lib/subprocess.py#L992
-        self.p.stdin = io.TextIOWrapper(self.p.stdin, newline='', encoding="utf-8", write_through=True)
-        self.p.stdout = io.TextIOWrapper(self.p.stdout, newline='', encoding="utf-8")
 
         # A separate thread is used to read the message returned by the LSP server.
         self.listener_thread = LspBridgeListener(self.p, self.lsp_message_queue)
