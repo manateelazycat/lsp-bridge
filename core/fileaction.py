@@ -169,10 +169,10 @@ class FileAction(object):
 
             if response_result is not None:
                 for item in response_result["items"] if "items" in response_result else response_result:
-                    completion_items.append(item["label"])
+                    completion_items.append(item["insertText"] if "insertText" in item else item["label"])
                     kind = KIND_MAP[item.get("kind", 0)]
                     candidate = {
-                        "label": item["label"],
+                        "label": completion_items[-1],
                         "kind": kind,
                         #  HACK: space makes the number of args for emacs wrong
                         "annotation": item.get("detail", kind).replace(" ", ""),
@@ -189,7 +189,7 @@ class FileAction(object):
             if len(completion_items) == 1 and (self.completion_prefix_string == completion_common_string == completion_items[0]):
                 # Clear completion items if user input last completion item.
                 eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string,
-                                                                     completion_common_string, [], [], []])
+                                                                     completion_common_string, []])
             else:
                 eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string,
                                                                      completion_common_string, completion_candidates])

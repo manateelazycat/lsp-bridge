@@ -449,25 +449,23 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defun lsp-bridge-capf ()
   "Capf function similar to eglot's 'eglot-completion-at-point'."
-  (let* (items
-         (candidates
-          (lambda ()
-            (setq items lsp-bridge-completion-items)
-            (mapcar
-             (lambda (item)
-               (let* ((label (plist-get item :label))
-                      (candidate (string-trim-left label)))
-                 (unless (zerop (length candidate))
-                   (put-text-property 0 1 'lsp-bridge--lsp-item item candidate))
-                 candidate))
-             items)))
+  (let* ((candidates
+          (mapcar
+           (lambda (item)
+             (let* ((label (plist-get item :label))
+                    (candidate (string-trim-left label)))
+               (unless (zerop (length candidate))
+                 (put-text-property 0 1 'lsp-bridge--lsp-item item candidate))
+               candidate))
+           lsp-bridge-completion-items))
          (bounds (bounds-of-thing-at-point 'symbol)))
     (list
      (or (car bounds) (point))
      (or (cdr bounds) (point))
-     (funcall candidates)
+     candidates
      :annotation-function
      (lambda (candidate)
+       "Extract annotation from CANDIDATE."
        (let* ((item (get-text-property 0 'lsp-bridge--lsp-item candidate))
               (annotation (plist-get item :annotation)))
          (when annotation
@@ -475,18 +473,11 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                    (propertize annotation
                                'face 'font-lock-function-name-face)))))
      :company-kind
-     ;; Associate each lsp-item with a lsp-kind symbol.
      (lambda (candidate)
+       "Set icon here"
        (when-let* ((lsp-item (get-text-property 0 'lsp-bridge--lsp-item candidate))
                    (kind (plist-get lsp-item :kind)))
          (intern (downcase kind))))
-     :company-deprecated
-     (lambda (candidate)
-       (when-let ((lsp-item (get-text-property 0 'lsp-bridge--lsp-item candidate)))
-         (or (seq-contains-p (plist-get lsp-item :tags)
-                             1)
-             (eq t (plist-get lsp-item :deprecated)))))
-     :company-require-match 'never
      :exit-function
      (lambda (candidate status)
        (when (memq status '(finished exact))
@@ -496,7 +487,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
            ;; When selecting from the *Completions*
            ;; buffer, `candidate' won't have any properties.
            ;; A lookup should fix that (github#148)
-           (let* ((item (get-text-property 0 'lsp-bridge--lsp-item (cl-find candidate (funcall candidates) :test #'string=)))
+           (let* ((item (get-text-property 0 'lsp-bridge--lsp-item (cl-find candidate candidates :test #'string=)))
                   (additionalTextEdits (plist-get item :additionalTextEdits)))
              (when (cl-plusp (length additionalTextEdits))
                (lsp-bridge--apply-text-edits additionalTextEdits)))))))))
