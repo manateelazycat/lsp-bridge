@@ -31,6 +31,7 @@ import re
 import subprocess
 import threading
 import traceback
+from core.streams import JsonRpcStreamReader, JsonRpcStreamWriter
 
 
 DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
@@ -43,91 +44,40 @@ class JsonEncoder(json.JSONEncoder):
 
 class LspBridgeListener(Thread):
 
-    def __init__(self, process, lsp_message_queue):
+    def __init__(self, message_reader: JsonRpcStreamReader, lsp_message_queue):
         Thread.__init__(self)
 
-        self.process = process
-        self.reader = io.BufferedReader(io.FileIO(self.process.stdout.fileno()), buffer_size=DEFAULT_BUFFER_SIZE)
+        self.message_reader = message_reader
         self.lsp_message_queue = lsp_message_queue
 
-    def emit_message(self, line):
-        if line != "":
-            try:
+    def emit_message(self, message):
                 # Send message.
                 self.lsp_message_queue.put({
                     "name": "lsp_recv_message",
-                    "content": json.loads(line)
+                    "content": message
                 })
-                
-            except:
-                traceback.print_exc()
 
     def run(self):
-        content_length = None
-        buffer = bytearray()
-        while self.process.poll() is None:
-            try:
-                if content_length is None:
-                    match = re.search(b"Content-Length: [0-9]+\r\n\r\n", buffer)
-                    if match is not None:
-                        end = match.end()
-                        parts = match.group(0).decode("utf-8").strip().split(": ")
-                        content_length = int(parts[1])
-
-                        buffer = buffer[end:]
-                    else:
-                        line = self.process.stdout.readline()
-                        buffer = buffer + line
-                else:
-                    if len(buffer) < content_length:
-                        # 这个检查算是个防御吧，实际应该用不到了。先保留，后续再看。
-                        match = re.search(b"Content-Length: [0-9]+\r\n\r\n", buffer)
-                        if match is not None:
-                            start = match.start()
-                            msg = buffer[0:start]
-                            buffer = buffer[start :]
-                            content_length = None
-                            self.emit_message(msg.decode("utf-8"))
-                        else:
-                            line = self.process.stdout.readline(content_length - len(buffer))
-                            buffer = buffer + line
-                    else:
-                        msg = buffer[0 : content_length]
-                        buffer = buffer[content_length :]
-                        content_length = None
-                        self.emit_message(msg.decode("utf-8"))
-            except:
-                traceback.print_exc()
-        logger.info("\n--- Lsp server exited, exit code: {}".format(self.process.returncode))
-        logger.info(self.process.stdout.read())
-        if self.process.stderr:
-            logger.info(self.process.stderr.read())
+        self.message_reader.listen(self.emit_message)
 
 class SendRequest(Thread):
 
-    def __init__(self, process, name, params, id):
+    def __init__(self, message_writer: JsonRpcStreamWriter, name, params, id):
         Thread.__init__(self)
 
-        self.process = process
+        self.message_writer = message_writer
         self.name = name
         self.params = params
         self.id = id
 
     def run(self):
-        if self.process.returncode is not None:
-            return
-
         message_dict = {}
         message_dict["jsonrpc"] = "2.0"
         message_dict["method"] = self.name
         message_dict["params"] = self.params
         message_dict["id"] = self.id
 
-        json_string = json.dumps(message_dict, cls=JsonEncoder, separators=(',', ':'))
-        json_message = "Content-Length: {}\r\n\r\n{}".format(len(json_string), json_string)
-
-        self.process.stdin.write(json_message.encode("utf-8"))
-        self.process.stdin.flush()
+        self.message_writer.write(message_dict)
 
         logger.info("\n--- Send request ({}): {}".format(self.id, self.name))
 
@@ -135,28 +85,21 @@ class SendRequest(Thread):
 
 class SendNotification(Thread):
 
-    def __init__(self, process, lsp_message_queue, name, params):
+    def __init__(self, message_writer: JsonRpcStreamWriter, lsp_message_queue, name, params):
         Thread.__init__(self)
 
-        self.process = process
+        self.message_writer = message_writer
         self.lsp_message_queue = lsp_message_queue
         self.name = name
         self.params = params
 
     def run(self):
-        if self.process.returncode is not None:
-            return
-
         message_dict = {}
         message_dict["jsonrpc"] = "2.0"
         message_dict["method"] = self.name
         message_dict["params"] = self.params
 
-        json_string = json.dumps(message_dict, cls=JsonEncoder, separators=(',', ':'))
-        json_message = "Content-Length: {}\r\n\r\n{}".format(len(json_string), json_string)
-
-        self.process.stdin.write(json_message.encode("utf-8"))
-        self.process.stdin.flush()
+        self.message_writer.write(message_dict)
 
         self.lsp_message_queue.put({
             "name": "lsp_send_notification",
@@ -169,28 +112,21 @@ class SendNotification(Thread):
 
 class SendResponse(Thread):
 
-    def __init__(self, process, name, id, result):
+    def __init__(self, writer: JsonRpcStreamWriter, name, id, result):
         Thread.__init__(self)
 
-        self.process = process
+        self.writer = writer
         self.name = name
         self.id = id
         self.result = result
 
     def run(self):
-        if self.process.returncode is not None:
-            return
-
         message_dict = {}
         message_dict["jsonrpc"] = "2.0"
         message_dict["id"] = self.id
         message_dict["result"] = self.result
 
-        json_string = json.dumps(message_dict, cls=JsonEncoder, separators=(',', ':'))
-        json_message = "Content-Length: {}\r\n\r\n{}".format(len(json_string), json_string)
-
-        self.process.stdin.write(json_message.encode("utf-8"))
-        self.process.stdin.flush()
+        self.writer.write(message_dict)
 
         logger.info("\n--- Send response ({}): {}".format(self.id, self.name))
 
@@ -215,10 +151,10 @@ class LspServer(object):
         self.open_file_dict = {} # contain file opened in current project
         self.root_path = self.project_path
 
-        # All LSP server response running in ls_message_thread.
+        # All LSP server response running in lsp_message_thread.
         self.lsp_message_queue = queue.Queue()
-        self.ls_message_thread = threading.Thread(target=self.lsp_message_dispatcher)
-        self.ls_message_thread.start()
+        self.lsp_message_thread = threading.Thread(target=self.lsp_message_dispatcher)
+        self.lsp_message_thread.start()
 
         # LSP server information.
         self.completion_trigger_characters = list()
@@ -227,12 +163,15 @@ class LspServer(object):
         self.p = subprocess.Popen(self.server_info["command"],
                                   bufsize=DEFAULT_BUFFER_SIZE,
                                   stdin=PIPE, stdout=PIPE, stderr=stderr)
-        
+
+        self.message_writer = JsonRpcStreamWriter(self.p.stdin, cls=JsonEncoder, separators=(',', ':'))
+        self.message_reader = JsonRpcStreamReader(self.p.stdout)
+
         # Notify user server is start.
         eval_in_emacs("message", ["[LSP-Bridge] Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path)])
 
         # A separate thread is used to read the message returned by the LSP server.
-        self.listener_thread = LspBridgeListener(self.p, self.lsp_message_queue)
+        self.listener_thread = LspBridgeListener(self.message_reader, self.lsp_message_queue)
         self.listener_thread.start()
 
         # STEP 1: Say hello to LSP server.
@@ -482,6 +421,8 @@ class LspServer(object):
                     pass
                 
                 self.send_to_notification("initialized", {})
+            elif message["id"] == self.shutdown_id:
+                self.send_exit_notification()
             else:
                 if "method" not in message.keys() and message["id"] in self.request_dict:
                     self.message_queue.put({
@@ -491,7 +432,7 @@ class LspServer(object):
                                     message["id"],
                                     message["result"])
                     })
-                else:
+                elif "method" in message.keys():
                     if message["method"] == "workspace/configuration":
                         self.handle_workspace_configuration_request(message["method"], message["id"], message["params"])
 
@@ -509,6 +450,18 @@ class LspServer(object):
             
             # Notify user server is ready.
             eval_in_emacs("message", ["[LSP-Bridge] Start LSP server ({}) for {} complete, enjoy hacking!".format(self.server_info["name"], self.root_path)])
+
+        elif name == "shutdown":
+            self.message_queue.put({
+                "name": "server_process_exit",
+                "content": self.server_name
+            })
+
+            # Don't need wait LSP server response, kill immediately.
+            self.message_reader.close()
+            self.message_writer.close()
+            os.kill(self.p.pid, 9)
+
         elif name == "textDocument/didOpen":
             fileuri = params["textDocument"]["uri"]
             if fileuri.startswith("file://"):
@@ -521,17 +474,17 @@ class LspServer(object):
 
     def send_to_request(self, name, params, request_id):
         # Request message must be contain unique request id.
-        sender_thread = SendRequest(self.p, name, params, request_id)
+        sender_thread = SendRequest(self.message_writer, name, params, request_id)
         self.sender_threads.append(sender_thread)
         sender_thread.start()
 
     def send_to_notification(self, name, params):
-        sender_thread = SendNotification(self.p, self.lsp_message_queue, name, params)
+        sender_thread = SendNotification(self.message_writer, self.lsp_message_queue, name, params)
         self.sender_threads.append(sender_thread)
         sender_thread.start()
 
     def send_to_response(self, name, id, result):
-        sender_thread = SendResponse(self.p, name, id, result)
+        sender_thread = SendResponse(self.message_writer, name, id, result)
         self.sender_threads.append(sender_thread)
         sender_thread.start()
 
@@ -545,12 +498,3 @@ class LspServer(object):
         # We need shutdown LSP server when last file closed, to save system memory.
         if len(self.open_file_dict) == 0:
             self.send_shutdown_request()
-            self.send_exit_notification()
-
-            self.message_queue.put({
-                "name": "server_process_exit",
-                "content": self.server_name
-            })
-
-            # Don't need wait LSP server response, kill immediately.
-            os.kill(self.p.pid, 9)
