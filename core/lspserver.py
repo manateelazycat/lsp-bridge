@@ -507,7 +507,6 @@ class LspServer(object):
                                     message["result"])
                     })
                 else:
-                    # FIXME: send to another mq and handle in a seperated thread?
                     if message["method"] == "workspace/configuration":
                         self.handle_workspace_configuration_request(message["method"], message["id"], message["params"])
 
