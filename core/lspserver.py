@@ -35,6 +35,11 @@ import traceback
 
 DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
 
+COMPLETION_TRIGGER_KIND = {
+    "Invoked": 1,
+    "TriggerCharacter": 2,
+    "TriggerForIncompleteCompletions": 3
+}
 
 class JsonEncoder(json.JSONEncoder):
 
@@ -334,6 +339,7 @@ class LspServer(object):
 
         # STEP 6: Calculate completion candidates for current point.
         if char in self.completion_trigger_characters:
+            # Completion was triggered by a trigger character specified by the `completion_trigger_characters'.
             self.send_to_request(method,
                                  {
                                      "textDocument": {
@@ -341,12 +347,13 @@ class LspServer(object):
                                      },
                                      "position": position,
                                      "context": {
-                                         "triggerKind": 2,
+                                         "triggerKind": COMPLETION_TRIGGER_KIND["TriggerCharacter"],
                                          "triggerCharacter": char
                                      }
                                  },
                                  request_id)
         else:
+            # Completion was triggered by typing an identifier.
             self.send_to_request(method,
                                  {
                                      "textDocument": {
@@ -354,7 +361,7 @@ class LspServer(object):
                                      },
                                      "position": position,
                                      "context": {
-                                         "triggerKind": 3
+                                         "triggerKind": COMPLETION_TRIGGER_KIND["Invoked"]
                                      }
                                  },
                                  request_id)
