@@ -9,7 +9,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 ## Installation
 
 1. Install Python dependences: [python-epc](https://github.com/tkf/python-epc)
-2. Install Elisp dependences: [corfu](https://github.com/minad/corfu) ,[all-the-icons](https://github.com/domtronn/all-the-icons.el), [Orderless](https://github.com/oantolin/orderless), [posframe](https://github.com/tumashu/posframe)
+2. Install Elisp dependences: [corfu](https://github.com/minad/corfu) ,[all-the-icons](https://github.com/domtronn/all-the-icons.el), [Orderless](https://github.com/oantolin/orderless), [posframe](https://github.com/tumashu/posframe), [markdown-mode](https://github.com/jrblevin/markdown-mode)
 3. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
 4. Add follow code in your ~/.emacs:
 
