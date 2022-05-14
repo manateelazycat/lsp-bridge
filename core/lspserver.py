@@ -465,7 +465,6 @@ class LspServer(object):
         }
 
     def handle_workspace_configuration_request(self, name, id, params):
-        # FIXME: workaround for server require response to "workspace/configuration" like sumneko
         self.send_to_response(name, id, {})
 
     def handle_recv_message(self, message):
