@@ -220,6 +220,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   '(
     (("vue") . "volar")
     (("wxml") . "wxml-language-server")
+    (("html") . "vscode-html-language-server")
     )
   "The lang server rule for file extension."
   :type 'cons)
