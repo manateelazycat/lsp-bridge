@@ -468,6 +468,11 @@ class LspServer(object):
         self.send_to_response(name, id, {})
 
     def handle_recv_message(self, message):
+        if "error" in message.keys():
+            logger.error("\n--- Recv message (error):")
+            logger.error(json.dumps(message, indent=3))
+            return
+
         if "id" in message.keys():
             if "method" in message.keys():
                 # server request
@@ -502,8 +507,6 @@ class LspServer(object):
                 
                 self.send_to_notification("initialized", {})
             else:
-                if "error" in message.keys():
-                    return
                 if "method" not in message.keys() and message["id"] in self.request_dict:
                     self.message_queue.put({
                         "name": "server_response_message",
