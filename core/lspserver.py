@@ -155,7 +155,7 @@ class SendRequest(Thread):
         self.process.stdin.write(json_message)
         self.process.stdin.flush()
 
-        logger.info("\n--- Send request {}: {}".format(self.name, self.id))
+        logger.info("\n--- Send request ({}): {}".format(self.id, self.name))
 
         logger.debug(json.dumps(message_dict, indent = 3))
 
@@ -212,7 +212,7 @@ class SendResponse(Thread):
         self.process.stdin.write(json_message)
         self.process.stdin.flush()
 
-        logger.info("\n--- Send response: {}".format(self.name))
+        logger.info("\n--- Send response ({}): {}".format(self.id, self.name))
 
         logger.debug(json.dumps(message_dict, indent = 3))
 
@@ -345,18 +345,20 @@ class LspServer(object):
                                       ]
                                   })
 
-    def record_request_id(self, request_id, filepath, type):
+    def record_request_id(self, request_id, method, filepath, type):
         self.request_dict[request_id] = {
+            "method": method,
             "filepath": filepath,
             "type": type
         }
 
     def send_completion_request(self, request_id, filepath, type, position, char):
-        self.record_request_id(request_id, filepath, type)
+        method = "textDocument/completion"
+        self.record_request_id(request_id, method, filepath, type)
 
         # STEP 6: Calculate completion candidates for current point.
         if char in self.trigger_characters:
-            self.send_to_request("textDocument/completion",
+            self.send_to_request(method,
                                  {
                                      "textDocument": {
                                          "uri": path_to_uri(filepath)
@@ -369,7 +371,7 @@ class LspServer(object):
                                  },
                                  request_id)
         else:
-            self.send_to_request("textDocument/completion",
+            self.send_to_request(method,
                                  {
                                      "textDocument": {
                                          "uri": path_to_uri(filepath)
@@ -382,9 +384,10 @@ class LspServer(object):
                                  request_id)
 
     def send_find_define_request(self, request_id, filepath, type, position):
-        self.record_request_id(request_id, filepath, type)
+        method = "textDocument/definition"
+        self.record_request_id(request_id, method, filepath, type)
 
-        self.send_to_request("textDocument/definition",
+        self.send_to_request(method,
                              {
                                  "textDocument": {
                                      "uri": path_to_uri(filepath)
@@ -394,9 +397,10 @@ class LspServer(object):
                              request_id)
 
     def send_find_references_request(self, request_id, filepath, type, positon):
-        self.record_request_id(request_id, filepath, type)
+        method = "textDocument/references"
+        self.record_request_id(request_id, method, filepath, type)
 
-        self.send_to_request("textDocument/references",
+        self.send_to_request(method,
                              {
                                  "textDocument": {
                                      "uri": path_to_uri(filepath)
@@ -409,9 +413,10 @@ class LspServer(object):
                              request_id)
 
     def send_prepare_rename_request(self, request_id, filepath, type, position):
-        self.record_request_id(request_id, filepath, type)
+        method = "textDocument/prepareRename"
+        self.record_request_id(request_id, method, filepath, type)
 
-        self.send_to_request("textDocument/prepareRename",
+        self.send_to_request(method,
                              {
                                  "textDocument": {
                                      "uri": path_to_uri(filepath)
@@ -421,9 +426,10 @@ class LspServer(object):
                              request_id)
 
     def send_rename_request(self, request_id, filepath, type, position, new_name):
-        self.record_request_id(request_id, filepath, type)
+        method = "textDocument/rename"
+        self.record_request_id(request_id, method, filepath, type)
 
-        self.send_to_request("textDocument/rename",
+        self.send_to_request(method,
                              {
                                  "textDocument": {
                                      "uri": path_to_uri(filepath)
@@ -434,9 +440,10 @@ class LspServer(object):
                              request_id)
         
     def send_hover_request(self, request_id, filepath, type, position):
-        self.record_request_id(request_id, filepath, type)
+        method = "textDocument/hover"
+        self.record_request_id(request_id, method, filepath, type)
 
-        self.send_to_request("textDocument/hover",
+        self.send_to_request(method,
                              {
                                  "textDocument": {
                                      "uri": path_to_uri(filepath)
@@ -457,14 +464,29 @@ class LspServer(object):
             "settings": self.server_info["settings"]
         }
 
+    def handle_workspace_configuration_request(self, name, id, params):
+        # FIXME: workaround for server require response to "workspace/configuration" like sumneko
+        self.send_to_response(name, id, {})
+
     def handle_recv_message(self, message):
-        method_name = ""
-        if "method" in message.keys():
-            logger.info("\n--- Recv message: %s", message["method"])
         if "id" in message.keys():
-            logger.info("\n--- Recv message: %s", message["id"])
+            if "method" in message.keys():
+                # server request
+                logger.info("\n--- Recv request ({}): {}".format(message["id"], message["method"]))
+            else:
+                # server response
+                if message["id"] in self.request_dict:
+                    method = self.request_dict[message["id"]]["method"]
+                    logger.info("\n--- Recv response ({}): {}".format(message["id"], method))
+                else:
+                    logger.info("\n--- Recv response ({})".format(message["id"]))
         else:
-            logger.info("\n--- Recv message")
+            if "method" in message.keys():
+                # server notification
+                logger.info("\n--- Recv notification: %s", message["method"])
+            else:
+                # others
+                logger.info("\n--- Recv message")
 
         logger.debug(json.dumps(message, indent = 3))
 
@@ -475,7 +497,9 @@ class LspServer(object):
                 self.trigger_characters = message["result"]["capabilities"]["completionProvider"]["triggerCharacters"]
                 self.send_to_notification("initialized", {})
             else:
-                if message["id"] in self.request_dict and "error" not in message:
+                if "error" in message.keys():
+                    return
+                if "method" not in message.keys() and message["id"] in self.request_dict:
                     self.message_queue.put({
                         "name": "server_response_message",
                         "content": (self.request_dict[message["id"]]["filepath"],
@@ -483,6 +507,10 @@ class LspServer(object):
                                     message["id"],
                                     message["result"])
                     })
+                else:
+                    # FIXME: send to another mq and handle in a seperated thread?
+                    if message["method"] == "workspace/configuration":
+                        self.handle_workspace_configuration_request(message["method"], message["id"], message["params"])
 
     def handle_send_notification(self, name, params):
         if name == "initialized":
