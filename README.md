@@ -37,6 +37,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
                'java-mode-hook
                'python-mode-hook
                'ruby-mode-hook
+               'lua-mode-hook
                'rust-mode-hook
                'elixir-mode-hook
                'go-mode-hook
@@ -113,6 +114,7 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 15. clojure-lsp (clojure)
 16. bash-language-server (bash)
 17. volar (vue)
+18. sumneko (lua) Note: please ensure export `bin` under sumneko installation in your system PATH at first.
 
 ## Report bug
 

@@ -226,6 +226,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (elixir-mode . "elixirLS")
     (go-mode . "gopls")
     (haskell-mode . "hls")
+    (lua-mode . "sumneko")
     (dart-mode . "dart_analysis_server")
     (scala-mode . "metals")
     ((js2-mode js-mode rjsx-mode) . "javascript")

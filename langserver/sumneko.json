@@ -1,0 +1,6 @@
+{
+  "name": "sumneko",
+  "languageId": "lua",
+  "command": ["lua-language-server"],
+  "settings": {}
+}
