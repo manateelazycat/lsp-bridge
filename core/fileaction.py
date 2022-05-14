@@ -189,7 +189,7 @@ class FileAction(object):
                         "label": item["label"],
                         "insertText": insertText,
                         "kind": kind,
-                        "annotation": item.get("detail", kind).replace(" ", ""),
+                        "annotation": (item.get("detail") or kind).replace(" ", ""),
                     }
                     
                     if (self.enable_auto_import):
