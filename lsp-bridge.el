@@ -452,8 +452,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   (let* ((candidates
           (mapcar
            (lambda (item)
-             (let* ((label (plist-get item :label))
-                    (candidate (string-trim-left label)))
+             (let* ((candidate (plist-get item :label)))
                (unless (zerop (length candidate))
                  (put-text-property 0 1 'lsp-bridge--lsp-item item candidate))
                candidate))
@@ -504,24 +503,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                     (save-excursion
                       (save-restriction
                         (narrow-to-region beg end)
-                        ;; On emacs versions < 26.2,
-                        ;; `replace-buffer-contents' is buggy - it calls
-                        ;; change functions with invalid arguments - so we
-                        ;; manually call the change functions here.
-                        ;;
-                        ;; See emacs bugs #32237, #32278:
-                        ;; https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32237
-                        ;; https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32278
-                        (let ((inhibit-modification-hooks t)
-                              (length (- end beg))
-                              (beg (marker-position beg))
-                              (end (marker-position end)))
-                          (run-hook-with-args 'before-change-functions
-                                              beg end)
-                          (replace-buffer-contents temp)
-                          (run-hook-with-args 'after-change-functions
-                                              beg (+ beg (length newText))
-                                              length)))))))))
+                        (replace-buffer-contents temp))))))))
           (mapcar
            (lambda (edit) ()
              (let* ((range (plist-get edit :range))
@@ -553,7 +535,7 @@ If optional MARKER, return a marker instead"
               (col (plist-get pos-plist :character)))
           (unless (wholenump col)
             (message
-             "Caution: LSP server sent invalid character position %s. Using 0 instead."
+             "[LSP Bridge] Caution: LSP server sent invalid character position %s. Using 0 instead."
              col)
             (setq col 0))
           (lsp--bridge-move-to-column col)))
@@ -568,25 +550,6 @@ If optional MARKER, return a marker instead"
   ;; github#297)
   (goto-char (min (+ (line-beginning-position) column)
                   (line-end-position))))
-
-(defun lsp-bridge-point-row (pos)
-  (save-excursion
-    (save-restriction
-      (widen)
-      (goto-char (point-min))
-      (forward-line (min most-positive-fixnum
-                         (plist-get pos-plist :line)))
-      (unless (eobp) ;; if line was excessive leave point at eob
-        (let ((tab-width 1)
-              (col (plist-get pos-plist :character)))
-          (unless (wholenump col)
-            (message
-             "Caution: LSP server sent invalid character position %s. Using 0 instead."
-             col)
-            (setq col 0))
-          (eglot-lsp-abiding-column col)
-          ))
-      (if marker (copy-marker (point-marker)) (point)))))
 
 (defun lsp-bridge--point-position (pos)
   "Get position of POS."
