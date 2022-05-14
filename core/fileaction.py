@@ -287,18 +287,54 @@ class FileAction(object):
                     counter = 0
                     rename_files = []
 
-                    for rename_info in response_result["documentChanges"] if "documentChanges" in response_result else response_result["changes"]:
-                        (rename_file, rename_counter) = self.rename_symbol_in_file(rename_info)
-                        rename_files.append(rename_file)
-                        counter += rename_counter
+                    rename_infos = response_result["documentChanges"] if "documentChanges" in response_result else response_result["changes"]
+                    
+                    if type(rename_infos) == dict:
+                        # JSON struct is 'changes'
+                        for rename_info in rename_infos.items():
+                            (rename_file, rename_counter) = self.rename_symbol_in_file__changes(rename_info)
+                            rename_files.append(rename_file)
+                            counter += rename_counter
+                    else:
+                        # JSON struct is 'documentChanges'
+                        for rename_info in rename_infos:
+                            (rename_file, rename_counter) = self.rename_symbol_in_file__document_changes(rename_info)
+                            rename_files.append(rename_file)
+                            counter += rename_counter
 
                     eval_in_emacs("lsp-bridge-rename-finish", [rename_files, counter])
                 except:
                     logger.info("* Failed information about rename response.")
                     import traceback
                     traceback.print_exc()
+                    
+    def rename_symbol_in_file__changes(self, rename_info):
+        rename_file = rename_info[0]
+        if rename_file.startswith("file://"):
+            rename_file = uri_to_path(rename_file)
+        
+        lines = []
+        rename_counter = 0
+        
+        with open(rename_file, "r") as f:
+            lines = f.readlines()
 
-    def rename_symbol_in_file(self, rename_info):
+            line_offset_dict = {}
+
+            edits = rename_info[1]
+            for edit_info in edits:
+                # Get replace line.
+                replace_line = edit_info["range"]["start"]["line"]
+                lines[replace_line] = self.get_rename_line_content(edit_info, line_offset_dict, lines, replace_line)
+
+                rename_counter += 1
+
+        with open(rename_file, "w") as f:
+            f.writelines(lines)
+
+        return (rename_file, rename_counter)
+
+    def rename_symbol_in_file__document_changes(self, rename_info):
         rename_file = rename_info["textDocument"]["uri"]
         if rename_file.startswith("file://"):
             rename_file = uri_to_path(rename_file)
@@ -315,32 +351,7 @@ class FileAction(object):
             for edit_info in edits:
                 # Get replace line.
                 replace_line = edit_info["range"]["start"]["line"]
-
-                # Get current line offset, if previous edit is same as current line.
-                # We need add changed offset to make sure current edit has right column.
-                replace_line_offset = 0
-                if replace_line in line_offset_dict:
-                    replace_line_offset = line_offset_dict[replace_line]
-                else:
-                    line_offset_dict[replace_line] = 0
-
-                # Calculate replace column offset.
-                replace_column_start = edit_info["range"]["start"]["character"] + replace_line_offset
-                replace_column_end = edit_info["range"]["end"]["character"] + replace_line_offset
-
-                # Get current line.
-                line_content = lines[replace_line]
-
-                # Get new changed offset.
-                new_text = edit_info["newText"]
-                replace_offset = len(new_text) - (replace_column_end - replace_column_start)
-
-                # Overlapping new changed offset.
-                line_offset_dict[replace_line] = line_offset_dict[replace_line] + replace_offset
-
-                # Replace current line.
-                new_line_content = line_content[:replace_column_start] + new_text + line_content[replace_column_end:]
-                lines[replace_line] = new_line_content
+                lines[replace_line] = self.get_rename_line_content(edit_info, line_offset_dict, lines, replace_line)
 
                 rename_counter += 1
 
@@ -348,6 +359,34 @@ class FileAction(object):
             f.writelines(lines)
 
         return (rename_file, rename_counter)
+    
+    def get_rename_line_content(self, edit_info, line_offset_dict, lines, replace_line):
+        # Get current line offset, if previous edit is same as current line.
+        # We need add changed offset to make sure current edit has right column.
+        replace_line_offset = 0
+        if replace_line in line_offset_dict:
+            replace_line_offset = line_offset_dict[replace_line]
+        else:
+            line_offset_dict[replace_line] = 0
+
+        # Calculate replace column offset.
+        replace_column_start = edit_info["range"]["start"]["character"] + replace_line_offset
+        replace_column_end = edit_info["range"]["end"]["character"] + replace_line_offset
+
+        # Get current line.
+        line_content = lines[replace_line]
+
+        # Get new changed offset.
+        new_text = edit_info["newText"]
+        replace_offset = len(new_text) - (replace_column_end - replace_column_start)
+
+        # Overlapping new changed offset.
+        line_offset_dict[replace_line] = line_offset_dict[replace_line] + replace_offset
+
+        # Replace current line.
+        new_line_content = line_content[:replace_column_start] + new_text + line_content[replace_column_end:]
+        
+        return new_line_content
 
     def handle_hover_response(self, request_id, response_result):
         import linecache
