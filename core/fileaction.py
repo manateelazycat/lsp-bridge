@@ -169,10 +169,10 @@ class FileAction(object):
 
             if response_result is not None:
                 for item in response_result["items"] if "items" in response_result else response_result:
-                    completion_items.append(item["label"])
+                    completion_items.append(item["insertText"] if "insertText" in item else item["label"])
                     kind = KIND_MAP[item.get("kind", 0)]
                     candidate = {
-                        "label": item["label"],
+                        "label": completion_items[-1],
                         "kind": kind,
                         #  HACK: space makes the number of args for emacs wrong
                         "annotation": item.get("detail", kind).replace(" ", ""),
