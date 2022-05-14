@@ -44,7 +44,7 @@ class FileAction(object):
         # Build request functions.
         for name in ["find_define", "find_references", "prepare_rename", "rename", "completion", "hover"]:
             self.build_request_function(name)
-            
+
         # Init.
         self.filepath = filepath
         self.project_path = project_path
@@ -64,7 +64,8 @@ class FileAction(object):
 
         # Generate initialize request id.
         self.initialize_id = generate_request_id()
-        
+        self.enable_auto_import = get_emacs_var("lsp-bridge-enable-auto-import")
+
     def load_lang_server_info(self, lang_server):
         lang_server_info_path = ""
         if os.path.exists(lang_server) and os.path.sep in lang_server:
@@ -75,9 +76,9 @@ class FileAction(object):
             lang_server_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "langserver")
             lang_server_file_path_current = os.path.join(lang_server_dir, "{}_{}.json".format(lang_server, os.name))
             lang_server_file_path_default = os.path.join(lang_server_dir, "{}.json".format(lang_server))
-            
+
             lang_server_info_path = lang_server_file_path_current if os.path.exists(lang_server_file_path_current) else lang_server_file_path_default
-            
+
         with open(lang_server_info_path) as f:
             import json
             self.lang_server_info = json.load(f)
@@ -112,7 +113,7 @@ class FileAction(object):
     def change_cursor(self):
         # Record change cursor time.
         self.last_change_cursor_time = time.time()
-        
+
     def save_file(self):
         self.lsp_server.send_did_save_notification(self.filepath)
 
@@ -133,7 +134,7 @@ class FileAction(object):
 
         # Init request list variable.
         setattr(self, "{}_request_list".format(name), [])
-        
+
         # Init request method.
         setattr(self, name, _do)
 
@@ -165,15 +166,23 @@ class FileAction(object):
             kinds = []
             annotations = []
             documents = []
+            completion_candidates = []
 
             if response_result is not None:
                 for item in response_result["items"] if "items" in response_result else response_result:
                     completion_items.append(item["insertText"] if "insertText" in item else item["label"])
-                    kinds.append(KIND_MAP[item.get("kind", 0)])
-                    annotations.append(item.get("detail", kinds[-1]))
-                    annotations[-1] = annotations[-1].replace(" ", "") #  HACK: space makes the number of args for emacs wrong
-                    #  TODO: the situtation for documentation is complex
-                    # documents.append(item["documentation"] if "documentation" in item else "")
+                    kind = KIND_MAP[item.get("kind", 0)]
+                    candidate = {
+                        "label": completion_items[-1],
+                        "kind": kind,
+                        #  HACK: space makes the number of args for emacs wrong
+                        "annotation": item.get("detail", kind).replace(" ", ""),
+                        #  TODO: the situtation for documentation is complex
+                        # "documents": str(item.get("documentation", ""))
+                    }
+                    if (self.enable_auto_import):
+                        candidate["additionalTextEdits"] = item.get("additionalTextEdits", [])
+                    completion_candidates.append(candidate)
 
             # Calcuate completion common string.
             completion_common_string = os.path.commonprefix(completion_items)
@@ -182,10 +191,10 @@ class FileAction(object):
             if len(completion_items) == 1 and (self.completion_prefix_string == completion_common_string == completion_items[0]):
                 # Clear completion items if user input last completion item.
                 eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string,
-                                                                     completion_common_string, [], [], []])
+                                                                     completion_common_string, []])
             else:
                 eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string,
-                                                                     completion_common_string, completion_items, kinds, annotations])
+                                                                     completion_common_string, completion_candidates])
 
     def calc_completion_prefix_string(self):
         ret = self.last_change_file_before_cursor_text
