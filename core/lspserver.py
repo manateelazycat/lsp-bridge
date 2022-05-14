@@ -51,37 +51,6 @@ class LspBridgeListener(Thread):
         self.lsp_message_queue = lsp_message_queue
         self.previous_message_ending_length = None
 
-    def is_beginning_number(self, string):
-        text = re.compile(r"^[0-9].*")
-        return text.match(string)
-        
-    def is_end_number(self, string):
-        text = re.compile(r".*[0-9]$")
-        return text.match(string)
-
-    def emit_message(self, line):
-        if line != "":
-            try:
-                # Copy message with line.
-                message = line
-                
-                # Try strip string before char '{'.
-                if not message.startswith("{"):
-                    message = message[message.find("{"):]
-                
-                # Try strip string after char '}'.
-                if not message.endswith("}"):
-                    message = message[:message.rfind("}") + 1]
-            
-                # Send message.
-                self.lsp_message_queue.put({
-                    "name": "lsp_recv_message",
-                    "content": json.loads(message)
-                })
-                
-            except:
-                traceback.print_exc()
-
     def run(self):
         while self.process.poll() is None:
             try:
