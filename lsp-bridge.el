@@ -415,7 +415,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
            (string-empty-p (format "%s" (car list))))
       (and (eq (length list) 0))))
 
-(defun lsp-bridge-record-completion-items (filepath prefix common items kinds annotions)
+(defun lsp-bridge-record-completion-items (filepath prefix common items)
   ;; (message "*** '%s' '%s' '%s'" prefix common items)
 
   (lsp-bridge--with-file-buffer filepath
@@ -430,13 +430,6 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
              (lsp-bridge-is-empty-list items)
              ;; If last command is match `lsp-bridge-completion-stop-commands'
              (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands))
-      ;; Add kind and annotion information in completion item text.
-      (when (eq (length items) (length kinds))
-        (cl-mapcar (lambda (item value)
-                     (put-text-property 0 1 'kind value item)) items kinds))
-      (when (eq (length items) (length annotions))
-        (cl-mapcar (lambda (item value)
-                     (put-text-property 0 1 'annotation value item)) items annotions))
 
       ;; Try to popup completion frame.
       (when (and (not (lsp-bridge-is-blank-before-cursor-p prefix)) ;hide completion frame if only blank before cursor
@@ -455,21 +448,202 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
        ))
 
 (defun lsp-bridge-capf ()
-  (let ((bounds (bounds-of-thing-at-point 'symbol)))
-    (list (or (car bounds) (point))
-          (or (cdr bounds) (point))
-          lsp-bridge-completion-items
-          :exclusive 'no
-          :company-kind
-          (lambda (candidate)
-            "Set icon here"
-            (let ((kind (get-text-property 0 'kind candidate)))
-              (and kind
-                   (intern (downcase kind)))))
-          :annotation-function
-          (lambda (candidate)
-            "Extract annotation from CANDIDATE."
-            (concat "   " (get-text-property 0 'annotation candidate))))))
+  "Capf function similar to eglot's 'eglot-completion-at-point'."
+  (let* ((sort-completions
+          (lambda (completions)
+            (cl-sort completions
+                     #'string-lessp
+                     :key (lambda (c)
+                            (or (plist-get
+                                 (get-text-property 0 'lsp-bridge--lsp-item c)
+                                 :sortText)
+                                "")))))
+         resp items (cached-proxies :none)
+         (proxies
+          (lambda ()
+            (if (listp cached-proxies) cached-proxies
+              (setq items lsp-bridge-completion-items)
+              (setq cached-proxies
+                    (mapcar
+                     (lambda (item)
+                       (let* ((label (plist-get item :label))
+                              (insertText (or (plist-get item :insertText) ""))
+                              (insertTextFormat (plist-get item :insertTextFormat))
+                              (proxy
+                               (cond ((and (eql insertTextFormat 2)
+                                           nil)
+                                      (string-trim-left label))
+                                     ((and insertText
+                                           (not (string-empty-p insertText)))
+                                      insertText)
+                                     (t
+                                      (string-trim-left label)))))
+                         (unless (zerop (length proxy))
+                           (put-text-property 0 1 'lsp-bridge--lsp-item item proxy))
+                         proxy))
+                     items)))))
+         (resolved (make-hash-table))
+         (bounds (bounds-of-thing-at-point 'symbol)))
+    (list
+     (or (car bounds) (point))
+     (or (cdr bounds) (point))
+     (lambda (probe pred action)
+       (cond
+        ;; ((eq action 'metadata) metadata)               ; metadata
+        ((eq action 'lambda)                           ; test-completion
+         (test-completion probe (funcall proxies)))
+        ((eq (car-safe action) 'boundaries) nil)       ; boundaries
+        ((null action)                                 ; try-completion
+         (try-completion probe (funcall proxies)))
+        ((eq action t)                                 ; all-completions
+         (all-completions
+          ""
+          (funcall proxies)
+          (lambda (proxy)
+            (let* ((item (get-text-property 0 'lsp-bridge--lsp-item proxy))
+                   (filterText (plist-get item :filterText)))
+              (and (or (null pred) (funcall pred proxy))
+                   (string-prefix-p
+                    probe (or filterText proxy) completion-ignore-case))))))))
+     :annotation-function
+     (lambda (candidate)
+       (let* ((item (get-text-property 0 'lsp-bridge--lsp-item candidate))
+              (annotation (plist-get item :annotation)))
+         (when annotation
+           (concat " "
+                   (propertize annotation
+                               'face 'font-lock-function-name-face)))))
+     :company-kind
+     ;; Associate each lsp-item with a lsp-kind symbol.
+     (lambda (candidate)
+       (when-let* ((lsp-item (get-text-property 0 'lsp-bridge--lsp-item candidate))
+                   (kind (plist-get lsp-item :kind)))
+         (intern (downcase kind))))
+     :company-deprecated
+     (lambda (candidate)
+       (when-let ((lsp-item (get-text-property 0 'lsp-bridge--lsp-item candidate)))
+         (or (seq-contains-p (plist-get lsp-item :tags)
+                             1)
+             (eq t (plist-get lsp-item :deprecated)))))
+     :company-require-match 'never
+     :exit-function
+     (lambda (candidate status)
+       (when (memq status '(finished exact))
+         (with-current-buffer
+             (if (minibufferp) (window-buffer (minibuffer-selected-window))
+               (current-buffer))
+           (let* ((item (get-text-property 0 'lsp-bridge--lsp-item (cl-find candidate (funcall proxies) :test #'string=)))
+                  (additionalTextEdits (plist-get item :additionalTextEdits)))
+             (when (cl-plusp (length additionalTextEdits))
+               (lsp-bridge--apply-text-edits additionalTextEdits)))))))))
+
+;; Copy from eglot
+(defun lsp-bridge--apply-text-edits (edits &optional version)
+  (let* ((change-group (prepare-change-group))
+         (howmany (length edits))
+         (done 0))
+    (mapc (pcase-lambda (`(,newText ,beg . ,end))
+            (let ((source (current-buffer)))
+              (with-temp-buffer
+                (insert newText)
+                (let ((temp (current-buffer)))
+                  (with-current-buffer source
+                    (save-excursion
+                      (save-restriction
+                        (narrow-to-region beg end)
+
+                        ;; On emacs versions < 26.2,
+                        ;; `replace-buffer-contents' is buggy - it calls
+                        ;; change functions with invalid arguments - so we
+                        ;; manually call the change functions here.
+                        ;;
+                        ;; See emacs bugs #32237, #32278:
+                        ;; https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32237
+                        ;; https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32278
+                        (let ((inhibit-modification-hooks t)
+                              (length (- end beg))
+                              (beg (marker-position beg))
+                              (end (marker-position end)))
+                          (run-hook-with-args 'before-change-functions
+                                              beg end)
+                          (replace-buffer-contents temp)
+                          (run-hook-with-args 'after-change-functions
+                                              beg (+ beg (length newText))
+                                              length))))
+                    (cl-incf done)
+                    )))))
+          (mapcar
+           (lambda (edit) ()
+             (let* ((range (plist-get edit :range))
+                    (newText (plist-get edit :newText)))
+               (cons newText (lsp-bridge--range-region range 'markers))
+               )
+             )
+           (reverse edits)
+           )
+          )
+    (undo-amalgamate-change-group change-group)
+    ))
+
+;; Copy from eglot
+(defun lsp-bridge--range-region (range &optional markers)
+  "Return region (BEG . END) that represents LSP RANGE.
+If optional MARKERS, make markers."
+  (let* ((st (plist-get range :start))
+         (beg (lsp-bridge--lsp-position-to-point st markers))
+         (end (lsp-bridge--lsp-position-to-point (plist-get range :end) markers)))
+    (cons beg end)))
+
+;; Copy from eglot
+(defun lsp-bridge--lsp-position-to-point (pos-plist &optional marker)
+  "Convert LSP position POS-PLIST to Emacs point.
+If optional MARKER, return a marker instead"
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (forward-line (min most-positive-fixnum
+                         (plist-get pos-plist :line)))
+      (unless (eobp) ;; if line was excessive leave point at eob
+        (let ((tab-width 1)
+              (col (plist-get pos-plist :character)))
+          (unless (wholenump col)
+            (message
+             "Caution: LSP server sent invalid character position %s. Using 0 instead."
+             col)
+            (setq col 0))
+          (lsp--bridge-move-to-column col)
+          ))
+      (if marker (copy-marker (point-marker)) (point)))))
+
+;; Copy from eglot
+(defun lsp--bridge-move-to-column (column)
+  "Move to COLUMN without closely following the LSP spec."
+  ;; We cannot use `move-to-column' here, because it moves to *visual*
+  ;; columns, which can be different from LSP columns in case of
+  ;; `whitespace-mode', `prettify-symbols-mode', etc.  (github#296,
+  ;; github#297)
+  (goto-char (min (+ (line-beginning-position) column)
+                  (line-end-position))))
+
+(defun lsp-bridge-point-row (pos)
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (forward-line (min most-positive-fixnum
+                         (plist-get pos-plist :line)))
+      (unless (eobp) ;; if line was excessive leave point at eob
+        (let ((tab-width 1)
+              (col (plist-get pos-plist :character)))
+          (unless (wholenump col)
+            (message
+             "Caution: LSP server sent invalid character position %s. Using 0 instead."
+             col)
+            (setq col 0))
+          (eglot-lsp-abiding-column col)
+          ))
+      (if marker (copy-marker (point-marker)) (point)))))
 
 (defun lsp-bridge--point-position (pos)
   "Get position of POS."
