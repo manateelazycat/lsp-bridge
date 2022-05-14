@@ -688,17 +688,12 @@ If optional MARKER, return a marker instead"
   (set-marker (mark-marker) (point) (current-buffer))
   (add-to-history 'lsp-bridge-mark-ring (copy-marker (mark-marker)) lsp-bridge-mark-ring-max t)
 
-  ;; Show define in other window if `lsp-bridge-jump-to-def-in-other-window' is non-nil.
-  (when lsp-bridge-jump-to-def-in-other-window
-    (when (< (length (cl-remove-if #'window-dedicated-p (window-list))) 2) ;we need remove dedicated window, such as sort-tab window
-      (split-window-below))
-
-    (ignore-errors
-      (dotimes (i 50)
-        (windmove-down))))
-
   ;; Jump to define.
-  (find-file filepath)
+  ;; Show define in other window if `lsp-bridge-jump-to-def-in-other-window' is non-nil.
+  (if lsp-bridge-jump-to-def-in-other-window
+      (find-file-other-window filepath)
+    (find-file filepath))
+
   (goto-line (1+ row))
   (move-to-column column)
 
