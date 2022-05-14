@@ -63,38 +63,38 @@ class LspBridgeListener(Thread):
                 traceback.print_exc()
 
     def run(self):
-        contentLength = None
+        content_length = None
         buffer = bytearray()
         while self.process.poll() is None:
             try:
-                if contentLength is None:
-                    m = re.search(b"Content-Length: [0-9]+\r\n\r\n", buffer)
-                    if m is not None:
-                        end = m.end()
-                        parts = m.group(0).decode("utf-8").strip().split(": ")
-                        contentLength = int(parts[1])
+                if content_length is None:
+                    match = re.search(b"Content-Length: [0-9]+\r\n\r\n", buffer)
+                    if match is not None:
+                        end = match.end()
+                        parts = match.group(0).decode("utf-8").strip().split(": ")
+                        content_length = int(parts[1])
 
                         buffer = buffer[end:]
                     else:
                         line = self.process.stdout.readline()
                         buffer = buffer + line
                 else:
-                    if len(buffer) < contentLength:
+                    if len(buffer) < content_length:
                         # 这个检查算是个防御吧，实际应该用不到了。先保留，后续再看。
-                        m = re.search(b"Content-Length: [0-9]+\r\n\r\n", buffer)
-                        if m is not None:
-                            start = m.start()
+                        match = re.search(b"Content-Length: [0-9]+\r\n\r\n", buffer)
+                        if match is not None:
+                            start = match.start()
                             msg = buffer[0:start]
                             buffer = buffer[start :]
-                            contentLength = None
+                            content_length = None
                             self.emit_message(msg.decode("utf-8"))
                         else:
-                            line = self.process.stdout.readline(contentLength - len(buffer))
+                            line = self.process.stdout.readline(content_length - len(buffer))
                             buffer = buffer + line
                     else:
-                        msg = buffer[0 : contentLength]
-                        buffer = buffer[contentLength :]
-                        contentLength = None
+                        msg = buffer[0 : content_length]
+                        buffer = buffer[content_length :]
+                        content_length = None
                         self.emit_message(msg.decode("utf-8"))
             except:
                 traceback.print_exc()
