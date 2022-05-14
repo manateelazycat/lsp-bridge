@@ -1,5 +1,5 @@
 {
-    "name": "erlang_ls",
+    "name": "erlang-ls",
     "languageId": "erlang",
     "command": ["erlang_ls", "--transport", "stdio"],
     "settings": {}

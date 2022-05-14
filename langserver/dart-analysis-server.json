@@ -1,5 +1,5 @@
 {
-  "name": "dart_analysis_server",
+  "name": "dart-analysis-server",
   "languageId": "dart",
   "command": ["dart", "language-server", "--client-id", "emacs.lsp-bridge"],
   "settings": {}

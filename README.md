@@ -107,11 +107,11 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 5. elixirLS (elixir) Note: please ensure export `elixir-ls` release directory in your system PATH at first.
 6. gopls (go)
 7. hls (haskell)
-8. dart_analysis_server (dart)
+8. dart-analysis-server (dart)
 9. metals (scala)
 10. typescript (typescript, javascript)
 11. ocamllsp (ocaml)
-12. erlang_ls (erlang)
+12. erlang-ls (erlang)
 13. texlab (latex)
 14. eclipse.jdt.ls (java) Note: please ensure export `org.eclipse.jdt.ls.product/target/repository/bin` in your system PATH at first.
 15. clojure-lsp (clojure)
