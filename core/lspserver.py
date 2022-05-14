@@ -203,7 +203,7 @@ class LspServer(object):
         self.p = subprocess.Popen(self.server_info["command"],
                                   bufsize=DEFAULT_BUFFER_SIZE,
                                   stdin=PIPE, stdout=PIPE, stderr=stderr)
-        
+
         # Notify user server is start.
         eval_in_emacs("message", ["[LSP-Bridge] Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path)])
 
@@ -278,7 +278,7 @@ class LspServer(object):
                                           "uri": path_to_uri(filepath)
                                       }
                                   })
-        
+
     def send_did_change_notification(self, filepath, version, start, end, range_length, text):
         # STEP 5: Tell LSP server file content is changed.
         # This step is very IMPORTANT, make sure LSP server contain same content as client,
@@ -352,6 +352,19 @@ class LspServer(object):
                              },
                              request_id)
 
+    def send_find_implementation_request(self, request_id, filepath, type, position):
+        method = "textDocument/implementation"
+        self.record_request_id(request_id, method, filepath, type)
+
+        self.send_to_request(method,
+                             {
+                                 "textDocument": {
+                                     "uri": path_to_uri(filepath)
+                                 },
+                                 "position": position,
+                             },
+                             request_id)
+
     def send_find_references_request(self, request_id, filepath, type, positon):
         method = "textDocument/references"
         self.record_request_id(request_id, method, filepath, type)
@@ -394,7 +407,7 @@ class LspServer(object):
                                  "newName": new_name
                              },
                              request_id)
-        
+
     def send_hover_request(self, request_id, filepath, type, position):
         method = "textDocument/hover"
         self.record_request_id(request_id, method, filepath, type)
@@ -456,11 +469,11 @@ class LspServer(object):
                 # We need wait LSP server response 'initialize', then we send 'initialized' notification.
                 try:
                     # We pick up completion trigger characters from server.
-                    # But some LSP server haven't this value, such as html/css LSP server. 
+                    # But some LSP server haven't this value, such as html/css LSP server.
                     self.completion_trigger_characters = message["result"]["capabilities"]["completionProvider"]["triggerCharacters"]
                 except:
                     pass
-                
+
                 self.send_to_notification("initialized", {})
             else:
                 if "method" not in message.keys() and message["id"] in self.request_dict:
@@ -486,7 +499,7 @@ class LspServer(object):
             # We need send 'textDocument/didOpen' notification,
             # then LSP server will return file information, such as completion, find-define, find-references and rename etc.
             self.send_did_open_notification(self.first_file_path)
-            
+
             # Notify user server is ready.
             eval_in_emacs("message", ["[LSP-Bridge] Start LSP server ({}) for {} complete, enjoy hacking!".format(self.server_info["name"], self.root_path)])
         elif name == "textDocument/didOpen":
