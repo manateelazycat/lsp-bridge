@@ -657,6 +657,12 @@ If optional MARKER, return a marker instead"
 
 (defun lsp-bridge-find-impl ()
   (interactive)
+  (setq-local lsp-bridge-jump-to-def-in-other-window nil)
+  (lsp-bridge-call-async "find_implementation" lsp-bridge-filepath (lsp-bridge--position)))
+
+(defun lsp-bridge-find-impl-other-window ()
+  (interactive)
+  (setq-local lsp-bridge-jump-to-def-in-other-window t)
   (lsp-bridge-call-async "find_implementation" lsp-bridge-filepath (lsp-bridge--position)))
 
 (defun lsp-bridge-find-references ()
