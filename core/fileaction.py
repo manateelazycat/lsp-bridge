@@ -74,7 +74,7 @@ class FileAction(object):
         else:
             # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
             lang_server_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "langserver")
-            lang_server_file_path_current = os.path.join(lang_server_dir, "{}_{}.json".format(lang_server, os.name))
+            lang_server_file_path_current = os.path.join(lang_server_dir, "{}_{}.json".format(lang_server, get_os_name()))
             lang_server_file_path_default = os.path.join(lang_server_dir, "{}.json".format(lang_server))
 
             lang_server_info_path = lang_server_file_path_current if os.path.exists(lang_server_file_path_current) else lang_server_file_path_default
