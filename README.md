@@ -114,11 +114,6 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 16. bash-language-server (bash)
 17. volar (vue)
 
-## Todo
-
-- [ ] Popup web document window by [Popweb](https://github.com/manateelazycat/popweb)
-- [ ] To support more LSP servers
-
 ## Report bug
 
 Please use `emacs -q` and load a minimal setup with only lsp-bridge to verify that the bug is reproducible. If `emacs -q` works fine, probably something is wrong with your Emacs config.
