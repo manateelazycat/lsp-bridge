@@ -331,37 +331,40 @@ class FileAction(object):
         import linecache
 
         if request_id == self.hover_request_list[-1]:
-            if "range" in response_result and "contents" in response_result:
+            if (response_result is not None and
+                "range" in response_result and
+                "contents" in response_result):
                 line = response_result["range"]["start"]["line"]
                 start_column = response_result["range"]["start"]["character"]
                 end_column = response_result["range"]["end"]["character"]
 
                 line_content = linecache.getline(self.filepath, line + 1)
                 contents = response_result["contents"]
-                (kind, value) = self.parse_hover_contents(contents)
+                render_string = self.parse_hover_contents(contents, [])
 
-                eval_in_emacs("lsp-bridge-popup-documentation", [kind,
+                eval_in_emacs("lsp-bridge-popup-documentation", ["",
                                                                  line_content[start_column:end_column],
-                                                                 value])
+                                                                 render_string])
             else:
                 eval_in_emacs("message", ["[LSP-Bridge] No documentation here."])
 
-    def parse_hover_contents(self, contents, kind = "", value = ""):
+    def parse_hover_contents(self, contents, render_strings):
         content_type = type(contents)
         if content_type == str:
-            kind = ""
-            value += contents
+            render_strings.append(self.make_code_block("text", contents))
         elif content_type == dict:
             if "kind" in contents:
-                kind = contents["kind"]
+                if contents["kind"] == "markdown":
+                    render_strings.append(contents["value"])
+                else:
+                    render_strings.append(self.make_code_block(self.lang_server_info["languageId"], contents["value"]))
             elif "language" in contents:
-                kind = contents["language"]
-            value += contents["value"]
+                render_strings.append(self.make_code_block(contents["language"], contents["value"]))
         elif content_type == list:
             for item in contents:
-                (k, v) = self.parse_hover_contents(item)
-                if kind == "" and k != "":
-                    kind = k
-                value += v + "\n"
+                if item != "":
+                    self.parse_hover_contents(item, render_strings)
+        return "\n".join(render_strings)
 
-        return (kind, value)
+    def make_code_block(self, language, string):
+        return "```{language}\n{string}\n```".format(language=language, string=string)

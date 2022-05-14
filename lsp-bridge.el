@@ -112,7 +112,7 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'float
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-lookup-doc-tooltip-border-width 20
+(defcustom lsp-bridge-lookup-doc-tooltip-border-width 8
   "The border width of lsp-bridge hover tooltip, in pixels."
   :type 'integer
   :group 'lsp-bridge)
@@ -601,23 +601,26 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (pulse-momentary-highlight-one-line (point) 'lsp-bridge-font-lock-flash)))
 
 (defun lsp-bridge-popup-documentation (kind name value)
-  (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode)))
-         (background-color (if (string-equal theme-mode "dark")
-                               "#191a1b"
-                             "#f0f0f0")))
+  (let* ((background-color (face-attribute 'default :background)))
     (with-current-buffer (get-buffer-create lsp-bridge-lookup-doc-tooltip)
       (erase-buffer)
       (text-scale-set lsp-bridge-lookup-doc-tooltip-text-scale)
-      (insert (propertize name 'face 'font-lock-function-name-face))
-      (insert "\n\n")
-      (insert (propertize value 'face 'font-lock-doc-face)))
+      (setq-local markdown-fontify-code-blocks-natively t)
+      (insert value)
+      (gfm-view-mode)
+      (font-lock-ensure))
     (when (posframe-workable-p)
       (posframe-show lsp-bridge-lookup-doc-tooltip
                      :position (point)
                      :internal-border-width lsp-bridge-lookup-doc-tooltip-border-width
                      :background-color background-color
                      :max-width lsp-bridge-lookup-doc-tooltip-max-width
-                     :max-height lsp-bridge-lookup-doc-tooltip-max-height))))
+                     :max-height lsp-bridge-lookup-doc-tooltip-max-height)
+      (unwind-protect
+        (push (read-event) unread-command-events)
+      (progn
+        (posframe-delete lsp-bridge-lookup-doc-tooltip)
+        (other-frame 0))))))
 
 (defun lsp-bridge-hide-doc-tooltip ()
   (posframe-hide lsp-bridge-lookup-doc-tooltip))
