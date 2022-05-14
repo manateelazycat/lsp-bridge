@@ -114,6 +114,9 @@ class SendRequest(Thread):
         self.id = id
 
     def run(self):
+        if self.process.returncode is not None:
+            return
+
         message_dict = {}
         message_dict["jsonrpc"] = "2.0"
         message_dict["method"] = self.name
@@ -141,6 +144,9 @@ class SendNotification(Thread):
         self.params = params
 
     def run(self):
+        if self.process.returncode is not None:
+            return
+
         message_dict = {}
         message_dict["jsonrpc"] = "2.0"
         message_dict["method"] = self.name
@@ -172,6 +178,9 @@ class SendResponse(Thread):
         self.result = result
 
     def run(self):
+        if self.process.returncode is not None:
+            return
+
         message_dict = {}
         message_dict["jsonrpc"] = "2.0"
         message_dict["id"] = self.id
