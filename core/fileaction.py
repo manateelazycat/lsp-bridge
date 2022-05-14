@@ -167,26 +167,38 @@ class FileAction(object):
             annotations = []
             documents = []
             completion_candidates = []
-
+            
             if response_result is not None:
                 for item in response_result["items"] if "items" in response_result else response_result:
-                    completion_items.append(item["insertText"] if "insertText" in item else item["label"])
+                    label = item.get("insertText", item["label"]).strip()
+                    
+                    # We need replace prefix string with textEdit character diff if we use insertText as candidate.
+                    try:
+                        if ("insertText" in item and
+                            "textEdit" in item and
+                            "insertTextFormat" in item and
+                            item["insertTextFormat"] == 1):
+                            replace_range = item["textEdit"]["range"]["end"]["character"] - item["textEdit"]["range"]["start"]["character"]
+                            label = label[replace_range:]
+                    except:
+                        pass
+                    
+                    completion_items.append(label)
                     kind = KIND_MAP[item.get("kind", 0)]
                     candidate = {
-                        "label": completion_items[-1],
+                        "label": label,
                         "kind": kind,
-                        #  HACK: space makes the number of args for emacs wrong
                         "annotation": item.get("detail", kind).replace(" ", ""),
-                        #  TODO: the situtation for documentation is complex
-                        # "documents": str(item.get("documentation", ""))
                     }
+                    
                     if (self.enable_auto_import):
                         candidate["additionalTextEdits"] = item.get("additionalTextEdits", [])
+                        
                     completion_candidates.append(candidate)
 
             # Calcuate completion common string.
             completion_common_string = os.path.commonprefix(completion_items)
-
+            
             # Push completion items to Emacs.
             if len(completion_items) == 1 and (self.completion_prefix_string == completion_common_string == completion_items[0]):
                 # Clear completion items if user input last completion item.
@@ -195,7 +207,7 @@ class FileAction(object):
             else:
                 eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string,
                                                                      completion_common_string, completion_candidates])
-
+                
     def calc_completion_prefix_string(self):
         ret = self.last_change_file_before_cursor_text
         for c in self.lsp_server.completion_trigger_characters + [" " + '\t']:
