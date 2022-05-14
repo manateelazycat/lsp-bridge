@@ -43,6 +43,7 @@ class LspBridgeListener(Thread):
         Thread.__init__(self)
 
         self.process = process
+        self.reader = io.BufferedReader(io.FileIO(self.process.stdout.fileno()))
         self.lsp_message_queue = lsp_message_queue
         self.previous_message_ending_length = None
 
@@ -74,59 +75,42 @@ class LspBridgeListener(Thread):
                     "content": json.loads(message)
                 })
                 
-                # Record content length for next line.
-                self.previous_message_ending_length = int(line[line.rfind(":") + 1:]) if self.is_end_number(line) else None
             except:
                 traceback.print_exc()
 
-    def parse_content_length_message(self, length):
-        second_line = self.process.stdout.readline().strip()
-        if self.is_beginning_number(second_line):
-            # If second line is start with number, it means that the previous message was cut into two halves because the size of the buffer.
-            # So we need read the remaining length characters in the second line, and skip the third line.
-            old_length = length
-            length = int(str(length) + second_line)
-            logger.debug("### Adjust length from {} to {}".format(old_length, length))
-            
-            # Drop third empty line.
-            third_line = self.process.stdout.readline().strip()
-
-            if third_line != "":
-                logger.debug("### NOTE: It's a bug, third line should be empty line: '{}'".format(third_line))
-        else:
-            # Drop second empty line.
-            if second_line != "":
-                logger.error("### NOTE: It's a bug, second line should be empty line: '{}'".format(second_line))
-            else:
-                logger.debug("### recv 2, skip empty line")
-        
-        # Read message by given length.
-        message = self.process.stdout.readline(length).strip()
-        logger.debug("### recv 3: %s", message)
-        self.emit_message(message)
-            
     def run(self):
         while self.process.poll() is None:
             try:
-                # Continue to parse content by previous message ending length.
-                if self.previous_message_ending_length != None:
-                    self.parse_content_length_message(self.previous_message_ending_length)
-                else:
-                    line = self.process.stdout.readline().strip()
-                    
-                    logger.debug("### recv 1: %s", line)
-                
-                    # Parse next line if current line is empty line.
-                    if line == "":
-                        self.emit_message(self.process.stdout.readline().strip())
-                    # Continue to parse content by current line length. 
-                    elif self.is_end_number(line):
-                        self.parse_content_length_message(int(line[line.rfind(":") + 1:]))
-                    # Parse current line if it's not empty line and not ending with line number.
-                    else:
-                        self.emit_message(line)
+                # Forward to Content-Length.
+                while self.reader.peek()[0] != ord('C'):
+                    self.reader.read(1)
+
+                # Read Content-Length
+                line = self.reader.readline()
+                logger.debug('READ LINE: ' + repr(line))
+                length = int(line[line.rfind(b":") + 1:].strip())
+                self.reader.readline()
+                message = self.reader.read(length)
+
+                # Make sure the message is intact
+                if len(message) != length:
+                    logger.info('The server has died before we can receive a complete message')
+                    break
+
+                # The message is good.
+                message = message.decode()
+                logger.debug('### recv: %s', message)
+                self.lsp_message_queue.put({
+                    'name': 'lsp_recv_message',
+                    'content': json.loads(message)
+                })
+
             except:
                 traceback.print_exc()
+
+        # Poll again to update the returncode.
+        self.process.poll()
+
         logger.info("\n--- Lsp server exited, exit code: {}".format(self.process.returncode))
         logger.info(self.process.stdout.read())
         if self.process.stderr:
