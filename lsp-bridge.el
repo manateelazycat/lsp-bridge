@@ -604,8 +604,16 @@ If optional MARKER, return a marker instead"
 
 (defalias 'lsp-bridge-find-define #'lsp-bridge-find-def)
 
+(defvar-local lsp-bridge-jump-to-def-in-other-window nil)
+
 (defun lsp-bridge-find-def ()
   (interactive)
+  (setq-local lsp-bridge-jump-to-def-in-other-window nil)
+  (lsp-bridge-call-async "find_define" lsp-bridge-filepath (lsp-bridge--position)))
+
+(defun lsp-bridge-find-def-other-window ()
+  (interactive)
+  (setq-local lsp-bridge-jump-to-def-in-other-window t)
   (lsp-bridge-call-async "find_define" lsp-bridge-filepath (lsp-bridge--position)))
 
 (defun lsp-bridge-return-from-def ()
@@ -676,11 +684,25 @@ If optional MARKER, return a marker instead"
 
 (defun lsp-bridge--jump-to-def (filepath row column)
   (interactive)
+  ;; Record postion.
   (set-marker (mark-marker) (point) (current-buffer))
   (add-to-history 'lsp-bridge-mark-ring (copy-marker (mark-marker)) lsp-bridge-mark-ring-max t)
+
+  ;; Show define in other window if `lsp-bridge-jump-to-def-in-other-window' is non-nil.
+  (when lsp-bridge-jump-to-def-in-other-window
+    (when (< (length (cl-remove-if #'window-dedicated-p (window-list))) 2) ;we need remove dedicated window, such as sort-tab window
+      (split-window-below))
+
+    (ignore-errors
+      (dotimes (i 50)
+        (windmove-down))))
+
+  ;; Jump to define.
   (find-file filepath)
   (goto-line (1+ row))
   (move-to-column column)
+
+  ;; Flash define line.
   (require 'pulse)
   (let ((pulse-iterations 1)
         (pulse-delay lsp-bridge-flash-line-delay))
