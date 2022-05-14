@@ -170,7 +170,7 @@ class FileAction(object):
             
             if response_result is not None:
                 for item in response_result["items"] if "items" in response_result else response_result:
-                    label = item.get("insertText", item["label"]).strip()
+                    insertText = item.get("insertText", item["label"]).strip()
                     
                     # We need replace prefix string with textEdit character diff if we use insertText as candidate.
                     try:
@@ -179,14 +179,15 @@ class FileAction(object):
                             "insertTextFormat" in item and
                             item["insertTextFormat"] == 1):
                             replace_range = item["textEdit"]["range"]["end"]["character"] - item["textEdit"]["range"]["start"]["character"]
-                            label = label[replace_range:]
+                            insertText = insertText[replace_range:]
                     except:
                         pass
                     
-                    completion_items.append(label)
+                    completion_items.append(insertText)
                     kind = KIND_MAP[item.get("kind", 0)]
                     candidate = {
-                        "label": label,
+                        "label": item["label"],
+                        "insertText": insertText,
                         "kind": kind,
                         "annotation": item.get("detail", kind).replace(" ", ""),
                     }
