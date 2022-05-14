@@ -2,7 +2,8 @@
     "name": "hls",
     "languageId": "haskell",
     "command": [
-        "haskell-language-server-wrapper"
+        "haskell-language-server-wrapper",
+        "lsp"
     ],
     "settings": {}
 }
