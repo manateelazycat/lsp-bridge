@@ -116,6 +116,8 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 16. bash-language-server (bash)
 17. volar (vue)
 18. sumneko (lua) Note: please ensure export `bin` under sumneko installation in your system PATH at first.
+19. wxml-language-server (wxml)
+20. vscode-html-language-server (html)
 
 ## Report bug
 
