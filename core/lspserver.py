@@ -87,7 +87,7 @@ class LspBridgeListener(Thread):
 
                 # Read Content-Length
                 line = self.reader.readline()
-                logger.debug('READ LINE: ' + repr(line))
+                logger.debug('### content-length: ' + repr(line))
                 length = int(line[line.rfind(b":") + 1:].strip())
                 self.reader.readline()
                 message = self.reader.read(length)
