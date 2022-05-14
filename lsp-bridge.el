@@ -127,6 +127,11 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'integer
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-enable-auto-import t
+  "Whether to enable auto-import."
+  :type 'boolean
+  :group 'lsp-bridge)
+
 (defface lsp-bridge-font-lock-flash
   '((t (:inherit highlight)))
   "Face to flash the current line."
@@ -487,7 +492,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
            ;; buffer, `candidate' won't have any properties.
            ;; A lookup should fix that (github#148)
            (let* ((item (get-text-property 0 'lsp-bridge--lsp-item (cl-find candidate candidates :test #'string=)))
-                  (additionalTextEdits (plist-get item :additionalTextEdits)))
+                  (additionalTextEdits (if lsp-bridge-enable-auto-import (plist-get item :additionalTextEdits) nil)))
              (when (cl-plusp (length additionalTextEdits))
                (lsp-bridge--apply-text-edits additionalTextEdits)))))))))
 

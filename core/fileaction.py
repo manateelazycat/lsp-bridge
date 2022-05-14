@@ -64,6 +64,7 @@ class FileAction(object):
 
         # Generate initialize request id.
         self.initialize_id = generate_request_id()
+        self.enable_auto_import = get_emacs_var("lsp-bridge-enable-auto-import")
 
     def load_lang_server_info(self, lang_server):
         lang_server_info_path = ""
@@ -176,10 +177,11 @@ class FileAction(object):
                         "kind": kind,
                         #  HACK: space makes the number of args for emacs wrong
                         "annotation": item.get("detail", kind).replace(" ", ""),
-                        "additionalTextEdits": item.get("additionalTextEdits", []),
                         #  TODO: the situtation for documentation is complex
                         # "documents": str(item.get("documentation", ""))
                     }
+                    if (self.enable_auto_import):
+                        candidate["additionalTextEdits"] = item.get("additionalTextEdits", [])
                     completion_candidates.append(candidate)
 
             # Calcuate completion common string.
