@@ -32,6 +32,10 @@ import subprocess
 import threading
 import traceback
 
+
+DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
+
+
 class JsonEncoder(json.JSONEncoder):
 
     def default(self, o): # pylint: disable=E0202
@@ -43,7 +47,7 @@ class LspBridgeListener(Thread):
         Thread.__init__(self)
 
         self.process = process
-        self.reader = io.BufferedReader(io.FileIO(self.process.stdout.fileno()))
+        self.reader = io.BufferedReader(io.FileIO(self.process.stdout.fileno()), buffer_size=DEFAULT_BUFFER_SIZE)
         self.lsp_message_queue = lsp_message_queue
         self.previous_message_ending_length = None
 
@@ -229,7 +233,7 @@ class LspServer(object):
 
         # Start LSP sever.
         self.p = subprocess.Popen(self.server_info["command"],
-                                  bufsize=100000000, # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
+                                  bufsize=DEFAULT_BUFFER_SIZE,
                                   stdin=PIPE, stdout=PIPE, stderr=stderr)
         
         # Notify user server is start.
