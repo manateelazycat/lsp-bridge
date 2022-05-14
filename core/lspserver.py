@@ -282,7 +282,7 @@ class LspServer(object):
             "rootPath": self.root_path,
             "clientInfo": {
                 "name": "emacs",
-                "version": "GNU Emacs 28.1 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.24.33, cairo version 1.17.6)\n of 2022-04-04"
+                "version": get_emacs_version()
             },
             "rootUri": path_to_uri(self.project_path),
             "capabilities": self.server_info.get("capabilities", {}),

@@ -173,3 +173,12 @@ def get_project_path(filepath):
     else:
         return filepath
     
+emacs_version = None
+
+def get_emacs_version():
+    global emacs_version
+    
+    if emacs_version is None:
+        return get_emacs_func_result("get-emacs-version", [])
+    else:
+        return emacs_version
