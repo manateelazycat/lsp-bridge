@@ -63,7 +63,7 @@ class LspBridgeListener(Thread):
                     "name": "lsp_recv_message",
                     "content": json.loads(line)
                 })
-                
+
             except:
                 traceback.print_exc()
 
@@ -82,7 +82,10 @@ class LspBridgeListener(Thread):
                         buffer = buffer[end:]
                     else:
                         line = self.process.stdout.readline()
-                        buffer = buffer + line
+                        # dart_analysis_server 会发送 Content-Type,
+                        # 导致解析的 json 回包内容不完整
+                        if re.search(b"Content-Type", line) is None:
+                            buffer = buffer + line
                 else:
                     if len(buffer) < content_length:
                         # 这个检查算是个防御吧，实际应该用不到了。先保留，后续再看。
@@ -227,11 +230,20 @@ class LspServer(object):
 
         # LSP server information.
         self.completion_trigger_characters = list()
+        
+        # Start LSP server process.
+        self.start_lsp_server_process()
 
+    def start_lsp_server_process(self):
         # Start LSP sever.
-        self.p = subprocess.Popen(self.server_info["command"],
-                                  bufsize=DEFAULT_BUFFER_SIZE,
-                                  stdin=PIPE, stdout=PIPE, stderr=stderr)
+        try:
+            self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
+        except FileNotFoundError:
+            eval_in_emacs("message", ["LSP-Bridge] ERROR: start LSP server {} failed, not found file '{}'".format(
+                self.server_info["name"], self.server_info["command"][0]
+            )])
+            
+            return
 
         # Notify user server is start.
         eval_in_emacs("message", ["[LSP-Bridge] Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path)])
@@ -243,7 +255,10 @@ class LspServer(object):
         # STEP 1: Say hello to LSP server.
         # Send 'initialize' request.
         self.send_initialize_request()
-
+        
+    def lsp_server_is_started(self):
+        return getattr(self, "p", None) is None
+        
     def lsp_message_dispatcher(self):
         while True:
             message = self.lsp_message_queue.get(True)
@@ -541,19 +556,28 @@ class LspServer(object):
 
     def send_to_request(self, name, params, request_id):
         # Request message must be contain unique request id.
-        sender_thread = SendRequest(self.p, name, params, request_id)
-        self.sender_threads.append(sender_thread)
-        sender_thread.start()
+        if self.lsp_server_is_started():
+            self.start_lsp_server_process()
+        else:
+            sender_thread = SendRequest(self.p, name, params, request_id)
+            self.sender_threads.append(sender_thread)
+            sender_thread.start()
 
     def send_to_notification(self, name, params):
-        sender_thread = SendNotification(self.p, self.lsp_message_queue, name, params)
-        self.sender_threads.append(sender_thread)
-        sender_thread.start()
+        if self.lsp_server_is_started():
+            self.start_lsp_server_process()
+        else:
+            sender_thread = SendNotification(self.p, self.lsp_message_queue, name, params)
+            self.sender_threads.append(sender_thread)
+            sender_thread.start()
 
     def send_to_response(self, name, id, result):
-        sender_thread = SendResponse(self.p, name, id, result)
-        self.sender_threads.append(sender_thread)
-        sender_thread.start()
+        if self.lsp_server_is_started():
+            self.start_lsp_server_process()
+        else:
+            sender_thread = SendResponse(self.p, name, id, result)
+            self.sender_threads.append(sender_thread)
+            sender_thread.start()
 
     def close_file(self, filepath):
         # Send didClose notification when client close file.
@@ -573,4 +597,5 @@ class LspServer(object):
             })
 
             # Don't need wait LSP server response, kill immediately.
-            os.kill(self.p.pid, 9)
+            if self.lsp_server_is_started():
+                os.kill(self.p.pid, 9)

@@ -5,7 +5,7 @@
   "settings": {},
   "initializationOptions": {
     "typescript": {
-      "serverPath": "/usr/lib/node_modules/typescript/lib/tsserver.js"
+      "serverPath": "/usr/lib/node_modules/typescript/lib/tsserverlibrary.js"
     },
     "languageFeatures": {
       "references": true,

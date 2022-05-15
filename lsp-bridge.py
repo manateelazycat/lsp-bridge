@@ -193,7 +193,7 @@ class LspBridge(object):
 
     def handle_server_process_exit(self, server_name):
         if server_name in self.lsp_server_dict:
-            logger.info("Exit server: ", server_name)
+            logger.info("Exit server: {}".format(server_name))
             del self.lsp_server_dict[server_name]
 
     def handle_server_file_opened(self, filepath):

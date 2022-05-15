@@ -18,56 +18,9 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 
 (require 'lsp-bridge)             ;; load lsp-bridge
 (global-corfu-mode)               ;; use corfu as completion ui
-
 (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
 (require 'lsp-bridge-icon)        ;; show icon for completion items, optional
-
-;; Enable auto completion in elisp mode.
-(dolist (hook (list
-               'emacs-lisp-mode-hook
-               ))
-  (add-hook hook (lambda ()
-                   (setq-local corfu-auto t)
-                   )))
-
-;; Enable lsp-bridge.
-(dolist (hook (list
-               'c-mode-hook
-               'c++-mode-hook
-               'java-mode-hook
-               'python-mode-hook
-               'ruby-mode-hook
-               'lua-mode-hook
-               'rust-mode-hook
-               'elixir-mode-hook
-               'go-mode-hook
-               'haskell-mode-hook
-               'haskell-literate-mode-hook
-               'dart-mode-hook
-               'scala-mode-hook
-               'typescript-mode-hook
-               'typescript-tsx-mode-hook
-               'js2-mode-hook
-               'js-mode-hook
-               'rjsx-mode-hook
-               'tuareg-mode-hook
-               'latex-mode-hook
-               'Tex-latex-mode-hook
-               'texmode-hook
-               'context-mode-hook
-               'texinfo-mode-hook
-               'bibtex-mode-hook
-               'clojure-mode-hook
-               'clojurec-mode-hook
-               'clojurescript-mode-hook
-               'clojurex-mode-hook
-               'sh-mode-hook
-               'web-mode-hook
-               ))
-  (add-hook hook (lambda ()
-                   (setq-local corfu-auto nil)  ;; let lsp-bridge control when popup completion frame
-                   (lsp-bridge-mode 1)
-                   )))
+(global-lsp-bridge-mode)
 ```
 
 ## Commands
@@ -94,7 +47,7 @@ Anyway you can customize server configuration with below priority:
 
 1. Create settings file under lsp-bridge/langserver, such as `pyright.json` is use for pyright (windows use `pyright_windows.json`, macOS use `pyright_darwin.json`).
 2. Add `(mode . server_name)` in lsp-bridge-lang-server-list, such as `(python-mode . "pyright")`
-3. Then add `(lsp-bridge-enable)` in mode-hook for test.
+3. Add new mode-hook to `lsp-bridge-default-mode-hooks`
 
 Welcome send PR to help us improve support for LSP servers, thank you!
 
@@ -120,6 +73,14 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 18. sumneko (lua) Note: please ensure export `bin` under sumneko installation in your system PATH at first.
 19. wxml-language-server (wxml)
 20. vscode-html-language-server (html)
+
+### Features that won't support
+lsp-bridge goal is become the fastest LSP client in the Emacs, not the complete implementation of LSP protocol.
+
+The following function Emacs can do better, we will not repeat in lsp-bridge:
+1. Code format: each LSP server has its own formatting specification, with the formatting function of Emacs, we will get more detail control
+2. Diagnostics: [Flycheck](https://www.flycheck.org/en/latest/) or [Flymake](https://www.gnu.org/software/emacs/manual/html_node/flymake/Using-Flymake.html) is better chooise
+3. Syntax highlight: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) is a wonderful incremental parsing library to implement highlight code
 
 ## Report bug
 
