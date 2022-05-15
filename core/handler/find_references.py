@@ -46,4 +46,6 @@ class FindReferences(Handler):
                         line_content[end_column:])
                     references_counter += 1
 
+        linecache.clearcache()  # clear line cache 
+        
         eval_in_emacs("lsp-bridge-popup-references", references_content, references_counter)

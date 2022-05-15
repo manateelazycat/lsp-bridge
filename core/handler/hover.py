@@ -45,6 +45,7 @@ class Hover(Handler):
         end_column = response["range"]["end"]["character"]
 
         line_content = linecache.getline(self.fa.filepath, line + 1)
+        linecache.clearcache()  # clear line cache 
         contents = response["contents"]
         render_string = self.parse_hover_contents(contents, [])
 
