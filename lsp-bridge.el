@@ -245,38 +245,37 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   :type 'cons)
 
 (defcustom lsp-bridge-default-mode-hooks
-  '('c-mode-hook
-    'c++-mode-hook
-    'java-mode-hook
-    'python-mode-hook
-    'ruby-mode-hook
-    'lua-mode-hook
-    'rust-mode-hook
-    'elixir-mode-hook
-    'go-mode-hook
-    'haskell-mode-hook
-    'haskell-literate-mode-hook
-    'dart-mode-hook
-    'scala-mode-hook
-    'typescript-mode-hook
-    'typescript-tsx-mode-hook
-    'js2-mode-hook
-    'js-mode-hook
-    'rjsx-mode-hook
-    'tuareg-mode-hook
-    'latex-mode-hook
-    'Tex-latex-mode-hook
-    'texmode-hook
-    'context-mode-hook
-    'texinfo-mode-hook
-    'bibtex-mode-hook
-    'clojure-mode-hook
-    'clojurec-mode-hook
-    'clojurescript-mode-hook
-    'clojurex-mode-hook
-    'sh-mode-hook
-    'web-mode-hook
-    )
+  '(c-mode-hook
+    c++-mode-hook
+    java-mode-hook
+    python-mode-hook
+    ruby-mode-hook
+    lua-mode-hook
+    rust-mode-hook
+    elixir-mode-hook
+    go-mode-hook
+    haskell-mode-hook
+    haskell-literate-mode-hook
+    dart-mode-hook
+    scala-mode-hook
+    typescript-mode-hook
+    typescript-tsx-mode-hook
+    js2-mode-hook
+    js-mode-hook
+    rjsx-mode-hook
+    tuareg-mode-hook
+    latex-mode-hook
+    Tex-latex-mode-hook
+    texmode-hook
+    context-mode-hook
+    texinfo-mode-hook
+    bibtex-mode-hook
+    clojure-mode-hook
+    clojurec-mode-hook
+    clojurescript-mode-hook
+    clojurex-mode-hook
+    sh-mode-hook
+    web-mode-hook)
   "The default mode hook to enable lsp-bridge."
   :type 'list)
 
@@ -860,6 +859,7 @@ If optional MARKER, return a marker instead"
     (remove-hook (car hook) (cdr hook) t)))
 
 (defun global-lsp-bridge-mode ()
+  (interactive)
   (dolist (hook (list
                  'emacs-lisp-mode-hook
                  ))
