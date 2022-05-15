@@ -74,6 +74,14 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 19. wxml-language-server (wxml)
 20. vscode-html-language-server (html)
 
+### Features that won't support
+lsp-bridge goal is become the fastest LSP client in the Emacs, not the complete implementation of LSP protocol.
+
+The following function Emacs can do better, we will not repeat in lsp-bridge:
+1. Code format: each LSP server has its own formatting specification, with the formatting function of Emacs, we will get more detail control
+2. Diagnostics: [Flycheck](https://www.flycheck.org/en/latest/) or [Flymake](https://www.gnu.org/software/emacs/manual/html_node/flymake/Using-Flymake.html) is better chooise
+3. Syntax highlight: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) is a wonderful incremental parsing library to implement highlight code
+
 ## Report bug
 
 Please use `emacs -q` and load a minimal setup with only lsp-bridge to verify that the bug is reproducible. If `emacs -q` works fine, probably something is wrong with your Emacs config.
