@@ -19,8 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import random
 import threading
 import time
 
@@ -28,7 +26,7 @@ from core.utils import *
 
 KIND_MAP = ["", "Text", "Method", "Function", "Constructor", "Field",
             "Variable", "Class", "Interface", "Module", "Property",
-            "Unit" , "Value" , "Enum", "Keyword" , "Snippet", "Color",
+            "Unit", "Value", "Enum", "Keyword", "Snippet", "Color",
             "File", "Reference", "Folder", "EnumMember", "Constant",
             "Struct", "Event", "Operator", "TypeParameter"]
 
@@ -36,13 +34,14 @@ REFERENCE_PATH = '\033[95m'
 REFERENCE_TEXT = '\033[94m'
 REFERENCE_ENDC = '\033[0m'
 
+
 class FileAction(object):
 
     def __init__(self, filepath, project_path, lang_server):
         object.__init__(self)
 
         # Build request functions.
-        for name in ["find_define", "find_implementation", "find_references", "prepare_rename", 
+        for name in ["find_define", "find_implementation", "find_references", "prepare_rename",
                      "rename", "completion", "hover", "signature_help"]:
             self.build_request_function(name)
 
@@ -76,10 +75,12 @@ class FileAction(object):
         else:
             # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
             lang_server_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "langserver")
-            lang_server_file_path_current = os.path.join(lang_server_dir, "{}_{}.json".format(lang_server, get_os_name()))
+            lang_server_file_path_current = os.path.join(lang_server_dir,
+                                                         "{}_{}.json".format(lang_server, get_os_name()))
             lang_server_file_path_default = os.path.join(lang_server_dir, "{}.json".format(lang_server))
 
-            lang_server_info_path = lang_server_file_path_current if os.path.exists(lang_server_file_path_current) else lang_server_file_path_default
+            lang_server_info_path = lang_server_file_path_current if os.path.exists(
+                lang_server_file_path_current) else lang_server_file_path_default
 
         with open(lang_server_info_path, encoding="utf-8") as f:
             import json
@@ -109,7 +110,7 @@ class FileAction(object):
         self.last_change_file_before_cursor_text = before_cursor_text
 
         # Send textDocument/completion 100ms later.
-        self.try_completion_timer = threading.Timer(0.1, lambda : self.completion(position, before_char))
+        self.try_completion_timer = threading.Timer(0.1, lambda: self.completion(position, before_char))
         self.try_completion_timer.start()
 
     def change_cursor(self, position):
@@ -119,11 +120,11 @@ class FileAction(object):
         # Try cancel expired signature help timer.
         if self.try_signature_help_timer is not None and self.try_signature_help_timer.is_alive():
             self.try_signature_help_timer.cancel()
-            
+
         # Send textDocument/signatureHelp 200ms later.
-        self.try_signature_help_timer = threading.Timer(0.1, lambda : self.signature_help(position))
+        self.try_signature_help_timer = threading.Timer(0.1, lambda: self.signature_help(position))
         self.try_signature_help_timer.start()
-        
+
     def save_file(self):
         self.lsp_server.send_did_save_notification(self.filepath)
 
@@ -169,8 +170,8 @@ class FileAction(object):
     def handle_completion_response(self, request_id, response_result):
         # Stop send completion items to client if request id expired, or change file, or move cursor.
         if (request_id == self.completion_request_list[-1] and
-            self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and
-            self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
+                self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and
+                self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
 
             # Calcuate completion prefix string.
             self.completion_prefix_string = self.calc_completion_prefix_string()
@@ -181,22 +182,23 @@ class FileAction(object):
             annotations = []
             documents = []
             completion_candidates = []
-            
+
             if response_result is not None:
                 for item in response_result["items"] if "items" in response_result else response_result:
                     insertText = item.get("insertText", item["label"]).strip()
-                    
+
                     # We need replace prefix string with textEdit character diff if we use insertText as candidate.
                     try:
                         if ("insertText" in item and
-                            "textEdit" in item and
-                            "insertTextFormat" in item and
-                            item["insertTextFormat"] == 1):
-                            replace_range = item["textEdit"]["range"]["end"]["character"] - item["textEdit"]["range"]["start"]["character"]
+                                "textEdit" in item and
+                                "insertTextFormat" in item and
+                                item["insertTextFormat"] == 1):
+                            replace_range = item["textEdit"]["range"]["end"]["character"] - \
+                                            item["textEdit"]["range"]["start"]["character"]
                             insertText = insertText[replace_range:]
                     except:
                         pass
-                    
+
                     completion_items.append(insertText)
                     kind = KIND_MAP[item.get("kind", 0)]
                     candidate = {
@@ -205,44 +207,45 @@ class FileAction(object):
                         "kind": kind,
                         "annotation": (item.get("detail") or kind).replace(" ", ""),
                     }
-                    
+
                     if (self.enable_auto_import):
                         candidate["additionalTextEdits"] = item.get("additionalTextEdits", [])
-                        
+
                     completion_candidates.append(candidate)
 
             # Calcuate completion common string.
             completion_common_string = os.path.commonprefix(completion_items)
-            
+
             # Push completion items to Emacs.
-            if len(completion_items) == 1 and (self.completion_prefix_string == completion_common_string == completion_items[0]):
+            if len(completion_items) == 1 and (
+                    self.completion_prefix_string == completion_common_string == completion_items[0]):
                 # Clear completion items if user input last completion item.
                 eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string,
                                                                      completion_common_string, []])
             else:
                 eval_in_emacs("lsp-bridge-record-completion-items", [self.filepath, self.completion_prefix_string,
                                                                      completion_common_string, completion_candidates])
-                
+
     def calc_completion_prefix_string(self):
         ret = self.last_change_file_before_cursor_text
         for c in self.lsp_server.completion_trigger_characters + [" " + '\t']:
             ret = ret.rpartition(c)[2]
         return ret
-    
+
     def handle_signature_help(self, request_id, response_result):
         # Stop send completion items to client if request id expired, or change file, or move cursor.
         if (request_id == self.signature_help_request_list[-1] and
-            self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and
-            self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
-            
+                self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and
+                self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
+
             if response_result is not None:
                 eval_in_emacs("message", [response_result["signatures"][0]["label"]])
 
     def handle_find_define_response(self, request_id, response_result):
         # Stop send jump define if request id expired, or change file, or move cursor.
         if (request_id == self.find_define_request_list[-1] and
-            self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and
-            self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
+                self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and
+                self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
 
             if response_result:
                 try:
@@ -263,8 +266,8 @@ class FileAction(object):
     def handle_find_implementation_response(self, request_id, response_result):
         # Stop send jump define if request id expired, or change file, or move cursor.
         if (request_id == self.find_implementation_request_list[-1] and
-            self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and
-            self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
+                self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and
+                self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
 
             if response_result:
                 try:
@@ -311,7 +314,9 @@ class FileAction(object):
                         references_content += "{}:{}:{}".format(
                             line + 1,
                             start_column,
-                            line_content[:start_column] + REFERENCE_TEXT + line_content[start_column:end_column] + REFERENCE_ENDC + line_content[end_column:])
+                            line_content[:start_column] + REFERENCE_TEXT + line_content[
+                                                                           start_column:end_column] + REFERENCE_ENDC + line_content[
+                                                                                                                       end_column:])
                         references_counter += 1
 
             eval_in_emacs("lsp-bridge-popup-references", [references_content, references_counter])
@@ -332,8 +337,9 @@ class FileAction(object):
                     counter = 0
                     rename_files = []
 
-                    rename_infos = response_result["documentChanges"] if "documentChanges" in response_result else response_result["changes"]
-                    
+                    rename_infos = response_result["documentChanges"] if "documentChanges" in response_result else \
+                    response_result["changes"]
+
                     if type(rename_infos) == dict:
                         # JSON struct is 'changes'
                         for rename_info in rename_infos.items():
@@ -352,15 +358,15 @@ class FileAction(object):
                     logger.info("* Failed information about rename response.")
                     import traceback
                     traceback.print_exc()
-                    
+
     def rename_symbol_in_file__changes(self, rename_info):
         rename_file = rename_info[0]
         if rename_file.startswith("file://"):
             rename_file = uri_to_path(rename_file)
-        
+
         lines = []
         rename_counter = 0
-        
+
         with open(rename_file, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
@@ -404,7 +410,7 @@ class FileAction(object):
             f.writelines(lines)
 
         return (rename_file, rename_counter)
-    
+
     def get_rename_line_content(self, edit_info, line_offset_dict, lines, replace_line):
         # Get current line offset, if previous edit is same as current line.
         # We need add changed offset to make sure current edit has right column.
@@ -430,7 +436,7 @@ class FileAction(object):
 
         # Replace current line.
         new_line_content = line_content[:replace_column_start] + new_text + line_content[replace_column_end:]
-        
+
         return new_line_content
 
     def handle_hover_response(self, request_id, response_result):
@@ -438,8 +444,8 @@ class FileAction(object):
 
         if request_id == self.hover_request_list[-1]:
             if (response_result is not None and
-                "range" in response_result and
-                "contents" in response_result):
+                    "range" in response_result and
+                    "contents" in response_result):
                 line = response_result["range"]["start"]["line"]
                 start_column = response_result["range"]["start"]["character"]
                 end_column = response_result["range"]["end"]["character"]
