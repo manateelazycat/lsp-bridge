@@ -81,7 +81,7 @@ class FileAction(object):
 
             lang_server_info_path = lang_server_file_path_current if os.path.exists(lang_server_file_path_current) else lang_server_file_path_default
 
-        with open(lang_server_info_path) as f:
+        with open(lang_server_info_path, encoding="utf-8") as f:
             import json
             self.lang_server_info = json.load(f)
 
@@ -304,7 +304,7 @@ class FileAction(object):
                 references_content += "\n" + REFERENCE_PATH + path + REFERENCE_ENDC + "\n"
 
                 for range in ranges:
-                    with open(path) as f:
+                    with open(path, encoding="utf-8") as f:
                         line = range["start"]["line"]
                         start_column = range["start"]["character"]
                         end_column = range["end"]["character"]
@@ -363,7 +363,7 @@ class FileAction(object):
         lines = []
         rename_counter = 0
         
-        with open(rename_file, "r") as f:
+        with open(rename_file, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
             line_offset_dict = {}
@@ -376,7 +376,7 @@ class FileAction(object):
 
                 rename_counter += 1
 
-        with open(rename_file, "w") as f:
+        with open(rename_file, "w", encoding="utf-8") as f:
             f.writelines(lines)
 
         return (rename_file, rename_counter)
@@ -389,7 +389,7 @@ class FileAction(object):
         lines = []
         rename_counter = 0
 
-        with open(rename_file, "r") as f:
+        with open(rename_file, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
             line_offset_dict = {}
@@ -402,7 +402,7 @@ class FileAction(object):
 
                 rename_counter += 1
 
-        with open(rename_file, "w") as f:
+        with open(rename_file, "w", encoding="utf-8") as f:
             f.writelines(lines)
 
         return (rename_file, rename_counter)
