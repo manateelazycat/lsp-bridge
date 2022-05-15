@@ -804,11 +804,9 @@ If optional MARKER, return a marker instead"
               (string-equal (buffer-name) "*Messages*"))
     (setq lsp-bridge--last-buffer (current-buffer))))
 
-;;;###autoload
-(add-hook 'post-command-hook 'lsp-bridge-monitor-window-buffer-change)
-
 (defconst lsp-bridge--internal-hooks
-  '((before-change-functions . lsp-bridge-monitor-before-change)
+  '((post-command-hook . lsp-bridge-monitor-window-buffer-change)
+    (before-change-functions . lsp-bridge-monitor-before-change)
     (after-change-functions . lsp-bridge-monitor-after-change)
     (post-command-hook . lsp-bridge-monitor-post-command)
     (after-save-hook . lsp-bridge-monitor-after-save)
