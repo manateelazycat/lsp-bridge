@@ -23,6 +23,7 @@ import os
 import random
 import threading
 import time
+import re
 
 from core.utils import *
 
@@ -48,6 +49,7 @@ class FileAction(object):
 
         # Init.
         self.filepath = filepath
+        self.lsp_buffer_uri = filepath
         self.project_path = project_path
         self.request_dict = {}
         self.last_change_file_time = -1
@@ -67,6 +69,7 @@ class FileAction(object):
         # Generate initialize request id.
         self.initialize_id = generate_request_id()
         self.enable_auto_import = get_emacs_var("lsp-bridge-enable-auto-import")
+        self.java_workspace_cache_dir = get_emacs_var("lsp-bridge-java-workspace-cache-dir")
 
     def load_lang_server_info(self, lang_server):
         lang_server_info_path = ""
@@ -141,6 +144,7 @@ class FileAction(object):
             if self.lsp_server is not None:
                 args = (request_id, self.filepath, name) + args
                 getattr(self.lsp_server, "send_{}_request".format(name))(*args)
+            return request_id
 
         # Init request list variable.
         setattr(self, "{}_request_list".format(name), [])
@@ -165,6 +169,8 @@ class FileAction(object):
             self.handle_hover_response(request_id, response_result)
         elif request_type == "signature_help":
             self.handle_signature_help(request_id, response_result)
+        elif request_type == "jdt_class_contents":
+            self.handle_jdt_class_contents_response(request_id, response_result)
 
     def handle_completion_response(self, request_id, response_result):
         # Stop send completion items to client if request id expired, or change file, or move cursor.
@@ -247,14 +253,19 @@ class FileAction(object):
             if response_result:
                 try:
                     file_info = response_result[0]
+                    range1 = file_info["range"] if "range" in file_info else file_info["targetRange"]
                     # volar return only LocationLink (using targetUri)
                     fileuri = file_info["uri"] if "uri" in file_info else file_info["targetUri"]
+                    if fileuri.startswith("jdt://"):
+                        jdt_request_id = self.jdt_class_contents(fileuri, range1)
+                        self.request_dict[jdt_request_id]["range"] = range1
+                        self.request_dict[jdt_request_id]["uri"] = fileuri
+                        return
                     filepath = uri_to_path(fileuri)
-                    range1 = file_info["range"] if "range" in file_info else file_info["targetRange"]
                     startpos = range1["start"]
                     row = startpos["line"]
                     column = startpos["character"]
-                    eval_in_emacs("lsp-bridge--jump-to-def", [filepath, row, column])
+                    eval_in_emacs("lsp-bridge--jump-to-def", [filepath, row, column, False])
                 except:
                     logger.info("* Failed information about find_define response.")
                     import traceback
@@ -354,6 +365,29 @@ class FileAction(object):
                     logger.info("* Failed information about rename response.")
                     import traceback
                     traceback.print_exc()
+
+    def handle_jdt_class_contents_response(self, request_id, response_result):
+        if request_id == self.jdt_class_contents_request_list[-1]:
+            if response_result is None:
+                return ''
+            if type(response_result) == str:
+                if not os.path.exists(self.java_workspace_cache_dir):
+                    os.mkdir(self.java_workspace_cache_dir)
+                range1 = self.request_dict[request_id]["range"]
+                uri = self.request_dict[request_id]["uri"]
+                doc_name = re.match(r"jdt://contents/(.*?)/(.*)\.class\?", uri).groups()[1].replace('/', '.') + ".java"
+                doc_file = os.path.join(self.java_workspace_cache_dir, doc_name)
+                if not os.path.exists(doc_file):
+                    with open(doc_file, 'w') as f:
+                        f.write(response_result)
+                self.lsp_buffer_uri = uri
+                self.lsp_server.send_did_open_notification(doc_file, uri)
+                startpos = range1["start"]
+                row = startpos["line"]
+                column = startpos["character"]
+                eval_in_emacs("lsp-bridge--jump-to-def", [doc_file, row, column, True])
+            else:
+                eval_in_emacs("message", ["[LSP-Bridge] Can't find definition."])                    
                     
     def rename_symbol_in_file__changes(self, rename_info):
         rename_file = rename_info[0]

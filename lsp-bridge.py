@@ -38,6 +38,7 @@ class LspBridge(object):
         self.file_action_dict = {}  # use for contain file action
         self.lsp_server_dict = {}   # use for contain lsp server
         self.action_cache_dict = {} # use for contain file action cache
+        self.workspace_server_dict = {} # use for save the mapping between workspace and LSP server name
 
         # Build EPC interfaces.
         for name in ["change_file", "find_define", "find_implementation", "find_references", 
@@ -68,6 +69,7 @@ class LspBridge(object):
         (enable_lsp_server_log, ) = get_emacs_vars(["lsp-bridge-enable-log"])
         if enable_lsp_server_log:
             logger.setLevel(logging.DEBUG)
+        self.java_workspace_dir = get_emacs_var("lsp-bridge-java-workspace-dir")
 
         # All Emacs request running in postgui_thread.
         self.postgui_queue = queue.Queue()
@@ -96,6 +98,8 @@ class LspBridge(object):
             elif message["name"] == "action_func":
                 (func_name, func_args) = message["content"]
                 getattr(self, func_name)(*func_args)
+            elif message["name"] == "init_workspace":
+                self.workspace_server_dict[message["content"]["workspace"]] = message["content"]["lsp_server_name"]
 
             self.postgui_queue.task_done()
 
@@ -121,22 +125,29 @@ class LspBridge(object):
     def _open_file(self, filepath):
         # Create file action.
         filekey = path_as_key(filepath)
+        project_path = get_project_path(filepath)
+        lang_server = get_emacs_func_result("get-lang-server", [project_path, filepath])
+        lsp_server_name = None
+        if filepath.startswith(self.java_workspace_dir):
+            workspace = "{}#{}".format(self.java_workspace_dir, lang_server)
+            lsp_server_name = self.workspace_server_dict[workspace]
         if filekey not in self.file_action_dict:
-            project_path = get_project_path(filepath)
-            lang_server = get_emacs_func_result("get-lang-server", [project_path, filepath])
             action = FileAction(filepath, project_path, lang_server)
+            if lsp_server_name is None:
+                lsp_server_name = action.get_lsp_server_name()
             self.file_action_dict[filekey] = action
 
         # Create LSP server.
         file_action = self.file_action_dict[filekey]
-        lsp_server_name = file_action.get_lsp_server_name()
+        if project_path in self.workspace_server_dict:
+            lsp_server_name = self.workspace_server_dict[project_path]
         if lsp_server_name not in self.lsp_server_dict:
             # lsp server will send initialize and didOpen when open first file in project.
             server = LspServer(self.message_queue, file_action)
             self.lsp_server_dict[lsp_server_name] = server
         else:
             # Send didOpen notification to LSP server.
-            self.lsp_server_dict[lsp_server_name].send_did_open_notification(file_action.filepath)
+            self.lsp_server_dict[lsp_server_name].send_did_open_notification(file_action.filepath, file_action.filepath)
 
         # Add lsp server in file action for send message to lsp server.
         file_action.lsp_server = self.lsp_server_dict[lsp_server_name]

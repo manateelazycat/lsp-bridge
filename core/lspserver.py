@@ -221,12 +221,23 @@ class LspServer(object):
         self.sender_threads = []
         self.request_dict = {}
         self.open_file_dict = {} # contain file opened in current project
+        self.file_uri_dict = {} # save the mapping between file and uri
         self.root_path = self.project_path
 
         # All LSP server response running in ls_message_thread.
         self.lsp_message_queue = queue.Queue()
         self.ls_message_thread = threading.Thread(target=self.lsp_message_dispatcher)
         self.ls_message_thread.start()
+
+        # Init workspace
+        workspace_dir = get_emacs_var("lsp-bridge-java-workspace-dir")
+        self.message_queue.put({
+            "name": "init_workspace",
+            "content": {
+                "workspace": "{}#{}".format(workspace_dir, self.server_type),
+                "lsp_server_name": self.server_name
+            }
+        })
 
         # LSP server information.
         self.completion_trigger_characters = list()
@@ -285,16 +296,17 @@ class LspServer(object):
             "initializationOptions": self.server_info.get("initializationOptions", {})
         }, self.initialize_id)
 
-    def send_did_open_notification(self, filepath):
+def send_did_open_notification(self, filepath, uri):
         filekey = path_as_key(filepath)
         if filekey not in self.open_file_dict:
             self.open_file_dict[filekey] = ""
 
+            self.file_uri_dict[filepath] = path_to_uri(uri) if uri.startswith("/") else uri
             with open(filepath, encoding="utf-8") as f:
                 self.send_to_notification("textDocument/didOpen",
                                           {
                                               "textDocument": {
-                                                  "uri": path_to_uri(filepath),
+                                                  "uri": self.file_uri_dict[filepath],
                                                   "languageId": self.server_info["languageId"],
                                                   "version": 0,
                                                   "text": f.read()
@@ -401,7 +413,7 @@ class LspServer(object):
         self.send_to_request(method,
                              {
                                  "textDocument": {
-                                     "uri": path_to_uri(filepath)
+                                     "uri": self.file_uri_dict[filepath]
                                  },
                                  "position": position,
                              },
@@ -475,6 +487,15 @@ class LspServer(object):
                                  "position": position
                              },
                              request_id)
+
+    def send_jdt_class_contents_request(self, request_id, original_filepath, type, uri, range_info):
+        method = "java/classFileContents"
+        self.record_request_id(request_id, method, original_filepath, type, { "range": range_info, "uri": uri })
+        self.send_to_request(method, {
+            "uri": uri,
+            "range": range_info,
+            "link": uri
+        }, request_id)                             
 
     def send_shutdown_request(self):
         self.shutdown_id = generate_request_id()
@@ -553,7 +574,7 @@ class LspServer(object):
             # STEP 4: Tell LSP server open file.
             # We need send 'textDocument/didOpen' notification,
             # then LSP server will return file information, such as completion, find-define, find-references and rename etc.
-            self.send_did_open_notification(self.first_file_path)
+            self.send_did_open_notification(self.first_file_path, self.first_file_path)
 
             # Notify user server is ready.
             eval_in_emacs("message", ["[LSP-Bridge] Start LSP server ({}) for {} complete, enjoy hacking!".format(self.server_info["name"], self.root_path)])

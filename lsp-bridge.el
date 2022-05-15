@@ -279,6 +279,18 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "The default mode hook to enable lsp-bridge."
   :type 'list)
 
+(defcustom lsp-bridge-java-workspace-dir (expand-file-name (locate-user-emacs-file "workspace/"))
+  "LSP java workspace directory."
+  :group 'lsp-bridge
+  :risky t
+  :type 'directory)
+
+(defcustom lsp-bridge-java-workspace-cache-dir (expand-file-name ".cache/" lsp-bridge-java-workspace-dir)
+  "LSP java workspace cache directory."
+  :group 'lsp-bridge
+  :risky t
+  :type 'directory)
+
 (defvar lsp-bridge-get-lang-server-by-project nil
   "Get lang server with project path and file path.")
 
@@ -742,7 +754,7 @@ If optional MARKER, return a marker instead"
 
   (message "[LSP-Bridge] Rename %s places in %s files." counter (length rename-files)))
 
-(defun lsp-bridge--jump-to-def (filepath row column)
+(defun lsp-bridge--jump-to-def (filepath row column readonly)
   (interactive)
   ;; Record postion.
   (set-marker (mark-marker) (point) (current-buffer))
@@ -753,6 +765,9 @@ If optional MARKER, return a marker instead"
   (if lsp-bridge-jump-to-def-in-other-window
       (find-file-other-window filepath)
     (find-file filepath))
+
+  (when readonly
+    (read-only-mode))
 
   (goto-line (1+ row))
   (move-to-column column)
