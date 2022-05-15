@@ -1,68 +1,47 @@
-import os
-import tempfile
-import time
 import unittest
-from typing import NamedTuple, Tuple, List, Any
 
 from core.utils import eval_sexp_in_emacs
-from test.common import EvalInterceptor
+from test.common import *
 
 
-class SingleFile(NamedTuple):
-    filename: str
-    code: str
-    expectation: str
-    mode: str
+def try_complete(file: SingleFile):
+    def must_include_completion(method: str, args: List[Any]):
+        if method == "lsp-bridge-record-completion-items":
+            items = args[3]
+            for item in items:
+                if item['label'] == file.expectation:
+                    return True
+        return False
 
-
-def must_include_completion(e: Tuple[str, List[Any]], completion: str):
-    method, args = e
-    if method == "lsp-bridge-record-completion-items":
-        items = args[3]
-        for item in items:
-            if item['label'] == completion:
-                return True
-    return False
-
-
-def try_completion(file: SingleFile):
-    t_file = tempfile.NamedTemporaryFile(delete=False, suffix=file.filename)
-    t_file.write(file.code[:-1].encode('utf-8'))
-    t_file.close()
-
-    timeout = 40
-
-    with EvalInterceptor() as calls:
+    @with_file(file)
+    @interceptor(must_include_completion)
+    def complete_file(filename: str):
         eval_sexp_in_emacs(f"""
         (progn
-          (find-file "{t_file.name}")
-          (with-current-buffer (get-file-buffer "{t_file.name}")
+          (find-file "{filename}")
+          (with-current-buffer (get-file-buffer "{filename}")
             (setq-local major-mode '{file.mode})
             (lsp-bridge-mode 1)
             (goto-char (point-max))
+            (delete-char -1)
+            (sleep-for 5)
             (insert "{file.code[-1]}")
             ))
         """)
-        while not any(map(lambda c: c[0] == "lsp-bridge-record-completion-items", calls)):
-            time.sleep(1)
-            timeout -= 1
-            if timeout <= 0:
-                print(f"timeout: {timeout}")
-                break
-        assert any(must_include_completion(e, file.expectation) for e in calls)
-    os.remove(t_file.name)
+
+    return complete_file()
 
 
 class SimpleCompletion(unittest.TestCase):
     def test_python(self):
-        try_completion(SingleFile(
+        try_complete(SingleFile(
             filename="test.py",
             code="import os\n\nos.",
             expectation="system",
             mode="python-mode",
         ))
 
-        try_completion(SingleFile(
+        try_complete(SingleFile(
             filename="test.py",
             code="import os\n\ndef 测试():\n    os.",
             expectation="system",
@@ -70,7 +49,7 @@ class SimpleCompletion(unittest.TestCase):
         ))
 
     # def test_cpp(self):
-    #     try_completion(SingleFile(
+    #     try_complete(SingleFile(
     #         filename="test.cpp",
     #         code="""
     #                 #include <vector>
@@ -81,7 +60,7 @@ class SimpleCompletion(unittest.TestCase):
     #         expectation="clear()",
     #         mode="c++-mode",
     #     ))
-    #     try_completion(SingleFile(
+    #     try_complete(SingleFile(
     #         filename="test.cpp",
     #         code="""
     #         #include <vector>
@@ -94,7 +73,7 @@ class SimpleCompletion(unittest.TestCase):
     #     ))
 
     def test_go(self):
-        try_completion(SingleFile(
+        try_complete(SingleFile(
             filename="test.go",
             code="""
 package main

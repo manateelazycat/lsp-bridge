@@ -1,17 +1,65 @@
+import os
 import pprint
-from typing import Any, List, Tuple
+import tempfile
+import time
+from typing import Any, List, Tuple, Callable, Optional, NamedTuple
 
+from core.utils import logger
 import core.utils
 
 
-class EvalInterceptor:
-    def __init__(self):
-        self.calls = list()
-        core.utils.test_interceptor = lambda method_name, args: self.calls.append((method_name, args))
+def interceptor(expectation: Callable[[str, List[Any]], bool],
+                teardown: Optional[Callable[[], None]] = None,
+                timeout: int = 40):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            ok = False
+            calls = list()
 
-    def __enter__(self) -> List[Tuple[str, List[Any]]]:
-        return self.calls
+            def test_interceptor(*x):
+                nonlocal ok
+                calls.append(x)
+                ok = ok or expectation(*x)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        core.utils.logger.debug(pprint.pformat(self.calls))
-        core.utils.test_interceptor = None
+            core.utils.test_interceptor = test_interceptor
+
+            func(*args, **kwargs)
+
+            tick = 0
+            while not ok:
+                time.sleep(1)
+                tick += 1
+                if tick >= timeout:
+                    logger.error("timeout")
+                    break
+
+            core.utils.logger.debug("Calls: %s", pprint.pformat(calls))
+            core.utils.test_interceptor = None
+
+            if teardown:
+                teardown()
+
+            assert ok
+        return wrapper
+    return decorator
+
+
+class SingleFile(NamedTuple):
+    filename: str
+    code: str
+    expectation: str
+    mode: str
+
+
+def with_file(file: SingleFile):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            with tempfile.NamedTemporaryFile(delete=False, suffix=file.filename) as t_file:
+                t_file.write(file.code.encode('utf-8'))
+                t_file.close()
+
+                func(*args, **kwargs, filename=t_file.name)
+
+                os.remove(t_file.name)
+        return wrapper
+    return decorator
