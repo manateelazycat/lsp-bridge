@@ -42,7 +42,8 @@ class FileAction(object):
         object.__init__(self)
 
         # Build request functions.
-        for name in ["find_define", "find_implementation", "find_references", "prepare_rename", "rename", "completion", "hover"]:
+        for name in ["find_define", "find_implementation", "find_references", "prepare_rename", 
+                     "rename", "completion", "hover", "signature_help"]:
             self.build_request_function(name)
 
         # Init.
@@ -55,6 +56,7 @@ class FileAction(object):
         self.completion_prefix_string = ""
         self.version = 1
         self.try_completion_timer = None
+        self.try_signature_help_timer = None
 
         # Read language server information.
         self.lang_server_info = None
@@ -110,10 +112,18 @@ class FileAction(object):
         self.try_completion_timer = threading.Timer(0.1, lambda : self.completion(position, before_char))
         self.try_completion_timer.start()
 
-    def change_cursor(self):
+    def change_cursor(self, position):
         # Record change cursor time.
         self.last_change_cursor_time = time.time()
 
+        # Try cancel expired signature help timer.
+        if self.try_signature_help_timer is not None and self.try_signature_help_timer.is_alive():
+            self.try_signature_help_timer.cancel()
+            
+        # Send textDocument/signatureHelp 200ms later.
+        self.try_signature_help_timer = threading.Timer(0.1, lambda : self.signature_help(position))
+        self.try_signature_help_timer.start()
+        
     def save_file(self):
         self.lsp_server.send_did_save_notification(self.filepath)
 
@@ -153,6 +163,8 @@ class FileAction(object):
             self.handle_rename_response(request_id, response_result)
         elif request_type == "hover":
             self.handle_hover_response(request_id, response_result)
+        elif request_type == "signature_help":
+            self.handle_signature_help(request_id, response_result)
 
     def handle_completion_response(self, request_id, response_result):
         # Stop send completion items to client if request id expired, or change file, or move cursor.
@@ -216,6 +228,15 @@ class FileAction(object):
         for c in self.lsp_server.completion_trigger_characters + [" " + '\t']:
             ret = ret.rpartition(c)[2]
         return ret
+    
+    def handle_signature_help(self, request_id, response_result):
+        # Stop send completion items to client if request id expired, or change file, or move cursor.
+        if (request_id == self.signature_help_request_list[-1] and
+            self.request_dict[request_id]["last_change_file_time"] == self.last_change_file_time and
+            self.request_dict[request_id]["last_change_cursor_time"] == self.last_change_cursor_time):
+            
+            if response_result is not None:
+                eval_in_emacs("message", [response_result["signatures"][0]["label"]])
 
     def handle_find_define_response(self, request_id, response_result):
         # Stop send jump define if request id expired, or change file, or move cursor.

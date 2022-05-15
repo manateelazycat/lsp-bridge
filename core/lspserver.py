@@ -380,6 +380,19 @@ class LspServer(object):
                                      }
                                  },
                                  request_id)
+            
+    def send_signature_help_request(self, request_id, filepath, type, position):
+        method = "textDocument/signatureHelp"
+        self.record_request_id(request_id, method, filepath, type)
+
+        self.send_to_request(method,
+                             {
+                                 "textDocument": {
+                                     "uri": path_to_uri(filepath)
+                                 },
+                                 "position": position
+                             },
+                             request_id)
 
     def send_find_define_request(self, request_id, filepath, type, position):
         method = "textDocument/definition"

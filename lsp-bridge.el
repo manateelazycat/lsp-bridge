@@ -440,7 +440,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defun lsp-bridge-monitor-post-command ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (unless (equal (point) lsp-bridge-last-position)
-      (lsp-bridge-call-async "change_cursor" lsp-bridge-filepath)
+      (lsp-bridge-call-async "change_cursor" lsp-bridge-filepath (lsp-bridge--position))
       (setq-local lsp-bridge-last-position (point))))
 
   ;; Hide hover tooltip.
@@ -722,6 +722,10 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-lookup-documentation ()
   (interactive)
   (lsp-bridge-call-async "hover" lsp-bridge-filepath (lsp-bridge--position)))
+
+(defun lsp-bridge-show-signature-help-in-minibuffer ()
+  (interactive)
+  (lsp-bridge-call-async "signature_help" lsp-bridge-filepath (lsp-bridge--position)))
 
 (defun lsp-bridge-get-pos (buf line column)
   (with-current-buffer buf

@@ -33,6 +33,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 * lsp-bridge-find-references: traversing across code references (fork from color-rg.el)
 * lsp-bridge-lookup-documentation: lookup documentation of cursor 
 * lsp-bridge-rename: rename the cursor content
+* lsp-bridge-show-signature-help-in-minibuffer: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
 * lsp-bridge-restart-process: restart lsp-bridge process (only used for development)
 
 ## Customize language server configuration

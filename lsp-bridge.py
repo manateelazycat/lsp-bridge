@@ -40,7 +40,8 @@ class LspBridge(object):
         self.action_cache_dict = {} # use for contain file action cache
 
         # Build EPC interfaces.
-        for name in ["change_file", "find_define", "find_implementation", "find_references", "prepare_rename", "rename", "change_cursor", "save_file", "hover"]:
+        for name in ["change_file", "find_define", "find_implementation", "find_references", 
+                     "prepare_rename", "rename", "change_cursor", "save_file", "hover", "signature_help"]:
             self.build_file_action_function(name)
 
         # Init EPC client port.
