@@ -290,7 +290,7 @@ class LspServer(object):
         if filekey not in self.open_file_dict:
             self.open_file_dict[filekey] = ""
 
-            with open(filepath) as f:
+            with open(filepath, encoding="utf-8") as f:
                 self.send_to_notification("textDocument/didOpen",
                                           {
                                               "textDocument": {
