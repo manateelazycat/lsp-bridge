@@ -63,7 +63,7 @@ class LspBridgeListener(Thread):
                     "name": "lsp_recv_message",
                     "content": json.loads(line)
                 })
-                
+
             except:
                 traceback.print_exc()
 
@@ -82,7 +82,10 @@ class LspBridgeListener(Thread):
                         buffer = buffer[end:]
                     else:
                         line = self.process.stdout.readline()
-                        buffer = buffer + line
+                        # dart_analysis_server 会发送 Content-Type,
+                        # 导致解析的 json 回包内容不完整
+                        if re.search(b"Content-Type", line) is None:
+                            buffer = buffer + line
                 else:
                     if len(buffer) < content_length:
                         # 这个检查算是个防御吧，实际应该用不到了。先保留，后续再看。
