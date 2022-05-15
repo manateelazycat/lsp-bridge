@@ -62,3 +62,29 @@ def with_file(file: SingleFile):
                 os.remove(t_file.name)
         return wrapper
     return decorator
+
+
+def eval_sexp_sync(sexp: str, timeout: int = 40):
+    res = None
+
+    def callback(_res):
+        nonlocal res
+        res = _res
+
+    core.utils.eval_sexp_in_emacs(sexp, callback=callback)
+    while res is None:
+        time.sleep(1)
+        timeout -= 1
+        if timeout <= 0:
+            raise Exception("timeout when eval sexp")
+
+    return res
+
+
+def file_buffer(filename: str, sexps: str) -> str:
+    return f"""
+    (progn
+      (find-file "{filename}")
+      (with-current-buffer (get-file-buffer "{filename}")
+        {sexps}
+      ))"""

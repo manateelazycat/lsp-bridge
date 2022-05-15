@@ -16,18 +16,14 @@ def try_complete(file: SingleFile, label: str):
     @with_file(file)
     @interceptor(must_include_completion)
     def complete_file(filename: str):
-        eval_sexp_in_emacs(f"""
-        (progn
-          (find-file "{filename}")
-          (with-current-buffer (get-file-buffer "{filename}")
+        eval_sexp_in_emacs(file_buffer(filename, f"""
             (setq-local major-mode '{file.mode})
             (lsp-bridge-mode 1)
             (goto-char (point-max))
             (delete-char -1)
             (sleep-for 10)
             (insert "{file.code[-1]}")
-            ))
-        """)
+        """))
 
     return complete_file()
 

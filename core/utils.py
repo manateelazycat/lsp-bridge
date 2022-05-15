@@ -53,7 +53,7 @@ def close_epc_client():
         epc_client.close()
 
 
-def eval_sexp_in_emacs(sexp: str):
+def eval_sexp_in_emacs(sexp: str, **kwargs):
     global epc_client
 
     if epc_client is None:
@@ -61,10 +61,10 @@ def eval_sexp_in_emacs(sexp: str):
     else:
         logger.debug("Eval in Emacs: %s", sexp)
         # Call eval-in-emacs elisp function.
-        epc_client.call("eval-in-emacs", [sexp])
+        epc_client.call("eval-in-emacs", [sexp], **kwargs)
 
 
-def eval_in_emacs(method_name, *args, no_intercept=False):
+def eval_in_emacs(method_name, *args, no_intercept=False, **kwargs):
     global epc_client
 
     if len(args) == 1 and type(args[0]) == list:
@@ -80,7 +80,7 @@ def eval_in_emacs(method_name, *args, no_intercept=False):
         sexp = sexpdata.dumps(args)
         logger.debug("Eval in Emacs: %s", sexp)
         # Call eval-in-emacs elisp function.
-        epc_client.call("eval-in-emacs", [sexp])
+        epc_client.call("eval-in-emacs", [sexp], **kwargs)
 
 def epc_arg_transformer(arg):
     # Transform [Symbol(":a"), 1, Symbol(":b"), 2] to dict(a=1, b=2)
