@@ -18,16 +18,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from typing import Dict, Optional
-
-from epc.client import EPCClient
-import sexpdata
-import sys
-import os
-import platform
-import pathlib
-import logging
+from typing import Optional
 from urllib.parse import urlparse
+
+import sexpdata
+import logging
+import pathlib
+import platform
+import sys
+from epc.client import EPCClient
 
 epc_client: Optional[EPCClient] = None
 test_interceptor = None
@@ -83,6 +82,10 @@ def eval_in_emacs(method_name, *args, no_intercept=False, **kwargs):
         logger.debug("Eval in Emacs: %s", sexp)
         # Call eval-in-emacs elisp function.
         epc_client.call("eval-in-emacs", [sexp], **kwargs)
+
+
+def message_emacs(message: str):
+    eval_in_emacs("message", "[LSP-Bridge] " + message)
 
 
 def epc_arg_transformer(arg):

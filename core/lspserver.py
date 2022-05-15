@@ -34,12 +34,6 @@ import traceback
 
 DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
 
-COMPLETION_TRIGGER_KIND = {
-    "Invoked": 1,
-    "TriggerCharacter": 2,
-    "TriggerForIncompleteCompletions": 3
-}
-
 
 class JsonEncoder(json.JSONEncoder):
 
@@ -355,134 +349,6 @@ class LspServer(object):
             "type": type
         }
 
-    def send_completion_request(self, request_id, filepath, type, position, char):
-        method = "textDocument/completion"
-        self.record_request_id(request_id, method, filepath, type)
-
-        # STEP 6: Calculate completion candidates for current point.
-        if char in self.completion_trigger_characters:
-            # Completion was triggered by a trigger character specified by the `completion_trigger_characters'.
-            self.send_to_request(method,
-                                 {
-                                     "textDocument": {
-                                         "uri": path_to_uri(filepath)
-                                     },
-                                     "position": position,
-                                     "context": {
-                                         "triggerKind": COMPLETION_TRIGGER_KIND["TriggerCharacter"],
-                                         "triggerCharacter": char
-                                     }
-                                 },
-                                 request_id)
-        else:
-            # Completion was triggered by typing an identifier.
-            self.send_to_request(method,
-                                 {
-                                     "textDocument": {
-                                         "uri": path_to_uri(filepath)
-                                     },
-                                     "position": position,
-                                     "context": {
-                                         "triggerKind": COMPLETION_TRIGGER_KIND["Invoked"]
-                                     }
-                                 },
-                                 request_id)
-
-    def send_signature_help_request(self, request_id, filepath, type, position):
-        method = "textDocument/signatureHelp"
-        self.record_request_id(request_id, method, filepath, type)
-
-        self.send_to_request(method,
-                             {
-                                 "textDocument": {
-                                     "uri": path_to_uri(filepath)
-                                 },
-                                 "position": position
-                             },
-                             request_id)
-
-    def send_find_define_request(self, request_id, filepath, type, position):
-        method = "textDocument/definition"
-        self.record_request_id(request_id, method, filepath, type)
-
-        self.send_to_request(method,
-                             {
-                                 "textDocument": {
-                                     "uri": path_to_uri(filepath)
-                                 },
-                                 "position": position,
-                             },
-                             request_id)
-
-    def send_find_implementation_request(self, request_id, filepath, type, position):
-        method = "textDocument/implementation"
-        self.record_request_id(request_id, method, filepath, type)
-
-        self.send_to_request(method,
-                             {
-                                 "textDocument": {
-                                     "uri": path_to_uri(filepath)
-                                 },
-                                 "position": position,
-                             },
-                             request_id)
-
-    def send_find_references_request(self, request_id, filepath, type, positon):
-        method = "textDocument/references"
-        self.record_request_id(request_id, method, filepath, type)
-
-        self.send_to_request(method,
-                             {
-                                 "textDocument": {
-                                     "uri": path_to_uri(filepath)
-                                 },
-                                 "position": positon,
-                                 "context": {
-                                     "includeDeclaration": False
-                                 }
-                             },
-                             request_id)
-
-    def send_prepare_rename_request(self, request_id, filepath, type, position):
-        method = "textDocument/prepareRename"
-        self.record_request_id(request_id, method, filepath, type)
-
-        self.send_to_request(method,
-                             {
-                                 "textDocument": {
-                                     "uri": path_to_uri(filepath)
-                                 },
-                                 "position": position,
-                             },
-                             request_id)
-
-    def send_rename_request(self, request_id, filepath, type, position, new_name):
-        method = "textDocument/rename"
-        self.record_request_id(request_id, method, filepath, type)
-
-        self.send_to_request(method,
-                             {
-                                 "textDocument": {
-                                     "uri": path_to_uri(filepath)
-                                 },
-                                 "position": position,
-                                 "newName": new_name
-                             },
-                             request_id)
-
-    def send_hover_request(self, request_id, filepath, type, position):
-        method = "textDocument/hover"
-        self.record_request_id(request_id, method, filepath, type)
-
-        self.send_to_request(method,
-                             {
-                                 "textDocument": {
-                                     "uri": path_to_uri(filepath)
-                                 },
-                                 "position": position
-                             },
-                             request_id)
-
     def send_shutdown_request(self):
         self.shutdown_id = generate_request_id()
         self.send_to_request("shutdown", {}, self.shutdown_id)
@@ -523,7 +389,8 @@ class LspServer(object):
                 # others
                 logger.info("\n--- Recv message")
 
-        logger.debug(json.dumps(message, indent=3))
+        if "method" in message and message["method"] not in ["textDocument/publishDiagnostics"]:
+            logger.debug(json.dumps(message, indent=3))
 
         if "id" in message.keys():
             if message["id"] == self.initialize_id:
