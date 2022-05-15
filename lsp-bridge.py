@@ -29,6 +29,7 @@ import queue
 import signal
 import sys
 import threading
+import traceback
 
 class LspBridge(object):
     def __init__(self, args):
@@ -131,7 +132,14 @@ class LspBridge(object):
         lsp_server_name = file_action.get_lsp_server_name()
         if lsp_server_name not in self.lsp_server_dict:
             # lsp server will send initialize and didOpen when open first file in project.
-            server = LspServer(self.message_queue, file_action)
+            try:
+                server = LspServer(self.message_queue, file_action)
+            except FileNotFoundError:
+                eval_in_emacs("message", [f"Server {file_action.lang_server_info['command']} not found, please install it."])
+                return
+            except:
+                traceback.print_exc()
+                return
             self.lsp_server_dict[lsp_server_name] = server
         else:
             # Send didOpen notification to LSP server.
