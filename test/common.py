@@ -47,7 +47,6 @@ def interceptor(expectation: Callable[[str, List[Any]], bool],
 class SingleFile(NamedTuple):
     filename: str
     code: str
-    expectation: str
     mode: str
 
 
