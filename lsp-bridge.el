@@ -244,6 +244,42 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "The lang server rule for file mode."
   :type 'cons)
 
+(defcustom lsp-bridge-default-mode-hooks
+  '('c-mode-hook
+    'c++-mode-hook
+    'java-mode-hook
+    'python-mode-hook
+    'ruby-mode-hook
+    'lua-mode-hook
+    'rust-mode-hook
+    'elixir-mode-hook
+    'go-mode-hook
+    'haskell-mode-hook
+    'haskell-literate-mode-hook
+    'dart-mode-hook
+    'scala-mode-hook
+    'typescript-mode-hook
+    'typescript-tsx-mode-hook
+    'js2-mode-hook
+    'js-mode-hook
+    'rjsx-mode-hook
+    'tuareg-mode-hook
+    'latex-mode-hook
+    'Tex-latex-mode-hook
+    'texmode-hook
+    'context-mode-hook
+    'texinfo-mode-hook
+    'bibtex-mode-hook
+    'clojure-mode-hook
+    'clojurec-mode-hook
+    'clojurescript-mode-hook
+    'clojurex-mode-hook
+    'sh-mode-hook
+    'web-mode-hook
+    )
+  "The default mode hook to enable lsp-bridge."
+  :type 'list)
+
 (defvar lsp-bridge-get-lang-server-by-project nil
   "Get lang server with project path and file path.")
 
@@ -822,6 +858,20 @@ If optional MARKER, return a marker instead"
   "Disable LSP Bridge mode."
   (dolist (hook lsp-bridge--internal-hooks)
     (remove-hook (car hook) (cdr hook) t)))
+
+(defun global-lsp-bridge-mode ()
+  (dolist (hook (list
+                 'emacs-lisp-mode-hook
+                 ))
+    (add-hook hook (lambda ()
+                     (setq-local corfu-auto t)
+                     )))
+
+  (dolist (hook lsp-bridge-default-mode-hooks)
+    (add-hook hook (lambda ()
+                     (setq-local corfu-auto nil) ;; let lsp-bridge control when popup completion frame
+                     (lsp-bridge-mode 1)
+                     ))))
 
 (provide 'lsp-bridge)
 
