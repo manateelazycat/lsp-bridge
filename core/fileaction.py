@@ -43,8 +43,8 @@ class FileAction(object):
         object.__init__(self)
 
         # Build request functions.
-        for name in ["find_define", "find_implementation", "find_references", "prepare_rename", 
-                     "rename", "completion", "hover", "signature_help"]:
+        for name in ["find_define", "find_implementation", "find_references", "prepare_rename",
+                     "rename", "completion", "hover", "signature_help", "jdt_class_contents"]:
             self.build_request_function(name)
 
         # Init.
@@ -289,7 +289,7 @@ class FileAction(object):
                     startpos = range1["start"]
                     row = startpos["line"]
                     column = startpos["character"]
-                    eval_in_emacs("lsp-bridge--jump-to-def", [filepath, row, column])
+                    eval_in_emacs("lsp-bridge--jump-to-def", [filepath, row, column, False])
                 except:
                     logger.info("* Failed information about find_implementation response.")
                     import traceback

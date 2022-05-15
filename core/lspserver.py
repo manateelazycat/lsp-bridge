@@ -353,11 +353,12 @@ class LspServer(object):
                                       ]
                                   })
 
-    def record_request_id(self, request_id, method, filepath, type):
+    def record_request_id(self, request_id, method, filepath, type, extras={}):
         self.request_dict[request_id] = {
             "method": method,
             "filepath": filepath,
-            "type": type
+            "type": type,
+            "extras": extras
         }
 
     def send_completion_request(self, request_id, filepath, type, position, char):
