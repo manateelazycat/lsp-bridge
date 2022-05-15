@@ -296,7 +296,7 @@ class LspServer(object):
             "initializationOptions": self.server_info.get("initializationOptions", {})
         }, self.initialize_id)
 
-def send_did_open_notification(self, filepath, uri):
+    def send_did_open_notification(self, filepath, uri):
         filekey = path_as_key(filepath)
         if filekey not in self.open_file_dict:
             self.open_file_dict[filekey] = ""
