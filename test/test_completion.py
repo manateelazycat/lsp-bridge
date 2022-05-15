@@ -30,6 +30,8 @@ def try_completion(file: SingleFile):
     t_file.write(file.code[:-1].encode('utf-8'))
     t_file.close()
 
+    timeout = 40
+
     with EvalInterceptor() as calls:
         eval_sexp_in_emacs(f"""
         (progn
@@ -41,7 +43,12 @@ def try_completion(file: SingleFile):
             (insert "{file.code[-1]}")
             ))
         """)
-        time.sleep(10)
+        while not any(map(lambda c: c[0] == "lsp-bridge-record-completion-items", calls)):
+            time.sleep(1)
+            timeout -= 1
+            if timeout <= 0:
+                print(f"timeout: {timeout}")
+                break
         assert any(must_include_completion(e, file.expectation) for e in calls)
     os.remove(t_file.name)
 
