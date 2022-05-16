@@ -169,7 +169,12 @@ class LspBridge(object):
                 getattr(action, name)(*args[1:])
             else:
                 # Cache file action wait for file to open it.
-                self.action_cache_dict[filekey] = (name, ) + args[1:]
+                action_cache = (name, ) + args[1:]
+                if filekey in self.action_cache_dict:
+                    self.action_cache_dict[filekey].append(action_cache)
+                else:
+                    self.action_cache_dict[filekey] = [action_cache]
+                    
                 self.open_file(filepath)
                 logger.info("Cache action {}, wait for file {} to open it before executing.".format(name, filepath))
 
@@ -200,17 +205,20 @@ class LspBridge(object):
     def handle_server_file_opened(self, filepath):
         filekey = path_as_key(filepath)
         if filekey in self.action_cache_dict:
-            cache = self.action_cache_dict[filekey]
-            action_name = cache[0]
-            action_args = cache[1:]
-
-            if filekey in self.file_action_dict:
-                # Execute file action after file opened.
-                getattr(self.file_action_dict[filekey], action_name)(*action_args)
-                logger.info("Execute action {} for file {}".format(action_name, filepath))
-            else:
-                # Please report bug if you got this message.
-                logger.error("IMPOSSIBLE HERE: handle_server_file_opened '{}' {} {}".format(filepath, action_name, self.file_action_dict))
+            for action_cache in self.action_cache_dict[filekey]:
+                action_name = action_cache[0]
+                action_args = action_cache[1:]
+                
+                if filekey in self.file_action_dict:
+                    # Execute file action after file opened.
+                    getattr(self.file_action_dict[filekey], action_name)(*action_args)
+                    logger.info("Execute action {} for file {}".format(action_name, filepath))
+                else:
+                    # Please report bug if you got this message.
+                    logger.error("IMPOSSIBLE HERE: handle_server_file_opened '{}' {} {}".format(filepath, action_name, self.file_action_dict))
+                    
+            # We need clear action_cache_dict last.
+            del self.action_cache_dict[filekey]
 
     def cleanup(self):
         '''Do some cleanup before exit python process.'''
