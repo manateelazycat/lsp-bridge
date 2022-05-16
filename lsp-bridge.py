@@ -32,9 +32,8 @@ from core.utils import *
 from core.handler import *
 
 
-class LspBridge(object):
+class LspBridge:
     def __init__(self, args):
-        object.__init__(self)
 
         # Object cache to exchange information between Emacs and LSP server.
         self.file_action_dict: Dict[str, FileAction] = {}  # use for contain file action
@@ -86,7 +85,7 @@ class LspBridge(object):
         self.message_thread.start()
 
         # Pass epc port and webengine codec information to Emacs when first start LspBridge.
-        eval_in_emacs('lsp-bridge--first-start', [self.server.server_address[1]])
+        eval_in_emacs('lsp-bridge--first-start', self.server.server_address[1])
 
         # postgui_thread never exit, simulation event loop.
         self.postgui_thread.join()
@@ -129,7 +128,7 @@ class LspBridge(object):
         file_key = path_as_key(filepath)
         if file_key not in self.file_action_dict:
             project_path = get_project_path(filepath)
-            lang_server = get_emacs_func_result("get-lang-server", [project_path, filepath])
+            lang_server = get_emacs_func_result("get-lang-server", project_path, filepath)
             action = FileAction(filepath, project_path, lang_server)
             self.file_action_dict[file_key] = action
 

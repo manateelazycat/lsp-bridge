@@ -22,25 +22,24 @@ import pprint
 import threading
 import time
 import os
-from typing import Dict
+from typing import Dict, Tuple
 
 from core.utils import *
 from core.handler import *
 
 
-class FileAction(object):
+class FileAction:
 
     def __init__(self, filepath, project_path, lang_server):
-        object.__init__(self)
-
         # Init.
         self.filepath = filepath
         self.project_path = project_path
         self.request_dict = {}
-        self.last_change_file_time = -1
+        self.last_change_file_time = -1.0
         self.last_change_file_before_cursor_text = ""
-        self.last_change_cursor_time = -1
+        self.last_change_cursor_time = -1.0
         self.version = 1
+
         self.try_completion_timer = None
         self.try_signature_help_timer = None
 
@@ -60,11 +59,12 @@ class FileAction(object):
         self.enable_auto_import = get_emacs_var("lsp-bridge-enable-auto-import")
 
     @property
-    def last_change(self):
+    def last_change(self) -> Tuple[float, float]:
+        """Return the last change information as a tuple."""
         return self.last_change_file_time, self.last_change_cursor_time
 
     def call(self, method, *args, **kwargs):
-        # Call any handler or method of file action.
+        """Call any handler or method of file action."""
         if method in self.handlers:
             return self.handlers[method].send_request(*args, **kwargs)
         getattr(self, method)(*args, **kwargs)
@@ -112,7 +112,9 @@ class FileAction(object):
         self.last_change_file_before_cursor_text = before_cursor_text
 
         # Send textDocument/completion 100ms later.
-        self.try_completion_timer = threading.Timer(0.1, lambda: self.handlers["completion"].send_request(position, before_char))
+        self.try_completion_timer = threading.Timer(
+            0.1, lambda: self.handlers["completion"].send_request(position, before_char)
+        )
         self.try_completion_timer.start()
 
     def change_cursor(self, position):
@@ -124,7 +126,9 @@ class FileAction(object):
             self.try_signature_help_timer.cancel()
 
         # Send textDocument/signatureHelp 200ms later.
-        self.try_signature_help_timer = threading.Timer(0.2, lambda: self.handlers["signature_help"].send_request(position))
+        self.try_signature_help_timer = threading.Timer(
+            0.2, lambda: self.handlers["signature_help"].send_request(position)
+        )
         self.try_signature_help_timer.start()
 
     def save_file(self):

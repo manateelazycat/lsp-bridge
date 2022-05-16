@@ -29,6 +29,7 @@ import traceback
 from subprocess import PIPE
 from sys import stderr
 from threading import Thread
+from typing import Set
 
 from core.utils import *
 
@@ -159,7 +160,7 @@ class LspServer:
         self.initialize_id = generate_request_id()
         self.server_name = file_action.get_lsp_server_name()
         self.request_dict = {}
-        self.open_file_dict = {}  # contain file opened in current project
+        self.opened_files: Set[str] = set()  # contain file opened in current project
         self.root_path = self.project_path
 
         # LSP server information.
@@ -170,15 +171,14 @@ class LspServer:
             self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE,
                                       stderr=stderr)
         except FileNotFoundError:
-            eval_in_emacs("message", ["LSP-Bridge] ERROR: start LSP server {} failed, not found file '{}'".format(
-                self.server_info["name"], self.server_info["command"][0]
-            )])
+            message_emacs("ERROR: start LSP server {} failed, can't find file '{}'".format(
+                self.server_info["name"], self.server_info["command"][0])
+            )
 
             return
 
         # Notify user server is start.
-        eval_in_emacs("message",
-                      ["[LSP-Bridge] Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path)])
+        message_emacs("Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path))
 
         # Two separate thread (read/write) to communicate with LSP server.
         self.receiver = LspServerReceiver(self.p)
@@ -218,11 +218,11 @@ class LspServer:
 
     def send_did_open_notification(self, filepath):
         file_key = path_as_key(filepath)
-        if file_key in self.open_file_dict:
+        if file_key in self.opened_files:
             logger.info("File {} has opened in server {}".format(filepath, self.server_name))
             return
 
-        self.open_file_dict[file_key] = ""
+        self.opened_files.add(file_key)
 
         with open(filepath, encoding="utf-8") as f:
             self.sender.send_notification("textDocument/didOpen", {
@@ -234,54 +234,51 @@ class LspServer:
                 }
             })
 
-            self.message_queue.put({
-                "name": "server_file_opened",
-                "content": filepath
-            })
+        self.message_queue.put({
+            "name": "server_file_opened",
+            "content": filepath
+        })
 
     def send_did_close_notification(self, filepath):
-        self.sender.send_notification("textDocument/didClose",
-                                      {
-                                                 "textDocument": {
-                                                     "uri": path_to_uri(filepath),
-                                                 }
-                                             })
+        self.sender.send_notification("textDocument/didClose", {
+            "textDocument": {
+                "uri": path_to_uri(filepath),
+            }
+        })
 
     def send_did_save_notification(self, filepath):
-        self.sender.send_notification("textDocument/didSave",
-                                      {
-                                                 "textDocument": {
-                                                     "uri": path_to_uri(filepath)
-                                                 }
-                                             })
+        self.sender.send_notification("textDocument/didSave", {
+            "textDocument": {
+                "uri": path_to_uri(filepath)
+            }
+        })
 
     def send_did_change_notification(self, filepath, version, start, end, range_length, text):
         # STEP 5: Tell LSP server file content is changed.
         # This step is very IMPORTANT, make sure LSP server contain same content as client,
         # otherwise LSP server won't response client request, such as completion, find-define, find-references and rename etc.
-        self.sender.send_notification("textDocument/didChange",
-                                      {
-                                                 "textDocument": {
-                                                     "uri": path_to_uri(filepath),
-                                                     "version": version
-                                                 },
-                                                 "contentChanges": [
-                                                     {
-                                                         "range": {
-                                                             "start": start,
-                                                             "end": end
-                                                         },
-                                                         "rangeLength": range_length,
-                                                         "text": text
-                                                     }
-                                                 ]
-                                             })
+        self.sender.send_notification("textDocument/didChange", {
+            "textDocument": {
+                "uri": path_to_uri(filepath),
+                "version": version
+            },
+            "contentChanges": [
+                {
+                    "range": {
+                        "start": start,
+                        "end": end
+                    },
+                    "rangeLength": range_length,
+                    "text": text
+                }
+            ]
+        })
 
-    def record_request_id(self, request_id, method, filepath, type):
+    def record_request_id(self, request_id, method, filepath, name):
         self.request_dict[request_id] = {
             "method": method,
             "filepath": filepath,
-            "type": type
+            "name": name
         }
 
     def send_shutdown_request(self):
@@ -352,16 +349,16 @@ class LspServer:
                 self.send_did_open_notification(self.first_file_path)
 
                 # Notify user server is ready.
-                eval_in_emacs("message", [
-                    "[LSP-Bridge] Start LSP server ({}) for {} complete, enjoy hacking!".format(
+                message_emacs("Start LSP server ({}) for {} complete, enjoy hacking!".format(
                         self.server_info["name"],
-                        self.root_path)])
+                        self.root_path
+                ))
             else:
                 if "method" not in message and message["id"] in self.request_dict:
                     self.message_queue.put({
                         "name": "server_response_message",
                         "content": (self.request_dict[message["id"]]["filepath"],
-                                    self.request_dict[message["id"]]["type"],
+                                    self.request_dict[message["id"]]["name"],
                                     message["id"],
                                     message["result"])
                     })
@@ -371,13 +368,13 @@ class LspServer:
 
     def close_file(self, filepath):
         # Send didClose notification when client close file.
-        filekey = path_as_key(filepath)
-        if filekey in self.open_file_dict:
+        file_key = path_as_key(filepath)
+        if file_key in self.opened_files:
             self.send_did_close_notification(filepath)
-            del self.open_file_dict[filekey]
+            self.opened_files.remove(file_key)
 
         # We need shutdown LSP server when last file closed, to save system memory.
-        if len(self.open_file_dict) == 0:
+        if len(self.opened_files) == 0:
             self.send_shutdown_request()
             self.send_exit_notification()
 

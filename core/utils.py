@@ -18,6 +18,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import functools
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -29,8 +30,11 @@ import sys
 from epc.client import EPCClient
 
 epc_client: Optional[EPCClient] = None
+
+# for test purpose
 test_interceptor = None
 
+# initialize logging, default to STDERR and INFO level
 logger = logging.getLogger("lsp-bridge")
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
@@ -48,48 +52,34 @@ def init_epc_client(emacs_server_port):
 
 
 def close_epc_client():
-    global epc_client
-
     if epc_client is not None:
         epc_client.close()
 
 
 def eval_sexp_in_emacs(sexp: str, **kwargs):
-    global epc_client
-
-    if epc_client is None:
-        logger.error("Please call init_epc_client first before calling eval_in_emacs.")
-    else:
-        logger.debug("Eval in Emacs: %s", sexp)
-        # Call eval-in-emacs elisp function.
-        epc_client.call("eval-in-emacs", [sexp], **kwargs)
+    logger.debug("Eval in Emacs: %s", sexp)
+    # Call eval-in-emacs elisp function.
+    epc_client.call("eval-in-emacs", [sexp], **kwargs)
 
 
 def eval_in_emacs(method_name, *args, no_intercept=False, **kwargs):
-    global epc_client
+    if test_interceptor and not no_intercept:  # for test purpose, record all eval_in_emacs calls
+        test_interceptor(method_name, args)
 
-    if len(args) == 1 and type(args[0]) == list:
-        args = args[0]
-
-    if epc_client is None:
-        logger.error("Please call init_epc_client first before calling eval_in_emacs.")
-    else:
-        if test_interceptor and not no_intercept:
-            test_interceptor(method_name, args)
-
-        args = [sexpdata.Symbol(method_name)] + list(map(sexpdata.Quoted, args))
-        sexp = sexpdata.dumps(args)
-        logger.debug("Eval in Emacs: %s", sexp)
-        # Call eval-in-emacs elisp function.
-        epc_client.call("eval-in-emacs", [sexp], **kwargs)
+    args = [sexpdata.Symbol(method_name)] + list(map(sexpdata.Quoted, args))
+    sexp = sexpdata.dumps(args)
+    logger.debug("Eval in Emacs: %s", sexp)
+    # Call eval-in-emacs elisp function.
+    epc_client.call("eval-in-emacs", [sexp], **kwargs)
 
 
 def message_emacs(message: str):
+    """Message to Emacs with prefix."""
     eval_in_emacs("message", "[LSP-Bridge] " + message)
 
 
 def epc_arg_transformer(arg):
-    # Transform [Symbol(":a"), 1, Symbol(":b"), 2] to dict(a=1, b=2)
+    """Transform [Symbol(":a"), 1, Symbol(":b"), 2] to dict(a=1, b=2)"""
     if type(arg) != list or len(arg) % 2 != 0:
         return arg
 
@@ -113,29 +103,20 @@ def convert_emacs_bool(symbol_value, symbol_is_boolean):
 
 
 def get_emacs_vars(args):
-    global epc_client
-
     return list(map(lambda result: convert_emacs_bool(result[0], result[1]) if result != [] else False,
                     epc_client.call_sync("get-emacs-vars", args)))
 
 
 def get_emacs_var(var_name):
-    global epc_client
-
     symbol_value, symbol_is_boolean = epc_client.call_sync("get-emacs-var", [var_name])
 
     return convert_emacs_bool(symbol_value, symbol_is_boolean)
 
 
-def get_emacs_func_result(method_name, args):
-    global epc_client
-
-    if epc_client is None:
-        print("Please call init_epc_client first before calling eval_in_emacs.")
-    else:
-        # Call eval-in-emacs elisp function synchronously and return the result
-        result = epc_client.call_sync(method_name, args)
-        return result
+def get_emacs_func_result(method_name, *args):
+    """Call eval-in-emacs elisp function synchronously and return the result."""
+    result = epc_client.call_sync(method_name, args)
+    return result
 
 
 def get_command_result(command_string, cwd):
@@ -207,16 +188,9 @@ def get_project_path(filepath):
         return filepath
 
 
-emacs_version = None
-
-
+@functools.cache
 def get_emacs_version():
-    global emacs_version
-
-    if emacs_version is None:
-        return get_emacs_func_result("get-emacs-version", [])
-    else:
-        return emacs_version
+    return get_emacs_func_result("get-emacs-version")
 
 
 def get_os_name():
