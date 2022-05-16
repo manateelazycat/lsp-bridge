@@ -71,7 +71,6 @@ class LspBridge(object):
         (enable_lsp_server_log, ) = get_emacs_vars(["lsp-bridge-enable-log"])
         if enable_lsp_server_log:
             logger.setLevel(logging.DEBUG)
-        self.workspace_dir = get_emacs_var("lsp-bridge-workspace-dir")
 
         # All Emacs request running in postgui_thread.
         self.postgui_queue = queue.Queue()
