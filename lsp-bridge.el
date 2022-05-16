@@ -739,7 +739,7 @@ If optional MARKER, return a marker instead"
   (goto-line (1+ (plist-get position :line)))
   (lsp-bridge--move-to-column (plist-get position :character)))
 
-(defun lsp-bridge--jump-to-def (filepath position readonly)
+(defun lsp-bridge--jump-to-def (filepath position)
   (interactive)
   ;; Record postion.
   (set-marker (mark-marker) (point) (current-buffer))
@@ -750,9 +750,6 @@ If optional MARKER, return a marker instead"
   (if lsp-bridge-jump-to-def-in-other-window
       (find-file-other-window filepath)
     (find-file filepath))
-
-  (when readonly
-    (read-only-mode))
 
   (lsp-bridge--goto-position position)
 

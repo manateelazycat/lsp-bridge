@@ -220,7 +220,7 @@ class LspServer(object):
         self.sender_threads = []
         self.request_dict = {}
         self.open_file_dict = {} # contain file opened in current project
-        self.file_uri_dict = {} # save the mapping between file and uri
+        self.filepath_uri_dict = {} # save the mapping of filepath and uri
         self.root_path = self.project_path
 
         # All LSP server response running in ls_message_thread.
@@ -229,9 +229,9 @@ class LspServer(object):
         self.ls_message_thread.start()
 
         # Load library directories
-        self.library_directories = [*map(self.expand_file_name, file_action.lang_server_info.get("libraryDirectories", []))]
+        self.library_directories = [*map(os.path.expanduser, file_action.lang_server_info.get("libraryDirectories", []))]
         self.message_queue.put({
-            "name": "update_library_directories",
+            "name": "update_lang_library_directories",
             "content": {
                 "lang": self.server_type,
                 "dires": self.library_directories
@@ -239,9 +239,9 @@ class LspServer(object):
         })
         for lib_dir in self.library_directories:
             self.message_queue.put({
-                "name": "init_workspace",
+                "name": "update_library_to_server_dict",
                 "content": {
-                    "workspace": "{}#{}".format(lib_dir, self.server_type),
+                    "library": "{}#{}".format(lib_dir, self.server_type),
                     "lsp_server_name": self.server_name
                 }
             })
@@ -251,12 +251,6 @@ class LspServer(object):
 
         # Start LSP server process.
         self.start_lsp_server_process()
-
-    def expand_file_name(self, filepath):
-        if filepath.startswith('~'):
-            return os.path.expanduser(filepath)
-        else:
-            return filepath
 
     def start_lsp_server_process(self):
         # Start LSP sever.
@@ -317,14 +311,14 @@ class LspServer(object):
             self.open_file_dict[filekey] = ""
 
             if lsp_buffer_uri_or_path.startswith("/"):
-                self.file_uri_dict[filepath] = path_to_uri(lsp_buffer_uri_or_path)
+                self.filepath_uri_dict[filepath] = path_to_uri(lsp_buffer_uri_or_path)
             else:
-                self.file_uri_dict[filepath] = lsp_buffer_uri_or_path
+                self.filepath_uri_dict[filepath] = lsp_buffer_uri_or_path
             with open(filepath, encoding="utf-8") as f:
                 self.send_to_notification("textDocument/didOpen",
                                           {
                                               "textDocument": {
-                                                  "uri": self.file_uri_dict[filepath],
+                                                  "uri": self.filepath_uri_dict[filepath],
                                                   "languageId": self.server_info["languageId"],
                                                   "version": 0,
                                                   "text": f.read()

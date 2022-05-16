@@ -38,9 +38,8 @@ class LspBridge(object):
         self.file_action_dict = {}  # use for contain file action
         self.lsp_server_dict = {}   # use for contain lsp server
         self.action_cache_dict = {} # use for contain file action cache
-        self.workspace_server_dict = {} # use for save the mapping between workspace and LSP server name
-
-        self.lsp_library_directories = {}
+        self.library_to_server_dict = {} # use for save the mapping of library-directory and LSP server name
+        self.lang_library_directories = {} # use for save the mapping of language-server and library-directories
 
         # Build EPC interfaces.
         for name in ["change_file", "find_define", "find_implementation", "find_references",
@@ -111,12 +110,12 @@ class LspBridge(object):
                 self.handle_server_process_exit(message["content"])
             elif message["name"] == "server_response_message":
                 self.handle_server_message(*message["content"])
-            elif message["name"] == "init_workspace":
-                self.workspace_server_dict[message["content"]["workspace"]] = message["content"]["lsp_server_name"]
-            elif message["name"] == "update_library_directories":
+            elif message["name"] == "update_library_to_server_dict":
+                self.library_to_server_dict[message["content"]["library"]] = message["content"]["lsp_server_name"]
+            elif message["name"] == "update_lang_library_directories":
                 lang = message["content"]["lang"]
                 dires = message["content"]["dires"]
-                self.lsp_library_directories[lang] = dires
+                self.lang_library_directories[lang] = dires
 
             self.message_queue.task_done()
 
@@ -134,14 +133,14 @@ class LspBridge(object):
         lang_server = get_emacs_func_result("get-lang-server", [project_path, filepath])
         lsp_server_name = None
 
-        lib_dir = None
-        for _dir in self.lsp_library_directories.get(lang_server, []):
-            if filepath.startswith(_dir):
-                lib_dir = _dir
+        library_directory: str = None
+        for lib_dir_name in self.lang_library_directories.get(lang_server, []):
+            if filepath.startswith(lib_dir_name):
+                library_directory = lib_dir_name
                 break
-        if lib_dir:
-            workspace = "{}#{}".format(lib_dir, lang_server)
-            lsp_server_name = self.workspace_server_dict[workspace]
+        if library_directory:
+            library = "{}#{}".format(library_directory, lang_server)
+            lsp_server_name = self.library_to_server_dict[library]
         if filekey not in self.file_action_dict:
             action = FileAction(filepath, project_path, lang_server)
             if lsp_server_name is None:
@@ -150,8 +149,8 @@ class LspBridge(object):
 
         # Create LSP server.
         file_action = self.file_action_dict[filekey]
-        if project_path in self.workspace_server_dict:
-            lsp_server_name = self.workspace_server_dict[project_path]
+        if project_path in self.library_to_server_dict:
+            lsp_server_name = self.library_to_server_dict[project_path]
         if lsp_server_name not in self.lsp_server_dict:
             # lsp server will send initialize and didOpen when open first file in project.
             server = LspServer(self.message_queue, file_action)
@@ -196,7 +195,7 @@ class LspBridge(object):
                     self.action_cache_dict[filekey].append(action_cache)
                 else:
                     self.action_cache_dict[filekey] = [action_cache]
-                    
+
                 self.open_file(filepath)
                 logger.info("Cache action {}, wait for file {} to open it before executing.".format(name, filepath))
 
@@ -230,7 +229,7 @@ class LspBridge(object):
             for action_cache in self.action_cache_dict[filekey]:
                 action_name = action_cache[0]
                 action_args = action_cache[1:]
-                
+
                 if filekey in self.file_action_dict:
                     # Execute file action after file opened.
                     getattr(self.file_action_dict[filekey], action_name)(*action_args)
@@ -238,7 +237,7 @@ class LspBridge(object):
                 else:
                     # Please report bug if you got this message.
                     logger.error("IMPOSSIBLE HERE: handle_server_file_opened '{}' {} {}".format(filepath, action_name, self.file_action_dict))
-                    
+
             # We need clear action_cache_dict last.
             del self.action_cache_dict[filekey]
 
