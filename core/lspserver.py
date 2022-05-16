@@ -32,19 +32,14 @@ import subprocess
 import threading
 import traceback
 
-
 DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
 
-COMPLETION_TRIGGER_KIND = {
-    "Invoked": 1,
-    "TriggerCharacter": 2,
-    "TriggerForIncompleteCompletions": 3
-}
 
 class JsonEncoder(json.JSONEncoder):
 
-    def default(self, o): # pylint: disable=E0202
+    def default(self, o):  # pylint: disable=E0202
         return o.__dict__
+
 
 class LspBridgeListener(Thread):
 
@@ -93,15 +88,15 @@ class LspBridgeListener(Thread):
                         if match is not None:
                             start = match.start()
                             msg = buffer[0:start]
-                            buffer = buffer[start :]
+                            buffer = buffer[start:]
                             content_length = None
                             self.emit_message(msg.decode("utf-8"))
                         else:
                             line = self.process.stdout.readline(content_length - len(buffer))
                             buffer = buffer + line
                     else:
-                        msg = buffer[0 : content_length]
-                        buffer = buffer[content_length :]
+                        msg = buffer[0: content_length]
+                        buffer = buffer[content_length:]
                         content_length = None
                         self.emit_message(msg.decode("utf-8"))
             except:
@@ -110,6 +105,7 @@ class LspBridgeListener(Thread):
         logger.info(self.process.stdout.read())
         if self.process.stderr:
             logger.info(self.process.stderr.read())
+
 
 class SendRequest(Thread):
 
@@ -139,7 +135,8 @@ class SendRequest(Thread):
 
         logger.info("\n--- Send request ({}): {}".format(self.id, self.name))
 
-        logger.debug(json.dumps(message_dict, indent = 3))
+        logger.debug(json.dumps(message_dict, indent=3))
+
 
 class SendNotification(Thread):
 
@@ -173,7 +170,8 @@ class SendNotification(Thread):
 
         logger.info("\n--- Send notification: {}".format(self.name))
 
-        logger.debug(json.dumps(message_dict, indent = 3))
+        logger.debug(json.dumps(message_dict, indent=3))
+
 
 class SendResponse(Thread):
 
@@ -202,7 +200,8 @@ class SendResponse(Thread):
 
         logger.info("\n--- Send response ({}): {}".format(self.id, self.name))
 
-        logger.debug(json.dumps(message_dict, indent = 3))
+        logger.debug(json.dumps(message_dict, indent=3))
+
 
 class LspServer(object):
 
@@ -241,23 +240,25 @@ class LspServer(object):
 
         # LSP server information.
         self.completion_trigger_characters = list()
-        
+
         # Start LSP server process.
         self.start_lsp_server_process()
 
     def start_lsp_server_process(self):
         # Start LSP sever.
         try:
-            self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
+            self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE,
+                                      stderr=stderr)
         except FileNotFoundError:
             eval_in_emacs("message", ["LSP-Bridge] ERROR: start LSP server {} failed, not found file '{}'".format(
                 self.server_info["name"], self.server_info["command"][0]
             )])
-            
+
             return
 
         # Notify user server is start.
-        eval_in_emacs("message", ["[LSP-Bridge] Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path)])
+        eval_in_emacs("message",
+                      ["[LSP-Bridge] Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path)])
 
         # A separate thread is used to read the message returned by the LSP server.
         self.listener_thread = LspBridgeListener(self.p, self.lsp_message_queue)
@@ -266,10 +267,10 @@ class LspServer(object):
         # STEP 1: Say hello to LSP server.
         # Send 'initialize' request.
         self.send_initialize_request()
-        
+
     def lsp_server_is_started(self):
         return getattr(self, "p", None) is None
-        
+
     def lsp_message_dispatcher(self):
         while True:
             message = self.lsp_message_queue.get(True)
@@ -361,143 +362,6 @@ class LspServer(object):
             "extras": extras
         }
 
-    def send_completion_request(self, request_id, filepath, type, position, char):
-        method = "textDocument/completion"
-        self.record_request_id(request_id, method, filepath, type)
-
-        # STEP 6: Calculate completion candidates for current point.
-        if char in self.completion_trigger_characters:
-            # Completion was triggered by a trigger character specified by the `completion_trigger_characters'.
-            self.send_to_request(method,
-                                 {
-                                     "textDocument": {
-                                         "uri": path_to_uri(filepath)
-                                     },
-                                     "position": position,
-                                     "context": {
-                                         "triggerKind": COMPLETION_TRIGGER_KIND["TriggerCharacter"],
-                                         "triggerCharacter": char
-                                     }
-                                 },
-                                 request_id)
-        else:
-            # Completion was triggered by typing an identifier.
-            self.send_to_request(method,
-                                 {
-                                     "textDocument": {
-                                         "uri": path_to_uri(filepath)
-                                     },
-                                     "position": position,
-                                     "context": {
-                                         "triggerKind": COMPLETION_TRIGGER_KIND["Invoked"]
-                                     }
-                                 },
-                                 request_id)
-            
-    def send_signature_help_request(self, request_id, filepath, type, position):
-        method = "textDocument/signatureHelp"
-        self.record_request_id(request_id, method, filepath, type)
-
-        self.send_to_request(method,
-                             {
-                                 "textDocument": {
-                                     "uri": path_to_uri(filepath)
-                                 },
-                                 "position": position
-                             },
-                             request_id)
-
-    def send_find_define_request(self, request_id, filepath, type, position):
-        method = "textDocument/definition"
-        self.record_request_id(request_id, method, filepath, type)
-
-        self.send_to_request(method,
-                             {
-                                 "textDocument": {
-                                     "uri": self.file_uri_dict[filepath]
-                                 },
-                                 "position": position,
-                             },
-                             request_id)
-
-    def send_find_implementation_request(self, request_id, filepath, type, position):
-        method = "textDocument/implementation"
-        self.record_request_id(request_id, method, filepath, type)
-
-        self.send_to_request(method,
-                             {
-                                 "textDocument": {
-                                     "uri": path_to_uri(filepath)
-                                 },
-                                 "position": position,
-                             },
-                             request_id)
-
-    def send_find_references_request(self, request_id, filepath, type, positon):
-        method = "textDocument/references"
-        self.record_request_id(request_id, method, filepath, type)
-
-        self.send_to_request(method,
-                             {
-                                 "textDocument": {
-                                     "uri": path_to_uri(filepath)
-                                 },
-                                 "position": positon,
-                                 "context": {
-                                     "includeDeclaration": False
-                                 }
-                             },
-                             request_id)
-
-    def send_prepare_rename_request(self, request_id, filepath, type, position):
-        method = "textDocument/prepareRename"
-        self.record_request_id(request_id, method, filepath, type)
-
-        self.send_to_request(method,
-                             {
-                                 "textDocument": {
-                                     "uri": path_to_uri(filepath)
-                                 },
-                                 "position": position,
-                             },
-                             request_id)
-
-    def send_rename_request(self, request_id, filepath, type, position, new_name):
-        method = "textDocument/rename"
-        self.record_request_id(request_id, method, filepath, type)
-
-        self.send_to_request(method,
-                             {
-                                 "textDocument": {
-                                     "uri": path_to_uri(filepath)
-                                 },
-                                 "position": position,
-                                 "newName": new_name
-                             },
-                             request_id)
-
-    def send_hover_request(self, request_id, filepath, type, position):
-        method = "textDocument/hover"
-        self.record_request_id(request_id, method, filepath, type)
-
-        self.send_to_request(method,
-                             {
-                                 "textDocument": {
-                                     "uri": path_to_uri(filepath)
-                                 },
-                                 "position": position
-                             },
-                             request_id)
-
-    def send_jdt_class_contents_request(self, request_id, original_filepath, type, uri, range_info):
-        method = "java/classFileContents"
-        self.record_request_id(request_id, method, original_filepath, type, { "range": range_info, "uri": uri })
-        self.send_to_request(method, {
-            "uri": uri,
-            "range": range_info,
-            "link": uri
-        }, request_id)                             
-
     def send_shutdown_request(self):
         self.shutdown_id = generate_request_id()
         self.send_to_request("shutdown", {}, self.shutdown_id)
@@ -538,7 +402,8 @@ class LspServer(object):
                 # others
                 logger.info("\n--- Recv message")
 
-        logger.debug(json.dumps(message, indent = 3))
+        if "method" in message and message["method"] not in ["textDocument/publishDiagnostics"]:
+            logger.debug(json.dumps(message, indent=3))
 
         if "id" in message.keys():
             if message["id"] == self.initialize_id:
@@ -547,7 +412,8 @@ class LspServer(object):
                 try:
                     # We pick up completion trigger characters from server.
                     # But some LSP server haven't this value, such as html/css LSP server.
-                    self.completion_trigger_characters = message["result"]["capabilities"]["completionProvider"]["triggerCharacters"]
+                    self.completion_trigger_characters = message["result"]["capabilities"]["completionProvider"][
+                        "triggerCharacters"]
                 except:
                     pass
 
@@ -570,7 +436,8 @@ class LspServer(object):
             # STEP 3: Configure LSP server parameters.
             # After 'initialized' message finish, we should send 'workspace/didChangeConfiguration' notification.
             # The setting parameters of each language server are different.
-            self.send_to_notification("workspace/didChangeConfiguration", self.get_server_workspace_change_configuration())
+            self.send_to_notification("workspace/didChangeConfiguration",
+                                      self.get_server_workspace_change_configuration())
 
             # STEP 4: Tell LSP server open file.
             # We need send 'textDocument/didOpen' notification,
@@ -578,7 +445,9 @@ class LspServer(object):
             self.send_did_open_notification(self.first_file_path, self.first_file_path)
 
             # Notify user server is ready.
-            eval_in_emacs("message", ["[LSP-Bridge] Start LSP server ({}) for {} complete, enjoy hacking!".format(self.server_info["name"], self.root_path)])
+            eval_in_emacs("message", [
+                "[LSP-Bridge] Start LSP server ({}) for {} complete, enjoy hacking!".format(self.server_info["name"],
+                                                                                            self.root_path)])
         elif name == "textDocument/didOpen":
             fileuri = params["textDocument"]["uri"]
             if fileuri.startswith("file://"):

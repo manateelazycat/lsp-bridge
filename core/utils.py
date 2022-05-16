@@ -18,16 +18,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from typing import Dict, Optional
-
-from epc.client import EPCClient
-import sexpdata
-import sys
-import os
-import platform
-import pathlib
-import logging
+from typing import Optional
 from urllib.parse import urlparse
+
+import sexpdata
+import logging
+import pathlib
+import platform
+import sys
+from epc.client import EPCClient
 
 epc_client: Optional[EPCClient] = None
 test_interceptor = None
@@ -35,6 +34,7 @@ test_interceptor = None
 logger = logging.getLogger("lsp-bridge")
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
+
 
 def init_epc_client(emacs_server_port):
     global epc_client
@@ -46,6 +46,7 @@ def init_epc_client(emacs_server_port):
             import traceback
             traceback.print_exc()
 
+
 def close_epc_client():
     global epc_client
 
@@ -53,7 +54,7 @@ def close_epc_client():
         epc_client.close()
 
 
-def eval_sexp_in_emacs(sexp: str):
+def eval_sexp_in_emacs(sexp: str, **kwargs):
     global epc_client
 
     if epc_client is None:
@@ -61,10 +62,10 @@ def eval_sexp_in_emacs(sexp: str):
     else:
         logger.debug("Eval in Emacs: %s", sexp)
         # Call eval-in-emacs elisp function.
-        epc_client.call("eval-in-emacs", [sexp])
+        epc_client.call("eval-in-emacs", [sexp], **kwargs)
 
 
-def eval_in_emacs(method_name, *args, no_intercept=False):
+def eval_in_emacs(method_name, *args, no_intercept=False, **kwargs):
     global epc_client
 
     if len(args) == 1 and type(args[0]) == list:
@@ -80,7 +81,12 @@ def eval_in_emacs(method_name, *args, no_intercept=False):
         sexp = sexpdata.dumps(args)
         logger.debug("Eval in Emacs: %s", sexp)
         # Call eval-in-emacs elisp function.
-        epc_client.call("eval-in-emacs", [sexp])
+        epc_client.call("eval-in-emacs", [sexp], **kwargs)
+
+
+def message_emacs(message: str):
+    eval_in_emacs("message", "[LSP-Bridge] " + message)
+
 
 def epc_arg_transformer(arg):
     # Transform [Symbol(":a"), 1, Symbol(":b"), 2] to dict(a=1, b=2)
@@ -105,10 +111,13 @@ def convert_emacs_bool(symbol_value, symbol_is_boolean):
     else:
         return symbol_value
 
+
 def get_emacs_vars(args):
     global epc_client
 
-    return list(map(lambda result: convert_emacs_bool(result[0], result[1]) if result != [] else False, epc_client.call_sync("get-emacs-vars", args)))
+    return list(map(lambda result: convert_emacs_bool(result[0], result[1]) if result != [] else False,
+                    epc_client.call_sync("get-emacs-vars", args)))
+
 
 def get_emacs_var(var_name):
     global epc_client
@@ -116,6 +125,7 @@ def get_emacs_var(var_name):
     symbol_value, symbol_is_boolean = epc_client.call_sync("get-emacs-var", [var_name])
 
     return convert_emacs_bool(symbol_value, symbol_is_boolean)
+
 
 def get_emacs_func_result(method_name, args):
     global epc_client
@@ -127,6 +137,7 @@ def get_emacs_func_result(method_name, args):
         result = epc_client.call_sync(method_name, args)
         return result
 
+
 def get_command_result(command_string, cwd):
     import subprocess
     process = subprocess.Popen(command_string, cwd=cwd, shell=True, text=True,
@@ -135,9 +146,11 @@ def get_command_result(command_string, cwd):
     ret = process.wait()
     return "".join((process.stdout if ret == 0 else process.stderr).readlines()).strip()
 
+
 def generate_request_id():
     import random
     return abs(random.getrandbits(16))
+
 
 # modified from Lib/pathlib.py
 def _make_uri_win32(path):
@@ -153,6 +166,7 @@ def _make_uri_win32(path):
         # It's a path on a network drive => 'file://host/share/a/b'
         return 'file:' + urlquote_from_bytes(path.as_posix().encode('utf-8'))
 
+
 def path_to_uri(path):
     path = pathlib.Path(path)
     if get_os_name() != "windows":
@@ -164,6 +178,7 @@ def path_to_uri(path):
         uri = _make_uri_win32(path)
     return uri
 
+
 def uri_to_path(uri):
     from urllib.parse import unquote
     # parse first, '#' may be part of filepath(encoded)
@@ -174,12 +189,14 @@ def uri_to_path(uri):
         path = path[1:]
     return path
 
+
 def path_as_key(path):
     key = path
     # NOTE: (buffer-file-name) return "d:/Case/a.go", gopls return "file:///D:/Case/a.go"
     if sys.platform == "win32":
         key = path.lower()
     return key
+
 
 def get_project_path(filepath):
     import os
@@ -188,16 +205,19 @@ def get_project_path(filepath):
         return get_command_result("git rev-parse --show-toplevel", dir_path)
     else:
         return filepath
-    
+
+
 emacs_version = None
+
 
 def get_emacs_version():
     global emacs_version
-    
+
     if emacs_version is None:
         return get_emacs_func_result("get-emacs-version", [])
     else:
         return emacs_version
+
 
 def get_os_name():
     return platform.system().lower()
