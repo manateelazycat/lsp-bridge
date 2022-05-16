@@ -8,7 +8,7 @@ class JDTClassContents(Handler):
     name = "jdt_class_contents"
     method = "java/classFileContents"
     cancel_on_change = True
-    lsp_buffer_uri = self.fa.filepath
+    lsp_buffer_uri = None
     start_pos = None
 
     def process_request(self) -> dict:
