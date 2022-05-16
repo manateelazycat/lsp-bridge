@@ -207,7 +207,7 @@ class LspBridge(object):
             self.file_action_dict[filekey].handle_server_response_message(request_id, request_type, response_result)
         else:
             # Please report bug if you got this message.
-            logger.error("IMPOSSIBLE HERE: handle_server_message %s %s", filepath, request_type, request_id, response_result)
+            logger.error("IMPOSSIBLE HERE: handle_server_message {} {} {} {}".format(filepath, request_type, request_id, response_result))
 
     def handle_server_process_exit(self, server_name):
         if server_name in self.lsp_server_dict:
