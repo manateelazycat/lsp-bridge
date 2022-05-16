@@ -525,23 +525,23 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
      :exit-function
      (lambda (candidate status)
        (when (memq status '(finished exact))
-         (let ((label candidate)
-               (insert-text (gethash candidate lsp-bridge-completion-insert-texts)))
+         ;; When selecting from the *Completions*
+         ;; buffer, `candidate' won't have any properties.
+         ;; A lookup should fix that (github#148)
+         (let* ((item (get-text-property 0 'lsp-bridge--lsp-item (cl-find candidate candidates :test #'string=)))
+                (insert-text (plist-get item :insertText))
+                (additionalTextEdits (if lsp-bridge-enable-auto-import (plist-get item :additionalTextEdits) nil)))
            ;; Remove candidate label and insert candidate insertText
-           (delete-region (- (point) (length label)) (point))
+           (delete-region (- (point) (length candidate)) (point))
+           (message "insertText %s" insert-text)
            (insert insert-text)
 
            ;; Do auto-imprt action.
            (with-current-buffer
                (if (minibufferp) (window-buffer (minibuffer-selected-window))
                  (current-buffer))
-             ;; When selecting from the *Completions*
-             ;; buffer, `candidate' won't have any properties.
-             ;; A lookup should fix that (github#148)
-             (let* ((item (get-text-property 0 'lsp-bridge--lsp-item (cl-find candidate candidates :test #'string=)))
-                    (additionalTextEdits (if lsp-bridge-enable-auto-import (plist-get item :additionalTextEdits) nil)))
-               (when (cl-plusp (length additionalTextEdits))
-                 (lsp-bridge--apply-text-edits additionalTextEdits))))
+             (when (cl-plusp (length additionalTextEdits))
+               (lsp-bridge--apply-text-edits additionalTextEdits)))
            ))))))
 
 ;; Copy from eglot
