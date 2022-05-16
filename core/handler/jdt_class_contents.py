@@ -1,8 +1,3 @@
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from core.fileaction import FileAction
-
 from core.handler import Handler
 from core.utils import *
 
@@ -14,18 +9,15 @@ class JDTClassContents(Handler):
     method = "java/classFileContents"
     cancel_on_change = True
 
-    def __init__(self, fa: "FileAction"):
-        super().__init__(fa)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.lsp_buffer_uri = None
         self.start_pos = None
 
-    def process_request(self, uri) -> dict:
-        return dict(uri=uri)
-
-    def send_request(self, uri, start_pos):
-        super().send_request(uri)
+    def process_request(self, uri, start_pos) -> dict:
         self.start_pos = start_pos
         self.lsp_buffer_uri = uri
+        return dict(uri=uri)
 
     def process_response(self, response: str) -> None:
         if not response:
