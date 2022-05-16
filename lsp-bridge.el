@@ -428,7 +428,6 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defvar-local lsp-bridge-last-position 0)
 (defvar-local lsp-bridge-completion-items nil)
-(defvar-local lsp-bridge-completion-insert-texts nil)
 (defvar-local lsp-bridge-completion-prefix nil)
 (defvar-local lsp-bridge-completion-common nil)
 (defvar-local lsp-bridge-filepath "")
@@ -461,13 +460,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
     (setq-local lsp-bridge-completion-items items)
-    (setq-local lsp-bridge-completion-insert-texts (make-hash-table :test 'equal))
     (setq-local lsp-bridge-completion-prefix prefix)
     (setq-local lsp-bridge-completion-common common)
-
-    ;; We build (label . insertText) pair for replace label with insertText when call `exit-function'.
-    (dolist (item items)
-      (puthash (plist-get item :label) (plist-get item :insertText) lsp-bridge-completion-insert-texts))
 
     ;; Try popup completion frame.
     (unless (or
