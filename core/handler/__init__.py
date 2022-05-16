@@ -38,7 +38,7 @@ class Handler(abc.ABC):
             "uri": path_to_uri(self.fa.filepath)
         }
 
-        self.fa.lsp_server.sender_thread.send_request(
+        self.fa.lsp_server.sender.send_request(
             method=self.method,
             params=params,
             request_id=request_id,
@@ -61,7 +61,8 @@ class Handler(abc.ABC):
             import traceback
             logger.error(traceback.format_exc())
 
-# prevent circular import
+# import subclasses so that we can use core.handler.Handler.__subclasses__()
+# import at the end of this file to avoid circular import
 from core.handler.completion import Completion
 from core.handler.find_define import FindDefine
 from core.handler.find_implementation import FindImplementation

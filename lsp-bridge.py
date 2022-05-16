@@ -22,12 +22,14 @@ import queue
 import sys
 import threading
 from collections import defaultdict
+from typing import Dict
 
 from epc.server import ThreadingEPCServer
 
 from core.fileaction import FileAction
 from core.lspserver import LspServer
 from core.utils import *
+from core.handler import *
 
 
 class LspBridge(object):
@@ -35,15 +37,18 @@ class LspBridge(object):
         object.__init__(self)
 
         # Object cache to exchange information between Emacs and LSP server.
-        self.file_action_dict = {}  # use for contain file action
-        self.lsp_server_dict = {}  # use for contain lsp server
-        self.file_opened = defaultdict(bool)
-        self.action_cache_dict = defaultdict(list)  # use for contain file action cache
+        self.file_action_dict: Dict[str, FileAction] = {}  # use for contain file action
+        self.lsp_server_dict: Dict[str, LspServer] = {}  # use for contain lsp server
+        self.file_opened: Dict[str, bool] = defaultdict(bool)
+        self.action_cache_dict: Dict[str, list] = defaultdict(list)  # use for contain file action cache
 
         # Build EPC interfaces.
         for name in ["change_file", "find_define", "find_implementation", "find_references",
                      "prepare_rename", "rename", "change_cursor", "save_file", "hover", "signature_help"]:
             self.build_file_action_function(name)
+
+        for cls in Handler.__subclasses__():
+            self.build_file_action_function(cls.name)
 
         # Init EPC client port.
         init_epc_client(int(args[0]))
@@ -150,30 +155,29 @@ class LspBridge(object):
         })
 
     def _close_file(self, filepath):
-        filekey = path_as_key(filepath)
-        if filekey in self.file_action_dict:
-            action = self.file_action_dict[filekey]
+        file_key = path_as_key(filepath)
+        if file_key in self.file_action_dict:
+            action = self.file_action_dict[file_key]
 
             lsp_server_name = action.get_lsp_server_name()
             if lsp_server_name in self.lsp_server_dict:
                 lsp_server = self.lsp_server_dict[lsp_server_name]
                 lsp_server.close_file(filepath)
 
-            del self.file_action_dict[filekey]
+            del self.file_action_dict[file_key]
 
     def build_file_action_function(self, name):
-        def _do(*args):
-            filepath = args[0]
+        def _do(filepath, *args):
             file_key = path_as_key(filepath)
             if self.file_opened[file_key]:
                 action = self.file_action_dict[file_key]
-                getattr(action, name)(*args[1:])
+                action.call(name, *args)
             else:
                 if file_key not in self.file_action_dict:
                     self._open_file(filepath)  # _do is called in postgui_thread, so we can block here.
 
                 # Cache file action wait for file to open it.
-                action_cache = (name,) + args[1:]
+                action_cache = (name,) + args
                 self.action_cache_dict[file_key].append(action_cache)
                 logger.info("Cache action {}, wait for file {} to open it before executing.".format(name, filepath))
 
@@ -206,13 +210,10 @@ class LspBridge(object):
         file_key = path_as_key(filepath)
         self.file_opened[filepath] = True
         if file_key in self.action_cache_dict:
-            for action_cache in self.action_cache_dict[file_key]:
-                action_name = action_cache[0]
-                action_args = action_cache[1:]
-
+            for action_name, *action_args in self.action_cache_dict[file_key]:
                 if file_key in self.file_action_dict:
                     # Execute file action after file opened.
-                    getattr(self.file_action_dict[file_key], action_name)(*action_args)
+                    self.file_action_dict[file_key].call(action_name, *action_args)
                     logger.info("Execute action {} for file {}".format(action_name, filepath))
                 else:
                     # Please report bug if you got this message.
@@ -223,7 +224,7 @@ class LspBridge(object):
             del self.action_cache_dict[file_key]
 
     def cleanup(self):
-        '''Do some cleanup before exit python process.'''
+        """Do some cleanup before exit python process."""
         close_epc_client()
 
     def start_test(self):
