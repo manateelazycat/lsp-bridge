@@ -74,10 +74,10 @@ class LspBridge:
         if enable_lsp_server_log:
             logger.setLevel(logging.DEBUG)
 
-        # All Emacs request running in postgui_thread.
-        self.postgui_queue = queue.Queue()
-        self.postgui_thread = threading.Thread(target=self.postgui_dispatcher)
-        self.postgui_thread.start()
+        # All Emacs request running in event_loop.
+        self.event_queue = queue.Queue()
+        self.event_loop = threading.Thread(target=self.event_dispatcher)
+        self.event_loop.start()
 
         # All LSP server response running in message_thread.
         self.message_queue = queue.Queue()
@@ -87,12 +87,12 @@ class LspBridge:
         # Pass epc port and webengine codec information to Emacs when first start LspBridge.
         eval_in_emacs('lsp-bridge--first-start', self.server.server_address[1])
 
-        # postgui_thread never exit, simulation event loop.
-        self.postgui_thread.join()
+        # event_loop never exit, simulation event loop.
+        self.event_loop.join()
 
-    def postgui_dispatcher(self):
+    def event_dispatcher(self):
         while True:
-            message = self.postgui_queue.get(True)
+            message = self.event_queue.get(True)
 
             if message["name"] == "open_file":
                 self._open_file(message["content"])
@@ -102,7 +102,7 @@ class LspBridge:
                 (func_name, func_args) = message["content"]
                 getattr(self, func_name)(*func_args)
 
-            self.postgui_queue.task_done()
+            self.event_queue.task_done()
 
     def message_dispatcher(self):
         while True:
@@ -117,8 +117,8 @@ class LspBridge:
             self.message_queue.task_done()
 
     def open_file(self, filepath):
-        # We need post function postgui_thread, otherwise long-time calculation will block Emacs.
-        self.postgui_queue.put({
+        # We need post function event_loop, otherwise long-time calculation will block Emacs.
+        self.event_queue.put({
             "name": "open_file",
             "content": filepath
         })
@@ -147,8 +147,8 @@ class LspBridge:
         file_action.lsp_server = self.lsp_server_dict[lsp_server_name]
 
     def close_file(self, filepath):
-        # We need post function postgui_thread, otherwise long-time calculation will block Emacs.
-        self.postgui_queue.put({
+        # We need post function event_loop, otherwise long-time calculation will block Emacs.
+        self.event_queue.put({
             "name": "close_file",
             "content": filepath
         })
@@ -173,7 +173,7 @@ class LspBridge:
                 action.call(name, *args)
             else:
                 if file_key not in self.file_action_dict:
-                    self._open_file(filepath)  # _do is called in postgui_thread, so we can block here.
+                    self._open_file(filepath)  # _do is called inside event_loop, so we can block here.
 
                 # Cache file action wait for file to open it.
                 action_cache = (name,) + args
@@ -183,8 +183,8 @@ class LspBridge:
         setattr(self, "_{}".format(name), _do)
 
         def _do_wrap(*args):
-            # We need post function postgui_thread, otherwise long-time calculation will block Emacs.
-            self.postgui_queue.put({
+            # We need post function event_loop, otherwise long-time calculation will block Emacs.
+            self.event_queue.put({
                 "name": "action_func",
                 "content": ("_{}".format(name), list(map(epc_arg_transformer, args)))
             })
@@ -192,9 +192,9 @@ class LspBridge:
         setattr(self, name, _do_wrap)
 
     def handle_server_message(self, filepath, request_type, request_id, response_result):
-        filekey = path_as_key(filepath)
-        if filekey in self.file_action_dict:
-            self.file_action_dict[filekey].handle_server_response_message(request_id, request_type, response_result)
+        file_key = path_as_key(filepath)
+        if file_key in self.file_action_dict:
+            self.file_action_dict[file_key].handle_server_response_message(request_id, request_type, response_result)
         else:
             # Please report bug if you got this message.
             logger.error("IMPOSSIBLE HERE: handle_server_message %s %s", filepath, request_type, request_id,
@@ -227,6 +227,7 @@ class LspBridge:
         close_epc_client()
 
     def start_test(self):
+        # Called from lsp-bridge-test.el to start test.
         from test.test import start_test
         start_test()
 

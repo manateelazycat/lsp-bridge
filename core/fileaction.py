@@ -44,8 +44,7 @@ class FileAction:
         self.try_signature_help_timer = None
 
         # Read language server information.
-        self.lang_server_info = None
-        self.load_lang_server_info(lang_server)
+        self.lang_server_info = self.load_lang_server_info(lang_server)
 
         # Initialize handlers.
         self.handlers: Dict[str, Handler] = dict()
@@ -55,7 +54,6 @@ class FileAction:
 
         self.lsp_server = None
 
-        # Generate initialize request id.
         self.enable_auto_import = get_emacs_var("lsp-bridge-enable-auto-import")
 
     @property
@@ -86,7 +84,7 @@ class FileAction:
 
         with open(lang_server_info_path, encoding="utf-8") as f:
             import json
-            self.lang_server_info = json.load(f)
+            return json.load(f)
 
     def get_lsp_server_name(self):
         # We use project path and LSP server type as unique name.
