@@ -354,12 +354,11 @@ class LspServer(object):
                                       ]
                                   })
 
-    def record_request_id(self, request_id, method, filepath, type, extras={}):
+    def record_request_id(self, request_id, method, filepath, type):
         self.request_dict[request_id] = {
             "method": method,
             "filepath": filepath,
-            "type": type,
-            "extras": extras
+            "type": type
         }
 
     def send_shutdown_request(self):

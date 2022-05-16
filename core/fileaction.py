@@ -21,7 +21,6 @@
 import pprint
 import threading
 import time
-import re
 import os
 from typing import Dict
 
@@ -36,6 +35,7 @@ class FileAction(object):
 
         # Init.
         self.filepath = filepath
+        # the uri returned by the LSP server; for example in jdt.ls: jdt://contents/java.base/java.util/Optional.class?**
         self.lsp_buffer_uri = filepath
         self.project_path = project_path
         self.request_dict = {}
@@ -143,7 +143,6 @@ class FileAction(object):
             if self.lsp_server is not None:
                 args = (request_id, self.filepath, name) + args
                 getattr(self.lsp_server, "send_{}_request".format(name))(*args)
-            return request_id
 
         # Init request list variable.
         setattr(self, "{}_request_list".format(name), [])
