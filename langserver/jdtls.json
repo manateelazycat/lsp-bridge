@@ -75,16 +75,7 @@
         "autobuild": {
           "enabled": true
         },
-        "selectionRange": {
-          "enabled": true
-        },
         "import": {
-          "exclusions": [
-            "**/node_modules/**",
-            "**/.metadata/**",
-            "**/archetype-resources/**",
-            "**/META-INF/maven/**"
-          ],
           "maven": {
             "enabled": true
           }
@@ -92,28 +83,15 @@
         "signatureHelp": {
           "enabled": true
         },
-        "maven": {
-          "downloadSources": false,
-          "updateSnapshots": false
-        },
         "configuration": {
           "updateBuildConfiguration": "automatic",
           "checkProjectSettingsExclusions": true
-        },
-        "dependency": {
-          "packagePresentation": "flat"
         },
         "project": {
           "importHint": true,
           "importOnFirstTimeStartup": "automatic",
           "referencedLibraries": [
             "lib/**/*.jar"
-          ],
-          "resourceFilters": [
-            "node_modules",
-            ".metadata",
-            "archetype-resources",
-            "META-INF/maven"
           ]
         },
         "server": {
@@ -122,17 +100,7 @@
       }
     },
     "extendedClientCapabilities": {
-      "progressReportProvider": true,
-      "classFileContentsSupport": true,
-      "overrideMethodsPromptSupport": true,
-      "hashCodeEqualsPromptSupport": true,
-      "advancedOrganizeImportsSupport": true,
-      "generateConstructorsPromptSupport": true,
-      "generateToStringPromptSupport": true,
-      "advancedGenerateAccessorsSupport": true,
-      "advancedExtractRefactoringSupport": true,
-      "moveRefactoringSupport": true,
-      "resolveAdditionalTextEditsSupport": true
+      "classFileContentsSupport": true
     }
   }
 }
