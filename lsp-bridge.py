@@ -40,8 +40,10 @@ class LspBridge(object):
         self.action_cache_dict = {} # use for contain file action cache
         self.workspace_server_dict = {} # use for save the mapping between workspace and LSP server name
 
+        self.lsp_library_directories = {}
+
         # Build EPC interfaces.
-        for name in ["change_file", "find_define", "find_implementation", "find_references", 
+        for name in ["change_file", "find_define", "find_implementation", "find_references",
                      "prepare_rename", "rename", "change_cursor", "save_file", "hover", "signature_help"]:
             self.build_file_action_function(name)
 
@@ -112,7 +114,10 @@ class LspBridge(object):
                 self.handle_server_message(*message["content"])
             elif message["name"] == "init_workspace":
                 self.workspace_server_dict[message["content"]["workspace"]] = message["content"]["lsp_server_name"]
-
+            elif message["name"] == "update_library_directories":
+                lang = message["content"]["lang"]
+                dires = message["content"]["dires"]
+                self.lsp_library_directories[lang] = dires
 
             self.message_queue.task_done()
 
@@ -129,8 +134,14 @@ class LspBridge(object):
         project_path = get_project_path(filepath)
         lang_server = get_emacs_func_result("get-lang-server", [project_path, filepath])
         lsp_server_name = None
-        if filepath.startswith(self.workspace_dir):
-            workspace = "{}#{}".format(self.workspace_dir, lang_server)
+
+        lib_dir = None
+        for _dir in self.lsp_library_directories.get(lang_server, []):
+            if filepath.startswith(_dir):
+                lib_dir = _dir
+                break
+        if lib_dir:
+            workspace = "{}#{}".format(lib_dir, lang_server)
             lsp_server_name = self.workspace_server_dict[workspace]
         if filekey not in self.file_action_dict:
             action = FileAction(filepath, project_path, lang_server)

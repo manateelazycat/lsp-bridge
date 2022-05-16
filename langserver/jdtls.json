@@ -4,6 +4,7 @@
   "command": [
     "jdtls"
   ],
+  "libraryDirectories": ["~/.emacs.d/workspace/.cache"],
   "settings": {
     "java": {
       "completion": {
