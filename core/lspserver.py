@@ -41,26 +41,73 @@ class JsonEncoder(json.JSONEncoder):
         return o.__dict__
 
 
+class LspBridgeSender(Thread):
+    def __init__(self, process: subprocess.Popen):
+        super().__init__()
+
+        self.process = process
+        self.queue = queue.Queue()
+
+    def _send_message(self, message: dict):
+        message["jsonrpc"] = "2.0"
+        self.queue.put(message)
+
+    def send_request(self, method, params, request_id):
+        self._send_message(dict(
+            id=request_id,
+            method=method,
+            params=params
+        ))
+
+    def send_notification(self, method, params):
+        self._send_message(dict(
+            method=method,
+            params=params
+        ))
+
+    def send_response(self, request_id, result):
+        self._send_message(dict(
+            id=request_id,
+            result=result
+        ))
+
+    def run(self) -> None:
+        while self.process.poll() is None:
+            message: dict = self.queue.get()
+
+            message_str = "Content-Length: {}\r\n\r\n{}".format(len(json.dumps(message)), json.dumps(message))
+
+            self.process.stdin.write(message_str.encode("utf-8"))
+            self.process.stdin.flush()
+
+            logger.info("\n--- Send ({}): {}".format(
+                message.get('id', 'notification'), message.get('method', 'response')))
+
+            logger.debug(json.dumps(message, indent=3))
+
+
 class LspBridgeListener(Thread):
 
-    def __init__(self, process, lsp_message_queue):
+    def __init__(self, process: subprocess.Popen):
         Thread.__init__(self)
 
         self.process = process
-        self.reader = io.BufferedReader(io.FileIO(self.process.stdout.fileno()), buffer_size=DEFAULT_BUFFER_SIZE)
-        self.lsp_message_queue = lsp_message_queue
+        self.queue = queue.Queue()
+
+    def get_message(self):
+        return self.queue.get(block=True)
 
     def emit_message(self, line):
-        if line != "":
-            try:
-                # Send message.
-                self.lsp_message_queue.put({
-                    "name": "lsp_recv_message",
-                    "content": json.loads(line)
-                })
-
-            except:
-                traceback.print_exc()
+        if not line:
+            return
+        try:
+            # Send message.
+            self.queue.put({
+                "name": "lsp_recv_message",
+                "content": json.loads(line)
+            })
+        except:
+            logger.error(traceback.format_exc())
 
     def run(self):
         content_length = None
@@ -100,114 +147,16 @@ class LspBridgeListener(Thread):
                         content_length = None
                         self.emit_message(msg.decode("utf-8"))
             except:
-                traceback.print_exc()
+                logger.error(traceback.format_exc())
         logger.info("\n--- Lsp server exited, exit code: {}".format(self.process.returncode))
         logger.info(self.process.stdout.read())
         if self.process.stderr:
             logger.info(self.process.stderr.read())
 
 
-class SendRequest(Thread):
-
-    def __init__(self, process, name, params, id):
-        Thread.__init__(self)
-
-        self.process = process
-        self.name = name
-        self.params = params
-        self.id = id
-
-    def run(self):
-        if self.process.returncode is not None:
-            return
-
-        message_dict = {}
-        message_dict["jsonrpc"] = "2.0"
-        message_dict["method"] = self.name
-        message_dict["params"] = self.params
-        message_dict["id"] = self.id
-
-        json_string = json.dumps(message_dict, cls=JsonEncoder, separators=(',', ':'))
-        json_message = "Content-Length: {}\r\n\r\n{}".format(len(json_string), json_string)
-
-        self.process.stdin.write(json_message.encode("utf-8"))
-        self.process.stdin.flush()
-
-        logger.info("\n--- Send request ({}): {}".format(self.id, self.name))
-
-        logger.debug(json.dumps(message_dict, indent=3))
-
-
-class SendNotification(Thread):
-
-    def __init__(self, process, lsp_message_queue, name, params):
-        Thread.__init__(self)
-
-        self.process = process
-        self.lsp_message_queue = lsp_message_queue
-        self.name = name
-        self.params = params
-
-    def run(self):
-        if self.process.returncode is not None:
-            return
-
-        message_dict = {}
-        message_dict["jsonrpc"] = "2.0"
-        message_dict["method"] = self.name
-        message_dict["params"] = self.params
-
-        json_string = json.dumps(message_dict, cls=JsonEncoder, separators=(',', ':'))
-        json_message = "Content-Length: {}\r\n\r\n{}".format(len(json_string), json_string)
-
-        self.process.stdin.write(json_message.encode("utf-8"))
-        self.process.stdin.flush()
-
-        self.lsp_message_queue.put({
-            "name": "lsp_send_notification",
-            "content": (self.name, self.params)
-        })
-
-        logger.info("\n--- Send notification: {}".format(self.name))
-
-        logger.debug(json.dumps(message_dict, indent=3))
-
-
-class SendResponse(Thread):
-
-    def __init__(self, process, name, id, result):
-        Thread.__init__(self)
-
-        self.process = process
-        self.name = name
-        self.id = id
-        self.result = result
-
-    def run(self):
-        if self.process.returncode is not None:
-            return
-
-        message_dict = {}
-        message_dict["jsonrpc"] = "2.0"
-        message_dict["id"] = self.id
-        message_dict["result"] = self.result
-
-        json_string = json.dumps(message_dict, cls=JsonEncoder, separators=(',', ':'))
-        json_message = "Content-Length: {}\r\n\r\n{}".format(len(json_string), json_string)
-
-        self.process.stdin.write(json_message.encode("utf-8"))
-        self.process.stdin.flush()
-
-        logger.info("\n--- Send response ({}): {}".format(self.id, self.name))
-
-        logger.debug(json.dumps(message_dict, indent=3))
-
-
-class LspServer(object):
+class LspServer:
 
     def __init__(self, message_queue, file_action):
-        object.__init__(self)
-
         # Init.
         self.message_queue = message_queue
         self.project_path = file_action.project_path
@@ -217,24 +166,14 @@ class LspServer(object):
         self.initialize_id = file_action.initialize_id
         self.server_name = file_action.get_lsp_server_name()
         self.shutdown_id = -1
-        self.sender_threads = []
         self.request_dict = {}
         self.open_file_dict = {}  # contain file opened in current project
         self.root_path = self.project_path
 
-        # All LSP server response running in ls_message_thread.
-        self.lsp_message_queue = queue.Queue()
-        self.ls_message_thread = threading.Thread(target=self.lsp_message_dispatcher)
-        self.ls_message_thread.start()
-
         # LSP server information.
         self.completion_trigger_characters = list()
 
-        # Start LSP server process.
-        self.start_lsp_server_process()
-
-    def start_lsp_server_process(self):
-        # Start LSP sever.
+        # Start LSP server.
         try:
             self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE,
                                       stderr=stderr)
@@ -249,32 +188,31 @@ class LspServer(object):
         eval_in_emacs("message",
                       ["[LSP-Bridge] Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path)])
 
-        # A separate thread is used to read the message returned by the LSP server.
-        self.listener_thread = LspBridgeListener(self.p, self.lsp_message_queue)
+        # Two separate thread (read/write) to communicate with LSP server.
+        self.listener_thread = LspBridgeListener(self.p)
         self.listener_thread.start()
+
+        self.sender_thread = LspBridgeSender(self.p)
+        self.sender_thread.start()
+
+        # All LSP server response running in ls_message_thread.
+        self.ls_message_thread = threading.Thread(target=self.lsp_message_dispatcher)
+        self.ls_message_thread.start()
 
         # STEP 1: Say hello to LSP server.
         # Send 'initialize' request.
         self.send_initialize_request()
 
-    def lsp_server_is_started(self):
-        return getattr(self, "p", None) is None
-
     def lsp_message_dispatcher(self):
         while True:
-            message = self.lsp_message_queue.get(True)
+            message = self.listener_thread.get_message()
             try:
-                if message["name"] == "lsp_recv_message":
-                    self.handle_recv_message(message["content"])
-                elif message["name"] == "lsp_send_notification":
-                    self.handle_send_notification(*message["content"])
-
-                self.lsp_message_queue.task_done()
+                self.handle_recv_message(message["content"])
             except:
-                traceback.print_exc()
+                logger.error(traceback.format_exc())
 
     def send_initialize_request(self):
-        self.send_to_request("initialize", {
+        self.sender_thread.send_request("initialize", {
             "processId": os.getpid(),
             "rootPath": self.root_path,
             "clientInfo": {
@@ -287,60 +225,65 @@ class LspServer(object):
         }, self.initialize_id)
 
     def send_did_open_notification(self, filepath):
-        filekey = path_as_key(filepath)
-        if filekey not in self.open_file_dict:
-            self.open_file_dict[filekey] = ""
-
-            with open(filepath, encoding="utf-8") as f:
-                self.send_to_notification("textDocument/didOpen",
-                                          {
-                                              "textDocument": {
-                                                  "uri": path_to_uri(filepath),
-                                                  "languageId": self.server_info["languageId"],
-                                                  "version": 0,
-                                                  "text": f.read()
-                                              }
-                                          })
-        else:
+        file_key = path_as_key(filepath)
+        if file_key in self.open_file_dict:
             logger.info("File {} has opened in server {}".format(filepath, self.server_name))
+            return
+
+        self.open_file_dict[file_key] = ""
+
+        with open(filepath, encoding="utf-8") as f:
+            self.sender_thread.send_notification("textDocument/didOpen", {
+                "textDocument": {
+                    "uri": path_to_uri(filepath),
+                    "languageId": self.server_info["languageId"],
+                    "version": 0,
+                    "text": f.read()
+                }
+            })
+
+            self.message_queue.put({
+                "name": "server_file_opened",
+                "content": filepath
+            })
 
     def send_did_close_notification(self, filepath):
-        self.send_to_notification("textDocument/didClose",
-                                  {
-                                      "textDocument": {
-                                          "uri": path_to_uri(filepath),
-                                      }
-                                  })
+        self.sender_thread.send_notification("textDocument/didClose",
+                                             {
+                                                 "textDocument": {
+                                                     "uri": path_to_uri(filepath),
+                                                 }
+                                             })
 
     def send_did_save_notification(self, filepath):
-        self.send_to_notification("textDocument/didSave",
-                                  {
-                                      "textDocument": {
-                                          "uri": path_to_uri(filepath)
-                                      }
-                                  })
+        self.sender_thread.send_notification("textDocument/didSave",
+                                             {
+                                                 "textDocument": {
+                                                     "uri": path_to_uri(filepath)
+                                                 }
+                                             })
 
     def send_did_change_notification(self, filepath, version, start, end, range_length, text):
         # STEP 5: Tell LSP server file content is changed.
         # This step is very IMPORTANT, make sure LSP server contain same content as client,
         # otherwise LSP server won't response client request, such as completion, find-define, find-references and rename etc.
-        self.send_to_notification("textDocument/didChange",
-                                  {
-                                      "textDocument": {
-                                          "uri": path_to_uri(filepath),
-                                          "version": version
-                                      },
-                                      "contentChanges": [
-                                          {
-                                              "range": {
-                                                  "start": start,
-                                                  "end": end
-                                              },
-                                              "rangeLength": range_length,
-                                              "text": text
-                                          }
-                                      ]
-                                  })
+        self.sender_thread.send_notification("textDocument/didChange",
+                                             {
+                                                 "textDocument": {
+                                                     "uri": path_to_uri(filepath),
+                                                     "version": version
+                                                 },
+                                                 "contentChanges": [
+                                                     {
+                                                         "range": {
+                                                             "start": start,
+                                                             "end": end
+                                                         },
+                                                         "rangeLength": range_length,
+                                                         "text": text
+                                                     }
+                                                 ]
+                                             })
 
     def record_request_id(self, request_id, method, filepath, type):
         self.request_dict[request_id] = {
@@ -351,18 +294,18 @@ class LspServer(object):
 
     def send_shutdown_request(self):
         self.shutdown_id = generate_request_id()
-        self.send_to_request("shutdown", {}, self.shutdown_id)
+        self.sender_thread.send_request("shutdown", {}, self.shutdown_id)
 
     def send_exit_notification(self):
-        self.send_to_notification("exit", {})
+        self.sender_thread.send_notification("exit", {})
 
     def get_server_workspace_change_configuration(self):
         return {
             "settings": self.server_info["settings"]
         }
 
-    def handle_workspace_configuration_request(self, name, id, params):
-        self.send_to_response(name, id, {})
+    def handle_workspace_configuration_request(self, name, request_id, params):
+        self.sender_thread.send_response(request_id, {})
 
     def handle_recv_message(self, message):
         if "error" in message.keys():
@@ -401,10 +344,27 @@ class LspServer(object):
                     # But some LSP server haven't this value, such as html/css LSP server.
                     self.completion_trigger_characters = message["result"]["capabilities"]["completionProvider"][
                         "triggerCharacters"]
-                except:
+                except KeyError:
                     pass
 
-                self.send_to_notification("initialized", {})
+                self.sender_thread.send_notification("initialized", {})
+
+                # STEP 3: Configure LSP server parameters.
+                # After 'initialized' message finish, we should send 'workspace/didChangeConfiguration' notification.
+                # The setting parameters of each language server are different.
+                self.sender_thread.send_notification("workspace/didChangeConfiguration",
+                                                     self.get_server_workspace_change_configuration())
+
+                # STEP 4: Tell LSP server open file.
+                # We need send 'textDocument/didOpen' notification,
+                # then LSP server will return file information, such as completion, find-define, find-references and rename etc.
+                self.send_did_open_notification(self.first_file_path)
+
+                # Notify user server is ready.
+                eval_in_emacs("message", [
+                    "[LSP-Bridge] Start LSP server ({}) for {} complete, enjoy hacking!".format(
+                        self.server_info["name"],
+                        self.root_path)])
             else:
                 if "method" not in message.keys() and message["id"] in self.request_dict:
                     self.message_queue.put({
@@ -417,58 +377,6 @@ class LspServer(object):
                 else:
                     if message["method"] == "workspace/configuration":
                         self.handle_workspace_configuration_request(message["method"], message["id"], message["params"])
-
-    def handle_send_notification(self, name, params):
-        if name == "initialized":
-            # STEP 3: Configure LSP server parameters.
-            # After 'initialized' message finish, we should send 'workspace/didChangeConfiguration' notification.
-            # The setting parameters of each language server are different.
-            self.send_to_notification("workspace/didChangeConfiguration",
-                                      self.get_server_workspace_change_configuration())
-
-            # STEP 4: Tell LSP server open file.
-            # We need send 'textDocument/didOpen' notification,
-            # then LSP server will return file information, such as completion, find-define, find-references and rename etc.
-            self.send_did_open_notification(self.first_file_path)
-
-            # Notify user server is ready.
-            eval_in_emacs("message", [
-                "[LSP-Bridge] Start LSP server ({}) for {} complete, enjoy hacking!".format(self.server_info["name"],
-                                                                                            self.root_path)])
-        elif name == "textDocument/didOpen":
-            fileuri = params["textDocument"]["uri"]
-            if fileuri.startswith("file://"):
-                fileuri = uri_to_path(fileuri)
-
-            self.message_queue.put({
-                "name": "server_file_opened",
-                "content": fileuri
-            })
-
-    def send_to_request(self, name, params, request_id):
-        # Request message must be contain unique request id.
-        if self.lsp_server_is_started():
-            self.start_lsp_server_process()
-        else:
-            sender_thread = SendRequest(self.p, name, params, request_id)
-            self.sender_threads.append(sender_thread)
-            sender_thread.start()
-
-    def send_to_notification(self, name, params):
-        if self.lsp_server_is_started():
-            self.start_lsp_server_process()
-        else:
-            sender_thread = SendNotification(self.p, self.lsp_message_queue, name, params)
-            self.sender_threads.append(sender_thread)
-            sender_thread.start()
-
-    def send_to_response(self, name, id, result):
-        if self.lsp_server_is_started():
-            self.start_lsp_server_process()
-        else:
-            sender_thread = SendResponse(self.p, name, id, result)
-            self.sender_threads.append(sender_thread)
-            sender_thread.start()
 
     def close_file(self, filepath):
         # Send didClose notification when client close file.
@@ -488,5 +396,5 @@ class LspServer(object):
             })
 
             # Don't need wait LSP server response, kill immediately.
-            if self.lsp_server_is_started():
+            if self.p is not None:
                 os.kill(self.p.pid, 9)

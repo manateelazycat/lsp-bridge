@@ -38,8 +38,8 @@ class Handler(abc.ABC):
             "uri": path_to_uri(self.fa.filepath)
         }
 
-        self.fa.lsp_server.send_to_request(
-            name=self.method,
+        self.fa.lsp_server.sender_thread.send_request(
+            method=self.method,
             params=params,
             request_id=request_id,
         )

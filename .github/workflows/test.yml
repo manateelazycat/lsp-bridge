@@ -3,6 +3,7 @@ on: [ push, pull_request, workflow_dispatch ]
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       matrix:
         emacs_version:

@@ -95,7 +95,7 @@ class FileAction(object):
                 self.filepath, self.version, start, end, range_length, change_text)
         else:
             # Please report bug if you got this message.
-            logger.info("IMPOSSIBLE HERE: change_file %s %s", self.filepath, self.lsp_server)
+            logger.error("IMPOSSIBLE HERE: change_file %s %s", self.filepath, self.lsp_server)
 
         self.version += 1
 
@@ -125,27 +125,6 @@ class FileAction(object):
 
     def save_file(self):
         self.lsp_server.send_did_save_notification(self.filepath)
-
-    def build_request_function(self, name):
-        def _do(*args):
-            request_id = generate_request_id()
-            getattr(self, "{}_request_list".format(name)).append(request_id)
-
-            # Cache last change information to compare after receive LSP server response message.
-            self.request_dict[request_id] = {
-                "last_change_file_time": self.last_change_file_time,
-                "last_change_cursor_time": self.last_change_cursor_time
-            }
-
-            if self.lsp_server is not None:
-                args = (request_id, self.filepath, name) + args
-                getattr(self.lsp_server, "send_{}_request".format(name))(*args)
-
-        # Init request list variable.
-        setattr(self, "{}_request_list".format(name), [])
-
-        # Init request method.
-        setattr(self, name, _do)
 
     def handle_server_response_message(self, request_id, request_type, response):
         self.handlers[request_type].handle_response(request_id, response)

@@ -18,17 +18,17 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import queue
+import sys
+import threading
+from collections import defaultdict
+
+from epc.server import ThreadingEPCServer
 
 from core.fileaction import FileAction
 from core.lspserver import LspServer
 from core.utils import *
-from epc.server import ThreadingEPCServer
-import os
-import platform
-import queue
-import signal
-import sys
-import threading
+
 
 class LspBridge(object):
     def __init__(self, args):
@@ -36,11 +36,12 @@ class LspBridge(object):
 
         # Object cache to exchange information between Emacs and LSP server.
         self.file_action_dict = {}  # use for contain file action
-        self.lsp_server_dict = {}   # use for contain lsp server
-        self.action_cache_dict = {} # use for contain file action cache
+        self.lsp_server_dict = {}  # use for contain lsp server
+        self.file_opened = defaultdict(bool)
+        self.action_cache_dict = defaultdict(list)  # use for contain file action cache
 
         # Build EPC interfaces.
-        for name in ["change_file", "find_define", "find_implementation", "find_references", 
+        for name in ["change_file", "find_define", "find_implementation", "find_references",
                      "prepare_rename", "rename", "change_cursor", "save_file", "hover", "signature_help"]:
             self.build_file_action_function(name)
 
@@ -58,14 +59,14 @@ class LspBridge(object):
         # ch.setLevel(logging.DEBUG)
         # self.server.logger.addHandler(ch)
 
-        self.server.register_instance(self) # register instance functions let elisp side call
+        self.server.register_instance(self)  # register instance functions let elisp side call
 
         # Start EPC server with sub-thread, avoid block Qt main loop.
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.start()
 
         # Init emacs option.
-        (enable_lsp_server_log, ) = get_emacs_vars(["lsp-bridge-enable-log"])
+        enable_lsp_server_log = get_emacs_var("lsp-bridge-enable-log")
         if enable_lsp_server_log:
             logger.setLevel(logging.DEBUG)
 
@@ -82,7 +83,7 @@ class LspBridge(object):
         # Pass epc port and webengine codec information to Emacs when first start LspBridge.
         eval_in_emacs('lsp-bridge--first-start', [self.server.server_address[1]])
 
-        # postgui_thread nevert exit, simulation event loop.
+        # postgui_thread never exit, simulation event loop.
         self.postgui_thread.join()
 
     def postgui_dispatcher(self):
@@ -120,15 +121,15 @@ class LspBridge(object):
 
     def _open_file(self, filepath):
         # Create file action.
-        filekey = path_as_key(filepath)
-        if filekey not in self.file_action_dict:
+        file_key = path_as_key(filepath)
+        if file_key not in self.file_action_dict:
             project_path = get_project_path(filepath)
             lang_server = get_emacs_func_result("get-lang-server", [project_path, filepath])
             action = FileAction(filepath, project_path, lang_server)
-            self.file_action_dict[filekey] = action
+            self.file_action_dict[file_key] = action
 
         # Create LSP server.
-        file_action = self.file_action_dict[filekey]
+        file_action = self.file_action_dict[file_key]
         lsp_server_name = file_action.get_lsp_server_name()
         if lsp_server_name not in self.lsp_server_dict:
             # lsp server will send initialize and didOpen when open first file in project.
@@ -163,19 +164,17 @@ class LspBridge(object):
     def build_file_action_function(self, name):
         def _do(*args):
             filepath = args[0]
-            filekey = path_as_key(filepath)
-            if filekey in self.file_action_dict:
-                action = self.file_action_dict[filekey]
+            file_key = path_as_key(filepath)
+            if self.file_opened[file_key]:
+                action = self.file_action_dict[file_key]
                 getattr(action, name)(*args[1:])
             else:
+                if file_key not in self.file_action_dict:
+                    self._open_file(filepath)  # _do is called in postgui_thread, so we can block here.
+
                 # Cache file action wait for file to open it.
-                action_cache = (name, ) + args[1:]
-                if filekey in self.action_cache_dict:
-                    self.action_cache_dict[filekey].append(action_cache)
-                else:
-                    self.action_cache_dict[filekey] = [action_cache]
-                    
-                self.open_file(filepath)
+                action_cache = (name,) + args[1:]
+                self.action_cache_dict[file_key].append(action_cache)
                 logger.info("Cache action {}, wait for file {} to open it before executing.".format(name, filepath))
 
         setattr(self, "_{}".format(name), _do)
@@ -195,7 +194,8 @@ class LspBridge(object):
             self.file_action_dict[filekey].handle_server_response_message(request_id, request_type, response_result)
         else:
             # Please report bug if you got this message.
-            logger.error("IMPOSSIBLE HERE: handle_server_message %s %s", filepath, request_type, request_id, response_result)
+            logger.error("IMPOSSIBLE HERE: handle_server_message %s %s", filepath, request_type, request_id,
+                         response_result)
 
     def handle_server_process_exit(self, server_name):
         if server_name in self.lsp_server_dict:
@@ -203,22 +203,24 @@ class LspBridge(object):
             del self.lsp_server_dict[server_name]
 
     def handle_server_file_opened(self, filepath):
-        filekey = path_as_key(filepath)
-        if filekey in self.action_cache_dict:
-            for action_cache in self.action_cache_dict[filekey]:
+        file_key = path_as_key(filepath)
+        self.file_opened[filepath] = True
+        if file_key in self.action_cache_dict:
+            for action_cache in self.action_cache_dict[file_key]:
                 action_name = action_cache[0]
                 action_args = action_cache[1:]
-                
-                if filekey in self.file_action_dict:
+
+                if file_key in self.file_action_dict:
                     # Execute file action after file opened.
-                    getattr(self.file_action_dict[filekey], action_name)(*action_args)
+                    getattr(self.file_action_dict[file_key], action_name)(*action_args)
                     logger.info("Execute action {} for file {}".format(action_name, filepath))
                 else:
                     # Please report bug if you got this message.
-                    logger.error("IMPOSSIBLE HERE: handle_server_file_opened '{}' {} {}".format(filepath, action_name, self.file_action_dict))
-                    
+                    logger.error("IMPOSSIBLE HERE: handle_server_file_opened '{}' {} {}".format(filepath, action_name,
+                                                                                                self.file_action_dict))
+
             # We need clear action_cache_dict last.
-            del self.action_cache_dict[filekey]
+            del self.action_cache_dict[file_key]
 
     def cleanup(self):
         '''Do some cleanup before exit python process.'''
