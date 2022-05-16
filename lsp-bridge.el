@@ -533,7 +533,6 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                 (additionalTextEdits (if lsp-bridge-enable-auto-import (plist-get item :additionalTextEdits) nil)))
            ;; Remove candidate label and insert candidate insertText
            (delete-region (- (point) (length candidate)) (point))
-           (message "insertText %s" insert-text)
            (insert insert-text)
 
            ;; Do auto-imprt action.
