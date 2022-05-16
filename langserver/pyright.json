@@ -2,6 +2,7 @@
   "name": "pyright",
   "languageId": "python",
   "command": ["pyright-langserver", "--stdio"],
+  "libraryDirectories": ["/usr"],
   "settings": {
     "analysis": {
       "autoImportCompletions": true,

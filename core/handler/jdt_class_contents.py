@@ -25,10 +25,8 @@ class JDTClassContents(Handler):
             return
 
         if type(response) == str:
-            if not os.path.exists(self.fa.workspace_cache_dir):
-                os.mkdir(self.fa.workspace_cache_dir)
             doc_name = re.match(r"jdt://contents/(.*?)/(.*)\.class\?", self.lsp_buffer_uri).groups()[1].replace('/', '.') + ".java"
-            doc_file = os.path.join(self.fa.workspace_cache_dir, doc_name)
+            doc_file = os.path.join(self.fa.lsp_server.library_directories[0], doc_name)
             if not os.path.exists(doc_file):
                 with open(doc_file, 'w') as f:
                     f.write(response)

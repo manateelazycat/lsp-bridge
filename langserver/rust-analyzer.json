@@ -4,5 +4,9 @@
   "command": [
     "rust-analyzer"
   ],
-  "settings": {}
+  "settings": {},
+  "libraryDirectories": [
+      "~/.cargo/registry/src",
+      "~/.rustup/toolchains"
+  ]
 }

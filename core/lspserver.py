@@ -228,21 +228,35 @@ class LspServer(object):
         self.ls_message_thread = threading.Thread(target=self.lsp_message_dispatcher)
         self.ls_message_thread.start()
 
-        # Init workspace
-        workspace_dir = get_emacs_var("lsp-bridge-workspace-dir")
+        # Load library directories
+        self.library_directories = [*map(self.expand_file_name, file_action.lang_server_info.get("libraryDirectories", []))]
         self.message_queue.put({
-            "name": "init_workspace",
+            "name": "update_library_directories",
             "content": {
-                "workspace": "{}#{}".format(workspace_dir, self.server_type),
-                "lsp_server_name": self.server_name
+                "lang": self.server_type,
+                "dires": self.library_directories
             }
         })
+        for lib_dir in self.library_directories:
+            self.message_queue.put({
+                "name": "init_workspace",
+                "content": {
+                    "workspace": "{}#{}".format(lib_dir, self.server_type),
+                    "lsp_server_name": self.server_name
+                }
+            })
 
         # LSP server information.
         self.completion_trigger_characters = list()
 
         # Start LSP server process.
         self.start_lsp_server_process()
+
+    def expand_file_name(self, filepath):
+        if filepath.startswith('~'):
+            return os.path.expanduser(filepath)
+        else:
+            return filepath
 
     def start_lsp_server_process(self):
         # Start LSP sever.
