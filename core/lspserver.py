@@ -229,7 +229,7 @@ class LspServer(object):
         self.ls_message_thread.start()
 
         # Init workspace
-        workspace_dir = get_emacs_var("lsp-bridge-java-workspace-dir")
+        workspace_dir = get_emacs_var("lsp-bridge-workspace-dir")
         self.message_queue.put({
             "name": "init_workspace",
             "content": {
@@ -297,12 +297,12 @@ class LspServer(object):
             "initializationOptions": self.server_info.get("initializationOptions", {})
         }, self.initialize_id)
 
-    def send_did_open_notification(self, filepath, uri):
+    def send_did_open_notification(self, filepath, lsp_buffer_uri):
         filekey = path_as_key(filepath)
         if filekey not in self.open_file_dict:
             self.open_file_dict[filekey] = ""
 
-            self.file_uri_dict[filepath] = path_to_uri(uri) if uri.startswith("/") else uri
+            self.file_uri_dict[filepath] = path_to_uri(lsp_buffer_uri) if lsp_buffer_uri.startswith("/") else lsp_buffer_uri
             with open(filepath, encoding="utf-8") as f:
                 self.send_to_notification("textDocument/didOpen",
                                           {

@@ -1,16 +1,408 @@
 {
-  "name": "jdtls",
-  "languageId": "java",
-  "command": [
-    "jdtls"
-  ],
-  "settings": {
-    "java": {
-      "completion" : {
-        "guessMethodArguments": true,
-        "overwrite": true,
-        "enabled": true
-      }
+    "name": "jdtls",
+    "languageId": "java",
+    "command": ["java",
+                "-Declipse.application=org.eclipse.jdt.ls.core.id1",
+                "-Dosgi.bundles.defaultStartLevel=4",
+                "-Dlog.level=ALL",
+                "-javaagent:/Users/pi/.m2/repository/org/projectlombok/lombok/1.18.16/lombok-1.18.16.jar",
+                "-noverify",
+                "-Xmx1G",
+                "-jar",
+                "/Users/pi/.emacs.d/.cache/lsp/eclipse.jdt.ls/plugins/org.eclipse.equinox.launcher_1.6.400.v20210924-0641.jar",
+                "-configuration",
+                "/Users/pi/.emacs.d/.cache/lsp/eclipse.jdt.ls/config_mac",
+                "-data",
+                "/Users/pi/.emacs.d/workspace/"
+               ],
+    "settings": {},
+    "capabilities": {
+        "workspace": {
+            "workspaceEdit": {
+                "documentChanges": true,
+                "resourceOperations": [
+                    "create",
+                    "rename",
+                    "delete"
+                ]
+            },
+            "applyEdit": true,
+            "symbol": {
+                "symbolKind": {
+                    "valueSet": [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        13,
+                        14,
+                        15,
+                        16,
+                        17,
+                        18,
+                        19,
+                        20,
+                        21,
+                        22,
+                        23,
+                        24,
+                        25,
+                        26
+                    ]
+                }
+            },
+            "executeCommand": {
+                "dynamicRegistration": false
+            },
+            "workspaceFolders": true,
+            "configuration": true,
+            "codeLens": {
+                "refreshSupport": true
+            },
+            "fileOperations": {
+                "didCreate": false,
+                "willCreate": false,
+                "didRename": false,
+                "willRename": false,
+                "didDelete": false,
+                "willDelete": false
+            }
+        },
+        "textDocument": {
+            "declaration": {
+                "linkSupport": true
+            },
+            "definition": {
+                "linkSupport": true
+            },
+            "implementation": {
+                "linkSupport": true
+            },
+            "typeDefinition": {
+                "linkSupport": true
+            },
+            "synchronization": {
+                "willSave": true,
+                "didSave": true,
+                "willSaveWaitUntil": true
+            },
+            "documentSymbol": {
+                "symbolKind": {
+                    "valueSet": [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        13,
+                        14,
+                        15,
+                        16,
+                        17,
+                        18,
+                        19,
+                        20,
+                        21,
+                        22,
+                        23,
+                        24,
+                        25,
+                        26
+                    ]
+                },
+                "hierarchicalDocumentSymbolSupport": true
+            },
+            "formatting": {
+                "dynamicRegistration": true
+            },
+            "rangeFormatting": {
+                "dynamicRegistration": true
+            },
+            "rename": {
+                "dynamicRegistration": true,
+                "prepareSupport": true
+            },
+            "codeAction": {
+                "dynamicRegistration": true,
+                "isPreferredSupport": true,
+                "codeActionLiteralSupport": {
+                    "codeActionKind": {
+                        "valueSet": [
+                            "",
+                            "quickfix",
+                            "refactor",
+                            "refactor.extract",
+                            "refactor.inline",
+                            "refactor.rewrite",
+                            "source",
+                            "source.organizeImports"
+                        ]
+                    }
+                },
+                "resolveSupport": {
+                    "properties": [
+                        "edit",
+                        "command"
+                    ]
+                },
+                "dataSupport": true
+            },
+            "completion": {
+                "completionItem": {
+                    "snippetSupport": true,
+                    "documentationFormat": [
+                        "markdown",
+                        "plaintext"
+                    ],
+                    "resolveAdditionalTextEditsSupport": true,
+                    "insertReplaceSupport": true,
+                    "deprecatedSupport": true,
+                    "resolveSupport": {
+                        "properties": [
+                            "documentation",
+                            "details",
+                            "additionalTextEdits",
+                            "command"
+                        ]
+                    },
+                    "insertTextModeSupport": {
+                        "valueSet": [
+                            1,
+                            2
+                        ]
+                    }
+                },
+                "contextSupport": true
+            },
+            "signatureHelp": {
+                "signatureInformation": {
+                    "parameterInformation": {
+                        "labelOffsetSupport": true
+                    }
+                }
+            },
+            "documentLink": {
+                "dynamicRegistration": true,
+                "tooltipSupport": true
+            },
+            "hover": {
+                "contentFormat": [
+                    "markdown",
+                    "plaintext"
+                ]
+            },
+            "foldingRange": null,
+            "callHierarchy": {
+                "dynamicRegistration": false
+            },
+            "publishDiagnostics": {
+                "relatedInformation": true,
+                "tagSupport": {
+                    "valueSet": [
+                        1,
+                        2
+                    ]
+                },
+                "versionSupport": true
+            },
+            "linkedEditingRange": {
+                "dynamicRegistration": true
+            }
+        },
+        "window": {
+            "workDoneProgress": true,
+            "showMessage": null,
+            "showDocument": {
+                "support": true
+            }
+        }
+    },
+    "initializationOptions": {
+        "settings": {
+            "java": {
+                "codeGeneration": {
+                    "toString": {
+                        "limitElements": 0,
+                        "listArrayContents": true,
+                        "skipNullValues": false,
+                        "codeStyle": "STRING_CONCATENATION",
+                        "template": "${object.className} [${member.name()}=${member.value}, ${otherMembers}]"
+                    },
+                    "generateComments": false,
+                    "useBlocks": false,
+                    "hashCodeEquals": {
+                        "useInstanceof": false,
+                        "useJava7Objects": false
+                    }
+                },
+                "format": {
+                    "onType": {
+                        "enabled": true
+                    },
+                    "comments": {
+                        "enabled": true
+                    },
+                    "enabled": true,
+                    "tabSize": 4,
+                    "insertSpaces": true
+                },
+                "progressReports": {
+                    "enabled": true
+                },
+                "foldingRange": {
+                    "enabled": true
+                },
+                "completion": {
+                    "importOrder": [
+                        "java",
+                        "javax",
+                        "com",
+                        "org"
+                    ],
+                    "favoriteStaticMembers": [
+                        "org.junit.Assert.*",
+                        "org.junit.Assume.*",
+                        "org.junit.jupiter.api.Assertions.*",
+                        "org.junit.jupiter.api.Assumptions.*",
+                        "org.junit.jupiter.api.DynamicContainer.*",
+                        "org.junit.jupiter.api.DynamicTest.*",
+                        "org.mockito.Mockito.*",
+                        "org.mockito.ArgumentMatchers.*",
+                        "org.mockito.Answers.*"
+                    ],
+                    "guessMethodArguments": true,
+                    "overwrite": true,
+                    "enabled": true,
+                    "filteredTypes": [
+                        "java.awt.*",
+                        "com.sun.*"
+                    ],
+                    "maxResults": 0
+                },
+                "maxConcurrentBuilds": 1,
+                "autobuild": {
+                    "enabled": true
+                },
+                "selectionRange": {
+                    "enabled": true
+                },
+                "import": {
+                    "exclusions": [
+                        "**/node_modules/**",
+                        "**/.metadata/**",
+                        "**/archetype-resources/**",
+                        "**/META-INF/maven/**"
+                    ],
+                    "maven": {
+                        "enabled": true
+                    },
+                    "gradle": {
+                        "enabled": true,
+                        "wrapper": {
+                            "enabled": true
+                        },
+                        "offline": {
+                            "enabled": false
+                        }
+                    }
+                },
+                "saveActions": {
+                    "organizeImports": false
+                },
+                "implementationsCodeLens": {
+                    "enabled": false
+                },
+                "signatureHelp": {
+                    "enabled": true
+                },
+                "referencesCodeLens": {
+                    "enabled": false
+                },
+                "maven": {
+                    "downloadSources": false,
+                    "updateSnapshots": false
+                },
+                "trace": {
+                    "server": "off"
+                },
+                "configuration": {
+                    "updateBuildConfiguration": "automatic",
+                    "checkProjectSettingsExclusions": true
+                },
+                "errors": {
+                    "incompleteClasspath": {
+                        "severity": "warning"
+                    }
+                },
+                "dependency": {
+                    "packagePresentation": "flat"
+                },
+                "project": {
+                    "importHint": true,
+                    "importOnFirstTimeStartup": "automatic",
+                    "referencedLibraries": [
+                        "lib/**/*.jar"
+                    ],
+                    "resourceFilters": [
+                        "node_modules",
+                        ".metadata",
+                        "archetype-resources",
+                        "META-INF/maven"
+                    ]
+                },
+                "imports": {
+                    "gradle": {
+                        "wrapper": {
+                            "checksums": []
+                        }
+                    }
+                },
+                "sources": {
+                    "organizeImports": {
+                        "staticStarThreshold": 99,
+                        "starThreshold": 99
+                    }
+                },
+                "server": {
+                    "launchMode": "Hybrid"
+                },
+                "showBuildStatusOnStart": {
+                    "enabled": false
+                }
+            }
+        },
+        "extendedClientCapabilities": {
+            "progressReportProvider": true,
+            "classFileContentsSupport": true,
+            "classFileContentsSupport": true,
+            "overrideMethodsPromptSupport": true,
+            "hashCodeEqualsPromptSupport": true,
+            "advancedOrganizeImportsSupport": true,
+            "generateConstructorsPromptSupport": true,
+            "generateToStringPromptSupport": true,
+            "advancedGenerateAccessorsSupport": true,
+            "advancedExtractRefactoringSupport": true,
+            "moveRefactoringSupport": true,
+            "resolveAdditionalTextEditsSupport": true
+        },
+        "bundles": [],
+        "workspaceFolders3": [
+            "file:///Users/pi/company/pangcai/ghac"
+        ]
     }
-  }
 }

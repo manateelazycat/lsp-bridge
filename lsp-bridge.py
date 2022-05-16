@@ -69,7 +69,7 @@ class LspBridge(object):
         (enable_lsp_server_log, ) = get_emacs_vars(["lsp-bridge-enable-log"])
         if enable_lsp_server_log:
             logger.setLevel(logging.DEBUG)
-        self.java_workspace_dir = get_emacs_var("lsp-bridge-java-workspace-dir")
+        self.workspace_dir = get_emacs_var("lsp-bridge-workspace-dir")
 
         # All Emacs request running in postgui_thread.
         self.postgui_queue = queue.Queue()
@@ -129,8 +129,8 @@ class LspBridge(object):
         project_path = get_project_path(filepath)
         lang_server = get_emacs_func_result("get-lang-server", [project_path, filepath])
         lsp_server_name = None
-        if filepath.startswith(self.java_workspace_dir):
-            workspace = "{}#{}".format(self.java_workspace_dir, lang_server)
+        if filepath.startswith(self.workspace_dir):
+            workspace = "{}#{}".format(self.workspace_dir, lang_server)
             lsp_server_name = self.workspace_server_dict[workspace]
         if filekey not in self.file_action_dict:
             action = FileAction(filepath, project_path, lang_server)

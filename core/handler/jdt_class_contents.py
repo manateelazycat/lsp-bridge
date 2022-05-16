@@ -1,3 +1,8 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from core.fileaction import FileAction
+
 from core.handler import Handler
 from core.utils import *
 
@@ -8,34 +13,19 @@ class JDTClassContents(Handler):
     name = "jdt_class_contents"
     method = "java/classFileContents"
     cancel_on_change = True
-    lsp_buffer_uri = None
-    start_pos = None
 
-    def process_request(self) -> dict:
-        return dict()
+    def __init__(self, fa: "FileAction"):
+        super().__init__(fa)
+        self.lsp_buffer_uri = None
+        self.start_pos = None
 
-    def send_request(self, file_uri, start_pos):
-        self.latest_request_id = request_id = generate_request_id()
-        self.last_change = self.fa.last_change
+    def process_request(self, uri) -> dict:
+        return dict(uri=uri)
+
+    def send_request(self, uri, start_pos):
+        super().send_request(uri)
         self.start_pos = start_pos
-        self.lsp_buffer_uri = file_uri
-
-        self.fa.lsp_server.record_request_id(
-            request_id=request_id,
-            method=self.method,
-            filepath=self.fa.filepath,
-            type=self.name,
-        )
-
-        params = self.process_request()
-        params["uri"] = file_uri
-
-        self.fa.lsp_server.send_to_request(
-            name=self.method,
-            params=params,
-            request_id=request_id,
-        )
-
+        self.lsp_buffer_uri = uri
 
     def process_response(self, response: str) -> None:
         if not response:
@@ -43,10 +33,10 @@ class JDTClassContents(Handler):
             return
 
         if type(response) == str:
-            if not os.path.exists(self.fa.java_workspace_cache_dir):
-                os.mkdir(self.fa.java_workspace_cache_dir)
+            if not os.path.exists(self.fa.workspace_cache_dir):
+                os.mkdir(self.fa.workspace_cache_dir)
             doc_name = re.match(r"jdt://contents/(.*?)/(.*)\.class\?", self.lsp_buffer_uri).groups()[1].replace('/', '.') + ".java"
-            doc_file = os.path.join(self.fa.java_workspace_cache_dir, doc_name)
+            doc_file = os.path.join(self.fa.workspace_cache_dir, doc_name)
             if not os.path.exists(doc_file):
                 with open(doc_file, 'w') as f:
                     f.write(response)

@@ -62,7 +62,7 @@ class FileAction(object):
         # Generate initialize request id.
         self.initialize_id = generate_request_id()
         self.enable_auto_import = get_emacs_var("lsp-bridge-enable-auto-import")
-        self.java_workspace_cache_dir = get_emacs_var("lsp-bridge-java-workspace-cache-dir")
+        self.workspace_cache_dir = get_emacs_var("lsp-bridge-workspace-cache-dir")
 
     @property
     def last_change(self):
