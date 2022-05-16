@@ -603,11 +603,11 @@ If optional MARKER, return a marker instead"
              "[LSP Bridge] Caution: LSP server sent invalid character position %s. Using 0 instead."
              col)
             (setq col 0))
-          (lsp--bridge-move-to-column col)))
+          (lsp-bridge--move-to-column col)))
       (if marker (copy-marker (point-marker)) (point)))))
 
 ;; Copy from eglot
-(defun lsp--bridge-move-to-column (column)
+(defun lsp-bridge--move-to-column (column)
   "Move to COLUMN without closely following the LSP spec."
   ;; We cannot use `move-to-column' here, because it moves to *visual*
   ;; columns, which can be different from LSP columns in case of
@@ -724,8 +724,8 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-rename-highlight (filepath line bound-start bound-end)
   (lsp-bridge--with-file-buffer filepath
     (let* ((highlight-line (1+ line))
-           (start-pos (lsp-bridge-get-pos buffer highlight-line bound-start))
-           (end-pos (lsp-bridge-get-pos buffer highlight-line bound-end)))
+           (start-pos (lsp-bridge--get-pos buffer highlight-line bound-start))
+           (end-pos (lsp-bridge--get-pos buffer highlight-line bound-end)))
       (require 'pulse)
       (let ((pulse-iterations 1)
             (pulse-delay lsp-bridge-flash-line-delay))
@@ -739,11 +739,11 @@ If optional MARKER, return a marker instead"
   (interactive)
   (lsp-bridge-call-async "signature_help" lsp-bridge-filepath (lsp-bridge--position)))
 
-(defun lsp-bridge-get-pos (buf line column)
+(defun lsp-bridge--get-pos (buf line column)
   (with-current-buffer buf
     (save-excursion
       (goto-line line)
-      (move-to-column column)
+      (lsp-bridge--move-to-column column)
       (point))))
 
 (defun lsp-bridge-rename-finish (rename-files counter)
@@ -754,7 +754,11 @@ If optional MARKER, return a marker instead"
 
   (message "[LSP-Bridge] Rename %s places in %s files." counter (length rename-files)))
 
-(defun lsp-bridge--jump-to-def (filepath row column readonly)
+(defun lsp-bridge--goto-position (position)
+  (goto-line (1+ (plist-get position :line)))
+  (lsp-bridge--move-to-column (plist-get position :character)))
+
+(defun lsp-bridge--jump-to-def (filepath position readonly)
   (interactive)
   ;; Record postion.
   (set-marker (mark-marker) (point) (current-buffer))
@@ -769,8 +773,7 @@ If optional MARKER, return a marker instead"
   (when readonly
     (read-only-mode))
 
-  (goto-line (1+ row))
-  (move-to-column column)
+  (lsp-bridge--goto-position position)
 
   ;; Flash define line.
   (require 'pulse)

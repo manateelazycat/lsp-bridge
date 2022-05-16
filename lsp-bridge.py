@@ -98,8 +98,6 @@ class LspBridge(object):
             elif message["name"] == "action_func":
                 (func_name, func_args) = message["content"]
                 getattr(self, func_name)(*func_args)
-            elif message["name"] == "init_workspace":
-                self.workspace_server_dict[message["content"]["workspace"]] = message["content"]["lsp_server_name"]
 
             self.postgui_queue.task_done()
 
@@ -112,6 +110,9 @@ class LspBridge(object):
                 self.handle_server_process_exit(message["content"])
             elif message["name"] == "server_response_message":
                 self.handle_server_message(*message["content"])
+            elif message["name"] == "init_workspace":
+                self.workspace_server_dict[message["content"]["workspace"]] = message["content"]["lsp_server_name"]
+
 
             self.message_queue.task_done()
 
