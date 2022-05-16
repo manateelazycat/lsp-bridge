@@ -10,9 +10,10 @@ class PrepareRename(Handler):
         return dict(position=position)
 
     def process_response(self, response: dict) -> None:
-        eval_in_emacs("lsp-bridge-rename-highlight", [
+        eval_in_emacs(
+            "lsp-bridge-rename-highlight",
             self.fa.filepath,
             response["start"]["line"],
             response["start"]["character"],
             response["end"]["character"]
-        ])
+        )

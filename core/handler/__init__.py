@@ -7,19 +7,21 @@ from core.utils import *
 
 
 class Handler(abc.ABC):
-    name = "NAME"
-    method = "METHOD"
-    cancel_on_change = False
+    name: str  # Name called by Emacs
+    method: str  # Method name defined by LSP
+    cancel_on_change = False  # Whether to cancel request on file change or cursor change
 
     def __init__(self, fa: "FileAction"):
-        self.latest_request_id = -1
-        self.last_change = fa.last_change
+        self.latest_request_id = -1  # Latest request id
+        self.last_change: tuple = fa.last_change  # Last change information
         self.fa = fa
 
     def process_request(self, *args, **kwargs) -> dict:
+        """Called from Emacs, return the request params."""
         raise NotImplementedError()
 
     def process_response(self, response: dict) -> None:
+        """Process the response from LSP server."""
         raise NotImplementedError()
 
     def send_request(self, *args, **kwargs):
@@ -30,7 +32,7 @@ class Handler(abc.ABC):
             request_id=request_id,
             method=self.method,
             filepath=self.fa.filepath,
-            type=self.name,
+            name=self.name,
         )
 
         params = self.process_request(*args, **kwargs)
@@ -38,15 +40,15 @@ class Handler(abc.ABC):
             "uri": path_to_uri(self.fa.filepath)
         }
 
-        self.fa.lsp_server.send_to_request(
-            name=self.method,
+        self.fa.lsp_server.sender.send_request(
+            method=self.method,
             params=params,
             request_id=request_id,
         )
 
     def handle_response(self, request_id, response):
         if request_id != self.latest_request_id:
-            logger.debug("Discard out-to-date response: received=%d, latest=%d",
+            logger.debug("Discard outdated response: received=%d, latest=%d",
                          request_id, self.latest_request_id)
             return
 
@@ -61,7 +63,8 @@ class Handler(abc.ABC):
             import traceback
             logger.error(traceback.format_exc())
 
-# prevent circular import
+# import subclasses so that we can use core.handler.Handler.__subclasses__()
+# import at the end of this file to avoid circular import
 from core.handler.completion import Completion
 from core.handler.find_define import FindDefine
 from core.handler.find_implementation import FindImplementation

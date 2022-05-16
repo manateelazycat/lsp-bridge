@@ -22,48 +22,50 @@ import pprint
 import threading
 import time
 import os
-from typing import Dict
+from typing import Dict, Tuple
 
 from core.utils import *
 from core.handler import *
 
 
-class FileAction(object):
+class FileAction:
 
     def __init__(self, filepath, project_path, lang_server):
-        object.__init__(self)
-
         # Init.
         self.filepath = filepath
         self.project_path = project_path
         self.request_dict = {}
-        self.last_change_file_time = -1
+        self.last_change_file_time = -1.0
         self.last_change_file_before_cursor_text = ""
-        self.last_change_cursor_time = -1
+        self.last_change_cursor_time = -1.0
         self.version = 1
+
         self.try_completion_timer = None
         self.try_signature_help_timer = None
 
         # Read language server information.
-        self.lang_server_info = None
-        self.load_lang_server_info(lang_server)
+        self.lang_server_info = self.load_lang_server_info(lang_server)
 
         # Initialize handlers.
         self.handlers: Dict[str, Handler] = dict()
         logger.debug("Handlers: " + pprint.pformat(Handler.__subclasses__()))
         for handler_cls in Handler.__subclasses__():
             self.handlers[handler_cls.name] = handler_cls(self)
-            setattr(self, handler_cls.name, self.handlers[handler_cls.name].send_request)
 
         self.lsp_server = None
 
-        # Generate initialize request id.
-        self.initialize_id = generate_request_id()
         self.enable_auto_import = get_emacs_var("lsp-bridge-enable-auto-import")
 
     @property
-    def last_change(self):
+    def last_change(self) -> Tuple[float, float]:
+        """Return the last change information as a tuple."""
         return self.last_change_file_time, self.last_change_cursor_time
+
+    def call(self, method, *args, **kwargs):
+        """Call any handler or method of file action."""
+        if method in self.handlers:
+            return self.handlers[method].send_request(*args, **kwargs)
+        getattr(self, method)(*args, **kwargs)
 
     def load_lang_server_info(self, lang_server):
         lang_server_info_path = ""
@@ -82,7 +84,7 @@ class FileAction(object):
 
         with open(lang_server_info_path, encoding="utf-8") as f:
             import json
-            self.lang_server_info = json.load(f)
+            return json.load(f)
 
     def get_lsp_server_name(self):
         # We use project path and LSP server type as unique name.
@@ -95,7 +97,7 @@ class FileAction(object):
                 self.filepath, self.version, start, end, range_length, change_text)
         else:
             # Please report bug if you got this message.
-            logger.info("IMPOSSIBLE HERE: change_file %s %s", self.filepath, self.lsp_server)
+            logger.error("IMPOSSIBLE HERE: change_file %s %s", self.filepath, self.lsp_server)
 
         self.version += 1
 
@@ -108,7 +110,9 @@ class FileAction(object):
         self.last_change_file_before_cursor_text = before_cursor_text
 
         # Send textDocument/completion 100ms later.
-        self.try_completion_timer = threading.Timer(0.1, lambda: self.completion(position, before_char))
+        self.try_completion_timer = threading.Timer(
+            0.1, lambda: self.handlers["completion"].send_request(position, before_char)
+        )
         self.try_completion_timer.start()
 
     def change_cursor(self, position):
@@ -120,32 +124,13 @@ class FileAction(object):
             self.try_signature_help_timer.cancel()
 
         # Send textDocument/signatureHelp 200ms later.
-        self.try_signature_help_timer = threading.Timer(0.1, lambda: self.signature_help(position))
+        self.try_signature_help_timer = threading.Timer(
+            0.2, lambda: self.handlers["signature_help"].send_request(position)
+        )
         self.try_signature_help_timer.start()
 
     def save_file(self):
         self.lsp_server.send_did_save_notification(self.filepath)
-
-    def build_request_function(self, name):
-        def _do(*args):
-            request_id = generate_request_id()
-            getattr(self, "{}_request_list".format(name)).append(request_id)
-
-            # Cache last change information to compare after receive LSP server response message.
-            self.request_dict[request_id] = {
-                "last_change_file_time": self.last_change_file_time,
-                "last_change_cursor_time": self.last_change_cursor_time
-            }
-
-            if self.lsp_server is not None:
-                args = (request_id, self.filepath, name) + args
-                getattr(self.lsp_server, "send_{}_request".format(name))(*args)
-
-        # Init request list variable.
-        setattr(self, "{}_request_list".format(name), [])
-
-        # Init request method.
-        setattr(self, name, _do)
 
     def handle_server_response_message(self, request_id, request_type, response):
         self.handlers[request_type].handle_response(request_id, response)

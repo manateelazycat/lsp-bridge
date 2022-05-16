@@ -21,7 +21,6 @@ def try_complete(file: SingleFile, label: str):
             (lsp-bridge-mode 1)
             (goto-char (point-max))
             (delete-char -1)
-            (sleep-for 10)
             (insert "{file.code[-1]}")
         """))
 

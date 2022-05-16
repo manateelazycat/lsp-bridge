@@ -114,4 +114,4 @@ class Rename(Handler):
                 rename_files.append(rename_file)
                 counter += rename_counter
 
-        eval_in_emacs("lsp-bridge-rename-finish", [rename_files, counter])
+        eval_in_emacs("lsp-bridge-rename-finish", rename_files, counter)
