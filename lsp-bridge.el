@@ -279,18 +279,6 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "The default mode hook to enable lsp-bridge."
   :type 'list)
 
-(defcustom lsp-bridge-workspace-dir (expand-file-name (locate-user-emacs-file "workspace/"))
-  "LSP workspace directory."
-  :group 'lsp-bridge
-  :risky t
-  :type 'directory)
-
-(defcustom lsp-bridge-workspace-cache-dir (expand-file-name ".cache/" lsp-bridge-workspace-dir)
-  "LSP workspace cache directory."
-  :group 'lsp-bridge
-  :risky t
-  :type 'directory)
-
 (defvar lsp-bridge-get-lang-server-by-project nil
   "Get lang server with project path and file path.")
 
