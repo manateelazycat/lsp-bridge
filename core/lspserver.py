@@ -297,12 +297,15 @@ class LspServer(object):
             "initializationOptions": self.server_info.get("initializationOptions", {})
         }, self.initialize_id)
 
-    def send_did_open_notification(self, filepath, lsp_buffer_uri):
+    def send_did_open_notification(self, filepath, lsp_buffer_uri_or_path):
         filekey = path_as_key(filepath)
         if filekey not in self.open_file_dict:
             self.open_file_dict[filekey] = ""
 
-            self.file_uri_dict[filepath] = path_to_uri(lsp_buffer_uri) if lsp_buffer_uri.startswith("/") else lsp_buffer_uri
+            if lsp_buffer_uri_or_path.startswith("/"):
+                self.file_uri_dict[filepath] = path_to_uri(lsp_buffer_uri_or_path)
+            else:
+                self.file_uri_dict[filepath] = lsp_buffer_uri_or_path
             with open(filepath, encoding="utf-8") as f:
                 self.send_to_notification("textDocument/didOpen",
                                           {

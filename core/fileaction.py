@@ -35,8 +35,6 @@ class FileAction(object):
 
         # Init.
         self.filepath = filepath
-        # the uri returned by the LSP server; for example in jdt.ls: jdt://contents/java.base/java.util/Optional.class?**
-        self.lsp_buffer_uri = filepath
         self.project_path = project_path
         self.request_dict = {}
         self.last_change_file_time = -1
