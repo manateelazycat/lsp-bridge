@@ -1,0 +1,9 @@
+{
+    "name": "vscode-css-language-server",
+    "languageId": "vscode-css-language-server",
+    "command": [
+        "vscode-css-language-server",
+        "--stdio"
+    ],
+    "settings": {}
+}
