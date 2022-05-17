@@ -9,19 +9,21 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 ## Installation
 
 1. Install Python dependences: [python-epc](https://github.com/tkf/python-epc)
-2. Install Elisp dependences: [corfu](https://github.com/minad/corfu) ,[all-the-icons](https://github.com/domtronn/all-the-icons.el), [Orderless](https://github.com/oantolin/orderless), [posframe](https://github.com/tumashu/posframe), [markdown-mode](https://github.com/jrblevin/markdown-mode)
+2. Install Elisp dependences: [corfu](https://github.com/minad/corfu) ,[all-the-icons](https://github.com/domtronn/all-the-icons.el), [Orderless](https://github.com/oantolin/orderless), [posframe](https://github.com/tumashu/posframe), [markdown-mode](https://github.com/jrblevin/markdown-mode), [yasnippet](https://github.com/joaotavora/yasnippet)
 3. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
 4. Add follow code in your ~/.emacs:
 
 ```elisp
 (add-to-list 'load-path "<path-to-lsp-bridge>")
 
+(require 'yasnippet)
 (require 'lsp-bridge)             ;; load lsp-bridge
 (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
 (require 'lsp-bridge-icon)        ;; show icon for completion items, optional
 
 (global-corfu-mode)               ;; use corfu as completion ui
 (global-lsp-bridge-mode)
+(yas-global-mode 1)
 ```
 
 ## Commands
@@ -80,7 +82,6 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 ### Features need to finish:
 
 - [ ] Show signature help with eldoc 
-- [ ] Snippet expand
 - [ ] Code action
 - [ ] Inline Value
 - [ ] One file open multi-server, and mixed multi-result to corfu menu
