@@ -1,3 +1,5 @@
+English | [简体中文](./README.zh-CN.md)
+
 # lsp-bridge
 
 lsp-bridge's goal is to become the fastest LSP client in the Emacs.
@@ -50,7 +52,7 @@ Anyway you can customize server configuration with below priority:
 ## Add support for new language?
 
 1. Create settings file under lsp-bridge/langserver, such as `pyright.json` is use for pyright (windows use `pyright_windows.json`, macOS use `pyright_darwin.json`).
-2. Add `(mode . server_name)` in lsp-bridge-lang-server-list, such as `(python-mode . "pyright")`
+2. Add `(mode . server_name)` in ```lsp-bridge-lang-server-list```, such as `(python-mode . "pyright")`
 3. Add new mode-hook to `lsp-bridge-default-mode-hooks`
 
 Welcome send PR to help us improve support for LSP servers, thank you!
