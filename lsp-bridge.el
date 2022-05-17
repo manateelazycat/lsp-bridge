@@ -535,18 +535,39 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
          ;; A lookup should fix that (github#148)
          (let* ((item (get-text-property 0 'lsp-bridge--lsp-item (cl-find candidate candidates :test #'string=)))
                 (insert-text (plist-get item :insertText))
-                (additionalTextEdits (if lsp-bridge-enable-auto-import (plist-get item :additionalTextEdits) nil)))
-           ;; Remove candidate label and insert candidate insertText
-           (delete-region (- (point) (length candidate)) (point))
-           (insert insert-text)
+                (additionalTextEdits (if lsp-bridge-enable-auto-import (plist-get item :additionalTextEdits) nil))
+                (kind (plist-get item :kind)))
 
            ;; Do auto-imprt action.
            (with-current-buffer
                (if (minibufferp) (window-buffer (minibuffer-selected-window))
                  (current-buffer))
-             (when (cl-plusp (length additionalTextEdits))
-               (lsp-bridge--apply-text-edits additionalTextEdits)))
+
+             (let ((snippet-fn (and (string= kind "Snippet")
+                                    (lsp-bridge--snippet-expansion-fn))))
+               (cond (snippet-fn
+                      ;; A snippet should be inserted, but using plain
+                      ;; `insertText'.  This requires us to delete the
+                      ;; whole completion, since `insertText' is the full
+                      ;; completion's text.
+                      (delete-region (- (point) (length candidate)) (point))
+                      (funcall snippet-fn insert-text))
+                     (insert-text
+                      ;; Remove candidate label and insert candidate insertText
+                      (delete-region (- (point) (length candidate)) (point))
+                      (insert insert-text)
+
+                      (when (cl-plusp (length additionalTextEdits))
+                        (lsp-bridge--apply-text-edits additionalTextEdits))))))
            ))))))
+
+;; Copy from eglot
+(defun lsp-bridge--snippet-expansion-fn ()
+  "Compute a function to expand snippets.
+Doubles as an indicator of snippet support."
+  (and (boundp 'yas-minor-mode)
+       (symbol-value 'yas-minor-mode)
+       'yas-expand-snippet))
 
 ;; Copy from eglot
 (defun lsp-bridge--apply-text-edits (edits &optional version)
