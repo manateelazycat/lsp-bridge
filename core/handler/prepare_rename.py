@@ -12,7 +12,7 @@ class PrepareRename(Handler):
     def process_response(self, response: dict) -> None:
         eval_in_emacs(
             "lsp-bridge-rename-highlight",
-            self.fa.filepath,
+            self.file_action.filepath,
             response["start"]["line"],
             response["start"]["character"],
             response["end"]["character"]

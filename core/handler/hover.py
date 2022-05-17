@@ -24,7 +24,7 @@ class Hover(Handler):
                     render_strings.append(contents["value"])
                 else:
                     render_strings.append(make_code_block(
-                        self.fa.lang_server_info["languageId"],
+                        self.file_action.lang_server_info["languageId"],
                         contents["value"]
                     ))
             elif "language" in contents:
@@ -44,7 +44,7 @@ class Hover(Handler):
         start_column = response["range"]["start"]["character"]
         end_column = response["range"]["end"]["character"]
 
-        line_content = linecache.getline(self.fa.filepath, line + 1)
+        line_content = linecache.getline(self.file_action.filepath, line + 1)
         linecache.clearcache()  # clear line cache 
         contents = response["contents"]
         render_string = self.parse_hover_contents(contents, [])

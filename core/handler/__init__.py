@@ -11,10 +11,10 @@ class Handler(abc.ABC):
     method: str  # Method name defined by LSP
     cancel_on_change = False  # Whether to cancel request on file change or cursor change
 
-    def __init__(self, fa: "FileAction"):
+    def __init__(self, file_action: "FileAction"):
         self.latest_request_id = -1  # Latest request id
-        self.last_change: tuple = fa.last_change  # Last change information
-        self.fa = fa
+        self.last_change: tuple = file_action.last_change  # Last change information
+        self.file_action = file_action
 
     def process_request(self, *args, **kwargs) -> dict:
         """Called from Emacs, return the request params."""
@@ -26,21 +26,21 @@ class Handler(abc.ABC):
 
     def send_request(self, *args, **kwargs):
         self.latest_request_id = request_id = generate_request_id()
-        self.last_change = self.fa.last_change
+        self.last_change = self.file_action.last_change
 
-        self.fa.lsp_server.record_request_id(
+        self.file_action.lsp_server.record_request_id(
             request_id=request_id,
             method=self.method,
-            filepath=self.fa.filepath,
+            filepath=self.file_action.filepath,
             name=self.name,
         )
 
         params = self.process_request(*args, **kwargs)
         params["textDocument"] = {
-            "uri": path_to_uri(self.fa.filepath)
+            "uri": path_to_uri(self.file_action.filepath)
         }
 
-        self.fa.lsp_server.sender.send_request(
+        self.file_action.lsp_server.sender.send_request(
             method=self.method,
             params=params,
             request_id=request_id,
@@ -52,7 +52,7 @@ class Handler(abc.ABC):
                          request_id, self.latest_request_id)
             return
 
-        if self.cancel_on_change and self.last_change != self.fa.last_change:
+        if self.cancel_on_change and self.last_change != self.file_action.last_change:
             logger.debug("Discard response: file changed since last request")
             return
 

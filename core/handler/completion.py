@@ -23,7 +23,7 @@ class Completion(Handler):
     cancel_on_change = True
 
     def process_request(self, position, char) -> dict:
-        if char in self.fa.lsp_server.completion_trigger_characters:
+        if char in self.file_action.lsp_server.completion_trigger_characters:
             context = dict(triggerCharacter=char,
                            triggerKind=CompletionTriggerKind.TriggerCharacter.value)
         else:
@@ -32,8 +32,8 @@ class Completion(Handler):
         return dict(position=position, context=context)
 
     def calc_completion_prefix_string(self):
-        ret = self.fa.last_change_file_before_cursor_text
-        for c in self.fa.lsp_server.completion_trigger_characters + [" " + '\t']:
+        ret = self.file_action.last_change_file_before_cursor_text
+        for c in self.file_action.lsp_server.completion_trigger_characters + [" " + '\t']:
             ret = ret.rpartition(c)[2]
         return ret
 
@@ -70,7 +70,7 @@ class Completion(Handler):
                     "annotation": (item.get("detail") or kind).replace(" ", ""),
                 }
 
-                if self.fa.enable_auto_import:
+                if self.file_action.enable_auto_import:
                     candidate["additionalTextEdits"] = item.get("additionalTextEdits", [])
 
                 completion_candidates.append(candidate)
@@ -83,10 +83,10 @@ class Completion(Handler):
                 completion_prefix_string == completion_common_string == completion_items[0]):
             # Clear completion items if user input last completion item.
             eval_in_emacs("lsp-bridge-record-completion-items",
-                          self.fa.filepath, completion_prefix_string,
+                          self.file_action.filepath, completion_prefix_string,
                           completion_common_string, [])
         else:
             eval_in_emacs("lsp-bridge-record-completion-items",
-                          self.fa.filepath, completion_prefix_string,
+                          self.file_action.filepath, completion_prefix_string,
                           completion_common_string, completion_candidates)
 
