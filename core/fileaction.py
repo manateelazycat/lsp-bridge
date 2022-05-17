@@ -33,7 +33,6 @@ class FileAction:
     def __init__(self, filepath, project_path, lang_server):
         # Init.
         self.filepath = filepath
-        self.external_file_link = None
         self.project_path = project_path
         self.request_dict = {}
         self.last_change_file_time = -1.0
@@ -134,4 +133,3 @@ class FileAction:
 
     def handle_server_response_message(self, request_id, request_type, response):
         self.handlers[request_type].handle_response(request_id, response)
-

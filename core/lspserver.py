@@ -219,14 +219,7 @@ class LspServer:
             "initializationOptions": self.server_info.get("initializationOptions", {})
         }, self.initialize_id)
 
-    def parse_document_uri(self, filepath, external_file_link):
-        uri = path_to_uri(filepath)
-        if external_file_link is not None:
-            uri = path_to_uri(external_file_link) if os.path.sep in external_file_link else external_file_link
-            
-        return uri
-        
-    def send_did_open_notification(self, filepath, external_file_link=None):
+    def send_did_open_notification(self, filepath):
         # Check file is opened?
         file_key = path_as_key(filepath)
         if file_key in self.opened_files:
@@ -239,7 +232,7 @@ class LspServer:
         with open(filepath, encoding="utf-8") as f:
             self.sender.send_notification("textDocument/didOpen", {
                 "textDocument": {
-                    "uri": self.parse_document_uri(filepath, external_file_link),
+                    "uri": path_to_uri(filepath),
                     "languageId": self.server_info["languageId"],
                     "version": 0,
                     "text": f.read()
