@@ -76,6 +76,7 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 19. [wxml-language-server](https://github.com/chemzqm/wxml-languageserver) (wxml)
 20. [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) (html)
 21. [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) (css)
+
 ### Features that won't support
 lsp-bridge goal is become the fastest LSP client in the Emacs, not the complete implementation of LSP protocol.
 
@@ -83,6 +84,12 @@ The following function Emacs can do better, we will not repeat in lsp-bridge:
 1. Code format: each LSP server has its own formatting specification, with the formatting function of Emacs, we will get more detail control
 2. Diagnostics: [Flycheck](https://www.flycheck.org/en/latest/) or [Flymake](https://www.gnu.org/software/emacs/manual/html_node/flymake/Using-Flymake.html) is better chooise
 3. Syntax highlight: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) is a wonderful incremental parsing library to implement highlight code
+
+## Join development
+
+Please read [LSP Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/) and [The Design of lsp-bridge](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html) first.
+
+Then turn on option ```lsp-bridge-enable-log``` and happy hacking! ;)
 
 ## Report bug
 
