@@ -17,9 +17,10 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 (add-to-list 'load-path "<path-to-lsp-bridge>")
 
 (require 'lsp-bridge)             ;; load lsp-bridge
-(global-corfu-mode)               ;; use corfu as completion ui
 (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
 (require 'lsp-bridge-icon)        ;; show icon for completion items, optional
+
+(global-corfu-mode)               ;; use corfu as completion ui
 (global-lsp-bridge-mode)
 ```
 
