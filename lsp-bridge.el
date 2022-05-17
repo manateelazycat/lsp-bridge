@@ -246,6 +246,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ((clojure-mode clojurec-mode clojurescript-mode clojurex-mode) . "clojure-lsp")
     ((sh-mode) . "bash-language-server")
     ((css-mode) . "vscode-css-language-server")
+    (elm-mode . "elm-language-server")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -282,7 +283,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     clojurex-mode-hook
     sh-mode-hook
     web-mode-hook
-    css-mode-hook)
+    css-mode-hook
+    elm-mode-hook)
   "The default mode hook to enable lsp-bridge."
   :type 'list)
 
