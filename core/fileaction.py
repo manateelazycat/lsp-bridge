@@ -96,12 +96,7 @@ class FileAction:
 
     def change_file(self, start, end, range_length, change_text, position, before_char, before_cursor_text):
         # Send didChange request to LSP server.
-        if self.lsp_server is not None:
-            self.lsp_server.send_did_change_notification(
-                self.filepath, self.version, start, end, range_length, change_text)
-        else:
-            # Please report bug if you got this message.
-            logger.error("IMPOSSIBLE HERE: change_file %s %s", self.filepath, self.lsp_server)
+        self.lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
 
         self.version += 1
 
@@ -139,3 +134,4 @@ class FileAction:
 
     def handle_server_response_message(self, request_id, request_type, response):
         self.handlers[request_type].handle_response(request_id, response)
+

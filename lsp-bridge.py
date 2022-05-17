@@ -31,7 +31,6 @@ from core.lspserver import LspServer
 from core.utils import *
 from core.handler import *
 
-
 class LspBridge:
     def __init__(self, args):
 
@@ -124,13 +123,12 @@ class LspBridge:
             "name": "open_file",
             "content": filepath
         })
-
-    def create_file_action(self, filepath, project_path, lang_server):
-        file_key = path_as_key(filepath)
-        action = FileAction(filepath, project_path, lang_server)
-        self.file_action_dict[file_key] = action
-        return action
         
+    def create_file_action(self, filepath, project_path, lang_server):
+        action = FileAction(filepath, project_path, lang_server)
+        self.file_action_dict[path_as_key(filepath)] = action
+        return action
+    
     def _open_file(self, filepath):
         # Create file action.
         file_key = path_as_key(filepath)
@@ -152,7 +150,7 @@ class LspBridge:
 
         # Add lsp server in file action for send message to lsp server.
         file_action.lsp_server = self.lsp_server_dict[lsp_server_name]
-
+        
     def close_file(self, filepath):
         # We need post function event_loop, otherwise long-time calculation will block Emacs.
         self.event_queue.put({
@@ -201,12 +199,7 @@ class LspBridge:
         setattr(self, name, _do_wrap)
 
     def handle_server_message(self, filepath, request_type, request_id, response_result):
-        file_key = path_as_key(filepath)
-        if file_key in self.file_action_dict:
-            self.file_action_dict[file_key].handle_server_response_message(request_id, request_type, response_result)
-        else:
-            # Please report bug if you got this message.
-            logger.error("IMPOSSIBLE HERE: handle_server_message {} {} {} {}".format(filepath, request_type, request_id, response_result))
+        self.file_action_dict[path_as_key(filepath)].handle_server_response_message(request_id, request_type, response_result)
 
     def handle_server_process_exit(self, server_name):
         if server_name in self.lsp_server_dict:
@@ -219,29 +212,23 @@ class LspBridge:
         parent_file_action = message["content"]["file_action"]
         file_action = self.create_file_action(external_file_path, parent_file_action.project_path, parent_file_action.lang_server_info["name"])
         
-        # Open did open notification.
+        # Send did open notification.
         lsp_location_link = message["content"]["lsp_location_link"]
         file_action.lsp_location_link = lsp_location_link
         file_action.lsp_server = parent_file_action.lsp_server
         file_action.lsp_server.send_did_open_notification(external_file_path, lsp_location_link)
         
         # Jump to define.
-        start_pos = message["content"]["start_pos"]
-        eval_in_emacs("lsp-bridge--jump-to-def", external_file_path, start_pos)
+        eval_in_emacs("lsp-bridge--jump-to-def", external_file_path, message["content"]["start_pos"])
 
     def handle_server_file_opened(self, filepath):
         file_key = path_as_key(filepath)
         self.file_opened[file_key] = True
         if file_key in self.action_cache_dict:
             for action_name, *action_args in self.action_cache_dict[file_key]:
-                if file_key in self.file_action_dict:
-                    # Execute file action after file opened.
-                    self.file_action_dict[file_key].call(action_name, *action_args)
-                    logger.info("Execute action {} for file {}".format(action_name, filepath))
-                else:
-                    # Please report bug if you got this message.
-                    logger.error("IMPOSSIBLE HERE: handle_server_file_opened '{}' {} {}".format(filepath, action_name,
-                                                                                                self.file_action_dict))
+                # Execute file action after file opened.
+                self.file_action_dict[file_key].call(action_name, *action_args)
+                logger.info("Execute action {} for file {}".format(action_name, filepath))
 
             # We need clear action_cache_dict last.
             del self.action_cache_dict[file_key]
@@ -254,7 +241,6 @@ class LspBridge:
         # Called from lsp-bridge-test.el to start test.
         from test.test import start_test
         start_test()
-
-
+        
 if __name__ == "__main__":
     LspBridge(sys.argv[1:])

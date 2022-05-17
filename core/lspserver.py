@@ -219,24 +219,34 @@ class LspServer:
             "initializationOptions": self.server_info.get("initializationOptions", {})
         }, self.initialize_id)
 
+    def parse_document_uri(self, filepath, lsp_location_link):
+        uri = path_to_uri(filepath)
+        if lsp_location_link is not None:
+            uri = path_to_uri(lsp_location_link) if os.path.sep in lsp_location_link else lsp_location_link
+            
+        return uri
+        
     def send_did_open_notification(self, filepath, lsp_location_link):
+        # Check file is opened?
         file_key = path_as_key(filepath)
         if file_key in self.opened_files:
             logger.info("File {} has opened in server {}".format(filepath, self.server_name))
             return
-
+        
+        # Record file open in opened_files.
         self.opened_files.add(file_key)
-        uri = path_to_uri(lsp_location_link) if lsp_location_link.startswith('/') else lsp_location_link
+            
         with open(filepath, encoding="utf-8") as f:
             self.sender.send_notification("textDocument/didOpen", {
                 "textDocument": {
-                    "uri": uri,
+                    "uri": self.parse_document_uri(filepath, lsp_location_link),
                     "languageId": self.server_info["languageId"],
                     "version": 0,
                     "text": f.read()
                 }
             })
 
+        # Send server_file_opened message.
         self.message_queue.put({
             "name": "server_file_opened",
             "content": filepath
