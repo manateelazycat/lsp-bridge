@@ -1,5 +1,6 @@
 from core.handler import Handler
 from core.utils import *
+from typing import Union
 
 
 class FindDefine(Handler):
@@ -10,12 +11,12 @@ class FindDefine(Handler):
     def process_request(self, position) -> dict:
         return dict(position=position)
 
-    def process_response(self, response: dict) -> None:
+    def process_response(self, response: Union[dict, list[dict]]) -> None:
         if not response:
             message_emacs("No definition found.")
             return
 
-        file_info = response[0]
+        file_info = response[0] if isinstance(response, list) else response
         # volar return only LocationLink (using targetUri)
         file_uri = file_info["uri"] if "uri" in file_info else file_info["targetUri"]
         range1 = file_info["range"] if "range" in file_info else file_info["targetRange"]
