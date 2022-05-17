@@ -113,6 +113,10 @@ class LspBridge:
                 self.handle_server_process_exit(message["content"])
             elif message["name"] == "server_response_message":
                 self.handle_server_message(*message["content"])
+            elif message["name"] == "make_lsp_location_link_file_action":
+                filepath = message["content"]["filepath"]
+                file_action = message["content"]["file_action"]
+                self.file_action_dict[path_as_key(filepath)] = file_action
 
             self.message_queue.task_done()
 
@@ -141,7 +145,7 @@ class LspBridge:
             self.lsp_server_dict[lsp_server_name] = server
         else:
             # Send didOpen notification to LSP server.
-            self.lsp_server_dict[lsp_server_name].send_did_open_notification(file_action.filepath)
+            self.lsp_server_dict[lsp_server_name].send_did_open_notification(file_action.filepath, file_action.lsp_location_link)
 
         # Add lsp server in file action for send message to lsp server.
         file_action.lsp_server = self.lsp_server_dict[lsp_server_name]

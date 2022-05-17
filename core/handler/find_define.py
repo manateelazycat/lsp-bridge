@@ -18,7 +18,19 @@ class FindDefine(Handler):
         file_info = response[0]
         # volar return only LocationLink (using targetUri)
         file_uri = file_info["uri"] if "uri" in file_info else file_info["targetUri"]
-        filepath = uri_to_path(file_uri)
         range1 = file_info["range"] if "range" in file_info else file_info["targetRange"]
         start_pos = range1["start"]
-        eval_in_emacs("lsp-bridge--jump-to-def", filepath, start_pos)
+
+        if file_uri.startswith("jdt://"):
+            # for java
+            self.file_action.handlers["jdt_uri_resolver"].send_request(file_uri, start_pos)
+        elif file_uri.startswith("csharp://"):
+            # for csharp
+            raise NotImplementedError()
+        elif file_uri.startswith("jar://"):
+            # for clojure
+            raise NotImplementedError()
+        else:
+            # for normal file uri
+            filepath = uri_to_path(file_uri)
+            eval_in_emacs("lsp-bridge--jump-to-def", filepath, start_pos)
