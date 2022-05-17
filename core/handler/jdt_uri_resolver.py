@@ -36,7 +36,7 @@ class JDTUriResolver(Handler):
 
             # Jump to define in decompile file.
             self.file_action.lsp_server.message_queue.put({
-                "name": "jdt_jump_to_define",
+                "name": "jump_to_external_file_link",
                 "content": {
                     "filepath": doc_file,
                     "project_path": self.file_action.project_path,

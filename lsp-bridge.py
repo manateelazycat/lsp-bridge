@@ -113,7 +113,7 @@ class LspBridge:
                 self.handle_server_process_exit(message["content"])
             elif message["name"] == "server_response_message":
                 self.handle_server_message(*message["content"])
-            elif message["name"] == "jdt_jump_to_define":
+            elif message["name"] == "jump_to__external_file_link":
                 # Parse message.
                 filepath = message["content"]["filepath"]
                 project_path = message["content"]["project_path"]
