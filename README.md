@@ -87,6 +87,10 @@ The following function Emacs can do better, we will not repeat in lsp-bridge:
 
 ## Join development
 
+Below is framework of lsp-bridge:
+
+<img src="./framework.png">
+
 Please read [LSP Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/) and [The Design of lsp-bridge](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html) first.
 
 Then turn on option ```lsp-bridge-enable-log``` and happy hacking! ;)
