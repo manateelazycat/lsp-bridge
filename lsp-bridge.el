@@ -794,6 +794,20 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-hide-doc-tooltip ()
   (posframe-hide lsp-bridge-lookup-doc-tooltip))
 
+(defun lsp-bridge-show-signature-help (help)
+  (cond
+   ;; Trim signature help length make sure `awesome-tray' won't wrap line display.
+   ((ignore-errors (require 'awesome-tray))
+    (message (substring help
+                        0
+                        (min (string-width help)
+                             (- (awesome-tray-get-frame-width)
+                                (string-width (awesome-tray-build-active-info))
+                                )))))
+   ;; Other minibuffer plugin similar `awesome-tray' welcome to send PR here. ;)
+   (t
+    (message help))))
+
 (defvar lsp-bridge--last-buffer nil)
 
 (defun lsp-bridge-monitor-window-buffer-change ()

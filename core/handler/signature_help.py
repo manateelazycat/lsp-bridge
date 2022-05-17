@@ -12,4 +12,4 @@ class SignatureHelp(Handler):
 
     def process_response(self, response: dict) -> None:
         if response is not None:
-            message_emacs(response["signatures"][0]["label"])
+            eval_in_emacs("lsp-bridge-show-signature-help", response["signatures"][0]["label"])
