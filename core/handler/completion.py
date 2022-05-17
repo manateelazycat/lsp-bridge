@@ -47,27 +47,14 @@ class Completion(Handler):
 
         if response is not None:
             for item in response["items"] if "items" in response else response:
-                insert_text = item.get("insertText", item["label"]).strip()
-
-                # We need replace prefix string with textEdit character diff if we use insertText as candidate.
-                try:
-                    if ("insertText" in item and
-                            "textEdit" in item and
-                            "insertTextFormat" in item and
-                            item["insertTextFormat"] == 1):
-                        replace_range = item["textEdit"]["range"]["end"]["character"] - \
-                                        item["textEdit"]["range"]["start"]["character"]
-                        insert_text = insert_text[replace_range:]
-                except:
-                    pass
-
-                completion_items.append(insert_text)
                 kind = KIND_MAP[item.get("kind", 0)]
                 candidate = {
                     "label": item["label"],
-                    "insertText": insert_text,
+                    "insertText": item.get('insertText', None),
                     "kind": kind,
                     "annotation": (item.get("detail") or kind).replace(" ", ""),
+                    "insertTextFormat": item.get("insertTextFormat", ''),
+                    "textEdit": item.get("textEdit", None),
                 }
 
                 if self.file_action.enable_auto_import:
@@ -84,9 +71,9 @@ class Completion(Handler):
             # Clear completion items if user input last completion item.
             eval_in_emacs("lsp-bridge-record-completion-items",
                           self.file_action.filepath, completion_prefix_string,
-                          completion_common_string, [])
+                          completion_common_string, [], [])
         else:
             eval_in_emacs("lsp-bridge-record-completion-items",
                           self.file_action.filepath, completion_prefix_string,
-                          completion_common_string, completion_candidates)
-
+                          completion_common_string, completion_candidates,
+                          self.file_action.lsp_server.completion_trigger_characters)
