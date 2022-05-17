@@ -80,6 +80,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 19. [wxml-language-server](https://github.com/chemzqm/wxml-languageserver) (wxml)
 20. [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) (html)
 21. [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) (css)
+22. [elm-language-server](https://github.com/elm-tooling/elm-language-server) (elm)
 
 ### Features need to finish:
 
