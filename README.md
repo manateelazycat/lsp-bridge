@@ -54,24 +54,24 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 
 ## Supported language servers
 
-1. clangd (c, c++)
-2. pyright (python)
-3. solargraph (ruby)
-4. rust-analyzer (rust)
-5. elixirLS (elixir) Note: please ensure export `elixir-ls` release directory in your system PATH at first.
-6. gopls (go)
-7. hls (haskell)
-8. dart-analysis-server (dart)
-9. metals (scala)
-10. typescript (typescript, javascript)
-11. ocamllsp (ocaml)
-12. erlang-ls (erlang)
-13. texlab (latex)
-14. eclipse.jdt.ls (java) Note: please ensure export `org.eclipse.jdt.ls.product/target/repository/bin` in your system PATH at first.
-15. clojure-lsp (clojure)
-16. bash-language-server (bash)
-17. volar (vue)
-18. sumneko (lua) Note: please ensure export `bin` under sumneko installation in your system PATH at first.
+1. [clangd](https://github.com/clangd/clangd) (c, c++)
+2. [pyright](https://github.com/microsoft/pyright) (python)
+3. [solargraph](https://github.com/castwide/solargraph) (ruby)
+4. [rust-analyzer](https://github.com/rust-lang/rust-analyzer) (rust)
+5. [elixirLS](https://github.com/elixir-lsp/elixir-ls) (elixir) Note: please ensure export `elixir-ls` release directory in your system PATH at first.
+6. [gopls](https://github.com/golang/tools/tree/master/gopls) (go)
+7. [hls](https://github.com/haskell/haskell-language-server) (haskell)
+8. [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) (dart)
+9. [metals](https://scalameta.org/metals/) (scala)
+10. [typescript](https://www.npmjs.com/package/typescript) (typescript, javascript)
+11. [ocamllsp](https://github.com/ocaml/ocaml-lsp) (ocaml)
+12. [erlang-ls](https://github.com/erlang-ls/erlang_ls) (erlang)
+13. [texlab](https://github.com/latex-lsp/texlab) (latex)
+14. [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls) (java) Note: please ensure export `org.eclipse.jdt.ls.product/target/repository/bin` in your system PATH at first.
+15. [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp) (clojure)
+16. [bash-language-server](https://github.com/bash-lsp/bash-language-server) (bash)
+17. [volar](https://github.com/johnsoncodehk/volar) (vue)
+18. [sumneko](https://github.com/sumneko/lua-language-server) (lua) Note: please ensure export `bin` under sumneko installation in your system PATH at first.
 19. [wxml-language-server](https://github.com/chemzqm/wxml-languageserver) (wxml)
 20. [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) (html)
 21. [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) (css)
