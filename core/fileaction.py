@@ -55,7 +55,10 @@ class FileAction:
 
         self.lsp_server = None
 
-        self.enable_auto_import = get_emacs_var("lsp-bridge-enable-auto-import")
+        (self.enable_auto_import, self.enable_signature_help) = get_emacs_vars([
+            "lsp-bridge-enable-auto-import",
+            "lsp-bridge-enable-signature-help"
+        ])
 
     @property
     def last_change(self) -> Tuple[float, float]:
@@ -120,15 +123,16 @@ class FileAction:
         # Record change cursor time.
         self.last_change_cursor_time = time.time()
 
-        # Try cancel expired signature help timer.
-        if self.try_signature_help_timer is not None and self.try_signature_help_timer.is_alive():
-            self.try_signature_help_timer.cancel()
-
-        # Send textDocument/signatureHelp 200ms later.
-        self.try_signature_help_timer = threading.Timer(
-            0.2, lambda: self.handlers["signature_help"].send_request(position)
-        )
-        self.try_signature_help_timer.start()
+        if self.enable_signature_help:
+            # Try cancel expired signature help timer.
+            if self.try_signature_help_timer is not None and self.try_signature_help_timer.is_alive():
+                self.try_signature_help_timer.cancel()
+            
+            # Send textDocument/signatureHelp 200ms later.
+            self.try_signature_help_timer = threading.Timer(
+                0.2, lambda: self.handlers["signature_help"].send_request(position)
+            )
+            self.try_signature_help_timer.start()
 
     def save_file(self):
         self.lsp_server.send_did_save_notification(self.filepath)
