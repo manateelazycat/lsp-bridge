@@ -27,21 +27,22 @@ class JDTUriResolver(Handler):
             return
 
         if type(response) == str:
+            # Save decompile file.
             doc_name = re.match(r"jdt://contents/(.*?)/(.*)\.class\?", self.lsp_location_link).groups()[1].replace('/', '.') + ".java"
             doc_file = os.path.join(self.file_action.lsp_server.library_directories[0], doc_name)
             if not os.path.exists(doc_file):
                 with open(doc_file, 'w') as f:
                     f.write(response)
-            # may need optimization
-            file_action = core.fileaction.FileAction(doc_file, self.file_action.project_path, self.file_action.lang_server_info["name"])
-            file_action.lsp_location_link = self.lsp_location_link
-            file_action.lsp_server = self.file_action.lsp_server
+
+            # Jump to define in decompile file.
             self.file_action.lsp_server.message_queue.put({
-                "name": "make_lsp_location_link_file_action",
+                "name": "jdt_jump_to_define",
                 "content": {
                     "filepath": doc_file,
-                    "file_action": file_action
+                    "project_path": self.file_action.project_path,
+                    "lang_server": self.file_action.lang_server_info["name"],
+                    "lsp_location_link": self.lsp_location_link,
+                    "lsp_server": self.file_action.lsp_server,
+                    "start_pos": self.start_pos
                 }
             })
-            self.file_action.lsp_server.send_did_open_notification(doc_file, self.lsp_location_link)
-            eval_in_emacs("lsp-bridge--jump-to-def", doc_file, self.start_pos)

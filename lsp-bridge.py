@@ -113,10 +113,25 @@ class LspBridge:
                 self.handle_server_process_exit(message["content"])
             elif message["name"] == "server_response_message":
                 self.handle_server_message(*message["content"])
-            elif message["name"] == "make_lsp_location_link_file_action":
+            elif message["name"] == "jdt_jump_to_define":
+                # Parse message.
                 filepath = message["content"]["filepath"]
-                file_action = message["content"]["file_action"]
-                self.file_action_dict[path_as_key(filepath)] = file_action
+                project_path = message["content"]["project_path"]
+                lang_server = message["content"]["lang_server"]
+                lsp_location_link = message["content"]["lsp_location_link"]
+                lsp_server = message["content"]["lsp_server"]
+                start_pos = message["content"]["start_pos"]
+                
+                # Create file action.
+                file_action = self.create_file_action(filepath, project_path, lang_server)
+                file_action.lsp_location_link = lsp_location_link
+                file_action.lsp_server = lsp_server
+                
+                # Open did open notification.
+                file_action.lsp_server.send_did_open_notification(filepath, lsp_location_link)
+                
+                # Jump to define.
+                eval_in_emacs("lsp-bridge--jump-to-def", filepath, start_pos)
 
             self.message_queue.task_done()
 
@@ -127,14 +142,19 @@ class LspBridge:
             "content": filepath
         })
 
+    def create_file_action(self, filepath, project_path, lang_server):
+        file_key = path_as_key(filepath)
+        action = FileAction(filepath, project_path, lang_server)
+        self.file_action_dict[file_key] = action
+        return action
+        
     def _open_file(self, filepath):
         # Create file action.
         file_key = path_as_key(filepath)
         if file_key not in self.file_action_dict:
             project_path = get_project_path(filepath)
             lang_server = get_emacs_func_result("get-lang-server", project_path, filepath)
-            action = FileAction(filepath, project_path, lang_server)
-            self.file_action_dict[file_key] = action
+            self.create_file_action(filepath, project_path, lang_server)
 
         # Create LSP server.
         file_action = self.file_action_dict[file_key]
