@@ -4,13 +4,48 @@
   "command": [
     "jdtls"
   ],
+  "libraryDirectories": [
+    "~/java-workspace"
+  ],
   "settings": {
     "java": {
-      "completion" : {
+      "completion": {
         "guessMethodArguments": true,
         "overwrite": true,
         "enabled": true
       }
+    }
+  },
+  "initializationOptions": {
+    "settings": {
+      "java": {
+        "maxConcurrentBuilds": 1,
+        "autobuild": {
+          "enabled": true
+        },
+        "import": {
+          "maven": {
+            "enabled": true
+          }
+        },
+        "configuration": {
+          "updateBuildConfiguration": "automatic",
+          "checkProjectSettingsExclusions": true
+        },
+        "project": {
+          "importHint": true,
+          "importOnFirstTimeStartup": "automatic",
+          "referencedLibraries": [
+            "lib/**/*.jar"
+          ]
+        },
+        "server": {
+          "launchMode": "Hybrid"
+        }
+      }
+    },
+    "extendedClientCapabilities": {
+      "classFileContentsSupport": true
     }
   }
 }

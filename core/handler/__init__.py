@@ -36,8 +36,11 @@ class Handler(abc.ABC):
         )
 
         params = self.process_request(*args, **kwargs)
+        uri = self.file_action.lsp_location_link
+        if (self.file_action.lsp_location_link.startswith('/')):
+            uri = path_to_uri(self.file_action.lsp_location_link)
         params["textDocument"] = {
-            "uri": path_to_uri(self.file_action.filepath)
+            "uri": uri
         }
 
         self.file_action.lsp_server.sender.send_request(
@@ -73,3 +76,4 @@ from core.handler.hover import Hover
 from core.handler.signature_help import SignatureHelp
 from core.handler.prepare_rename import PrepareRename
 from core.handler.rename import Rename
+from core.handler.jdt_uri_resolver import JDTUriResolver
