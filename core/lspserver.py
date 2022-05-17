@@ -151,7 +151,7 @@ class LspServerReceiver(Thread):
 
 class LspServer:
 
-    def __init__(self, message_queue, file_action):
+    def __init__(self, message_queue, file_action, lsp_server_dict):
         # Init.
         self.message_queue = message_queue
         self.project_path = file_action.project_path
@@ -162,6 +162,7 @@ class LspServer:
         self.request_dict = {}
         self.opened_files: Set[str] = set()  # contain file opened in current project
         self.root_path = self.project_path
+        self.lsp_server_dict = lsp_server_dict
 
         # Load library directories
         self.library_directories = [*map(os.path.expanduser, file_action.lang_server_info.get("libraryDirectories", []))]
@@ -381,11 +382,11 @@ class LspServer:
             self.send_shutdown_request()
             self.send_exit_notification()
 
-            self.message_queue.put({
-                "name": "server_process_exit",
-                "content": self.server_name
-            })
-
             # Don't need to wait LSP server response, kill immediately.
             if self.p is not None:
                 os.kill(self.p.pid, 9)
+
+            logger.info("Exit server: {}".format(self.server_name))
+            del self.lsp_server_dict[self.server_name]
+            
+                

@@ -109,8 +109,6 @@ class LspBridge:
             message = self.message_queue.get(True)
             if message["name"] == "server_file_opened":
                 self.handle_server_file_opened(message["content"])
-            elif message["name"] == "server_process_exit":
-                self.handle_server_process_exit(message["content"])
             elif message["name"] == "server_response_message":
                 self.handle_server_message(*message["content"])
             elif message["name"] == "make_lsp_location_link_file_action":
@@ -141,7 +139,7 @@ class LspBridge:
         lsp_server_name = file_action.get_lsp_server_name()
         if lsp_server_name not in self.lsp_server_dict:
             # lsp server will send initialize and didOpen when open first file in project.
-            server = LspServer(self.message_queue, file_action)
+            server = LspServer(self.message_queue, file_action, self.lsp_server_dict)
             self.lsp_server_dict[lsp_server_name] = server
         else:
             # Send didOpen notification to LSP server.
@@ -204,11 +202,6 @@ class LspBridge:
         else:
             # Please report bug if you got this message.
             logger.error("IMPOSSIBLE HERE: handle_server_message {} {} {} {}".format(filepath, request_type, request_id, response_result))
-
-    def handle_server_process_exit(self, server_name):
-        if server_name in self.lsp_server_dict:
-            logger.info("Exit server: {}".format(server_name))
-            del self.lsp_server_dict[server_name]
 
     def handle_server_file_opened(self, filepath):
         file_key = path_as_key(filepath)
