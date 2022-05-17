@@ -37,8 +37,9 @@ class Handler(abc.ABC):
 
         params = self.process_request(*args, **kwargs)
         uri = self.file_action.lsp_location_link
-        if (self.file_action.lsp_location_link.startswith('/')):
-            uri = path_to_uri(self.file_action.lsp_location_link)
+        if uri is None:
+            uri = path_to_uri(self.file_action.filepath)
+            
         params["textDocument"] = {
             "uri": uri
         }

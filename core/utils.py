@@ -175,6 +175,7 @@ def path_as_key(path):
     key = path
     # NOTE: (buffer-file-name) return "d:/Case/a.go", gopls return "file:///D:/Case/a.go"
     if sys.platform == "win32":
+        path = pathlib.Path(path).as_posix()
         key = path.lower()
     return key
 

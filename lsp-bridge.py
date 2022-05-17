@@ -232,7 +232,7 @@ class LspBridge:
 
     def handle_server_file_opened(self, filepath):
         file_key = path_as_key(filepath)
-        self.file_opened[filepath] = True
+        self.file_opened[file_key] = True
         if file_key in self.action_cache_dict:
             for action_name, *action_args in self.action_cache_dict[file_key]:
                 if file_key in self.file_action_dict:

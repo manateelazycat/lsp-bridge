@@ -296,7 +296,7 @@ class LspServer:
         }
 
     def handle_workspace_configuration_request(self, name, request_id, params):
-        self.sender.send_response(request_id, {})
+        self.sender.send_response(request_id, [])
 
     def handle_recv_message(self, message: dict):
         if "error" in message:
@@ -323,7 +323,7 @@ class LspServer:
                 # others
                 logger.info("\n--- Recv message")
 
-        if "method" in message and message["method"] not in ["textDocument/publishDiagnostics"]:
+        if not ("method" in message and message["method"] in ["textDocument/publishDiagnostics"]):
             logger.debug(json.dumps(message, indent=3))
 
         if "id" in message:
