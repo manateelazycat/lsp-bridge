@@ -754,6 +754,7 @@ If optional MARKER, return a marker instead"
     (find-file filepath))
 
   (lsp-bridge--goto-position position)
+  (recenter)
 
   ;; Flash define line.
   (require 'pulse)
