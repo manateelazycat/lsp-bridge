@@ -214,24 +214,20 @@ class LspBridge:
             del self.lsp_server_dict[server_name]
             
     def handle_jump_to_external_file_link(self, message):
-        # Parse message.
-        filepath = message["content"]["filepath"]
-        project_path = message["content"]["project_path"]
-        lang_server = message["content"]["lang_server"]
-        lsp_location_link = message["content"]["lsp_location_link"]
-        lsp_server = message["content"]["lsp_server"]
-        start_pos = message["content"]["start_pos"]
-        
-        # Create file action.
-        file_action = self.create_file_action(filepath, project_path, lang_server)
-        file_action.lsp_location_link = lsp_location_link
-        file_action.lsp_server = lsp_server
+        # Make external file share file action that send jump define request.
+        external_file_path = message["content"]["filepath"]
+        parent_file_action = message["content"]["file_action"]
+        file_action = self.create_file_action(external_file_path, parent_file_action.project_path, parent_file_action.lang_server_info["name"])
         
         # Open did open notification.
-        file_action.lsp_server.send_did_open_notification(filepath, lsp_location_link)
+        lsp_location_link = message["content"]["lsp_location_link"]
+        file_action.lsp_location_link = lsp_location_link
+        file_action.lsp_server = parent_file_action.lsp_server
+        file_action.lsp_server.send_did_open_notification(external_file_path, lsp_location_link)
         
         # Jump to define.
-        eval_in_emacs("lsp-bridge--jump-to-def", filepath, start_pos)
+        start_pos = message["content"]["start_pos"]
+        eval_in_emacs("lsp-bridge--jump-to-def", external_file_path, start_pos)
 
     def handle_server_file_opened(self, filepath):
         file_key = path_as_key(filepath)

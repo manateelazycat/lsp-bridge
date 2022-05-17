@@ -27,22 +27,22 @@ class JDTUriResolver(Handler):
             return
 
         if type(response) == str:
-            # Save decompile file.
-            doc_name = re.match(r"jdt://contents/(.*?)/(.*)\.class\?", self.lsp_location_link).groups()[1].replace('/', '.') + ".java"
-            doc_file = os.path.join(self.file_action.lsp_server.library_directories[0], doc_name)
-            if not os.path.exists(doc_file):
-                with open(doc_file, 'w') as f:
+            # Save the analysis content to the file.
+            external_file_name = re.match(r"jdt://contents/(.*?)/(.*)\.class\?", self.lsp_location_link).groups()[1].replace('/', '.') + ".java"
+            external_file = os.path.join(self.file_action.lsp_server.library_directories[0], external_file_name)
+            external_file_dir = os.path.dirname(external_file)
+            os.makedirs(external_file_dir, exist_ok=True)
+            if not os.path.exists(external_file):
+                with open(external_file, 'w') as f:
                     f.write(response)
 
-            # Jump to define in decompile file.
+            # Jump to define in external file.
             self.file_action.lsp_server.message_queue.put({
                 "name": "jump_to_external_file_link",
                 "content": {
-                    "filepath": doc_file,
-                    "project_path": self.file_action.project_path,
-                    "lang_server": self.file_action.lang_server_info["name"],
+                    "filepath": external_file,
+                    "file_action": self.file_action,
                     "lsp_location_link": self.lsp_location_link,
-                    "lsp_server": self.file_action.lsp_server,
                     "start_pos": self.start_pos
                 }
             })
