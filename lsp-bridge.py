@@ -167,7 +167,9 @@ class LspBridge:
                 lsp_server = self.lsp_server_dict[lsp_server_name]
                 lsp_server.close_file(filepath)
 
+            # Clean file_action_dict and file_opened after close file.
             del self.file_action_dict[file_key]
+            del self.file_opened[file_key]
 
     def build_file_action_function(self, name):
         def _do(filepath, *args):

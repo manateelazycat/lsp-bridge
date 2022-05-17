@@ -13,13 +13,14 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 3. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
 4. Add follow code in your ~/.emacs:
 
-```
+```elisp
 (add-to-list 'load-path "<path-to-lsp-bridge>")
 
 (require 'lsp-bridge)             ;; load lsp-bridge
-(global-corfu-mode)               ;; use corfu as completion ui
 (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
 (require 'lsp-bridge-icon)        ;; show icon for completion items, optional
+
+(global-corfu-mode)               ;; use corfu as completion ui
 (global-lsp-bridge-mode)
 ```
 
@@ -54,27 +55,28 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 
 ## Supported language servers
 
-1. clangd (c, c++)
-2. pyright (python)
-3. solargraph (ruby)
-4. rust-analyzer (rust)
-5. elixirLS (elixir) Note: please ensure export `elixir-ls` release directory in your system PATH at first.
-6. gopls (go)
-7. hls (haskell)
-8. dart-analysis-server (dart)
-9. metals (scala)
-10. typescript (typescript, javascript)
-11. ocamllsp (ocaml)
-12. erlang-ls (erlang)
-13. texlab (latex)
-14. eclipse.jdt.ls (java) Note: please ensure export `org.eclipse.jdt.ls.product/target/repository/bin` in your system PATH at first.
-15. clojure-lsp (clojure)
-16. bash-language-server (bash)
-17. volar (vue)
-18. sumneko (lua) Note: please ensure export `bin` under sumneko installation in your system PATH at first.
+1. [clangd](https://github.com/clangd/clangd) (c, c++)
+2. [pyright](https://github.com/microsoft/pyright) (python)
+3. [solargraph](https://github.com/castwide/solargraph) (ruby)
+4. [rust-analyzer](https://github.com/rust-lang/rust-analyzer) (rust)
+5. [elixirLS](https://github.com/elixir-lsp/elixir-ls) (elixir) Note: please ensure export `elixir-ls` release directory in your system PATH at first.
+6. [gopls](https://github.com/golang/tools/tree/master/gopls) (go)
+7. [hls](https://github.com/haskell/haskell-language-server) (haskell)
+8. [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) (dart)
+9. [metals](https://scalameta.org/metals/) (scala)
+10. [typescript](https://www.npmjs.com/package/typescript) (typescript, javascript)
+11. [ocamllsp](https://github.com/ocaml/ocaml-lsp) (ocaml)
+12. [erlang-ls](https://github.com/erlang-ls/erlang_ls) (erlang)
+13. [texlab](https://github.com/latex-lsp/texlab) (latex)
+14. [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls) (java) Note: please ensure export `org.eclipse.jdt.ls.product/target/repository/bin` in your system PATH at first.
+15. [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp) (clojure)
+16. [bash-language-server](https://github.com/bash-lsp/bash-language-server) (bash)
+17. [volar](https://github.com/johnsoncodehk/volar) (vue)
+18. [sumneko](https://github.com/sumneko/lua-language-server) (lua) Note: please ensure export `bin` under sumneko installation in your system PATH at first.
 19. [wxml-language-server](https://github.com/chemzqm/wxml-languageserver) (wxml)
 20. [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) (html)
 21. [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) (css)
+
 ### Features that won't support
 lsp-bridge goal is become the fastest LSP client in the Emacs, not the complete implementation of LSP protocol.
 
@@ -82,6 +84,16 @@ The following function Emacs can do better, we will not repeat in lsp-bridge:
 1. Code format: each LSP server has its own formatting specification, with the formatting function of Emacs, we will get more detail control
 2. Diagnostics: [Flycheck](https://www.flycheck.org/en/latest/) or [Flymake](https://www.gnu.org/software/emacs/manual/html_node/flymake/Using-Flymake.html) is better chooise
 3. Syntax highlight: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) is a wonderful incremental parsing library to implement highlight code
+
+## Join development
+
+Below is framework of lsp-bridge:
+
+<img src="./framework.png">
+
+Please read [LSP Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/) and [The Design of lsp-bridge](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html) first.
+
+Then turn on option ```lsp-bridge-enable-log``` and happy hacking! ;)
 
 ## Report bug
 
