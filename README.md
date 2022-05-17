@@ -13,7 +13,7 @@ lsp-bridge use python threading technology build cache bridge between Emacs and 
 3. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
 4. Add follow code in your ~/.emacs:
 
-```
+```elisp
 (add-to-list 'load-path "<path-to-lsp-bridge>")
 
 (require 'lsp-bridge)             ;; load lsp-bridge
