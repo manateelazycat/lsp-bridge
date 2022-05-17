@@ -77,6 +77,14 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 20. [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) (html)
 21. [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) (css)
 
+### Features need to finish:
+
+- [ ] Show signature help with eldoc 
+- [ ] Snippet expand
+- [ ] Code action
+- [ ] Inline Value
+- [ ] One file open multi-server, and mixed multi-result to corfu menu
+
 ### Features that won't support
 lsp-bridge goal is become the fastest LSP client in the Emacs, not the complete implementation of LSP protocol.
 
