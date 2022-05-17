@@ -1,3 +1,8 @@
+import os
+import re
+from urllib.parse import urlparse
+
+import core.fileaction
 from core.handler import Handler
 from core.utils import *
 from typing import Union
@@ -24,7 +29,20 @@ class FindDefine(Handler):
 
         if file_uri.startswith("jdt://"):
             # for java
-            self.file_action.handlers["jdt_uri_resolver"].send_request(file_uri, start_pos)
+            doc_name = re.match(r"jdt://contents/(.*?)/(.*)\.class\?", file_uri).groups()[1].replace('/', '.') + ".java"
+            doc_file = os.path.join(self.file_action.lsp_server.library_directories[0], doc_name)
+            file_action = core.fileaction.FileAction(doc_file, self.file_action.project_path, self.file_action.lang_server_info["name"])
+            file_action.lsp_location_link = file_uri
+            file_action.lsp_server = self.file_action.lsp_server
+            # FIXME: 异步问题？收到此消息与_open_file被调用的顺序
+            self.file_action.lsp_server.message_queue.put({
+                "name": "make_lsp_location_link_file_action",
+                "content": {
+                    "filepath": doc_file,
+                    "file_action": file_action
+                }
+            })
+            file_action.handlers["jdt_uri_resolver"].send_request(file_uri, start_pos)
         elif file_uri.startswith("csharp://"):
             # for csharp
             raise NotImplementedError()

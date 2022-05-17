@@ -219,18 +219,18 @@ class LspServer:
             "initializationOptions": self.server_info.get("initializationOptions", {})
         }, self.initialize_id)
 
-    def send_did_open_notification(self, filepath, lsp_location_link):
+    def send_did_open_notification(self, filepath):
         file_key = path_as_key(filepath)
         if file_key in self.opened_files:
             logger.info("File {} has opened in server {}".format(filepath, self.server_name))
             return
 
         self.opened_files.add(file_key)
-        uri = path_to_uri(lsp_location_link) if lsp_location_link.startswith('/') else lsp_location_link
+
         with open(filepath, encoding="utf-8") as f:
             self.sender.send_notification("textDocument/didOpen", {
                 "textDocument": {
-                    "uri": uri,
+                    "uri": path_to_uri(filepath),
                     "languageId": self.server_info["languageId"],
                     "version": 0,
                     "text": f.read()
@@ -296,7 +296,7 @@ class LspServer:
         }
 
     def handle_workspace_configuration_request(self, name, request_id, params):
-        self.sender.send_response(request_id, {})
+        self.sender.send_response(request_id, [])
 
     def handle_recv_message(self, message: dict):
         if "error" in message:
@@ -323,7 +323,7 @@ class LspServer:
                 # others
                 logger.info("\n--- Recv message")
 
-        if "method" in message and message["method"] not in ["textDocument/publishDiagnostics"]:
+        if not ("method" in message and message["method"] in ["textDocument/publishDiagnostics"]):
             logger.debug(json.dumps(message, indent=3))
 
         if "id" in message:
@@ -349,7 +349,7 @@ class LspServer:
                 # STEP 4: Tell LSP server open file.
                 # We need send 'textDocument/didOpen' notification,
                 # then LSP server will return file information, such as completion, find-define, find-references and rename etc.
-                self.send_did_open_notification(self.first_file_path, self.first_file_path)
+                self.send_did_open_notification(self.first_file_path)
 
                 # Notify user server is ready.
                 message_emacs("Start LSP server ({}) for {} complete, enjoy hacking!".format(
