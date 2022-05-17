@@ -188,7 +188,7 @@ def get_project_path(filepath):
         return filepath
 
 
-@functools.cache
+@functools.lru_cache(maxsize=None)
 def get_emacs_version():
     return get_emacs_func_result("get-emacs-version")
 
