@@ -1,0 +1,6 @@
+{
+  "name": "elm-language-server",
+  "languageId": "elm",
+  "command": ["elm-language-server", "--stdio"],
+  "settings": {}
+}
