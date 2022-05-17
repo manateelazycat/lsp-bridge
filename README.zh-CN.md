@@ -28,7 +28,7 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (yas-global-mode 1)               ;; 全局打开yasnippet
 ```
 
-## Commands
+## 命令列表
 
 * lsp-bridge-find-def: 跳转到定义位置
 * lsp-bridge-find-def-other-window: 在其他窗口跳转到定义位置
@@ -41,7 +41,7 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 * lsp-bridge-show-signature-help-in-minibuffer: 在minibuffer显示参数信息
 * lsp-bridge-restart-process: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)
 
-## Customize language server configuration
+## 自定义语言服务器配置
 lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
 
 你可以根据以下优先级顺序来自定义服务器配置：
@@ -82,14 +82,14 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 21. [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) (css)
 22. [elm-language-server](https://github.com/elm-tooling/elm-language-server) (elm)
 
-### Features need to finish:
+### 需要完成的功能：
 
 - [ ] 用eldoc来显示参数信息
 - [ ] Code Action: 代码动作， 比如自动修复代码
 - [ ] Inline Value: 行类值显示
 - [ ] 一个文件支持多个LSP服务器，并混合不同LSP服务器的补全结果
 
-### Features that won't support
+### 不会支持的特性：
 lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是实现LSP协议最全的LSP客户端。
 
 下面的功能用Emacs现有生态做更好：
