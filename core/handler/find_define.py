@@ -11,7 +11,7 @@ class FindDefine(Handler):
     def process_request(self, position) -> dict:
         return dict(position=position)
 
-    def process_response(self, response: Union[dict, list[dict]]) -> None:
+    def process_response(self, response: Union[dict, list]) -> None:
         if not response:
             message_emacs("No definition found.")
             return
