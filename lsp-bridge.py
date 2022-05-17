@@ -114,24 +114,7 @@ class LspBridge:
             elif message["name"] == "server_response_message":
                 self.handle_server_message(*message["content"])
             elif message["name"] == "jump_to_external_file_link":
-                # Parse message.
-                filepath = message["content"]["filepath"]
-                project_path = message["content"]["project_path"]
-                lang_server = message["content"]["lang_server"]
-                lsp_location_link = message["content"]["lsp_location_link"]
-                lsp_server = message["content"]["lsp_server"]
-                start_pos = message["content"]["start_pos"]
-                
-                # Create file action.
-                file_action = self.create_file_action(filepath, project_path, lang_server)
-                file_action.lsp_location_link = lsp_location_link
-                file_action.lsp_server = lsp_server
-                
-                # Open did open notification.
-                file_action.lsp_server.send_did_open_notification(filepath, lsp_location_link)
-                
-                # Jump to define.
-                eval_in_emacs("lsp-bridge--jump-to-def", filepath, start_pos)
+                self.handle_jump_to_external_file_link(message)
 
             self.message_queue.task_done()
 
@@ -229,6 +212,26 @@ class LspBridge:
         if server_name in self.lsp_server_dict:
             logger.info("Exit server: {}".format(server_name))
             del self.lsp_server_dict[server_name]
+            
+    def handle_jump_to_external_file_link(self, message):
+        # Parse message.
+        filepath = message["content"]["filepath"]
+        project_path = message["content"]["project_path"]
+        lang_server = message["content"]["lang_server"]
+        lsp_location_link = message["content"]["lsp_location_link"]
+        lsp_server = message["content"]["lsp_server"]
+        start_pos = message["content"]["start_pos"]
+        
+        # Create file action.
+        file_action = self.create_file_action(filepath, project_path, lang_server)
+        file_action.lsp_location_link = lsp_location_link
+        file_action.lsp_server = lsp_server
+        
+        # Open did open notification.
+        file_action.lsp_server.send_did_open_notification(filepath, lsp_location_link)
+        
+        # Jump to define.
+        eval_in_emacs("lsp-bridge--jump-to-def", filepath, start_pos)
 
     def handle_server_file_opened(self, filepath):
         file_key = path_as_key(filepath)
