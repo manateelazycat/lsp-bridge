@@ -501,7 +501,11 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
              (let* ((candidate-label (plist-get item :label)))
                (unless (zerop (length candidate-label))
                  (put-text-property 0 1 'lsp-bridge--lsp-item item candidate-label))
-               candidate-label))
+               ;; We add blank after `label' with different annotation, 
+               ;; avoid corfu filter candidate with same label name. 
+               (if (string-equal (plist-get item :annotation) "Snippet")
+                   (format "%s " candidate-label)
+                 candidate-label)))
            lsp-bridge-completion-items))
          (bounds (bounds-of-thing-at-point 'symbol)))
     (list
