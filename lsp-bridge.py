@@ -146,7 +146,7 @@ class LspBridge:
             self.lsp_server_dict[lsp_server_name] = server
         else:
             # Send didOpen notification to LSP server.
-            self.lsp_server_dict[lsp_server_name].send_did_open_notification(file_action.filepath, file_action.lsp_location_link)
+            self.lsp_server_dict[lsp_server_name].send_did_open_notification(file_action.filepath, file_action.external_file_link)
 
         # Add lsp server in file action for send message to lsp server.
         file_action.lsp_server = self.lsp_server_dict[lsp_server_name]
@@ -213,10 +213,10 @@ class LspBridge:
         file_action = self.create_file_action(external_file_path, parent_file_action.project_path, parent_file_action.lang_server_info["name"])
         
         # Send did open notification.
-        lsp_location_link = message["content"]["lsp_location_link"]
-        file_action.lsp_location_link = lsp_location_link
+        external_file_link = message["content"]["external_file_link"]
+        file_action.external_file_link = external_file_link
         file_action.lsp_server = parent_file_action.lsp_server
-        file_action.lsp_server.send_did_open_notification(external_file_path, lsp_location_link)
+        file_action.lsp_server.send_did_open_notification(external_file_path, external_file_link)
         
         # Jump to define.
         eval_in_emacs("lsp-bridge--jump-to-def", external_file_path, message["content"]["start_pos"])

@@ -219,14 +219,14 @@ class LspServer:
             "initializationOptions": self.server_info.get("initializationOptions", {})
         }, self.initialize_id)
 
-    def parse_document_uri(self, filepath, lsp_location_link):
+    def parse_document_uri(self, filepath, external_file_link):
         uri = path_to_uri(filepath)
-        if lsp_location_link is not None:
-            uri = path_to_uri(lsp_location_link) if os.path.sep in lsp_location_link else lsp_location_link
+        if external_file_link is not None:
+            uri = path_to_uri(external_file_link) if os.path.sep in external_file_link else external_file_link
             
         return uri
         
-    def send_did_open_notification(self, filepath, lsp_location_link):
+    def send_did_open_notification(self, filepath, external_file_link=None):
         # Check file is opened?
         file_key = path_as_key(filepath)
         if file_key in self.opened_files:
@@ -239,7 +239,7 @@ class LspServer:
         with open(filepath, encoding="utf-8") as f:
             self.sender.send_notification("textDocument/didOpen", {
                 "textDocument": {
-                    "uri": self.parse_document_uri(filepath, lsp_location_link),
+                    "uri": self.parse_document_uri(filepath, external_file_link),
                     "languageId": self.server_info["languageId"],
                     "version": 0,
                     "text": f.read()
@@ -359,7 +359,7 @@ class LspServer:
                 # STEP 4: Tell LSP server open file.
                 # We need send 'textDocument/didOpen' notification,
                 # then LSP server will return file information, such as completion, find-define, find-references and rename etc.
-                self.send_did_open_notification(self.first_file_path, self.first_file_path)
+                self.send_did_open_notification(self.first_file_path)
 
                 # Notify user server is ready.
                 message_emacs("Start LSP server ({}) for {} complete, enjoy hacking!".format(

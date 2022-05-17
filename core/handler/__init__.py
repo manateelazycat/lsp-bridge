@@ -37,7 +37,7 @@ class Handler(abc.ABC):
 
         params = self.process_request(*args, **kwargs)
         params["textDocument"] = {
-            "uri": self.file_action.lsp_server.parse_document_uri(self.file_action.filepath, self.file_action.lsp_location_link)
+            "uri": self.file_action.lsp_server.parse_document_uri(self.file_action.filepath, self.file_action.external_file_link)
         }
 
         self.file_action.lsp_server.sender.send_request(

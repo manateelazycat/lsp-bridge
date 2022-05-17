@@ -33,7 +33,7 @@ class FileAction:
     def __init__(self, filepath, project_path, lang_server):
         # Init.
         self.filepath = filepath
-        self.lsp_location_link = None
+        self.external_file_link = None
         self.project_path = project_path
         self.request_dict = {}
         self.last_change_file_time = -1.0
