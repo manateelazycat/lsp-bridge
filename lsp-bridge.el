@@ -547,8 +547,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                (if (minibufferp) (window-buffer (minibuffer-selected-window))
                  (current-buffer))
 
-             (let ((snippet-fn (and (string= kind "Snippet")
-                                    (lsp-bridge--snippet-expansion-fn))))
+             (let ((snippet-fn (lsp-bridge--snippet-expansion-fn)))
                (cond
                 ;; Expand snippet.
                 (snippet-fn
