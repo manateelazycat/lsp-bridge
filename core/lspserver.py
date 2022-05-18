@@ -279,12 +279,6 @@ class LspServer:
                 }
             })
 
-        # Send server_file_opened message.
-        self.message_queue.put({
-            "name": "server_file_opened",
-            "content": filepath
-        })
-
     def send_did_close_notification(self, filepath):
         self.sender.send_notification("textDocument/didClose", {
             "textDocument": {
