@@ -45,7 +45,7 @@ class Handler(abc.ABC):
         
     def fill_document_uri(self):
         self.params["textDocument"] = {
-            "uri": path_to_uri(self.file_action.filepath)
+            "uri": self.file_action.lsp_server.parse_document_uri(self.file_action.filepath, self.file_action.external_file_link)
         }
         
     def handle_response(self, request_id, response):

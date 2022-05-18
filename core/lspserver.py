@@ -219,7 +219,16 @@ class LspServer:
             "initializationOptions": self.server_info.get("initializationOptions", {})
         }, self.initialize_id)
 
-    def send_did_open_notification(self, filepath):
+    def parse_document_uri(self, filepath, external_file_link):
+        """If FileAction include external_file_link return by LSP server, such as jdt.
+        We should use external_file_link, such as uri 'jdt://xxx', otherwise use filepath as textDocument uri."""
+        uri = path_to_uri(filepath)
+        if external_file_link is not None:
+            uri = path_to_uri(external_file_link) if os.path.sep in external_file_link else external_file_link
+            
+        return uri
+        
+    def send_did_open_notification(self, filepath, external_file_link=None):
         # Check file is opened?
         file_key = path_as_key(filepath)
         if file_key in self.opened_files:
@@ -232,7 +241,7 @@ class LspServer:
         with open(filepath, encoding="utf-8") as f:
             self.sender.send_notification("textDocument/didOpen", {
                 "textDocument": {
-                    "uri": path_to_uri(filepath),
+                    "uri": self.parse_document_uri(filepath, external_file_link),
                     "languageId": self.server_info["languageId"],
                     "version": 0,
                     "text": f.read()

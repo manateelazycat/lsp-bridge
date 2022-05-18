@@ -42,6 +42,7 @@ class JDTUriResolver(Handler):
                 "name": "jump_to_external_file_link",
                 "content": {
                     "filepath": external_file,
+                    "external_file_link": self.external_file_link,
                     "file_action": self.file_action,
                     "start_pos": self.start_pos
                 }

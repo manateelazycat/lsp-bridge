@@ -214,7 +214,7 @@ class LspBridge:
         
         # Send did open notification.
         file_action.lsp_server = parent_file_action.lsp_server
-        file_action.lsp_server.send_did_open_notification(external_file_path)
+        file_action.lsp_server.send_did_open_notification(external_file_path, message["content"]["external_file_link"])
         
         # Jump to define.
         eval_in_emacs("lsp-bridge--jump-to-def", external_file_path, message["content"]["start_pos"])
