@@ -503,8 +503,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
              (let* ((candidate-label (plist-get item :label)))
                (unless (zerop (length candidate-label))
                  (put-text-property 0 1 'lsp-bridge--lsp-item item candidate-label))
-               ;; We add blank after `label' with different annotation, 
-               ;; avoid corfu filter candidate with same label name. 
+               ;; We add blank after `label' with different annotation,
+               ;; avoid corfu filter candidate with same label name.
                (if (string-equal (plist-get item :annotation) "Snippet")
                    (format "%s " candidate-label)
                  candidate-label)))
@@ -727,8 +727,10 @@ If optional MARKER, return a marker instead"
   (lsp-bridge-call-async "find_references" lsp-bridge-filepath (lsp-bridge--position)))
 
 (defun lsp-bridge-popup-references (references-content references-counter)
-  (lsp-bridge-ref-popup references-content references-counter)
-  (message "[LSP-Bridge] Found %s references" references-counter))
+  (if (zerop references-counter)
+      (message "[LSP-Bridge] No references found.")
+    (lsp-bridge-ref-popup references-content references-counter)
+    (message "[LSP-Bridge] Found %s references" references-counter)))
 
 (defun lsp-bridge-rename ()
   (interactive)
