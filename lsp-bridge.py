@@ -162,19 +162,22 @@ class LspBridge:
         })
 
     def _close_file(self, filepath: Path):
-        if filepath not in self.file_action_dict:
-            logger.error("File action not exist when closing: %s" % filepath)
-
-        action = self.file_action_dict[filepath]
-
-        lsp_server_name = action.lsp_server.server_name
-        if lsp_server_name in self.lsp_server_dict:
-            lsp_server = self.lsp_server_dict[lsp_server_name]
-            lsp_server.close_file(filepath)
-
-        # Clean file_action_dict and file_opened after close file.
-        del self.file_action_dict[filepath]
-        del self.file_opened[filepath]
+        # Open file and do command `lsp-bridge-restart-process`, 
+        # kill buffer directly will cause KeyError on self.file_action_dict,
+        # because LSP server only start when user type something or move cursor.
+        # 
+        # So we need check filepath whether exists in file_action_dict.
+        if filepath in self.file_action_dict:
+            action = self.file_action_dict[filepath]
+            
+            lsp_server_name = action.lsp_server.server_name
+            if lsp_server_name in self.lsp_server_dict:
+                lsp_server = self.lsp_server_dict[lsp_server_name]
+                lsp_server.close_file(filepath)
+            
+            # Clean file_action_dict and file_opened after close file.
+            del self.file_action_dict[filepath]
+            del self.file_opened[filepath]
 
     def build_file_action_function(self, name):
         def _do(filepath: str, *args):
