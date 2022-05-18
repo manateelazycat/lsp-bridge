@@ -547,20 +547,12 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                (if (minibufferp) (window-buffer (minibuffer-selected-window))
                  (current-buffer))
 
-             (let ((snippet-fn (and (string= kind "Snippet")
-                                    (lsp-bridge--snippet-expansion-fn))))
-               (cond
-                ;; Expand snippet.
-                (snippet-fn
+             (let ((snippet-fn (lsp-bridge--snippet-expansion-fn)))
+               (when insert-text
                  (delete-region (- (point) (length candidate)) (point))
-                 (funcall snippet-fn insert-text))
-                ;; Insert `insertText' and try to apply `additionalTextEdits'.
-                (insert-text
-                 (delete-region (- (point) (length candidate)) (point))
-                 (insert insert-text)
-
+                 (funcall (or snippet-fn #'insert) insert-text)
                  (when (cl-plusp (length additionalTextEdits))
-                   (lsp-bridge--apply-text-edits additionalTextEdits))))))
+                   (lsp-bridge--apply-text-edits additionalTextEdits)))))
            ))))))
 
 ;; Copy from eglot
