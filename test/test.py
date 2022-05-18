@@ -40,6 +40,11 @@ def test_entrypoint():
         (package-install 'posframe)
         (package-install 'markdown-mode)
         ;; (all-the-icons-install-fonts 't)
+        
+        ;; for Windows
+        (prefer-coding-system 'utf-8-unix)
+        (set-language-environment 'utf-8)
+        (setq default-buffer-file-coding-system 'utf-8-unix)
     )
     """
     run([

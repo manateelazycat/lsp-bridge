@@ -62,6 +62,7 @@ class LspBridge:
         # ch.setFormatter(formatter)
         # ch.setLevel(logging.DEBUG)
         # self.server.logger.addHandler(ch)
+        self.server.logger = logger
 
         self.server.register_instance(self)  # register instance functions let elisp side call
 

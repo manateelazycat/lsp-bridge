@@ -53,6 +53,7 @@ class SingleFile(NamedTuple):
 
 
 def _buffer_file_name(abspath: str) -> str:
+    # Emacs only accepts "C:/a/b/c.txt" or "C:\\a\\b\\c.txt", but we have "C:\a\b\c.txt"
     if sys.platform != "win32":
         return abspath
     # same as (buffer-file-name) in Emacs under Windows
@@ -77,12 +78,10 @@ def with_file(file: SingleFile):
 
 
 def eval_sexp_sync(sexp: str, timeout=40) -> Any:
-    logger.debug("Eval in Emacs: %s", sexp)
     return epc_client.call_sync("eval-in-emacs", [sexp], timeout=timeout)
 
 
 def eval_sexp(sexp: str):
-    logger.debug("Eval in Emacs: %s", sexp)
     epc_client.call("eval-in-emacs", [sexp])
 
 
