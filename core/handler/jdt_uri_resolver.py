@@ -33,9 +33,9 @@ class JDTUriResolver(Handler):
             external_file_dir = os.path.dirname(external_file)
             os.makedirs(external_file_dir, exist_ok=True)
             
-            if not os.path.exists(external_file):
-                with open(external_file, 'w') as f:
-                    f.write(response)
+            # Always override decompile content to file, avoid cache conflict.
+            with open(external_file, 'w') as f:
+                f.write(response)
 
             # Jump to define in external file.
             self.file_action.lsp_server.message_queue.put({
