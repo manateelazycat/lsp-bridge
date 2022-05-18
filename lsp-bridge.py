@@ -209,12 +209,14 @@ class LspBridge:
     def handle_jump_to_external_file_link(self, message):
         # Make external file share file action that send jump define request.
         external_file_path = message["content"]["filepath"]
+        external_file_link = message["content"]["external_file_link"]
         parent_file_action = message["content"]["file_action"]
         file_action = self.create_file_action(external_file_path, parent_file_action.project_path, parent_file_action.lang_server_info["name"])
         
         # Send did open notification.
+        file_action.external_file_link = external_file_link
         file_action.lsp_server = parent_file_action.lsp_server
-        file_action.lsp_server.send_did_open_notification(external_file_path, message["content"]["external_file_link"])
+        file_action.lsp_server.send_did_open_notification(external_file_path, external_file_link)
         
         # Jump to define.
         eval_in_emacs("lsp-bridge--jump-to-def", external_file_path, message["content"]["start_pos"])
