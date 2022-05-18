@@ -2,5 +2,23 @@
   "name": "gopls",
   "languageId": "go",
   "command": ["gopls", "-remote=auto"],
-  "settings": {}
+  "settings":{
+    "gopls": {
+      "usePlaceholders": true,
+      "completeUnimported": true,
+      "staticcheck": false,
+      "allowImplicitNetworkAccess": true,
+      "experimentalWorkspaceModule": true,
+      "allowModfileModifications": true
+    }
+  },
+  "capabilities": {
+    "textDocument": {
+      "completion": {
+        "completionItem": {
+          "snippetSupport": true
+        }
+      }
+    }
+  }
 }
