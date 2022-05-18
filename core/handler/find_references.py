@@ -20,7 +20,7 @@ class FindReferences(Handler):
     def process_response(self, response: dict) -> None:
         references_dict = {}
         for uri_info in response:
-            path = uri_to_path(uri_info["uri"])
+            path = Path(uri=uri_info["uri"])
             if path in references_dict:
                 references_dict[path].append(uri_info["range"])
             else:

@@ -30,7 +30,7 @@ from subprocess import PIPE
 from sys import stderr
 from threading import Thread
 from urllib.parse import urlparse
-from typing import Set, Dict, TYPE_CHECKING
+from typing import Set, Dict, TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from core.fileaction import FileAction
@@ -75,7 +75,13 @@ class LspServerSender(Thread):
         ), **kwargs)
 
     def _send_message(self, message: dict):
-        message_str = "Content-Length: {}\r\n\r\n{}".format(len(json.dumps(message)), json.dumps(message))
+        def serialize(obj):
+            if isinstance(obj, Path):
+                return obj.as_uri()
+            raise TypeError("Type %s is not JSON serializable" % type(obj))
+
+        message_json = json.dumps(message, default=serialize)
+        message_str = "Content-Length: {}\r\n\r\n{}".format(len(message_json), message_json)
 
         self.process.stdin.write(message_str.encode("utf-8"))
         self.process.stdin.flush()
@@ -83,7 +89,7 @@ class LspServerSender(Thread):
         logger.info("\n--- Send ({}): {}".format(
             message.get('id', 'notification'), message.get('method', 'response')))
 
-        logger.debug(json.dumps(message, indent=3))
+        logger.debug(json.dumps(message, default=serialize, indent=3))
 
     def run(self) -> None:
         # send "initialize" request
@@ -170,7 +176,7 @@ class LspServerReceiver(Thread):
 
 class LspServer:
 
-    def __init__(self, message_queue, project_path, server_info, server_name):
+    def __init__(self, message_queue, project_path: Path, server_info, server_name):
         # Init.
         self.message_queue = message_queue
         self.project_path = project_path
@@ -181,7 +187,7 @@ class LspServer:
         self.root_path = self.project_path
 
         # Load library directories
-        self.library_directories = [*map(os.path.expanduser, server_info.get("libraryDirectories", []))]
+        self.library_directories: List[Path] = [*map(lambda x: Path(path=x).resolve(), server_info.get("libraryDirectories", []))]
 
         # LSP server information.
         self.completion_trigger_characters = list()
@@ -211,15 +217,14 @@ class LspServer:
         self.ls_message_thread = threading.Thread(target=self.lsp_message_dispatcher)
         self.ls_message_thread.start()
 
-        self.files: Dict[str, "FileAction"] = dict()
+        self.files: Dict[Path, "FileAction"] = dict()
 
     def attach(self, fa: "FileAction"):
-        file_key = path_as_key(fa.filepath)
-        if file_key in self.files:
+        if fa.filepath in self.files:
             logger.error(f"File {fa.filepath} opened again before close.")
             return
 
-        self.files[file_key] = fa
+        self.files[fa.filepath] = fa
 
         if len(self.files) == 1:
             # STEP 1: Say hello to LSP server.
@@ -247,7 +252,7 @@ class LspServer:
                 "name": "emacs",
                 "version": get_emacs_version()
             },
-            "rootUri": path_to_uri(self.project_path),
+            "rootUri": self.project_path,
             "capabilities": self.server_info.get("capabilities", {}),
             "initializationOptions": self.server_info.get("initializationOptions", {})
         }, self.initialize_id, init=True)
@@ -256,15 +261,15 @@ class LspServer:
         """If FileAction include external_file_link return by LSP server, such as jdt.
         We should use external_file_link, such as uri 'jdt://xxx', otherwise use filepath as textDocument uri."""
         # Init with filepath.
-        uri = path_to_uri(filepath)
+        uri = filepath.as_uri()
 
         if external_file_link is not None:
             if urlparse(external_file_link).scheme != "":
                 # Use external_file_link if we found scheme.
                 uri = external_file_link
             else:
-                # Otherwise external_file_link is filepath.
-                uri = path_to_uri(external_file_link)
+                # Otherwise, external_file_link is filepath.
+                uri = Path(path=external_file_link).as_uri()
 
         return uri
 
@@ -288,14 +293,14 @@ class LspServer:
     def send_did_close_notification(self, filepath):
         self.sender.send_notification("textDocument/didClose", {
             "textDocument": {
-                "uri": path_to_uri(filepath),
+                "uri": filepath,
             }
         })
 
     def send_did_save_notification(self, filepath):
         self.sender.send_notification("textDocument/didSave", {
             "textDocument": {
-                "uri": path_to_uri(filepath)
+                "uri": filepath,         
             }
         })
 
@@ -305,7 +310,7 @@ class LspServer:
         # otherwise LSP server won't response client request, such as completion, find-define, find-references and rename etc.
         self.sender.send_notification("textDocument/didChange", {
             "textDocument": {
-                "uri": path_to_uri(filepath),
+                "uri": filepath,
                 "version": version
             },
             "contentChanges": [
@@ -411,10 +416,9 @@ class LspServer:
 
     def close_file(self, filepath):
         # Send didClose notification when client close file.
-        file_key = path_as_key(filepath)
-        if file_key in self.files:
+        if filepath in self.files:
             self.send_did_close_notification(filepath)
-            del self.files[file_key]
+            del self.files[filepath]
 
         # We need shutdown LSP server when last file closed, to save system memory.
         if len(self.files) == 0:
