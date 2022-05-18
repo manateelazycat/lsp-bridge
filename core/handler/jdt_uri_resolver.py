@@ -26,11 +26,10 @@ class JDTUriResolver(Handler):
 
         if type(response) == str:
             # Save the analysis content to the file.
-            external_file = os.path.join(
-                self.file_action.lsp_server.library_directories[0], 
-                re.match(r"jdt://contents/(.*?)/(.*)\.class\?", self.external_file_link).groups()[1].replace('/', '.') + ".java")
+            external_file = (self.file_action.lsp_server.library_directories[0] /
+                             (re.match(r"jdt://contents/(.*?)/(.*)\.class\?", self.external_file_link).groups()[1].replace('/', '.') + ".java"))
             
-            external_file_dir = os.path.dirname(external_file)
+            external_file_dir = external_file.parent
             os.makedirs(external_file_dir, exist_ok=True)
             
             # Always override decompile content to file, avoid cache conflict.
@@ -48,6 +47,5 @@ class JDTUriResolver(Handler):
                 }
             })
 
-    def fill_document_uri(self):
-        # JDT don't need fill textDocument uri.
+    def fill_document_uri(self, params):
         pass

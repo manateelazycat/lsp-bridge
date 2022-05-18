@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from core.handler import Handler
 from core.utils import *
 
@@ -34,7 +36,7 @@ def get_rename_line_content(edit_info, line_offset_dict, lines, replace_line):
 def rename_symbol_in_file_changes(rename_info):
     rename_file = rename_info[0]
     if rename_file.startswith("file://"):
-        rename_file = uri_to_path(rename_file)
+        rename_file = Path(uri=rename_file)
 
     rename_counter = 0
 
@@ -57,12 +59,11 @@ def rename_symbol_in_file_changes(rename_info):
     return rename_file, rename_counter
 
 
-def rename_symbol_in_file__document_changes(rename_info):
+def rename_symbol_in_file__document_changes(rename_info) -> Tuple[Path, int]:
     rename_file = rename_info["textDocument"]["uri"]
     if rename_file.startswith("file://"):
-        rename_file = uri_to_path(rename_file)
+        rename_file = Path(uri=rename_file)
 
-    lines = []
     rename_counter = 0
 
     with open(rename_file, "r", encoding="utf-8") as f:
@@ -110,7 +111,7 @@ class Rename(Handler):
         else:
             # JSON struct is 'documentChanges'
             for rename_info in rename_infos:
-                (rename_file, rename_counter) = rename_symbol_in_file__document_changes(rename_info)
+                rename_file, rename_counter = rename_symbol_in_file__document_changes(rename_info)
                 rename_files.append(rename_file)
                 counter += rename_counter
 
