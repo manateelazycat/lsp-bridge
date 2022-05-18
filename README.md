@@ -103,6 +103,24 @@ Below is framework of lsp-bridge:
 
 <img src="./framework.png">
 
+Below is the directory structure of the lsp-bridge project:
+
+| File              | Explain                                                                                                                                                                             |
+| :----------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
+| lsp-bridge.el           | The elisp main logic part of lsp-bridge provides custom options and elisp functions for python sub-process calls, such as code jumping, renamed renames, etc.                          |
+| lsp-bridge-epc.el       | The code of communicating with lsp-bridge python sub-process, which mainly implements elisp IPC to connect python EPC, realize data serialization, sending, receiving, and desertation |
+| lsp-bridge-ref.el       | Code reference framework, provides reference viewing, batch renames, regex filtering of reference results, etc. The core code fork from color-rg.el                                    |
+| lsp-bridge-orderless.el | The function of providing fuzzy search is that when the code is completed, you don’t need to type in the order of the word to quickly complete the long candidate.                    |
+| lsp-bridge-icon.el      | Provide a completion menu icon rendering, which is used to distinguish different types of completion options                                                                           |
+| lsp-bridge.py           | lsp-bridge's Python main logic part, provides event loop, message scheduling and status management                                                                                     |
+| core/fileaction.py      | Record the status of each file, process LSP response messages, call the Emacs elisp function                                                                                           |
+| core/lspserver.py       | The LSP message processing module is mainly to analyze, send and accept LSP messages, and ensure that the LSP request order conforms to the LSP protocol specification                 |
+| core/utils.py           | Global tool functions, convenient for each module call                                                                                                                                 |
+| core/hanlder/           | The implementation of LSP message sending and accepting, where __init__.py is a base class                                                                                             |
+| langserver              | Mainly placed the configuration of the LSP server, each server a JSON file, defining the name of the server, language ID, starting command, and setting options                        |
+
+
+
 Please read [LSP Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/) and [The Design of lsp-bridge](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html) first.
 
 Then turn on option ```lsp-bridge-enable-log``` and happy hacking! ;)
