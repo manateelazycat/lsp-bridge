@@ -719,10 +719,8 @@ If optional MARKER, return a marker instead"
   (lsp-bridge-call-async "find_references" lsp-bridge-filepath (lsp-bridge--position)))
 
 (defun lsp-bridge-popup-references (references-content references-counter)
-  (if (zerop references-counter)
-      (message "[LSP-Bridge] No references found.")
-    (lsp-bridge-ref-popup references-content references-counter)
-    (message "[LSP-Bridge] Found %s references" references-counter)))
+  (lsp-bridge-ref-popup references-content references-counter)
+  (message "[LSP-Bridge] Found %s references" references-counter))
 
 (defun lsp-bridge-rename ()
   (interactive)

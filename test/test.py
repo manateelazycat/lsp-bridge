@@ -2,14 +2,15 @@ import logging
 import os
 import subprocess
 import unittest
-import pathlib
+from pathlib import Path
 from unittest import TestLoader
 
-from core.utils import eval_in_emacs, logger, eval_sexp_in_emacs
+from core.utils import eval_in_emacs, logger
+from test.common import eval_sexp
 
 EMACS = 'emacs'
 
-BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def run(args, cwd=BASE_DIR):
@@ -64,7 +65,7 @@ def start_test():
     test_result = unittest.TextTestRunner(verbosity=2).run(suite)
 
     eval_in_emacs("message", "=================== *lsp-bridge-log* ===================")
-    eval_sexp_in_emacs("""
+    eval_sexp("""
     (with-current-buffer lsp-bridge-name
       (message (buffer-string)))
     """)

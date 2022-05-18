@@ -6,8 +6,8 @@ import pathlib
 import sys
 from typing import Any, List, Tuple, Callable, Optional, NamedTuple
 
-from core.utils import logger
 import core.utils
+from core.utils import logger, epc_client
 
 
 def interceptor(expectation: Callable[[str, List[Any]], bool],
@@ -76,21 +76,14 @@ def with_file(file: SingleFile):
     return decorator
 
 
-def eval_sexp_sync(sexp: str, timeout: int = 40):
-    res = None
+def eval_sexp_sync(sexp: str, timeout=40) -> Any:
+    logger.debug("Eval in Emacs: %s", sexp)
+    return epc_client.call_sync("eval-in-emacs", [sexp], timeout=timeout)
 
-    def callback(_res):
-        nonlocal res
-        res = _res
 
-    core.utils.eval_sexp_in_emacs(sexp, callback=callback)
-    while res is None:
-        time.sleep(1)
-        timeout -= 1
-        if timeout <= 0:
-            raise Exception("timeout when eval sexp")
-
-    return res
+def eval_sexp(sexp: str):
+    logger.debug("Eval in Emacs: %s", sexp)
+    epc_client.call("eval-in-emacs", [sexp])
 
 
 def file_buffer(filename: str, sexps: str) -> str:
