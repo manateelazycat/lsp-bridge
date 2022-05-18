@@ -20,8 +20,9 @@ jobs:
         if: matrix.os != 'windows-latest'
 
       - name: Install emacs
-        run: |
-          choco install emacs
+        uses: jcs090218/setup-emacs-windows@master
+        with:
+          version: ${{ matrix.emacs_version }}
         if: matrix.os == 'windows-latest'
 
       - name: Install Python
@@ -45,7 +46,7 @@ jobs:
 
       - name: Install Dependencies (Windows)
         run: |
-          choco install llvm
+          # choco install llvm
           python -m pip install epc pyright
           go install golang.org/x/tools/gopls@latest
         if: matrix.os == 'windows-latest'
