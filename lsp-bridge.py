@@ -138,7 +138,7 @@ class LspBridge:
         project_path: Path = get_project_path(filepath)
         lang_server: str = get_emacs_func_result("get-lang-server", project_path, filepath)
         lang_server_info: dict = load_lang_server_info(lang_server)
-        lsp_server_name = "{}#{}".format(filepath, lang_server_info["name"])
+        lsp_server_name = "{}#{}".format(project_path, lang_server_info["name"])
 
         if lsp_server_name not in self.lsp_server_dict:
             self.lsp_server_dict[lsp_server_name] = LspServer(
