@@ -34,17 +34,17 @@ class Handler(abc.ABC):
             name=self.name,
         )
         
-        params = self.process_request(*args, **kwargs)
-        self.fill_document_uri(params)
+        self.params = self.process_request(*args, **kwargs)
+        self.fill_document_uri()
 
         self.file_action.lsp_server.sender.send_request(
             method=self.method,
-            params=params,
+            params=self.params,
             request_id=request_id,
         )
         
-    def fill_document_uri(self, params):
-        params["textDocument"] = {
+    def fill_document_uri(self):
+        self.params["textDocument"] = {
             "uri": self.file_action.lsp_server.parse_document_uri(self.file_action.filepath, self.file_action.external_file_link)
         }
         

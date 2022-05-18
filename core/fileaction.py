@@ -30,10 +30,10 @@ from core.handler import *
 
 
 class FileAction:
-    def __init__(self, filepath: Path, lang_server_info, lsp_server):
+    def __init__(self, filepath, lang_server_info, lsp_server):
         # Init.
         self.filepath = filepath
-        self.external_file_link: Optional[str] = None
+        self.external_file_link = None
         self.request_dict = {}
         self.last_change_file_time = -1.0
         self.last_change_file_before_cursor_text = ""
