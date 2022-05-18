@@ -247,7 +247,7 @@ class LspServer:
     def send_initialize_request(self):
         self.sender.send_request("initialize", {
             "processId": os.getpid(),
-            "rootPath": self.root_path,
+            "rootPath": self.root_path.as_path(),
             "clientInfo": {
                 "name": "emacs",
                 "version": get_emacs_version()
