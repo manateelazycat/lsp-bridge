@@ -30,6 +30,7 @@ from subprocess import PIPE
 from sys import stderr
 from threading import Thread
 from typing import Set
+from urllib.parse import urlparse
 
 from core.utils import *
 
@@ -222,9 +223,16 @@ class LspServer:
     def parse_document_uri(self, filepath, external_file_link):
         """If FileAction include external_file_link return by LSP server, such as jdt.
         We should use external_file_link, such as uri 'jdt://xxx', otherwise use filepath as textDocument uri."""
+        # Init with filepath.
         uri = path_to_uri(filepath)
+        
         if external_file_link is not None:
-            uri = path_to_uri(external_file_link) if os.path.sep in external_file_link else external_file_link
+            if urlparse(external_file_link).scheme != "":
+                # Use external_file_link if we found scheme.
+                uri = external_file_link
+            else:
+                # Otherwise external_file_link is filepath.
+                uri = path_to_uri(external_file_link)
             
         return uri
         
