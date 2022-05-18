@@ -27,6 +27,7 @@ def test_entrypoint():
     print('Installing dependencies...')
     init_eval = """
     (progn
+        (setq network-security-level 'low) ; see https://github.com/jcs090218/setup-emacs-windows/issues/156#issuecomment-932956432
         (setq package-user-dir (expand-file-name "lsp-bridge-test" temporary-file-directory))
         (require 'package)
         (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)

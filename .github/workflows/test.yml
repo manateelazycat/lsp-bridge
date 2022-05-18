@@ -6,20 +6,20 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest, windows-latest]
         emacs_version:
           - "27.2"
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install emacs
+      - name: Install emacs (Linux)
         uses: purcell/setup-emacs@master
         with:
           version: ${{ matrix.emacs_version }}
         if: matrix.os != 'windows-latest'
 
-      - name: Install emacs
+      - name: Install emacs (Windows)
         uses: jcs090218/setup-emacs-windows@master
         with:
           version: ${{ matrix.emacs_version }}
@@ -50,12 +50,6 @@ jobs:
           python -m pip install epc pyright
           go install golang.org/x/tools/gopls@latest
         if: matrix.os == 'windows-latest'
-
-      - name: Install Dependencies (macOS)
-        run: |
-          python -m pip install epc pyright
-          go install golang.org/x/tools/gopls@latest
-        if: matrix.os == 'macOS-latest'
 
       - name: test
         run: |
