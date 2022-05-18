@@ -29,9 +29,11 @@ import traceback
 from subprocess import PIPE
 from sys import stderr
 from threading import Thread
-from typing import Set
 from urllib.parse import urlparse
+from typing import Set, Dict, TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from core.fileaction import FileAction
 from core.utils import *
 
 DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
@@ -42,44 +44,60 @@ class LspServerSender(Thread):
         super().__init__()
 
         self.process = process
+        self.init_queue = queue.Queue()
         self.queue = queue.Queue()
+        self.initialized = threading.Event()
 
-    def _send_message(self, message: dict):
+    def _enqueue_message(self, message: dict, *, init=False):
         message["jsonrpc"] = "2.0"
-        self.queue.put(message)
+        if init:
+            self.init_queue.put(message)
+        else:
+            self.queue.put(message)
 
-    def send_request(self, method, params, request_id):
-        self._send_message(dict(
+    def send_request(self, method, params, request_id, **kwargs):
+        self._enqueue_message(dict(
             id=request_id,
             method=method,
             params=params
-        ))
+        ), **kwargs)
 
-    def send_notification(self, method, params):
-        self._send_message(dict(
+    def send_notification(self, method, params, **kwargs):
+        self._enqueue_message(dict(
             method=method,
             params=params
-        ))
+        ), **kwargs)
 
-    def send_response(self, request_id, result):
-        self._send_message(dict(
+    def send_response(self, request_id, result, **kwargs):
+        self._enqueue_message(dict(
             id=request_id,
             result=result
-        ))
+        ), **kwargs)
+
+    def _send_message(self, message: dict):
+        message_str = "Content-Length: {}\r\n\r\n{}".format(len(json.dumps(message)), json.dumps(message))
+
+        self.process.stdin.write(message_str.encode("utf-8"))
+        self.process.stdin.flush()
+
+        logger.info("\n--- Send ({}): {}".format(
+            message.get('id', 'notification'), message.get('method', 'response')))
+
+        logger.debug(json.dumps(message, indent=3))
 
     def run(self) -> None:
+        # send "initialize" request
+        self._send_message(self.init_queue.get())
+        # wait until initialized
+        self.initialized.wait()
+        # send other initialization-related messages
+        while not self.init_queue.empty():
+            message = self.init_queue.get()
+            self._send_message(message)
+        # send all others
         while self.process.poll() is None:
-            message: dict = self.queue.get()
-
-            message_str = "Content-Length: {}\r\n\r\n{}".format(len(json.dumps(message)), json.dumps(message))
-
-            self.process.stdin.write(message_str.encode("utf-8"))
-            self.process.stdin.flush()
-
-            logger.info("\n--- Send ({}): {}".format(
-                message.get('id', 'notification'), message.get('method', 'response')))
-
-            logger.debug(json.dumps(message, indent=3))
+            message = self.queue.get()
+            self._send_message(message)
 
 
 class LspServerReceiver(Thread):
@@ -152,20 +170,18 @@ class LspServerReceiver(Thread):
 
 class LspServer:
 
-    def __init__(self, message_queue, file_action):
+    def __init__(self, message_queue, project_path, server_info, server_name):
         # Init.
         self.message_queue = message_queue
-        self.project_path = file_action.project_path
-        self.server_info = file_action.lang_server_info
-        self.first_file_path = file_action.filepath
+        self.project_path = project_path
+        self.server_info = server_info
         self.initialize_id = generate_request_id()
-        self.server_name = file_action.get_lsp_server_name()
+        self.server_name = server_name
         self.request_dict = {}
-        self.opened_files: Set[str] = set()  # contain file opened in current project
         self.root_path = self.project_path
 
         # Load library directories
-        self.library_directories = [*map(os.path.expanduser, file_action.lang_server_info.get("libraryDirectories", []))]
+        self.library_directories = [*map(os.path.expanduser, server_info.get("libraryDirectories", []))]
 
         # LSP server information.
         self.completion_trigger_characters = list()
@@ -195,9 +211,25 @@ class LspServer:
         self.ls_message_thread = threading.Thread(target=self.lsp_message_dispatcher)
         self.ls_message_thread.start()
 
-        # STEP 1: Say hello to LSP server.
-        # Send 'initialize' request.
-        self.send_initialize_request()
+        self.files: Dict[str, "FileAction"] = dict()
+
+    def attach(self, fa: "FileAction"):
+        file_key = path_as_key(fa.filepath)
+        if file_key in self.files:
+            logger.error(f"File {fa.filepath} opened again before close.")
+            return
+
+        self.files[file_key] = fa
+
+        if len(self.files) == 1:
+            # STEP 1: Say hello to LSP server.
+            # Send 'initialize' request.
+            self.send_initialize_request()
+
+        # STEP 4: Tell LSP server open file.
+        # We need send 'textDocument/didOpen' notification,
+        # then LSP server will return file information, such as completion, find-define, find-references and rename etc.
+        self.send_did_open_notification(fa.filepath, fa.external_file_link)
 
     def lsp_message_dispatcher(self):
         while True:
@@ -218,14 +250,14 @@ class LspServer:
             "rootUri": path_to_uri(self.project_path),
             "capabilities": self.server_info.get("capabilities", {}),
             "initializationOptions": self.server_info.get("initializationOptions", {})
-        }, self.initialize_id)
+        }, self.initialize_id, init=True)
 
     def parse_document_uri(self, filepath, external_file_link):
         """If FileAction include external_file_link return by LSP server, such as jdt.
         We should use external_file_link, such as uri 'jdt://xxx', otherwise use filepath as textDocument uri."""
         # Init with filepath.
         uri = path_to_uri(filepath)
-        
+
         if external_file_link is not None:
             if urlparse(external_file_link).scheme != "":
                 # Use external_file_link if we found scheme.
@@ -233,19 +265,10 @@ class LspServer:
             else:
                 # Otherwise external_file_link is filepath.
                 uri = path_to_uri(external_file_link)
-            
+
         return uri
-        
+
     def send_did_open_notification(self, filepath, external_file_link=None):
-        # Check file is opened?
-        file_key = path_as_key(filepath)
-        if file_key in self.opened_files:
-            logger.info("File {} has opened in server {}".format(filepath, self.server_name))
-            return
-        
-        # Record file open in opened_files.
-        self.opened_files.add(file_key)
-            
         with open(filepath, encoding="utf-8") as f:
             self.sender.send_notification("textDocument/didOpen", {
                 "textDocument": {
@@ -358,18 +381,15 @@ class LspServer:
                 except KeyError:
                     pass
 
-                self.sender.send_notification("initialized", {})
+                self.sender.send_notification("initialized", {}, init=True)
 
                 # STEP 3: Configure LSP server parameters.
                 # After 'initialized' message finish, we should send 'workspace/didChangeConfiguration' notification.
                 # The setting parameters of each language server are different.
                 self.sender.send_notification("workspace/didChangeConfiguration",
-                                              self.get_server_workspace_change_configuration())
+                                              self.get_server_workspace_change_configuration(), init=True)
 
-                # STEP 4: Tell LSP server open file.
-                # We need send 'textDocument/didOpen' notification,
-                # then LSP server will return file information, such as completion, find-define, find-references and rename etc.
-                self.send_did_open_notification(self.first_file_path)
+                self.sender.initialized.set()
 
                 # Notify user server is ready.
                 message_emacs("Start LSP server ({}) for {} complete, enjoy hacking!".format(
@@ -392,12 +412,12 @@ class LspServer:
     def close_file(self, filepath):
         # Send didClose notification when client close file.
         file_key = path_as_key(filepath)
-        if file_key in self.opened_files:
+        if file_key in self.files:
             self.send_did_close_notification(filepath)
-            self.opened_files.remove(file_key)
+            del self.files[file_key]
 
         # We need shutdown LSP server when last file closed, to save system memory.
-        if len(self.opened_files) == 0:
+        if len(self.files) == 0:
             self.send_shutdown_request()
             self.send_exit_notification()
 

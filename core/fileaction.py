@@ -24,17 +24,16 @@ import time
 import os
 from typing import Dict, Tuple
 
+from core.lspserver import LspServer
 from core.utils import *
 from core.handler import *
 
 
 class FileAction:
-
-    def __init__(self, filepath, project_path, lang_server):
+    def __init__(self, filepath, lang_server_info, lsp_server):
         # Init.
         self.filepath = filepath
         self.external_file_link = None
-        self.project_path = project_path
         self.request_dict = {}
         self.last_change_file_time = -1.0
         self.last_change_file_before_cursor_text = ""
@@ -45,7 +44,7 @@ class FileAction:
         self.try_signature_help_timer = None
 
         # Read language server information.
-        self.lang_server_info = self.load_lang_server_info(lang_server)
+        self.lang_server_info = lang_server_info
 
         # Initialize handlers.
         self.handlers: Dict[str, Handler] = dict()
@@ -53,7 +52,7 @@ class FileAction:
         for handler_cls in Handler.__subclasses__():
             self.handlers[handler_cls.name] = handler_cls(self)
 
-        self.lsp_server = None
+        self.lsp_server: LspServer = lsp_server
 
         (self.enable_auto_import, self.enable_signature_help) = get_emacs_vars([
             "lsp-bridge-enable-auto-import",
@@ -70,29 +69,6 @@ class FileAction:
         if method in self.handlers:
             return self.handlers[method].send_request(*args, **kwargs)
         getattr(self, method)(*args, **kwargs)
-
-    def load_lang_server_info(self, lang_server):
-        lang_server_info_path = ""
-        if os.path.exists(lang_server) and os.path.sep in lang_server:
-            # If lang_server is real file path, we load the LSP server configuration from the user specified file.
-            lang_server_info_path = lang_server
-        else:
-            # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
-            lang_server_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "langserver")
-            lang_server_file_path_current = os.path.join(lang_server_dir,
-                                                         "{}_{}.json".format(lang_server, get_os_name()))
-            lang_server_file_path_default = os.path.join(lang_server_dir, "{}.json".format(lang_server))
-
-            lang_server_info_path = lang_server_file_path_current if os.path.exists(
-                lang_server_file_path_current) else lang_server_file_path_default
-
-        with open(lang_server_info_path, encoding="utf-8") as f:
-            import json
-            return json.load(f)
-
-    def get_lsp_server_name(self):
-        # We use project path and LSP server type as unique name.
-        return "{}#{}".format(path_as_key(self.project_path), self.lang_server_info["name"])
 
     def change_file(self, start, end, range_length, change_text, position, before_char, before_cursor_text):
         # Send didChange request to LSP server.
