@@ -18,6 +18,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import os
 import queue
 import sys
 import threading
@@ -31,14 +32,15 @@ from core.lspserver import LspServer
 from core.utils import *
 from core.handler import *
 
+
 class LspBridge:
     def __init__(self, args):
 
         # Object cache to exchange information between Emacs and LSP server.
-        self.file_action_dict: Dict[str, FileAction] = {}  # use for contain file action
+        self.file_action_dict: Dict[Path, FileAction] = {}  # use for contain file action
         self.lsp_server_dict: Dict[str, LspServer] = {}  # use for contain lsp server
-        self.file_opened: Dict[str, bool] = defaultdict(bool)
-        self.action_cache_dict: Dict[str, list] = defaultdict(list)  # use for contain file action cache
+        self.file_opened: Dict[Path, bool] = defaultdict(bool)
+        self.action_cache_dict: Dict[Path, list] = defaultdict(list)  # use for contain file action cache
 
         # Build EPC interfaces.
         for name in ["change_file", "find_define", "find_implementation", "find_references",
@@ -123,68 +125,73 @@ class LspBridge:
             "name": "open_file",
             "content": filepath
         })
-        
-    def create_file_action(self, filepath, project_path, lang_server):
-        action = FileAction(filepath, project_path, lang_server)
-        self.file_action_dict[path_as_key(filepath)] = action
+
+    def create_file_action(self, filepath: Path, lang_server_info, lsp_server):
+        if filepath in self.file_action_dict:
+            logger.error("File action already exist: %s" % filepath)
+            return
+        action = FileAction(filepath, lang_server_info, lsp_server)
+        self.file_action_dict[filepath] = action
         return action
-    
-    def _open_file(self, filepath):
-        # Create file action.
-        file_key = path_as_key(filepath)
-        if file_key not in self.file_action_dict:
-            project_path = get_project_path(filepath)
-            lang_server = get_emacs_func_result("get-lang-server", project_path, filepath)
-            self.create_file_action(filepath, project_path, lang_server)
 
-        # Create LSP server.
-        file_action = self.file_action_dict[file_key]
-        lsp_server_name = file_action.get_lsp_server_name()
+    def _open_file(self, filepath: Path):
+        project_path: Path = get_project_path(filepath)
+        lang_server: str = get_emacs_func_result("get-lang-server", project_path.as_path(), filepath)
+        lang_server_info: dict = load_lang_server_info(lang_server)
+        lsp_server_name = "{}#{}".format(project_path.as_path(), lang_server_info["name"])
+
         if lsp_server_name not in self.lsp_server_dict:
-            # lsp server will send initialize and didOpen when open first file in project.
-            server = LspServer(self.message_queue, file_action)
-            self.lsp_server_dict[lsp_server_name] = server
-        else:
-            # Send didOpen notification to LSP server.
-            self.lsp_server_dict[lsp_server_name].send_did_open_notification(file_action.filepath)
+            self.lsp_server_dict[lsp_server_name] = LspServer(
+                message_queue=self.message_queue,
+                project_path=project_path,
+                server_info=lang_server_info,
+                server_name=lsp_server_name
+            )
 
-        # Add lsp server in file action for send message to lsp server.
-        file_action.lsp_server = self.lsp_server_dict[lsp_server_name]
-        
+        lsp_server = self.lsp_server_dict[lsp_server_name]
+
+        file_action = self.create_file_action(filepath, lang_server_info, lsp_server)
+
+        lsp_server.attach(file_action)
+
     def close_file(self, filepath):
         # We need post function event_loop, otherwise long-time calculation will block Emacs.
         self.event_queue.put({
             "name": "close_file",
-            "content": filepath
+            "content": Path(path=filepath)
         })
 
-    def _close_file(self, filepath):
-        file_key = path_as_key(filepath)
-        if file_key in self.file_action_dict:
-            action = self.file_action_dict[file_key]
-
-            lsp_server_name = action.get_lsp_server_name()
+    def _close_file(self, filepath: Path):
+        # Open file and do command `lsp-bridge-restart-process`, 
+        # kill buffer directly will cause KeyError on self.file_action_dict,
+        # because LSP server only start when user type something or move cursor.
+        # 
+        # So we need check filepath whether exists in file_action_dict.
+        if filepath in self.file_action_dict:
+            action = self.file_action_dict[filepath]
+            
+            lsp_server_name = action.lsp_server.server_name
             if lsp_server_name in self.lsp_server_dict:
                 lsp_server = self.lsp_server_dict[lsp_server_name]
                 lsp_server.close_file(filepath)
-
+            
             # Clean file_action_dict and file_opened after close file.
-            del self.file_action_dict[file_key]
-            del self.file_opened[file_key]
+            del self.file_action_dict[filepath]
+            del self.file_opened[filepath]
 
     def build_file_action_function(self, name):
-        def _do(filepath, *args):
-            file_key = path_as_key(filepath)
-            if self.file_opened[file_key]:
-                action = self.file_action_dict[file_key]
+        def _do(filepath: str, *args):
+            filepath = Path(path=filepath)
+            if self.file_opened[filepath]:
+                action = self.file_action_dict[filepath]
                 action.call(name, *args)
             else:
-                if file_key not in self.file_action_dict:
+                if filepath not in self.file_action_dict:
                     self._open_file(filepath)  # _do is called inside event_loop, so we can block here.
 
                 # Cache file action wait for file to open it.
                 action_cache = (name,) + args
-                self.action_cache_dict[file_key].append(action_cache)
+                self.action_cache_dict[filepath].append(action_cache)
                 logger.info("Cache action {}, wait for file {} to open it before executing.".format(name, filepath))
 
         setattr(self, "_{}".format(name), _do)
@@ -198,40 +205,42 @@ class LspBridge:
 
         setattr(self, name, _do_wrap)
 
-    def handle_server_message(self, filepath, request_type, request_id, response_result):
-        self.file_action_dict[path_as_key(filepath)].handle_server_response_message(request_id, request_type, response_result)
+    def handle_server_message(self, filepath: Path, request_type, request_id, response_result):
+        self.file_action_dict[filepath].handle_server_response_message(request_id, request_type, response_result)
 
     def handle_server_process_exit(self, server_name):
         if server_name in self.lsp_server_dict:
             logger.info("Exit server: {}".format(server_name))
             del self.lsp_server_dict[server_name]
-            
+
     def handle_jump_to_external_file_link(self, message):
         # Make external file share file action that send jump define request.
         external_file_path = message["content"]["filepath"]
         external_file_link = message["content"]["external_file_link"]
         parent_file_action = message["content"]["file_action"]
-        file_action = self.create_file_action(external_file_path, parent_file_action.project_path, parent_file_action.lang_server_info["name"])
-        
+        file_action = self.create_file_action(
+            external_file_path,
+            parent_file_action.lang_server_info,
+            parent_file_action.lsp_server,
+        )
+
         # Send did open notification.
         file_action.external_file_link = external_file_link
-        file_action.lsp_server = parent_file_action.lsp_server
-        file_action.lsp_server.send_did_open_notification(external_file_path, external_file_link)
-        
+        file_action.lsp_server.attach(file_action)
+
         # Jump to define.
         eval_in_emacs("lsp-bridge--jump-to-def", external_file_path, message["content"]["start_pos"])
 
-    def handle_server_file_opened(self, filepath):
-        file_key = path_as_key(filepath)
-        self.file_opened[file_key] = True
-        if file_key in self.action_cache_dict:
-            for action_name, *action_args in self.action_cache_dict[file_key]:
+    def handle_server_file_opened(self, filepath: Path):
+        self.file_opened[filepath] = True
+        if filepath in self.action_cache_dict:
+            for action_name, *action_args in self.action_cache_dict[filepath]:
                 # Execute file action after file opened.
-                self.file_action_dict[file_key].call(action_name, *action_args)
+                self.file_action_dict[filepath].call(action_name, *action_args)
                 logger.info("Execute action {} for file {}".format(action_name, filepath))
 
             # We need clear action_cache_dict last.
-            del self.action_cache_dict[file_key]
+            del self.action_cache_dict[filepath]
 
     def cleanup(self):
         """Do some cleanup before exit python process."""
@@ -241,6 +250,24 @@ class LspBridge:
         # Called from lsp-bridge-test.el to start test.
         from test.test import start_test
         start_test()
-        
+
+
+def load_lang_server_info(lang_server: str):
+    if os.path.exists(lang_server) and os.path.sep in lang_server:
+        # If lang_server is real file path, we load the LSP server configuration from the user specified file.
+        lang_server_info_path = lang_server
+    else:
+        # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
+        lang_server_dir = Path(path=__file__).resolve().parent / "langserver"
+        lang_server_file_path_current = lang_server_dir / "{}_{}.json".format(lang_server, get_os_name())
+        lang_server_file_path_default = lang_server_dir / "{}.json".format(lang_server)
+
+        lang_server_info_path = lang_server_file_path_current if lang_server_file_path_current.exists() else lang_server_file_path_default
+
+    with open(lang_server_info_path, encoding="utf-8") as f:
+        import json
+        return json.load(f)
+
+
 if __name__ == "__main__":
     LspBridge(sys.argv[1:])

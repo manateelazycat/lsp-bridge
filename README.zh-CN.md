@@ -103,6 +103,23 @@ lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是
 
 <img src="./framework.png">
 
+下面是 lsp-bridge 项目的目录结构：
+
+| 文件名                  | 作用                                                                                                         |
+| :--------------------- | :-------------------                                                                                        |
+| lsp-bridge.el           | lsp-bridge的Elisp主逻辑部分，提供自定义选项和Elisp函数供python子进程调用，比如代码跳转、重命名等             |
+| lsp-bridge-epc.el       | 和lsp-bridge python子进程通讯的代码，主要实现Elisp IPC来对接Python EPC, 实现数据序列化、发送、接收和反序列化 |
+| lsp-bridge-ref.el       | 代码引用查看框架，提供引用查看、批量重命名、引用结果正则过滤等，核心代码 fork 自color-rg.el                  |
+| lsp-bridge-orderless.el | 提供模糊查找的功能，就是代码补全的时候不需要按照单词顺序敲就可以快速补全较长的后选项                         |
+| lsp-bridge-icon.el      | 提供补全菜单Icon渲染，用于区分不同类型的补全后选项                                                           |
+| lsp-bridge.py           | lsp-bridge的Python主逻辑部分，提供事件循环、消息调度和状态管理                                               |
+| core/fileaction.py      | 主要记录每个文件状态，处理LSP响应消息，调用Emacs Elisp函数                                                   |
+| core/lspserver.py       | LSP消息处理模块，主要是解析、发送和接受LSP消息，并保证LSP请求顺序符合LSP协议规范                             |
+| core/utils.py           | 一些全局工具函数，方便各模块调用                                                                             |
+| core/hanlder/           | LSP消息发送和接受的实现，其中 __init__.py 是基类                                                             |
+| langserver              | 主要放置LSP服务器的配置，每一个服务器一个 json 文件，分别定义服务器的名称、语言ID、启动命令和设置选项等      |
+
+
 请先阅读[LSP协议规范](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/) 和 [lsp-bridge架构设计](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html)。
 
 接着打开选项 ```lsp-bridge-enable-log``` ， happy hacking! ;)
