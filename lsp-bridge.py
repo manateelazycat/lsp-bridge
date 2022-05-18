@@ -109,8 +109,6 @@ class LspBridge:
             message = self.message_queue.get(True)
             if message["name"] == "server_process_exit":
                 self.handle_server_process_exit(message["content"])
-            elif message["name"] == "server_response_message":
-                self.handle_server_message(*message["content"])
             elif message["name"] == "jump_to_external_file_link":
                 self.handle_jump_to_external_file_link(message)
             else:
@@ -192,9 +190,6 @@ class LspBridge:
             })
 
         setattr(self, name, _do_wrap)
-
-    def handle_server_message(self, filepath, request_type, request_id, response_result):
-        self.file_action_dict[path_as_key(filepath)].handle_server_response_message(request_id, request_type, response_result)
 
     def handle_server_process_exit(self, server_name):
         if server_name in self.lsp_server_dict:

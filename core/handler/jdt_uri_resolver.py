@@ -48,6 +48,6 @@ class JDTUriResolver(Handler):
                 }
             })
 
-    def fill_document_uri(self):
+    def fill_document_uri(self, params: dict) -> None:
         # JDT don't need fill textDocument uri.
         pass

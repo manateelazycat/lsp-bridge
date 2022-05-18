@@ -30,7 +30,9 @@ from subprocess import PIPE
 from sys import stderr
 from threading import Thread
 from urllib.parse import urlparse
-from typing import Set, Dict, TYPE_CHECKING
+from typing import Dict, TYPE_CHECKING
+
+from core.handler import Handler
 
 if TYPE_CHECKING:
     from core.fileaction import FileAction
@@ -169,15 +171,13 @@ class LspServerReceiver(Thread):
 
 
 class LspServer:
-
     def __init__(self, message_queue, project_path, server_info, server_name):
-        # Init.
         self.message_queue = message_queue
         self.project_path = project_path
         self.server_info = server_info
         self.initialize_id = generate_request_id()
         self.server_name = server_name
-        self.request_dict = {}
+        self.request_dict: Dict[int, Handler] = dict()
         self.root_path = self.project_path
 
         # Load library directories
@@ -314,12 +314,8 @@ class LspServer:
             ]
         })
 
-    def record_request_id(self, request_id, method, filepath, name):
-        self.request_dict[request_id] = {
-            "method": method,
-            "filepath": filepath,
-            "name": name
-        }
+    def record_request_id(self, request_id: int, handler: Handler):
+        self.request_dict[request_id] = handler
 
     def send_shutdown_request(self):
         self.sender.send_request("shutdown", {}, generate_request_id())
@@ -348,7 +344,7 @@ class LspServer:
             else:
                 # server response
                 if message["id"] in self.request_dict:
-                    method = self.request_dict[message["id"]]["method"]
+                    method = self.request_dict[message["id"]].method
                     logger.info("\n--- Recv response ({}): {}".format(message["id"], method))
                 else:
                     logger.info("\n--- Recv response ({})".format(message["id"]))
@@ -392,13 +388,11 @@ class LspServer:
                 ))
             else:
                 if "method" not in message and message["id"] in self.request_dict:
-                    self.message_queue.put({
-                        "name": "server_response_message",
-                        "content": (self.request_dict[message["id"]]["filepath"],
-                                    self.request_dict[message["id"]]["name"],
-                                    message["id"],
-                                    message["result"])
-                    })
+                    handler = self.request_dict[message["id"]]
+                    handler.handle_response(
+                        request_id=message["id"],
+                        response=message["result"],
+                    )
                 else:
                     if message["method"] == "workspace/configuration":
                         self.handle_workspace_configuration_request(message["method"], message["id"], message["params"])
