@@ -14,10 +14,10 @@ BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
 
 def run(args, cwd=BASE_DIR):
     print('Running command:', args)
-    with subprocess.Popen(args, cwd=cwd,
+    with subprocess.Popen(args, cwd=cwd, text=True,
                           stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as p:
         for line in p.stdout:
-            print(line.decode('utf-8').rstrip())
+            print(line.rstrip())
     if p.returncode != 0:
         print('Command failed with exit code', p.returncode)
         exit(p.returncode)
