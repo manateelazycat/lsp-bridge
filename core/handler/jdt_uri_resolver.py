@@ -30,14 +30,15 @@ class JDTUriResolver(Handler):
 
             # Use the project md5 value guarantee uniqueness of the path
             md5 = hashlib.md5()
-            md5.update(str(self.file_action.lsp_server.project_path).encode('utf-8'))
+            md5.update(self.file_action.lsp_server.project_path.encode('utf-8'))
             project_hash = md5.hexdigest()
 
-            external_file = (self.file_action.lsp_server.library_directories[0] /
-                                             project_hash /
-                             (re.match(r"jdt://contents/(.*?)/(.*)\.class\?", self.external_file_link).groups()[1].replace('/', '.') + ".java"))
+            external_file = os.path.join(
+                self.file_action.lsp_server.library_directories[0],
+                project_hash,
+                re.match(r"jdt://contents/(.*?)/(.*)\.class\?", self.external_file_link).groups()[1].replace('/', '.') + ".java")
 
-            external_file_dir = external_file.parent
+            external_file_dir = os.path.dirname(external_file)
 
             os.makedirs(external_file_dir, exist_ok=True)
 
@@ -56,5 +57,6 @@ class JDTUriResolver(Handler):
                 }
             })
 
-    def fill_document_uri(self, params):
+    def fill_document_uri(self):
+        # JDT don't need fill textDocument uri.
         pass

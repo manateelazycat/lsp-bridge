@@ -33,5 +33,5 @@ class FindDefine(Handler):
             raise NotImplementedError()
         else:
             # for normal file uri
-            filepath = Path(uri=file_uri)
+            filepath = uri_to_path(file_uri)
             eval_in_emacs("lsp-bridge--jump-to-def", filepath, start_pos)

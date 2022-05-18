@@ -2,14 +2,14 @@ import logging
 import os
 import subprocess
 import unittest
-import pathlib
+from pathlib import Path
 from unittest import TestLoader
 
 from core.utils import eval_in_emacs, logger, eval_sexp_in_emacs
 
 EMACS = 'emacs'
 
-BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def run(args, cwd=BASE_DIR):
