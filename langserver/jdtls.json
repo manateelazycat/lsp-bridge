@@ -5,7 +5,7 @@
     "jdtls"
   ],
   "libraryDirectories": [
-    "~/java-workspace"
+    "~/.cache/lsp-bridge-jdtls"
   ],
   "settings": {
     "java": {
