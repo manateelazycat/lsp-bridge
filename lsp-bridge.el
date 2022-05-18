@@ -495,20 +495,22 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
        (string-match "\\s-*" prefix)
        ))
 
+(defun lsp-bridge-extract-candidates ()
+  (mapcar
+   (lambda (item)
+     (let* ((candidate-label (plist-get item :label)))
+       (unless (zerop (length candidate-label))
+         (put-text-property 0 1 'lsp-bridge--lsp-item item candidate-label))
+       ;; We add blank after `label' with different annotation,
+       ;; avoid corfu filter candidate with same label name.
+       (if (string-equal (plist-get item :annotation) "Snippet")
+           (format "%s " candidate-label)
+         candidate-label)))
+   lsp-bridge-completion-items))
+
 (defun lsp-bridge-capf ()
   "Capf function similar to eglot's 'eglot-completion-at-point'."
-  (let* ((candidates
-          (mapcar
-           (lambda (item)
-             (let* ((candidate-label (plist-get item :label)))
-               (unless (zerop (length candidate-label))
-                 (put-text-property 0 1 'lsp-bridge--lsp-item item candidate-label))
-               ;; We add blank after `label' with different annotation,
-               ;; avoid corfu filter candidate with same label name.
-               (if (string-equal (plist-get item :annotation) "Snippet")
-                   (format "%s " candidate-label)
-                 candidate-label)))
-           lsp-bridge-completion-items))
+  (let* ((candidates (lsp-bridge-extract-candidates))
          (bounds (bounds-of-thing-at-point 'symbol)))
     (list
      (or (car bounds) (point))
@@ -532,10 +534,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
      :exit-function
      (lambda (candidate status)
        (when (memq status '(finished exact))
-         ;; When selecting from the *Completions*
-         ;; buffer, `candidate' won't have any properties.
-         ;; A lookup should fix that (github#148)
-         (let* ((item (get-text-property 0 'lsp-bridge--lsp-item (cl-find candidate candidates :test #'string=)))
+         ;; Because lsp-bridge will push new candidates when corfu completing.
+         ;; We need extract newest candidates when insert, avoid insert old candidate content.
+         (let* ((newest-candidates (lsp-bridge-extract-candidates))
+                (item (get-text-property 0 'lsp-bridge--lsp-item (cl-find candidate newest-candidates :test #'string=)))
                 (insert-text (plist-get item :insertText))
                 (additionalTextEdits (if lsp-bridge-enable-auto-import (plist-get item :additionalTextEdits) nil))
                 (kind (plist-get item :kind)))
@@ -547,20 +549,18 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
              (let ((snippet-fn (and (string= kind "Snippet")
                                     (lsp-bridge--snippet-expansion-fn))))
-               (cond (snippet-fn
-                      ;; A snippet should be inserted, but using plain
-                      ;; `insertText'.  This requires us to delete the
-                      ;; whole completion, since `insertText' is the full
-                      ;; completion's text.
-                      (delete-region (- (point) (length candidate)) (point))
-                      (funcall snippet-fn insert-text))
-                     (insert-text
-                      ;; Remove candidate label and insert candidate insertText
-                      (delete-region (- (point) (length candidate)) (point))
-                      (insert insert-text)
+               (cond
+                ;; Expand snippet.
+                (snippet-fn
+                 (delete-region (- (point) (length candidate)) (point))
+                 (funcall snippet-fn insert-text))
+                ;; Insert `insertText' and try to apply `additionalTextEdits'.
+                (insert-text
+                 (delete-region (- (point) (length candidate)) (point))
+                 (insert insert-text)
 
-                      (when (cl-plusp (length additionalTextEdits))
-                        (lsp-bridge--apply-text-edits additionalTextEdits))))))
+                 (when (cl-plusp (length additionalTextEdits))
+                   (lsp-bridge--apply-text-edits additionalTextEdits))))))
            ))))))
 
 ;; Copy from eglot
