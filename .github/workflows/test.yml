@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         emacs_version:
-          - 27.2
+          - "27.2"
 
     steps:
       - uses: actions/checkout@v2
@@ -20,7 +20,7 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.9"
+          python-version: "3.7"
           architecture: "x64"
 
       - name: Setup Go
