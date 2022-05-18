@@ -60,7 +60,7 @@ Welcome send PR to help us improve support for LSP servers, thank you!
 ## Supported language servers
 
 1. [clangd](https://github.com/clangd/clangd) (c, c++)
-2. [pyright](https://github.com/microsoft/pyright) (python)
+2. [pyright](https://github.com/microsoft/pyright) (python, `pip install pyright`)
 3. [solargraph](https://github.com/castwide/solargraph) (ruby)
 4. [rust-analyzer](https://github.com/rust-lang/rust-analyzer) (rust)
 5. [elixirLS](https://github.com/elixir-lsp/elixir-ls) (elixir) Note: please ensure export `elixir-ls` release directory in your system PATH at first.
