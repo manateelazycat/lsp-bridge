@@ -6,7 +6,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
         emacs_version:
           - "27.2"
 
@@ -17,7 +17,7 @@ jobs:
         uses: purcell/setup-emacs@master
         with:
           version: ${{ matrix.emacs_version }}
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os != 'windows-latest'
 
       - name: Install emacs
         run: |
@@ -35,7 +35,7 @@ jobs:
         with:
           go-version: '>=1.17.0'
 
-      - name: Install Dependencies
+      - name: Install Dependencies (Linux)
         run: |
           sudo apt-get install clangd-12
           sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
@@ -43,12 +43,18 @@ jobs:
           go install golang.org/x/tools/gopls@latest
         if: matrix.os == 'ubuntu-latest'
 
-      - name: Install Dependencies
+      - name: Install Dependencies (Windows)
         run: |
-          python -m pip install epc pyright
           choco install llvm
+          python -m pip install epc pyright
           go install golang.org/x/tools/gopls@latest
         if: matrix.os == 'windows-latest'
+
+      - name: Install Dependencies (macOS)
+        run: |
+          python -m pip install epc pyright
+          go install golang.org/x/tools/gopls@latest
+        if: matrix.os == 'macOS-latest'
 
       - name: test
         run: |
