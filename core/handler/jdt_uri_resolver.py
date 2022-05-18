@@ -1,8 +1,6 @@
 from core.handler import Handler
 from core.utils import *
-
 import core.fileaction
-
 import os
 import re
 
@@ -48,3 +46,7 @@ class JDTUriResolver(Handler):
                     "start_pos": self.start_pos
                 }
             })
+
+    def fill_document_uri(self):
+        # JDT don't need fill textDocument uri.
+        pass

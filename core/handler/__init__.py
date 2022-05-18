@@ -5,7 +5,6 @@ if TYPE_CHECKING:
     from core.fileaction import FileAction
 from core.utils import *
 
-
 class Handler(abc.ABC):
     name: str  # Name called by Emacs
     method: str  # Method name defined by LSP
@@ -35,17 +34,20 @@ class Handler(abc.ABC):
             name=self.name,
         )
         
-        params = self.process_request(*args, **kwargs)
-        params["textDocument"] = {
-            "uri": path_to_uri(self.file_action.filepath)
-        }
+        self.params = self.process_request(*args, **kwargs)
+        self.fill_document_uri()
 
         self.file_action.lsp_server.sender.send_request(
             method=self.method,
-            params=params,
+            params=self.params,
             request_id=request_id,
         )
-
+        
+    def fill_document_uri(self):
+        self.params["textDocument"] = {
+            "uri": path_to_uri(self.file_action.filepath)
+        }
+        
     def handle_response(self, request_id, response):
         if request_id != self.latest_request_id:
             logger.debug("Discard outdated response: received=%d, latest=%d",
