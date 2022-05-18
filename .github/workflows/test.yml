@@ -2,10 +2,11 @@ name: test
 on: [ push, pull_request, workflow_dispatch ]
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         emacs_version:
           - "27.2"
 
@@ -34,6 +35,14 @@ jobs:
           sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
           pip install epc pyright
           go install golang.org/x/tools/gopls@latest
+        if: matrix.os == 'ubuntu-latest'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install epc pyright
+          choco install llvm
+          go install golang.org/x/tools/gopls@latest
+        if: matrix.os == 'windows-latest'
 
       - name: test
         run: |
