@@ -18,34 +18,37 @@ class FindReferences(Handler):
         )
 
     def process_response(self, response: dict) -> None:
-        references_dict = {}
-        for uri_info in response:
-            path = Path(uri=uri_info["uri"])
-            if path in references_dict:
-                references_dict[path].append(uri_info["range"])
-            else:
-                references_dict[path] = [uri_info["range"]]
-
-        references_counter = 0
-        references_content = ""
-        for i, (path, ranges) in enumerate(references_dict.items()):
-            references_content += "\n" + REFERENCE_PATH + path.as_path() + REFERENCE_ENDC + "\n"
-
-            for rg in ranges:
-                with open(path, encoding="utf-8") as f:
-                    line = rg["start"]["line"]
-                    start_column = rg["start"]["character"]
-                    end_column = rg["end"]["character"]
-                    line_content = linecache.getline(path.as_path(), rg["start"]["line"] + 1)
-
-                    references_content += "{}:{}:{}".format(
-                        line + 1,
-                        start_column,
-                        line_content[:start_column] + REFERENCE_TEXT +
-                        line_content[start_column:end_column] + REFERENCE_ENDC +
-                        line_content[end_column:])
-                    references_counter += 1
-
-        linecache.clearcache()  # clear line cache 
-        
-        eval_in_emacs("lsp-bridge-popup-references", references_content, references_counter)
+        if response is None:
+            message_emacs("No references found")
+        else:
+            references_dict = {}
+            for uri_info in response:
+                path = Path(uri=uri_info["uri"])
+                if path in references_dict:
+                    references_dict[path].append(uri_info["range"])
+                else:
+                    references_dict[path] = [uri_info["range"]]
+            
+            references_counter = 0
+            references_content = ""
+            for i, (path, ranges) in enumerate(references_dict.items()):
+                references_content += "\n" + REFERENCE_PATH + path.as_path() + REFERENCE_ENDC + "\n"
+            
+                for rg in ranges:
+                    with open(path, encoding="utf-8") as f:
+                        line = rg["start"]["line"]
+                        start_column = rg["start"]["character"]
+                        end_column = rg["end"]["character"]
+                        line_content = linecache.getline(path.as_path(), rg["start"]["line"] + 1)
+            
+                        references_content += "{}:{}:{}".format(
+                            line + 1,
+                            start_column,
+                            line_content[:start_column] + REFERENCE_TEXT +
+                            line_content[start_column:end_column] + REFERENCE_ENDC +
+                            line_content[end_column:])
+                        references_counter += 1
+            
+            linecache.clearcache()  # clear line cache 
+            
+            eval_in_emacs("lsp-bridge-popup-references", references_content, references_counter)
