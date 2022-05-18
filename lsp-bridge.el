@@ -924,6 +924,11 @@ If optional MARKER, return a marker instead"
                      (lsp-bridge-mode 1)
                      ))))
 
+(with-eval-after-load 'evil
+  (evil-add-command-properties #'lsp-bridge-find-def :jump t)
+  (evil-add-command-properties #'lsp-bridge-find-references :jump t)
+  (evil-add-command-properties #'lsp-bridge-find-impl :jump t))
+
 (provide 'lsp-bridge)
 
 ;;; lsp-bridge.el ends here
