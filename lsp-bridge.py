@@ -158,7 +158,7 @@ class LspBridge:
         # We need post function event_loop, otherwise long-time calculation will block Emacs.
         self.event_queue.put({
             "name": "close_file",
-            "content": filepath
+            "content": Path(path=filepath)
         })
 
     def _close_file(self, filepath: Path):
