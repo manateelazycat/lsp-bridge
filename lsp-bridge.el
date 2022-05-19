@@ -152,7 +152,7 @@ Setting this to nil or 0 will turn off the indicator."
 (defvar lsp-bridge-server nil
   "The LSP-Bridge Server.")
 
-(defvar lsp-bridge-python-file (expand-file-name "lsp-bridge.py" (file-name-directory load-file-name)))
+(defvar lsp-bridge-python-file (expand-file-name "lsp_bridge.py" (file-name-directory load-file-name)))
 
 (defvar lsp-bridge-mark-ring nil
   "The list of saved lsp-bridge marks, most recent first.")
@@ -207,7 +207,7 @@ Start discarding off end if gets this big."
   :type 'string)
 
 (defcustom lsp-bridge-python-command (if (memq system-type '(cygwin windows-nt ms-dos)) "python.exe" "python3")
-  "The Python interpreter used to run lsp-bridge.py."
+  "The Python interpreter used to run lsp_bridge.py."
   :type 'string)
 
 (defcustom lsp-bridge-enable-debug nil
@@ -588,14 +588,14 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defun lsp-bridge-capf-get-bound-start (trigger-characters)
   (let ((matches (cl-remove-if
                   'null
-                  (mapcar '(lambda (char)
-                             (save-excursion
-                               ;; Search backward trigger char.
-                               (when (search-backward char (line-beginning-position) t)
-                                 (forward-char)
-                                 (point))))
+                  (mapcar (lambda (char)
+                            (save-excursion
+                              ;; Search backward trigger char.
+                              (when (search-backward char (line-beginning-position) t)
+                                (forward-char)
+                                (point))))
                           ;; We add space in trigger characters make sure start position in symbol bound
-                          (append trigger-characters (list " "))))))
+                          (append trigger-characters (list " " "\t"))))))
     (if (> (length matches) 0)
         ;; Found rightest one.
         (cl-reduce 'max matches)
