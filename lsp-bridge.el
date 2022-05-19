@@ -530,7 +530,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
        "Extract annotation from CANDIDATE."
        (let* ((item (get-text-property 0 'lsp-bridge--lsp-item candidate))
               (annotation (plist-get item :annotation)))
-         ;; record prefix before corfu/company insert
+         ;; Record prefix before corfu/company insert.
          (setq prefix (buffer-substring-no-properties bounds-start (point)))
          (when annotation
            (concat " "
@@ -545,7 +545,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
      :exit-function
      (lambda (candidate status)
        (when (memq status '(finished exact))
-         ;; Because lsp-bridge will push new candidates when corfu completing.
+         ;; Because lsp-bridge will push new candidates when company/corfu completing.
          ;; We need extract newest candidates when insert, avoid insert old candidate content.
          (let* ((newest-candidates (lsp-bridge-extract-candidates))
                 (item (get-text-property 0 'lsp-bridge--lsp-item (cl-find candidate newest-candidates :test #'string=)))
@@ -563,9 +563,12 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                  (current-buffer))
              (cond
               (textEdit
-               ;; Remove candidate label and insert candidate insertText
+               ;; textEdit delete range is compared to the position before completion,
+               ;; so we need delete candidate and insert prefix, make sure textEdit can delete region correctly.
                (apply #'delete-region markers)
                (insert prefix)
+
+               ;; Delete range provide by textEdit and insert `newText'.
                (let* ((range (plist-get textEdit :range))
                       (newText (plist-get textEdit :newText)))
                  (pcase-let ((`(,beg . ,end)
@@ -574,21 +577,27 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                    (goto-char beg))
                  (funcall (or snippet-fn #'insert) newText)))
               (t
+               ;; Delete current candidate and insert `insertText' or `label'.
                (delete-region (- (point) (length candidate)) (point))
                (funcall (or snippet-fn #'insert) (or insert-text label))))
+
+             ;; Do `additionalTextEdits' if return auto-imprt information.
              (when (cl-plusp (length additionalTextEdits))
                (lsp-bridge--apply-text-edits additionalTextEdits)))))))))
 
 (defun lsp-bridge-capf-get-bound-start (trigger-characters)
-  (let ((matches (cl-remove-if 'null
-                               (mapcar '(lambda (char) (save-excursion
-                                                         (when (search-backward char (line-beginning-position) t)
-                                                           (forward-char)
-                                                           (point))
-                                                         ))
-                                       trigger-characters))))
-
+  (let ((matches (cl-remove-if
+                  'null
+                  (mapcar '(lambda (char)
+                             (save-excursion
+                               ;; Search backward trigger char.
+                               (when (search-backward char (line-beginning-position) t)
+                                 (forward-char)
+                                 (point))))
+                          ;; We add space in trigger characters make sure start position in symbol bound
+                          (append trigger-characters (list " "))))))
     (if (> (length matches) 0)
+        ;; Found rightest one.
         (cl-reduce 'max matches)
       nil)))
 
