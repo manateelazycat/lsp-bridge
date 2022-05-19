@@ -2,7 +2,9 @@ import os
 import pprint
 import tempfile
 import time
-from typing import Any, List, Callable, Optional, NamedTuple
+import pathlib
+import sys
+from typing import Any, List, Tuple, Callable, Optional, NamedTuple
 
 import core.utils
 from core.utils import logger, epc_client
@@ -50,6 +52,17 @@ class SingleFile(NamedTuple):
     mode: str
 
 
+def _buffer_file_name(abspath: str) -> str:
+    # Emacs only accepts "C:/a/b/c.txt" or "C:\\a\\b\\c.txt", but we have "C:\a\b\c.txt"
+    if sys.platform != "win32":
+        return abspath
+    # same as (buffer-file-name) in Emacs under Windows
+    path = pathlib.Path(abspath).as_posix()
+    drive = path[0]
+    path = drive.lower() + path[1:]
+    return path
+
+
 def with_file(file: SingleFile):
     def decorator(func):
         def wrapper(*args, **kwargs):
@@ -57,7 +70,7 @@ def with_file(file: SingleFile):
                 t_file.write(file.code.encode('utf-8'))
                 t_file.close()
 
-                func(*args, **kwargs, filename=t_file.name)
+                func(*args, **kwargs, filename=_buffer_file_name(t_file.name))
 
                 os.remove(t_file.name)
         return wrapper
@@ -65,12 +78,10 @@ def with_file(file: SingleFile):
 
 
 def eval_sexp_sync(sexp: str, timeout=40) -> Any:
-    logger.debug("Eval in Emacs: %s", sexp)
     return epc_client.call_sync("eval-in-emacs", [sexp], timeout=timeout)
 
 
 def eval_sexp(sexp: str):
-    logger.debug("Eval in Emacs: %s", sexp)
     epc_client.call("eval-in-emacs", [sexp])
 
 

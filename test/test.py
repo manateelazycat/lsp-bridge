@@ -1,6 +1,8 @@
 import logging
 import os
+import pathlib
 import subprocess
+import sys
 import unittest
 from pathlib import Path
 from unittest import TestLoader
@@ -15,19 +17,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 def run(args, cwd=BASE_DIR):
     print('Running command:', args)
-    with subprocess.Popen(args, cwd=cwd,
+    with subprocess.Popen(args, cwd=cwd, text=True,
                           stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as p:
         for line in p.stdout:
-            print(line.decode('utf-8').rstrip())
+            print(line.rstrip())
     if p.returncode != 0:
         print('Command failed with exit code', p.returncode)
         exit(p.returncode)
 
 
 def test_entrypoint():
+    if os.getenv("CI") is not None and sys.platform == "win32":
+        tmpdir = BASE_DIR.parent / "lsp-bridge-tmp"
+        tmpdir.mkdir(exist_ok=True, parents=True)
+        tmppath = tmpdir.as_posix()
+        os.environ["TMP"] = tmppath
+        os.environ["TEMP"] = tmppath
+
     print('Installing dependencies...')
     init_eval = """
     (progn
+        (setq network-security-level 'low) ; see https://github.com/jcs090218/setup-emacs-windows/issues/156#issuecomment-932956432
         (setq package-user-dir (expand-file-name "lsp-bridge-test" temporary-file-directory))
         (require 'package)
         (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
@@ -39,6 +49,11 @@ def test_entrypoint():
         (package-install 'posframe)
         (package-install 'markdown-mode)
         ;; (all-the-icons-install-fonts 't)
+        
+        ;; for Windows
+        (prefer-coding-system 'utf-8-unix)
+        (set-language-environment 'utf-8)
+        (setq default-buffer-file-coding-system 'utf-8-unix)
     )
     """
     run([

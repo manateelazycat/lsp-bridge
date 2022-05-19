@@ -56,13 +56,12 @@ def close_epc_client():
         epc_client.close()
 
 
-def eval_in_emacs(method_name, *args, no_intercept=False, **kwargs):
-    if test_interceptor and not no_intercept:  # for test purpose, record all eval_in_emacs calls
+def eval_in_emacs(method_name, *args, intercept=False, **kwargs):
+    if test_interceptor and not intercept:  # for test purpose, record all eval_in_emacs calls
         test_interceptor(method_name, args)
 
     args = [sexpdata.Symbol(method_name)] + list(map(sexpdata.Quoted, args))
     sexp = sexpdata.dumps(args)
-    logger.debug("Eval in Emacs: %s", sexp)
     # Call eval-in-emacs elisp function.
     epc_client.call("eval-in-emacs", [sexp], **kwargs)
 

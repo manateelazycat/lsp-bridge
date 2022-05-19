@@ -409,6 +409,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   ;; Kill process after kill buffer, make application can save session data.
   (lsp-bridge--kill-python-process))
 
+(add-hook 'kill-emacs-hook #'lsp-bridge-kill-process)
+
 (defun lsp-bridge--kill-python-process ()
   "Kill LSP-Bridge background python process."
   (interactive)
