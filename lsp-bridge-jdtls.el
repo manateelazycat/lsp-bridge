@@ -7,6 +7,7 @@
 (defcustom lsp-bridge-jdtls-worksapce
   (expand-file-name "~/.cache/lsp-bridge-jdtls")
   "LSP-Bridge jdtls workspace directory.")
+
 (defvar lsp-bridge-jdtls-default-file
   (expand-file-name "langserver/jdtls.json"
                     (file-name-directory load-file-name)))
@@ -20,7 +21,6 @@
 
 (defun lsp-bridge-jdtls-init-config (project-path filepath)
   "Initialize JDTLS configuration"
-
   (let* ((json-object-type 'plist)
          (config (json-read-file lsp-bridge-jdtls-default-file))
          (config-file (lsp-bridge-jdtls-config-file project-path filepath))
@@ -36,17 +36,8 @@
         (unless (file-exists-p dir)
           (make-directory dir t))))
 
-    ;; FIXME: Don't start the lsp-bridge
-    (with-temp-buffer
-      (setq-local lsp-bridge-get-lang-server-by-project nil)
-      (message  "(temp-buffer) lsp-bridge-get-lang-server-by-project: %s" lsp-bridge-get-lang-server-by-project)
-      (insert (json-encode config))
-      (json-pretty-print-buffer)
-      (write-file config-file t))
-    )
-  (message  "(nonrmal) lsp-bridge-get-lang-server-by-project: %s" lsp-bridge-get-lang-server-by-project)
-  )
-
+    (with-temp-file config-file
+      (insert (json-encode config)))))
 
 (defun lsp-bridge-jdtls-cache-dir (project-path filepath)
   "[LSP-Bridge] JDTLS cache directory"
@@ -80,7 +71,7 @@
 
 (defun lsp-bridge-jdtls-single-file-mode? (project-path filepath)
   "Determine whether it is a single file mode?"
-  (equal project-path filepath))
+  (string-equal project-path filepath))
 
 (add-hook 'java-mode-hook (lambda ()
                             (setq-local lsp-bridge-get-lang-server-by-project 'lsp-bridge-get-jdtls-server-by-project)))
