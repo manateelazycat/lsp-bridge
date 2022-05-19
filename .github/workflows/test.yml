@@ -31,6 +31,11 @@ jobs:
           python-version: "3.7"
           architecture: "x64"
 
+      - name: Install NodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: "14"
+
       - name: Setup Go
         uses: actions/setup-go@v3
         with:
