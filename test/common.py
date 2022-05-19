@@ -63,13 +63,6 @@ def _buffer_file_name(abspath: str) -> str:
     return path
 
 
-ws_dir = os.getenv("GITHUB_WORKSPACE")
-if ws_dir:
-    tmpdir = os.path.join(pathlib.Path(ws_dir).parent, "lsp-bridge-tmp")
-    os.makedirs(tmpdir, exist_ok=True)
-    tempfile.tempdir = tmpdir
-
-
 def with_file(file: SingleFile):
     def decorator(func):
         def wrapper(*args, **kwargs):
