@@ -48,6 +48,10 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 (require 'company-box)
 (company-box-mode 1)
 (global-lsp-bridge-mode)
+
+;; For Xref support
+(add-hook 'lsp-bridge-mode-hook (lambda ()
+  (add-hook 'xref-backend-functions #'lsp-bridge-xref-backend nil t)))
 ```
 
 ## Commands
@@ -58,10 +62,16 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 * lsp-bridge-find-impl-other-window: jump to the implementation in other-window
 * lsp-bridge-return-from-def: return to the location before calling `lsp-bridge-find-def`
 * lsp-bridge-find-references: traverse across code references (forked from color-rg.el)
-* lsp-bridge-lookup-documentation: lookup documentation of symbol under the cursor 
+* lsp-bridge-lookup-documentation: lookup documentation of symbol under the cursor
 * lsp-bridge-rename: rename symbol under the cursor
 * lsp-bridge-show-signature-help-in-minibuffer: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
 * lsp-bridge-restart-process: restart lsp-bridge process (only used for development)
+
+After enable Xref support, the commands for Xref is available, we currently supported and tested those:
+
+* xref-find-definitions: jump to the definition
+* xref-go-back: return to the location before calling `xref-find-definitions`
+* xref-go-forward: jump to the location before calling `xref-go-back`
 
 ## Customize language server configuration
 
@@ -107,7 +117,7 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 
 ### TODO Features:
 
-- [ ] Show signature help with eldoc 
+- [ ] Show signature help with eldoc
 - [ ] Code action
 - [ ] Inline Value
 - [ ] One file open multi-server, and mixed multi-result to corfu menu
