@@ -445,6 +445,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defvar-local lsp-bridge-completion-items nil)
 (defvar-local lsp-bridge-completion-prefix nil)
 (defvar-local lsp-bridge-completion-common nil)
+(defvar-local lsp-bridge-completion-trigger-characters nil)
 (defvar-local lsp-bridge-filepath "")
 
 (defun lsp-bridge-char-before ()
@@ -469,7 +470,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
            (string-empty-p (format "%s" (car list))))
       (and (eq (length list) 0))))
 
-(defun lsp-bridge-record-completion-items (filepath prefix common items)
+(defun lsp-bridge-record-completion-items (filepath prefix common items trigger-characters)
   ;; (message "*** '%s' '%s' '%s'" prefix common items)
 
   (lsp-bridge--with-file-buffer filepath
@@ -477,6 +478,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (setq-local lsp-bridge-completion-items items)
     (setq-local lsp-bridge-completion-prefix prefix)
     (setq-local lsp-bridge-completion-common common)
+    (setq-local lsp-bridge-completion-trigger-characters trigger-characters)
 
     ;; Try popup completion frame.
     (unless (or
@@ -517,16 +519,19 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defun lsp-bridge-capf ()
   "Capf function similar to eglot's 'eglot-completion-at-point'."
   (let* ((candidates (lsp-bridge-extract-candidates))
-         (bounds (bounds-of-thing-at-point 'symbol)))
+         (bounds-start (lsp-bridge-capf-get-bound-start lsp-bridge-completion-trigger-characters))
+         prefix)
     (list
-     (or (car bounds) (point))
-     (or (cdr bounds) (point))
+     bounds-start
+     (point)
      candidates
      :annotation-function
      (lambda (candidate)
        "Extract annotation from CANDIDATE."
        (let* ((item (get-text-property 0 'lsp-bridge--lsp-item candidate))
               (annotation (plist-get item :annotation)))
+         ;; record prefix before corfu/company insert
+         (setq prefix (buffer-substring-no-properties bounds-start (point)))
          (when annotation
            (concat " "
                    (propertize annotation
@@ -544,22 +549,48 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
          ;; We need extract newest candidates when insert, avoid insert old candidate content.
          (let* ((newest-candidates (lsp-bridge-extract-candidates))
                 (item (get-text-property 0 'lsp-bridge--lsp-item (cl-find candidate newest-candidates :test #'string=)))
+                (label (plist-get item :label))
                 (insert-text (plist-get item :insertText))
+                (insert-text-format (plist-get item :insertTextFormat))
+                (textEdit (plist-get item :textEdit))
                 (additionalTextEdits (if lsp-bridge-enable-auto-import (plist-get item :additionalTextEdits) nil))
-                (kind (plist-get item :kind)))
-
+                (kind (plist-get item :kind))
+                (markers (list bounds-start (copy-marker (point) t)))
+                (snippet-fn (and (or (eql insert-text-format 2) (string= kind "Snippet")) (lsp-bridge--snippet-expansion-fn))))
            ;; Do auto-imprt action.
            (with-current-buffer
                (if (minibufferp) (window-buffer (minibuffer-selected-window))
                  (current-buffer))
+             (cond
+              (textEdit
+               ;; Remove candidate label and insert candidate insertText
+               (apply #'delete-region markers)
+               (insert prefix)
+               (let* ((range (plist-get textEdit :range))
+                      (newText (plist-get textEdit :newText)))
+                 (pcase-let ((`(,beg . ,end)
+                              (lsp-bridge--range-region range)))
+                   (delete-region beg end)
+                   (goto-char beg))
+                 (funcall (or snippet-fn #'insert) newText)))
+              (t
+               (delete-region (- (point) (length candidate)) (point))
+               (funcall (or snippet-fn #'insert) (or insert-text label))))
+             (when (cl-plusp (length additionalTextEdits))
+               (lsp-bridge--apply-text-edits additionalTextEdits)))))))))
 
-             (let ((snippet-fn (lsp-bridge--snippet-expansion-fn)))
-               (when insert-text
-                 (delete-region (- (point) (length candidate)) (point))
-                 (funcall (or snippet-fn #'insert) insert-text)
-                 (when (cl-plusp (length additionalTextEdits))
-                   (lsp-bridge--apply-text-edits additionalTextEdits)))))
-           ))))))
+(defun lsp-bridge-capf-get-bound-start (trigger-characters)
+  (let ((matches (cl-remove-if 'null
+                               (mapcar '(lambda (char) (save-excursion
+                                                         (when (search-backward char (line-beginning-position) t)
+                                                           (forward-char)
+                                                           (point))
+                                                         ))
+                                       trigger-characters))))
+
+    (if (> (length matches) 0)
+        (cl-reduce 'max matches)
+      nil)))
 
 ;; Copy from eglot
 (defun lsp-bridge--snippet-expansion-fn ()
