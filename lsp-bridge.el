@@ -891,8 +891,7 @@ If optional MARKER, return a marker instead"
 
     ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
     (unless lsp-bridge-is-starting
-      (lsp-bridge-start-process)
-      (message "[LSP-Bridge] Start lsp server")))))
+      (lsp-bridge-start-process)))))
 
 (defun lsp-bridge--disable ()
   "Disable LSP Bridge mode."

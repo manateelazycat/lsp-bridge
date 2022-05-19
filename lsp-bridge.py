@@ -85,7 +85,7 @@ class LspBridge:
         self.message_thread = threading.Thread(target=self.message_dispatcher)
         self.message_thread.start()
 
-        # Pass epc port and webengine codec information to Emacs when first start LspBridge.
+        # Pass epc port and webengine codec information to Emacs when first start lsp-bridge.
         eval_in_emacs('lsp-bridge--first-start', self.server.server_address[1])
 
         # event_loop never exit, simulation event loop.
