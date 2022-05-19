@@ -31,10 +31,7 @@
     (plist-put config :command (vconcat (plist-get config :command) `("-data" ,data-directory)))
 
     "Create parent directory if not exists while visiting file."
-    (unless (file-exists-p config-file)
-      (let ((dir (file-name-directory config-file)))
-        (unless (file-exists-p dir)
-          (make-directory dir t))))
+    (make-directory (file-name-directory config-file) t)
 
     (with-temp-file config-file
       (insert (json-encode config)))))
