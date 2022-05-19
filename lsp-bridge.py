@@ -134,12 +134,6 @@ class LspBridge:
     def _open_file(self, filepath):
         project_path = get_project_path(filepath)
         lang_server = get_emacs_func_result("get-lang-server", project_path, filepath)
-        
-        # Don't handle temporary files.
-        if lang_server == "LSP-BRIDGE-TEMP-FILE":
-            logger.info("Open temp file: {}".format(filepath))
-            return
-        
         lang_server_info = load_lang_server_info(lang_server)
         lsp_server_name = "{}#{}".format(path_as_key(project_path), lang_server_info["name"])
 
