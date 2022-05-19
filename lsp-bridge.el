@@ -231,7 +231,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (java-mode . "jdtls")
     (python-mode . "pyright")
     (ruby-mode . "solargraph")
-    (rust-mode . "rust-analyzer")
+    ((rust-mode rustic-mdoe) . "rust-analyzer")
     (elixir-mode . "elixirLS")
     (go-mode . "gopls")
     (haskell-mode . "hls")
@@ -259,6 +259,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ruby-mode-hook
     lua-mode-hook
     rust-mode-hook
+    rustic-mode-hook
     elixir-mode-hook
     go-mode-hook
     haskell-mode-hook
@@ -407,6 +408,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
   ;; Kill process after kill buffer, make application can save session data.
   (lsp-bridge--kill-python-process))
+
+(add-hook 'kill-emacs-hook #'lsp-bridge-kill-process)
 
 (defun lsp-bridge--kill-python-process ()
   "Kill LSP-Bridge background python process."

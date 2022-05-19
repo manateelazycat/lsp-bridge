@@ -3,6 +3,8 @@ from core.utils import *
 import core.fileaction
 import os
 import re
+import hashlib
+import tempfile
 
 class JDTUriResolver(Handler):
     name = "jdt_uri_resolver"
@@ -26,13 +28,30 @@ class JDTUriResolver(Handler):
 
         if type(response) == str:
             # Save the analysis content to the file.
+
+            external_file_dir = ''
+            decompile_dir_name = 'jdt-uri-resolver'
+
+            try:
+                # Value for -data: An absolute path to your data directory. eclipse.jdt.ls stores workspace specific information in it. This should be unique per workspace/project.
+                index = self.file_action.lang_server_info['command'].index('-data')
+                data_dir = self.file_action.lang_server_info['command'][index + 1]
+                external_file_dir = os.path.join(data_dir, decompile_dir_name)
+            except ValueError as e:
+                md5 = hashlib.md5()
+                md5.update(self.file_action.lsp_server.project_path.encode('utf-8'))
+                project_hash = md5.hexdigest()
+                external_file_dir = os.path.join(tempfile.gettempdir(),
+                                                 "lsp-bridge-jdtls",
+                                                 project_hash,
+                                                 decompile_dir_name)
+
             external_file = os.path.join(
-                self.file_action.lsp_server.library_directories[0], 
+                external_file_dir,
                 re.match(r"jdt://contents/(.*?)/(.*)\.class\?", self.external_file_link).groups()[1].replace('/', '.') + ".java")
-            
-            external_file_dir = os.path.dirname(external_file)
+
             os.makedirs(external_file_dir, exist_ok=True)
-            
+
             # Always override decompile content to file, avoid cache conflict.
             with open(external_file, 'w') as f:
                 f.write(response)

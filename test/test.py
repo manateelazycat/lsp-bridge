@@ -1,6 +1,8 @@
 import logging
 import os
+import pathlib
 import subprocess
+import sys
 import unittest
 from pathlib import Path
 from unittest import TestLoader
@@ -25,6 +27,13 @@ def run(args, cwd=BASE_DIR):
 
 
 def test_entrypoint():
+    if os.getenv("CI") is not None and sys.platform == "win32":
+        tmpdir = BASE_DIR.parent / "lsp-bridge-tmp"
+        tmpdir.mkdir(exist_ok=True, parents=True)
+        tmppath = tmpdir.as_posix()
+        os.environ["TMP"] = tmppath
+        os.environ["TEMP"] = tmppath
+
     print('Installing dependencies...')
     init_eval = """
     (progn
