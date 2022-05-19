@@ -40,6 +40,10 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (require 'company-box)
 (company-box-mode 1)
 (global-lsp-bridge-mode)
+
+;; Xref 配置：
+(add-hook 'lsp-bridge-mode-hook (lambda ()
+  (add-hook 'xref-backend-functions #'lsp-bridge-xref-backend nil t)))
 ```
 
 ## 命令列表
@@ -54,6 +58,13 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 * lsp-bridge-rename: 重命名
 * lsp-bridge-show-signature-help-in-minibuffer: 在minibuffer显示参数信息
 * lsp-bridge-restart-process: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)
+
+
+配置 Xref 后，可以使用 Xref 命令查找函数定义和跳转，当前支持命令如下：
+
+* xref-find-definitions: 跳转到定义的位置
+* xref-go-back: 返回 Xref 跳转之前的位置
+* xref-go-forward: 跳转到调用 `xref-go-back` 命令之前的位置
 
 ## 自定义语言服务器配置
 lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).

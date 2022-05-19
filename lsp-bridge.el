@@ -80,6 +80,7 @@
 (require 'lsp-bridge-ref)
 (require 'posframe)
 (require 'markdown-mode)
+(require 'xref)
 
 (defgroup lsp-bridge nil
   "LSP-Bridge group."
@@ -925,6 +926,21 @@ If optional MARKER, return a marker instead"
   (evil-add-command-properties #'lsp-bridge-find-def :jump t)
   (evil-add-command-properties #'lsp-bridge-find-references :jump t)
   (evil-add-command-properties #'lsp-bridge-find-impl :jump t))
+
+
+;;;###autoload
+(defun lsp-bridge-xref-backend ()
+  "LSP Bridge backend for Xref."
+  'lsp-bridge)
+
+(cl-defmethod xref-backend-identifier-at-point ((_backend (eql lsp-bridge)))
+  (lsp-bridge-find-def))
+
+(cl-defmethod xref-backend-definitions ((_backend (eql lsp-bridge)) _)
+  (lsp-bridge-find-def))
+
+(cl-defmethod xref-backend-references ((_backend (eql lsp-bridge)) _)
+  (lsp-bridge-find-def))
 
 (provide 'lsp-bridge)
 
