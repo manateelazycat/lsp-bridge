@@ -23,6 +23,8 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (require 'lsp-bridge-orderless)   ;; 支持代码补全时模糊搜索，可选
 (require 'lsp-bridge-icon)        ;; 补全菜单显示类型图标，可选
 
+(require 'lsp-bridge-jdtls)       ;; 提供Java第三方库跳转和 -data 目录支持
+
 (global-corfu-mode)               ;; 开启补全菜单
 (global-lsp-bridge-mode)          ;; 全局打开lsp-bridge模式
 (yas-global-mode 1)               ;; 全局打开yasnippet
