@@ -23,7 +23,7 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
 (require 'lsp-bridge-icon)        ;; show icons for completion items, optional
 
-(require 'lsp-bridge-jdtls)       ;; Provide Java third -party library jump and -data directory supportonly need for java developer
+(require 'lsp-bridge-jdtls)       ;; provide Java third -party library jump and -data directory support
 
 (global-corfu-mode)               ;; use corfu as completion ui
 (global-lsp-bridge-mode)
