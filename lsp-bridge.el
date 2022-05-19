@@ -76,7 +76,6 @@
 (require 'map)
 (require 'seq)
 (require 'subr-x)
-(require 'dash)
 (require 'lsp-bridge-epc)
 (require 'lsp-bridge-ref)
 (require 'posframe)
@@ -519,16 +518,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defun lsp-bridge-capf ()
   "Capf function similar to eglot's 'eglot-completion-at-point'."
   (let* ((candidates (lsp-bridge-extract-candidates))
-         (bounds-start (or (-some--> (cl-first (bounds-of-thing-at-point 'symbol))
-                               (save-excursion
-                                 (ignore-errors
-                                   (goto-char (+ it 1))
-                                   (while (lsp-bridge--looking-back-trigger-characterp
-                                           lsp-bridge-completion-trigger-characters)
-                                     (cl-incf it)
-                                     (forward-char))
-                                   it)))
-                             (point)))
+         (bounds-start (lsp-bridge-capf-get-bound-start lsp-bridge-completion-trigger-characters))
          prefix)
     (list
      bounds-start
@@ -588,18 +578,18 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
              (when (cl-plusp (length additionalTextEdits))
                (lsp-bridge--apply-text-edits additionalTextEdits)))))))))
 
+(defun lsp-bridge-capf-get-bound-start (trigger-characters)
+  (let ((matches (cl-remove-if 'null
+                               (mapcar '(lambda (char) (save-excursion
+                                                         (when (search-backward char (line-beginning-position) t)
+                                                           (forward-char)
+                                                           (point))
+                                                         ))
+                                       trigger-characters))))
 
-;;; Copy from lsp-mode
-(defun lsp-bridge--looking-back-trigger-characterp (trigger-characters)
-  "Return trigger character if text before point match any of the TRIGGER-CHARACTERS."
-  (unless (= (point) (point-at-bol))
-    (seq-some
-     (lambda (trigger-char)
-       (and (equal (buffer-substring-no-properties (- (point) (length trigger-char)) (point))
-                   trigger-char)
-            trigger-char))
-     trigger-characters)))
-
+    (if (> (length matches) 0)
+        (cl-reduce 'max matches)
+      nil)))
 
 ;; Copy from eglot
 (defun lsp-bridge--snippet-expansion-fn ()
