@@ -22,12 +22,24 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (require 'lsp-bridge)             ;; 加载lsp-bridge
 (require 'lsp-bridge-orderless)   ;; 支持代码补全时模糊搜索，可选
 (require 'lsp-bridge-icon)        ;; 补全菜单显示类型图标，可选
-
 (require 'lsp-bridge-jdtls)       ;; 提供Java第三方库跳转和 -data 目录支持
+(yas-global-mode 1)
 
-(global-corfu-mode)               ;; 开启补全菜单
-(global-lsp-bridge-mode)          ;; 全局打开lsp-bridge模式
-(yas-global-mode 1)               ;; 全局打开yasnippet
+;; corfu 配置:
+(setq lsp-bridge-completion-provider 'corfu)
+(require 'corfu)
+(require 'corfu-info)
+(require 'corfu-history)
+(global-corfu-mode)
+(corfu-history-mode t)
+(global-lsp-bridge-mode)
+
+;; company-mode 配置:
+(setq lsp-bridge-completion-provider 'company)
+(require 'company)
+(require 'company-box)
+(company-box-mode 1)
+(global-lsp-bridge-mode)
 ```
 
 ## 命令列表
