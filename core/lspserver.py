@@ -184,15 +184,7 @@ class LspServer:
         self.completion_trigger_characters = list()
 
         # Start LSP server.
-        try:
-            self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE,
-                                      stderr=stderr)
-        except FileNotFoundError:
-            message_emacs("ERROR: start LSP server {} failed, can't find file '{}'".format(
-                self.server_info["name"], self.server_info["command"][0])
-            )
-
-            return
+        self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
 
         # Notify user server is start.
         message_emacs("Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path))

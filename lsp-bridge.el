@@ -951,6 +951,10 @@ If optional MARKER, return a marker instead"
   (dolist (hook lsp-bridge--internal-hooks)
     (remove-hook (car hook) (cdr hook) t)))
 
+(defun lsp-bridge-turn-off (filepath)
+  (lsp-bridge--with-file-buffer filepath
+    (lsp-bridge--disable)))
+
 (defun global-lsp-bridge-mode ()
   (interactive)
 
