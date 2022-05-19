@@ -4,9 +4,6 @@
   "command": [
     "jdtls"
   ],
-  "libraryDirectories": [
-    "~/.cache/lsp-bridge-jdtls"
-  ],
   "settings": {
     "java": {
       "completion": {

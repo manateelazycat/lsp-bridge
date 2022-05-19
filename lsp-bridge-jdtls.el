@@ -1,54 +1,89 @@
-;;; lsp-bridge-jdtls.el --- Insert description here -*- lexical-binding: t -*-
+;;; lsp-bridge-jdtls.el --- Provide jdtls configuration dynamically -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;; Code:
 
 (defconst lsp-bridge-jdtls-workspace-file-name "jdtls.json")
 
 (defcustom lsp-bridge-jdtls-worksapce
-  (expand-file-name (locate-user-emacs-file "lsp-bridge-jdtls/"))
+  (expand-file-name "~/.cache/lsp-bridge-jdtls")
   "LSP-Bridge jdtls workspace directory.")
-
 (defvar lsp-bridge-jdtls-default-file
   (expand-file-name "langserver/jdtls.json"
                     (file-name-directory load-file-name)))
 
 (defun lsp-bridge-get-jdtls-server-by-project (project-path filepath)
   "Get JDTLS configuration"
-  (if (lsp-bridge-jdtls-single-file-mode? project-path filepath)
-      lsp-bridge-jdtls-default-file
-    (let ((workspace-config-path (lsp-bridge-jdtls-workspace-file-path project-path)))
-      (if (not (file-exists-p workspace-config-path))
-          ;; Create a project configuration file
-          (lsp-bridge-jdtls-init-jdtls-config project-path filepath))
-      workspace-config-path)))
+  (let ((config-file (lsp-bridge-jdtls-config-file project-path filepath)))
+    (if (not (file-exists-p config-file))
+        (lsp-bridge-jdtls-init-config project-path filepath))
+    config-file))
 
-(defun lsp-bridge-jdtls-init-jdtls-config (project-path filepath)
+(defun lsp-bridge-jdtls-init-config (project-path filepath)
   "Initialize JDTLS configuration"
+
   (let* ((json-object-type 'plist)
          (config (json-read-file lsp-bridge-jdtls-default-file))
-         (project-hash (md5 project-path))
-         (data-directory (expand-file-name project-hash lsp-bridge-jdtls-worksapce)))
+         (config-file (lsp-bridge-jdtls-config-file project-path filepath))
+         (data-directory (lsp-bridge-jdtls-project-data-dir project-path filepath)))
 
     ;; Add the `-data` parameter to the startup parameter
     ;; --jvm-arg support?
     (plist-put config :command (vconcat (plist-get config :command) `("-data" ,data-directory)))
 
+    "Create parent directory if not exists while visiting file."
+    (unless (file-exists-p config-file)
+      (let ((dir (file-name-directory config-file)))
+        (unless (file-exists-p dir)
+          (make-directory dir t))))
+
+    ;; FIXME: Don't start the lsp-bridge
     (with-temp-buffer
+      (setq-local lsp-bridge-get-lang-server-by-project nil)
+      (message  "(temp-buffer) lsp-bridge-get-lang-server-by-project: %s" lsp-bridge-get-lang-server-by-project)
       (insert (json-encode config))
       (json-pretty-print-buffer)
-      (write-file (lsp-bridge-jdtls-workspace-file-path project-path)))))
+      (write-file config-file t))
+    )
+  (message  "(nonrmal) lsp-bridge-get-lang-server-by-project: %s" lsp-bridge-get-lang-server-by-project)
+  )
 
-(defun lsp-bridge-jdtls-workspace-file-path (project-path)
+
+(defun lsp-bridge-jdtls-cache-dir (project-path filepath)
+  "[LSP-Bridge] JDTLS cache directory"
+  (if (lsp-bridge-jdtls-single-file-mode? project-path filepath)
+      (lsp-bridge-jdtls-single-file-cache-dir filepath)
+    (lsp-bridge-jdtls-project-cache-dir project-path)))
+
+(defun lsp-bridge-jdtls-project-cache-dir (project-path)
+  "Project cache directory"
+  (let ((project-name (file-name-nondirectory project-path))
+        (project-hash (md5 project-path)))
+    (expand-file-name (concat project-name "-" project-hash)
+                      lsp-bridge-jdtls-worksapce)))
+
+(defun lsp-bridge-jdtls-single-file-cache-dir (filepath)
+  "Signle file cache directory"
+  (let ((single-file-hash (md5 filepath)))
+    (expand-file-name single-file-hash
+                      lsp-bridge-jdtls-worksapce)))
+
+(defun lsp-bridge-jdtls-config-file (project-path filepath)
   "JDTLS configuration file path of the project"
-  (expand-file-name lsp-bridge-jdtls-workspace-file-name project-path))
+  (expand-file-name lsp-bridge-jdtls-workspace-file-name
+                    (lsp-bridge-jdtls-cache-dir project-path filepath)))
+
+(defun lsp-bridge-jdtls-project-data-dir (project-path filepath)
+  "Project data directory"
+  (expand-file-name "jdtls-data"
+                    (lsp-bridge-jdtls-cache-dir project-path filepath)))
+
 
 (defun lsp-bridge-jdtls-single-file-mode? (project-path filepath)
   "Determine whether it is a single file mode?"
   (equal project-path filepath))
 
 (add-hook 'java-mode-hook (lambda ()
-                            (setq-local lsp-bridge-get-lang-server-by-project
-                                        'lsp-bridge-get-jdtls-server-by-project)))
+                            (setq-local lsp-bridge-get-lang-server-by-project 'lsp-bridge-get-jdtls-server-by-project)))
 
 (provide 'lsp-bridge-jdtls)
 ;;; lsp-bridge-jdtls.el ends here
