@@ -7,8 +7,8 @@ import unittest
 from pathlib import Path
 from unittest import TestLoader
 
-from core.utils import eval_in_emacs, logger
-from test.common import eval_sexp
+from core.utils import logger
+from test.common import eval_sexp, eval_sexp_sync
 
 EMACS = 'emacs'
 
@@ -73,15 +73,15 @@ def start_test():
     logger.handlers.clear()
     logger.addHandler(logging.FileHandler(BASE_DIR / 'test.log'))
 
-    eval_in_emacs('message', "Starting test...")
+    eval_sexp_sync('(message "Starting test...")')
 
     test_loader = TestLoader()
     suite = test_loader.discover('.', pattern='test_*.py')
     logger.info(f"suite {suite}")
     test_result = unittest.TextTestRunner(verbosity=2).run(suite)
 
-    eval_in_emacs("message", "=================== *lsp-bridge-log* ===================")
-    eval_sexp("""
+    eval_sexp_sync('(message "=================== *lsp-bridge-log* ===================")')
+    eval_sexp_sync("""
     (with-current-buffer lsp-bridge-name
       (message (buffer-string)))
     """)
@@ -92,10 +92,10 @@ def start_test():
 
     if test_result.wasSuccessful():
         logger.info('All tests passed!')
-        eval_in_emacs('kill-emacs')
+        eval_sexp('(kill-emacs)')
     else:
         test_result.printErrors()
-        eval_in_emacs('kill-emacs', -1)
+        eval_sexp('(kill-emacs -1)')
 
 
 if __name__ == '__main__':
