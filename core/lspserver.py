@@ -180,9 +180,6 @@ class LspServer:
         self.request_dict: Dict[int, Handler] = dict()
         self.root_path = self.project_path
 
-        # Load library directories
-        self.library_directories = [*map(os.path.expanduser, server_info.get("libraryDirectories", []))]
-
         # LSP server information.
         self.completion_trigger_characters = list()
 
