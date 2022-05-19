@@ -54,6 +54,8 @@ def test_entrypoint():
         (prefer-coding-system 'utf-8-unix)
         (set-language-environment 'utf-8)
         (setq default-buffer-file-coding-system 'utf-8-unix)
+        
+        (require 'corfu)
     )
     """
     run([
