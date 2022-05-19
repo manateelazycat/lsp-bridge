@@ -11,18 +11,23 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 ## 安装
 
 1. 安装Python依赖: [python-epc](https://github.com/tkf/python-epc)
-2. 安装Elisp依赖: [corfu](https://github.com/minad/corfu) ,[all-the-icons](https://github.com/domtronn/all-the-icons.el), [Orderless](https://github.com/oantolin/orderless), [posframe](https://github.com/tumashu/posframe), [markdown-mode](https://github.com/jrblevin/markdown-mode), [yasnippet](https://github.com/joaotavora/yasnippet)
+2. 安装Elisp依赖:
++ [corfu](https://github.com/minad/corfu) (使用 corfu 补全)
++ [company-mode](https://github.com/company-mode/company-mode), [company-box](https://github.com/sebastiencs/company-box) (使用 company-mode 补全)
++ [all-the-icons](https://github.com/domtronn/all-the-icons.el)
++ [orderless](https://github.com/oantolin/orderless)
++ [posframe](https://github.com/tumashu/posframe)
++ [markdown-mode](https://github.com/jrblevin/markdown-mode)
++ [yasnippet](https://github.com/joaotavora/yasnippet)
 3. 用 `git clone` 下载此仓库，并替换下面配置中的 load-path 路径
 4. 把下面代码加入到你的配置文件 ~/.emacs 中：
 
 ```elisp
-(add-to-list 'load-path "替换成lsp-bridge的下载目录")
+(add-to-list 'load-path "<path-to-lsp-bridge>")
 
-(require 'yasnippet)              ;; 加载代码片段展开引擎
-(require 'lsp-bridge)             ;; 加载lsp-bridge
-(require 'lsp-bridge-orderless)   ;; 支持代码补全时模糊搜索，可选
-(require 'lsp-bridge-icon)        ;; 补全菜单显示类型图标，可选
-(require 'lsp-bridge-jdtls)       ;; 提供Java第三方库跳转和 -data 目录支持
+(require 'yasnippet)
+(require 'lsp-bridge)             ;; load lsp-bridge
+(require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
 (yas-global-mode 1)
 
 ;; corfu 配置:
@@ -30,7 +35,9 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (require 'corfu)
 (require 'corfu-info)
 (require 'corfu-history)
-(global-corfu-mode)
+(require 'lsp-bridge-icon)        ;; show icons for completion items, optional
+(require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
+(global-corfu-mode)               ;; use corfu as completion ui
 (corfu-history-mode t)
 (global-lsp-bridge-mode)
 
@@ -38,10 +45,11 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (setq lsp-bridge-completion-provider 'company)
 (require 'company)
 (require 'company-box)
+(require 'lsp-bridge-icon)        ;; show icons for completion items, optional
 (company-box-mode 1)
 (global-lsp-bridge-mode)
 
-;; Xref 配置：
+;; For Xref support
 (add-hook 'lsp-bridge-mode-hook (lambda ()
   (add-hook 'xref-backend-functions #'lsp-bridge-xref-backend nil t)))
 ```

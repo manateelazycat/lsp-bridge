@@ -19,16 +19,14 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
 + [yasnippet](https://github.com/joaotavora/yasnippet)
-4. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
-5. Add following code in your ~/.emacs:
+3. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
+4. Add following code in your ~/.emacs:
 
 ```elisp
 (add-to-list 'load-path "<path-to-lsp-bridge>")
 
 (require 'yasnippet)
 (require 'lsp-bridge)             ;; load lsp-bridge
-(require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
-(require 'lsp-bridge-icon)        ;; show icons for completion items, optional
 (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
 (yas-global-mode 1)
 
@@ -37,15 +35,17 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 (require 'corfu)
 (require 'corfu-info)
 (require 'corfu-history)
+(require 'lsp-bridge-icon)        ;; show icons for completion items, optional
+(require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
 (global-corfu-mode)               ;; use corfu as completion ui
 (corfu-history-mode t)
 (global-lsp-bridge-mode)
 
-
-;; For company users:
+;; For company-mode users:
 (setq lsp-bridge-completion-provider 'company)
 (require 'company)
 (require 'company-box)
+(require 'lsp-bridge-icon)        ;; show icons for completion items, optional
 (company-box-mode 1)
 (global-lsp-bridge-mode)
 
