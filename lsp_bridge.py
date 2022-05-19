@@ -123,7 +123,7 @@ class LspBridge:
 
     def create_file_action(self, filepath, lang_server_info, lsp_server, **kwargs):
         if is_in_path_dict(self.file_action_dict, filepath):
-            if self.file_action_dict[filepath].lsp_server != lsp_server:
+            if get_from_path_dict(self.file_action_dict, filepath).lsp_server != lsp_server:
                 logger.warn("File {} is opened by different lsp server.".format(filepath))
             return
         action = FileAction(filepath, lang_server_info, lsp_server, lsp_bridge=self, **kwargs)
