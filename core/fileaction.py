@@ -22,18 +22,25 @@ import pprint
 import threading
 import time
 import os
-from typing import Dict, Tuple
+from typing import Dict, Tuple, TYPE_CHECKING
 
 from core.lspserver import LspServer
 from core.utils import *
 from core.handler import *
 
+if TYPE_CHECKING:
+    from lsp_bridge import LspBridge
+
 
 class FileAction:
-    def __init__(self, filepath, lang_server_info, lsp_server):
+    def __init__(self, filepath, lang_server_info, lsp_server, lsp_bridge, external_file_link=None):
         # Init.
         self.filepath = filepath
-        self.external_file_link = None
+        self.lang_server_info = lang_server_info
+        self.lsp_server: LspServer = lsp_server
+        self.lsp_bridge: "LspBridge" = lsp_bridge
+        self.external_file_link = external_file_link
+
         self.request_dict = {}
         self.last_change_file_time = -1.0
         self.last_change_file_before_cursor_text = ""
@@ -43,21 +50,18 @@ class FileAction:
         self.try_completion_timer = None
         self.try_signature_help_timer = None
 
-        # Read language server information.
-        self.lang_server_info = lang_server_info
-
         # Initialize handlers.
         self.handlers: Dict[str, Handler] = dict()
         logger.debug("Handlers: " + pprint.pformat(Handler.__subclasses__()))
         for handler_cls in Handler.__subclasses__():
             self.handlers[handler_cls.name] = handler_cls(self)
 
-        self.lsp_server: LspServer = lsp_server
-
         (self.enable_auto_import, self.enable_signature_help) = get_emacs_vars([
             "lsp-bridge-enable-auto-import",
             "lsp-bridge-enable-signature-help"
         ])
+
+        self.lsp_server.attach(self)
 
     @property
     def last_change(self) -> Tuple[float, float]:

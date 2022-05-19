@@ -20,10 +20,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import queue
-import sys
-import threading
 import shutil
-from collections import defaultdict
+import threading
 from pathlib import Path
 from typing import Dict
 
@@ -111,8 +109,6 @@ class LspBridge:
             message = self.message_queue.get(True)
             if message["name"] == "server_process_exit":
                 self.handle_server_process_exit(message["content"])
-            elif message["name"] == "jump_to_external_file_link":
-                self.handle_jump_to_external_file_link(message)
             else:
                 logger.error("Unhandled lsp-bridge message: %s" % message)
 
@@ -125,11 +121,12 @@ class LspBridge:
             "content": filepath
         })
 
-    def create_file_action(self, filepath, lang_server_info, lsp_server):
+    def create_file_action(self, filepath, lang_server_info, lsp_server, **kwargs):
         if is_in_path_dict(self.file_action_dict, filepath):
-            logger.error("File action already exist: %s" % filepath)
+            if self.file_action_dict[filepath].lsp_server != lsp_server:
+                logger.warn("File {} is opened by different lsp server.".format(filepath))
             return
-        action = FileAction(filepath, lang_server_info, lsp_server)
+        action = FileAction(filepath, lang_server_info, lsp_server, lsp_bridge=self, **kwargs)
         add_to_path_dict(self.file_action_dict, filepath, action)
         return action
 
@@ -137,7 +134,7 @@ class LspBridge:
         project_path = get_project_path(filepath)
         lang_server = get_emacs_func_result("get-lang-server", project_path, filepath)
         
-        if lang_server == []:
+        if not lang_server:
             message_emacs("ERROR: can't find the corresponding server for {}, disable lsp-bridge-mode.".format(filepath))
             eval_in_emacs("lsp-bridge-turn-off", filepath)
             
@@ -163,10 +160,8 @@ class LspBridge:
 
         lsp_server = self.lsp_server_dict[lsp_server_name]
 
-        file_action = self.create_file_action(filepath, lang_server_info, lsp_server)
+        self.create_file_action(filepath, lang_server_info, lsp_server)
 
-        lsp_server.attach(file_action)
-        
         return True
 
     def close_file(self, filepath):
@@ -214,24 +209,6 @@ class LspBridge:
         if server_name in self.lsp_server_dict:
             logger.info("Exit server: {}".format(server_name))
             del self.lsp_server_dict[server_name]
-
-    def handle_jump_to_external_file_link(self, message):
-        # Make external file share file action that send jump define request.
-        external_file_path = message["content"]["filepath"]
-        external_file_link = message["content"]["external_file_link"]
-        parent_file_action = message["content"]["file_action"]
-        file_action = self.create_file_action(
-            external_file_path,
-            parent_file_action.lang_server_info,
-            parent_file_action.lsp_server,
-        )
-
-        # Send did open notification.
-        file_action.external_file_link = external_file_link
-        file_action.lsp_server.attach(file_action)
-
-        # Jump to define.
-        eval_in_emacs("lsp-bridge--jump-to-def", external_file_path, message["content"]["start_pos"])
 
     def cleanup(self):
         """Do some cleanup before exit python process."""

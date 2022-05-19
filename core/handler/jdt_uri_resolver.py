@@ -1,10 +1,11 @@
-from core.handler import Handler
-from core.utils import *
-import core.fileaction
+import hashlib
 import os
 import re
-import hashlib
 import tempfile
+
+from core.handler import Handler
+from core.utils import *
+
 
 class JDTUriResolver(Handler):
     name = "jdt_uri_resolver"
@@ -56,16 +57,13 @@ class JDTUriResolver(Handler):
             with open(external_file, 'w') as f:
                 f.write(response)
 
-            # Jump to define in external file.
-            self.file_action.lsp_server.message_queue.put({
-                "name": "jump_to_external_file_link",
-                "content": {
-                    "filepath": external_file,
-                    "external_file_link": self.external_file_link,
-                    "file_action": self.file_action,
-                    "start_pos": self.start_pos
-                }
-            })
+            self.file_action.lsp_bridge.create_file_action(
+                filepath=external_file,
+                lang_server_info=self.file_action.lang_server_info,
+                lsp_server=self.file_action.lsp_server,
+                external_file_link=self.external_file_link,
+            )
+            eval_in_emacs("lsp-bridge--jump-to-def", external_file, self.start_pos)
 
     def fill_document_uri(self, params: dict) -> None:
         # JDT don't need fill textDocument uri.
