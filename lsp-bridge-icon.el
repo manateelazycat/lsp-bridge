@@ -1,6 +1,7 @@
 ;;; lsp-bridge-icon.el  -*- lexical-binding: t; -*-
 
 (require 'all-the-icons)
+(require 'lsp-bridge)
 
 (defvar lsp-bridge-icon--cache nil
   "The cache of styled and padded label (text or icon).
@@ -90,7 +91,17 @@ function to the relevant margin-formatters list."
             (lsp-bridge-icon-formatted kind)
           (lsp-bridge-icon-formatted t))))) ;; as a backup
 
-(add-to-list 'corfu-margin-formatters #'lsp-bridge-icon-margin-formatter)
+(defun lsp-bridge-company-box-icons (candidate)
+  (when-let* ((item (get-text-property 0 'lsp-bridge--lsp-item candidate))
+              (kind (plist-get item :kind)))
+    (intern kind)))
+
+(cl-case lsp-bridge-completion-provider
+  (company
+   (if (boundp 'company-box-mode)
+       (add-to-list 'company-box-icons-functions #'lsp-bridge-company-box-icons)))
+  (corfu
+   (add-to-list 'corfu-margin-formatters #'lsp-bridge-icon-margin-formatter)))
 
 (provide 'lsp-bridge-icon)
 ;;; lsp-bridge-icon.el ends here
