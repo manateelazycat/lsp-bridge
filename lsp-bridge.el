@@ -78,14 +78,8 @@
 (require 'subr-x)
 (require 'lsp-bridge-epc)
 (require 'lsp-bridge-ref)
-(require 'corfu)
-(require 'corfu-info)
-(require 'corfu-history)
 (require 'posframe)
 (require 'markdown-mode)
-
-;; Add completion history.
-(corfu-history-mode t)
 
 (defgroup lsp-bridge nil
   "LSP-Bridge group."
@@ -97,6 +91,14 @@
 Setting this to nil or 0 will turn off the indicator."
   :type 'number
   :group 'lsp-bridge)
+
+(defcustom lsp-bridge-completion-provider
+  (if (boundp 'company-mode)
+      'company
+    'corfu)
+  "The completion provider to use. Can be `company' or `corfu'."
+  :type '(choice (const :tag "company" company)
+                 (const :tag "corfu" corfu)))
 
 (defcustom lsp-bridge-completion-stop-commands '(corfu-complete corfu-insert)
   "If last command is match this option, stop popup completion ui."
@@ -128,7 +130,7 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'integer
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-enable-auto-import t
+(defcustom lsp-bridge-enable-auto-import nil
   "Whether to enable auto-import."
   :type 'boolean
   :group 'lsp-bridge)
@@ -482,12 +484,12 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
              ;; If last command is match `lsp-bridge-completion-stop-commands'
              (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands))
 
-      ;; Try to popup completion frame.
       (when (and (not (lsp-bridge-is-blank-before-cursor-p prefix)) ;hide completion frame if only blank before cursor
                  (not (lsp-bridge-is-at-sentence-ending-p))) ;hide completion if cursor after special chars
 
-        ;; Popup completion frame.
-        (corfu--auto-complete lsp-bridge-last-change-tick)
+        (cl-case lsp-bridge-completion-provider
+          (company (company-manual-begin))
+          (corfu (corfu--auto-complete lsp-bridge-last-change-tick)))
         ))))
 
 (defun lsp-bridge-is-at-sentence-ending-p ()
@@ -653,7 +655,8 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-monitor-after-change (begin end length)
   ;; Record last command to `lsp-bridge-last-change-command'.
   (setq lsp-bridge-last-change-command this-command)
-  (setq lsp-bridge-last-change-tick (corfu--auto-tick))
+  (if (eq lsp-bridge-completion-provider 'corfu)
+      (setq lsp-bridge-last-change-tick (corfu--auto-tick)))
 
   ;; Send change_file request.
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
@@ -886,11 +889,17 @@ If optional MARKER, return a marker instead"
 
     (setq lsp-bridge-filepath buffer-file-name)
     (setq lsp-bridge-last-position 0)
-    (setq-local corfu-auto-prefix 0)
 
-    ;; Add fuzzy match.
-    (when (functionp 'lsp-bridge-orderless-setup)
-      (lsp-bridge-orderless-setup))
+    (cl-case lsp-bridge-completion-provider
+      (company
+       (setq-local company-minimum-prefix-length 0)
+       (setq-local company-idle-delay nil))
+      (corfu
+       (setq-local corfu-auto-prefix 0)
+       (setq-local corfu-auto nil)
+       ;; Add fuzzy match.
+       (when (functionp 'lsp-bridge-orderless-setup)
+         (lsp-bridge-orderless-setup))))
 
     ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
     (unless lsp-bridge-is-starting
@@ -903,16 +912,12 @@ If optional MARKER, return a marker instead"
 
 (defun global-lsp-bridge-mode ()
   (interactive)
-  (dolist (hook (list
-                 'emacs-lisp-mode-hook
-                 ))
-    (add-hook hook (lambda ()
-                     (setq-local corfu-auto t)
-                     )))
+
+  (if (eq lsp-bridge-completion-provider 'corfu)
+      (setq corfu-auto t))
 
   (dolist (hook lsp-bridge-default-mode-hooks)
     (add-hook hook (lambda ()
-                     (setq-local corfu-auto nil) ;; let lsp-bridge control when popup completion frame
                      (lsp-bridge-mode 1)
                      ))))
 
