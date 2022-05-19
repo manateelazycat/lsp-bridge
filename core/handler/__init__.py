@@ -27,24 +27,19 @@ class Handler(abc.ABC):
         self.latest_request_id = request_id = generate_request_id()
         self.last_change = self.file_action.last_change
 
-        self.file_action.lsp_server.record_request_id(
-            request_id=request_id,
-            method=self.method,
-            filepath=self.file_action.filepath,
-            name=self.name,
-        )
+        self.file_action.lsp_server.record_request_id(request_id, self)
         
-        self.params = self.process_request(*args, **kwargs)
-        self.fill_document_uri()
+        params = self.process_request(*args, **kwargs)
+        self.fill_document_uri(params)
 
         self.file_action.lsp_server.sender.send_request(
             method=self.method,
-            params=self.params,
+            params=params,
             request_id=request_id,
         )
         
-    def fill_document_uri(self):
-        self.params["textDocument"] = {
+    def fill_document_uri(self, params: dict) -> None:
+        params["textDocument"] = {
             "uri": self.file_action.lsp_server.parse_document_uri(self.file_action.filepath, self.file_action.external_file_link)
         }
         

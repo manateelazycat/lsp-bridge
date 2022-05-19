@@ -1,6 +1,5 @@
 import unittest
 
-from core.utils import eval_sexp_in_emacs
 from test.common import *
 
 
@@ -16,7 +15,7 @@ def try_complete(file: SingleFile, label: str):
     @with_file(file)
     @interceptor(must_include_completion)
     def complete_file(filename: str):
-        eval_sexp_in_emacs(file_buffer(filename, f"""
+        eval_sexp(file_buffer(filename, f"""
             (setq-local major-mode '{file.mode})
             (lsp-bridge-mode 1)
             (goto-char (point-max))

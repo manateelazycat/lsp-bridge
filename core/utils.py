@@ -56,12 +56,6 @@ def close_epc_client():
         epc_client.close()
 
 
-def eval_sexp_in_emacs(sexp: str, **kwargs):
-    logger.debug("Eval in Emacs: %s", sexp)
-    # Call eval-in-emacs elisp function.
-    epc_client.call("eval-in-emacs", [sexp], **kwargs)
-
-
 def eval_in_emacs(method_name, *args, no_intercept=False, **kwargs):
     if test_interceptor and not no_intercept:  # for test purpose, record all eval_in_emacs calls
         test_interceptor(method_name, args)
@@ -179,6 +173,23 @@ def path_as_key(path):
         key = path.lower()
     return key
 
+
+def add_to_path_dict(path_dict, filepath, value):
+    path_dict[path_as_key(filepath)] = value
+    
+    
+def is_in_path_dict(path_dict, path):
+    path_key = path_as_key(path)
+    return path_key in path_dict
+
+
+def remove_from_path_dict(path_dict, path):
+    del path_dict[path_as_key(path)]
+    
+
+def get_from_path_dict(path_dict, filepath):
+    return path_dict[path_as_key(filepath)]
+    
 
 def get_project_path(filepath):
     import os

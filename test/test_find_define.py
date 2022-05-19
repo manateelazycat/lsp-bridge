@@ -1,7 +1,6 @@
 import unittest
 
 import core.utils
-from core.utils import eval_sexp_in_emacs
 from test.common import *
 
 
@@ -33,7 +32,7 @@ class SimpleFindDefinition(unittest.TestCase):
                                 (lsp-bridge--point-position (+ (point-min) {cursor_offset}))""")))
             logger.debug("target_position: %s", target_position)
             logger.debug("start_position: %s", start_position)
-            eval_sexp_in_emacs(file_buffer(filename, f"""
+            eval_sexp(file_buffer(filename, f"""
                 (setq-local major-mode '{file.mode})
                 (lsp-bridge-mode 1)
                 (goto-char (+ (point-min) {cursor_offset}))

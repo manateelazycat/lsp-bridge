@@ -301,21 +301,24 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defun lsp-bridge--get-lang-server-func (project-path filepath)
   "Get lang server with project path, file path or file extension."
-  (let (lang-server-by-project
-        lang-server-by-extension)
-    ;; Step 1: Search lang server base on project rule provide by `lsp-bridge-get-lang-server-by-project'.
-    (when lsp-bridge-get-lang-server-by-project
-      (setq lang-server-by-project (funcall lsp-bridge-get-lang-server-by-project project-path filepath)))
+  (if (and (boundp 'lsp-bridge-tempfile-p)
+           lsp-bridge-tempfile-p)
+      "LSP-BRIDGE-TEMP-FILE"
+    (let (lang-server-by-project
+          lang-server-by-extension)
+      ;; Step 1: Search lang server base on project rule provide by `lsp-bridge-get-lang-server-by-project'.
+      (when lsp-bridge-get-lang-server-by-project
+        (setq lang-server-by-project (funcall lsp-bridge-get-lang-server-by-project project-path filepath)))
 
-    (if lang-server-by-project
-        lang-server-by-project
-      ;; Step 2: search lang server base on extension rule provide by `lsp-bridge-lang-server-extension-list'.
-      (setq lang-server-by-extension (lsp-bridge-get-lang-server-by-extension filepath))
-      (if lang-server-by-extension
-          lang-server-by-extension
-        ;; Step 3: search lang server base on mode rule provide by `lsp-bridge-lang-server-extension-list'.
-        (lsp-bridge--with-file-buffer filepath
-          (lsp-bridge-get-lang-server-by-mode))))))
+      (if lang-server-by-project
+          lang-server-by-project
+        ;; Step 2: search lang server base on extension rule provide by `lsp-bridge-lang-server-extension-list'.
+        (setq lang-server-by-extension (lsp-bridge-get-lang-server-by-extension filepath))
+        (if lang-server-by-extension
+            lang-server-by-extension
+          ;; Step 3: search lang server base on mode rule provide by `lsp-bridge-lang-server-extension-list'.
+          (lsp-bridge--with-file-buffer filepath
+            (lsp-bridge-get-lang-server-by-mode)))))))
 
 (defun lsp-bridge-get-lang-server-by-extension (filepath)
   "Get lang server for file extension."
@@ -891,8 +894,7 @@ If optional MARKER, return a marker instead"
 
     ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
     (unless lsp-bridge-is-starting
-      (lsp-bridge-start-process)
-      (message "[LSP-Bridge] Start lsp server")))))
+      (lsp-bridge-start-process)))))
 
 (defun lsp-bridge--disable ()
   "Disable LSP Bridge mode."
