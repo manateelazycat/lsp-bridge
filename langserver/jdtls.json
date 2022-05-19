@@ -4,9 +4,6 @@
   "command": [
     "jdtls"
   ],
-  "libraryDirectories": [
-    "~/java-workspace"
-  ],
   "settings": {
     "java": {
       "completion": {
