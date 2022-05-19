@@ -214,12 +214,11 @@ class LspServer:
         self.files: Dict[str, "FileAction"] = dict()
 
     def attach(self, fa: "FileAction"):
-        file_key = path_as_key(fa.filepath)
-        if file_key in self.files:
+        if is_in_path_dict(self.files, fa.filepath):
             logger.error(f"File {fa.filepath} opened again before close.")
             return
 
-        self.files[file_key] = fa
+        add_to_path_dict(self.files, fa.filepath, fa)
 
         if len(self.files) == 1:
             # STEP 1: Say hello to LSP server.
@@ -399,10 +398,9 @@ class LspServer:
 
     def close_file(self, filepath):
         # Send didClose notification when client close file.
-        file_key = path_as_key(filepath)
-        if file_key in self.files:
+        if is_in_path_dict(self.files, filepath):
             self.send_did_close_notification(filepath)
-            del self.files[file_key]
+            remove_from_path_dict(self.files, filepath)
 
         # We need shutdown LSP server when last file closed, to save system memory.
         if len(self.files) == 0:

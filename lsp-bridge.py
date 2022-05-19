@@ -124,12 +124,11 @@ class LspBridge:
         })
 
     def create_file_action(self, filepath, lang_server_info, lsp_server):
-        file_key = path_as_key(filepath)
-        if file_key in self.file_action_dict:
+        if is_in_path_dict(self.file_action_dict, filepath):
             logger.error("File action already exist: %s" % filepath)
             return
         action = FileAction(filepath, lang_server_info, lsp_server)
-        self.file_action_dict[file_key] = action
+        add_to_path_dict(self.file_action_dict, filepath, action)
         return action
 
     def _open_file(self, filepath):
@@ -160,8 +159,7 @@ class LspBridge:
         })
 
     def _close_file(self, filepath):
-        file_key = path_as_key(filepath)
-        if file_key in self.file_action_dict:
+        if is_in_path_dict(self.file_action_dict, filepath):
             action = self.file_action_dict[file_key]
 
             lsp_server_name = action.lsp_server.server_name
@@ -170,14 +168,13 @@ class LspBridge:
                 lsp_server.close_file(filepath)
 
             # Clean file_action_dict after close file.
-            del self.file_action_dict[file_key]
+            remove_from_path_dict(self.file_action_dict, filepath)
 
     def build_file_action_function(self, name):
         def _do(filepath, *args):
-            file_key = path_as_key(filepath)
-            if file_key not in self.file_action_dict:
+            if not is_in_path_dict(self.file_action_dict, filepath):
                 self._open_file(filepath)  # _do is called inside event_loop, so we can block here.
-            action = self.file_action_dict[file_key]
+            action = get_from_path_dict(self.file_action_dict, filepath)
             action.call(name, *args)
 
         setattr(self, "_{}".format(name), _do)
