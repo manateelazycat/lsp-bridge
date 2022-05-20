@@ -543,6 +543,12 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
        (when-let* ((item (get-text-property 0 'lsp-bridge--lsp-item candidate))
                    (kind (plist-get item :kind)))
          (intern (downcase kind))))
+     :company-deprecated
+     (lambda (proxy)
+       (when-let ((lsp-item (get-text-property 0 'lsp-bridge--lsp-item proxy)))
+         (or (seq-contains-p (plist-get lsp-item :tags) 1)
+             (eq t (plist-get lsp-item :deprecated)))))
+
      :exit-function
      (lambda (candidate status)
        (when (memq status '(finished exact))

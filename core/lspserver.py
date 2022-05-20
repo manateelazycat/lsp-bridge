@@ -72,7 +72,7 @@ LSP_CLIENT_INFO = {
                 "dynamicRegistration": False,
                 "completionItem": {
                     "snippetSupport": True,
-                    "deprecatedSupport": False,
+                    "deprecatedSupport": True,
                     "tagSupport": {
                         "valueSet": [
                             1
