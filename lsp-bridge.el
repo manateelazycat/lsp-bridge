@@ -772,7 +772,7 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-rename ()
   (interactive)
   (lsp-bridge-call-async "prepare_rename" lsp-bridge-filepath (lsp-bridge--position))
-  (let ((new-name (read-string "Rename to: " (thing-at-point 'word 'no-properties))))
+  (let ((new-name (read-string "Rename to: " (thing-at-point 'symbol 'no-properties))))
     (lsp-bridge-call-async "rename" lsp-bridge-filepath (lsp-bridge--position) new-name)))
 
 (defun lsp-bridge-rename-highlight (filepath line bound-start bound-end)
