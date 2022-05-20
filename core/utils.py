@@ -177,8 +177,8 @@ def path_as_key(path):
 
 def add_to_path_dict(path_dict, filepath, value):
     path_dict[path_as_key(filepath)] = value
-    
-    
+
+
 def is_in_path_dict(path_dict, path):
     path_key = path_as_key(path)
     return path_key in path_dict
@@ -186,11 +186,11 @@ def is_in_path_dict(path_dict, path):
 
 def remove_from_path_dict(path_dict, path):
     del path_dict[path_as_key(path)]
-    
+
 
 def get_from_path_dict(path_dict, filepath):
     return path_dict[path_as_key(filepath)]
-    
+
 
 def get_project_path(filepath):
     import os
