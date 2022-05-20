@@ -50,6 +50,8 @@ class Completion(Handler):
                 kind = KIND_MAP[item.get("kind", 0)]
                 candidate = {
                     "label": item["label"],
+                    "tags": item.get("tags", []),
+                    "filterText":  item.get("filterText", ""),
                     "insertText": item.get('insertText', None),
                     "kind": kind,
                     "annotation": (item.get("detail") or kind).replace(" ", ""),
