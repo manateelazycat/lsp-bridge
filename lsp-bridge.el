@@ -176,6 +176,7 @@ Start discarding off end if gets this big."
                (lsp-bridge-epc-define-method mngr 'get-emacs-vars 'lsp-bridge--get-emacs-vars-func)
                (lsp-bridge-epc-define-method mngr 'get-lang-server 'lsp-bridge--get-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-version 'emacs-version)
+               (lsp-bridge-epc-define-method mngr 'is-snippet-support 'lsp-bridge--snippet-expansion-fn)
                ))))
     (if lsp-bridge-server
         (setq lsp-bridge-server-port (process-contact lsp-bridge-server :service))

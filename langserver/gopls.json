@@ -2,5 +2,10 @@
   "name": "gopls",
   "languageId": "go",
   "command": ["gopls", "-remote=auto"],
-  "settings": {}
+  "settings":{
+    "gopls": {
+      "usePlaceholders": true,
+      "completeUnimported": true
+    }
+  }
 }

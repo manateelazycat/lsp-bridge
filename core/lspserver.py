@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
 import json
 import os
 import queue
@@ -39,6 +40,159 @@ if TYPE_CHECKING:
 from core.utils import *
 
 DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
+
+
+LSP_CLIENT_INFO = {
+    "capabilities": {
+        "workspace": {
+            "applyEdit": False,
+            "executeCommand": {
+                "dynamicRegistration": False
+            },
+            "workspaceEdit": {
+                "documentChanges": False
+            },
+            "didChangeWatchedFiles": {
+                "dynamicRegistration": False
+            },
+            "symbol": {
+                "dynamicRegistration": False
+            },
+            "configuration": True,
+            "workspaceFolders": False
+        },
+        "textDocument": {
+            "synchronization": {
+                "dynamicRegistration": False,
+                "willSave": False,
+                "willSaveWaitUntil": False,
+                "didSave": True
+            },
+            "completion": {
+                "dynamicRegistration": False,
+                "completionItem": {
+                    "snippetSupport": True,
+                    "deprecatedSupport": False,
+                    "tagSupport": {
+                        "valueSet": [
+                            1
+                        ]
+                    }
+                },
+                "contextSupport": True
+            },
+            "hover": {
+                "dynamicRegistration": False,
+                "contentFormat": [
+                    "markdown",
+                    "plaintext"
+                ]
+            },
+            "signatureHelp": {
+                "dynamicRegistration": False,
+                "signatureInformation": {
+                    "parameterInformation": {
+                        "labelOffsetSupport": False
+                    },
+                    "activeParameterSupport": False
+                }
+            },
+            "references": {
+                "dynamicRegistration": False
+            },
+            "definition": {
+                "dynamicRegistration": False,
+                "linkSupport": True
+            },
+            "declaration": {
+                "dynamicRegistration": False,
+                "linkSupport": True
+            },
+            "implementation": {
+                "dynamicRegistration": False,
+                "linkSupport": True
+            },
+            "typeDefinition": {
+                "dynamicRegistration": False,
+                "linkSupport": True
+            },
+            "documentSymbol": {
+                "dynamicRegistration": False,
+                "hierarchicalDocumentSymbolSupport": False,
+                "symbolKind": {
+                    "valueSet": [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        13,
+                        14,
+                        15,
+                        16,
+                        17,
+                        18,
+                        19,
+                        20,
+                        21,
+                        22,
+                        23,
+                        24,
+                        25,
+                        26
+                    ]
+                }
+            },
+            "documentHighlight": {
+                "dynamicRegistration": False
+            },
+            "codeAction": {
+                "dynamicRegistration": False,
+                "codeActionLiteralSupport": {
+                    "codeActionKind": {
+                        "valueSet": [
+                            "quickfix",
+                            "refactor",
+                            "refactor.extract",
+                            "refactor.inline",
+                            "refactor.rewrite",
+                            "source",
+                            "source.organizeImports"
+                        ]
+                    }
+                },
+                "isPreferredSupport": False
+            },
+            "formatting": {
+                "dynamicRegistration": False
+            },
+            "rangeFormatting": {
+                "dynamicRegistration": False
+            },
+            "rename": {
+                "dynamicRegistration": False
+            },
+            "publishDiagnostics": {
+                "relatedInformation": False,
+                "codeDescriptionSupport": False,
+                "tagSupport": {
+                    "valueSet": [
+                        1,
+                        2
+                    ]
+                }
+            }
+        },
+        "experimental": {}
+    }
+}
 
 
 class LspServerSender(Thread):
@@ -175,6 +329,7 @@ class LspServer:
         self.message_queue = message_queue
         self.project_path = project_path
         self.server_info = server_info
+        self.client_info = copy.deepcopy(LSP_CLIENT_INFO)
         self.initialize_id = generate_request_id()
         self.server_name = server_name
         self.request_dict: Dict[int, Handler] = dict()
@@ -185,6 +340,12 @@ class LspServer:
 
         # Start LSP server.
         self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
+
+        is_snippet_support = get_emacs_func_result("is-snippet-support") # "true" or "false"
+        if not is_snippet_support:
+            self.client_info["capabilities"]["textDocument"]["completion"]["completionItem"]["snippetSupport"]=False
+        else:
+            self.client_info["capabilities"]["textDocument"]["completion"]["completionItem"]["snippetSupport"]=True
 
         # Notify user server is start.
         message_emacs("Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path))
@@ -236,7 +397,7 @@ class LspServer:
                 "version": get_emacs_version()
             },
             "rootUri": path_to_uri(self.project_path),
-            "capabilities": self.server_info.get("capabilities", {}),
+            "capabilities": self.client_info["capabilities"],
             "initializationOptions": self.server_info.get("initializationOptions", {})
         }, self.initialize_id, init=True)
 
@@ -317,7 +478,14 @@ class LspServer:
         }
 
     def handle_workspace_configuration_request(self, name, request_id, params):
-        self.sender.send_response(request_id, [])
+        # name= "workspace/configuration"
+        # params ="{’items’: [{’scopeUri’: ’file:///repos/lsp-bridge’, ’section’: ’gopls’}]}"
+        items = []
+        for p in params["items"]:
+            section = p.get("section", self.server_info["name"])
+            settings = self.server_info.get("settings", {})
+            items.append(settings.get(section, {}))
+        self.sender.send_response(request_id, items)
 
     def handle_recv_message(self, message: dict):
         if "error" in message:

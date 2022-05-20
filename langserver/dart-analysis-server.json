@@ -2,14 +2,5 @@
   "name": "dart-analysis-server",
   "languageId": "dart",
   "command": ["dart", "language-server", "--client-id", "emacs.lsp-bridge"],
-  "settings": {},
-  "capabilities": {
-    "textDocument": {
-      "completion": {
-        "completionItem": {
-          "snippetSupport": true
-        }
-      }
-    }
-  }
+  "settings": {}
 }
