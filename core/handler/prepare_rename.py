@@ -10,6 +10,10 @@ class PrepareRename(Handler):
         return dict(position=position)
 
     def process_response(self, response: dict) -> None:
+        # compatible for gopls
+        if "range" in response: 
+            response = response["range"]
+
         eval_in_emacs(
             "lsp-bridge-rename-highlight",
             self.file_action.filepath,
