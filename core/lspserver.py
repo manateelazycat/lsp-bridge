@@ -317,7 +317,14 @@ class LspServer:
         }
 
     def handle_workspace_configuration_request(self, name, request_id, params):
-        self.sender.send_response(request_id, [])
+        # name= "workspace/configuration"
+        # params ="{’items’: [{’scopeUri’: ’file:///repos/lsp-bridge’, ’section’: ’gopls’}]}"
+        items = []
+        for p in params["items"]:
+            section = p.get("section", self.server_info["name"])
+            settings = self.server_info.get("settings", {})
+            items.append(settings.get(section, {}))
+        self.sender.send_response(request_id, items)
 
     def handle_recv_message(self, message: dict):
         if "error" in message:
