@@ -11,7 +11,7 @@ class PrepareRename(Handler):
 
     def process_response(self, response: dict) -> None:
         # compatible for gopls
-        if "range" in response: 
+        if "range" in response:
             response = response["range"]
 
         eval_in_emacs(

@@ -102,7 +102,7 @@ class FileAction:
             # Try cancel expired signature help timer.
             if self.try_signature_help_timer is not None and self.try_signature_help_timer.is_alive():
                 self.try_signature_help_timer.cancel()
-            
+
             # Send textDocument/signatureHelp 200ms later.
             self.try_signature_help_timer = threading.Timer(
                 0.2, lambda: self.handlers["signature_help"].send_request(position)

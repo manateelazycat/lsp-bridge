@@ -28,19 +28,19 @@ class FindReferences(Handler):
                     references_dict[path].append(uri_info["range"])
                 else:
                     references_dict[path] = [uri_info["range"]]
-            
+
             references_counter = 0
             references_content = ""
             for i, (path, ranges) in enumerate(references_dict.items()):
                 references_content += "\n" + REFERENCE_PATH + path + REFERENCE_ENDC + "\n"
-            
+
                 for rg in ranges:
                     with open(path, encoding="utf-8") as f:
                         line = rg["start"]["line"]
                         start_column = rg["start"]["character"]
                         end_column = rg["end"]["character"]
                         line_content = linecache.getline(path, rg["start"]["line"] + 1)
-            
+
                         references_content += "{}:{}:{}".format(
                             line + 1,
                             start_column,
@@ -48,7 +48,7 @@ class FindReferences(Handler):
                             line_content[start_column:end_column] + REFERENCE_ENDC +
                             line_content[end_column:])
                         references_counter += 1
-            
-            linecache.clearcache()  # clear line cache 
-            
+
+            linecache.clearcache()  # clear line cache
+
             eval_in_emacs("lsp-bridge-popup-references", references_content, references_counter)

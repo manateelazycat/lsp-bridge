@@ -133,21 +133,21 @@ class LspBridge:
     def _open_file(self, filepath):
         project_path = get_project_path(filepath)
         lang_server = get_emacs_func_result("get-lang-server", project_path, filepath)
-        
+
         if not lang_server:
             message_emacs("ERROR: can't find the corresponding server for {}, disable lsp-bridge-mode.".format(filepath))
             eval_in_emacs("lsp-bridge-turn-off", filepath)
-            
+
             return False
-        
+
         lang_server_info = load_lang_server_info(lang_server)
-        
+
         if not(len(lang_server_info["command"]) > 0 and shutil.which(lang_server_info["command"][0])):
             message_emacs("Error: can't find command {} for {}, disable lsp-bridge-mode.".format(lang_server_info["command"][0], filepath))
             eval_in_emacs("lsp-bridge-turn-off", filepath)
-            
+
             return False
-        
+
         lsp_server_name = "{}#{}".format(path_as_key(project_path), lang_server_info["name"])
 
         if lsp_server_name not in self.lsp_server_dict:
@@ -186,10 +186,10 @@ class LspBridge:
     def build_file_action_function(self, name):
         def _do(filepath, *args):
             open_file_success = True
-            
+
             if not is_in_path_dict(self.file_action_dict, filepath):
                 open_file_success = self._open_file(filepath)  # _do is called inside event_loop, so we can block here.
-                
+
             if open_file_success:
                 action = get_from_path_dict(self.file_action_dict, filepath)
                 action.call(name, *args)
