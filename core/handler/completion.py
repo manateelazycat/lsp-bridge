@@ -34,10 +34,11 @@ class Completion(Handler):
     def calc_completion_prefix_string(self):
         # We search trigger chars backward to find bound of candidate prefix, and works well in most LSP servers,
         # but not work for some LSP server, such as Volar, 
-        # when `spaceAsPrefixBound` setting in server.json, we only search blank to find bound of candidate prefix.
-        search_characters = [" ", "\t"]
-        if not self.file_action.lsp_server.space_as_prefix_bound:
-            search_characters += self.file_action.lsp_server.completion_trigger_characters
+        # when `prefixBoundChars` setting in server.json, we only search blank to find bound of candidate prefix.
+        if "prefixBoundChars" in self.file_action.lsp_server.server_info:
+            search_characters = self.file_action.lsp_server.server_info["prefixBoundChars"]
+        else:
+            search_characters = self.file_action.lsp_server.completion_trigger_characters + [" ", "\t"]
         
         trigger_characters_index = list(filter(lambda res: res != -1,
                                                list(map(lambda char: self.file_action.last_change_file_before_cursor_text.rfind(char), 
@@ -46,8 +47,8 @@ class Completion(Handler):
         if len(trigger_characters_index) > 0:
             prefix_string = self.file_action.last_change_file_before_cursor_text[max(trigger_characters_index) + 1:]
             
-            # We need strim first trigger char if option `spaceAsPrefixBound` is enable.
-            if self.file_action.lsp_server.space_as_prefix_bound:
+            # We need strim first trigger char if option `prefixBoundChars` is enable.
+            if "prefixBoundChars" in self.file_action.lsp_server.server_info:
                 if len(prefix_string) > 0 and prefix_string[0] in self.file_action.lsp_server.completion_trigger_characters:
                     prefix_string = prefix_string[1:]
             

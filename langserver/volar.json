@@ -41,5 +41,5 @@
       }
     }
   },
-  "spaceAsPrefixBound": true
+  "prefixBoundChars": [" ", "\t", "."]
 }

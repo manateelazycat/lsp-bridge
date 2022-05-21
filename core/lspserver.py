@@ -182,7 +182,6 @@ class LspServer:
         self.root_path = self.project_path
 
         # LSP server information.
-        self.space_as_prefix_bound = "spaceAsPrefixBound" in self.server_info
         self.completion_trigger_characters = list()
 
         # Start LSP server.
