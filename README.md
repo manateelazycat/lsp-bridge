@@ -97,7 +97,7 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 3. [solargraph](https://github.com/castwide/solargraph) (ruby)
 4. [rust-analyzer](https://github.com/rust-lang/rust-analyzer) (rust)
 5. [elixirLS](https://github.com/elixir-lsp/elixir-ls) (elixir) Note: please ensure that the `elixir-ls` release directory is in your system PATH at first.
-6. [gopls](https://github.com/golang/tools/tree/master/gopls) (go)
+6. [gopls](https://github.com/golang/tools/tree/master/gopls) (go) Note: make sure gopls in PATH, please do `ln -s ~/go/bin/gopls ~/.local/bin`.
 7. [hls](https://github.com/haskell/haskell-language-server) (haskell)
 8. [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) (dart)
 9. [metals](https://scalameta.org/metals/) (scala)
