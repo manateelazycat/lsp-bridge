@@ -32,7 +32,7 @@ from sys import stderr
 from threading import Thread
 from urllib.parse import urlparse
 from typing import Dict, TYPE_CHECKING
-from core.mergedeep import merge 
+from core.mergedeep import merge
 
 from core.handler import Handler
 
@@ -240,22 +240,31 @@ class LspServer:
             "capabilities": self.get_capabilities(),
             "initializationOptions": self.server_info.get("initializationOptions", {})
         }, self.initialize_id, init=True)
-        
+
     def get_capabilities(self):
         server_capabilities = self.server_info.get("capabilities", {})
-        
+
         is_snippet_support = get_emacs_func_result("is-snippet-support")
-        
+
         merge_capabilites = merge(server_capabilities, {
+            "workspace": {
+                "configuration": True
+            },
             "textDocument": {
                 "completion": {
                     "completionItem": {
-                        "snippetSupport": False if not is_snippet_support else True
+                        "snippetSupport": False if not is_snippet_support else True,
+                        "deprecatedSupport": True,
+                        "tagSupport": {
+                            "valueSet": [
+                                1
+                            ]
+                        }
                     }
                 }
             }
         })
-        
+
         return merge_capabilites
 
     def parse_document_uri(self, filepath, external_file_link):
