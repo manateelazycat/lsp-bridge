@@ -51,7 +51,6 @@ class Completion(Handler):
                 candidate = {
                     "label": item["label"],
                     "tags": item.get("tags", []),
-                    "filterText":  item.get("filterText", ""),
                     "insertText": item.get('insertText', None),
                     "kind": kind,
                     "annotation": (item.get("detail") or kind).replace(" ", ""),
