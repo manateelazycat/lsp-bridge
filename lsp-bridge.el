@@ -824,6 +824,16 @@ If optional MARKER, return a marker instead"
         (pulse-delay lsp-bridge-flash-line-delay))
     (pulse-momentary-highlight-one-line (point) 'lsp-bridge-font-lock-flash)))
 
+(defun lsp-bridge-insert-common-prefix ()
+  (interactive)
+  (if (and (> (length lsp-bridge-completion-items) 0)
+           lsp-bridge-completion-prefix
+           lsp-bridge-completion-common
+           (not (string-equal lsp-bridge-completion-common ""))
+           (not (string-equal lsp-bridge-completion-common lsp-bridge-completion-prefix)))
+      (insert (substring lsp-bridge-completion-common (length lsp-bridge-completion-prefix)))
+    (message "Not found common part to insert.")))
+
 (defun lsp-bridge-popup-documentation (kind name value)
   (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode)))
          (background-color (if (string-equal theme-mode "dark")

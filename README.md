@@ -65,6 +65,7 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 * lsp-bridge-lookup-documentation: lookup documentation of symbol under the cursor
 * lsp-bridge-rename: rename symbol under the cursor
 * lsp-bridge-show-signature-help-in-minibuffer: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
+* lsp-bridge-insert-common-prefix: insert common prefix of candidates
 * lsp-bridge-restart-process: restart lsp-bridge process (only used for development)
 
 After enable Xref support, the commands for Xref is available, we currently supported and tested those:

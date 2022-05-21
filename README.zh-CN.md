@@ -65,6 +65,7 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 * lsp-bridge-lookup-documentation: 查看管标处的文档
 * lsp-bridge-rename: 重命名
 * lsp-bridge-show-signature-help-in-minibuffer: 在minibuffer显示参数信息
+* lsp-bridge-insert-common-prefix: 插入补全后选词的公共前缀
 * lsp-bridge-restart-process: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)
 
 
