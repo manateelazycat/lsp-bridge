@@ -32,17 +32,20 @@ class Completion(Handler):
         return dict(position=position, context=context)
 
     def calc_completion_prefix_string(self):
-        ret = self.file_action.last_change_file_before_cursor_text
-        for c in self.file_action.lsp_server.completion_trigger_characters + [" " + '\t']:
-            ret = ret.rpartition(c)[2]
-        return ret
+        trigger_characters_index = list(filter(lambda res: res != -1,
+                                               list(map(lambda char: self.file_action.last_change_file_before_cursor_text.rfind(char), 
+                                                        self.file_action.lsp_server.completion_trigger_characters + [" ", "\t"]))))
+        
+        if len(trigger_characters_index) > 0:
+            return self.file_action.last_change_file_before_cursor_text[max(trigger_characters_index)+1:]
+        else:
+            return self.file_action.last_change_file_before_cursor_text
 
     def process_response(self, response: dict) -> None:
         # Calculate completion prefix string.
         completion_prefix_string = self.calc_completion_prefix_string()
 
         # Get completion items.
-        completion_items = []
         completion_candidates = []
 
         if response is not None:
@@ -64,17 +67,13 @@ class Completion(Handler):
                 completion_candidates.append(candidate)
 
         # Calculate completion common string.
-        completion_common_string = os.path.commonprefix(completion_items)
-
+        completion_common_string = os.path.commonprefix(list(map(lambda candidate: candidate["label"], completion_candidates)))
+        
         # Push completion items to Emacs.
-        if (len(completion_items) == 1 and
-                completion_prefix_string == completion_common_string == completion_items[0]):
+        if (len(completion_candidates) == 1 and completion_prefix_string == completion_common_string == completion_candidates[0]["label"]):
             # Clear completion items if user input last completion item.
             eval_in_emacs("lsp-bridge-record-completion-items",
-                          self.file_action.filepath, completion_prefix_string,
-                          completion_common_string, [], [])
+                          self.file_action.filepath, completion_prefix_string, completion_common_string, [])
         else:
-            eval_in_emacs("lsp-bridge-record-completion-items",
-                          self.file_action.filepath, completion_prefix_string,
-                          completion_common_string, completion_candidates,
-                          self.file_action.lsp_server.completion_trigger_characters)
+            eval_in_emacs("lsp-bridge-record-completion-items", 
+                          self.file_action.filepath, completion_prefix_string, completion_common_string, completion_candidates)
