@@ -520,11 +520,14 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defun lsp-bridge-capf ()
   "Capf function similar to eglot's 'eglot-completion-at-point'."
   (let* ((candidates (lsp-bridge-extract-candidates))
-         (bounds-start (lsp-bridge-capf-get-bound-start lsp-bridge-completion-trigger-characters))
+         (trigger-character-start (lsp-bridge-capf-get-bound-start lsp-bridge-completion-trigger-characters))
+         (symbol-bounds (bounds-of-thing-at-point 'symbol))
+         (bounds-start (or trigger-character-start (car symbol-bounds)))
+         (bounds-end (if trigger-character-start (point) (cdr symbol-bounds)))
          prefix)
     (list
      bounds-start
-     (point)
+     bounds-end
      candidates
      :annotation-function
      (lambda (candidate)
