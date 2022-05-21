@@ -1,4 +1,5 @@
 import unittest
+from typing import Dict
 
 import core.utils
 from test.common import *
@@ -75,3 +76,59 @@ func main() {
         cursor_offset = get_offset(file.code, "i)")
         target_offset = get_offset(file.code, "i := 0")
         with_file(file)(self.jump_definition)(file, cursor_offset, target_offset)
+
+
+class JumpOtherFile(unittest.TestCase):
+    def jump(self, files: List[SingleFile], cursor_file: str, cursor_offset: int) -> str:
+        result = ""
+
+        def expectation(method: str, args: List[Any]) -> bool:
+            nonlocal result
+            if method == "lsp-bridge--jump-to-def":
+                result = args[0]
+                return True
+            return False
+
+        @with_multiple_files(files)
+        @interceptor(expectation)
+        def go(filenames: Dict[str, str]):
+            eval_sexp(file_buffer(filenames[cursor_file], f"""
+            (setq-local major-mode '{files[0].mode})
+            (lsp-bridge-mode 1)
+            (goto-char (+ (point-min) {cursor_offset}))
+            (lsp-bridge-find-define)
+            """))
+
+        lsp_server_cnt_before = len(lsp_bridge.lsp_server_dict)
+        go()
+        lsp_server_cnt_after = len(lsp_bridge.lsp_server_dict)
+        self.assertEqual(lsp_server_cnt_after, lsp_server_cnt_before + 1)
+
+        return result
+
+    def test_jump_project(self):
+        files = [
+            SingleFile(
+                filename="b.py",
+                code="from a import *\nprint(a)\n",
+                mode="python-mode",
+            ),
+            SingleFile(
+                filename="a.py",
+                code="a = 1\n",
+                mode="python-mode",
+            ),
+        ]
+        result_file = self.jump(files, "b.py", get_offset(files[0].code, "a)"))
+        self.assertIn("a.py", result_file)
+
+    def test_jump_external(self):
+        files = [
+            SingleFile(
+                filename="b.py",
+                code="import os",
+                mode="python-mode",
+            ),
+        ]
+        result_file = self.jump(files, "b.py", get_offset(files[0].code, "os"))
+        self.assertIn("os", result_file)

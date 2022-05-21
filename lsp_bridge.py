@@ -217,7 +217,7 @@ class LspBridge:
     def start_test(self):
         # Called from lsp-bridge-test.el to start test.
         from test.test import start_test
-        start_test()
+        start_test(self)
 
 
 def load_lang_server_info(lang_server):

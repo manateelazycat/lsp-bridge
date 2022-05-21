@@ -10,6 +10,9 @@ import core.utils
 from core.utils import logger, epc_client
 
 
+lsp_bridge = None
+
+
 def interceptor(expectation: Callable[[str, List[Any]], bool],
                 teardown: Optional[Callable[[], None]] = None,
                 timeout: int = 40):
@@ -75,6 +78,30 @@ def with_file(file: SingleFile):
                 os.remove(t_file.name)
         return wrapper
     return decorator
+
+
+def with_multiple_files(files: List[SingleFile]):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            d = dict()
+            t_dir = tempfile.mkdtemp()
+            os.system(f"git init --quiet {t_dir}")
+            for file in files:
+                with open(os.path.join(t_dir, file.filename), "wb") as t_file:
+                    t_file.write(file.code.encode('utf-8'))
+                    t_file.close()
+                    d[file.filename] = _buffer_file_name(t_file.name)
+            func(*args, **kwargs, filenames=d)
+            for name in d.values():
+                os.remove(name)
+        return wrapper
+    return decorator
+
+
+def get_offset(code: str, target: str):
+    pos = code.find(target)
+    assert pos >= 0
+    return pos
 
 
 def eval_sexp_sync(sexp: str, timeout=40) -> Any:

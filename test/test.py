@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest import TestLoader
 
 from core.utils import logger
+from test import common
 from test.common import eval_sexp, eval_sexp_sync
 
 EMACS = 'emacs'
@@ -68,7 +69,9 @@ def test_entrypoint():
     ])
 
 
-def start_test():
+def start_test(lsp_bridge):
+    common.lsp_bridge = lsp_bridge
+
     # Use only file handler in test
     logger.handlers.clear()
     logger.addHandler(logging.FileHandler(BASE_DIR / 'test.log'))
