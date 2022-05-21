@@ -344,12 +344,17 @@ class LspServer:
         }
 
     def handle_workspace_configuration_request(self, name, request_id, params):
-        # name= "workspace/configuration"
-        # params ="{’items’: [{’scopeUri’: ’file:///repos/lsp-bridge’, ’section’: ’gopls’}]}"
+        settings = self.server_info.get("settings", {})            
+        
+        # We send empty message back to server if nothing in 'settings' of server.json file.
+        if len(settings) == 0:
+            self.sender.send_response(request_id, [])
+            return
+        
+        # Otherwise, send back section value or default settings.
         items = []
         for p in params["items"]:
             section = p.get("section", self.server_info["name"])
-            settings = self.server_info.get("settings", {})
             items.append(settings.get(section, {}))
         self.sender.send_response(request_id, items)
 
