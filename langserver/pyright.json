@@ -3,7 +3,7 @@
   "languageId": "python",
   "command": ["pyright-langserver", "--stdio"],
   "settings": {
-    "analysis": {
+    "python.analysis": {
       "autoImportCompletions": true,
       "typeshedPaths": [],
       "stubPath": "",
