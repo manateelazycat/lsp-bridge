@@ -12,12 +12,17 @@
   (expand-file-name "langserver/jdtls.json"
                     (file-name-directory load-file-name)))
 
+(defcustom lsp-bridge-jdtls-jvm-args '()
+  "Specifies additional VM parameters for starting the Java language server.
+E.g. Use `-javaagent:/home/user/.emacs.d/plugin/lombok.jar` to add lombok support")
+
 (defun lsp-bridge-get-jdtls-server-by-project (project-path filepath)
   "Get JDTLS configuration"
   (let ((config-file (lsp-bridge-jdtls-config-file project-path filepath)))
     (if (not (file-exists-p config-file))
         (lsp-bridge-jdtls-init-config project-path filepath))
     config-file))
+
 
 (defun lsp-bridge-jdtls-init-config (project-path filepath)
   "Initialize JDTLS configuration"
@@ -26,8 +31,15 @@
          (config-file (lsp-bridge-jdtls-config-file project-path filepath))
          (data-directory (lsp-bridge-jdtls-project-data-dir project-path filepath)))
 
+    ;; An additional JVM option (can be used multiple times. Note, use with equal sign. For example: --jvm-arg=-Dlog.level=ALL
+    (when (listp lsp-bridge-jdtls-jvm-args)
+      (let ((jvm-args (mapcar (lambda (arg) (concat "--jvm-arg=" arg))
+                              lsp-bridge-jdtls-jvm-args)))
+
+        (plist-put config :command (vconcat (plist-get config :command)
+                                            jvm-args))))
+
     ;; Add the `-data` parameter to the startup parameter
-    ;; --jvm-arg support?
     (plist-put config :command (vconcat (plist-get config :command) `("-data" ,data-directory)))
 
     "Create parent directory if not exists while visiting file."
