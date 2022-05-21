@@ -182,6 +182,7 @@ class LspServer:
         self.root_path = self.project_path
 
         # LSP server information.
+        self.space_as_prefix_bound = "spaceAsPrefixBound" in self.server_info
         self.completion_trigger_characters = list()
 
         # Start LSP server.
@@ -393,8 +394,7 @@ class LspServer:
                 try:
                     # We pick up completion trigger characters from server.
                     # But some LSP server haven't this value, such as html/css LSP server.
-                    self.completion_trigger_characters = message["result"]["capabilities"]["completionProvider"][
-                        "triggerCharacters"]
+                    self.completion_trigger_characters = message["result"]["capabilities"]["completionProvider"]["triggerCharacters"]
                 except KeyError:
                     pass
 

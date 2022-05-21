@@ -32,12 +32,26 @@ class Completion(Handler):
         return dict(position=position, context=context)
 
     def calc_completion_prefix_string(self):
+        # We search trigger chars backward to find bound of candidate prefix, and works well in most LSP servers,
+        # but not work for some LSP server, such as Volar, 
+        # when `spaceAsPrefixBound` setting in server.json, we only search blank to find bound of candidate prefix.
+        search_characters = [" ", "\t"]
+        if not self.file_action.lsp_server.space_as_prefix_bound:
+            search_characters += self.file_action.lsp_server.completion_trigger_characters
+        
         trigger_characters_index = list(filter(lambda res: res != -1,
                                                list(map(lambda char: self.file_action.last_change_file_before_cursor_text.rfind(char), 
-                                                        self.file_action.lsp_server.completion_trigger_characters + [" ", "\t"]))))
+                                                        search_characters))))
         
         if len(trigger_characters_index) > 0:
-            return self.file_action.last_change_file_before_cursor_text[max(trigger_characters_index)+1:]
+            prefix_string = self.file_action.last_change_file_before_cursor_text[max(trigger_characters_index) + 1:]
+            
+            # We need strim first trigger char if option `spaceAsPrefixBound` is enable.
+            if self.file_action.lsp_server.space_as_prefix_bound:
+                if len(prefix_string) > 0 and prefix_string[0] in self.file_action.lsp_server.completion_trigger_characters:
+                    prefix_string = prefix_string[1:]
+            
+            return prefix_string
         else:
             return self.file_action.last_change_file_before_cursor_text
 
@@ -51,6 +65,7 @@ class Completion(Handler):
         if response is not None:
             for item in response["items"] if "items" in response else response:
                 kind = KIND_MAP[item.get("kind", 0)]
+                
                 candidate = {
                     "label": item["label"],
                     "tags": item.get("tags", []),
@@ -58,7 +73,7 @@ class Completion(Handler):
                     "kind": kind,
                     "annotation": (item.get("detail") or kind).replace(" ", ""),
                     "insertTextFormat": item.get("insertTextFormat", ''),
-                    "textEdit": item.get("textEdit", None),
+                    "textEdit": item.get("textEdit", None)
                 }
 
                 if self.file_action.enable_auto_import:

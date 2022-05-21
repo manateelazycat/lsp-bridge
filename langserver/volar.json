@@ -40,5 +40,6 @@
         "getDocumentPrintWidthRequest": false
       }
     }
-  }
+  },
+  "spaceAsPrefixBound": true
 }
