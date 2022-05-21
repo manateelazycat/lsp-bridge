@@ -93,28 +93,30 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 
 ## Supported language servers
 
-1. [clangd](https://github.com/clangd/clangd) (c, c++)
-2. [pyright](https://github.com/microsoft/pyright) (python, `pip install pyright`)
-3. [solargraph](https://github.com/castwide/solargraph) (ruby)
-4. [rust-analyzer](https://github.com/rust-lang/rust-analyzer) (rust)
-5. [elixirLS](https://github.com/elixir-lsp/elixir-ls) (elixir) Note: please ensure that the `elixir-ls` release directory is in your system PATH at first.
-6. [gopls](https://github.com/golang/tools/tree/master/gopls) (go) Note: make sure gopls in PATH, please do `ln -s ~/go/bin/gopls ~/.local/bin`.
-7. [hls](https://github.com/haskell/haskell-language-server) (haskell)
-8. [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) (dart)
-9. [metals](https://scalameta.org/metals/) (scala)
-10. [typescript](https://www.npmjs.com/package/typescript) (typescript, javascript)
-11. [ocamllsp](https://github.com/ocaml/ocaml-lsp) (ocaml)
-12. [erlang-ls](https://github.com/erlang-ls/erlang_ls) (erlang)
-13. [texlab](https://github.com/latex-lsp/texlab) (latex)
-14. [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls) (java) Note: please ensure that `org.eclipse.jdt.ls.product/target/repository/bin` is in your system PATH at first.
-15. [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp) (clojure)
-16. [bash-language-server](https://github.com/bash-lsp/bash-language-server) (bash)
-17. [volar](https://github.com/johnsoncodehk/volar) (vue)
-18. [sumneko](https://github.com/sumneko/lua-language-server) (lua) Note: please ensure `bin` under sumneko installation is in your system PATH at first.
-19. [wxml-language-server](https://github.com/chemzqm/wxml-languageserver) (wxml)
-20. [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) (html)
-21. [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) (css)
-22. [elm-language-server](https://github.com/elm-tooling/elm-language-server) (elm)
+| Index | LSP Server              | Language | Note                                                                                                                                                               |
+| :--- | :--- | :--- | :--- |
+| 1 | [clangd](https://github.com/clangd/clangd) | c, c++ |  |
+| 2 | [pyright](https://github.com/microsoft/pyright) | python | `pip install pyright`|
+| 3 | [solargraph](https://github.com/castwide/solargraph) | ruby | | 
+| 4 | [rust-analyzer](https://github.com/rust-lang/rust-analyzer) | rust | |
+| 5 | [elixirLS](https://github.com/elixir-lsp/elixir-ls) | elixir | please ensure that the `elixir-ls` release directory is in your system PATH at first |
+| 6 | [gopls](https://github.com/golang/tools/tree/master/gopls) | go | make sure gopls in PATH, please do `ln -s ~/go/bin/gopls ~/.local/bin` |
+| 7 | [hls](https://github.com/haskell/haskell-language-server) | haskell | |
+| 8 | [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) | dart | |
+| 9 | [metals](https://scalameta.org/metals/) | scala | |
+| 10 | [typescript](https://www.npmjs.com/package/typescript) | typescript, javascript | |
+| 11 | [ocamllsp](https://github.com/ocaml/ocaml-lsp) | ocaml | |
+| 12 | [erlang-ls](https://github.com/erlang-ls/erlang_ls) | erlang | |
+| 13 | [texlab](https://github.com/latex-lsp/texlab) | latex | |
+| 14 | [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls) | java | please ensure that `org.eclipse.jdt.ls.product/target/repository/bin` is in your system PATH at first |
+| 15 | [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp) | clojure | |
+| 16 | [bash-language-server](https://github.com/bash-lsp/bash-language-server) | bash | |
+| 17 | [volar](https://github.com/johnsoncodehk/volar) | vue | |
+| 18 | [sumneko](https://github.com/sumneko/lua-language-server) | lua | please ensure `bin` under sumneko installation is in your system PATH at first |
+| 19 | [wxml-language-server](https://github.com/chemzqm/wxml-languageserver) | wxml | |
+| 20 | [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | html | |
+| 21 | [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | css | |
+| 22 | [elm-language-server](https://github.com/elm-tooling/elm-language-server) | elm | |
 
 ### TODO Features:
 

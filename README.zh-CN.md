@@ -93,28 +93,31 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 
 ## 已经支持的语言服务器
 
-1. [clangd](https://github.com/clangd/clangd) (c, c++)
-2. [pyright](https://github.com/microsoft/pyright) (python)
-3. [solargraph](https://github.com/castwide/solargraph) (ruby)
-4. [rust-analyzer](https://github.com/rust-lang/rust-analyzer) (rust)
-5. [elixirLS](https://github.com/elixir-lsp/elixir-ls) (elixir) 注意: 请确保导出 `elixir-ls` 目录到你系统的PATH路径
-6. [gopls](https://github.com/golang/tools/tree/master/gopls) (go) 注意: 请确保gopls在系统的PATH路径， 执行 `ln -s ~/go/bin/gopls ~/.local/bin` 命令
-7. [hls](https://github.com/haskell/haskell-language-server) (haskell)
-8. [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) (dart)
-9. [metals](https://scalameta.org/metals/) (scala)
-10. [typescript](https://www.npmjs.com/package/typescript) (typescript, javascript)
-11. [ocamllsp](https://github.com/ocaml/ocaml-lsp) (ocaml)
-12. [erlang-ls](https://github.com/erlang-ls/erlang_ls) (erlang)
-13. [texlab](https://github.com/latex-lsp/texlab) (latex)
-14. [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls) (java) 注意: 请确保导出 `org.eclipse.jdt.ls.product/target/repository/bin` 到你系统的PATH路径
-15. [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp) (clojure)
-16. [bash-language-server](https://github.com/bash-lsp/bash-language-server) (bash)
-17. [volar](https://github.com/johnsoncodehk/volar) (vue)
-18. [sumneko](https://github.com/sumneko/lua-language-server) (lua) 注意: 请确保导出sumneko的 `bin` 目录到你系统的PATH路径
-19. [wxml-language-server](https://github.com/chemzqm/wxml-languageserver) (wxml)
-20. [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) (html)
-21. [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) (css)
-22. [elm-language-server](https://github.com/elm-tooling/elm-language-server) (elm)
+| 序号 | LSP服务器              | 语言 | 备注                                                                                                                                                               |
+| :--- | :--- | :--- | :--- |
+| 1 | [clangd](https://github.com/clangd/clangd) | c, c++ |  |
+| 2 | [pyright](https://github.com/microsoft/pyright) | python | `pip install pyright`|
+| 3 | [solargraph](https://github.com/castwide/solargraph) | ruby | | 
+| 4 | [rust-analyzer](https://github.com/rust-lang/rust-analyzer) | rust | |
+| 5 | [elixirLS](https://github.com/elixir-lsp/elixir-ls) | elixir | 请确保导出 `elixir-ls` 目录到你系统的PATH路径 |
+| 6 | [gopls](https://github.com/golang/tools/tree/master/gopls) | go | make sure gopls in PATH, please do `ln -s ~/go/bin/gopls ~/.local/bin` |
+| 7 | [hls](https://github.com/haskell/haskell-language-server) | haskell | |
+| 8 | [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) | dart | |
+| 9 | [metals](https://scalameta.org/metals/) | scala | |
+| 10 | [typescript](https://www.npmjs.com/package/typescript) | typescript, javascript | |
+| 11 | [ocamllsp](https://github.com/ocaml/ocaml-lsp) | ocaml | |
+| 12 | [erlang-ls](https://github.com/erlang-ls/erlang_ls) | erlang | |
+| 13 | [texlab](https://github.com/latex-lsp/texlab) | latex | |
+| 14 | [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls) | java | 请确保导出 `org.eclipse.jdt.ls.product/target/repository/bin` 到你系统的PATH路径 |
+| 15 | [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp) | clojure | |
+| 16 | [bash-language-server](https://github.com/bash-lsp/bash-language-server) | bash | |
+| 17 | [volar](https://github.com/johnsoncodehk/volar) | vue | |
+| 18 | [sumneko](https://github.com/sumneko/lua-language-server) | lua | 请确保导出sumneko的 `bin` 目录到你系统的PATH路径 |
+| 19 | [wxml-language-server](https://github.com/chemzqm/wxml-languageserver) | wxml | |
+| 20 | [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | html | |
+| 21 | [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | css | |
+| 22 | [elm-language-server](https://github.com/elm-tooling/elm-language-server) | elm | |
+
 
 ### 需要完成的功能：
 
