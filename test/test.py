@@ -44,6 +44,7 @@ def test_entrypoint():
         (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
         (package-initialize)
         (package-refresh-contents)
+        (package-install 'corfu)
         (package-install 'all-the-icons)
         (package-install 'orderless)
         (package-install 'posframe)
@@ -55,7 +56,7 @@ def test_entrypoint():
         (set-language-environment 'utf-8)
         (setq default-buffer-file-coding-system 'utf-8-unix)
         
-        (require 'lsp-bridge-ui)
+        (require 'corfu)
     )
     """
     run([
@@ -63,7 +64,6 @@ def test_entrypoint():
         '--eval', init_eval,
         '-L', '.',
         '-l', os.path.join(BASE_DIR, 'lsp-bridge.el'),
-        '-l', os.path.join(BASE_DIR, 'lsp-bridge-ui.el'),
         '-l', os.path.join(BASE_DIR, 'test', 'lsp-bridge-test.el'),
         '--eval', '(lsp-bridge-start-test)'
     ])

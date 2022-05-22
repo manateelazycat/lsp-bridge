@@ -12,6 +12,8 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 
 1. 安装Python依赖: [python-epc](https://github.com/tkf/python-epc)
 2. 安装Elisp依赖:
++ [corfu](https://github.com/minad/corfu) (使用 corfu 补全)
++ [company-mode](https://github.com/company-mode/company-mode), [company-box](https://github.com/sebastiencs/company-box) (使用 company-mode 补全)
 + [all-the-icons](https://github.com/domtronn/all-the-icons.el)
 + [orderless](https://github.com/oantolin/orderless)
 + [posframe](https://github.com/tumashu/posframe)
@@ -28,12 +30,23 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
 (yas-global-mode 1)
 
-;; lsp-bridge-ui 配置:
-(require 'lsp-bridge-ui)
-(require 'lsp-bridge-ui-history)
+;; corfu 配置:
+(setq lsp-bridge-completion-provider 'corfu)
+(require 'corfu)
+(require 'corfu-info)
+(require 'corfu-history)
+(require 'lsp-bridge-icon)        ;; show icons for completion items, optional
 (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
-(global-lsp-bridge-ui-mode)       ;; use lsp-bridge-ui as completion ui
-(lsp-bridge-ui-history-mode t)
+(global-corfu-mode)               ;; use corfu as completion ui
+(corfu-history-mode t)
+(global-lsp-bridge-mode)
+
+;; company-mode 配置:
+(setq lsp-bridge-completion-provider 'company)
+(require 'company)
+(require 'company-box)
+(require 'lsp-bridge-icon)        ;; show icons for completion items, optional
+(company-box-mode 1)
 (global-lsp-bridge-mode)
 
 ;; For Xref support
@@ -111,6 +124,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 - [ ] 用eldoc来显示参数信息
 - [ ] Code Action: 代码动作， 比如自动修复代码
 - [ ] Inline Value: 行类值显示
+- [ ] 一个文件支持多个LSP服务器，并混合不同LSP服务器的补全结果
 
 ### 不会支持的特性：
 lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是实现LSP协议最全的LSP客户端。

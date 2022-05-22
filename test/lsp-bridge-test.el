@@ -1,4 +1,4 @@
-(defun lsp-bridge-ui--auto-complete (&rest _)
+(defun corfu--auto-complete (&rest _)
   "Disable UI")
 
 (defun lsp-bridge-start-test ()

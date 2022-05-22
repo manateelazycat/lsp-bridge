@@ -2,10 +2,10 @@
 
 ;; Filename: lsp-bridge-orderless.el
 ;; Description: LSP bridge
-;; Author: Daniel Mendler <mail@daniel-mendler.de>
+;; Author: Andy Stewart <lazycat.manatee@gmail.com>
 ;; Maintainer: Andy Stewart <lazycat.manatee@gmail.com>
-;; Copyright (C) 2022, Daniel Mendler, Andy Stewart, all rights reserved.
-;; Created: 2022-05-01 14:10:12
+;; Copyright (C) 2018, Andy Stewart, all rights reserved.
+;; Created: 2018-06-15 14:10:12
 ;; Version: 0.5
 ;; Last-Updated: Sun Nov 21 04:35:02 2022 (-0500)
 ;;           By: Mingde (Matthew) Zeng
@@ -105,7 +105,7 @@
   (orderless-matching-styles '(orderless-initialism orderless-literal orderless-regexp)))
 
 (defun lsp-bridge-orderless-dispatch-flex-first (_pattern index _total)
-  "orderless-flex for lsp-bridge-ui."
+  "orderless-flex for corfu."
   (and (eq index 0) 'orderless-flex))
 
 (defun lsp-bridge-orderless-setup ()
