@@ -63,6 +63,7 @@ def test_entrypoint():
         '--eval', init_eval,
         '-L', '.',
         '-l', os.path.join(BASE_DIR, 'lsp-bridge.el'),
+        '-l', os.path.join(BASE_DIR, 'lsp-bridge-fw.el'),
         '-l', os.path.join(BASE_DIR, 'test', 'lsp-bridge-test.el'),
         '--eval', '(lsp-bridge-start-test)'
     ])
