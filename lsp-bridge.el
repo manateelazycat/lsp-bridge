@@ -442,6 +442,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defvar-local lsp-bridge-last-position 0)
 (defvar-local lsp-bridge-completion-candidates nil)
+(defvar-local lsp-bridge-completion-server-name nil)
+(defvar-local lsp-bridge-completion-trigger-characters nil)
 (defvar-local lsp-bridge-completion-prefix nil)
 (defvar-local lsp-bridge-completion-common nil)
 (defvar-local lsp-bridge-filepath "")
@@ -468,14 +470,14 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
            (string-empty-p (format "%s" (car list))))
       (and (eq (length list) 0))))
 
-(defun lsp-bridge-record-completion-items (filepath prefix common items)
+(defun lsp-bridge-record-completion-items (filepath common items server-name completion-trigger-characters)
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
-    (setq-local lsp-bridge-completion-prefix prefix)
     (setq-local lsp-bridge-completion-common common)
+    (setq-local lsp-bridge-completion-server-name server-name)
+    (setq-local lsp-bridge-completion-trigger-characters completion-trigger-characters)
 
     (setq-local lsp-bridge-completion-candidates (make-hash-table :test 'equal))
-
     (dolist (item items)
       (let* ((item-label (plist-get item :label))
              (item-annotation (plist-get item :annotation))
@@ -489,7 +491,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
              ;; If last command is match `lsp-bridge-completion-stop-commands'
              (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands))
 
-      (when (and (not (lsp-bridge-is-blank-before-cursor-p prefix)) ;hide completion frame if only blank before cursor
+      (when (and (not (lsp-bridge-is-blank-before-cursor-p)) ;hide completion frame if only blank before cursor
                  (not (lsp-bridge-is-at-sentence-ending-p))) ;hide completion if cursor after special chars
 
         (cl-case lsp-bridge-completion-provider
@@ -520,10 +522,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defun lsp-bridge-is-at-sentence-ending-p ()
   (member (char-to-string (char-before)) (list ":" ";" ")" "," "\"")))
 
-(defun lsp-bridge-is-blank-before-cursor-p (prefix)
-  (and (not (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
-       (string-match "\\s-*" prefix)
-       ))
+(defun lsp-bridge-is-blank-before-cursor-p ()
+  (not (split-string (buffer-substring-no-properties (line-beginning-position) (point)))))
 
 (defun lsp-bridge-capf ()
   "Capf function similar to eglot's 'eglot-completion-at-point'."
@@ -542,6 +542,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
      :annotation-function
      (lambda (candidate)
        (let* ((annotation (plist-get (gethash candidate lsp-bridge-completion-candidates) :annotation)))
+         (setq lsp-bridge-completion-prefix (buffer-substring-no-properties bounds-start (point)))
          (when annotation
            (concat " " (propertize annotation 'face 'font-lock-doc-face)))))
 
@@ -573,15 +574,22 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                (let* ((label candidate)
                       (insert-text (plist-get (gethash candidate lsp-bridge-completion-candidates) :insertText))
                       (insert-text-format (plist-get (gethash candidate lsp-bridge-completion-candidates) :insertTextFormat))
-                      (textEdit (plist-get (gethash candidate lsp-bridge-completion-candidates) :textEdit))
+                      (new-text (plist-get (gethash candidate lsp-bridge-completion-candidates) :newText))
                       (additionalTextEdits (if lsp-bridge-enable-auto-import
                                                (plist-get (gethash candidate lsp-bridge-completion-candidates) :additionalTextEdits)
                                              nil))
                       (kind (plist-get (gethash candidate lsp-bridge-completion-candidates) :kind))
                       (snippet-fn (and (or (eql insert-text-format 2) (string= kind "Snippet")) (lsp-bridge--snippet-expansion-fn)))
-                      (insert-candidate (if textEdit
-                                            (plist-get textEdit :newText)
-                                          (or insert-text label))))
+                      (insert-candidate (or new-text insert-text label)))
+
+                 ;; When we type @foo in *.vue file, volar will return candidates like @foo @foobar @xxx,
+                 ;; so we need trim first character of candidate if it start with completion trigger characters.
+                 (when (and (string-equal lsp-bridge-completion-server-name "volar")
+                            (> (length insert-candidate) 0)
+                            (member (substring insert-candidate 0 1) lsp-bridge-completion-trigger-characters))
+                   (setq insert-candidate (substring insert-candidate 1)))
+
+                 ;; Insert candidate or expand snippet.
                  (delete-region bounds-start (point))
                  (funcall (or snippet-fn #'insert) insert-candidate)
 

@@ -40,6 +40,5 @@
         "getDocumentPrintWidthRequest": false
       }
     }
-  },
-  "prefixBoundChars": [" ", "\t", "."]
+  }
 }
