@@ -28,11 +28,11 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
 (yas-global-mode 1)
 
-(require 'lsp-bridge-fw)
-(require 'lsp-bridge-fw-history)
+(require 'lsp-bridge-ui)
+(require 'lsp-bridge-ui-history)
 (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
-(global-lsp-bridge-fw-mode)       ;; use lsp-bridge-fw as completion ui
-(lsp-bridge-fw-history-mode t)
+(global-lsp-bridge-ui-mode)       ;; use lsp-bridge-ui as completion ui
+(lsp-bridge-ui-history-mode t)
 (global-lsp-bridge-mode)
 
 ;; For Xref support

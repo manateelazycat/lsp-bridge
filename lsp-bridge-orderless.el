@@ -105,7 +105,7 @@
   (orderless-matching-styles '(orderless-initialism orderless-literal orderless-regexp)))
 
 (defun lsp-bridge-orderless-dispatch-flex-first (_pattern index _total)
-  "orderless-flex for lsp-bridge-fw."
+  "orderless-flex for lsp-bridge-ui."
   (and (eq index 0) 'orderless-flex))
 
 (defun lsp-bridge-orderless-setup ()

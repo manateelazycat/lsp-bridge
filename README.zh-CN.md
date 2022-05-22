@@ -28,12 +28,12 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
 (yas-global-mode 1)
 
-;; lsp-bridge-fw 配置:
-(require 'lsp-bridge-fw)
-(require 'lsp-bridge-fw-history)
+;; lsp-bridge-ui 配置:
+(require 'lsp-bridge-ui)
+(require 'lsp-bridge-ui-history)
 (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
-(global-lsp-bridge-fw-mode)       ;; use lsp-bridge-fw as completion ui
-(lsp-bridge-fw-history-mode t)
+(global-lsp-bridge-ui-mode)       ;; use lsp-bridge-ui as completion ui
+(lsp-bridge-ui-history-mode t)
 (global-lsp-bridge-mode)
 
 ;; For Xref support

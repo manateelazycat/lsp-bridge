@@ -93,7 +93,7 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'number
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-completion-stop-commands '(lsp-bridge-fw-complete lsp-bridge-fw-insert)
+(defcustom lsp-bridge-completion-stop-commands '(lsp-bridge-ui-complete lsp-bridge-ui-insert)
   "If last command is match this option, stop popup completion ui."
   :type 'cons
   :group 'lsp-bridge)
@@ -479,7 +479,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
       (when (and (not (lsp-bridge-is-blank-before-cursor-p prefix)) ;hide completion frame if only blank before cursor
                  (not (lsp-bridge-is-at-sentence-ending-p))) ;hide completion if cursor after special chars
 
-        (lsp-bridge-fw--auto-complete lsp-bridge-last-change-tick)
+        (lsp-bridge-ui--auto-complete lsp-bridge-last-change-tick)
         ))))
 
 (defun lsp-bridge-is-at-sentence-ending-p ()
@@ -497,7 +497,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
        (unless (zerop (length candidate-label))
          (put-text-property 0 1 'lsp-bridge--lsp-item item candidate-label))
        ;; We add blank after `label' with different annotation,
-       ;; avoid lsp-bridge-fw filter candidate with same label name.
+       ;; avoid lsp-bridge-ui filter candidate with same label name.
        (if (string-equal (plist-get item :annotation) "Snippet")
            (format "%s " candidate-label)
          candidate-label)))
@@ -537,7 +537,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
      :exit-function
      (lambda (candidate status)
        (when (memq status '(finished exact))
-         ;; Because lsp-bridge will push new candidates when company/lsp-bridge-fw completing.
+         ;; Because lsp-bridge will push new candidates when company/lsp-bridge-ui completing.
          ;; We need extract newest candidates when insert, avoid insert old candidate content.
          (let* ((newest-candidates (lsp-bridge-extract-candidates))
                 (candidate-index (cl-find candidate newest-candidates :test #'string=)))
@@ -677,7 +677,7 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-monitor-after-change (begin end length)
   ;; Record last command to `lsp-bridge-last-change-command'.
   (setq lsp-bridge-last-change-command this-command)
-  (setq lsp-bridge-last-change-tick (lsp-bridge-fw--auto-tick))
+  (setq lsp-bridge-last-change-tick (lsp-bridge-ui--auto-tick))
 
   ;; Send change_file request.
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
@@ -921,8 +921,8 @@ If optional MARKER, return a marker instead"
     (setq lsp-bridge-filepath buffer-file-name)
     (setq lsp-bridge-last-position 0)
 
-    (setq-local lsp-bridge-fw-auto-prefix 0)
-       (setq-local lsp-bridge-fw-auto nil)
+    (setq-local lsp-bridge-ui-auto-prefix 0)
+       (setq-local lsp-bridge-ui-auto nil)
        ;; Add fuzzy match.
        (when (functionp 'lsp-bridge-orderless-setup)
          (lsp-bridge-orderless-setup))
@@ -943,7 +943,7 @@ If optional MARKER, return a marker instead"
 (defun global-lsp-bridge-mode ()
   (interactive)
 
-  (setq lsp-bridge-fw-auto t)
+  (setq lsp-bridge-ui-auto t)
 
   (dolist (hook lsp-bridge-default-mode-hooks)
     (add-hook hook (lambda ()
