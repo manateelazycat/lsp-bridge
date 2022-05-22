@@ -147,8 +147,6 @@ Setting this to nil or 0 will turn off the indicator."
   :group 'lsp-bridge)
 
 (defvar lsp-bridge-last-change-command nil)
-(defvar lsp-bridge-last-change-tick nil)
-
 (defvar lsp-bridge-server nil
   "The LSP-Bridge Server.")
 
@@ -443,7 +441,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   (setq lsp-bridge-is-starting nil))
 
 (defvar-local lsp-bridge-last-position 0)
-(defvar-local lsp-bridge-completion-items nil)
+(defvar-local lsp-bridge-completion-candidates nil)
 (defvar-local lsp-bridge-completion-prefix nil)
 (defvar-local lsp-bridge-completion-common nil)
 (defvar-local lsp-bridge-filepath "")
@@ -473,9 +471,16 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defun lsp-bridge-record-completion-items (filepath prefix common items)
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
-    (setq-local lsp-bridge-completion-items items)
     (setq-local lsp-bridge-completion-prefix prefix)
     (setq-local lsp-bridge-completion-common common)
+
+    (setq-local lsp-bridge-completion-candidates (make-hash-table :test 'equal))
+
+    (dolist (item items)
+      (let* ((item-label (plist-get item :label))
+             (item-annotation (plist-get item :annotation))
+             (item-key (if (string-equal item-annotation "Snippet") (format "%s " item-label) item-label)))
+        (puthash item-key item lsp-bridge-completion-candidates)))
 
     ;; Try popup completion frame.
     (unless (or
@@ -489,8 +494,28 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
         (cl-case lsp-bridge-completion-provider
           (company (company-manual-begin))
-          (corfu (corfu--auto-complete lsp-bridge-last-change-tick)))
-        ))))
+          (corfu
+           (pcase (while-no-input ;; Interruptible capf query
+                    (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
+             (`(,fun ,beg ,end ,table . ,plist)
+              (let ((completion-in-region-mode-predicate
+                     (lambda () (eq beg (car-safe (funcall fun)))))
+                    (completion-extra-properties plist))
+                (setq completion-in-region--data
+                      (list (if (markerp beg) beg (copy-marker beg))
+                            (copy-marker end t)
+                            table
+                            (plist-get plist :predicate)))
+
+                ;; Refresh candidates forcibly!!!
+                (pcase-let* ((`(,beg ,end ,table ,pred) completion-in-region--data)
+                             (pt (- (point) beg))
+                             (str (buffer-substring-no-properties beg end)))
+                  (corfu--update-candidates str pt table (plist-get plist :predicate)))
+
+                (corfu--setup)
+                (corfu--update))))
+           ))))))
 
 (defun lsp-bridge-is-at-sentence-ending-p ()
   (member (char-to-string (char-before)) (list ":" ";" ")" "," "\"")))
@@ -500,22 +525,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
        (string-match "\\s-*" prefix)
        ))
 
-(defun lsp-bridge-extract-candidates ()
-  (mapcar
-   (lambda (item)
-     (let* ((candidate-label (plist-get item :label)))
-       (unless (zerop (length candidate-label))
-         (put-text-property 0 1 'lsp-bridge--lsp-item item candidate-label))
-       ;; We add blank after `label' with different annotation,
-       ;; avoid corfu filter candidate with same label name.
-       (if (string-equal (plist-get item :annotation) "Snippet")
-           (format "%s " candidate-label)
-         candidate-label)))
-   lsp-bridge-completion-items))
-
 (defun lsp-bridge-capf ()
   "Capf function similar to eglot's 'eglot-completion-at-point'."
-  (let* ((candidates (lsp-bridge-extract-candidates))
+  (let* ((candidates (hash-table-keys lsp-bridge-completion-candidates))
          (bounds (bounds-of-thing-at-point 'symbol))
          (bounds-start (or (car bounds) (point)))
          (bounds-end (or (cdr bounds) (point))))
@@ -523,69 +535,55 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
      bounds-start
      bounds-end
      candidates
+
+     :company-cache
+     t
+
      :annotation-function
      (lambda (candidate)
-       "Extract annotation from CANDIDATE."
-       (let* ((item (get-text-property 0 'lsp-bridge--lsp-item candidate))
-              (annotation (plist-get item :annotation)))
+       (let* ((annotation (plist-get (gethash candidate lsp-bridge-completion-candidates) :annotation)))
          (when annotation
-           (concat " "
-                   (propertize annotation
-                               'face 'font-lock-doc-face)))))
+           (concat " " (propertize annotation 'face 'font-lock-doc-face)))))
+
      :company-kind
      (lambda (candidate)
-       "Set icon here"
-       (when-let* ((item (get-text-property 0 'lsp-bridge--lsp-item candidate))
-                   (kind (plist-get item :kind)))
+       (when-let* ((kind (plist-get (gethash candidate lsp-bridge-completion-candidates) :kind)))
          (intern (downcase kind))))
+
      :company-deprecated
-     (lambda (proxy)
-       (when-let ((lsp-item (get-text-property 0 'lsp-bridge--lsp-item proxy)))
-         (or (seq-contains-p (plist-get lsp-item :tags) 1)
-             (eq t (plist-get lsp-item :deprecated)))))
+     (lambda (candidate)
+       (seq-contains-p (plist-get (gethash candidate lsp-bridge-completion-candidates) :tags) 1))
 
      :exit-function
      (lambda (candidate status)
        (when (memq status '(finished exact))
-         ;; Because lsp-bridge will push new candidates when company/corfu completing.
+         ;; Because lsp-bridge will push new candidates when company/lsp-bridge-ui completing.
          ;; We need extract newest candidates when insert, avoid insert old candidate content.
-         (let* ((newest-candidates (lsp-bridge-extract-candidates))
-                (candidate-index (cl-find candidate newest-candidates :test #'string=)))
+         (let* ((candidate-index (cl-find candidate candidates :test #'string=)))
            (with-current-buffer (if (minibufferp)
                                     (window-buffer (minibuffer-selected-window))
                                   (current-buffer))
              (cond
               ;; Don't expand candidate if the user enters all characters manually.
-              ((and (member candidate newest-candidates)
+              ((and (member candidate candidates)
                     (eq this-command 'self-insert-command)))
               ;; Just insert candidate if it has expired.
               ((null candidate-index))
               (t
-               (let* ((item (get-text-property 0 'lsp-bridge--lsp-item candidate-index))
-                      (label (plist-get item :label))
-                      (insert-text (plist-get item :insertText))
-                      (insert-text-format (plist-get item :insertTextFormat))
-                      (textEdit (plist-get item :textEdit))
-                      (additionalTextEdits (if lsp-bridge-enable-auto-import (plist-get item :additionalTextEdits) nil))
-                      (kind (plist-get item :kind))
-                      (snippet-fn (and (or (eql insert-text-format 2) (string= kind "Snippet")) (lsp-bridge--snippet-expansion-fn))))
-                 ;; Delete current candidate.
-                 (delete-region (- (point) (length candidate)) (point))
-
-                 (cond
-                  ;; Replace prefix with textEdit rang and insert `newText'.
-                  (textEdit
-                   (insert lsp-bridge-completion-prefix)
-                   (let* ((range (plist-get textEdit :range)))
-                     (pcase-let ((`(,beg . ,end)
-                                  (lsp-bridge--range-region range)))
-                       (delete-region beg end)
-                       (goto-char beg)))
-
-                   (funcall (or snippet-fn #'insert) (plist-get textEdit :newText)))
-                  (t
-                   ;; Insert `insertText' or `label'.
-                   (funcall (or snippet-fn #'insert) (or insert-text label))))
+               (let* ((label candidate)
+                      (insert-text (plist-get (gethash candidate lsp-bridge-completion-candidates) :insertText))
+                      (insert-text-format (plist-get (gethash candidate lsp-bridge-completion-candidates) :insertTextFormat))
+                      (textEdit (plist-get (gethash candidate lsp-bridge-completion-candidates) :textEdit))
+                      (additionalTextEdits (if lsp-bridge-enable-auto-import
+                                               (plist-get (gethash candidate lsp-bridge-completion-candidates) :additionalTextEdits)
+                                             nil))
+                      (kind (plist-get (gethash candidate lsp-bridge-completion-candidates) :kind))
+                      (snippet-fn (and (or (eql insert-text-format 2) (string= kind "Snippet")) (lsp-bridge--snippet-expansion-fn)))
+                      (insert-candidate (if textEdit
+                                            (plist-get textEdit :newText)
+                                          (or insert-text label))))
+                 (delete-region bounds-start (point))
+                 (funcall (or snippet-fn #'insert) insert-candidate)
 
                  ;; Do `additionalTextEdits' if return auto-imprt information.
                  (when (cl-plusp (length additionalTextEdits))
@@ -687,8 +685,6 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-monitor-after-change (begin end length)
   ;; Record last command to `lsp-bridge-last-change-command'.
   (setq lsp-bridge-last-change-command this-command)
-  (if (eq lsp-bridge-completion-provider 'corfu)
-      (setq lsp-bridge-last-change-tick (corfu--auto-tick)))
 
   ;; Send change_file request.
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
@@ -826,7 +822,7 @@ If optional MARKER, return a marker instead"
 
 (defun lsp-bridge-insert-common-prefix ()
   (interactive)
-  (if (and (> (length lsp-bridge-completion-items) 0)
+  (if (and (> (length (hash-table-keys lsp-bridge-completion-candidates)) 0)
            lsp-bridge-completion-prefix
            lsp-bridge-completion-common
            (not (string-equal lsp-bridge-completion-common ""))
@@ -937,6 +933,10 @@ If optional MARKER, return a marker instead"
        (setq-local company-minimum-prefix-length 0)
        (setq-local company-idle-delay nil))
       (corfu
+       ;; Adjust default font height when running in HiDPI screen.
+       (when (> (frame-pixel-width) 3000)
+         (custom-set-faces '(corfu-default ((t (:height 1.3))))))
+
        (setq-local corfu-auto-prefix 0)
        (setq-local corfu-auto nil)
        ;; Add fuzzy match.
