@@ -6,7 +6,7 @@ from test.common import *
 def try_complete(file: SingleFile, label: str):
     def must_include_completion(method: str, args: List[Any]):
         if method == "lsp-bridge-record-completion-items":
-            items = args[3]
+            items = args[2]
             for item in items:
                 if item['label'] == label:
                     return True
