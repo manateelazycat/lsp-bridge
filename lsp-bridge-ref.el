@@ -4,8 +4,8 @@
 ;; Description: Search and refacotry code with rg
 ;; Author: Andy Stewart <lazycat.manatee@gmail.com>
 ;; Maintainer: Andy Stewart <lazycat.manatee@gmail.com>
-;; Copyright (C) 2018, Andy Stewart, all rights reserved.
-;; Created: 2018-08-26 14:22:12
+;; Copyright (C) 2022, Andy Stewart, all rights reserved.
+;; Created: 2022-05-01 14:22:12
 ;; Version: 5.6
 ;; Last-Updated: 2020-05-04 17:52:55
 ;;           By: Andy Stewart

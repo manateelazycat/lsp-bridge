@@ -12,8 +12,6 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 
 1. Install Python dependencies: [python-epc](https://github.com/tkf/python-epc)
 2. Install Elisp dependencies:
-+ [corfu](https://github.com/minad/corfu) (for corfu users)
-+ [company-mode](https://github.com/company-mode/company-mode), [company-box](https://github.com/sebastiencs/company-box) (for company users)
 + [all-the-icons](https://github.com/domtronn/all-the-icons.el)
 + [orderless](https://github.com/oantolin/orderless)
 + [posframe](https://github.com/tumashu/posframe)
@@ -30,23 +28,11 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
 (yas-global-mode 1)
 
-;; For corfu users:
-(setq lsp-bridge-completion-provider 'corfu)
-(require 'corfu)
-(require 'corfu-info)
-(require 'corfu-history)
-(require 'lsp-bridge-icon)        ;; show icons for completion items, optional
+(require 'lsp-bridge-fw)
+(require 'lsp-bridge-fw-history)
 (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
-(global-corfu-mode)               ;; use corfu as completion ui
-(corfu-history-mode t)
-(global-lsp-bridge-mode)
-
-;; For company-mode users:
-(setq lsp-bridge-completion-provider 'company)
-(require 'company)
-(require 'company-box)
-(require 'lsp-bridge-icon)        ;; show icons for completion items, optional
-(company-box-mode 1)
+(global-lsp-bridge-fw-mode)       ;; use lsp-bridge-fw as completion ui
+(lsp-bridge-fw-history-mode t)
 (global-lsp-bridge-mode)
 
 ;; For Xref support
@@ -123,7 +109,6 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 - [ ] Show signature help with eldoc
 - [ ] Code action
 - [ ] Inline Value
-- [ ] One file open multi-server, and mixed multi-result to corfu menu
 
 ### Features that won't be supported
 

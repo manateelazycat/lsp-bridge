@@ -4,8 +4,8 @@
 ;; Description: LSP bridge
 ;; Author: Andy Stewart <lazycat.manatee@gmail.com>
 ;; Maintainer: Andy Stewart <lazycat.manatee@gmail.com>
-;; Copyright (C) 2018, Andy Stewart, all rights reserved.
-;; Created: 2018-06-15 14:10:12
+;; Copyright (C) 2022, Andy Stewart, all rights reserved.
+;; Created: 2022-05-01 14:10:12
 ;; Version: 0.5
 ;; Last-Updated: Wed May 11 02:44:16 2022 (-0400)
 ;;           By: Mingde (Matthew) Zeng
@@ -93,15 +93,7 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'number
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-completion-provider
-  (if (boundp 'company-mode)
-      'company
-    'corfu)
-  "The completion provider to use. Can be `company' or `corfu'."
-  :type '(choice (const :tag "company" company)
-                 (const :tag "corfu" corfu)))
-
-(defcustom lsp-bridge-completion-stop-commands '(corfu-complete corfu-insert)
+(defcustom lsp-bridge-completion-stop-commands '(lsp-bridge-fw-complete lsp-bridge-fw-insert)
   "If last command is match this option, stop popup completion ui."
   :type 'cons
   :group 'lsp-bridge)
@@ -487,9 +479,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
       (when (and (not (lsp-bridge-is-blank-before-cursor-p prefix)) ;hide completion frame if only blank before cursor
                  (not (lsp-bridge-is-at-sentence-ending-p))) ;hide completion if cursor after special chars
 
-        (cl-case lsp-bridge-completion-provider
-          (company (company-manual-begin))
-          (corfu (corfu--auto-complete lsp-bridge-last-change-tick)))
+        (lsp-bridge-fw--auto-complete lsp-bridge-last-change-tick)
         ))))
 
 (defun lsp-bridge-is-at-sentence-ending-p ()
@@ -507,7 +497,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
        (unless (zerop (length candidate-label))
          (put-text-property 0 1 'lsp-bridge--lsp-item item candidate-label))
        ;; We add blank after `label' with different annotation,
-       ;; avoid corfu filter candidate with same label name.
+       ;; avoid lsp-bridge-fw filter candidate with same label name.
        (if (string-equal (plist-get item :annotation) "Snippet")
            (format "%s " candidate-label)
          candidate-label)))
@@ -547,7 +537,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
      :exit-function
      (lambda (candidate status)
        (when (memq status '(finished exact))
-         ;; Because lsp-bridge will push new candidates when company/corfu completing.
+         ;; Because lsp-bridge will push new candidates when company/lsp-bridge-fw completing.
          ;; We need extract newest candidates when insert, avoid insert old candidate content.
          (let* ((newest-candidates (lsp-bridge-extract-candidates))
                 (candidate-index (cl-find candidate newest-candidates :test #'string=)))
@@ -687,8 +677,7 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-monitor-after-change (begin end length)
   ;; Record last command to `lsp-bridge-last-change-command'.
   (setq lsp-bridge-last-change-command this-command)
-  (if (eq lsp-bridge-completion-provider 'corfu)
-      (setq lsp-bridge-last-change-tick (corfu--auto-tick)))
+  (setq lsp-bridge-last-change-tick (lsp-bridge-fw--auto-tick))
 
   ;; Send change_file request.
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
@@ -932,16 +921,11 @@ If optional MARKER, return a marker instead"
     (setq lsp-bridge-filepath buffer-file-name)
     (setq lsp-bridge-last-position 0)
 
-    (cl-case lsp-bridge-completion-provider
-      (company
-       (setq-local company-minimum-prefix-length 0)
-       (setq-local company-idle-delay nil))
-      (corfu
-       (setq-local corfu-auto-prefix 0)
-       (setq-local corfu-auto nil)
+    (setq-local lsp-bridge-fw-auto-prefix 0)
+       (setq-local lsp-bridge-fw-auto nil)
        ;; Add fuzzy match.
        (when (functionp 'lsp-bridge-orderless-setup)
-         (lsp-bridge-orderless-setup))))
+         (lsp-bridge-orderless-setup))
 
     ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
     (unless lsp-bridge-is-starting
@@ -959,8 +943,7 @@ If optional MARKER, return a marker instead"
 (defun global-lsp-bridge-mode ()
   (interactive)
 
-  (if (eq lsp-bridge-completion-provider 'corfu)
-      (setq corfu-auto t))
+  (setq lsp-bridge-fw-auto t)
 
   (dolist (hook lsp-bridge-default-mode-hooks)
     (add-hook hook (lambda ()

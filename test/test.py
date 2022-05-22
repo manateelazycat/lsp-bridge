@@ -44,7 +44,6 @@ def test_entrypoint():
         (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
         (package-initialize)
         (package-refresh-contents)
-        (package-install 'corfu)
         (package-install 'all-the-icons)
         (package-install 'orderless)
         (package-install 'posframe)
@@ -56,7 +55,7 @@ def test_entrypoint():
         (set-language-environment 'utf-8)
         (setq default-buffer-file-coding-system 'utf-8-unix)
         
-        (require 'corfu)
+        (require 'lsp-bridge-fw)
     )
     """
     run([
