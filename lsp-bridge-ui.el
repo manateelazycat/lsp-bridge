@@ -416,6 +416,11 @@ The completion backend can override this with
         (set (make-local-variable (car var)) (cdr var)))
       (setq-local face-remapping-alist (copy-tree fr)
                   line-spacing ls)
+
+      ;; Adjust default font height when running in HiDPI screen.
+      (when (> (frame-pixel-width) 3000)
+        (custom-set-faces '(lsp-bridge-ui-default ((t (:height 1.3))))))
+
       (cl-pushnew 'lsp-bridge-ui-default (alist-get 'default face-remapping-alist))
       (let ((inhibit-modification-hooks t)
             (inhibit-read-only t))
