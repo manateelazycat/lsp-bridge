@@ -1320,10 +1320,6 @@ An alist.")
   (interactive)
   (setq lsp-bridge-fw-icon--cache nil))
 
-(defun lsp-bridge-fw-icon--set-default-clear-cache (&rest args)
-  (lsp-bridge-fw-icon-reset-cache)
-  (apply #'set-default args))
-
 (defvar lsp-bridge-fw-icon--icons
   `((unknown . ,(all-the-icons-material "find_in_page" :height 0.8 :v-adjust -0.15))
     (text . ,(all-the-icons-faicon "text-width" :height 0.8 :v-adjust -0.02))
