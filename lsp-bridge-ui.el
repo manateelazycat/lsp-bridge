@@ -426,8 +426,8 @@ The completion backend can override this with
 
 ;; Function adapted from posframe.el by tumashu
 (defvar x-gtk-resize-child-frames) ;; Not present on non-gtk builds
-(defun lsp-bridge-ui--make-frame (x y width height content)
-  "Show child frame at X/Y with WIDTH/HEIGHT and CONTENT."
+(defun lsp-bridge-ui--make-frame (x y content)
+  "Show child frame at X/Y CONTENT."
   (let* ((window-min-height 1)
          (window-min-width 1)
          (x-gtk-resize-child-frames
@@ -447,14 +447,11 @@ The completion backend can override this with
          (edge (window-inside-pixel-edges))
          (ch (default-line-height))
          (border (alist-get 'child-frame-border-width lsp-bridge-ui--frame-parameters))
-         (x (max border (min (+ (car edge) x (- border))
-                             (- (frame-pixel-width) width))))
          (yb (+ (cadr edge) (window-tab-line-height) y ch))
-         (y (if (> (+ yb (* lsp-bridge-ui-count ch) ch ch) (frame-pixel-height))
-                (- yb height ch 1)
-              yb))
          (buffer (lsp-bridge-ui--make-buffer content))
-         (parent (window-frame)))
+         (parent (window-frame))
+         x-pos
+         y-pos)
     (unless (and (frame-live-p lsp-bridge-ui--frame)
                  (eq (frame-parent lsp-bridge-ui--frame) parent))
       (when lsp-bridge-ui--frame (delete-frame lsp-bridge-ui--frame))
@@ -480,24 +477,29 @@ The completion backend can override this with
       (set-window-buffer win buffer)
       ;; Mark window as dedicated to prevent frame reuse (#60)
       (set-window-dedicated-p win t))
-    (set-frame-size lsp-bridge-ui--frame width height t)
+    (fit-frame-to-buffer-1 lsp-bridge-ui--frame nil nil nil nil nil)
+    (setq x-pos (max border (min (+ (car edge) x (- border))
+                                 (- (frame-pixel-width)
+                                    (frame-pixel-width lsp-bridge-ui--frame)))))
+    (setq y-pos (if (> (+ yb (* lsp-bridge-ui-count ch) ch ch) (frame-pixel-height))
+                    (- yb (frame-pixel-height lsp-bridge-ui--frame) ch 1)
+                  yb))
     (if (frame-visible-p lsp-bridge-ui--frame)
         ;; XXX HACK Avoid flicker when frame is already visible.
         ;; Redisplay, wait for resize and then move the frame.
-        (unless (equal (frame-position lsp-bridge-ui--frame) (cons x y))
+        (unless (equal (frame-position lsp-bridge-ui--frame) (cons x-pos y-pos))
           (redisplay 'force)
           (sleep-for 0.01)
-          (set-frame-position lsp-bridge-ui--frame x y))
+          (set-frame-position lsp-bridge-ui--frame x-pos y-pos))
       ;; XXX HACK: Force redisplay, otherwise the popup sometimes does not
       ;; display content.
-      (set-frame-position lsp-bridge-ui--frame x y)
+      (set-frame-position lsp-bridge-ui--frame x-pos y-pos)
       (redisplay 'force)
       (make-frame-visible lsp-bridge-ui--frame))
     (redirect-frame-focus lsp-bridge-ui--frame parent)))
 
-(defun lsp-bridge-ui--popup-show (pos off width lines &optional curr lo bar)
+(defun lsp-bridge-ui--popup-show (pos off lines &optional curr lo bar)
   "Show LINES as popup at POS - OFF.
-WIDTH is the width of the popup.
 The current candidate CURR is highlighted.
 A scroll bar is displayed from LO to LO+BAR."
   (let* ((ch (default-line-height))
@@ -517,7 +519,6 @@ A scroll bar is displayed from LO to LO+BAR."
          (y (or (cdr pos) 0)))
     (lsp-bridge-ui--make-frame
      (- x ml (* cw off)) y
-     (+ (* width cw) ml mr) (* (length lines) ch)
      (mapconcat (lambda (line)
                   (let ((str (concat marginl line
                                      (if (and lo (<= lo row (+ lo bar))) sbar marginr))))
@@ -818,7 +819,7 @@ there hasn't been any input, then quit."
       (setq lo (max 1 lo)))
     (when (/= last lsp-bridge-ui--total)
       (setq lo (min (- lsp-bridge-ui-count bar 2) lo)))
-    (lsp-bridge-ui--popup-show (+ pos (length lsp-bridge-ui--base)) pw width fcands (- lsp-bridge-ui--index lsp-bridge-ui--scroll)
+    (lsp-bridge-ui--popup-show (+ pos (length lsp-bridge-ui--base)) pw fcands (- lsp-bridge-ui--index lsp-bridge-ui--scroll)
                                (and (> lsp-bridge-ui--total lsp-bridge-ui-count) lo) bar)))
 
 (defun lsp-bridge-ui--preview-current (beg end)
@@ -911,7 +912,7 @@ there hasn't been any input, then quit."
              ('t nil)
              ('nil t)
              ('separator (seq-contains-p (car lsp-bridge-ui--input) lsp-bridge-ui-separator))))
-      (lsp-bridge-ui--popup-show beg 0 8 '(#("No match" 0 8 (face italic))))
+      (lsp-bridge-ui--popup-show beg 0 '(#("No match" 0 8 (face italic))))
       (redisplay 'force)) ;; XXX HACK Ensure that popup is redisplayed
      (t (lsp-bridge-ui-quit)))))
 
