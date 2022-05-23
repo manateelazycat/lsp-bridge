@@ -39,3 +39,5 @@ class Rename(Handler):
                                   edit_info["newText"]])
                     
                 eval_in_emacs("lsp-bridge-rename-file", rename_file, edits)
+
+        message_emacs("Rename done.")
