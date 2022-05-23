@@ -586,7 +586,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                  ;; so we need trim first character of candidate if it start with completion trigger characters.
                  (when (and (string-equal lsp-bridge-completion-server-name "volar")
                             (> (length insert-candidate) 0)
-                            (member (substring insert-candidate 0 1) lsp-bridge-completion-trigger-characters))
+                            (member (substring insert-candidate 0 1) (list ":" "@")))
                    (setq insert-candidate (substring insert-candidate 1)))
 
                  ;; Insert candidate or expand snippet.
