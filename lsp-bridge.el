@@ -795,13 +795,24 @@ If optional MARKER, return a marker instead"
       (lsp-bridge--move-to-column column)
       (point))))
 
-(defun lsp-bridge-rename-finish (rename-files counter)
-  (save-excursion
-    (dolist (filepath rename-files)
-      (lsp-bridge--with-file-buffer filepath
-        (revert-buffer :ignore-auto :noconfirm))))
-
-  (message "[LSP-Bridge] Rename %s places in %s files." counter (length rename-files)))
+(defun lsp-bridge-rename-file (filepath edits)
+  (find-file filepath)
+  (lsp-bridge--with-file-buffer filepath
+    (dolist (edit edits)
+      (let* ((bound-start (nth 0 edit))
+             (bound-end (nth 1 edit))
+             (new-text (nth 2 edit))
+             (replace-start-pos (save-excursion
+                                  (goto-line (+ (plist-get bound-start :line) 1))
+                                  (move-to-column (plist-get bound-start :character))
+                                  (point)))
+             (replace-end-pos (save-excursion
+                                (goto-line (+ (plist-get bound-end :line) 1))
+                                (move-to-column (plist-get bound-end :character))
+                                (point))))
+        (delete-region replace-start-pos replace-end-pos)
+        (goto-char replace-start-pos)
+        (insert new-text)))))
 
 (defun lsp-bridge--goto-position (position)
   (goto-line (1+ (plist-get position :line)))
