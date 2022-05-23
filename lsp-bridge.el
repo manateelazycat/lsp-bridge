@@ -101,8 +101,13 @@ Setting this to nil or 0 will turn off the indicator."
   :type '(choice (const :tag "company" company)
                  (const :tag "corfu" corfu)))
 
-(defcustom lsp-bridge-completion-stop-commands '(corfu-complete corfu-insert)
+(defcustom lsp-bridge-completion-stop-commands '(corfu-complete corfu-insert undo-tree-undo undo-tree-redo)
   "If last command is match this option, stop popup completion ui."
+  :type 'cons
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-hide-completion-characters '(":" ";" "(" ")" "[" "]" "{" "}" "," "\"")
+  "If char before match this option, stop popup completion ui."
   :type 'cons
   :group 'lsp-bridge)
 
@@ -447,6 +452,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defvar-local lsp-bridge-completion-prefix nil)
 (defvar-local lsp-bridge-completion-common nil)
 (defvar-local lsp-bridge-filepath "")
+(defvar-local lsp-bridge-prohibit-completion nil)
 
 (defun lsp-bridge-char-before ()
   (let ((prev-char (char-before)))
@@ -484,43 +490,45 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
              (item-key (if (string-equal item-annotation "Snippet") (format "%s " item-label) item-label)))
         (puthash item-key item lsp-bridge-completion-candidates)))
 
-    ;; Try popup completion frame.
-    (unless (or
-             ;; Don't popup completion frame if completion items is empty.
-             (lsp-bridge-is-empty-list items)
-             ;; If last command is match `lsp-bridge-completion-stop-commands'
-             (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands))
+    (if lsp-bridge-prohibit-completion
+        (setq lsp-bridge-prohibit-completion nil)
+      ;; Try popup completion frame.
+      (unless (or
+               ;; Don't popup completion frame if completion items is empty.
+               (lsp-bridge-is-empty-list items)
+               ;; If last command is match `lsp-bridge-completion-stop-commands'
+               (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands))
 
-      (when (and (not (lsp-bridge-is-blank-before-cursor-p)) ;hide completion frame if only blank before cursor
-                 (not (lsp-bridge-is-at-sentence-ending-p))) ;hide completion if cursor after special chars
+        (when (and (not (lsp-bridge-is-blank-before-cursor-p)) ;hide completion frame if only blank before cursor
+                   (not (lsp-bridge-match-hide-characters-p))) ;hide completion if cursor after special chars
 
-        (cl-case lsp-bridge-completion-provider
-          (company (company-manual-begin))
-          (corfu
-           (pcase (while-no-input ;; Interruptible capf query
-                    (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
-             (`(,fun ,beg ,end ,table . ,plist)
-              (let ((completion-in-region-mode-predicate
-                     (lambda () (eq beg (car-safe (funcall fun)))))
-                    (completion-extra-properties plist))
-                (setq completion-in-region--data
-                      (list (if (markerp beg) beg (copy-marker beg))
-                            (copy-marker end t)
-                            table
-                            (plist-get plist :predicate)))
+          (cl-case lsp-bridge-completion-provider
+            (company (company-manual-begin))
+            (corfu
+             (pcase (while-no-input ;; Interruptible capf query
+                      (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
+               (`(,fun ,beg ,end ,table . ,plist)
+                (let ((completion-in-region-mode-predicate
+                       (lambda () (eq beg (car-safe (funcall fun)))))
+                      (completion-extra-properties plist))
+                  (setq completion-in-region--data
+                        (list (if (markerp beg) beg (copy-marker beg))
+                              (copy-marker end t)
+                              table
+                              (plist-get plist :predicate)))
 
-                ;; Refresh candidates forcibly!!!
-                (pcase-let* ((`(,beg ,end ,table ,pred) completion-in-region--data)
-                             (pt (- (point) beg))
-                             (str (buffer-substring-no-properties beg end)))
-                  (corfu--update-candidates str pt table (plist-get plist :predicate)))
+                  ;; Refresh candidates forcibly!!!
+                  (pcase-let* ((`(,beg ,end ,table ,pred) completion-in-region--data)
+                               (pt (- (point) beg))
+                               (str (buffer-substring-no-properties beg end)))
+                    (corfu--update-candidates str pt table (plist-get plist :predicate)))
 
-                (corfu--setup)
-                (corfu--update))))
-           ))))))
+                  (corfu--setup)
+                  (corfu--update))))
+             )))))))
 
-(defun lsp-bridge-is-at-sentence-ending-p ()
-  (member (char-to-string (char-before)) (list ":" ";" ")" "," "\"")))
+(defun lsp-bridge-match-hide-characters-p ()
+  (member (char-to-string (char-before)) lsp-bridge-hide-completion-characters))
 
 (defun lsp-bridge-is-blank-before-cursor-p ()
   (not (split-string (buffer-substring-no-properties (line-beginning-position) (point)))))
@@ -812,7 +820,8 @@ If optional MARKER, return a marker instead"
                                 (point))))
         (delete-region replace-start-pos replace-end-pos)
         (goto-char replace-start-pos)
-        (insert new-text)))))
+        (insert new-text))))
+  (setq lsp-bridge-prohibit-completion t))
 
 (defun lsp-bridge--goto-position (position)
   (goto-line (1+ (plist-get position :line)))
