@@ -39,7 +39,7 @@ class Completion(Handler):
             for item in response["items"] if "items" in response else response:
                 kind = KIND_MAP[item.get("kind", 0)]
                 textEdit = item.get("textEdit", None)
-                
+
                 candidate = {
                     "label": item["label"],
                     "tags": item.get("tags", []),
@@ -57,10 +57,11 @@ class Completion(Handler):
 
         # Calculate completion common string.
         completion_common_string = os.path.commonprefix(list(map(lambda candidate: candidate["label"], completion_candidates)))
-        
-        eval_in_emacs("lsp-bridge-record-completion-items", 
-                      self.file_action.filepath, 
-                      completion_common_string, 
-                      completion_candidates,
-                      self.file_action.lsp_server.server_info["name"],
-                      self.file_action.lsp_server.completion_trigger_characters)
+
+        if len(completion_candidates) > 0:
+            eval_in_emacs("lsp-bridge-record-completion-items",
+                        self.file_action.filepath,
+                        completion_common_string,
+                        completion_candidates,
+                        self.file_action.lsp_server.server_info["name"],
+                        self.file_action.lsp_server.completion_trigger_characters)
