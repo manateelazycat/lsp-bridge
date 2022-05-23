@@ -362,6 +362,9 @@ class LspServer:
         if "error" in message:
             logger.error("\n--- Recv message (error):")
             logger.error(json.dumps(message, indent=3))
+            
+            message_emacs(message["error"]["message"])
+            
             return
 
         if "id" in message:
