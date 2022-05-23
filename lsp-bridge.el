@@ -1006,6 +1006,15 @@ If optional MARKER, return a marker instead"
 (cl-defmethod xref-backend-references ((_backend (eql lsp-bridge)) _)
   (lsp-bridge-find-def))
 
+(defun lsp-bridge--rename-file-advisor (orig-fun &optional arg &rest args)
+  (when lsp-bridge-mode
+    (let ((new-name (expand-file-name (nth 0 args))))
+      (lsp-bridge-call-async "close_file" lsp-bridge-filepath)
+      (set-visited-file-name new-name t t)
+      (setq lsp-bridge-filepath new-name)))
+  (apply orig-fun arg args))
+(advice-add #'rename-file :around #'lsp-bridge--rename-file-advisor)
+
 (provide 'lsp-bridge)
 
 ;;; lsp-bridge.el ends here

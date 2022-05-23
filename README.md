@@ -120,7 +120,6 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 
 ### TODO Features:
 
-- [ ] Support file rename
 - [ ] Show signature help with eldoc
 - [ ] Code action
 - [ ] Inline Value

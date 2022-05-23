@@ -121,7 +121,6 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 
 ### 需要完成的功能：
 
-- [ ] 支持文件重命名
 - [ ] 用eldoc来显示参数信息
 - [ ] Code Action: 代码动作， 比如自动修复代码
 - [ ] Inline Value: 行类值显示
