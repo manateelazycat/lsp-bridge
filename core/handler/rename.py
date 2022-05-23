@@ -12,11 +12,6 @@ class Rename(Handler):
         if response is None:
             logger.info("No rename found.")
 
-        counter = 0
-        rename_files = []
-
-        print("************* ", response)
-        
         rename_infos = response["documentChanges"] if "documentChanges" in response else response["changes"]
 
         if type(rename_infos) == dict:
