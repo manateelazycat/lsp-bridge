@@ -663,23 +663,23 @@ If optional MARKER, return a marker instead"
                          (plist-get pos-plist :line)))
       (unless (eobp) ;; if line was excessive leave point at eob
         (let ((tab-width 1)
-              (col (plist-get pos-plist :character)))
-          (unless (wholenump col)
+              (char (plist-get pos-plist :character)))
+          (unless (wholenump char)
             (message
              "[LSP Bridge] Caution: LSP server sent invalid character position %s. Using 0 instead."
-             col)
-            (setq col 0))
-          (lsp-bridge--move-to-column col)))
+             char)
+            (setq char 0))
+          (lsp-bridge--move-to-character char)))
       (if marker (copy-marker (point-marker)) (point)))))
 
 ;; Copy from eglot
-(defun lsp-bridge--move-to-column (column)
+(defun lsp-bridge--move-to-character (character)
   "Move to COLUMN without closely following the LSP spec."
   ;; We cannot use `move-to-column' here, because it moves to *visual*
   ;; columns, which can be different from LSP columns in case of
   ;; `whitespace-mode', `prettify-symbols-mode', etc.  (github#296,
   ;; github#297)
-  (goto-char (min (+ (line-beginning-position) column)
+  (goto-char (min (+ (line-beginning-position) character)
                   (line-end-position))))
 
 (defun lsp-bridge--point-position (pos)
@@ -807,7 +807,7 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-position-to-pos (position)
   (save-excursion
     (goto-line (+ (plist-get position :line) 1))
-    (lsp-bridge--move-to-column (plist-get position :character))
+    (lsp-bridge--move-to-character (plist-get position :character))
     (point)))
 
 (defun lsp-bridge-rename-file (filepath edits)
