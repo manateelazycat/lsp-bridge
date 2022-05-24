@@ -121,6 +121,11 @@ class LspBridge:
             "content": filepath
         })
 
+    def rename_file(self, old_filepath, new_filepath):
+        if is_in_path_dict(self.file_action_dict, old_filepath):
+            get_from_path_dict(self.file_action_dict, old_filepath).lsp_server.send_did_rename_files_notification(
+                old_filepath, new_filepath)
+        
     def create_file_action(self, filepath, lang_server_info, lsp_server, **kwargs):
         if is_in_path_dict(self.file_action_dict, filepath):
             if get_from_path_dict(self.file_action_dict, filepath).lsp_server != lsp_server:

@@ -300,6 +300,14 @@ class LspServer:
                 "uri": path_to_uri(filepath),
             }
         })
+        
+    def send_did_rename_files_notification(self, old_filepath, new_filepath):
+        self.sender.send_notification("workspace/renameFiles", {
+            "files": [{
+                "oldUri": path_to_uri(old_filepath),
+                "newUri": path_to_uri(new_filepath)
+            }]
+        })
 
     def send_did_save_notification(self, filepath):
         self.sender.send_notification("textDocument/didSave", {

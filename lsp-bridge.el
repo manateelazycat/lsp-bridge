@@ -1010,6 +1010,7 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge--rename-file-advisor (orig-fun &optional arg &rest args)
   (when lsp-bridge-mode
     (let ((new-name (expand-file-name (nth 0 args))))
+      (lsp-bridge-call-async "rename_file" lsp-bridge-filepath new-name)
       (lsp-bridge-call-async "close_file" lsp-bridge-filepath)
       (set-visited-file-name new-name t t)
       (setq lsp-bridge-filepath new-name)))
