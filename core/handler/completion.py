@@ -38,13 +38,13 @@ class Completion(Handler):
         if response is not None:
             for item in response["items"] if "items" in response else response:
                 kind = KIND_MAP[item.get("kind", 0)]
-                
+
                 candidate = {
                     "label": item["label"],
                     "tags": item.get("tags", []),
                     "insertText": item.get('insertText', None),
                     "kind": kind,
-                    "annotation": (item.get("detail") or kind).replace(" ", ""),
+                    "annotation": item.get("detail", kind),
                     "insertTextFormat": item.get("insertTextFormat", ''),
                     "textEdit": item.get("textEdit", None)
                 }
