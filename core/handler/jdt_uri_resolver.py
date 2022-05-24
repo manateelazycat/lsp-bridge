@@ -54,8 +54,9 @@ class JDTUriResolver(Handler):
             os.makedirs(external_file_dir, exist_ok=True)
 
             # Always override decompile content to file, avoid cache conflict.
-            with open(external_file, 'w') as f:
-                f.write(response)
+            if not os.path.exists(external_file):
+                with open(external_file, 'w') as f:
+                    f.write(response)
 
             self.file_action.lsp_bridge.create_file_action(
                 filepath=external_file,
