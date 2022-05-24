@@ -487,7 +487,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (dolist (item items)
       (let* ((item-label (plist-get item :label))
              (item-annotation (plist-get item :annotation))
-             (item-key (if (string-equal item-annotation "Snippet") (format "%s " item-label) item-label)))
+             (item-key (if (member item-annotation '("Snippet" "Emmet Abbreviation"))
+                           (format "%s " item-label)
+                         item-label)))
         (puthash item-key item lsp-bridge-completion-candidates)))
 
     (if lsp-bridge-prohibit-completion
