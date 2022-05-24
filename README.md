@@ -26,7 +26,7 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 (add-to-list 'load-path "<path-to-lsp-bridge>")
 
 (require 'yasnippet)
-(require 'lsp-bridge)             ;; load lsp-bridge
+(require 'lsp-bridge)
 (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
 (yas-global-mode 1)
 
@@ -37,9 +37,10 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 (require 'corfu-history)
 (require 'lsp-bridge-icon)        ;; show icons for completion items, optional
 (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
-(global-corfu-mode)               ;; use corfu as completion ui
+(global-corfu-mode)
 (corfu-history-mode t)
 (global-lsp-bridge-mode)
+(when (> (frame-pixel-width) 3000) (custom-set-faces '(corfu-default ((t (:height 1.3))))))  ;; adjust default font height when running in HiDPI screen.
 
 ;; For company-mode users:
 (setq lsp-bridge-completion-provider 'company)

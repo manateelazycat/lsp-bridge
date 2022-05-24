@@ -850,13 +850,15 @@ If optional MARKER, return a marker instead"
 
 (defun lsp-bridge-insert-common-prefix ()
   (interactive)
-  (if (and (> (length (hash-table-keys lsp-bridge-completion-candidates)) 0)
-           lsp-bridge-completion-prefix
-           lsp-bridge-completion-common
-           (not (string-equal lsp-bridge-completion-common ""))
-           (not (string-equal lsp-bridge-completion-common lsp-bridge-completion-prefix)))
-      (insert (substring lsp-bridge-completion-common (length lsp-bridge-completion-prefix)))
-    (message "Not found common part to insert.")))
+  (if lsp-bridge-mode
+      (if (and (> (length (hash-table-keys lsp-bridge-completion-candidates)) 0)
+               lsp-bridge-completion-prefix
+               lsp-bridge-completion-common
+               (not (string-equal lsp-bridge-completion-common ""))
+               (not (string-equal lsp-bridge-completion-common lsp-bridge-completion-prefix)))
+          (insert (substring lsp-bridge-completion-common (length lsp-bridge-completion-prefix)))
+        (message "Not found common part to insert."))
+    (message "Only works for lsp-bridge mode.")))
 
 (defun lsp-bridge-popup-documentation (kind name value)
   (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode)))
@@ -961,10 +963,6 @@ If optional MARKER, return a marker instead"
        (setq-local company-minimum-prefix-length 0)
        (setq-local company-idle-delay nil))
       (corfu
-       ;; Adjust default font height when running in HiDPI screen.
-       (when (> (frame-pixel-width) 3000)
-         (custom-set-faces '(corfu-default ((t (:height 1.3))))))
-
        (setq-local corfu-auto-prefix 0)
        (setq-local corfu-auto nil)
        ;; Add fuzzy match.
