@@ -599,17 +599,14 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                    (setq insert-candidate (substring insert-candidate 1)))
 
                  ;; Insert candidate or expand snippet.
-                 (if text-edit
-                     ;; We need replace text from start position provide by `textEdit`.
+                 (if (and (string-equal lsp-bridge-completion-server-name "volar")
+                          text-edit)
+                     ;; We need replace text from start position provide by volar `textEdit`.
                      (let* ((range (plist-get text-edit :range))
                             (start (plist-get range :start))
-                            (end (plist-get range :end))
-                            (start-pos (save-excursion
-                                         (lsp-bridge--goto-position start)
-                                         (point))))
-                       (delete-region start-pos (point)))
+                            (end (plist-get range :end)))
+                       (delete-region (lsp-bridge-position-to-pos start) (point)))
                    (delete-region bounds-start (point)))
-
                  (funcall (or snippet-fn #'insert) insert-candidate)
 
                  ;; Do `additionalTextEdits' if return auto-imprt information.
@@ -789,15 +786,15 @@ If optional MARKER, return a marker instead"
   (let ((new-name (read-string "Rename to: " (thing-at-point 'symbol 'no-properties))))
     (lsp-bridge-call-async "rename" lsp-bridge-filepath (lsp-bridge--position) new-name)))
 
-(defun lsp-bridge-rename-highlight (filepath line bound-start bound-end)
+(defun lsp-bridge-rename-highlight (filepath bound-start bound-end)
   (lsp-bridge--with-file-buffer filepath
-    (let* ((highlight-line (1+ line))
-           (start-pos (lsp-bridge--get-pos buffer highlight-line bound-start))
-           (end-pos (lsp-bridge--get-pos buffer highlight-line bound-end)))
-      (require 'pulse)
-      (let ((pulse-iterations 1)
-            (pulse-delay lsp-bridge-flash-line-delay))
-        (pulse-momentary-highlight-region start-pos end-pos 'lsp-bridge-font-lock-flash)))))
+    (require 'pulse)
+    (let ((pulse-iterations 1)
+          (pulse-delay lsp-bridge-flash-line-delay))
+      (pulse-momentary-highlight-region
+       (lsp-bridge-position-to-pos bound-start)
+       (lsp-bridge-position-to-pos bound-end)
+       'lsp-bridge-font-lock-flash))))
 
 (defun lsp-bridge-lookup-documentation ()
   (interactive)
@@ -807,12 +804,11 @@ If optional MARKER, return a marker instead"
   (interactive)
   (lsp-bridge-call-async "signature_help" lsp-bridge-filepath (lsp-bridge--position)))
 
-(defun lsp-bridge--get-pos (buf line column)
-  (with-current-buffer buf
-    (save-excursion
-      (goto-line line)
-      (lsp-bridge--move-to-column column)
-      (point))))
+(defun lsp-bridge-position-to-pos (position)
+  (save-excursion
+    (goto-line (+ (plist-get position :line) 1))
+    (move-to-column (plist-get position :character))
+    (point)))
 
 (defun lsp-bridge-rename-file (filepath edits)
   (find-file filepath)
@@ -821,22 +817,12 @@ If optional MARKER, return a marker instead"
       (let* ((bound-start (nth 0 edit))
              (bound-end (nth 1 edit))
              (new-text (nth 2 edit))
-             (replace-start-pos (save-excursion
-                                  (goto-line (+ (plist-get bound-start :line) 1))
-                                  (move-to-column (plist-get bound-start :character))
-                                  (point)))
-             (replace-end-pos (save-excursion
-                                (goto-line (+ (plist-get bound-end :line) 1))
-                                (move-to-column (plist-get bound-end :character))
-                                (point))))
+             (replace-start-pos (lsp-bridge-position-to-pos bound-start))
+             (replace-end-pos (lsp-bridge-position-to-pos bound-end)))
         (delete-region replace-start-pos replace-end-pos)
         (goto-char replace-start-pos)
         (insert new-text))))
   (setq lsp-bridge-prohibit-completion t))
-
-(defun lsp-bridge--goto-position (position)
-  (goto-line (1+ (plist-get position :line)))
-  (lsp-bridge--move-to-column (plist-get position :character)))
 
 (defun lsp-bridge--jump-to-def (filepath position)
   (interactive)
@@ -850,7 +836,7 @@ If optional MARKER, return a marker instead"
       (find-file-other-window filepath)
     (find-file filepath))
 
-  (lsp-bridge--goto-position position)
+  (goto-char (lsp-bridge-position-to-pos position))
   (recenter)
 
   ;; Flash define line.
