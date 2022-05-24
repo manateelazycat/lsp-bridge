@@ -965,6 +965,8 @@ If optional MARKER, return a marker instead"
       (corfu
        (setq-local corfu-auto-prefix 0)
        (setq-local corfu-auto nil)
+       (remove-hook 'post-command-hook #'corfu--auto-post-command 'local)
+
        ;; Add fuzzy match.
        (when (functionp 'lsp-bridge-orderless-setup)
          (lsp-bridge-orderless-setup))))
@@ -975,6 +977,15 @@ If optional MARKER, return a marker instead"
 
 (defun lsp-bridge--disable ()
   "Disable LSP Bridge mode."
+  (cl-case lsp-bridge-completion-provider
+    (company
+     (kill-local-variable 'company-minimum-prefix-length)
+     (kill-local-variable 'company-idle-delay))
+    (corfu
+     (kill-local-variable 'corfu-auto-prefix)
+     (kill-local-variable 'corfu-auto)
+     (and corfu-auto (add-hook 'post-command-hook #'corfu--auto-post-command nil 'local))))
+
   (dolist (hook lsp-bridge--internal-hooks)
     (remove-hook (car hook) (cdr hook) t)))
 
