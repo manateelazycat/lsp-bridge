@@ -639,17 +639,13 @@ Doubles as an indicator of snippet support."
            (lambda (edit) ()
              (let* ((range (plist-get edit :range))
                     (newText (plist-get edit :newText)))
-               (cons newText (lsp-bridge--range-region range 'markers))))
+               (cons newText
+                     (cons
+                      (lsp-bridge--lsp-position-to-point (plist-get range :start) markers)
+                      (lsp-bridge--lsp-position-to-point (plist-get range :end) markers)
+                      ))))
            (reverse edits)))
     (undo-amalgamate-change-group change-group)))
-
-;; Copy from eglot
-(defun lsp-bridge--range-region (range &optional markers)
-  "Return region (BEG . END) that represents LSP RANGE.
-If optional MARKERS, make markers."
-  (let* ((beg (lsp-bridge--lsp-position-to-point (plist-get range :start) markers))
-         (end (lsp-bridge--lsp-position-to-point (plist-get range :end) markers)))
-    (cons beg end)))
 
 ;; Copy from eglot
 (defun lsp-bridge--lsp-position-to-point (pos-plist &optional marker)
