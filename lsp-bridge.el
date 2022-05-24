@@ -582,7 +582,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                (let* ((label candidate)
                       (insert-text (plist-get (gethash candidate lsp-bridge-completion-candidates) :insertText))
                       (insert-text-format (plist-get (gethash candidate lsp-bridge-completion-candidates) :insertTextFormat))
-                      (new-text (plist-get (gethash candidate lsp-bridge-completion-candidates) :newText))
+                      (text-edit (plist-get (gethash candidate lsp-bridge-completion-candidates) :textEdit))
+                      (new-text (if text-edit (plist-get text-edit :newText) nil))
                       (additionalTextEdits (if lsp-bridge-enable-auto-import
                                                (plist-get (gethash candidate lsp-bridge-completion-candidates) :additionalTextEdits)
                                              nil))
@@ -598,7 +599,17 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                    (setq insert-candidate (substring insert-candidate 1)))
 
                  ;; Insert candidate or expand snippet.
-                 (delete-region bounds-start (point))
+                 (if text-edit
+                     ;; We need replace text from start position provide by `textEdit`.
+                     (let* ((range (plist-get text-edit :range))
+                            (start (plist-get range :start))
+                            (end (plist-get range :end))
+                            (start-pos (save-excursion
+                                         (lsp-bridge--goto-position start)
+                                         (point))))
+                       (delete-region start-pos (point)))
+                   (delete-region bounds-start (point)))
+
                  (funcall (or snippet-fn #'insert) insert-candidate)
 
                  ;; Do `additionalTextEdits' if return auto-imprt information.

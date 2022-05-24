@@ -38,8 +38,7 @@ class Completion(Handler):
         if response is not None:
             for item in response["items"] if "items" in response else response:
                 kind = KIND_MAP[item.get("kind", 0)]
-                textEdit = item.get("textEdit", None)
-
+                
                 candidate = {
                     "label": item["label"],
                     "tags": item.get("tags", []),
@@ -47,7 +46,7 @@ class Completion(Handler):
                     "kind": kind,
                     "annotation": (item.get("detail") or kind).replace(" ", ""),
                     "insertTextFormat": item.get("insertTextFormat", ''),
-                    "newText": textEdit.get("newText", None) if textEdit else None
+                    "textEdit": item.get("textEdit", None)
                 }
 
                 if self.file_action.enable_auto_import:
