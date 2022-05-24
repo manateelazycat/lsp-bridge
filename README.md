@@ -123,7 +123,7 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 - [ ] Show signature help with eldoc
 - [ ] Code action
 - [ ] Inline Value
-- [ ] One file open multi-server, and mixed multi-result to corfu menu
+- [ ] JavaSctipt different code blocks use different language servers
 
 ### Features that won't be supported
 
