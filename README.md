@@ -42,7 +42,7 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 (global-lsp-bridge-mode)
 (when (> (frame-pixel-width) 3000) (custom-set-faces '(corfu-default ((t (:height 1.3))))))  ;; adjust default font height when running in HiDPI screen.
 
-;; For company-mode users:
+;; For company-mode users, only experimental support, recommended corfu.
 (setq lsp-bridge-completion-provider 'company)
 (require 'company)
 (require 'company-box)
@@ -124,6 +124,7 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 - [ ] Show signature help with eldoc
 - [ ] Code action
 - [ ] Inline Value
+- [ ] Caches diagnostic information, displaying the diagnostic information through Flycheck after user stop typing 1 second
 - [ ] JavaSctipt different code blocks use different language servers
 
 ### Features that won't be supported
@@ -132,8 +133,7 @@ The goal of lsp-bridge is to become the fastest LSP client in Emacs, not a compl
 
 Emacs can do better for the following tasks, we will not reinvent the wheel in lsp-bridge:
 1. Code formatting: each LSP server has its own formatting specification, we can gain finer control using Emacs' builtin formatting tool.
-2. Diagnostics: [Flycheck](https://www.flycheck.org/en/latest/) and [Flymake](https://www.gnu.org/software/emacs/manual/html_node/flymake/Using-Flymake.html) are better choices
-3. Syntax highlighting: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) is a wonderful incremental parsing library for syntax highlighting.
+2. Syntax highlighting: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) is a wonderful incremental parsing library for syntax highlighting.
 
 ## Join development
 

@@ -42,7 +42,7 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (global-lsp-bridge-mode)
 (when (> (frame-pixel-width) 3000) (custom-set-faces '(corfu-default ((t (:height 1.3))))))  ;; 让corfu适应高分屏
 
-;; company-mode 配置:
+;; company-mode 配置, company-mode目前只是试验支持，推荐用corfu
 (setq lsp-bridge-completion-provider 'company)
 (require 'company)
 (require 'company-box)
@@ -125,6 +125,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 - [ ] 用eldoc来显示参数信息
 - [ ] Code Action: 代码动作， 比如自动修复代码
 - [ ] Inline Value: 行类值显示
+- [ ] 缓存诊断信息，用户停止输入1秒以后再通过flycheck显示诊断信息
 - [ ] JavaSctipt不同的代码块使用不同的语言服务器
 
 ### 不会支持的特性：
@@ -132,8 +133,7 @@ lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是
 
 下面的功能用Emacs现有生态做更好：
 1. 代码格式化: 每个LSP服务器都有自己的格式配置，使用Emacs内置的格式化工具，我们可以获得更细腻一致的格式化风格
-2. 代码诊断: [Flycheck](https://www.flycheck.org/en/latest/) 或 [Flymake](https://www.gnu.org/software/emacs/manual/html_node/flymake/Using-Flymake.html) 都是更好的实时诊断工具
-3. 语法高亮: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) 是一个静态高性能的语法分析库，比LSP更适合完成语法高亮
+2. 语法高亮: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) 是一个静态高性能的语法分析库，比LSP更适合完成语法高亮
 
 ## 加入开发
 
