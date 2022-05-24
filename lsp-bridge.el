@@ -605,7 +605,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                      (let* ((range (plist-get text-edit :range))
                             (start (plist-get range :start))
                             (end (plist-get range :end)))
-                       (delete-region (lsp-bridge-position-to-pos start) (point)))
+                       (delete-region (lsp-bridge--lsp-position-to-point start) (point)))
                    (delete-region bounds-start (point)))
                  (funcall (or snippet-fn #'insert) insert-candidate)
 
@@ -792,8 +792,8 @@ If optional MARKER, return a marker instead"
     (let ((pulse-iterations 1)
           (pulse-delay lsp-bridge-flash-line-delay))
       (pulse-momentary-highlight-region
-       (lsp-bridge-position-to-pos bound-start)
-       (lsp-bridge-position-to-pos bound-end)
+       (lsp-bridge--lsp-position-to-point bound-start)
+       (lsp-bridge--lsp-position-to-point bound-end)
        'lsp-bridge-font-lock-flash))))
 
 (defun lsp-bridge-lookup-documentation ()
@@ -804,12 +804,6 @@ If optional MARKER, return a marker instead"
   (interactive)
   (lsp-bridge-call-async "signature_help" lsp-bridge-filepath (lsp-bridge--position)))
 
-(defun lsp-bridge-position-to-pos (position)
-  (save-excursion
-    (goto-line (+ (plist-get position :line) 1))
-    (lsp-bridge--move-to-character (plist-get position :character))
-    (point)))
-
 (defun lsp-bridge-rename-file (filepath edits)
   (find-file-noselect filepath)
   (lsp-bridge--with-file-buffer filepath
@@ -817,8 +811,8 @@ If optional MARKER, return a marker instead"
       (let* ((bound-start (nth 0 edit))
              (bound-end (nth 1 edit))
              (new-text (nth 2 edit))
-             (replace-start-pos (lsp-bridge-position-to-pos bound-start))
-             (replace-end-pos (lsp-bridge-position-to-pos bound-end)))
+             (replace-start-pos (lsp-bridge--lsp-position-to-point bound-start))
+             (replace-end-pos (lsp-bridge--lsp-position-to-point bound-end)))
         (delete-region replace-start-pos replace-end-pos)
         (goto-char replace-start-pos)
         (insert new-text))))
@@ -836,7 +830,7 @@ If optional MARKER, return a marker instead"
       (find-file-other-window filepath)
     (find-file filepath))
 
-  (goto-char (lsp-bridge-position-to-pos position))
+  (goto-char (lsp-bridge--lsp-position-to-point position))
   (recenter)
 
   ;; Flash define line.
