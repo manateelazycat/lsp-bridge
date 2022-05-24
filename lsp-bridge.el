@@ -807,7 +807,7 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-position-to-pos (position)
   (save-excursion
     (goto-line (+ (plist-get position :line) 1))
-    (move-to-column (plist-get position :character))
+    (lsp-bridge--move-to-column (plist-get position :character))
     (point)))
 
 (defun lsp-bridge-rename-file (filepath edits)
