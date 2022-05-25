@@ -111,6 +111,15 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'cons
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-identify-annotation '("Snippet" "Emmet Abbreviation")
+  "LSP Server will return candidates include same 'label',
+then candidates have same `label' will filter by completion ui, such as Corfu.
+
+So we will add blank after label if candidate annotation match tihs option,
+to avoid completion ui filter candidates."
+  :type 'cons
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-lookup-doc-tooltip " *lsp-bridge-hover*"
   "Buffer for display hover information."
   :type 'string
@@ -487,7 +496,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (dolist (item items)
       (let* ((item-label (plist-get item :label))
              (item-annotation (plist-get item :annotation))
-             (item-key (if (member item-annotation '("Snippet" "Emmet Abbreviation"))
+             (item-key (if (member item-annotation lsp-bridge-identify-annotation)
                            (format "%s " item-label)
                          item-label)))
         (puthash item-key item lsp-bridge-completion-candidates)))
