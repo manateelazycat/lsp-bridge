@@ -119,13 +119,15 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 | 21 | [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | css | |
 | 22 | [elm-language-server](https://github.com/elm-tooling/elm-language-server) | elm | |
 
-### TODO Features:
+### TODO:
 
 - [ ] Show signature help with eldoc
 - [ ] Code action
 - [ ] Inline Value
-- [ ] Caches diagnostic information, displaying the diagnostic information through Flycheck after user stop typing 1 second
+- [ ] Caches diagnostic information, displaying the diagnostic information after user stop typing 1 second
 - [ ] JavaSctipt different code blocks use different language servers
+- [ ] Support completionItem/resolve to implement auto-import for volar
+- [ ] Cache candidate document at Python side, only fetch document information when switch candidate.
 
 ### Features that won't be supported
 

@@ -125,8 +125,10 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 - [ ] 用eldoc来显示参数信息
 - [ ] Code Action: 代码动作， 比如自动修复代码
 - [ ] Inline Value: 行类值显示
-- [ ] 缓存诊断信息，用户停止输入1秒以后再通过flycheck显示诊断信息
+- [ ] 缓存诊断信息，用户停止输入1秒以后再显示诊断信息
 - [ ] JavaSctipt不同的代码块使用不同的语言服务器
+- [ ] 支持completionItem/resolve消息以实现volar的自动导入功能
+- [ ] 缓存后选词文档，只有用户切换后选词时才获取新的文档
 
 ### 不会支持的特性：
 lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是实现LSP协议最全的LSP客户端。
