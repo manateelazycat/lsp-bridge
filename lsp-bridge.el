@@ -247,7 +247,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (java-mode . "jdtls")
     (python-mode . "pyright")
     (ruby-mode . "solargraph")
-    ((rust-mode rustic-mdoe) . "rust-analyzer")
+    ((rust-mode rustic-mode) . "rust-analyzer")
     (elixir-mode . "elixirLS")
     (go-mode . "gopls")
     (haskell-mode . "hls")
