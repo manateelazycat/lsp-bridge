@@ -86,6 +86,12 @@
   "LSP-Bridge group."
   :group 'applications)
 
+
+(defcustom lsp-bridge-enable-popup-predicates '()
+  "A list of predicate functions with no argument to enable popup completion in callback."
+  :type 'list
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-flash-line-delay .3
   "How many seconds to flash `lsp-bridge-font-lock-flash' after navigation.
 
@@ -361,6 +367,11 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
         (cdr langserver-info)
       nil)))
 
+(defun lsp-bridge--auto-tick ()
+  "Return the current tick/status of the buffer.
+Auto completion is only performed if the tick did not change."
+  (list (current-buffer) (buffer-chars-modified-tick) (point)))
+
 (defun lsp-bridge-call-async (method &rest args)
   "Call Python EPC function METHOD and ARGS asynchronously."
   (lsp-bridge-deferred-chain
@@ -462,6 +473,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defvar-local lsp-bridge-completion-common nil)
 (defvar-local lsp-bridge-filepath "")
 (defvar-local lsp-bridge-prohibit-completion nil)
+(defvar-local lsp-bridge--current-tick nil)
 
 (defun lsp-bridge-char-before ()
   (let ((prev-char (char-before)))
@@ -511,7 +523,11 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands))
 
         (when (and (not (lsp-bridge-is-blank-before-cursor-p)) ;hide completion frame if only blank before cursor
-                   (not (lsp-bridge-match-hide-characters-p))) ;hide completion if cursor after special chars
+                   (not (lsp-bridge-match-hide-characters-p)) ;hide completion if cursor after special chars
+                   (equal lsp-bridge--current-tick (lsp-bridge--auto-tick)) ;hide completion if the position of cursor has changed
+                   (cl-every (lambda (pred)
+                             (if (functionp pred) (funcall pred) t))
+                          lsp-bridge-enable-popup-predicates)) ;hide completion if one of predicates is not satisfied
 
           (cl-case lsp-bridge-completion-provider
             (company (company-manual-begin))
@@ -713,6 +729,7 @@ If optional MARKER, return a marker instead"
 
   ;; Send change_file request.
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+    (setq-local lsp-bridge--current-tick (lsp-bridge--auto-tick))
     (lsp-bridge-call-async "change_file"
                            lsp-bridge-filepath
                            lsp-bridge--before-change-begin-pos
