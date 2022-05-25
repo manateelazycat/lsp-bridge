@@ -1,4 +1,6 @@
+import sys
 import unittest
+from typing import Dict
 
 from test.common import *
 
@@ -78,3 +80,111 @@ func main() {
 \tos.""",
             mode="go-mode",
         ), label="Open")
+
+
+def get_offset(file: SingleFile, target='I'):
+    pos = file.code.find(target)
+    file.code = file.code.replace(target, '')
+    return pos
+
+
+class AcceptCompletion(unittest.TestCase):
+    def setUp(self) -> None:
+        if sys.platform == "win32":
+            self.skipTest("To simplify dependency installation, we skip completion test on Windows")
+
+    def accept_completion(self, files: List[SingleFile], user_input: Tuple[str, str],
+                          expected: str, cursor_offset: int = None) -> None:
+        """
+        :param files: files of the project, we will trigger completion in the first file.
+        :param user_input: a tuple of (completion trigger, user filter).
+                           It will wait for completion result between completion trigger and user filter.
+        :param expected: what we expect to see in the buffer after completion.
+        :param cursor_offset: the offset of the cursor, if None, we will use the end of the buffer
+        :return: None
+        """
+        if cursor_offset is None:
+            cursor_offset = len(files[0].code)
+
+        def has_completion(method: str, args: List[Any]):
+            return method == "lsp-bridge-record-completion-items"
+
+        @with_multiple_files(files)
+        def go(filenames: Dict[str, str]):
+            filename = filenames[files[0].filename]
+
+            @interceptor(has_completion)
+            def mock_input():
+
+                eval_sexp(file_buffer(filename, f"""
+                    (setq-local major-mode '{files[0].mode})
+                    (lsp-bridge-mode 1)
+                    (goto-char (+ (point-min) {cursor_offset}))
+                    (insert "{user_input[0]}")
+                """))
+
+            mock_input()
+            inserts = '\n'.join(
+                map(lambda c: f'(execute-kbd-macro (read-kbd-macro "{c}"))\n(sleep-for 0.08)', user_input[1]))
+            eval_sexp_sync(file_buffer(filename, inserts))
+            eval_sexp_sync("(sleep-for 2)")
+            eval_sexp_sync(file_buffer(filename, "(corfu-insert)"))
+            eval_sexp_sync("(sleep-for 2)")
+            result = eval_sexp_sync(file_buffer(filename, "(buffer-string)"))
+            logger.debug("After accepting completion: %s", result)
+            self.assertIn(expected, result)
+
+        go()
+    
+    def test_python(self):
+        self.accept_completion([SingleFile(
+            filename="t.py",
+            code="import os\nos",
+            mode="python-mode",
+        )], user_input=(".", "syste"), expected="system")
+
+    def test_java(self):
+        file = SingleFile(
+            filename="t.java",
+            code="""
+            public class Test {
+                public static void main(String[] args) {
+                    System.out.I
+                }
+            }
+            """,
+            mode="java-mode",
+        )
+        self.accept_completion(
+            [file],
+            user_input=("printl", "nString"),
+            expected="println();\n",
+            cursor_offset=get_offset(file),
+        )
+
+#     def test_volar(self):
+#         files = [SingleFile(
+#             filename=os.path.join("src", "t.vue"),
+#             code="""
+# <template>
+#     <div></div>
+# </template>
+# <script lang="ts">
+# interface Test {
+#   member?: [];
+# }
+#
+# const test: Test = {
+#   member: []
+# };
+#
+# test.member.filI
+# </script>""",
+#             mode="vue-mode",
+#         )]
+#         self.accept_completion(
+#             files,
+#             user_input=("te", "r"),
+#             expected="member?.filter",
+#             cursor_offset=get_offset(files[0])
+#         )

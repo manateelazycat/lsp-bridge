@@ -49,22 +49,38 @@ def test_entrypoint():
         (package-install 'orderless)
         (package-install 'posframe)
         (package-install 'markdown-mode)
+        (package-install 'yasnippet)
         ;; (all-the-icons-install-fonts 't)
         
         ;; for Windows
         (prefer-coding-system 'utf-8-unix)
         (set-language-environment 'utf-8)
         (setq default-buffer-file-coding-system 'utf-8-unix)
-        
-        (require 'corfu)
     )
     """
+    setup_eval = """
+    (progn
+        (require 'yasnippet)
+        (require 'lsp-bridge)
+        (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
+        (yas-global-mode 1)
+        (setq lsp-bridge-completion-provider 'corfu)
+        (require 'corfu)
+        (require 'corfu-info)
+        (require 'corfu-history)
+        (require 'lsp-bridge-icon)        ;; show icons for completion items, optional
+        (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
+        (global-corfu-mode)
+        (corfu-history-mode t)
+        (global-lsp-bridge-mode)
+    )"""
     run([
         EMACS, '-Q', '--batch',
         '--eval', init_eval,
         '-L', '.',
         '-l', os.path.join(BASE_DIR, 'lsp-bridge.el'),
         '-l', os.path.join(BASE_DIR, 'test', 'lsp-bridge-test.el'),
+        '--eval', setup_eval,
         '--eval', '(lsp-bridge-start-test)'
     ])
 
@@ -88,10 +104,6 @@ def start_test(lsp_bridge):
     (with-current-buffer lsp-bridge-name
       (message (buffer-string)))
     """)
-    # eval_sexp_in_emacs("""
-    # (with-current-buffer (get-buffer-create "*lsp-bridge-epc-log*")
-    #   (message (buffer-string)))
-    # """)
 
     if test_result.wasSuccessful():
         logger.info('All tests passed!')
