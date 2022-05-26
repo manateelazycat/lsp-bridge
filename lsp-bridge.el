@@ -87,7 +87,7 @@
 
 
 (defcustom lsp-bridge-enable-popup-predicates '(lsp-bridge-not-empty-candidates
-                                                lsp-bridge-not-only-blank-before-cursor
+                                                lsp-bridge-not-only-blank-around-cursor
                                                 lsp-bridge-not-match-hide-characters
                                                 lsp-bridge-not-match-completion-position
                                                 lsp-bridge-not-match-stop-commands
@@ -565,9 +565,12 @@ Auto completion is only performed if the tick did not change."
   "Hide completion if cursor after hide character match `lsp-bridge-hide-completion-characters'."
   (not (member (char-to-string (char-before)) lsp-bridge-hide-completion-characters)))
 
-(defun lsp-bridge-not-only-blank-before-cursor ()
-  "Hide completion if only blank before cursor."
-  (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
+(defun lsp-bridge-not-only-blank-around-cursor ()
+  "Hide completion if only blank around cursor."
+  (not (and (save-excursion
+              (re-search-backward "\\s-+\\|^" (1- (point)) t))
+            (save-excursion
+              (re-search-forward "\\s-+\\|$" (1+ (point)) t)))))
 
 (defun lsp-bridge-capf ()
   "Capf function similar to eglot's 'eglot-completion-at-point'."
