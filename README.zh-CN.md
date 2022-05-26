@@ -14,7 +14,7 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 2. 安装Elisp依赖:
 + [corfu](https://github.com/minad/corfu) (使用 corfu 补全)
 + [company-mode](https://github.com/company-mode/company-mode), [company-box](https://github.com/sebastiencs/company-box) (使用 company-mode 补全)
-+ [all-the-icons](https://github.com/domtronn/all-the-icons.el) (需要在安装all-the-icons后执行命令`auto-the-icons-install-fonts`安装图标字体)
++ [all-the-icons](https://github.com/domtronn/all-the-icons.el) (需要在安装all-the-icons后执行命令`all-the-icons-install-fonts`安装图标字体)
 + [orderless](https://github.com/oantolin/orderless)
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
