@@ -545,8 +545,14 @@ Auto completion is only performed if the tick did not change."
                              (str (buffer-substring-no-properties beg end)))
                   (corfu--update-candidates str pt table (plist-get plist :predicate)))
 
+                ;; Setup hook.
                 (corfu--setup)
-                (corfu--update))))
+
+                ;; When you finger faster than LSP server,
+                ;; Corfu will **auto insert** select candidate when lsp-bridge push newest completion data,
+                ;; so we need set `corfu-on-exact-match' to quit to prohibit corfu insert select candidate.
+                (let ((corfu-on-exact-match 'quit))
+                  (corfu--update)))))
            ))))))
 
 (defun lsp-bridge-not-empty-candidates ()
