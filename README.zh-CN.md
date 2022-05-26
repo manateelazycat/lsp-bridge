@@ -64,6 +64,20 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 * lsp-bridge-show-signature-help-in-minibuffer: 在minibuffer显示参数信息
 * lsp-bridge-insert-common-prefix: 插入补全后选词的公共前缀
 * lsp-bridge-restart-process: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)
+* lsp-bridge-popup-documentation-scroll-up: 文档窗口向上滚动
+* lsp-bridge-popup-documentation-scroll-down: 文档窗口向下滚动
+
+## 自定义lsp-bridge按键
+可以为 lsp-bridge 命令列表自定义对应的按键
+
+eg:
+```elisp
+(defvar lsp-bridge-mode-map
+    (let ((keymap (make-sparse-keymap)))
+    (define-key keymap (kbd "C-j") 'lsp-bridge-popup-documentation-scroll-up)
+    (define-key keymap (kbd "C-k") 'lsp-bridge-popup-documentation-scroll-down)
+    keymap))
+```
 
 ## 自定义语言服务器配置
 lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).

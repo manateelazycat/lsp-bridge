@@ -961,11 +961,7 @@ If optional MARKER, return a marker instead"
     (kill-buffer-hook . lsp-bridge-monitor-kill-buffer)
     (completion-at-point-functions . lsp-bridge-capf)))
 
-(defvar lsp-bridge-mode-map
-  (let ((keymap (make-sparse-keymap)))
-    (define-key keymap (kbd "C-j") 'lsp-bridge-popup-documentation-scroll-up)
-    (define-key keymap (kbd "C-k") 'lsp-bridge-popup-documentation-scroll-down)
-    keymap))
+(defvar lsp-bridge-mode-map (make-sparse-keymap))
 
 ;;;###autoload
 (define-minor-mode lsp-bridge-mode
