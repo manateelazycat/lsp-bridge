@@ -60,12 +60,12 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 * lsp-bridge-return-from-def: return to the location before calling `lsp-bridge-find-def`
 * lsp-bridge-find-references: traverse across code references (forked from color-rg.el)
 * lsp-bridge-lookup-documentation: lookup documentation of symbol under the cursor
+* lsp-bridge-popup-documentation-scroll-up: scroll up popup document.
+* lsp-bridge-popup-documentation-scroll-down: scroll down popup document.
 * lsp-bridge-rename: rename symbol under the cursor
 * lsp-bridge-show-signature-help-in-minibuffer: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
 * lsp-bridge-insert-common-prefix: insert common prefix of candidates
 * lsp-bridge-restart-process: restart lsp-bridge process (only used for development)
-* lsp-bridge-popup-documentation-scroll-up: scroll up popup document.
-* lsp-bridge-popup-documentation-scroll-down: scroll down popup document.
 
 ## Customize lsp-bridge keymap
 customize keymap for lsp-bridge commands.

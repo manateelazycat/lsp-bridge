@@ -59,13 +59,13 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 * lsp-bridge-find-impl-other-window: 在其他窗口跳转到接口实现位置
 * lsp-bridge-return-from-def: 返回跳转之前的位置
 * lsp-bridge-find-references: 查看代码引用
-* lsp-bridge-lookup-documentation: 查看管标处的文档
+* lsp-bridge-lookup-documentation: 查看光标处的文档
+* lsp-bridge-popup-documentation-scroll-up: 文档窗口向上滚动
+* lsp-bridge-popup-documentation-scroll-down: 文档窗口向下滚动
 * lsp-bridge-rename: 重命名
 * lsp-bridge-show-signature-help-in-minibuffer: 在minibuffer显示参数信息
 * lsp-bridge-insert-common-prefix: 插入补全后选词的公共前缀
 * lsp-bridge-restart-process: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)
-* lsp-bridge-popup-documentation-scroll-up: 文档窗口向上滚动
-* lsp-bridge-popup-documentation-scroll-down: 文档窗口向下滚动
 
 ## 自定义lsp-bridge按键
 可以为 lsp-bridge 命令列表自定义对应的按键
