@@ -615,27 +615,26 @@ Auto completion is only performed if the tick did not change."
               ;; Just insert candidate if it has expired.
               ((null candidate-index))
               (t
-               (let* ((label candidate)
+               (let* ((label (string-trim candidate)) ; we need trim candidate, `lsp-bridge-identify-annotation' will cause insert blank after `label' information
                       (insert-text (plist-get (gethash candidate lsp-bridge-completion-candidates) :insertText))
                       (insert-text-format (plist-get (gethash candidate lsp-bridge-completion-candidates) :insertTextFormat))
                       (text-edit (plist-get (gethash candidate lsp-bridge-completion-candidates) :textEdit))
-                      (new-text (if text-edit (plist-get text-edit :newText) nil))
+                      (new-text (if text-edit
+                                    (plist-get text-edit :newText)
+                                  nil))
                       (additionalTextEdits (if lsp-bridge-enable-auto-import
                                                (plist-get (gethash candidate lsp-bridge-completion-candidates) :additionalTextEdits)
                                              nil))
                       (kind (plist-get (gethash candidate lsp-bridge-completion-candidates) :kind))
                       (snippet-fn (and (or (eql insert-text-format 2) (string= kind "Snippet")) (lsp-bridge--snippet-expansion-fn)))
+                      (delete-start-pos (if text-edit
+                                            (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :start))
+                                          bounds-start))
+                      (delete-end-pos (point))
                       (insert-candidate (or new-text insert-text label)))
 
                  ;; Insert candidate or expand snippet.
-                 (if (and (string-equal lsp-bridge-completion-server-name "volar")
-                          text-edit)
-                     ;; We need replace text from start position provide by volar `textEdit`.
-                     (let* ((range (plist-get text-edit :range))
-                            (start (plist-get range :start))
-                            (end (plist-get range :end)))
-                       (delete-region (lsp-bridge--lsp-position-to-point start) (point)))
-                   (delete-region bounds-start (point)))
+                 (delete-region delete-start-pos delete-end-pos)
                  (funcall (or snippet-fn #'insert) insert-candidate)
 
                  ;; Do `additionalTextEdits' if return auto-imprt information.
