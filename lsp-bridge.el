@@ -938,7 +938,6 @@ If optional MARKER, return a marker instead"
               (string-equal (buffer-name) "*Messages*"))
     (setq lsp-bridge--last-buffer (current-buffer))))
 
-;;;###autoload
 (add-hook 'post-command-hook 'lsp-bridge-monitor-window-buffer-change)
 
 (defconst lsp-bridge--internal-hooks
@@ -951,6 +950,7 @@ If optional MARKER, return a marker instead"
 
 (defvar lsp-bridge-mode-map (make-sparse-keymap))
 
+;;;###autoload
 (define-minor-mode lsp-bridge-mode
   "LSP Bridge mode."
   :keymap lsp-bridge-mode-map
@@ -1012,6 +1012,7 @@ If optional MARKER, return a marker instead"
   (lsp-bridge--with-file-buffer filepath
     (lsp-bridge--disable)))
 
+;;;###autoload
 (defun global-lsp-bridge-mode ()
   (interactive)
 
