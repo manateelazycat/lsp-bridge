@@ -87,7 +87,12 @@
   :group 'applications)
 
 
-(defcustom lsp-bridge-enable-popup-predicates '()
+(defcustom lsp-bridge-enable-popup-predicates '(lsp-bridge-not-empty-candidates
+                                                lsp-bridge-not-only-blank-before-cursor
+                                                lsp-bridge-not-match-hide-characters
+                                                lsp-bridge-not-match-completion-position
+                                                lsp-bridge-not-match-stop-commands
+                                                )
   "A list of predicate functions with no argument to enable popup completion in callback."
   :type 'list
   :group 'lsp-bridge)
@@ -515,50 +520,55 @@ Auto completion is only performed if the tick did not change."
 
     (if lsp-bridge-prohibit-completion
         (setq lsp-bridge-prohibit-completion nil)
+
       ;; Try popup completion frame.
-      (unless (or
-               ;; Don't popup completion frame if completion items is empty.
-               (lsp-bridge-is-empty-list items)
-               ;; If last command is match `lsp-bridge-completion-stop-commands'
-               (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands))
+      (when (cl-every (lambda (pred)
+                        (if (functionp pred) (funcall pred) t))
+                      lsp-bridge-enable-popup-predicates)
+        (cl-case lsp-bridge-completion-provider
+          (company (company-manual-begin))
+          (corfu
+           (pcase (while-no-input ;; Interruptible capf query
+                    (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
+             (`(,fun ,beg ,end ,table . ,plist)
+              (let ((completion-in-region-mode-predicate
+                     (lambda () (eq beg (car-safe (funcall fun)))))
+                    (completion-extra-properties plist))
+                (setq completion-in-region--data
+                      (list (if (markerp beg) beg (copy-marker beg))
+                            (copy-marker end t)
+                            table
+                            (plist-get plist :predicate)))
 
-        (when (and (not (lsp-bridge-is-blank-before-cursor-p)) ;hide completion frame if only blank before cursor
-                   (not (lsp-bridge-match-hide-characters-p)) ;hide completion if cursor after special chars
-                   (equal lsp-bridge--current-tick (lsp-bridge--auto-tick)) ;hide completion if the position of cursor has changed
-                   (cl-every (lambda (pred)
-                             (if (functionp pred) (funcall pred) t))
-                          lsp-bridge-enable-popup-predicates)) ;hide completion if one of predicates is not satisfied
+                ;; Refresh candidates forcibly!!!
+                (pcase-let* ((`(,beg ,end ,table ,pred) completion-in-region--data)
+                             (pt (- (point) beg))
+                             (str (buffer-substring-no-properties beg end)))
+                  (corfu--update-candidates str pt table (plist-get plist :predicate)))
 
-          (cl-case lsp-bridge-completion-provider
-            (company (company-manual-begin))
-            (corfu
-             (pcase (while-no-input ;; Interruptible capf query
-                      (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
-               (`(,fun ,beg ,end ,table . ,plist)
-                (let ((completion-in-region-mode-predicate
-                       (lambda () (eq beg (car-safe (funcall fun)))))
-                      (completion-extra-properties plist))
-                  (setq completion-in-region--data
-                        (list (if (markerp beg) beg (copy-marker beg))
-                              (copy-marker end t)
-                              table
-                              (plist-get plist :predicate)))
+                (corfu--setup)
+                (corfu--update))))
+           ))))))
 
-                  ;; Refresh candidates forcibly!!!
-                  (pcase-let* ((`(,beg ,end ,table ,pred) completion-in-region--data)
-                               (pt (- (point) beg))
-                               (str (buffer-substring-no-properties beg end)))
-                    (corfu--update-candidates str pt table (plist-get plist :predicate)))
+(defun lsp-bridge-not-empty-candidates ()
+  "Hide completion if candidates list is empty."
+  (not (lsp-bridge-is-empty-list (hash-table-keys lsp-bridge-completion-candidates))))
 
-                  (corfu--setup)
-                  (corfu--update))))
-             )))))))
+(defun lsp-bridge-not-match-completion-position ()
+  "Hide completion if the position of cursor has changed."
+  (equal lsp-bridge--current-tick (lsp-bridge--auto-tick)))
 
-(defun lsp-bridge-match-hide-characters-p ()
-  (member (char-to-string (char-before)) lsp-bridge-hide-completion-characters))
+(defun lsp-bridge-not-match-stop-commands ()
+  "Hide completion if `lsp-bridge-last-change-command' match commands in `lsp-bridge-completion-stop-commands'."
+  (not (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands)))
 
-(defun lsp-bridge-is-blank-before-cursor-p ()
-  (not (split-string (buffer-substring-no-properties (line-beginning-position) (point)))))
+(defun lsp-bridge-not-match-hide-characters ()
+  "Hide completion if cursor after hide character match `lsp-bridge-hide-completion-characters'."
+  (not (member (char-to-string (char-before)) lsp-bridge-hide-completion-characters)))
+
+(defun lsp-bridge-not-only-blank-before-cursor ()
+  "Hide completion if only blank before cursor."
+  (split-string (buffer-substring-no-properties (line-beginning-position) (point))))
 
 (defun lsp-bridge-capf ()
   "Capf function similar to eglot's 'eglot-completion-at-point'."
