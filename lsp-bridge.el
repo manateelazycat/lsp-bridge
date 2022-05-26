@@ -91,6 +91,7 @@
                                                 lsp-bridge-not-match-hide-characters
                                                 lsp-bridge-not-match-completion-position
                                                 lsp-bridge-not-match-stop-commands
+                                                lsp-bridge-is-evil-insert-state
                                                 )
   "A list of predicate functions with no argument to enable popup completion in callback."
   :type 'list
@@ -577,6 +578,10 @@ Auto completion is only performed if the tick did not change."
               (re-search-backward "\\s-+\\|^" (1- (point)) t))
             (save-excursion
               (re-search-forward "\\s-+\\|$" (1+ (point)) t)))))
+
+(defun lsp-bridge-is-evil-insert-state ()
+  "If `evil' mode is enable, only show completion when evil is in insert mode."
+  (or (not (featurep 'evil)) (evil-insert-state-p)))
 
 (defun lsp-bridge-capf ()
   "Capf function similar to eglot's 'eglot-completion-at-point'."
