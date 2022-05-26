@@ -322,25 +322,20 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defmacro lsp-bridge--with-file-buffer (filepath &rest body)
   "Evaluate BODY in buffer with FILEPATH."
   (declare (indent 1))
-  `(let ((buffer (lsp-bridge--get-buffer ,filepath (buffer-list))))
+  `(let ((buffer (lsp-bridge-get-match-buffer ,filepath)))
      (when buffer
        (with-current-buffer buffer
          ,@body))))
 
-(defun lsp-bridge--get-buffer (filepath buffers)
-  (if-let ((buffer (get-file-buffer filepath)))
-      buffer
-   (let* ((head (car buffers))
-          (tail (cdr buffers))
-          (head-buffer (buffer-file-name head)))
-     (if (null head)
-         nil
-       (if (null head-buffer)
-           (lsp-bridge--get-real-buffer filepath tail)
-         (if (string-equal (file-truename head-buffer) filepath)
-             head
-           (lsp-bridge--get-real-buffer filepath tail)))))))
-   
+(defun lsp-bridge-get-match-buffer (filepath)
+  (catch 'find-match
+    (dolist (buffer (buffer-list))
+      (if-let ((file-name (buffer-file-name buffer)))
+          (when (or (string-equal file-name filepath)
+                    (string-equal (file-truename file-name) filepath))
+            (throw 'find-match buffer))))  
+    nil))
+
 (defun lsp-bridge--get-lang-server-func (project-path filepath)
   "Get lang server with project path, file path or file extension."
   (let (lang-server-by-project
