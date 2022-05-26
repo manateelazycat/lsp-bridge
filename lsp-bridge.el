@@ -491,7 +491,8 @@ Auto completion is only performed if the tick did not change."
       (setq-local lsp-bridge-last-position (point))))
 
   ;; Hide hover tooltip.
-  (lsp-bridge-hide-doc-tooltip))
+  (if (not (string-prefix-p "lsp-bridge-popup-documentation-scroll" (format "%s" this-command)))
+      (lsp-bridge-hide-doc-tooltip)))
 
 (defun lsp-bridge-monitor-kill-buffer ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
@@ -884,6 +885,16 @@ If optional MARKER, return a marker instead"
         (message "Not found common part to insert."))
     (message "Only works for lsp-bridge mode.")))
 
+(defun lsp-bridge-popup-documentation-scroll-up (&optional arg)
+  (interactive)
+  (posframe-funcall lsp-bridge-lookup-doc-tooltip
+                    #'scroll-up-command arg))
+
+(defun lsp-bridge-popup-documentation-scroll-down (&optional arg)
+  (interactive)
+  (posframe-funcall lsp-bridge-lookup-doc-tooltip
+                    #'scroll-down-command arg))
+
 (defun lsp-bridge-popup-documentation (kind name value)
   (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode)))
          (background-color (if (string-equal theme-mode "dark")
@@ -900,6 +911,8 @@ If optional MARKER, return a marker instead"
           (let ((view-inhibit-help-message t))
             (gfm-view-mode))
         (gfm-mode))
+      ;; avoid 'gfm-view-mode made buffer read only.
+      (read-only-mode 0)
       (font-lock-ensure))
     (when (posframe-workable-p)
       (posframe-show lsp-bridge-lookup-doc-tooltip
@@ -907,12 +920,7 @@ If optional MARKER, return a marker instead"
                      :internal-border-width lsp-bridge-lookup-doc-tooltip-border-width
                      :background-color background-color
                      :max-width lsp-bridge-lookup-doc-tooltip-max-width
-                     :max-height lsp-bridge-lookup-doc-tooltip-max-height)
-      (unwind-protect
-          (push (read-event) unread-command-events)
-        (progn
-          (posframe-delete lsp-bridge-lookup-doc-tooltip)
-          (other-frame 0))))))
+                     :max-height lsp-bridge-lookup-doc-tooltip-max-height))))
 
 (defun lsp-bridge-hide-doc-tooltip ()
   (posframe-hide lsp-bridge-lookup-doc-tooltip))

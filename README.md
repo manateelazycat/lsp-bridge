@@ -64,6 +64,20 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 * lsp-bridge-show-signature-help-in-minibuffer: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
 * lsp-bridge-insert-common-prefix: insert common prefix of candidates
 * lsp-bridge-restart-process: restart lsp-bridge process (only used for development)
+* lsp-bridge-popup-documentation-scroll-up: scroll up popup document.
+* lsp-bridge-popup-documentation-scroll-down: scroll down popup document.
+
+## Customize lsp-bridge keymap
+customize keymap for lsp-bridge commands.
+
+eg:
+```elisp
+(defvar lsp-bridge-mode-map
+    (let ((keymap (make-sparse-keymap)))
+    (define-key keymap (kbd "C-j") 'lsp-bridge-popup-documentation-scroll-up)
+    (define-key keymap (kbd "C-k") 'lsp-bridge-popup-documentation-scroll-down)
+    keymap))
+```
 
 ## Customize language server configuration
 
