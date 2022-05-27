@@ -80,6 +80,7 @@
 (require 'lsp-bridge-ref)
 (require 'posframe)
 (require 'markdown-mode)
+(require 'xref)
 
 (defgroup lsp-bridge nil
   "LSP-Bridge group."
@@ -333,7 +334,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
       (if-let ((file-name (buffer-file-name buffer)))
           (when (or (string-equal file-name filepath)
                     (string-equal (file-truename file-name) filepath))
-            (throw 'find-match buffer))))  
+            (throw 'find-match buffer))))
     nil))
 
 (defun lsp-bridge--get-lang-server-func (project-path filepath)
@@ -820,8 +821,12 @@ If optional MARKER, return a marker instead"
   (lsp-bridge-call-async "find_references" lsp-bridge-filepath (lsp-bridge--position)))
 
 (defun lsp-bridge-popup-references (references-content references-counter)
-  (lsp-bridge-ref-popup references-content references-counter)
-  (message "[LSP-Bridge] Found %s references" references-counter))
+  (if lsp-bridge--xref-wait-for ;;  HACK: more situations should be considered
+      (progn
+        (setq lsp-bridge--xref-locations (lsp-bridge--xref-reference-content-to-mark references-content))
+        (setq lsp-bridge--xref-wait-for nil))
+    (lsp-bridge-ref-popup references-content references-counter)
+    (message "[LSP-Bridge] Found %s references" references-counter)))
 
 (defun lsp-bridge-rename ()
   (interactive)
@@ -864,23 +869,29 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge--jump-to-def (filepath position)
   (interactive)
   ;; Record postion.
-  (set-marker (mark-marker) (point) (current-buffer))
-  (add-to-history 'lsp-bridge-mark-ring (copy-marker (mark-marker)) lsp-bridge-mark-ring-max t)
+  (if lsp-bridge--xref-wait-for ;;  TODO: more situations should be considered
+      (progn
+        (setq lsp-bridge--xref-locations (list (list filepath
+                                                     (1+ (plist-get position :line))
+                                                     (plist-get position :character))))
+        (setq lsp-bridge--xref-wait-for nil))
+    (set-marker (mark-marker) (point) (current-buffer))
+    (add-to-history 'lsp-bridge-mark-ring (copy-marker (mark-marker)) lsp-bridge-mark-ring-max t)
 
-  ;; Jump to define.
-  ;; Show define in other window if `lsp-bridge-jump-to-def-in-other-window' is non-nil.
-  (if lsp-bridge-jump-to-def-in-other-window
-      (find-file-other-window filepath)
-    (find-file filepath))
+    ;; Jump to define.
+    ;; Show define in other window if `lsp-bridge-jump-to-def-in-other-window' is non-nil.
+    (if lsp-bridge-jump-to-def-in-other-window
+        (find-file-other-window filepath)
+      (find-file filepath))
 
-  (goto-char (lsp-bridge--lsp-position-to-point position))
-  (recenter)
+    (goto-char (lsp-bridge--lsp-position-to-point position))
+    (recenter)
 
-  ;; Flash define line.
-  (require 'pulse)
-  (let ((pulse-iterations 1)
-        (pulse-delay lsp-bridge-flash-line-delay))
-    (pulse-momentary-highlight-one-line (point) 'lsp-bridge-font-lock-flash)))
+    ;; Flash define line.
+    (require 'pulse)
+    (let ((pulse-iterations 1)
+          (pulse-delay lsp-bridge-flash-line-delay))
+      (pulse-momentary-highlight-one-line (point) 'lsp-bridge-font-lock-flash))))
 
 (defun lsp-bridge-insert-common-prefix ()
   (interactive)
@@ -1061,6 +1072,80 @@ If optional MARKER, return a marker instead"
       (setq lsp-bridge-filepath new-name)))
   (apply orig-fun arg args))
 (advice-add #'rename-file :around #'lsp-bridge--rename-file-advisor)
+
+(defvar lsp-bridge--xref-wait-for nil
+  "To judge whether we are waiting for the results.")
+(defvar lsp-bridge--xref-locations nil
+  "A list of (filename line column . content) for xref.")
+
+;;;###autoload
+(defun lsp-bridge-xref-backend ()
+  "LSP Bridge backend for Xref."
+  'lsp-bridge)
+
+(cl-defmethod xref-backend-identifier-at-point ((_backend (eql lsp-bridge)))
+  (symbol-name (symbol-at-point)))
+
+(defun lsp-bridge--xref-do (action)
+  ""
+  (setq lsp-bridge--xref-wait-for (lsp-bridge--position))
+  (pcase action
+    ('find-definitions
+     (lsp-bridge-find-def))
+    ('find-references
+     (lsp-bridge-find-references)))
+  (let ((sleep-time 0))
+    (while (and lsp-bridge--xref-wait-for
+                (< sleep-time 2)) ;;  HACK: wait for 2 seconds
+      (sleep-for 0.05)
+      (setq sleep-time (+ sleep-time 0.05))))
+  (unless lsp-bridge--xref-wait-for
+    (seq-map
+     (lambda (candidate)
+       (xref-make (if (> (length candidate) 3)
+                      (nth 3 candidate)
+                    'match)
+                  (xref-make-file-location (nth 0 candidate)
+                                           (nth 1 candidate)
+                                           (nth 2 candidate))))
+     lsp-bridge--xref-locations)))
+
+
+(defun lsp-bridge--xref-reference-content-to-mark (references-content)
+  "Turn the REFERENCES-CONTENT of string into the list of (filename line column content)."
+  (let* ((num 0)
+         (content (split-string references-content "\n"))
+         (len (length content))
+         (current-file)
+         (results '()))
+    (while (< num len)
+      (let ((str (nth num content)))
+        (cond
+         ((string-prefix-p "\033[95m" str)
+          (setq current-file (substring str 5 (- (length str) 4))))
+         ((and current-file str (> (length str) 0))
+          (let* ((p1 (string-search ":" str))
+                 (p2 (string-search ":" str (1+ p1)))
+                 (line (substring str 0 p1))
+                 (col (substring str (1+ p1) p2))
+                 (content (substring str (1+ p2)))
+                 (content (string-replace "\033[94m" "" (string-replace "\033[0m" "" content))))
+            (push (list current-file
+                        (string-to-number line)
+                        (string-to-number col)
+                        content)
+                  results)))))
+      (setq num (1+ num)))
+    results))
+
+(cl-defmethod xref-backend-definitions ((_backend (eql lsp-bridge)) _)
+  (lsp-bridge--xref-do 'find-definitions))
+
+(cl-defmethod xref-backend-references ((_backend (eql lsp-bridge)) _)
+  (lsp-bridge--xref-do 'find-references))
+
+(cl-defmethod xref-backend-identifier-completion-table ((_backend (eql lsp-bridge)))
+  nil)
 
 (provide 'lsp-bridge)
 
