@@ -87,7 +87,7 @@
 
 
 (defcustom lsp-bridge-enable-popup-predicates '(lsp-bridge-not-empty-candidates
-                                                lsp-bridge-not-only-blank-around-cursor
+                                                lsp-bridge-not-only-blank-before-cursor
                                                 lsp-bridge-not-match-hide-characters
                                                 lsp-bridge-not-match-completion-position
                                                 lsp-bridge-not-match-stop-commands
@@ -333,7 +333,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
       (if-let ((file-name (buffer-file-name buffer)))
           (when (or (string-equal file-name filepath)
                     (string-equal (file-truename file-name) filepath))
-            (throw 'find-match buffer))))  
+            (throw 'find-match buffer))))
     nil))
 
 (defun lsp-bridge--get-lang-server-func (project-path filepath)
@@ -582,12 +582,11 @@ Auto completion is only performed if the tick did not change."
   "Hide completion if cursor after hide character match `lsp-bridge-hide-completion-characters'."
   (not (member (char-to-string (char-before)) lsp-bridge-hide-completion-characters)))
 
-(defun lsp-bridge-not-only-blank-around-cursor ()
-  "Hide completion if only blank around cursor."
-  (not (and (save-excursion
-              (re-search-backward "\\s-+\\|^" (1- (point)) t))
-            (save-excursion
-              (re-search-forward "\\s-+\\|$" (1+ (point)) t)))))
+(defun lsp-bridge-not-only-blank-before-cursor ()
+  "Hide completion if only blank before cursor."
+  (split-string (buffer-substring-no-properties
+                 (max (1- (point)) (line-beginning-position))
+                 (point))))
 
 (defun lsp-bridge-is-evil-insert-state ()
   "If `evil' mode is enable, only show completion when evil is in insert mode."
@@ -763,7 +762,9 @@ If optional MARKER, return a marker instead"
                            (buffer-substring-no-properties begin end)
                            (lsp-bridge--position)
                            (lsp-bridge-char-before)
-                           (buffer-substring-no-properties (line-beginning-position) (point)))))
+                           (buffer-substring-no-properties (line-beginning-position) (point))
+                           (and (frame-live-p corfu--frame)
+                                (frame-visible-p corfu--frame)))))
 
 (defun lsp-bridge-monitor-after-save ()
   (lsp-bridge-call-async "save_file" lsp-bridge-filepath))
@@ -1061,6 +1062,10 @@ If optional MARKER, return a marker instead"
       (setq lsp-bridge-filepath new-name)))
   (apply orig-fun arg args))
 (advice-add #'rename-file :around #'lsp-bridge--rename-file-advisor)
+
+(defun lsp-bridge--corfu-hide-advisor (&rest args)
+  (lsp-bridge-call-async "completion_hide" lsp-bridge-filepath))
+(advice-add #'corfu--popup-hide :after #'lsp-bridge--corfu-hide-advisor)
 
 (provide 'lsp-bridge)
 
