@@ -17,7 +17,10 @@ class Hover(Handler):
     def parse_hover_contents(self, contents, render_strings):
         content_type = type(contents)
         if content_type == str:
-            render_strings.append(make_code_block("text", contents))
+            if contents.startswith("```"):
+                render_strings.append(contents)
+            else:
+                render_strings.append(make_code_block("text", contents))
         elif content_type == dict:
             if "kind" in contents:
                 if contents["kind"] == "markdown":
