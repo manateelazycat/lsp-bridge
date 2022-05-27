@@ -88,7 +88,7 @@
 
 
 (defcustom lsp-bridge-enable-popup-predicates '(lsp-bridge-not-empty-candidates
-                                                lsp-bridge-not-only-blank-around-cursor
+                                                lsp-bridge-not-only-blank-before-cursor
                                                 lsp-bridge-not-match-hide-characters
                                                 lsp-bridge-not-match-completion-position
                                                 lsp-bridge-not-match-stop-commands
@@ -583,12 +583,11 @@ Auto completion is only performed if the tick did not change."
   "Hide completion if cursor after hide character match `lsp-bridge-hide-completion-characters'."
   (not (member (char-to-string (char-before)) lsp-bridge-hide-completion-characters)))
 
-(defun lsp-bridge-not-only-blank-around-cursor ()
-  "Hide completion if only blank around cursor."
-  (not (and (save-excursion
-              (re-search-backward "\\s-+\\|^" (1- (point)) t))
-            (save-excursion
-              (re-search-forward "\\s-+\\|$" (1+ (point)) t)))))
+(defun lsp-bridge-not-only-blank-before-cursor ()
+  "Hide completion if only blank before cursor."
+  (split-string (buffer-substring-no-properties
+                 (max (1- (point)) (line-beginning-position))
+                 (point))))
 
 (defun lsp-bridge-is-evil-insert-state ()
   "If `evil' mode is enable, only show completion when evil is in insert mode."
@@ -764,7 +763,9 @@ If optional MARKER, return a marker instead"
                            (buffer-substring-no-properties begin end)
                            (lsp-bridge--position)
                            (lsp-bridge-char-before)
-                           (buffer-substring-no-properties (line-beginning-position) (point)))))
+                           (buffer-substring-no-properties (line-beginning-position) (point))
+                           (and (frame-live-p corfu--frame)
+                                (frame-visible-p corfu--frame)))))
 
 (defun lsp-bridge-monitor-after-save ()
   (lsp-bridge-call-async "save_file" lsp-bridge-filepath))
@@ -983,6 +984,11 @@ If optional MARKER, return a marker instead"
 
 (defvar lsp-bridge-mode-map (make-sparse-keymap))
 
+(defcustom lsp-bridge-org-babel-lang-list '("clojure" "latex" "python")
+  "A list of org babel languages in which source code block lsp-bridge will be enabled."
+  :type 'list
+  :group 'lsp-bridge)
+
 ;;;###autoload
 (define-minor-mode lsp-bridge-mode
   "LSP Bridge mode."
@@ -1146,6 +1152,39 @@ If optional MARKER, return a marker instead"
 
 (cl-defmethod xref-backend-identifier-completion-table ((_backend (eql lsp-bridge)))
   nil)
+
+(defun lsp-bridge--corfu-hide-advisor (&rest args)
+  (lsp-bridge-call-async "completion_hide" lsp-bridge-filepath))
+(advice-add #'corfu--popup-hide :after #'lsp-bridge--corfu-hide-advisor)
+
+;; https://tecosaur.github.io/emacs-config/config.html#lsp-support-src
+(cl-defmacro lsp-org-babel-enable (lang)
+  "Support LANG in org source code block."
+  (cl-check-type lang stringp)
+  (let* ((edit-pre (intern (format "org-babel-edit-prep:%s" lang)))
+	 (intern-pre (intern (format "lsp--%s" (symbol-name edit-pre)))))
+    `(progn
+       (defun ,intern-pre (info)
+	 (let ((file-name (->> info caddr (alist-get :file))))
+	   (unless file-name
+	     (setq file-name (make-temp-file "babel-lsp-")))
+	   (setq buffer-file-name file-name)
+	   (lsp-bridge-mode 1)))
+       (put ',intern-pre 'function-documentation
+	    (format "Enable lsp-bridge-mode in the buffer of org source block (%s)."
+		    (upcase ,lang)))
+       (if (fboundp ',edit-pre)
+	   (advice-add ',edit-pre :after ',intern-pre)
+	 (progn
+	   (defun ,edit-pre (info)
+	     (,intern-pre info))
+	   (put ',edit-pre 'function-documentation
+		(format "Prepare local buffer environment for org source block (%s)."
+			(upcase ,lang))))))))
+
+(with-eval-after-load 'org
+  (dolist (lang lsp-bridge-org-babel-lang-list)
+    (eval `(lsp-org-babel-enable ,lang))))
 
 (provide 'lsp-bridge)
 
