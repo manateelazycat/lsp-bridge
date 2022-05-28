@@ -1047,6 +1047,12 @@ If optional MARKER, return a marker instead"
     (message "[LSP-Bridge] cannot be enabled in non-file buffers.")
     (setq lsp-bridge-mode nil))
    (t
+    ;; Disable backup file.
+    ;; Please use my another plugin `https://github.com/manateelazycat/auto-save' and use git for file version management.
+    (setq make-backup-files nil)
+    (setq auto-save-default nil)
+    (setq create-lockfiles nil)
+
     ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
     ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
     (unless (file-exists-p (buffer-file-name))
