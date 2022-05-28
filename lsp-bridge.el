@@ -915,32 +915,32 @@ If optional MARKER, return a marker instead"
   (posframe-funcall lsp-bridge-lookup-doc-tooltip
                     #'scroll-down-command arg))
 
+(defun lsp-bridge-frame-background-color ()
+  (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode))))
+    (if (string-equal theme-mode "dark") "#191a1b" "#f0f0f0")))
+
 (defun lsp-bridge-popup-documentation (kind name value)
-  (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode)))
-         (background-color (if (string-equal theme-mode "dark")
-                               "#191a1b"
-                             "#f0f0f0")))
-    (with-current-buffer (get-buffer-create lsp-bridge-lookup-doc-tooltip)
-      (erase-buffer)
-      (text-scale-set lsp-bridge-lookup-doc-tooltip-text-scale)
-      (insert (propertize name 'face 'font-lock-function-name-face))
-      (insert "\n\n")
-      (setq-local markdown-fontify-code-blocks-natively t)
-      (insert value)
-      (if (fboundp 'gfm-view-mode)
-          (let ((view-inhibit-help-message t))
-            (gfm-view-mode))
-        (gfm-mode))
-      ;; avoid 'gfm-view-mode made buffer read only.
-      (read-only-mode 0)
-      (font-lock-ensure))
-    (when (posframe-workable-p)
-      (posframe-show lsp-bridge-lookup-doc-tooltip
-                     :position (point)
-                     :internal-border-width lsp-bridge-lookup-doc-tooltip-border-width
-                     :background-color background-color
-                     :max-width lsp-bridge-lookup-doc-tooltip-max-width
-                     :max-height lsp-bridge-lookup-doc-tooltip-max-height))))
+  (with-current-buffer (get-buffer-create lsp-bridge-lookup-doc-tooltip)
+    (erase-buffer)
+    (text-scale-set lsp-bridge-lookup-doc-tooltip-text-scale)
+    (insert (propertize name 'face 'font-lock-function-name-face))
+    (insert "\n\n")
+    (setq-local markdown-fontify-code-blocks-natively t)
+    (insert value)
+    (if (fboundp 'gfm-view-mode)
+        (let ((view-inhibit-help-message t))
+          (gfm-view-mode))
+      (gfm-mode))
+    ;; avoid 'gfm-view-mode made buffer read only.
+    (read-only-mode 0)
+    (font-lock-ensure))
+  (when (posframe-workable-p)
+    (posframe-show lsp-bridge-lookup-doc-tooltip
+                   :position (point)
+                   :internal-border-width lsp-bridge-lookup-doc-tooltip-border-width
+                   :background-color (lsp-bridge-frame-background-color)
+                   :max-width lsp-bridge-lookup-doc-tooltip-max-width
+                   :max-height lsp-bridge-lookup-doc-tooltip-max-height)))
 
 (defun lsp-bridge-hide-doc-tooltip ()
   (posframe-hide lsp-bridge-lookup-doc-tooltip))
@@ -1132,23 +1132,19 @@ If optional MARKER, return a marker instead"
     (setq lsp-bridge-diagnostic-overlays (reverse lsp-bridge-diagnostic-overlays))))
 
 (defun lsp-bridge-show-diagnostic-tooltip (diagnostic-info foreground-color)
-  (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode)))
-         (background-color (if (string-equal theme-mode "dark")
-                               "#191a1b"
-                             "#f0f0f0")))
-    (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-tooltip)
-      (erase-buffer)
-      (insert diagnostic-info))
-    (when (posframe-workable-p)
-      ;; Perform redisplay make sure posframe can poup to 
-      (redisplay 'force)
-      (sleep-for 0.01)
-      (posframe-show lsp-bridge-diagnostic-tooltip
-                     :position (point)
-                     :internal-border-width lsp-bridge-diagnostic-tooltip-border-width
-                     :background-color background-color
-                     :foreground-color foreground-color
-                     ))))
+  (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-tooltip)
+    (erase-buffer)
+    (insert diagnostic-info))
+  (when (posframe-workable-p)
+    ;; Perform redisplay make sure posframe can poup to
+    (redisplay 'force)
+    (sleep-for 0.01)
+    (posframe-show lsp-bridge-diagnostic-tooltip
+                   :position (point)
+                   :internal-border-width lsp-bridge-diagnostic-tooltip-border-width
+                   :background-color (lsp-bridge-frame-background-color)
+                   :foreground-color foreground-color
+                   )))
 
 (defun lsp-bridge-jump-to-next-diagnostic ()
   (interactive)
