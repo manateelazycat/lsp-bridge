@@ -12,10 +12,9 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 
 1. Install Python dependencies: [python-epc](https://github.com/tkf/python-epc)
 2. Install Elisp dependencies:
-+ [corfu](https://github.com/minad/corfu) (for corfu users)
++ [corfu](https://github.com/minad/corfu), [orderless](https://github.com/oantolin/orderless) (for corfu users)
 + [company-mode](https://github.com/company-mode/company-mode), [company-box](https://github.com/sebastiencs/company-box) (for company users)
 + [all-the-icons](https://github.com/domtronn/all-the-icons.el) (need execute command `all-the-icons-install-fonts` to install all-the-icons fonts)
-+ [orderless](https://github.com/oantolin/orderless)
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
 + [yasnippet](https://github.com/joaotavora/yasnippet)
