@@ -1134,6 +1134,9 @@ If optional MARKER, return a marker instead"
       (erase-buffer)
       (insert diagnostic-info))
     (when (posframe-workable-p)
+      ;; Perform redisplay make sure posframe can poup to 
+      (redisplay 'force)
+      (sleep-for 0.01)
       (posframe-show lsp-bridge-diagnostic-tooltip
                      :position (point)
                      :internal-border-width lsp-bridge-diagnostic-tooltip-border-width
