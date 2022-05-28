@@ -28,7 +28,7 @@ class Completion(Handler):
                            triggerKind=CompletionTriggerKind.TriggerCharacter.value)
         else:
             context = dict(triggerKind=CompletionTriggerKind.Invoked.value)
-
+        self.position = position
         return dict(position=position, context=context)
 
     def process_response(self, response: dict) -> None:
@@ -64,5 +64,6 @@ class Completion(Handler):
                         self.file_action.filepath,
                         completion_common_string,
                         completion_candidates,
+                        self.position,
                         self.file_action.lsp_server.server_info["name"],
                         self.file_action.lsp_server.completion_trigger_characters)
