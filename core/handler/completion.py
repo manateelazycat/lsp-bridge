@@ -63,7 +63,7 @@ class Completion(Handler):
             eval_in_emacs("lsp-bridge-record-completion-items",
                         self.file_action.filepath,
                         completion_common_string,
-                        self.position,
                         completion_candidates,
+                        self.position,
                         self.file_action.lsp_server.server_info["name"],
                         self.file_action.lsp_server.completion_trigger_characters)
