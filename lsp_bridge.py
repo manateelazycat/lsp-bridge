@@ -235,7 +235,7 @@ class LspBridge:
 
 def load_lang_server_info(lang_server):
     lang_server_info_path = ""
-    if os.path.exists(lang_server) and os.path.dirname(lang_server):
+    if os.path.exists(lang_server) and os.path.dirname(lang_server) != "":
         # If lang_server is real file path, we load the LSP server configuration from the user specified file.
         lang_server_info_path = lang_server
     else:
