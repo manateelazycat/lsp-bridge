@@ -96,12 +96,5 @@ function to the relevant margin-formatters list."
               (kind (plist-get item :kind)))
     (intern kind)))
 
-(cl-case lsp-bridge-completion-provider
-  (company
-   (if (boundp 'company-box-mode)
-       (add-to-list 'company-box-icons-functions #'lsp-bridge-company-box-icons)))
-  (corfu
-   (add-to-list 'corfu-margin-formatters #'lsp-bridge-icon-margin-formatter)))
-
 (provide 'lsp-bridge-icon)
 ;;; lsp-bridge-icon.el ends here

@@ -113,7 +113,9 @@ Setting this to nil or 0 will turn off the indicator."
   :type '(choice (const :tag "company" company)
                  (const :tag "corfu" corfu)))
 
-(defcustom lsp-bridge-completion-stop-commands '(corfu-complete corfu-insert undo-tree-undo undo-tree-redo)
+(defcustom lsp-bridge-completion-stop-commands '("corfu-complete" "corfu-insert"
+                                                 "undo-tree-undo" "undo-tree-redo"
+                                                 "kill-region" "delete-block-backward")
   "If last command is match this option, stop popup completion ui."
   :type 'cons
   :group 'lsp-bridge)
@@ -642,16 +644,15 @@ Auto completion is only performed if the tick did not change."
               ((null candidate-index))
               (t
                (let* ((label (string-trim candidate)) ; we need trim candidate, `lsp-bridge-identify-annotation' will cause insert blank after `label' information
-                      (insert-text (plist-get (gethash candidate lsp-bridge-completion-candidates) :insertText))
-                      (insert-text-format (plist-get (gethash candidate lsp-bridge-completion-candidates) :insertTextFormat))
-                      (text-edit (plist-get (gethash candidate lsp-bridge-completion-candidates) :textEdit))
-                      (new-text (if text-edit
-                                    (plist-get text-edit :newText)
-                                  nil))
+                      (candidate-info (gethash candidate lsp-bridge-completion-candidates))
+                      (insert-text (plist-get candidate-info :insertText))
+                      (insert-text-format (plist-get candidate-info :insertTextFormat))
+                      (text-edit (plist-get candidate-info :textEdit))
+                      (new-text (plist-get text-edit :newText))
                       (additionalTextEdits (if lsp-bridge-enable-auto-import
-                                               (plist-get (gethash candidate lsp-bridge-completion-candidates) :additionalTextEdits)
+                                               (plist-get candidate-info :additionalTextEdits)
                                              nil))
-                      (kind (plist-get (gethash candidate lsp-bridge-completion-candidates) :kind))
+                      (kind (plist-get candidate-info :kind))
                       (snippet-fn (and (or (eql insert-text-format 2) (string= kind "Snippet")) (lsp-bridge--snippet-expansion-fn)))
                       (delete-start-pos (if text-edit
                                             (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :start))
@@ -665,8 +666,8 @@ Auto completion is only performed if the tick did not change."
 
                  ;; Do `additionalTextEdits' if return auto-imprt information.
                  (when (cl-plusp (length additionalTextEdits))
-                   (lsp-bridge--apply-text-edits additionalTextEdits)))
-               )))))))))
+                   (lsp-bridge--apply-text-edits additionalTextEdits))
+                 ))))))))))
 
 ;; Copy from eglot
 (defun lsp-bridge--snippet-expansion-fn ()
@@ -752,22 +753,26 @@ If optional MARKER, return a marker instead"
 
 (defun lsp-bridge-monitor-after-change (begin end length)
   ;; Record last command to `lsp-bridge-last-change-command'.
-  (setq lsp-bridge-last-change-command this-command)
+  (setq lsp-bridge-last-change-command (format "%s" this-command))
 
   ;; Send change_file request.
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (setq-local lsp-bridge--current-tick (lsp-bridge--auto-tick))
-    (lsp-bridge-call-async "change_file"
-                           lsp-bridge-filepath
-                           lsp-bridge--before-change-begin-pos
-                           lsp-bridge--before-change-end-pos
-                           length
-                           (buffer-substring-no-properties begin end)
-                           (lsp-bridge--position)
-                           (lsp-bridge-char-before)
-                           (buffer-substring-no-properties (line-beginning-position) (point))
-                           (and (frame-live-p corfu--frame)
-                                (frame-visible-p corfu--frame)))))
+    (let ((completion-frame (cl-case lsp-bridge-completion-provider
+                              (company (company-box--get-frame))
+                              (corfu corfu--frame))))
+      (setq-local lsp-bridge--current-tick (lsp-bridge--auto-tick))
+      (lsp-bridge-call-async "change_file"
+                             lsp-bridge-filepath
+                             lsp-bridge--before-change-begin-pos
+                             lsp-bridge--before-change-end-pos
+                             length
+                             (buffer-substring-no-properties begin end)
+                             (lsp-bridge--position)
+                             (lsp-bridge-char-before)
+                             (buffer-substring-no-properties (line-beginning-position) (point))
+                             (and (frame-live-p completion-frame)
+                                  (frame-visible-p completion-frame))
+                             ))))
 
 (defun lsp-bridge-monitor-after-save ()
   (lsp-bridge-call-async "save_file" lsp-bridge-filepath))
@@ -1021,11 +1026,23 @@ If optional MARKER, return a marker instead"
     (cl-case lsp-bridge-completion-provider
       (company
        (setq-local company-minimum-prefix-length 0)
-       (setq-local company-idle-delay nil))
+       (setq-local company-idle-delay nil)
+       (setq-local company-require-match nil) ; need disable `company-require-match', you even can't input `.' sometimes
+
+       (advice-add #'company-box-hide :after #'lsp-bridge--completion-hide-advisor)
+
+       (when (featurep 'lsp-bridge-icon)
+         (add-to-list 'company-box-icons-functions #'lsp-bridge-company-box-icons)))
       (corfu
        (setq-local corfu-auto-prefix 0)
        (setq-local corfu-auto nil)
+
        (remove-hook 'post-command-hook #'corfu--auto-post-command 'local)
+
+       (advice-add #'corfu--popup-hide :after #'lsp-bridge--completion-hide-advisor)
+
+       (when (featurep 'lsp-bridge-icon)
+         (add-to-list 'corfu-margin-formatters #'lsp-bridge-icon-margin-formatter))
 
        ;; Add fuzzy match.
        (when (functionp 'lsp-bridge-orderless-setup)
@@ -1040,11 +1057,17 @@ If optional MARKER, return a marker instead"
   (cl-case lsp-bridge-completion-provider
     (company
      (kill-local-variable 'company-minimum-prefix-length)
-     (kill-local-variable 'company-idle-delay))
+     (kill-local-variable 'company-idle-delay)
+     (kill-local-variable 'company-require-match)
+
+     (advice-remove #'company-box-hide #'lsp-bridge--completion-hide-advisor))
     (corfu
      (kill-local-variable 'corfu-auto-prefix)
      (kill-local-variable 'corfu-auto)
-     (and corfu-auto (add-hook 'post-command-hook #'corfu--auto-post-command nil 'local))))
+
+     (and corfu-auto (add-hook 'post-command-hook #'corfu--auto-post-command nil 'local))
+
+     (advice-remove #'corfu--popup-hide #'lsp-bridge--completion-hide-advisor)))
 
   (dolist (hook lsp-bridge--internal-hooks)
     (remove-hook (car hook) (cdr hook) t)))
@@ -1062,6 +1085,13 @@ If optional MARKER, return a marker instead"
 
   (dolist (hook lsp-bridge-default-mode-hooks)
     (add-hook hook (lambda ()
+                     (cl-case lsp-bridge-completion-provider
+                       (company
+                        (company-mode 1)
+                        (company-box-mode 1))
+                       (corfu
+                        (corfu-mode 1)))
+
                      (lsp-bridge-mode 1)
                      ))))
 
@@ -1069,7 +1099,6 @@ If optional MARKER, return a marker instead"
   (evil-add-command-properties #'lsp-bridge-find-def :jump t)
   (evil-add-command-properties #'lsp-bridge-find-references :jump t)
   (evil-add-command-properties #'lsp-bridge-find-impl :jump t))
-
 
 (defun lsp-bridge--rename-file-advisor (orig-fun &optional arg &rest args)
   (when lsp-bridge-mode
@@ -1181,31 +1210,34 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge--corfu-hide-advisor (&rest args)
   (lsp-bridge-call-async "completion_hide" lsp-bridge-filepath))
 (advice-add #'corfu--popup-hide :after #'lsp-bridge--corfu-hide-advisor)
+(defun lsp-bridge--completion-hide-advisor (&rest args)
+  (when lsp-bridge-mode
+    (lsp-bridge-call-async "completion_hide" lsp-bridge-filepath)))
 
 ;; https://tecosaur.github.io/emacs-config/config.html#lsp-support-src
 (cl-defmacro lsp-org-babel-enable (lang)
   "Support LANG in org source code block."
   (cl-check-type lang stringp)
   (let* ((edit-pre (intern (format "org-babel-edit-prep:%s" lang)))
-	     (intern-pre (intern (format "lsp--%s" (symbol-name edit-pre)))))
+         (intern-pre (intern (format "lsp--%s" (symbol-name edit-pre)))))
     `(progn
        (defun ,intern-pre (info)
-	     (let ((file-name (->> info caddr (alist-get :file))))
-	       (unless file-name
-	         (setq file-name (make-temp-file "babel-lsp-")))
-	       (setq buffer-file-name file-name)
-	       (lsp-bridge-mode 1)))
+         (let ((file-name (->> info caddr (alist-get :file))))
+           (unless file-name
+             (setq file-name (make-temp-file "babel-lsp-")))
+           (setq buffer-file-name file-name)
+           (lsp-bridge-mode 1)))
        (put ',intern-pre 'function-documentation
-	        (format "Enable lsp-bridge-mode in the buffer of org source block (%s)."
-		            (upcase ,lang)))
+            (format "Enable lsp-bridge-mode in the buffer of org source block (%s)."
+                    (upcase ,lang)))
        (if (fboundp ',edit-pre)
-	       (advice-add ',edit-pre :after ',intern-pre)
-	     (progn
-	       (defun ,edit-pre (info)
-	         (,intern-pre info))
-	       (put ',edit-pre 'function-documentation
-		        (format "Prepare local buffer environment for org source block (%s)."
-			            (upcase ,lang))))))))
+           (advice-add ',edit-pre :after ',intern-pre)
+         (progn
+           (defun ,edit-pre (info)
+             (,intern-pre info))
+           (put ',edit-pre 'function-documentation
+                (format "Prepare local buffer environment for org source block (%s)."
+                        (upcase ,lang))))))))
 
 (with-eval-after-load 'org
   (dolist (lang lsp-bridge-org-babel-lang-list)
