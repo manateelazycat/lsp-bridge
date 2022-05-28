@@ -22,13 +22,17 @@ class Completion(Handler):
     method = "textDocument/completion"
     cancel_on_change = True
 
+    def __init__(self, file_action: "FileAction"):
+        super().__init__(file_action)
+        self.position = None
+        
     def process_request(self, position, char) -> dict:
         if char in self.file_action.lsp_server.completion_trigger_characters:
             context = dict(triggerCharacter=char,
                            triggerKind=CompletionTriggerKind.TriggerCharacter.value)
         else:
             context = dict(triggerKind=CompletionTriggerKind.Invoked.value)
-
+        self.position = position
         return dict(position=position, context=context)
 
     def process_response(self, response: dict) -> None:
@@ -40,6 +44,7 @@ class Completion(Handler):
                 kind = KIND_MAP[item.get("kind", 0)]
 
                 candidate = {
+                    "position": self.position,
                     "label": item["label"],
                     "tags": item.get("tags", []),
                     "insertText": item.get('insertText', None),

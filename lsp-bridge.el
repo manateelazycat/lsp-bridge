@@ -652,10 +652,15 @@ Auto completion is only performed if the tick did not change."
                                              nil))
                       (kind (plist-get candidate-info :kind))
                       (snippet-fn (and (or (eql insert-text-format 2) (string= kind "Snippet")) (lsp-bridge--snippet-expansion-fn)))
+                      (position-pos (lsp-bridge--lsp-position-to-point
+                                     (plist-get candidate-info :position)))
                       (delete-start-pos (if text-edit
                                             (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :start))
                                           bounds-start))
-                      (delete-end-pos (point))
+                      (range-end-pos (if text-edit
+                                            (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :end))
+                                          position-pos))
+                      (delete-end-pos (+ (point) (- range-end-pos position-pos)))
                       (insert-candidate (or new-text insert-text label)))
 
                  ;; Insert candidate or expand snippet.
