@@ -514,7 +514,8 @@ Auto completion is only performed if the tick did not change."
       (and (eq (length list) 0))))
 
 (defun lsp-bridge-record-completion-items (filepath common items server-name completion-trigger-characters)
-  (lsp-bridge--with-file-buffer filepath
+  (lsp-bridge--with-file-buffer
+      filepath
     ;; Save completion items.
     (setq-local lsp-bridge-completion-common common)
     (setq-local lsp-bridge-completion-server-name server-name)
@@ -595,10 +596,11 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge-capf ()
   "Capf function similar to eglot's 'eglot-completion-at-point'."
-  (let* ((candidates (hash-table-keys lsp-bridge-completion-candidates))
-         (bounds (bounds-of-thing-at-point 'symbol))
-         (bounds-start (or (car bounds) (point)))
-         (bounds-end (or (cdr bounds) (point))))
+  (when-let* ((lsp-bridge-completion-candidates lsp-bridge-completion-candidates)
+              (candidates (hash-table-keys lsp-bridge-completion-candidates))
+              (bounds (bounds-of-thing-at-point 'symbol))
+              (bounds-start (or (car bounds) (point)))
+              (bounds-end (or (cdr bounds) (point))))
     (list
      bounds-start
      bounds-end
@@ -1105,7 +1107,8 @@ If optional MARKER, return a marker instead"
                 (< sleep-time 2)) ;;  HACK: wait for 2 seconds
       (sleep-for 0.05)
       (setq sleep-time (+ sleep-time 0.05))))
-  (unless lsp-bridge--xref-wait-for
+  (if lsp-bridge--xref-wait-for
+      (setq lsp-bridge--xref-wait-for nil)
     (seq-map
      (lambda (candidate)
        (xref-make (if (> (length candidate) 3)
@@ -1116,6 +1119,28 @@ If optional MARKER, return a marker instead"
                                            (nth 2 candidate))))
      lsp-bridge--xref-locations)))
 
+(defun lsp-bridge--xref-highlight-references (content)
+  "Add face for reference."
+  (let ((loop t)
+        (keys '("\033[94m" "\033[0m"))
+        (index 0)
+        (pos '())
+        (content content))
+    (while loop
+      (setq current-pos (string-search (nth index keys) content))
+      (if (null current-pos)
+          (setq loop nil)
+        (setq content
+              (concat (substring content 0 current-pos)
+                      (substring content (+ current-pos (length (nth index keys))))
+                      ))
+        (push current-pos pos)
+        (unless (= index 0)
+          (add-face-text-property (nth 0 pos) (nth 1 pos)
+                                  'xref-match t content)
+          (setq pos '()))
+        (setq index (% (1+ index) 2))))
+    content))
 
 (defun lsp-bridge--xref-reference-content-to-mark (references-content)
   "Turn the REFERENCES-CONTENT of string into the list of (filename line column content)."
@@ -1135,7 +1160,7 @@ If optional MARKER, return a marker instead"
                  (line (substring str 0 p1))
                  (col (substring str (1+ p1) p2))
                  (content (substring str (1+ p2)))
-                 (content (string-replace "\033[94m" "" (string-replace "\033[0m" "" content))))
+                 (content (lsp-bridge--xref-highlight-references content)))
             (push (list current-file
                         (string-to-number line)
                         (string-to-number col)
@@ -1162,25 +1187,25 @@ If optional MARKER, return a marker instead"
   "Support LANG in org source code block."
   (cl-check-type lang stringp)
   (let* ((edit-pre (intern (format "org-babel-edit-prep:%s" lang)))
-	 (intern-pre (intern (format "lsp--%s" (symbol-name edit-pre)))))
+	     (intern-pre (intern (format "lsp--%s" (symbol-name edit-pre)))))
     `(progn
        (defun ,intern-pre (info)
-	 (let ((file-name (->> info caddr (alist-get :file))))
-	   (unless file-name
-	     (setq file-name (make-temp-file "babel-lsp-")))
-	   (setq buffer-file-name file-name)
-	   (lsp-bridge-mode 1)))
+	     (let ((file-name (->> info caddr (alist-get :file))))
+	       (unless file-name
+	         (setq file-name (make-temp-file "babel-lsp-")))
+	       (setq buffer-file-name file-name)
+	       (lsp-bridge-mode 1)))
        (put ',intern-pre 'function-documentation
-	    (format "Enable lsp-bridge-mode in the buffer of org source block (%s)."
-		    (upcase ,lang)))
+	        (format "Enable lsp-bridge-mode in the buffer of org source block (%s)."
+		            (upcase ,lang)))
        (if (fboundp ',edit-pre)
-	   (advice-add ',edit-pre :after ',intern-pre)
-	 (progn
-	   (defun ,edit-pre (info)
-	     (,intern-pre info))
-	   (put ',edit-pre 'function-documentation
-		(format "Prepare local buffer environment for org source block (%s)."
-			(upcase ,lang))))))))
+	       (advice-add ',edit-pre :after ',intern-pre)
+	     (progn
+	       (defun ,edit-pre (info)
+	         (,intern-pre info))
+	       (put ',edit-pre 'function-documentation
+		        (format "Prepare local buffer environment for org source block (%s)."
+			            (upcase ,lang))))))))
 
 (with-eval-after-load 'org
   (dolist (lang lsp-bridge-org-babel-lang-list)
