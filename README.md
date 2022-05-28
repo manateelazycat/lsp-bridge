@@ -21,6 +21,7 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 3. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
 4. Add following code in your ~/.emacs:
 
+Corfu user.
 ```elisp
 (add-to-list 'load-path "<path-to-lsp-bridge>")
 
@@ -30,7 +31,6 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
 (yas-global-mode 1)
 
-;; For corfu users:
 (setq lsp-bridge-completion-provider 'corfu)
 (require 'corfu)
 (require 'corfu-info)
@@ -39,8 +39,19 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 (corfu-history-mode t)
 (global-lsp-bridge-mode)
 (when (> (frame-pixel-width) 3000) (custom-set-faces '(corfu-default ((t (:height 1.3))))))  ;; adjust default font height when running in HiDPI screen.
+```
 
-;; For company-mode users, only experimental support, recommended corfu.
+Company user
+
+```elisp
+(add-to-list 'load-path "<path-to-lsp-bridge>")
+
+(require 'yasnippet)
+(require 'lsp-bridge)
+(require 'lsp-bridge-icon)        ;; show icons for completion items, optional
+(require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
+(yas-global-mode 1)
+
 (setq lsp-bridge-completion-provider 'company)
 (require 'company)
 (require 'company-box)
