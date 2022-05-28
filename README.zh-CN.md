@@ -13,7 +13,6 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 1. 安装Python依赖: [python-epc](https://github.com/tkf/python-epc)
 2. 安装Elisp依赖:
 + [corfu](https://github.com/minad/corfu), [orderless](https://github.com/oantolin/orderless) (使用 corfu 补全)
-+ [company-mode](https://github.com/company-mode/company-mode), [company-box](https://github.com/sebastiencs/company-box) (使用 company-mode 补全)
 + [all-the-icons](https://github.com/domtronn/all-the-icons.el) (需要在安装all-the-icons后执行命令`all-the-icons-install-fonts`安装图标字体)
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
@@ -21,7 +20,6 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 3. 用 `git clone` 下载此仓库，并替换下面配置中的 load-path 路径
 4. 把下面代码加入到你的配置文件 ~/.emacs 中：
 
-Corfu用户
 ```elisp
 (add-to-list 'load-path "<path-to-lsp-bridge>")
 
@@ -31,7 +29,6 @@ Corfu用户
 (require 'lsp-bridge-jdtls)       ;; 提供Java第三方库跳转和-data目录支持， Java用户必选
 (yas-global-mode 1)
 
-(setq lsp-bridge-completion-provider 'corfu)
 (require 'corfu)
 (require 'corfu-info)
 (require 'corfu-history)
@@ -39,22 +36,6 @@ Corfu用户
 (corfu-history-mode t)
 (global-lsp-bridge-mode)
 (when (> (frame-pixel-width) 3000) (custom-set-faces '(corfu-default ((t (:height 1.3))))))  ;; 让corfu适应高分屏
-```
-
-Company用户
-```elisp
-(add-to-list 'load-path "<path-to-lsp-bridge>")
-
-(require 'yasnippet)
-(require 'lsp-bridge)
-(require 'lsp-bridge-icon)        ;; 显示图标在补全菜单中，可选
-(require 'lsp-bridge-jdtls)       ;; 提供Java第三方库跳转和-data目录支持， Java用户必选
-(yas-global-mode 1)
-
-(setq lsp-bridge-completion-provider 'company)
-(require 'company)
-(require 'company-box)
-(global-lsp-bridge-mode)
 ```
 
 ## 命令列表

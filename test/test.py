@@ -64,7 +64,6 @@ def test_entrypoint():
         (require 'lsp-bridge)
         (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
         (yas-global-mode 1)
-        (setq lsp-bridge-completion-provider 'corfu)
         (require 'corfu)
         (require 'corfu-info)
         (require 'corfu-history)

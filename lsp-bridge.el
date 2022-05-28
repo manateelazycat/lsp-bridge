@@ -104,14 +104,6 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'number
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-completion-provider
-  (if (boundp 'company-mode)
-      'company
-    'corfu)
-  "The completion provider to use. Can be `company' or `corfu'."
-  :type '(choice (const :tag "company" company)
-                 (const :tag "corfu" corfu)))
-
 (defcustom lsp-bridge-completion-stop-commands
   '("corfu-complete" "corfu-insert"
     "undo-tree-undo" "undo-tree-redo"
@@ -544,10 +536,7 @@ Auto completion is only performed if the tick did not change."
       (when (cl-every (lambda (pred)
                         (if (functionp pred) (funcall pred) t))
                       lsp-bridge-enable-popup-predicates)
-        (cl-case lsp-bridge-completion-provider
-          (company (company-manual-begin))
-          (corfu
-           (pcase (while-no-input ;; Interruptible capf query
+        (pcase (while-no-input ;; Interruptible capf query
                     (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
              (`(,fun ,beg ,end ,table . ,plist)
               (let ((completion-in-region-mode-predicate
@@ -573,7 +562,7 @@ Auto completion is only performed if the tick did not change."
                 ;; so we need set `corfu-on-exact-match' to quit to prohibit corfu insert select candidate.
                 (let ((corfu-on-exact-match 'quit))
                   (corfu--update)))))
-           ))))))
+        ))))
 
 (defun lsp-bridge-not-empty-candidates ()
   "Hide completion if candidates list is empty."
@@ -761,9 +750,7 @@ If optional MARKER, return a marker instead"
 
   ;; Send change_file request.
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (let ((completion-frame (cl-case lsp-bridge-completion-provider
-                              (company (company-box--get-frame))
-                              (corfu corfu--frame))))
+    (let ((completion-frame corfu--frame))
       (setq-local lsp-bridge-current-tick (lsp-bridge--auto-tick))
       (lsp-bridge-call-async "change_file"
                              lsp-bridge-filepath
@@ -1064,30 +1051,19 @@ If optional MARKER, return a marker instead"
     (setq lsp-bridge-filepath (file-truename buffer-file-name))
     (setq lsp-bridge-last-position 0)
 
-    (cl-case lsp-bridge-completion-provider
-      (company
-       (setq-local company-minimum-prefix-length 0)
-       (setq-local company-idle-delay nil)
-       (setq-local company-require-match nil) ; need disable `company-require-match', you even can't input `.' sometimes
+    (setq-local corfu-auto-prefix 0)
+    (setq-local corfu-auto nil)
 
-       (advice-add #'company-box-hide :after #'lsp-bridge--completion-hide-advisor)
+    (remove-hook 'post-command-hook #'corfu--auto-post-command 'local)
 
-       (when (featurep 'lsp-bridge-icon)
-         (add-to-list 'company-box-icons-functions #'lsp-bridge-company-box-icons)))
-      (corfu
-       (setq-local corfu-auto-prefix 0)
-       (setq-local corfu-auto nil)
+    (advice-add #'corfu--popup-hide :after #'lsp-bridge--completion-hide-advisor)
 
-       (remove-hook 'post-command-hook #'corfu--auto-post-command 'local)
+    (when (featurep 'lsp-bridge-icon)
+      (add-to-list 'corfu-margin-formatters #'lsp-bridge-icon-margin-formatter))
 
-       (advice-add #'corfu--popup-hide :after #'lsp-bridge--completion-hide-advisor)
-
-       (when (featurep 'lsp-bridge-icon)
-         (add-to-list 'corfu-margin-formatters #'lsp-bridge-icon-margin-formatter))
-
-       ;; Add fuzzy match.
-       (when (functionp 'lsp-bridge-orderless-setup)
-         (lsp-bridge-orderless-setup))))
+    ;; Add fuzzy match.
+    (when (functionp 'lsp-bridge-orderless-setup)
+      (lsp-bridge-orderless-setup))
 
     ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
     (unless lsp-bridge-is-starting
@@ -1095,20 +1071,12 @@ If optional MARKER, return a marker instead"
 
 (defun lsp-bridge--disable ()
   "Disable LSP Bridge mode."
-  (cl-case lsp-bridge-completion-provider
-    (company
-     (kill-local-variable 'company-minimum-prefix-length)
-     (kill-local-variable 'company-idle-delay)
-     (kill-local-variable 'company-require-match)
+  (kill-local-variable 'corfu-auto-prefix)
+  (kill-local-variable 'corfu-auto)
 
-     (advice-remove #'company-box-hide #'lsp-bridge--completion-hide-advisor))
-    (corfu
-     (kill-local-variable 'corfu-auto-prefix)
-     (kill-local-variable 'corfu-auto)
+  (and corfu-auto (add-hook 'post-command-hook #'corfu--auto-post-command nil 'local))
 
-     (and corfu-auto (add-hook 'post-command-hook #'corfu--auto-post-command nil 'local))
-
-     (advice-remove #'corfu--popup-hide #'lsp-bridge--completion-hide-advisor)))
+  (advice-remove #'corfu--popup-hide #'lsp-bridge--completion-hide-advisor)
 
   (dolist (hook lsp-bridge--internal-hooks)
     (remove-hook (car hook) (cdr hook) t)))
@@ -1207,18 +1175,11 @@ If optional MARKER, return a marker instead"
 (defun global-lsp-bridge-mode ()
   (interactive)
 
-  (if (eq lsp-bridge-completion-provider 'corfu)
-      (setq corfu-auto t))
+  (setq corfu-auto t)
 
   (dolist (hook lsp-bridge-default-mode-hooks)
     (add-hook hook (lambda ()
-                     (cl-case lsp-bridge-completion-provider
-                       (company
-                        (company-mode 1)
-                        (company-box-mode 1))
-                       (corfu
-                        (corfu-mode 1)))
-
+                     (corfu-mode 1)
                      (lsp-bridge-mode 1)
                      )))
 
