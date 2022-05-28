@@ -112,9 +112,10 @@ Setting this to nil or 0 will turn off the indicator."
   :type '(choice (const :tag "company" company)
                  (const :tag "corfu" corfu)))
 
-(defcustom lsp-bridge-completion-stop-commands '("corfu-complete" "corfu-insert"
-                                                 "undo-tree-undo" "undo-tree-redo"
-                                                 "kill-region" "delete-block-backward")
+(defcustom lsp-bridge-completion-stop-commands
+  '("corfu-complete" "corfu-insert"
+    "undo-tree-undo" "undo-tree-redo"
+    "kill-region" "delete-block-backward" "company-complete-selection")
   "If last command is match this option, stop popup completion ui."
   :type 'cons
   :group 'lsp-bridge)
