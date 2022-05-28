@@ -27,6 +27,7 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 
 (require 'yasnippet)
 (require 'lsp-bridge)
+(require 'lsp-bridge-icon)        ;; 显示图标在补全菜单中，可选
 (require 'lsp-bridge-jdtls)       ;; 提供Java第三方库跳转和-data目录支持， Java用户必选
 (yas-global-mode 1)
 
@@ -35,9 +36,7 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (require 'corfu)
 (require 'corfu-info)
 (require 'corfu-history)
-(require 'lsp-bridge-icon)        ;; 显示图标在补全菜单中，可选
 (require 'lsp-bridge-orderless)   ;; 支持模糊搜索，可选
-(global-corfu-mode)
 (corfu-history-mode t)
 (global-lsp-bridge-mode)
 (when (> (frame-pixel-width) 3000) (custom-set-faces '(corfu-default ((t (:height 1.3))))))  ;; 让corfu适应高分屏
@@ -46,8 +45,6 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (setq lsp-bridge-completion-provider 'company)
 (require 'company)
 (require 'company-box)
-(require 'lsp-bridge-icon)        ;; 显示图标在补全菜单中，可选
-(company-box-mode 1)
 (global-lsp-bridge-mode)
 ```
 
