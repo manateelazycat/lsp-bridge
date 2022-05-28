@@ -399,8 +399,8 @@ class LspServer:
             if is_in_path_dict(self.files, filepath):
                 file_action = get_from_path_dict(self.files, filepath)
                 file_action.diagnostics = message["params"]["diagnostics"]
-        else:
-            logger.debug(json.dumps(message, indent=3))
+        
+        logger.debug(json.dumps(message, indent=3))
 
         if "id" in message:
             if message["id"] == self.initialize_id:
