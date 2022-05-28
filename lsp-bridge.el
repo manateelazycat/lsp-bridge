@@ -490,7 +490,8 @@ Auto completion is only performed if the tick did not change."
 (defvar-local lsp-bridge-completion-common nil)
 (defvar-local lsp-bridge-filepath "")
 (defvar-local lsp-bridge-prohibit-completion nil)
-(defvar-local lsp-bridge--current-tick nil)
+(defvar-local lsp-bridge-current-tick nil)
+(defvar-local lsp-bridge-diagnostic-overlays '())
 
 (defun lsp-bridge-char-before ()
   (let ((prev-char (char-before)))
@@ -504,7 +505,12 @@ Auto completion is only performed if the tick did not change."
 
   ;; Hide hover tooltip.
   (if (not (string-prefix-p "lsp-bridge-popup-documentation-scroll" (format "%s" this-command)))
-      (lsp-bridge-hide-doc-tooltip)))
+      (lsp-bridge-hide-doc-tooltip))
+
+  ;; Hide diagnostic tooltip.
+  (unless (member (format "%s" this-command) '("lsp-bridge-jump-to-next-diagnostic"
+                                               "lsp-bridge-jump-to-prev-diagnostic"))
+    (lsp-bridge-hide-diagnostic-tooltip)))
 
 (defun lsp-bridge-monitor-kill-buffer ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
@@ -575,7 +581,7 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge-not-match-completion-position ()
   "Hide completion if the position of cursor has changed."
-  (equal lsp-bridge--current-tick (lsp-bridge--auto-tick)))
+  (equal lsp-bridge-current-tick (lsp-bridge--auto-tick)))
 
 (defun lsp-bridge-not-match-stop-commands ()
   "Hide completion if `lsp-bridge-last-change-command' match commands in `lsp-bridge-completion-stop-commands'."
@@ -758,7 +764,7 @@ If optional MARKER, return a marker instead"
     (let ((completion-frame (cl-case lsp-bridge-completion-provider
                               (company (company-box--get-frame))
                               (corfu corfu--frame))))
-      (setq-local lsp-bridge--current-tick (lsp-bridge--auto-tick))
+      (setq-local lsp-bridge-current-tick (lsp-bridge--auto-tick))
       (lsp-bridge-call-async "change_file"
                              lsp-bridge-filepath
                              lsp-bridge--before-change-begin-pos
@@ -941,6 +947,9 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-hide-doc-tooltip ()
   (posframe-hide lsp-bridge-lookup-doc-tooltip))
 
+(defun lsp-bridge-hide-diagnostic-tooltip ()
+  (posframe-hide lsp-bridge-diagnostic-tooltip))
+
 (defun lsp-bridge-show-signature-help (help)
   (cond
    ;; Trim signature help length make sure `awesome-tray' won't wrap line display.
@@ -961,7 +970,8 @@ If optional MARKER, return a marker instead"
   ;; Hide completion frame when buffer or window changed.
   (unless (eq (current-buffer)
               lsp-bridge--last-buffer)
-    (lsp-bridge-hide-doc-tooltip))
+    (lsp-bridge-hide-doc-tooltip)
+    (lsp-bridge-hide-diagnostic-tooltip))
 
   (unless (or (minibufferp)
               (string-equal (buffer-name) "*Messages*"))
@@ -983,6 +993,43 @@ If optional MARKER, return a marker instead"
   "A list of org babel languages in which source code block lsp-bridge will be enabled."
   :type 'list
   :group 'lsp-bridge)
+
+(defcustom lsp-bridge-diagnostics-fetch-idle 1
+  "The idle seconds to fetch diagnostics."
+  :type 'integer
+  :group 'lsp-bridge)
+
+(defface lsp-bridge-diagnostics-error-face
+  '((t (:underline (:style wave :color "Red1"))))
+  "Face error diagnostic."
+  :group 'lsp-bridge)
+
+(defface lsp-bridge-diagnostics-warning-face
+  '((t (:underline (:style wave :color "DarkOrange"))))
+  "Face warning diagnostic."
+  :group 'lsp-bridge)
+
+(defface lsp-bridge-diagnostics-info-face
+  '((t (:underline (:style wave :color "ForestGreen"))))
+  "Face info diagnostic."
+  :group 'lsp-bridge)
+
+(defface lsp-bridge-diagnostics-hint-face
+  '((t (:underline (:style wave :color "grey"))))
+  "Face hint diagnostic."
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-diagnostic-tooltip " *lsp-bridge-diagnostic*"
+  "Buffer for display diagnostic information."
+  :type 'string
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-diagnostic-tooltip-border-width 20
+  "The border width of lsp-bridge diagnostic tooltip, in pixels."
+  :type 'integer
+  :group 'lsp-bridge)
+
+(defvar lsp-bridge-diagnostics-timer nil)
 
 ;;;###autoload
 (define-minor-mode lsp-bridge-mode
@@ -1064,6 +1111,90 @@ If optional MARKER, return a marker instead"
   (lsp-bridge--with-file-buffer filepath
     (lsp-bridge--disable)))
 
+(defun lsp-bridge-diagnostics-fetch ()
+  (when (and lsp-bridge-mode
+             (process-live-p lsp-bridge-server)
+             (buffer-file-name))
+    (when (string-equal (buffer-file-name) lsp-bridge-filepath)
+      (lsp-bridge-call-async "pull_diagnostics" lsp-bridge-filepath))))
+
+(defun lsp-bridge-diagnostics-render (filepath diagnostics)
+  (lsp-bridge--with-file-buffer filepath
+    (when lsp-bridge-diagnostic-overlays
+      (dolist (diagnostic-overlay lsp-bridge-diagnostic-overlays)
+        (delete-overlay diagnostic-overlay)))
+
+    (setq lsp-bridge-diagnostic-overlays nil)
+
+    (dolist (diagnostic diagnostics)
+      (let* ((overlay (make-overlay
+                       (lsp-bridge--lsp-position-to-point (plist-get (plist-get diagnostic :range) :start))
+                       (lsp-bridge--lsp-position-to-point (plist-get (plist-get diagnostic :range) :end))
+                       ))
+             (severity (plist-get diagnostic :severity))
+             (message (plist-get diagnostic :message))
+             (overlay-face (cl-case severity
+                             (1 'lsp-bridge-diagnostics-error-face)
+                             (2 'lsp-bridge-diagnostics-warning-face)
+                             (3 'lsp-bridge-diagnostics-info-face)
+                             (4 'lsp-bridge-diagnostics-hint-face))))
+        (overlay-put overlay 'face overlay-face)
+        (overlay-put overlay 'help-echo message)
+        (push  overlay lsp-bridge-diagnostic-overlays)))
+    (setq lsp-bridge-diagnostic-overlays (reverse lsp-bridge-diagnostic-overlays))))
+
+(defun lsp-bridge-show-diagnostic-tooltip (diagnostic-info foreground-color)
+  (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode)))
+         (background-color (if (string-equal theme-mode "dark")
+                               "#191a1b"
+                             "#f0f0f0")))
+    (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-tooltip)
+      (erase-buffer)
+      (insert diagnostic-info))
+    (when (posframe-workable-p)
+      (posframe-show lsp-bridge-diagnostic-tooltip
+                     :position (point)
+                     :internal-border-width lsp-bridge-diagnostic-tooltip-border-width
+                     :background-color background-color
+                     :foreground-color foreground-color
+                     ))))
+
+(defun lsp-bridge-jump-to-next-diagnostic ()
+  (interactive)
+  (if (zerop (length lsp-bridge-diagnostic-overlays))
+      (message "[LSP-Bridge] No diagnostic information.")
+    (let (next-diagnostic)
+      (setq next-diagnostic
+            (catch 'match
+              (dolist (diagnostic-overlay lsp-bridge-diagnostic-overlays)
+                (when (< (point) (overlay-start diagnostic-overlay))
+                  (throw 'match diagnostic-overlay)))))
+
+      (if next-diagnostic
+          (progn
+            (goto-char (overlay-start next-diagnostic))
+            (lsp-bridge-show-diagnostic-tooltip (overlay-get next-diagnostic 'help-echo)
+                                                (plist-get (face-attribute (overlay-get next-diagnostic 'face) :underline) :color)))
+        (message "[LSP-Bridge] reach last diagnostic.")))))
+
+(defun lsp-bridge-jump-to-prev-diagnostic ()
+  (interactive)
+  (if (zerop (length lsp-bridge-diagnostic-overlays))
+      (message "[LSP-Bridge] No diagnostic information."))
+  (let (prev-diagnostic)
+    (setq prev-diagnostic
+          (catch 'match
+            (dolist (diagnostic-overlay (reverse lsp-bridge-diagnostic-overlays))
+              (when (> (point) (overlay-end diagnostic-overlay))
+                (throw 'match diagnostic-overlay)))))
+
+    (if prev-diagnostic
+        (progn
+          (goto-char (overlay-start prev-diagnostic))
+          (lsp-bridge-show-diagnostic-tooltip (overlay-get prev-diagnostic 'help-echo)
+                                              (plist-get (face-attribute (overlay-get prev-diagnostic 'face) :underline) :color)))
+      (message "[LSP-Bridge] reach first diagnostic."))))
+
 ;;;###autoload
 (defun global-lsp-bridge-mode ()
   (interactive)
@@ -1081,7 +1212,10 @@ If optional MARKER, return a marker instead"
                         (corfu-mode 1)))
 
                      (lsp-bridge-mode 1)
-                     ))))
+                     )))
+
+  (setq lsp-bridge-diagnostics-timer
+        (run-with-idle-timer lsp-bridge-diagnostics-fetch-idle t #'lsp-bridge-diagnostics-fetch)))
 
 (with-eval-after-load 'evil
   (evil-add-command-properties #'lsp-bridge-find-def :jump t)

@@ -69,6 +69,8 @@ Company用户
 * lsp-bridge-popup-documentation-scroll-up: 文档窗口向上滚动
 * lsp-bridge-popup-documentation-scroll-down: 文档窗口向下滚动
 * lsp-bridge-rename: 重命名
+* lsp-bridge-jump-to-next-diagnostic: 跳转到下一个诊断位置
+* lsp-bridge-jump-to-prev-diagnostic: 跳转到上一个诊断位置
 * lsp-bridge-show-signature-help-in-minibuffer: 在minibuffer显示参数信息
 * lsp-bridge-insert-common-prefix: 插入补全后选词的公共前缀
 * lsp-bridge-restart-process: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)
@@ -134,7 +136,6 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 - [ ] 用eldoc来显示参数信息
 - [ ] Code Action: 代码动作， 比如自动修复代码
 - [ ] Inline Value: 行类值显示
-- [ ] 缓存诊断信息，用户停止输入1秒以后再显示诊断信息
 - [ ] JavaSctipt不同的代码块使用不同的语言服务器
 - [ ] 支持completionItem/resolve消息以实现volar的自动导入功能
 - [ ] 缓存后选词文档，只有用户切换后选词时才获取新的文档

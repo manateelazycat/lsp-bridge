@@ -70,6 +70,8 @@ Company user
 * lsp-bridge-popup-documentation-scroll-up: scroll up popup document.
 * lsp-bridge-popup-documentation-scroll-down: scroll down popup document.
 * lsp-bridge-rename: rename symbol under the cursor
+* lsp-bridge-jump-to-next-diagnostic: Jump to the next diagnostic position
+* lsp-bridge-jump-to-prev-diagnostic: Jump to the previous diagnostic position
 * lsp-bridge-show-signature-help-in-minibuffer: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
 * lsp-bridge-insert-common-prefix: insert common prefix of candidates
 * lsp-bridge-restart-process: restart lsp-bridge process (only used for development)
@@ -135,7 +137,6 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 - [ ] Show signature help with eldoc
 - [ ] Code action
 - [ ] Inline Value
-- [ ] Caches diagnostic information, displaying the diagnostic information after user stop typing 1 second
 - [ ] JavaSctipt different code blocks use different language servers
 - [ ] Support completionItem/resolve to implement auto-import for volar
 - [ ] Cache candidate document at Python side, only fetch document information when switch candidate.

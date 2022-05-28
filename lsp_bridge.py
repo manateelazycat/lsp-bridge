@@ -61,7 +61,7 @@ class LspBridge:
         # ch.setFormatter(formatter)
         # ch.setLevel(logging.DEBUG)
         # self.server.logger.addHandler(ch)
-        self.server.logger = logger
+        # self.server.logger = logger
 
         self.server.register_instance(self)  # register instance functions let elisp side call
 
@@ -129,6 +129,10 @@ class LspBridge:
     def completion_hide(self, filepath):
         if is_in_path_dict(self.file_action_dict, filepath):
             get_from_path_dict(self.file_action_dict, filepath).last_completion_candidates = []
+            
+    def pull_diagnostics(self, filepath):
+        if is_in_path_dict(self.file_action_dict, filepath):
+            eval_in_emacs("lsp-bridge-diagnostics-render", filepath, get_from_path_dict(self.file_action_dict, filepath).diagnostics)
     
     def create_file_action(self, filepath, lang_server_info, lsp_server, **kwargs):
         if is_in_path_dict(self.file_action_dict, filepath):

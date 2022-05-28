@@ -51,6 +51,8 @@ class FileAction:
 
         self.try_completion_timer = None
         self.try_signature_help_timer = None
+        
+        self.diagnostics = []
 
         # Initialize handlers.
         self.handlers: Dict[str, Handler] = dict()
