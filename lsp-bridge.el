@@ -1133,10 +1133,12 @@ If optional MARKER, return a marker instead"
     (setq lsp-bridge-diagnostic-overlays nil)
 
     (dolist (diagnostic diagnostics)
-      (let* ((overlay (make-overlay
-                       (lsp-bridge--lsp-position-to-point (plist-get (plist-get diagnostic :range) :start))
-                       (lsp-bridge--lsp-position-to-point (plist-get (plist-get diagnostic :range) :end))
-                       ))
+      (let* ((diagnostic-start (lsp-bridge--lsp-position-to-point (plist-get (plist-get diagnostic :range) :start)))
+             (diagnostic-end (lsp-bridge--lsp-position-to-point (plist-get (plist-get diagnostic :range) :end)))
+             (overlay (if (eq diagnostic-start diagnostic-end)
+                          ;; Adjust diagnostic end position if start and end is same position.
+                          (make-overlay diagnostic-start (1+ diagnostic-start))
+                        (make-overlay diagnostic-start diagnostic-end)))
              (severity (plist-get diagnostic :severity))
              (message (plist-get diagnostic :message))
              (overlay-face (cl-case severity
