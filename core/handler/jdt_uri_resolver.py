@@ -2,6 +2,7 @@ import hashlib
 import os
 import re
 import tempfile
+from urllib.parse import urlparse, unquote
 
 from core.handler import Handler
 from core.utils import *
@@ -36,28 +37,26 @@ class JDTUriResolver(Handler):
             try:
                 # Value for -data: An absolute path to your data directory. eclipse.jdt.ls stores workspace specific information in it. This should be unique per workspace/project.
                 index = self.file_action.lang_server_info['command'].index('-data')
-                data_dir = self.file_action.lang_server_info['command'][index + 1]
-                external_file_dir = os.path.join(data_dir, decompile_dir_name)
+                data_dir = pathlib.Path(self.file_action.lang_server_info['command'][index + 1])
             except ValueError as e:
                 md5 = hashlib.md5()
                 md5.update(self.file_action.lsp_server.project_path.encode('utf-8'))
                 project_hash = md5.hexdigest()
-                external_file_dir = os.path.join(tempfile.gettempdir(),
-                                                 "lsp-bridge-jdtls",
-                                                 project_hash,
-                                                 decompile_dir_name)
+                data_dir = pathlib.Path(os.path.join(tempfile.gettempdir(), "lsp-bridge-jdtls", project_hash))
 
-            external_file = os.path.join(
-                external_file_dir,
-                re.match(r"jdt://contents/(.*?)/(.*)\.class\?", self.external_file_link).groups()[1].replace('/', '.') + ".java")
+            external_file_dir = data_dir / decompile_dir_name
 
-            os.makedirs(external_file_dir, exist_ok=True)
+            url = urlparse(self.external_file_link)
+            path = unquote(url.path).replace(".class", ".java")[1:]
+            external_file = external_file_dir / path
 
-            # Always override decompile content to file, avoid cache conflict.
-            if not os.path.exists(external_file):
+            external_file.parent.mkdir(exist_ok=True, parents=True)
+
+            if not external_file.exists():
                 with open(external_file, 'w') as f:
                     f.write(response)
 
+            external_file = external_file.as_posix()
             self.file_action.lsp_bridge.create_file_action(
                 filepath=external_file,
                 lang_server_info=self.file_action.lang_server_info,
