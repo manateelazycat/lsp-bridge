@@ -1110,6 +1110,42 @@ If optional MARKER, return a marker instead"
   (apply orig-fun arg args))
 (advice-add #'rename-file :around #'lsp-bridge--rename-file-advisor)
 
+(defun lsp-bridge--completion-hide-advisor (&rest args)
+  (when lsp-bridge-mode
+    (lsp-bridge-call-async "completion_hide" lsp-bridge-filepath)))
+
+;; https://tecosaur.github.io/emacs-config/config.html#lsp-support-src
+(cl-defmacro lsp-org-babel-enable (lang)
+  "Support LANG in org source code block."
+  (cl-check-type lang stringp)
+  (let* ((edit-pre (intern (format "org-babel-edit-prep:%s" lang)))
+         (intern-pre (intern (format "lsp--%s" (symbol-name edit-pre)))))
+    `(progn
+       (defun ,intern-pre (info)
+         (let ((file-name (->> info caddr (alist-get :file))))
+           (unless file-name
+             (setq file-name (make-temp-file "babel-lsp-")))
+           (setq buffer-file-name file-name)
+           (lsp-bridge-mode 1)))
+       (put ',intern-pre 'function-documentation
+            (format "Enable lsp-bridge-mode in the buffer of org source block (%s)."
+                    (upcase ,lang)))
+       (if (fboundp ',edit-pre)
+           (advice-add ',edit-pre :after ',intern-pre)
+         (progn
+           (defun ,edit-pre (info)
+             (,intern-pre info))
+           (put ',edit-pre 'function-documentation
+                (format "Prepare local buffer environment for org source block (%s)."
+                        (upcase ,lang))))))))
+
+(with-eval-after-load 'org
+  (dolist (lang lsp-bridge-org-babel-lang-list)
+    (eval `(lsp-org-babel-enable ,lang))))
+
+
+;;; xref
+
 (defvar lsp-bridge--xref-wait-for nil
   "To judge whether we are waiting for the results.")
 (defvar lsp-bridge--xref-locations nil
@@ -1124,7 +1160,7 @@ If optional MARKER, return a marker instead"
   (symbol-name (symbol-at-point)))
 
 (defun lsp-bridge--xref-do (action)
-  ""
+  "Call the actual asynchronous function according to ACTION and wait for the results."
   (setq lsp-bridge--xref-wait-for (lsp-bridge--position))
   (pcase action
     ('find-definitions
@@ -1149,7 +1185,7 @@ If optional MARKER, return a marker instead"
      lsp-bridge--xref-locations)))
 
 (defun lsp-bridge--xref-highlight-references (content)
-  "Add face for reference."
+  "Remove unwanted substrings and add face for reference in CONTENT."
   (let ((loop t)
         (keys '("\033[94m" "\033[0m"))
         (index 0)
@@ -1206,42 +1242,6 @@ If optional MARKER, return a marker instead"
 
 (cl-defmethod xref-backend-identifier-completion-table ((_backend (eql lsp-bridge)))
   nil)
-
-(defun lsp-bridge--corfu-hide-advisor (&rest args)
-  (lsp-bridge-call-async "completion_hide" lsp-bridge-filepath))
-(advice-add #'corfu--popup-hide :after #'lsp-bridge--corfu-hide-advisor)
-(defun lsp-bridge--completion-hide-advisor (&rest args)
-  (when lsp-bridge-mode
-    (lsp-bridge-call-async "completion_hide" lsp-bridge-filepath)))
-
-;; https://tecosaur.github.io/emacs-config/config.html#lsp-support-src
-(cl-defmacro lsp-org-babel-enable (lang)
-  "Support LANG in org source code block."
-  (cl-check-type lang stringp)
-  (let* ((edit-pre (intern (format "org-babel-edit-prep:%s" lang)))
-         (intern-pre (intern (format "lsp--%s" (symbol-name edit-pre)))))
-    `(progn
-       (defun ,intern-pre (info)
-         (let ((file-name (->> info caddr (alist-get :file))))
-           (unless file-name
-             (setq file-name (make-temp-file "babel-lsp-")))
-           (setq buffer-file-name file-name)
-           (lsp-bridge-mode 1)))
-       (put ',intern-pre 'function-documentation
-            (format "Enable lsp-bridge-mode in the buffer of org source block (%s)."
-                    (upcase ,lang)))
-       (if (fboundp ',edit-pre)
-           (advice-add ',edit-pre :after ',intern-pre)
-         (progn
-           (defun ,edit-pre (info)
-             (,intern-pre info))
-           (put ',edit-pre 'function-documentation
-                (format "Prepare local buffer environment for org source block (%s)."
-                        (upcase ,lang))))))))
-
-(with-eval-after-load 'org
-  (dolist (lang lsp-bridge-org-babel-lang-list)
-    (eval `(lsp-org-babel-enable ,lang))))
 
 (provide 'lsp-bridge)
 
