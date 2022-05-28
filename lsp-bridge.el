@@ -156,6 +156,11 @@ to avoid completion ui filter candidates."
   :type 'boolean
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-disable-backup t
+  "Default disable backup feature, include `make-backup-files' `auto-save-default' and `create-lockfiles'."
+  :type 'boolean
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-enable-signature-help nil
   "Whether to enable signature-help."
   :type 'boolean
@@ -537,31 +542,31 @@ Auto completion is only performed if the tick did not change."
                         (if (functionp pred) (funcall pred) t))
                       lsp-bridge-enable-popup-predicates)
         (pcase (while-no-input ;; Interruptible capf query
-                    (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
-             (`(,fun ,beg ,end ,table . ,plist)
-              (let ((completion-in-region-mode-predicate
-                     (lambda () (eq beg (car-safe (funcall fun)))))
-                    (completion-extra-properties plist))
-                (setq completion-in-region--data
-                      (list (if (markerp beg) beg (copy-marker beg))
-                            (copy-marker end t)
-                            table
-                            (plist-get plist :predicate)))
+                 (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
+          (`(,fun ,beg ,end ,table . ,plist)
+           (let ((completion-in-region-mode-predicate
+                  (lambda () (eq beg (car-safe (funcall fun)))))
+                 (completion-extra-properties plist))
+             (setq completion-in-region--data
+                   (list (if (markerp beg) beg (copy-marker beg))
+                         (copy-marker end t)
+                         table
+                         (plist-get plist :predicate)))
 
-                ;; Refresh candidates forcibly!!!
-                (pcase-let* ((`(,beg ,end ,table ,pred) completion-in-region--data)
-                             (pt (- (point) beg))
-                             (str (buffer-substring-no-properties beg end)))
-                  (corfu--update-candidates str pt table (plist-get plist :predicate)))
+             ;; Refresh candidates forcibly!!!
+             (pcase-let* ((`(,beg ,end ,table ,pred) completion-in-region--data)
+                          (pt (- (point) beg))
+                          (str (buffer-substring-no-properties beg end)))
+               (corfu--update-candidates str pt table (plist-get plist :predicate)))
 
-                ;; Setup hook.
-                (corfu--setup)
+             ;; Setup hook.
+             (corfu--setup)
 
-                ;; When you finger faster than LSP server,
-                ;; Corfu will **auto insert** select candidate when lsp-bridge push newest completion data,
-                ;; so we need set `corfu-on-exact-match' to quit to prohibit corfu insert select candidate.
-                (let ((corfu-on-exact-match 'quit))
-                  (corfu--update)))))
+             ;; When you finger faster than LSP server,
+             ;; Corfu will **auto insert** select candidate when lsp-bridge push newest completion data,
+             ;; so we need set `corfu-on-exact-match' to quit to prohibit corfu insert select candidate.
+             (let ((corfu-on-exact-match 'quit))
+               (corfu--update)))))
         ))))
 
 (defun lsp-bridge-not-empty-candidates ()
@@ -1036,9 +1041,10 @@ If optional MARKER, return a marker instead"
    (t
     ;; Disable backup file.
     ;; Please use my another plugin `https://github.com/manateelazycat/auto-save' and use git for file version management.
-    (setq make-backup-files nil)
-    (setq auto-save-default nil)
-    (setq create-lockfiles nil)
+    (when lsp-bridge-disable-backup
+      (setq make-backup-files nil)
+      (setq auto-save-default nil)
+      (setq create-lockfiles nil))
 
     ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
     ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
