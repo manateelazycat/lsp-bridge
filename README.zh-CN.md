@@ -10,16 +10,15 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 
 ## 安装
 
-1. 安装Python依赖: [python-epc](https://github.com/tkf/python-epc)
-2. 安装Elisp依赖:
+1. 安装依赖:
 + [corfu](https://github.com/minad/corfu)
 + [orderless](https://github.com/oantolin/orderless)
 + [all-the-icons](https://github.com/domtronn/all-the-icons.el) (需要在安装all-the-icons后执行命令`all-the-icons-install-fonts`安装图标字体)
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
 + [yasnippet](https://github.com/joaotavora/yasnippet)
-3. 用 `git clone` 下载此仓库，并替换下面配置中的 load-path 路径
-4. 把下面代码加入到你的配置文件 ~/.emacs 中：
+2. 用 `git clone` 下载此仓库，并替换下面配置中的 load-path 路径
+3. 把下面代码加入到你的配置文件 ~/.emacs 中：
 
 ```elisp
 (add-to-list 'load-path "<path-to-lsp-bridge>")
