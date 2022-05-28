@@ -639,16 +639,15 @@ Auto completion is only performed if the tick did not change."
               ((null candidate-index))
               (t
                (let* ((label (string-trim candidate)) ; we need trim candidate, `lsp-bridge-identify-annotation' will cause insert blank after `label' information
-                      (insert-text (plist-get (gethash candidate lsp-bridge-completion-candidates) :insertText))
-                      (insert-text-format (plist-get (gethash candidate lsp-bridge-completion-candidates) :insertTextFormat))
-                      (text-edit (plist-get (gethash candidate lsp-bridge-completion-candidates) :textEdit))
-                      (new-text (if text-edit
-                                    (plist-get text-edit :newText)
-                                  nil))
+                      (candidate-info (gethash candidate lsp-bridge-completion-candidates))
+                      (insert-text (plist-get candidate-info :insertText))
+                      (insert-text-format (plist-get candidate-info :insertTextFormat))
+                      (text-edit (plist-get candidate-info :textEdit))
+                      (new-text (plist-get text-edit :newText))
                       (additionalTextEdits (if lsp-bridge-enable-auto-import
-                                               (plist-get (gethash candidate lsp-bridge-completion-candidates) :additionalTextEdits)
+                                               (plist-get candidate-info :additionalTextEdits)
                                              nil))
-                      (kind (plist-get (gethash candidate lsp-bridge-completion-candidates) :kind))
+                      (kind (plist-get candidate-info :kind))
                       (snippet-fn (and (or (eql insert-text-format 2) (string= kind "Snippet")) (lsp-bridge--snippet-expansion-fn)))
                       (delete-start-pos (if text-edit
                                             (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :start))
@@ -1077,25 +1076,25 @@ If optional MARKER, return a marker instead"
   "Support LANG in org source code block."
   (cl-check-type lang stringp)
   (let* ((edit-pre (intern (format "org-babel-edit-prep:%s" lang)))
-	 (intern-pre (intern (format "lsp--%s" (symbol-name edit-pre)))))
+         (intern-pre (intern (format "lsp--%s" (symbol-name edit-pre)))))
     `(progn
        (defun ,intern-pre (info)
-	 (let ((file-name (->> info caddr (alist-get :file))))
-	   (unless file-name
-	     (setq file-name (make-temp-file "babel-lsp-")))
-	   (setq buffer-file-name file-name)
-	   (lsp-bridge-mode 1)))
+         (let ((file-name (->> info caddr (alist-get :file))))
+           (unless file-name
+             (setq file-name (make-temp-file "babel-lsp-")))
+           (setq buffer-file-name file-name)
+           (lsp-bridge-mode 1)))
        (put ',intern-pre 'function-documentation
-	    (format "Enable lsp-bridge-mode in the buffer of org source block (%s)."
-		    (upcase ,lang)))
+            (format "Enable lsp-bridge-mode in the buffer of org source block (%s)."
+                    (upcase ,lang)))
        (if (fboundp ',edit-pre)
-	   (advice-add ',edit-pre :after ',intern-pre)
-	 (progn
-	   (defun ,edit-pre (info)
-	     (,intern-pre info))
-	   (put ',edit-pre 'function-documentation
-		(format "Prepare local buffer environment for org source block (%s)."
-			(upcase ,lang))))))))
+           (advice-add ',edit-pre :after ',intern-pre)
+         (progn
+           (defun ,edit-pre (info)
+             (,intern-pre info))
+           (put ',edit-pre 'function-documentation
+                (format "Prepare local buffer environment for org source block (%s)."
+                        (upcase ,lang))))))))
 
 (with-eval-after-load 'org
   (dolist (lang lsp-bridge-org-babel-lang-list)
