@@ -485,6 +485,7 @@ Auto completion is only performed if the tick did not change."
 (defvar-local lsp-bridge-completion-trigger-characters nil)
 (defvar-local lsp-bridge-completion-prefix nil)
 (defvar-local lsp-bridge-completion-common nil)
+(defvar-local lsp-bridge-completion-position nil)
 (defvar-local lsp-bridge-filepath "")
 (defvar-local lsp-bridge-prohibit-completion nil)
 (defvar-local lsp-bridge-current-tick nil)
@@ -518,10 +519,11 @@ Auto completion is only performed if the tick did not change."
            (string-empty-p (format "%s" (car list))))
       (and (eq (length list) 0))))
 
-(defun lsp-bridge-record-completion-items (filepath common items server-name completion-trigger-characters)
+(defun lsp-bridge-record-completion-items (filepath common position items server-name completion-trigger-characters)
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
     (setq-local lsp-bridge-completion-common common)
+    (setq-local lsp-bridge-completion-position position)
     (setq-local lsp-bridge-completion-server-name server-name)
     (setq-local lsp-bridge-completion-trigger-characters completion-trigger-characters)
 
@@ -652,14 +654,13 @@ Auto completion is only performed if the tick did not change."
                                              nil))
                       (kind (plist-get candidate-info :kind))
                       (snippet-fn (and (or (eql insert-text-format 2) (string= kind "Snippet")) (lsp-bridge--snippet-expansion-fn)))
-                      (position-pos (lsp-bridge--lsp-position-to-point
-                                     (plist-get candidate-info :position)))
+                      (position-pos (lsp-bridge--lsp-position-to-point lsp-bridge-completion-position))
                       (delete-start-pos (if text-edit
                                             (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :start))
                                           bounds-start))
                       (range-end-pos (if text-edit
-                                            (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :end))
-                                          position-pos))
+                                         (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :end))
+                                       position-pos))
                       (delete-end-pos (+ (point) (- range-end-pos position-pos)))
                       (insert-candidate (or new-text insert-text label)))
 
