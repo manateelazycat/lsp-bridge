@@ -112,7 +112,9 @@ Setting this to nil or 0 will turn off the indicator."
   :type '(choice (const :tag "company" company)
                  (const :tag "corfu" corfu)))
 
-(defcustom lsp-bridge-completion-stop-commands '(corfu-complete corfu-insert undo-tree-undo undo-tree-redo)
+(defcustom lsp-bridge-completion-stop-commands '("corfu-complete" "corfu-insert"
+                                                 "undo-tree-undo" "undo-tree-redo"
+                                                 "kill-region" "delete-block-backward")
   "If last command is match this option, stop popup completion ui."
   :type 'cons
   :group 'lsp-bridge)
@@ -748,7 +750,7 @@ If optional MARKER, return a marker instead"
 
 (defun lsp-bridge-monitor-after-change (begin end length)
   ;; Record last command to `lsp-bridge-last-change-command'.
-  (setq lsp-bridge-last-change-command this-command)
+  (setq lsp-bridge-last-change-command (format "%s" this-command))
 
   ;; Send change_file request.
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
