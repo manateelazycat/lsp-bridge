@@ -1131,45 +1131,56 @@ If optional MARKER, return a marker instead"
         (push  overlay lsp-bridge-diagnostic-overlays)))
     (setq lsp-bridge-diagnostic-overlays (reverse lsp-bridge-diagnostic-overlays))))
 
-(defun lsp-bridge-show-diagnostic-tooltip (diagnostic-overlay)
-  (let* ((diagnostic-info (overlay-get diagnostic-overlay 'help-echo))
-         (foreground-color (plist-get (face-attribute (overlay-get diagnostic-overlay 'face) :underline) :color)))
-    (goto-char (overlay-start diagnostic-overlay))
-
-    (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-tooltip)
-      (erase-buffer)
-      (insert diagnostic-info))
-
-    (when (posframe-workable-p)
-      ;; Perform redisplay make sure posframe can poup to
-      (redisplay 'force)
-      (sleep-for 0.01)
-      (posframe-show lsp-bridge-diagnostic-tooltip
-                     :position (point)
-                     :internal-border-width lsp-bridge-diagnostic-tooltip-border-width
-                     :background-color (lsp-bridge-frame-background-color)
-                     :foreground-color foreground-color
-                     ))))
+(defun lsp-bridge-show-diagnostic-tooltip (diagnostic-info foreground-color)
+  (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-tooltip)
+    (erase-buffer)
+    (insert diagnostic-info))
+  (when (posframe-workable-p)
+    ;; Perform redisplay make sure posframe can poup to
+    (redisplay 'force)
+    (sleep-for 0.01)
+    (posframe-show lsp-bridge-diagnostic-tooltip
+                   :position (point)
+                   :internal-border-width lsp-bridge-diagnostic-tooltip-border-width
+                   :background-color (lsp-bridge-frame-background-color)
+                   :foreground-color foreground-color
+                   )))
 
 (defun lsp-bridge-jump-to-next-diagnostic ()
   (interactive)
   (if (zerop (length lsp-bridge-diagnostic-overlays))
-      (message "[LSP-Bridge] No diagnostics.")
-    (if-let ((diagnostic-overlay (cl-find-if
-                                  (lambda (overlay) (< (point) (overlay-start overlay)))
-                                  lsp-bridge-diagnostic-overlays)))
-        (lsp-bridge-show-diagnostic-tooltip diagnostic-overlay)
-      (message "[LSP-Bridge] Reach last diagnostic."))))
+      (message "[LSP-Bridge] No diagnostic information.")
+    (let (next-diagnostic)
+      (setq next-diagnostic
+            (catch 'match
+              (dolist (diagnostic-overlay lsp-bridge-diagnostic-overlays)
+                (when (< (point) (overlay-start diagnostic-overlay))
+                  (throw 'match diagnostic-overlay)))))
+
+      (if next-diagnostic
+          (progn
+            (goto-char (overlay-start next-diagnostic))
+            (lsp-bridge-show-diagnostic-tooltip (overlay-get next-diagnostic 'help-echo)
+                                                (plist-get (face-attribute (overlay-get next-diagnostic 'face) :underline) :color)))
+        (message "[LSP-Bridge] reach last diagnostic.")))))
 
 (defun lsp-bridge-jump-to-prev-diagnostic ()
   (interactive)
   (if (zerop (length lsp-bridge-diagnostic-overlays))
-      (message "[LSP-Bridge] No diagnostics."))
-  (if-let ((diagnostic-overlay (cl-find-if
-                                (lambda (overlay) (> (point) (overlay-end overlay)))
-                                (reverse lsp-bridge-diagnostic-overlays))))
-      (lsp-bridge-show-diagnostic-tooltip diagnostic-overlay)
-    (message "[LSP-Bridge] Reach first diagnostic.")))
+      (message "[LSP-Bridge] No diagnostic information."))
+  (let (prev-diagnostic)
+    (setq prev-diagnostic
+          (catch 'match
+            (dolist (diagnostic-overlay (reverse lsp-bridge-diagnostic-overlays))
+              (when (> (point) (overlay-end diagnostic-overlay))
+                (throw 'match diagnostic-overlay)))))
+
+    (if prev-diagnostic
+        (progn
+          (goto-char (overlay-start prev-diagnostic))
+          (lsp-bridge-show-diagnostic-tooltip (overlay-get prev-diagnostic 'help-echo)
+                                              (plist-get (face-attribute (overlay-get prev-diagnostic 'face) :underline) :color)))
+      (message "[LSP-Bridge] reach first diagnostic."))))
 
 ;;;###autoload
 (defun global-lsp-bridge-mode ()
