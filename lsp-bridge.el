@@ -511,7 +511,7 @@ Auto completion is only performed if the tick did not change."
                                                "lsp-bridge-jump-to-prev-diagnostic"))
     (lsp-bridge-hide-diagnostic-tooltip)))
 
-(defun lsp-bridge-monitor-kill-buffer ()
+(defun lsp-bridge-close-buffer-file ()
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (lsp-bridge-call-async "close_file" lsp-bridge-filepath)))
 
@@ -983,8 +983,10 @@ If optional MARKER, return a marker instead"
     (after-change-functions . lsp-bridge-monitor-after-change)
     (post-command-hook . lsp-bridge-monitor-post-command)
     (after-save-hook . lsp-bridge-monitor-after-save)
-    (kill-buffer-hook . lsp-bridge-monitor-kill-buffer)
-    (completion-at-point-functions . lsp-bridge-capf)))
+    (kill-buffer-hook . lsp-bridge-close-buffer-file)
+    (completion-at-point-functions . lsp-bridge-capf)
+    (before-revert-hook . lsp-bridge-close-buffer-file)
+    ))
 
 (defvar lsp-bridge-mode-map (make-sparse-keymap))
 
