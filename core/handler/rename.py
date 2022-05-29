@@ -11,7 +11,9 @@ class Rename(Handler):
     def process_response(self, response: dict) -> None:
         if response is None:
             logger.info("No rename found.")
-
+            message_emacs("No rename found")
+            return
+        
         rename_infos = response["documentChanges"] if "documentChanges" in response else response["changes"]
 
         if type(rename_infos) == dict:
