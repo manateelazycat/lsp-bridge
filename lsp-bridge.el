@@ -1102,7 +1102,7 @@ If optional MARKER, return a marker instead"
   (when (and lsp-bridge-mode
              (process-live-p lsp-bridge-server)
              (buffer-file-name))
-    (when (string-equal (buffer-file-name) lsp-bridge-filepath)
+    (when (string-equal (file-truename (buffer-file-name)) lsp-bridge-filepath)
       (lsp-bridge-call-async "pull_diagnostics" lsp-bridge-filepath))))
 
 (defun lsp-bridge-diagnostics-render (filepath diagnostics)
