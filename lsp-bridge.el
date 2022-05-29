@@ -1134,6 +1134,8 @@ If optional MARKER, return a marker instead"
         (push  overlay lsp-bridge-diagnostic-overlays)))
     (setq lsp-bridge-diagnostic-overlays (reverse lsp-bridge-diagnostic-overlays))))
 
+(defvar lsp-bridge-diagnostic-frame nil)
+
 (defun lsp-bridge-show-diagnostic-tooltip (diagnostic-overlay)
   (let* ((diagnostic-info (overlay-get diagnostic-overlay 'help-echo))
          (foreground-color (plist-get (face-attribute (overlay-get diagnostic-overlay 'face) :underline) :color)))
@@ -1147,19 +1149,30 @@ If optional MARKER, return a marker instead"
       ;; Perform redisplay make sure posframe can poup to
       (redisplay 'force)
       (sleep-for 0.01)
-      (posframe-show lsp-bridge-diagnostic-tooltip
-                     :position (point)
-                     :internal-border-width lsp-bridge-diagnostic-tooltip-border-width
-                     :background-color (lsp-bridge-frame-background-color)
-                     :foreground-color foreground-color
-                     ))))
+      (setq lsp-bridge-diagnostic-frame
+            (posframe-show lsp-bridge-diagnostic-tooltip
+                           :position (point)
+                           :internal-border-width lsp-bridge-diagnostic-tooltip-border-width
+                           :background-color (lsp-bridge-frame-background-color)
+                           :foreground-color foreground-color
+                           )))))
+
+(defun lsp-bridge-in-diagnostic-overlay-area-p (overlay)
+  (and
+   lsp-bridge-diagnostic-frame
+   (not (frame-visible-p lsp-bridge-diagnostic-frame))
+   (>= (point) (overlay-start overlay))
+   (<= (point) (overlay-end overlay))))
 
 (defun lsp-bridge-jump-to-next-diagnostic ()
   (interactive)
   (if (zerop (length lsp-bridge-diagnostic-overlays))
       (message "[LSP-Bridge] No diagnostics.")
     (if-let ((diagnostic-overlay (cl-find-if
-                                  (lambda (overlay) (< (point) (overlay-start overlay)))
+                                  (lambda (overlay)
+                                    (or (< (point) (overlay-start overlay))
+                                        ;; Show diagnostic information around cursor if diagnostic frame is not visiable.
+                                        (lsp-bridge-in-diagnostic-overlay-area-p overlay)))
                                   lsp-bridge-diagnostic-overlays)))
         (lsp-bridge-show-diagnostic-tooltip diagnostic-overlay)
       (message "[LSP-Bridge] Reach last diagnostic."))))
@@ -1169,7 +1182,10 @@ If optional MARKER, return a marker instead"
   (if (zerop (length lsp-bridge-diagnostic-overlays))
       (message "[LSP-Bridge] No diagnostics."))
   (if-let ((diagnostic-overlay (cl-find-if
-                                (lambda (overlay) (> (point) (overlay-end overlay)))
+                                (lambda (overlay)
+                                  (or (> (point) (overlay-end overlay))
+                                      ;; Show diagnostic information around cursor if diagnostic frame is not visiable.
+                                      (lsp-bridge-in-diagnostic-overlay-area-p overlay)))
                                 (reverse lsp-bridge-diagnostic-overlays))))
       (lsp-bridge-show-diagnostic-tooltip diagnostic-overlay)
     (message "[LSP-Bridge] Reach first diagnostic.")))
