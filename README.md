@@ -146,10 +146,12 @@ The following is the directory structure of the lsp-bridge project:
 | lsp-bridge-ref.el       | Framework of code referencing, providing references viewing, batch renames, regex filtering of reference results, etc. The core code is forked from color-rg.el                                    |
 | lsp-bridge-orderless.el | Fuzzy search for completion items, i.e. for long candidate you do not need to type the word in correct order to get the correct item                 |
 | lsp-bridge-icon.el      | Rendering the completion menu icons, which is used to distinguish different types of completion options                                                                           |
+ | lsp-bridge-jdtls.el      | Provide java language third-party library jumping function                                                           |
 | lsp-bridge.py           | Python main logic part that provides event loop, message scheduling and status management                                                                                     |
 | core/fileaction.py      | Tracking the status of each file, processing LSP response messages, calling Emacs elisp function                                                                                           |
 | core/lspserver.py       | LSP message processing module, mainly to analyze, send and receive LSP messages, and ensure that the sequence of LSP requests conforms with the LSP protocol specification                 |
 | core/utils.py           | Utility functions of convenience for each module call                                                                                                                                 |
+| core/mergedeep.py           | JSON information merger is mainly used to send custom options to LSP server                                                                             |
 | core/hanlder/           | The implementation of sending and receiving LSP message, where __init__.py is a base class                                                                                             |
 | langserver              | The configurations of the LSP servers, each server corresponding to a JSON file that defines the name of the server, language ID, starting command, options, etc.                        |
 
