@@ -700,8 +700,8 @@ Doubles as an indicator of snippet support."
                     (newText (plist-get edit :newText)))
                (cons newText
                      (cons
-                      (lsp-bridge--lsp-position-to-point (plist-get range :start) markers)
-                      (lsp-bridge--lsp-position-to-point (plist-get range :end) markers)
+                      (lsp-bridge--lsp-position-to-point (plist-get range :start) 'markers)
+                      (lsp-bridge--lsp-position-to-point (plist-get range :end) 'markers)
                       ))))
            (reverse edits)))
     (undo-amalgamate-change-group change-group)))
