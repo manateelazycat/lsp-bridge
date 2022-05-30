@@ -56,7 +56,7 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 * lsp-bridge-insert-common-prefix: insert common prefix of candidates
 * lsp-bridge-restart-process: restart lsp-bridge process (only used for development)
 
-## Option
+## Options
 * lsp-bridge-completion-popup-predicates: The predicate function for completion menu, completion menu popup after all the functions pass
 * lsp-bridge-completion-stop-commands: Completion menu will not popup if these commands are executed
 * lsp-bridge-completion-hide-characters: Completion menu will not popup when cursor after those characters
