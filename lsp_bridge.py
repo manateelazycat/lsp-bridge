@@ -134,9 +134,9 @@ class LspBridge:
         if is_in_path_dict(self.file_action_dict, filepath):
             eval_in_emacs("lsp-bridge-diagnostics-render", filepath, get_from_path_dict(self.file_action_dict, filepath).diagnostics)
             
-    def pull_completion_item(self, filepath, label, kind_text):
+    def fetch_completion_item_info(self, filepath, label, item_key):
         if is_in_path_dict(self.file_action_dict, filepath):
-            get_from_path_dict(self.file_action_dict, filepath).completion_item_resolve(label, kind_text)
+            get_from_path_dict(self.file_action_dict, filepath).completion_item_resolve(label, item_key)
     
     def create_file_action(self, filepath, lang_server_info, lsp_server, **kwargs):
         if is_in_path_dict(self.file_action_dict, filepath):

@@ -525,6 +525,9 @@ Auto completion is only performed if the tick did not change."
       (lsp-bridge-add-candidate-item (format "%s " label) item)
     (puthash label item lsp-bridge-completion-candidates)))
 
+(defun lsp-bridge-get-candidate-item (label)
+  (gethash label lsp-bridge-completion-candidates))
+
 (defun lsp-bridge-record-completion-items (filepath common items position server-name completion-trigger-characters)
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
@@ -544,33 +547,36 @@ Auto completion is only performed if the tick did not change."
       (when (cl-every (lambda (pred)
                         (if (functionp pred) (funcall pred) t))
                       lsp-bridge-enable-popup-predicates)
-        (pcase (while-no-input ;; Interruptible capf query
-                 (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
-          (`(,fun ,beg ,end ,table . ,plist)
-           (let ((completion-in-region-mode-predicate
-                  (lambda () (eq beg (car-safe (funcall fun)))))
-                 (completion-extra-properties plist))
-             (setq completion-in-region--data
-                   (list (if (markerp beg) beg (copy-marker beg))
-                         (copy-marker end t)
-                         table
-                         (plist-get plist :predicate)))
-
-             ;; Refresh candidates forcibly!!!
-             (pcase-let* ((`(,beg ,end ,table ,pred) completion-in-region--data)
-                          (pt (- (point) beg))
-                          (str (buffer-substring-no-properties beg end)))
-               (corfu--update-candidates str pt table (plist-get plist :predicate)))
-
-             ;; Setup hook.
-             (corfu--setup)
-
-             ;; When you finger faster than LSP server,
-             ;; Corfu will **auto insert** select candidate when lsp-bridge push newest completion data,
-             ;; so we need set `corfu-on-exact-match' to quit to prohibit corfu insert select candidate.
-             (let ((corfu-on-exact-match 'quit))
-               (corfu--update)))))
+        (lsp-bridge-update-candidates)
         ))))
+
+(defun lsp-bridge-update-candidates ()
+  (pcase (while-no-input ;; Interruptible capf query
+           (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
+    (`(,fun ,beg ,end ,table . ,plist)
+     (let ((completion-in-region-mode-predicate
+            (lambda () (eq beg (car-safe (funcall fun)))))
+           (completion-extra-properties plist))
+       (setq completion-in-region--data
+             (list (if (markerp beg) beg (copy-marker beg))
+                   (copy-marker end t)
+                   table
+                   (plist-get plist :predicate)))
+
+       ;; Refresh candidates forcibly!!!
+       (pcase-let* ((`(,beg ,end ,table ,pred) completion-in-region--data)
+                    (pt (- (point) beg))
+                    (str (buffer-substring-no-properties beg end)))
+         (corfu--update-candidates str pt table (plist-get plist :predicate)))
+
+       ;; Setup hook.
+       (corfu--setup)
+
+       ;; When you finger faster than LSP server,
+       ;; Corfu will **auto insert** select candidate when lsp-bridge push newest completion data,
+       ;; so we need set `corfu-on-exact-match' to quit to prohibit corfu insert select candidate.
+       (let ((corfu-on-exact-match 'quit))
+         (corfu--update))))))
 
 (defun lsp-bridge-not-empty-candidates ()
   "Hide completion if candidates list is empty."
@@ -614,19 +620,19 @@ Auto completion is only performed if the tick did not change."
 
      :annotation-function
      (lambda (candidate)
-       (let* ((annotation (plist-get (gethash candidate lsp-bridge-completion-candidates) :annotation)))
+       (let* ((annotation (plist-get (lsp-bridge-get-candidate-item candidate) :annotation)))
          (setq lsp-bridge-completion-prefix (buffer-substring-no-properties bounds-start (point)))
          (when annotation
            (concat " " (propertize annotation 'face 'font-lock-doc-face)))))
 
      :company-kind
      (lambda (candidate)
-       (when-let* ((kind (plist-get (gethash candidate lsp-bridge-completion-candidates) :kind)))
+       (when-let* ((kind (plist-get (lsp-bridge-get-candidate-item candidate) :kind)))
          (intern (downcase kind))))
 
      :company-deprecated
      (lambda (candidate)
-       (seq-contains-p (plist-get (gethash candidate lsp-bridge-completion-candidates) :tags) 1))
+       (seq-contains-p (plist-get (lsp-bridge-get-candidate-item candidate) :tags) 1))
 
      :exit-function
      (lambda (candidate status)
@@ -647,14 +653,12 @@ Auto completion is only performed if the tick did not change."
               ((null candidate-index))
               (t
                (let* ((label (string-trim candidate)) ; we need trim candidate
-                      (candidate-info (gethash candidate lsp-bridge-completion-candidates))
+                      (candidate-info (lsp-bridge-get-candidate-item candidate))
                       (insert-text (plist-get candidate-info :insertText))
                       (insert-text-format (plist-get candidate-info :insertTextFormat))
                       (text-edit (plist-get candidate-info :textEdit))
                       (new-text (plist-get text-edit :newText))
-                      (additionalTextEdits (if lsp-bridge-enable-auto-import
-                                               (plist-get candidate-info :additionalTextEdits)
-                                             nil))
+                      (additionalTextEdits (plist-get candidate-info :additionalTextEdits))
                       (kind (plist-get candidate-info :kind))
                       (snippet-fn (and (or (eql insert-text-format 2) (string= kind "Snippet")) (lsp-bridge--snippet-expansion-fn)))
                       (completion-start-pos (lsp-bridge--lsp-position-to-point lsp-bridge-completion-position))
@@ -672,7 +676,8 @@ Auto completion is only performed if the tick did not change."
                  (funcall (or snippet-fn #'insert) insert-candidate)
 
                  ;; Do `additionalTextEdits' if return auto-imprt information.
-                 (when (cl-plusp (length additionalTextEdits))
+                 (when (and lsp-bridge-enable-auto-import
+                            (cl-plusp (length additionalTextEdits)))
                    (lsp-bridge--apply-text-edits additionalTextEdits))
                  ))))))))))
 
@@ -1195,8 +1200,29 @@ If optional MARKER, return a marker instead"
       (lsp-bridge-show-diagnostic-tooltip diagnostic-overlay)
     (message "[LSP-Bridge] Reach first diagnostic.")))
 
-(defun lsp-bridge-popup-completion-item-doc (filepath documentation)
-  (lsp-bridge--with-file-buffer filepath
+(defun lsp-bridge-update-completion-item-info (info)
+  (let* ((filepath (plist-get info :filepath))
+         (label (plist-get info :label))
+         (additional-text-edits (plist-get info :additionalTextEdits))
+         (documentation (plist-get info :documentation)))
+    (lsp-bridge--with-file-buffer filepath
+      ;; Update `documentation' and `additionalTextEdits'
+      (when-let (item (lsp-bridge-get-candidate-item label))
+        (when additional-text-edits
+          (plist-put item :additionalTextEdits additional-text-edits))
+
+        (unless (string-equal documentation "")
+          (plist-put item :documentation documentation))
+
+        (puthash label item lsp-bridge-completion-candidates))
+
+      ;; Popup documentation window if same documentation window not exist.
+      (unless (string-equal label lsp-bridge-completion-item-popup-doc-tick)
+        (lsp-bridge-popup-completion-item-doc documentation))
+      )))
+
+(defun lsp-bridge-popup-completion-item-doc (documentation)
+  (unless (string-equal documentation "")
     (unless (corfu-doc--popup-support-p)
       (error "Corfu-doc requires child frames to display documentation."))
     (when (corfu-doc--should-show-popup)
@@ -1257,21 +1283,34 @@ If optional MARKER, return a marker instead"
 (advice-add #'corfu--goto :after #'lsp-bridge--monitor-candidate-select-advisor)
 (advice-add #'corfu--popup-show :after #'lsp-bridge--monitor-candidate-select-advisor)
 
-(defvar-local lsp-bridge-last-completion-doc nil)
+(defvar-local lsp-bridge-completion-item-fetch-tick nil)
+(defvar-local lsp-bridge-completion-item-popup-doc-tick nil)
 
 (defun lsp-bridge-completion-item-fetch (label)
   (let* ((candidate-info (gethash label lsp-bridge-completion-candidates))
          (candidate (string-trim label))
-         (kind (plist-get candidate-info :kind)))
-    (unless (equal lsp-bridge-last-completion-doc (list lsp-bridge-filepath label kind))
-      (lsp-bridge-call-async "pull_completion_item" lsp-bridge-filepath label kind)
-      (setq lsp-bridge-last-completion-doc (list lsp-bridge-filepath label kind)))))
+         (kind (plist-get candidate-info :kind))
+         (documentation (plist-get candidate-info :documentation)))
+
+    ;; Popup candidate documentation directly if `documentation' is exist in candidate.
+    (when documentation
+      (setq-local lsp-bridge-completion-item-popup-doc-tick label)
+      (lsp-bridge-popup-completion-item-doc documentation))
+
+    ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
+    (unless (equal lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind))
+      (lsp-bridge-call-async "fetch_completion_item_info" lsp-bridge-filepath label (format "%s,%s" candidate kind))
+      (setq lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind)))))
 
 (defun lsp-bridge--completion-hide-advisor (&rest args)
   (when lsp-bridge-mode
+    ;; Hide completion ui.
     (lsp-bridge-call-async "completion_hide" lsp-bridge-filepath)
 
-    (setq-local lsp-bridge-last-completion-doc nil)))
+    ;; Clean completion item tick.
+    (setq-local lsp-bridge-completion-item-fetch-tick nil)
+    (setq-local lsp-bridge-completion-item-popup-doc-tick nil)
+    ))
 
 ;; https://tecosaur.github.io/emacs-config/config.html#lsp-support-src
 (cl-defmacro lsp-org-babel-enable (lang)

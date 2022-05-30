@@ -48,7 +48,7 @@ class Completion(Handler):
 
                 completion_candidates.append(candidate)
                 
-                self.file_action.completion_items["{}#{}".format(label, kind)] = item
+                self.file_action.completion_items["{},{}".format(label, kind)] = item
 
         # Calculate completion common string.
         completion_common_string = os.path.commonprefix(list(map(lambda candidate: candidate["label"], completion_candidates)))
