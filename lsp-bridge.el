@@ -1264,7 +1264,7 @@ If optional MARKER, return a marker instead"
 (advice-add #'corfu--goto :after #'lsp-bridge--monitor-candidate-select-advisor)
 (advice-add #'corfu--popup-show :after #'lsp-bridge--monitor-candidate-select-advisor)
 
-(defvar lsp-bridge-last-completion-doc nil)
+(defvar-local lsp-bridge-last-completion-doc nil)
 
 (defun lsp-bridge-completion-item-fetch (label)
   (let* ((candidate-info (gethash label lsp-bridge-completion-candidates))
@@ -1276,7 +1276,9 @@ If optional MARKER, return a marker instead"
 
 (defun lsp-bridge--completion-hide-advisor (&rest args)
   (when lsp-bridge-mode
-    (lsp-bridge-call-async "completion_hide" lsp-bridge-filepath)))
+    (lsp-bridge-call-async "completion_hide" lsp-bridge-filepath)
+    
+    (setq-local lsp-bridge-last-completion-doc nil)))
 
 ;; https://tecosaur.github.io/emacs-config/config.html#lsp-support-src
 (cl-defmacro lsp-org-babel-enable (lang)
