@@ -1266,11 +1266,15 @@ If optional MARKER, return a marker instead"
 (advice-add #'corfu--goto :after #'lsp-bridge--monitor-candidate-select-advisor)
 (advice-add #'corfu--popup-show :after #'lsp-bridge--monitor-candidate-select-advisor)
 
+(defvar lsp-bridge-last-completion-doc nil)
+
 (defun lsp-bridge-completion-item-fetch (label)
   (let* ((candidate-info (gethash label lsp-bridge-completion-candidates))
          (candidate (string-trim label))
          (annotation (plist-get candidate-info :annotation)))
-    (lsp-bridge-call-async "pull_completion_item" lsp-bridge-filepath label annotation)))
+    (unless (equal lsp-bridge-last-completion-doc (list lsp-bridge-filepath label annotation))
+      (lsp-bridge-call-async "pull_completion_item" lsp-bridge-filepath label annotation)
+      (setq lsp-bridge-last-completion-doc (list lsp-bridge-filepath label annotation)))))
 
 (defun lsp-bridge--completion-hide-advisor (&rest args)
   (when lsp-bridge-mode
