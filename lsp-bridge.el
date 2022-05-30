@@ -90,7 +90,7 @@
   :group 'applications)
 
 
-(defcustom lsp-bridge-enable-popup-predicates '(lsp-bridge-not-empty-candidates
+(defcustom lsp-bridge-completion-popup-predicates '(lsp-bridge-not-empty-candidates
                                                 lsp-bridge-not-only-blank-before-cursor
                                                 lsp-bridge-not-match-hide-characters
                                                 lsp-bridge-not-match-completion-position
@@ -116,7 +116,7 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'cons
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-hide-completion-characters '(":" ";" "(" ")" "[" "]" "{" "}" "," "\"")
+(defcustom lsp-bridge-completion-hide-characters '(":" ";" "(" ")" "[" "]" "{" "}" "," "\"")
   "If character before match this option, stop popup completion ui."
   :type 'cons
   :group 'lsp-bridge)
@@ -151,7 +151,7 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'boolean
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-enable-candidate-documentation t
+(defcustom lsp-bridge-enable-candidate-doc-preview t
   "Whether to enable candidate documentation."
   :type 'boolean
   :group 'lsp-bridge)
@@ -546,7 +546,7 @@ Auto completion is only performed if the tick did not change."
       ;; Try popup completion frame.
       (when (cl-every (lambda (pred)
                         (if (functionp pred) (funcall pred) t))
-                      lsp-bridge-enable-popup-predicates)
+                      lsp-bridge-completion-popup-predicates)
         (lsp-bridge-update-candidates)
         ))))
 
@@ -591,8 +591,8 @@ Auto completion is only performed if the tick did not change."
   (not (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands)))
 
 (defun lsp-bridge-not-match-hide-characters ()
-  "Hide completion if cursor after hide character match `lsp-bridge-hide-completion-characters'."
-  (not (member (char-to-string (char-before)) lsp-bridge-hide-completion-characters)))
+  "Hide completion if cursor after hide character match `lsp-bridge-completion-hide-characters'."
+  (not (member (char-to-string (char-before)) lsp-bridge-completion-hide-characters)))
 
 (defun lsp-bridge-not-only-blank-before-cursor ()
   "Hide completion if only blank before cursor."
@@ -1278,7 +1278,7 @@ If optional MARKER, return a marker instead"
 
 (defun lsp-bridge--monitor-candidate-select-advisor (&rest args)
   (when (and lsp-bridge-mode
-             lsp-bridge-enable-candidate-documentation)
+             lsp-bridge-enable-candidate-doc-preview)
     (lsp-bridge-completion-item-fetch (nth corfu--index corfu--candidates))))
 (advice-add #'corfu--goto :after #'lsp-bridge--monitor-candidate-select-advisor)
 (advice-add #'corfu--popup-show :after #'lsp-bridge--monitor-candidate-select-advisor)

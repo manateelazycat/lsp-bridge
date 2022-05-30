@@ -56,17 +56,18 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 * lsp-bridge-insert-common-prefix: insert common prefix of candidates
 * lsp-bridge-restart-process: restart lsp-bridge process (only used for development)
 
-## Customize lsp-bridge keymap
-customize keymap for lsp-bridge commands.
-
-eg:
-```elisp
-(defvar lsp-bridge-mode-map
-    (let ((keymap (make-sparse-keymap)))
-    (define-key keymap (kbd "C-j") 'lsp-bridge-popup-documentation-scroll-up)
-    (define-key keymap (kbd "C-k") 'lsp-bridge-popup-documentation-scroll-down)
-    keymap))
-```
+## Option
+* lsp-bridge-completion-popup-predicates: The predicate function for completion menu, completion menu popup after all the functions pass
+* lsp-bridge-completion-stop-commands: Completion menu will not popup if these commands are executed
+* lsp-bridge-completion-hide-characters: Completion menu will not popup when cursor after those characters
+* lsp-bridge-diagnostics-fetch-idle： Diagnostic delay, start pulling diagnostic information 1 second after stopping typing
+* lsp-bridge-enable-auto-import: Automatic insert import code, disable by default
+* lsp-bridge-enable-candidate-doc-preview: Preview of the candidate document, enable by default
+* lsp-bridge-enable-signature-help: Show function parameter in minibufer, disable by default
+* lsp-bridge-org-babel-lang-list: List of language to support org-mode code block completion
+* lsp-bridge-disable-backup: Forbidden version manage of Emacs, enable by default
+* lsp-bridge-enable-log: Enable the LSP message log, disable by default
+* lsp-bridge-enable-debug: Enable program debugging, disable by default
 
 ## Customize language server configuration
 

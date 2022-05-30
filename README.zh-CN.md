@@ -56,17 +56,18 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 * lsp-bridge-insert-common-prefix: 插入补全后选词的公共前缀
 * lsp-bridge-restart-process: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)
 
-## 自定义lsp-bridge按键
-可以为 lsp-bridge 命令列表自定义对应的按键
-
-eg:
-```elisp
-(defvar lsp-bridge-mode-map
-    (let ((keymap (make-sparse-keymap)))
-    (define-key keymap (kbd "C-j") 'lsp-bridge-popup-documentation-scroll-up)
-    (define-key keymap (kbd "C-k") 'lsp-bridge-popup-documentation-scroll-down)
-    keymap))
-```
+## 选项
+* lsp-bridge-completion-popup-predicates: 补全菜单显示的检查函数， 这个选项包括的所有函数都检查过以后， 补全菜单才能显示
+* lsp-bridge-completion-stop-commands: 这些命令执行以后，不再弹出补全菜单
+* lsp-bridge-completion-hide-characters: 这些字符的后面不再弹出补全菜单
+* lsp-bridge-diagnostics-fetch-idle： 诊断延迟，默认是停止敲键盘后1秒开始拉取诊断信息
+* lsp-bridge-enable-auto-import: 支持自动导入， 默认关闭
+* lsp-bridge-enable-candidate-doc-preview: 支持后选词文档预览， 默认打开
+* lsp-bridge-enable-signature-help: 支持函数参数显示， 默认关闭
+* lsp-bridge-org-babel-lang-list: 支持org-mode代码块补全的语言列表
+* lsp-bridge-disable-backup: 禁止emacs对文件做版本管理， 默认打开
+* lsp-bridge-enable-log: 启用LSP消息日志， 默认关闭
+* lsp-bridge-enable-debug: 启用程序调试， 默认关闭
 
 ## 自定义语言服务器配置
 lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
