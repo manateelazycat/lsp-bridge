@@ -1227,8 +1227,6 @@ If optional MARKER, return a marker instead"
   (read-only-mode 0)
   (font-lock-ensure))
 
-(defalias 'corfu--set-frame-position #'corfu-doc--set-frame-position)
-
 ;;;###autoload
 (defun global-lsp-bridge-mode ()
   (interactive)
