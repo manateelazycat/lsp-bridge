@@ -690,9 +690,12 @@ Doubles as an indicator of snippet support."
 
 (defun lsp-bridge--apply-text-edits (edits)
   (dolist (edit edits)
-    (let* ((range (plist-get edit :range)))
+    (let* ((range (plist-get edit :range))
+           (range-start-pos (lsp-bridge--lsp-position-to-point (plist-get range :start)))
+           (range-end-pos (lsp-bridge--lsp-position-to-point (plist-get range :start))))
       (save-excursion
-        (goto-char (lsp-bridge--lsp-position-to-point (plist-get range :start)))
+        (goto-char range-start-pos)
+        (delete-region range-start-pos range-end-pos)
         (insert (plist-get edit :newText))))))
 
 (defun lsp-bridge--lsp-position-to-point (pos-plist &optional marker)
