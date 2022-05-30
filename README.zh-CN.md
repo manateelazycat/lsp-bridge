@@ -40,34 +40,34 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 
 ## 命令列表
 
-* lsp-bridge-find-def: 跳转到定义位置
-* lsp-bridge-find-def-other-window: 在其他窗口跳转到定义位置
-* lsp-bridge-find-impl: 跳转到接口实现位置
-* lsp-bridge-find-impl-other-window: 在其他窗口跳转到接口实现位置
-* lsp-bridge-return-from-def: 返回跳转之前的位置
-* lsp-bridge-find-references: 查看代码引用
-* lsp-bridge-lookup-documentation: 查看光标处的文档
-* lsp-bridge-popup-documentation-scroll-up: 文档窗口向上滚动
-* lsp-bridge-popup-documentation-scroll-down: 文档窗口向下滚动
-* lsp-bridge-rename: 重命名
-* lsp-bridge-jump-to-next-diagnostic: 跳转到下一个诊断位置
-* lsp-bridge-jump-to-prev-diagnostic: 跳转到上一个诊断位置
-* lsp-bridge-show-signature-help-in-minibuffer: 在minibuffer显示参数信息
-* lsp-bridge-insert-common-prefix: 插入补全后选词的公共前缀
-* lsp-bridge-restart-process: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)
+* `lsp-bridge-find-def`: 跳转到定义位置
+* `lsp-bridge-find-def-other-window`: 在其他窗口跳转到定义位置
+* `lsp-bridge-find-impl`: 跳转到接口实现位置
+* `lsp-bridge-find-impl-other-window`: 在其他窗口跳转到接口实现位置
+* `lsp-bridge-return-from-def`: 返回跳转之前的位置
+* `lsp-bridge-find-references`: 查看代码引用
+* `lsp-bridge-lookup-documentation`: 查看光标处的文档
+* `lsp-bridge-popup-documentation-scroll-up`: 文档窗口向上滚动
+* `lsp-bridge-popup-documentation-scroll-down`: 文档窗口向下滚动
+* `lsp-bridge-rename`: 重命名
+* `lsp-bridge-jump-to-next-diagnostic`: 跳转到下一个诊断位置
+* `lsp-bridge-jump-to-prev-diagnostic`: 跳转到上一个诊断位置
+* `lsp-bridge-show-signature-help-in-minibuffer`: 在minibuffer显示参数信息
+* `lsp-bridge-insert-common-prefix`: 插入补全后选词的公共前缀
+* `lsp-bridge-restart-process`: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)
 
 ## 选项
-* lsp-bridge-completion-popup-predicates: 补全菜单显示的检查函数， 这个选项包括的所有函数都检查过以后， 补全菜单才能显示
-* lsp-bridge-completion-stop-commands: 这些命令执行以后，不再弹出补全菜单
-* lsp-bridge-completion-hide-characters: 这些字符的后面不再弹出补全菜单
-* lsp-bridge-diagnostics-fetch-idle： 诊断延迟，默认是停止敲键盘后1秒开始拉取诊断信息
-* lsp-bridge-enable-auto-import: 支持自动导入， 默认关闭
-* lsp-bridge-enable-candidate-doc-preview: 支持后选词文档预览， 默认打开
-* lsp-bridge-enable-signature-help: 支持函数参数显示， 默认关闭
-* lsp-bridge-org-babel-lang-list: 支持org-mode代码块补全的语言列表
-* lsp-bridge-disable-backup: 禁止emacs对文件做版本管理， 默认打开
-* lsp-bridge-enable-log: 启用LSP消息日志， 默认关闭
-* lsp-bridge-enable-debug: 启用程序调试， 默认关闭
+* `lsp-bridge-completion-popup-predicates`: 补全菜单显示的检查函数， 这个选项包括的所有函数都检查过以后， 补全菜单才能显示
+* `lsp-bridge-completion-stop-commands`: 这些命令执行以后，不再弹出补全菜单
+* `lsp-bridge-completion-hide-characters`: 这些字符的后面不再弹出补全菜单
+* `lsp-bridge-diagnostics-fetch-idle`： 诊断延迟，默认是停止敲键盘后1秒开始拉取诊断信息
+* `lsp-bridge-enable-auto-import`: 支持自动导入， 默认关闭
+* `lsp-bridge-enable-candidate-doc-preview`: 支持后选词文档预览， 默认打开
+* `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认关闭
+* `lsp-bridge-org-babel-lang-list`: 支持org-mode代码块补全的语言列表
+* `lsp-bridge-disable-backup`: 禁止emacs对文件做版本管理， 默认打开
+* `lsp-bridge-enable-log`: 启用LSP消息日志， 默认关闭
+* `lsp-bridge-enable-debug`: 启用程序调试， 默认关闭
 
 ## 自定义语言服务器配置
 lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).

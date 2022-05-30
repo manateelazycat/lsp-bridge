@@ -40,34 +40,34 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 
 ## Commands
 
-* lsp-bridge-find-def: jump to the definition
-* lsp-bridge-find-def-other-window: jump to the definition in other-window
-* lsp-bridge-find-impl: jump to the implementation
-* lsp-bridge-find-impl-other-window: jump to the implementation in other-window
-* lsp-bridge-return-from-def: return to the location before calling `lsp-bridge-find-def`
-* lsp-bridge-find-references: traverse across code references (forked from color-rg.el)
-* lsp-bridge-lookup-documentation: lookup documentation of symbol under the cursor
-* lsp-bridge-popup-documentation-scroll-up: scroll up popup document.
-* lsp-bridge-popup-documentation-scroll-down: scroll down popup document.
-* lsp-bridge-rename: rename symbol under the cursor
-* lsp-bridge-jump-to-next-diagnostic: Jump to the next diagnostic position
-* lsp-bridge-jump-to-prev-diagnostic: Jump to the previous diagnostic position
-* lsp-bridge-show-signature-help-in-minibuffer: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
-* lsp-bridge-insert-common-prefix: insert common prefix of candidates
-* lsp-bridge-restart-process: restart lsp-bridge process (only used for development)
+* `lsp-bridge-find-def`: jump to the definition
+* `lsp-bridge-find-def-other-window`: jump to the definition in other-window
+* `lsp-bridge-find-impl`: jump to the implementation
+* `lsp-bridge-find-impl-other-window`: jump to the implementation in other-window
+* `lsp-bridge-return-from-def`: return to the location before calling `lsp-bridge-find-def`
+* `lsp-bridge-find-references`: traverse across code references (forked from color-rg.el)
+* `lsp-bridge-lookup-documentation`: lookup documentation of symbol under the cursor
+* `lsp-bridge-popup-documentation-scroll-up`: scroll up popup document.
+* `lsp-bridge-popup-documentation-scroll-down`: scroll down popup document.
+* `lsp-bridge-rename`: rename symbol under the cursor
+* `lsp-bridge-jump-to-next-diagnostic`: Jump to the next diagnostic position
+* `lsp-bridge-jump-to-prev-diagnostic`: Jump to the previous diagnostic position
+* `lsp-bridge-show-signature-help-in-minibuffer`: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
+* `lsp-bridge-insert-common-prefix`: insert common prefix of candidates
+* `lsp-bridge-restart-process`: restart lsp-bridge process (only used for development)
 
 ## Options
-* lsp-bridge-completion-popup-predicates: the predicate function for completion menu, completion menu popup after all the functions pass
-* lsp-bridge-completion-stop-commands: completion menu will not popup if these commands are executed
-* lsp-bridge-completion-hide-characters: completion menu will not popup when cursor after those characters
-* lsp-bridge-diagnostics-fetch-idle： diagnostic delay, start pulling diagnostic information 1 second after stopping typing
-* lsp-bridge-enable-auto-import: automatic insert import code, disable by default
-* lsp-bridge-enable-candidate-doc-preview: preview of the candidate document, enable by default
-* lsp-bridge-enable-signature-help: show function parameter in minibufer, disable by default
-* lsp-bridge-org-babel-lang-list: list of language to support org-mode code block completion
-* lsp-bridge-disable-backup: forbidden version manage of emacs, enable by default
-* lsp-bridge-enable-log: enable the LSP message log, disable by default
-* lsp-bridge-enable-debug: enable program debugging, disable by default
+* `lsp-bridge-completion-popup-predicates`: the predicate function for completion menu, completion menu popup after all the functions pass
+* `lsp-bridge-completion-stop-commands`: completion menu will not popup if these commands are executed
+* `lsp-bridge-completion-hide-characters`: completion menu will not popup when cursor after those characters
+* `lsp-bridge-diagnostics-fetch-idle`: diagnostic delay, start pulling diagnostic information 1 second after stopping typing
+* `lsp-bridge-enable-auto-import`: automatic insert import code, disable by default
+* `lsp-bridge-enable-candidate-doc-preview`: preview of the candidate document, enable by default
+* `lsp-bridge-enable-signature-help`: show function parameter in minibufer, disable by default
+* `lsp-bridge-org-babel-lang-list`: list of language to support org-mode code block completion
+* `lsp-bridge-disable-backup`: forbidden version manage of emacs, enable by default
+* `lsp-bridge-enable-log`: enable the LSP message log, disable by default
+* `lsp-bridge-enable-debug`: enable program debugging, disable by default
 
 ## Customize language server configuration
 
