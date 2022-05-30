@@ -939,13 +939,7 @@ If optional MARKER, return a marker instead"
     (insert "\n\n")
     (setq-local markdown-fontify-code-blocks-natively t)
     (insert value)
-    (if (fboundp 'gfm-view-mode)
-        (let ((view-inhibit-help-message t))
-          (gfm-view-mode))
-      (gfm-mode))
-    ;; avoid 'gfm-view-mode made buffer read only.
-    (read-only-mode 0)
-    (font-lock-ensure))
+    (lsp-bridge-render-markdown-content))
   (when (posframe-workable-p)
     (posframe-show lsp-bridge-lookup-doc-tooltip
                    :position (point)
@@ -1216,9 +1210,20 @@ If optional MARKER, return a marker instead"
         (if (corfu-doc--should-refresh-popup candidate)
             (corfu-doc--refresh-popup)
           (corfu-doc--update-popup documentation)
+          (with-current-buffer (get-buffer-create " *corfu-doc*")
+            (lsp-bridge-render-markdown-content))
           (corfu-doc--set-vars
            candidate cf-popup-edges (selected-window))
           )))))
+
+(defun lsp-bridge-render-markdown-content ()
+  (let ((inhibit-message t))
+    (if (fboundp 'gfm-view-mode)
+        (gfm-view-mode)
+      (gfm-mode)))
+  (display-line-numbers-mode -1)
+  (read-only-mode 0)
+  (font-lock-ensure))
 
 (defalias 'corfu--set-frame-position #'corfu-doc--set-frame-position)
 
