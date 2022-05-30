@@ -14,5 +14,5 @@ class CompletionItem(Handler):
         return item
 
     def process_response(self, response: dict) -> None:
-        if response is not None and "documentation" in response:
+        if response is not None and "documentation" in response and response["documentation"]["value"] != "":
             eval_in_emacs("lsp-bridge-popup-completion-item-doc", self.file_action.filepath, response["documentation"]["value"])
