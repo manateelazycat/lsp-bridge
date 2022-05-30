@@ -639,7 +639,9 @@ Auto completion is only performed if the tick did not change."
 
      :exit-function
      (lambda (candidate status)
-       (when (memq status '(finished exact))
+       ;; Only expand candidate when status is `finished'.
+       ;; Otherwise we execute command `backward-delete-char-untabify' will cause candidate expand.
+       (when (memq status '(finished))
          ;; Because lsp-bridge will push new candidates when company/lsp-bridge-ui completing.
          ;; We need extract newest candidates when insert, avoid insert old candidate content.
          (let* ((candidate-index (cl-find candidate candidates :test #'string=)))
