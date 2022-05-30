@@ -1075,6 +1075,7 @@ If optional MARKER, return a marker instead"
 
     (setq-local corfu-auto-prefix 0)
     (setq-local corfu-auto nil)
+    (setq-local corfu-preview-current nil)
 
     (remove-hook 'post-command-hook #'corfu--auto-post-command 'local)
 
@@ -1097,6 +1098,7 @@ If optional MARKER, return a marker instead"
   "Disable LSP Bridge mode."
   (kill-local-variable 'corfu-auto-prefix)
   (kill-local-variable 'corfu-auto)
+  (kill-local-variable 'corfu-preview-current)
 
   (and corfu-auto (add-hook 'post-command-hook #'corfu--auto-post-command nil 'local))
 
