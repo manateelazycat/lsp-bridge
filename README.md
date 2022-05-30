@@ -115,10 +115,8 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 
 ### TODO:
 
-- [ ] Show signature help with eldoc
 - [ ] Code action
-- [ ] Inline Value
-- [ ] JavaSctipt different code blocks use different language servers
+- [ ] Show signature help with eldoc
 
 ### Features that won't be supported
 
