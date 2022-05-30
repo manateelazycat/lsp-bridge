@@ -45,6 +45,7 @@ def test_entrypoint():
         (package-initialize)
         (package-refresh-contents)
         (package-install 'corfu)
+        (package-install 'corfu-doc)
         (package-install 'all-the-icons)
         (package-install 'orderless)
         (package-install 'posframe)
@@ -65,6 +66,7 @@ def test_entrypoint():
         (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
         (yas-global-mode 1)
         (require 'corfu)
+        (require 'corfu-doc)
         (require 'corfu-info)
         (require 'corfu-history)
         (require 'lsp-bridge-icon)        ;; show icons for completion items, optional
