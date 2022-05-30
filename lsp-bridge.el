@@ -91,12 +91,12 @@
 
 
 (defcustom lsp-bridge-completion-popup-predicates '(lsp-bridge-not-empty-candidates
-                                                lsp-bridge-not-only-blank-before-cursor
-                                                lsp-bridge-not-match-hide-characters
-                                                lsp-bridge-not-match-completion-position
-                                                lsp-bridge-not-match-stop-commands
-                                                lsp-bridge-is-evil-insert-state
-                                                )
+                                                    lsp-bridge-not-only-blank-before-cursor
+                                                    lsp-bridge-not-match-hide-characters
+                                                    lsp-bridge-not-match-completion-position
+                                                    lsp-bridge-not-match-stop-commands
+                                                    lsp-bridge-is-evil-insert-state
+                                                    )
   "A list of predicate functions with no argument to enable popup completion in callback."
   :type 'list
   :group 'lsp-bridge)
@@ -605,7 +605,7 @@ Auto completion is only performed if the tick did not change."
   (or (not (featurep 'evil)) (evil-insert-state-p)))
 
 (defun lsp-bridge-capf ()
-  "Capf function similar to eglot's 'eglot-completion-at-point'."
+  "Capf function"
   (let* ((candidates (hash-table-keys lsp-bridge-completion-candidates))
          (bounds (bounds-of-thing-at-point 'symbol))
          (bounds-start (or (car bounds) (point)))
@@ -681,7 +681,6 @@ Auto completion is only performed if the tick did not change."
                    (lsp-bridge--apply-text-edits additionalTextEdits))
                  ))))))))))
 
-;; Copy from eglot
 (defun lsp-bridge--snippet-expansion-fn ()
   "Compute a function to expand snippets.
 Doubles as an indicator of snippet support."
@@ -689,32 +688,13 @@ Doubles as an indicator of snippet support."
        (symbol-value 'yas-minor-mode)
        'yas-expand-snippet))
 
-;; Copy from eglot
-(defun lsp-bridge--apply-text-edits (edits &optional version)
-  (let* ((change-group (prepare-change-group)))
-    (mapc (pcase-lambda (`(,newText ,beg . ,end))
-            (let ((source (current-buffer)))
-              (with-temp-buffer
-                (insert newText)
-                (let ((temp (current-buffer)))
-                  (with-current-buffer source
-                    (save-excursion
-                      (save-restriction
-                        (narrow-to-region beg end)
-                        (replace-buffer-contents temp))))))))
-          (mapcar
-           (lambda (edit) ()
-             (let* ((range (plist-get edit :range))
-                    (newText (plist-get edit :newText)))
-               (cons newText
-                     (cons
-                      (lsp-bridge--lsp-position-to-point (plist-get range :start) 'markers)
-                      (lsp-bridge--lsp-position-to-point (plist-get range :end) 'markers)
-                      ))))
-           (reverse edits)))
-    (undo-amalgamate-change-group change-group)))
+(defun lsp-bridge--apply-text-edits (edits)
+  (dolist (edit edits)
+    (let* ((range (plist-get edit :range)))
+      (save-excursion
+        (goto-char (lsp-bridge--lsp-position-to-point (plist-get range :start)))
+        (insert (plist-get edit :newText))))))
 
-;; Copy from eglot
 (defun lsp-bridge--lsp-position-to-point (pos-plist &optional marker)
   "Convert LSP position POS-PLIST to Emacs point.
 If optional MARKER, return a marker instead"
