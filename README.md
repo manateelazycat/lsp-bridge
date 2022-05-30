@@ -119,7 +119,6 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 - [ ] Code action
 - [ ] Inline Value
 - [ ] JavaSctipt different code blocks use different language servers
-- [ ] Support completionItem/resolve to implement auto-import for volar
 
 ### Features that won't be supported
 
