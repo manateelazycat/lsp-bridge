@@ -61,7 +61,7 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 * `lsp-bridge-completion-stop-commands`: 这些命令执行以后，不再弹出补全菜单
 * `lsp-bridge-completion-hide-characters`: 这些字符的后面不再弹出补全菜单
 * `lsp-bridge-diagnostics-fetch-idle`： 诊断延迟，默认是停止敲键盘后1秒开始拉取诊断信息
-* `lsp-bridge-enable-auto-import`: 支持自动导入， 默认关闭
+* `lsp-bridge-enable-auto-import`: 支持自动导入， 默认打开
 * `lsp-bridge-enable-candidate-doc-preview`: 支持后选词文档预览， 默认打开
 * `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认关闭
 * `lsp-bridge-org-babel-lang-list`: 支持org-mode代码块补全的语言列表
@@ -119,7 +119,6 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 - [ ] Code Action: 代码动作， 比如自动修复代码
 - [ ] Inline Value: 行类值显示
 - [ ] JavaSctipt不同的代码块使用不同的语言服务器
-- [ ] 支持completionItem/resolve消息以实现volar的自动导入功能
 
 ### 不会支持的特性：
 lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是实现LSP协议最全的LSP客户端。

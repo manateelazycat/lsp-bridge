@@ -146,7 +146,7 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'integer
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-enable-auto-import nil
+(defcustom lsp-bridge-enable-auto-import t
   "Whether to enable auto-import."
   :type 'boolean
   :group 'lsp-bridge)
