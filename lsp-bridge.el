@@ -121,15 +121,6 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'cons
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-identify-annotation '("Snippet" "Emmet Abbreviation")
-  "LSP Server will return candidates include same 'label',
-then candidates have same `label' will filter by completion ui, such as Corfu.
-
-So we will add blank after label if candidate annotation match tihs option,
-to avoid completion ui filter candidates."
-  :type 'cons
-  :group 'lsp-bridge)
-
 (defcustom lsp-bridge-lookup-doc-tooltip " *lsp-bridge-hover*"
   "Buffer for display hover information."
   :type 'string
@@ -529,6 +520,11 @@ Auto completion is only performed if the tick did not change."
            (string-empty-p (format "%s" (car list))))
       (and (eq (length list) 0))))
 
+(defun lsp-bridge-add-candidate-item (label item)
+  (if (gethash label lsp-bridge-completion-candidates)
+      (lsp-bridge-add-candidate-item (format "%s " label) item)
+    (puthash label item lsp-bridge-completion-candidates)))
+
 (defun lsp-bridge-record-completion-items (filepath common items position server-name completion-trigger-characters)
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
@@ -539,12 +535,7 @@ Auto completion is only performed if the tick did not change."
 
     (setq-local lsp-bridge-completion-candidates (make-hash-table :test 'equal))
     (dolist (item items)
-      (let* ((item-label (plist-get item :label))
-             (item-annotation (plist-get item :annotation))
-             (item-key (if (member item-annotation lsp-bridge-identify-annotation)
-                           (format "%s " item-label)
-                         item-label)))
-        (puthash item-key item lsp-bridge-completion-candidates)))
+      (lsp-bridge-add-candidate-item (plist-get item :label) item))
 
     (if lsp-bridge-prohibit-completion
         (setq lsp-bridge-prohibit-completion nil)
@@ -655,7 +646,7 @@ Auto completion is only performed if the tick did not change."
               ;; Just insert candidate if it has expired.
               ((null candidate-index))
               (t
-               (let* ((label (string-trim candidate)) ; we need trim candidate, `lsp-bridge-identify-annotation' will cause insert blank after `label' information
+               (let* ((label (string-trim candidate)) ; we need trim candidate
                       (candidate-info (gethash candidate lsp-bridge-completion-candidates))
                       (insert-text (plist-get candidate-info :insertText))
                       (insert-text-format (plist-get candidate-info :insertTextFormat))
@@ -1271,15 +1262,15 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-completion-item-fetch (label)
   (let* ((candidate-info (gethash label lsp-bridge-completion-candidates))
          (candidate (string-trim label))
-         (annotation (plist-get candidate-info :annotation)))
-    (unless (equal lsp-bridge-last-completion-doc (list lsp-bridge-filepath label annotation))
-      (lsp-bridge-call-async "pull_completion_item" lsp-bridge-filepath label annotation)
-      (setq lsp-bridge-last-completion-doc (list lsp-bridge-filepath label annotation)))))
+         (kind (plist-get candidate-info :kind)))
+    (unless (equal lsp-bridge-last-completion-doc (list lsp-bridge-filepath label kind))
+      (lsp-bridge-call-async "pull_completion_item" lsp-bridge-filepath label kind)
+      (setq lsp-bridge-last-completion-doc (list lsp-bridge-filepath label kind)))))
 
 (defun lsp-bridge--completion-hide-advisor (&rest args)
   (when lsp-bridge-mode
     (lsp-bridge-call-async "completion_hide" lsp-bridge-filepath)
-    
+
     (setq-local lsp-bridge-last-completion-doc nil)))
 
 ;; https://tecosaur.github.io/emacs-config/config.html#lsp-support-src

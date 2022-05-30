@@ -129,7 +129,7 @@ class FileAction:
     def handle_server_response_message(self, request_id, request_type, response):
         self.handlers[request_type].handle_response(request_id, response)
         
-    def completion_item_resolve(self, label, kind_text):
-        item_key = "{}#{}".format(label, kind_text)
+    def completion_item_resolve(self, label, kind):
+        item_key = "{}#{}".format(label, kind)
         if item_key in self.completion_items:
             self.handlers["completion_item_resolve"].send_request(self.completion_items[item_key])
