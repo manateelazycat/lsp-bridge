@@ -13,6 +13,7 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 1. Install Python dependencies: [python-epc](https://github.com/tkf/python-epc)
 2. Install Elisp dependencies:
 + [corfu](https://github.com/minad/corfu)
++ [corfu-doc](https://github.com/galeo/corfu-doc)
 + [orderless](https://github.com/oantolin/orderless) 
 + [all-the-icons](https://github.com/domtronn/all-the-icons.el) (need execute command `all-the-icons-install-fonts` to install all-the-icons fonts)
 + [posframe](https://github.com/tumashu/posframe)
@@ -30,8 +31,6 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
 (yas-global-mode 1)
 
-(require 'corfu)
-(require 'corfu-info)
 (require 'corfu-history)
 (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
 (corfu-history-mode t)
@@ -120,7 +119,6 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 - [ ] Inline Value
 - [ ] JavaSctipt different code blocks use different language servers
 - [ ] Support completionItem/resolve to implement auto-import for volar
-- [ ] Cache candidate document at Python side, only fetch document information when switch candidate.
 
 ### Features that won't be supported
 

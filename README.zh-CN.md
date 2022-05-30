@@ -13,6 +13,7 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 1. 安装Python依赖: [python-epc](https://github.com/tkf/python-epc)
 2. 安装Elisp依赖:
 + [corfu](https://github.com/minad/corfu)
++ [corfu-doc](https://github.com/galeo/corfu-doc)
 + [orderless](https://github.com/oantolin/orderless)
 + [all-the-icons](https://github.com/domtronn/all-the-icons.el) (需要在安装all-the-icons后执行命令`all-the-icons-install-fonts`安装图标字体)
 + [posframe](https://github.com/tumashu/posframe)
@@ -30,8 +31,6 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (require 'lsp-bridge-jdtls)       ;; 提供Java第三方库跳转和-data目录支持， Java用户必选
 (yas-global-mode 1)
 
-(require 'corfu)
-(require 'corfu-info)
 (require 'corfu-history)
 (require 'lsp-bridge-orderless)   ;; 支持模糊搜索，可选
 (corfu-history-mode t)
@@ -120,7 +119,6 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 - [ ] Inline Value: 行类值显示
 - [ ] JavaSctipt不同的代码块使用不同的语言服务器
 - [ ] 支持completionItem/resolve消息以实现volar的自动导入功能
-- [ ] 缓存后选词文档，只有用户切换后选词时才获取新的文档
 
 ### 不会支持的特性：
 lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是实现LSP协议最全的LSP客户端。

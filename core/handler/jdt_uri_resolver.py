@@ -12,6 +12,7 @@ class JDTUriResolver(Handler):
     name = "jdt_uri_resolver"
     method = "java/classFileContents"
     cancel_on_change = True
+    send_document_uri = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -65,6 +66,3 @@ class JDTUriResolver(Handler):
             )
             eval_in_emacs("lsp-bridge--jump-to-def", external_file, self.start_pos)
 
-    def fill_document_uri(self, params: dict) -> None:
-        # JDT don't need fill textDocument uri.
-        pass

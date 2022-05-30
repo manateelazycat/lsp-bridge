@@ -29,6 +29,12 @@ import platform
 import sys
 from epc.client import EPCClient
 
+KIND_MAP = ["", "Text", "Method", "Function", "Constructor", "Field",
+            "Variable", "Class", "Interface", "Module", "Property",
+            "Unit", "Value", "Enum", "Keyword", "Snippet", "Color",
+            "File", "Reference", "Folder", "EnumMember", "Constant",
+            "Struct", "Event", "Operator", "TypeParameter"]
+
 epc_client: Optional[EPCClient] = None
 
 # for test purpose

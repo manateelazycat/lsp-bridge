@@ -81,6 +81,10 @@
 (require 'posframe)
 (require 'markdown-mode)
 
+(require 'corfu)
+(require 'corfu-info)
+(require 'corfu-doc)
+
 (defgroup lsp-bridge nil
   "LSP-Bridge group."
   :group 'applications)
@@ -153,6 +157,11 @@ to avoid completion ui filter candidates."
 
 (defcustom lsp-bridge-enable-auto-import nil
   "Whether to enable auto-import."
+  :type 'boolean
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-enable-candidate-documentation t
+  "Whether to enable candidate documentation."
   :type 'boolean
   :group 'lsp-bridge)
 
@@ -1082,6 +1091,8 @@ If optional MARKER, return a marker instead"
     (when (functionp 'lsp-bridge-orderless-setup)
       (lsp-bridge-orderless-setup))
 
+    (corfu-doc-mode 1)
+
     ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
     (unless lsp-bridge-is-starting
       (lsp-bridge-start-process)))))
@@ -1096,7 +1107,9 @@ If optional MARKER, return a marker instead"
   (advice-remove #'corfu--popup-hide #'lsp-bridge--completion-hide-advisor)
 
   (dolist (hook lsp-bridge--internal-hooks)
-    (remove-hook (car hook) (cdr hook) t)))
+    (remove-hook (car hook) (cdr hook) t))
+
+  (corfu-doc-mode -1))
 
 (defun lsp-bridge-turn-off (filepath)
   (lsp-bridge--with-file-buffer filepath
@@ -1193,6 +1206,22 @@ If optional MARKER, return a marker instead"
       (lsp-bridge-show-diagnostic-tooltip diagnostic-overlay)
     (message "[LSP-Bridge] Reach first diagnostic.")))
 
+(defun lsp-bridge-popup-completion-item-doc (filepath documentation)
+  (lsp-bridge--with-file-buffer filepath
+    (unless (corfu-doc--popup-support-p)
+      (error "Corfu-doc requires child frames to display documentation."))
+    (when (corfu-doc--should-show-popup)
+      (when-let ((candidate (corfu-doc--get-candidate))
+                 (cf-popup-edges (corfu-doc--get-cf-popup-edges)))
+        (if (corfu-doc--should-refresh-popup candidate)
+            (corfu-doc--refresh-popup)
+          (corfu-doc--update-popup documentation)
+          (corfu-doc--set-vars
+           candidate cf-popup-edges (selected-window))
+          )))))
+
+(defalias 'corfu--set-frame-position #'corfu-doc--set-frame-position)
+
 ;;;###autoload
 (defun global-lsp-bridge-mode ()
   (interactive)
@@ -1222,6 +1251,19 @@ If optional MARKER, return a marker instead"
       (setq lsp-bridge-filepath new-name)))
   (apply orig-fun arg args))
 (advice-add #'rename-file :around #'lsp-bridge--rename-file-advisor)
+
+(defun lsp-bridge--monitor-candidate-select-advisor (&rest args)
+  (when (and lsp-bridge-mode
+             lsp-bridge-enable-candidate-documentation)
+    (lsp-bridge-completion-item-fetch (nth corfu--index corfu--candidates))))
+(advice-add #'corfu--goto :after #'lsp-bridge--monitor-candidate-select-advisor)
+(advice-add #'corfu--popup-show :after #'lsp-bridge--monitor-candidate-select-advisor)
+
+(defun lsp-bridge-completion-item-fetch (label)
+  (let* ((candidate-info (gethash label lsp-bridge-completion-candidates))
+         (candidate (string-trim label))
+         (annotation (plist-get candidate-info :annotation)))
+    (lsp-bridge-call-async "pull_completion_item" lsp-bridge-filepath label annotation)))
 
 (defun lsp-bridge--completion-hide-advisor (&rest args)
   (when lsp-bridge-mode

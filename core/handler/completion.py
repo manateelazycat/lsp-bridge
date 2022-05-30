@@ -4,13 +4,6 @@ from enum import Enum
 from core.handler import Handler
 from core.utils import *
 
-KIND_MAP = ["", "Text", "Method", "Function", "Constructor", "Field",
-            "Variable", "Class", "Interface", "Module", "Property",
-            "Unit", "Value", "Enum", "Keyword", "Snippet", "Color",
-            "File", "Reference", "Folder", "EnumMember", "Constant",
-            "Struct", "Event", "Operator", "TypeParameter"]
-
-
 class CompletionTriggerKind(Enum):
     Invoked = 1
     TriggerCharacter = 2
@@ -38,9 +31,10 @@ class Completion(Handler):
         if response is not None:
             for item in response["items"] if "items" in response else response:
                 kind = KIND_MAP[item.get("kind", 0)]
+                label = item["label"]
 
                 candidate = {
-                    "label": item["label"],
+                    "label": label,
                     "tags": item.get("tags", []),
                     "insertText": item.get('insertText', None),
                     "kind": kind,
@@ -53,6 +47,8 @@ class Completion(Handler):
                     candidate["additionalTextEdits"] = item.get("additionalTextEdits", [])
 
                 completion_candidates.append(candidate)
+                
+                self.file_action.completion_items["{}#{}".format(label, kind)] = item
 
         # Calculate completion common string.
         completion_common_string = os.path.commonprefix(list(map(lambda candidate: candidate["label"], completion_candidates)))
