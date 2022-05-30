@@ -677,8 +677,24 @@ Auto completion is only performed if the tick did not change."
                       (delete-end-pos (+ (point) (- range-end-pos completion-start-pos)))
                       (insert-candidate (or new-text insert-text label)))
 
-                 ;; Insert candidate or expand snippet.
+                 ;; Move bound start position forward one character, if the following situation is satisfied:
+                 ;; 1. `textEdit' is not exist
+                 ;; 2. bound-start character is `lsp-bridge-completion-trigger-characters'
+                 ;; 3. `label' start with bound-start character
+                 ;; 4. `insertText' is not start with bound-start character
+                 (unless text-edit
+                   (let* ((bound-start-char (save-excursion
+                                              (goto-char delete-start-pos)
+                                              (char-to-string (char-after)))))
+                     (when (and (member bound-start-char lsp-bridge-completion-trigger-characters)
+                                (string-prefix-p bound-start-char label)
+                                (not (string-prefix-p bound-start-char insert-text)))
+                       (setq delete-start-pos (1+ delete-start-pos)))))
+
+                 ;; Delete region.
                  (delete-region delete-start-pos delete-end-pos)
+
+                 ;; Insert candidate or expand snippet.
                  (funcall (or snippet-fn #'insert) insert-candidate)
 
                  ;; Do `additionalTextEdits' if return auto-imprt information.
