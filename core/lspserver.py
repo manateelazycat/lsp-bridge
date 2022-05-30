@@ -183,6 +183,7 @@ class LspServer:
 
         # LSP server information.
         self.completion_trigger_characters = list()
+        self.completion_resolve_provider = False
 
         # Start LSP server.
         self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
@@ -412,7 +413,12 @@ class LspServer:
                     self.completion_trigger_characters = message["result"]["capabilities"]["completionProvider"]["triggerCharacters"]
                 except KeyError:
                     pass
-
+                
+                try:
+                    self.completion_resolve_provider = message["result"]["capabilities"]["completionProvider"]["resolveProvider"]
+                except KeyError:
+                    pass
+                
                 self.sender.send_notification("initialized", {}, init=True)
 
                 # STEP 3: Configure LSP server parameters.

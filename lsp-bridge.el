@@ -484,6 +484,7 @@ Auto completion is only performed if the tick did not change."
 (defvar-local lsp-bridge-completion-candidates nil)
 (defvar-local lsp-bridge-completion-server-name nil)
 (defvar-local lsp-bridge-completion-trigger-characters nil)
+(defvar-local lsp-bridge-completion-resolve-provider nil)
 (defvar-local lsp-bridge-completion-prefix nil)
 (defvar-local lsp-bridge-completion-common nil)
 (defvar-local lsp-bridge-completion-position nil)
@@ -528,13 +529,18 @@ Auto completion is only performed if the tick did not change."
 (defun lsp-bridge-get-candidate-item (label)
   (gethash label lsp-bridge-completion-candidates))
 
-(defun lsp-bridge-record-completion-items (filepath common items position server-name completion-trigger-characters)
+(defun lsp-bridge-record-completion-items (filepath
+                                           common items position
+                                           server-name
+                                           completion-trigger-characters
+                                           completion-resolve-provider)
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
     (setq-local lsp-bridge-completion-common common)
     (setq-local lsp-bridge-completion-position position)
     (setq-local lsp-bridge-completion-server-name server-name)
     (setq-local lsp-bridge-completion-trigger-characters completion-trigger-characters)
+    (setq-local lsp-bridge-completion-resolve-provider completion-resolve-provider)
 
     (setq-local lsp-bridge-completion-candidates (make-hash-table :test 'equal))
     (dolist (item items)
@@ -1261,7 +1267,8 @@ If optional MARKER, return a marker instead"
 
 (defun lsp-bridge--monitor-candidate-select-advisor (&rest args)
   (when (and lsp-bridge-mode
-             lsp-bridge-enable-candidate-doc-preview)
+             lsp-bridge-enable-candidate-doc-preview
+             lsp-bridge-completion-resolve-provider)
     (lsp-bridge-completion-item-fetch (nth corfu--index corfu--candidates))))
 (advice-add #'corfu--goto :after #'lsp-bridge--monitor-candidate-select-advisor)
 (advice-add #'corfu--popup-show :after #'lsp-bridge--monitor-candidate-select-advisor)
