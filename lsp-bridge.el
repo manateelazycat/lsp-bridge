@@ -762,20 +762,22 @@ If optional MARKER, return a marker instead"
 
   ;; Send change_file request.
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (let ((completion-frame corfu--frame))
-      (setq-local lsp-bridge-current-tick (lsp-bridge--auto-tick))
-      (lsp-bridge-call-async "change_file"
-                             lsp-bridge-filepath
-                             lsp-bridge--before-change-begin-pos
-                             lsp-bridge--before-change-end-pos
-                             length
-                             (buffer-substring-no-properties begin end)
-                             (lsp-bridge--position)
-                             (lsp-bridge-char-before)
-                             (buffer-substring-no-properties (line-beginning-position) (point))
-                             (and (frame-live-p completion-frame)
-                                  (frame-visible-p completion-frame))
-                             ))))
+    (setq-local lsp-bridge-current-tick (lsp-bridge--auto-tick))
+    (lsp-bridge-call-async "change_file"
+                           lsp-bridge-filepath
+                           lsp-bridge--before-change-begin-pos
+                           lsp-bridge--before-change-end-pos
+                           length
+                           (buffer-substring-no-properties begin end)
+                           (lsp-bridge--position)
+                           (lsp-bridge-char-before)
+                           (buffer-substring-no-properties (line-beginning-position) (point))
+                           (lsp-bridge-completion-ui-visible-p)
+                           )))
+
+(defun lsp-bridge-completion-ui-visible-p ()
+  (and (frame-live-p corfu--frame)
+       (frame-visible-p corfu--frame)))
 
 (defun lsp-bridge-monitor-after-save ()
   (lsp-bridge-call-async "save_file" lsp-bridge-filepath))
@@ -1103,6 +1105,7 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-diagnostics-fetch ()
   (when (and lsp-bridge-mode
              (process-live-p lsp-bridge-server)
+             (not (lsp-bridge-completion-ui-visible-p))
              (buffer-file-name))
     (when (string-equal (file-truename (buffer-file-name)) lsp-bridge-filepath)
       (lsp-bridge-call-async "pull_diagnostics" lsp-bridge-filepath))))
