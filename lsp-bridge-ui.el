@@ -132,7 +132,7 @@ Cached version is returned if it exists unless FORCE-RELOAD is t."
         (url-insert-buffer-contents buffer url)
         (xml-parse-region (point-min) (point-max))))))
 
-(defun lsp-bridge-ui-icon--emacs-color-to-svg-color (color-name)
+(defun lsp-bridge-ui-emacs-color-to-svg-color (color-name)
   "Convert Emacs COLOR-NAME to #rrggbb form.
 If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   (let ((rgb-color (color-name-to-rgb color-name)))
@@ -169,11 +169,11 @@ specified in `:foreground' or `:background' attribute is used."
          (svg-height (* svg-height zoom))
 
          (svg-viewbox (format "%f %f %f %f" view-x view-y view-width view-height))
-         (fg-color (lsp-bridge-ui-icon--emacs-color-to-svg-color
+         (fg-color (lsp-bridge-ui-emacs-color-to-svg-color
                     (or (when (facep fg-color)
                           (face-foreground fg-color nil t))
                         fg-color (face-attribute 'default :foreground))))
-         (bg-color (lsp-bridge-ui-icon--emacs-color-to-svg-color
+         (bg-color (lsp-bridge-ui-emacs-color-to-svg-color
                     (or (when (facep bg-color)
                           (face-background bg-color nil t))
                         bg-color "transparent")))
