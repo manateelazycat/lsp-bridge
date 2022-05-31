@@ -192,9 +192,9 @@ specified in `:foreground' or `:background' attribute is used."
         (svg-node svg 'path :d path :fill fill)))
     (svg-image svg :ascent 'center :scale 1)))
 
-(defvar-local lsp-bridge-ui-completion-items nil)
+(defvar-local lsp-bridge-ui-backend-items nil)
 
-(defface lsp-bridge-ui-buffer-default-face
+(defface lsp-bridge-ui-frame-default-face
   '((t (:height 140)))
   "Face for content area.")
 
@@ -306,7 +306,7 @@ specified in `:foreground' or `:background' attribute is used."
 
 (defun lsp-bridge-ui-popup ()
   (interactive)
-  (let* ((items lsp-bridge-ui-completion-items)
+  (let* ((items lsp-bridge-ui-backend-items)
          (item-max-length 0))
     (if (and lsp-bridge-ui-frame
              (frame-live-p lsp-bridge-ui-frame))
@@ -321,7 +321,7 @@ specified in `:foreground' or `:background' attribute is used."
 
         (erase-buffer)
 
-        (buffer-face-set 'lsp-bridge-ui-buffer-default-face)
+        (buffer-face-set 'lsp-bridge-ui-frame-default-face)
 
         (maphash
          (lambda (k v)
@@ -351,8 +351,7 @@ specified in `:foreground' or `:background' attribute is used."
           (delete-backward-char 1)))
 
       (with-selected-frame lsp-bridge-ui-frame
-        (switch-to-buffer lsp-bridge-ui-buffer)
-        )
+        (switch-to-buffer lsp-bridge-ui-buffer))
 
       (fit-frame-to-buffer-1 lsp-bridge-ui-frame nil nil nil nil nil nil nil)
 
@@ -386,12 +385,12 @@ specified in `:foreground' or `:background' attribute is used."
 
 (defun lsp-bridge-ui-update-completion-data (backend-name completion-table)
   ;; Update completion table that match backend-name.
-  (puthash backend-name completion-table lsp-bridge-ui-completion-items))
+  (puthash backend-name completion-table lsp-bridge-ui-backend-items))
 
 (defun lsp-bridge-ui-test ()
   (interactive)
-  (unless lsp-bridge-ui-completion-items
-    (setq-local lsp-bridge-ui-completion-items (make-hash-table :test 'equal)))
+  (unless lsp-bridge-ui-backend-items
+    (setq-local lsp-bridge-ui-backend-items (make-hash-table :test 'equal)))
 
   (let* ((completion-table (make-hash-table :test 'equal))
          items)
@@ -414,13 +413,13 @@ specified in `:foreground' or `:background' attribute is used."
                   (:key "16" :icon property :candidate "long-function-name" :annotation "Snippet" :doc "Doc for long-function-name.")
                   (:key "17" :icon prop :candidate "cool-vars-name" :annotation "Function" :doc "Doc for cool-vars-name.")
                   (:key "18" :icon unit :candidate "cool-vars-name" :annotation "Snippet" :doc "Doc for cool-vars-name.")
-                  ;; (:key "19" :icon value :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser.")
-                  ;; (:key "20" :icon enum :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser.")
-                  ;; (:key "21" :icon keyword :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser.")
-                  ;; (:key "22" :icon k/w :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser.")
-                  ;; (:key "23" :icon snippet :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser.")
-                  ;; (:key "24" :icon color :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser.")
-                  ;; (:key "25" :icon file :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser.")
+                  (:key "19" :icon value :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser.")
+                  (:key "20" :icon enum :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser.")
+                  (:key "21" :icon keyword :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser.")
+                  (:key "22" :icon k/w :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser.")
+                  (:key "23" :icon snippet :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser.")
+                  (:key "24" :icon color :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser.")
+                  (:key "25" :icon file :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser.")
                   ;; (:key "26" :icon reference :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser.")
                   ;; (:key "27" :icon ref :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser.")
                   ;; (:key "28" :icon folder :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser.")
