@@ -209,8 +209,7 @@ specified in `:foreground' or `:background' attribute is used."
 
 (defun lsp-bridge-ui-popup ()
   (interactive)
-  (let* ((cursor-pos (window-absolute-pixel-position))
-         (items lsp-bridge-ui-completion-items)
+  (let* ((items lsp-bridge-ui-completion-items)
          (item-max-length 0)
          (theme-mode (format "%s" (frame-parameter nil 'background-mode)))
          icon-map
@@ -354,9 +353,22 @@ specified in `:foreground' or `:background' attribute is used."
 
       (fit-frame-to-buffer-1 lsp-bridge-ui-frame nil nil nil nil nil nil nil)
 
-      (set-frame-position lsp-bridge-ui-frame
-                          (- (car cursor-pos) (* (window-font-width) 3))
-                          (+ (cdr cursor-pos) (line-pixel-height)))
+      (let* ((emacs-width (frame-pixel-width))
+             (emacs-height (frame-pixel-height))
+             (completion-frame-width (frame-pixel-width lsp-bridge-ui-frame))
+             (completion-frame-height (frame-pixel-height lsp-bridge-ui-frame))
+             (cursor-pos (window-absolute-pixel-position))
+             (cursor-x (car cursor-pos))
+             (cursor-y (cdr cursor-pos))
+             (offset-x (* (window-font-width) 3))
+             (offset-y (line-pixel-height))
+             (completion-x (if (> (+ cursor-x completion-frame-width) emacs-width)
+                               (- cursor-x completion-frame-width)
+                             (- cursor-x offset-x)))
+             (completion-y (if (> (+ cursor-y completion-frame-height) emacs-height)
+                               (- cursor-y completion-frame-height)
+                             (+ cursor-y offset-y))))
+        (set-frame-position lsp-bridge-ui-frame completion-x completion-y))
 
       (make-frame-visible lsp-bridge-ui-frame)
       )))
