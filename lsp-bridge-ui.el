@@ -86,51 +86,32 @@
 
 ;;; Code:
 
-(defgroup lsp-bridge-ui-icon nil
-  "SVG icons collection created on the fly."
-  :group 'multimedia)
-
-(defcustom  lsp-bridge-ui-icon-collections
+(defvar  lsp-bridge-ui-icon-collections
   '(("bootstrap" . "https://icons.getbootstrap.com/icons/%s.svg")
     ("material" . "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/svg/%s.svg")
     ("octicons" . "https://raw.githubusercontent.com/primer/octicons/master/icons/%s-24.svg")
-    ("boxicons" . "https://boxicons.com/static/img/svg/regular/bx-%s.svg"))
+    ("boxicons" . "https://boxicons.com/static/img/svg/regular/bx-%s.svg")))
 
-  "Various icons collections stored as (name . base-url).
+(defvar lsp-bridge-ui-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))
 
-The name of the collection is used as a pointer for the various
-icon creation methods. The base-url is a string containing a %s
-such that is can be replaced with the name of a specific icon.
-User is responsible for finding/giving proper names for a given
-collection (there are way too many to store them)."
+(defun lsp-bridge-ui-icon-filepath (collection name)
+  (concat (file-name-as-directory lsp-bridge-ui-icon-dir) (format "%s_%s.svg" collection name)))
 
-  :type '(alist :key-type (string :tag "Name")
-                :value-type (string :tag "URL"))
-  :group 'lsp-bridge-ui-icon)
-
-
-(defun lsp-bridge-ui-icon-get-data (collection name &optional force-reload)
-  "Retrieve icon NAME from COLLECTION.
-
-Cached version is returned if it exists unless FORCE-RELOAD is t."
-
-  ;; Build url from collection and name without checking for error
-  (let ((url (format (cdr (assoc collection lsp-bridge-ui-icon-collections)) name)))
-
-    ;; Get data only if not cached or if explicitely requested
-    (if (or force-reload (not (url-is-cached url)))
-        (let ((url-automatic-caching t)
-              (filename (url-cache-create-filename url)))
-          (with-current-buffer (url-retrieve-synchronously url)
-            (write-region (point-min) (point-max) filename))))
-
-    ;; Get data from cache
-    (let ((buffer (generate-new-buffer " *temp*")))
-      (with-current-buffer buffer
-        (url-cache-extract (url-cache-create-filename url)))
+(defun lsp-bridge-ui-icon-fetch-all ()
+  (interactive)
+  (dolist (icon lsp-bridge-ui-icon-alist)
+    (let* ((collection (nth 0 (cdr icon)))
+           (name (nth 1 (cdr icon)))
+           (url (format (cdr (assoc collection lsp-bridge-ui-icon-collections)) name))
+           (filename (lsp-bridge-ui-icon-filepath collection name)))
       (with-temp-buffer
-        (url-insert-buffer-contents buffer url)
-        (xml-parse-region (point-min) (point-max))))))
+        (url-insert-file-contents url)
+        (write-region (point-min) (point-max) filename)))))
+
+(defun lsp-bridge-ui-icon-parse (collection name)
+  (with-temp-buffer
+    (insert-file-contents (lsp-bridge-ui-icon-filepath collection name))
+    (xml-parse-region (point-min) (point-max))))
 
 (defun lsp-bridge-ui-emacs-color-to-svg-color (color-name)
   "Convert Emacs COLOR-NAME to #rrggbb form.
@@ -149,7 +130,7 @@ level control the size of the icon. Default size is 3x1 characters.
 FG-COLOR or BG-COLOR also could be a face.  In this case colors
 specified in `:foreground' or `:background' attribute is used."
 
-  (let* ((root (lsp-bridge-ui-icon-get-data collection name))
+  (let* ((root (lsp-bridge-ui-icon-parse collection name))
 
          ;; Read original viewbox
          (viewbox (cdr (assq 'viewBox (xml-node-attributes (car root)))))
