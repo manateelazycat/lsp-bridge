@@ -166,7 +166,6 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'boolean
   :group 'lsp-bridge)
 
-
 (defcustom lsp-bridge-enable-diagnostics t
   "Whether to enable diagnostics."
   :type 'boolean
