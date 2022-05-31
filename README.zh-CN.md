@@ -62,6 +62,7 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 * `lsp-bridge-completion-hide-characters`: 这些字符的后面不再弹出补全菜单
 * `lsp-bridge-diagnostics-fetch-idle`： 诊断延迟，默认是停止敲键盘后1秒开始拉取诊断信息
 * `lsp-bridge-enable-auto-import`: 支持自动导入， 默认打开
+* `lsp-bridge-enable-diagnostics`: 代码诊断， 默认打开
 * `lsp-bridge-enable-candidate-doc-preview`: 支持后选词文档预览， 默认打开
 * `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认关闭
 * `lsp-bridge-org-babel-lang-list`: 支持org-mode代码块补全的语言列表

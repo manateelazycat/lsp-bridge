@@ -62,6 +62,7 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 * `lsp-bridge-completion-hide-characters`: completion menu will not popup when cursor after those characters
 * `lsp-bridge-diagnostics-fetch-idle`: diagnostic delay, start pulling diagnostic information 1 second after stopping typing
 * `lsp-bridge-enable-auto-import`: automatic insert import code, enable by default
+* `lsp-bridge-enable-diagnostics`: code diagnostic, enable by default
 * `lsp-bridge-enable-candidate-doc-preview`: preview of the candidate document, enable by default
 * `lsp-bridge-enable-signature-help`: show function parameter in minibufer, disable by default
 * `lsp-bridge-org-babel-lang-list`: list of language to support org-mode code block completion
