@@ -1269,8 +1269,9 @@ If optional MARKER, return a marker instead"
                      (lsp-bridge-mode 1)
                      )))
 
-  (setq lsp-bridge-diagnostics-timer
-        (run-with-idle-timer lsp-bridge-diagnostics-fetch-idle t #'lsp-bridge-diagnostics-fetch)))
+  (when lsp-bridge-enable-diagnostics
+    (setq lsp-bridge-diagnostics-timer
+          (run-with-idle-timer lsp-bridge-diagnostics-fetch-idle t #'lsp-bridge-diagnostics-fetch))))
 
 (with-eval-after-load 'evil
   (evil-add-command-properties #'lsp-bridge-find-def :jump t)
