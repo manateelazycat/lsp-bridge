@@ -1246,13 +1246,18 @@ If optional MARKER, return a marker instead"
             (lsp-bridge-render-markdown-content))
           (corfu-doc--set-vars
            candidate cf-popup-edges (selected-window))
-          )))))
+          ))))
+  ;;  TODO: I will get errors like:
+  ;; ERROR:epc:(return 74 ...): Got too many arguments in the reply: [Symbol('#<window'), 3, Symbol('on'), Symbol('main.py>')]
+  ;; which may be from the last command in `corfu-doc--set-vars'. A `nil' value fixes it but I don't know why.
+  nil)
 
 (defun lsp-bridge-render-markdown-content ()
   (let ((inhibit-message t))
     (if (fboundp 'gfm-view-mode)
         (gfm-view-mode)
       (gfm-mode)))
+  (setq-local mode-line-format nil) ;; Hide mode-line for corfu-doc buffer.
   (display-line-numbers-mode -1)
   (read-only-mode 0)
   (font-lock-ensure))
@@ -1291,7 +1296,9 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge--monitor-candidate-select-advisor (&rest args)
   (when (and lsp-bridge-mode
              lsp-bridge-enable-candidate-doc-preview
-             lsp-bridge-completion-resolve-provider)
+             lsp-bridge-completion-resolve-provider
+             (not (null lsp-bridge-completion-candidates))
+             (member (nth corfu--index corfu--candidates) (hash-table-keys lsp-bridge-completion-candidates))) ;; Check whether current candidate comes from lsp-bridge
     (lsp-bridge-completion-item-fetch (nth corfu--index corfu--candidates))))
 (advice-add #'corfu--goto :after #'lsp-bridge--monitor-candidate-select-advisor)
 (advice-add #'corfu--popup-show :after #'lsp-bridge--monitor-candidate-select-advisor)
