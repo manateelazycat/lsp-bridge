@@ -166,6 +166,11 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'boolean
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-enable-diagnostics nil
+  "Whether to enable diagnostics."
+  :type 'boolean
+  :group 'lsp-bridge)
+
 (defface lsp-bridge-font-lock-flash
   '((t (:inherit highlight)))
   "Face to flash the current line."
@@ -1116,6 +1121,7 @@ If optional MARKER, return a marker instead"
 
 (defun lsp-bridge-diagnostics-fetch ()
   (when (and lsp-bridge-mode
+             lsp-bridge-enable-diagnostics
              (process-live-p lsp-bridge-server)
              (not (lsp-bridge-completion-ui-visible-p))
              (buffer-file-name))
