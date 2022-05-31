@@ -16,10 +16,13 @@ class CompletionItem(Handler):
 
     def process_response(self, response: dict) -> None:
         if response is not None and "documentation" in response:
-            eval_in_emacs("lsp-bridge-update-completion-item-info", 
+            response_doc = response["documentation"]
+            additional_text_edits = response["additionalTextEdits"] if "additionalTextEdits" in response else []
+            documentation = response_doc["value"] if response_doc and "value" in response_doc else ""
+            eval_in_emacs("lsp-bridge-update-completion-item-info",
                           {
                               "filepath": self.file_action.filepath,
                               "label": self.label,
-                              "additionalTextEdits": response["additionalTextEdits"] if "additionalTextEdits" in response else [],
-                              "documentation": response["documentation"]["value"]
+                              "additionalTextEdits": additional_text_edits,
+                              "documentation": documentation
                           })
