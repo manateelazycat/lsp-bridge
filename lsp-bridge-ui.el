@@ -173,7 +173,9 @@ specified in `:foreground' or `:background' attribute is used."
         (svg-node svg 'path :d path :fill fill)))
     (svg-image svg :ascent 'center :scale 1)))
 
-(defvar-local lsp-bridge-ui-backend-items nil)
+(defvar-local lsp-bridge-ui-backend-global-items nil)
+
+(defvar-local lsp-bridge-ui-backend-local-items nil)
 
 (defface lsp-bridge-ui-frame-default-face
   '((t (:height 140)))
@@ -287,7 +289,7 @@ specified in `:foreground' or `:background' attribute is used."
 
 (defun lsp-bridge-ui-popup ()
   (interactive)
-  (let* ((items lsp-bridge-ui-backend-items)
+  (let* ((items lsp-bridge-ui-backend-local-items)
          (item-max-length 0))
     (if (and lsp-bridge-ui-frame
              (frame-live-p lsp-bridge-ui-frame))
@@ -366,12 +368,12 @@ specified in `:foreground' or `:background' attribute is used."
 
 (defun lsp-bridge-ui-update-completion-data (backend-name completion-table)
   ;; Update completion table that match backend-name.
-  (puthash backend-name completion-table lsp-bridge-ui-backend-items))
+  (puthash backend-name completion-table lsp-bridge-ui-backend-local-items))
 
 (defun lsp-bridge-ui-test ()
   (interactive)
-  (unless lsp-bridge-ui-backend-items
-    (setq-local lsp-bridge-ui-backend-items (make-hash-table :test 'equal)))
+  (unless lsp-bridge-ui-backend-local-items
+    (setq-local lsp-bridge-ui-backend-local-items (make-hash-table :test 'equal)))
 
   (let* ((completion-table (make-hash-table :test 'equal))
          items)
