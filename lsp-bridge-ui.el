@@ -183,6 +183,10 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
     (t :background "blue" :foreground "white"))
   "Face used to highlight the currently selected candidate.")
 
+(defface lsp-bridge-ui-deprecated
+  '((t :inherit shadow :strike-through t))
+  "Face used for deprecated candidates.")
+
 (defvar lsp-bridge-ui-frame nil)
 
 (defvar lsp-bridge-ui-buffer " *lsp-bridge-ui-buffer*")
@@ -325,24 +329,24 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                   (candidate (plist-get v :candidate))
                   (annotation (plist-get v :annotation))
                   (item-length (string-width annotation))
-                  item-start-pos
                   item-icon
                   item-str)
+
              (setq item-icon (propertize "----" 'display (lsp-bridge-ui-icon (nth 0 icon) (nth 1 icon) (nth 2 icon))))
+
+             (when (plist-get v :deprecated)
+               (add-face-text-property 0 (length candidate) 'lsp-bridge-ui-deprecated 'append candidate))
              (setq item-str (concat
                              item-icon
                              candidate
                              (propertize " " 'display (lsp-bridge-ui-indent-pixel (ceiling (* (window-font-width) (- (* item-max-length 1.5) item-length)))))
                              (propertize (format "%s \n" annotation) 'face 'font-lock-doc-face)
                              ))
-             (setq item-start-pos (point))
 
-             (if (equal item-index 0)
-                 (progn
-                   (goto-char item-start-pos)
-                   (add-face-text-property 0 (length item-str) 'lsp-bridge-ui-select-face 'append item-str)
-                   (insert item-str))
-               (insert item-str))
+             (when (equal item-index 0)
+               (add-face-text-property 0 (length item-str) 'lsp-bridge-ui-select-face 'append item-str))
+
+             (insert item-str)
 
              (setq item-index (1+ item-index))))
          (gethash "lsp-bridge" items))
@@ -415,7 +419,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                   (:key "16" :icon property :candidate "long-function-name" :annotation "Snippet" :doc "Doc for long-function-name.")
                   (:key "17" :icon prop :candidate "cool-vars-name" :annotation "Function" :doc "Doc for cool-vars-name.")
                   (:key "18" :icon unit :candidate "cool-vars-name" :annotation "Snippet" :doc "Doc for cool-vars-name.")
-                  (:key "19" :icon value :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser.")
+                  (:key "19" :icon value :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser." :deprecated t)
                   (:key "20" :icon enum :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser.")
                   (:key "21" :icon keyword :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser.")
                   (:key "22" :icon k/w :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser.")
