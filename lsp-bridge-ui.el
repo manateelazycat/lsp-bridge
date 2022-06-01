@@ -328,25 +328,28 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
            (let* ((icon (cdr (assq (plist-get v :icon) lsp-bridge-ui-icon-alist)))
                   (candidate (plist-get v :candidate))
                   (annotation (plist-get v :annotation))
-                  (item-length (string-width annotation))
-                  item-icon
-                  item-str)
+                  (annotation-text (if annotation annotation ""))
+                  (item-length (string-width annotation-text))
+                  icon-text
+                  candidate-line)
 
-             (setq item-icon (propertize "----" 'display (lsp-bridge-ui-icon (nth 0 icon) (nth 1 icon) (nth 2 icon))))
+             (setq icon-text (propertize "----" 'display (lsp-bridge-ui-icon (nth 0 icon) (nth 1 icon) (nth 2 icon))))
 
              (when (plist-get v :deprecated)
                (add-face-text-property 0 (length candidate) 'lsp-bridge-ui-deprecated 'append candidate))
-             (setq item-str (concat
-                             item-icon
-                             candidate
-                             (propertize " " 'display (lsp-bridge-ui-indent-pixel (ceiling (* (window-font-width) (- (* item-max-length 1.5) item-length)))))
-                             (propertize (format "%s \n" annotation) 'face 'font-lock-doc-face)
-                             ))
+
+             (setq candidate-line
+                   (concat
+                    icon-text
+                    candidate
+                    (propertize " " 'display (lsp-bridge-ui-indent-pixel (ceiling (* (window-font-width) (- (* item-max-length 1.5) item-length)))))
+                    (propertize (format "%s \n" annotation-text) 'face 'font-lock-doc-face)
+                    ))
 
              (when (equal item-index 0)
-               (add-face-text-property 0 (length item-str) 'lsp-bridge-ui-select-face 'append item-str))
+               (add-face-text-property 0 (length candidate-line) 'lsp-bridge-ui-select-face 'append candidate-line))
 
-             (insert item-str)
+             (insert candidate-line)
 
              (setq item-index (1+ item-index))))
          (gethash "lsp-bridge" items))
@@ -401,7 +404,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   (let* ((completion-table (make-hash-table :test 'equal))
          items)
     (setq items '(
-                  (:key "1" :icon unknown :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser.")
+                  (:key "1" :icon unknown :candidate "expanduser" :doc "Doc for expanduser.")
                   (:key "2" :icon text :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser.")
                   (:key "3" :icon method :candidate "isabs" :annotation "Function" :doc "Doc for isabs.")
                   (:key "4" :icon function :candidate "isabs" :annotation "Snippet" :doc "Doc for isabs.")
@@ -412,11 +415,11 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                   (:key "9" :icon variable :candidate "remove" :annotation "Function" :doc "Doc for remove.")
                   (:key "10" :icon var :candidate "remove" :annotation "Snippet" :doc "Doc for remove.")
                   (:key "11" :icon class :candidate "startswith" :annotation "Function" :doc "Doc for startswith.")
-                  (:key "12" :icon interface :candidate "startswith" :annotation "Snippet" :doc "Doc for startswith.")
+                  (:key "12" :icon interface :candidate "startswith" :doc "Doc for startswith.")
                   (:key "13" :icon i/f :candidate "endswith" :annotation "Function" :doc "Doc for endswith.")
                   (:key "14" :icon module :candidate "endswith" :annotation "Snippet" :doc "Doc for endswith.")
                   (:key "15" :icon mod :candidate "long-function-name" :annotation "Function" :doc "Doc for long-function-name.")
-                  (:key "16" :icon property :candidate "long-function-name" :annotation "Snippet" :doc "Doc for long-function-name.")
+                  (:key "16" :icon property :candidate "long-function-name" :doc "Doc for long-function-name.")
                   (:key "17" :icon prop :candidate "cool-vars-name" :annotation "Function" :doc "Doc for cool-vars-name.")
                   (:key "18" :icon unit :candidate "cool-vars-name" :annotation "Snippet" :doc "Doc for cool-vars-name.")
                   (:key "19" :icon value :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser." :deprecated t)
