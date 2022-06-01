@@ -122,14 +122,6 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
       color-name)))
 
 (defun lsp-bridge-ui-icon (collection name &optional fg-color bg-color zoom)
-  "Build the icon NAME from COLLECTION.
-
-Icon is drawn using FG-COLOR (default is `default' face's foreground)
-on a BG-COLOR background (default transparent). Optional integer ZOOM
-level control the size of the icon. Default size is 3x1 characters.
-FG-COLOR or BG-COLOR also could be a face.  In this case colors
-specified in `:foreground' or `:background' attribute is used."
-
   (let* ((root (lsp-bridge-ui-icon-parse collection name))
 
          ;; Read original viewbox
@@ -140,8 +132,8 @@ specified in `:foreground' or `:background' attribute is used."
          (view-width (nth 2 viewbox))
          (view-height (nth 3 viewbox))
 
-         ;; Set icon size (in pixels) to 3x1 characters
-         (svg-width  (* (window-font-width)  3))
+         ;; Set icon size (in pixels) to 4x1 characters
+         (svg-width  (* (window-font-width)  lsp-bridge-ui-icon-width))
          (svg-height (* (window-font-height) 1))
 
          ;; Zoom the icon by using integer factor only
@@ -177,9 +169,19 @@ specified in `:foreground' or `:background' attribute is used."
 
 (defvar-local lsp-bridge-ui-backend-local-items nil)
 
+(defvar lsp-bridge-ui-icon-width 4)
+
 (defface lsp-bridge-ui-frame-default-face
   '((t (:height 140)))
   "Face for content area.")
+
+(defface lsp-bridge-ui-select-face
+  '((((class color) (min-colors 88) (background dark))
+     :background "#00415e" :foreground "white")
+    (((class color) (min-colors 88) (background light))
+     :background "#c0efff" :foreground "black")
+    (t :background "blue" :foreground "white"))
+  "Face used to highlight the currently selected candidate.")
 
 (defvar lsp-bridge-ui-frame nil)
 
@@ -246,7 +248,7 @@ specified in `:foreground' or `:background' attribute is used."
     (show-trailing-whitespace . nil)
     (display-line-numbers . nil)
     (left-fringe-width . nil)
-    (right-fringe-width . 10)
+    (right-fringe-width . 0)
     (left-margin-width . 0)
     (right-margin-width . 0)
     (fringes-outside-margins . 0)))
@@ -290,7 +292,8 @@ specified in `:foreground' or `:background' attribute is used."
 (defun lsp-bridge-ui-popup ()
   (interactive)
   (let* ((items lsp-bridge-ui-backend-local-items)
-         (item-max-length 0))
+         (item-max-length 0)
+         (item-index 0))
     (if (and lsp-bridge-ui-frame
              (frame-live-p lsp-bridge-ui-frame))
         (make-frame-visible lsp-bridge-ui-frame)
@@ -321,20 +324,36 @@ specified in `:foreground' or `:background' attribute is used."
            (let* ((icon (cdr (assq (plist-get v :icon) lsp-bridge-ui-icon-alist)))
                   (candidate (plist-get v :candidate))
                   (annotation (plist-get v :annotation))
-                  (item-length (string-width annotation)))
-             (insert-image (lsp-bridge-ui-icon (nth 0 icon) (nth 1 icon) (nth 2 icon)))
-             (insert (concat
-                      candidate
-                      (propertize " " 'display (lsp-bridge-ui-indent-pixel (ceiling (* (window-font-width) (- (* item-max-length 1.5) item-length)))))
-                      (propertize (format "%s\n" annotation) 'face 'font-lock-doc-face)
-                      ))))
+                  (item-length (string-width annotation))
+                  item-start-pos
+                  item-icon
+                  item-str)
+             (setq item-icon (propertize "----" 'display (lsp-bridge-ui-icon (nth 0 icon) (nth 1 icon) (nth 2 icon))))
+             (setq item-str (concat
+                             item-icon
+                             candidate
+                             (propertize " " 'display (lsp-bridge-ui-indent-pixel (ceiling (* (window-font-width) (- (* item-max-length 1.5) item-length)))))
+                             (propertize (format "%s \n" annotation) 'face 'font-lock-doc-face)
+                             ))
+             (setq item-start-pos (point))
+
+             (if (equal item-index 0)
+                 (progn
+                   (goto-char item-start-pos)
+                   (add-face-text-property 0 (length item-str) 'lsp-bridge-ui-select-face 'append item-str)
+                   (insert item-str))
+               (insert item-str))
+
+             (setq item-index (1+ item-index))))
          (gethash "lsp-bridge" items))
 
         (when (> (length (hash-table-keys items)) 0)
-          (delete-backward-char 1)))
+          (delete-backward-char 1))
+        )
 
       (with-selected-frame lsp-bridge-ui-frame
-        (switch-to-buffer lsp-bridge-ui-buffer))
+        (switch-to-buffer lsp-bridge-ui-buffer)
+        )
 
       (fit-frame-to-buffer-1 lsp-bridge-ui-frame nil nil nil nil nil nil nil)
 
@@ -345,7 +364,7 @@ specified in `:foreground' or `:background' attribute is used."
              (cursor-pos (window-absolute-pixel-position))
              (cursor-x (car cursor-pos))
              (cursor-y (cdr cursor-pos))
-             (offset-x (* (window-font-width) 3))
+             (offset-x (* (window-font-width) lsp-bridge-ui-icon-width))
              (offset-y (line-pixel-height))
              (completion-x (if (> (+ cursor-x completion-frame-width) emacs-width)
                                (- cursor-x completion-frame-width)
