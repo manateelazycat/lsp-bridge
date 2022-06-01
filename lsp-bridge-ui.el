@@ -333,7 +333,9 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                   icon-text
                   candidate-line)
 
-             (setq icon-text (propertize "----" 'display (lsp-bridge-ui-icon (nth 0 icon) (nth 1 icon) (nth 2 icon))))
+             (setq icon-text (propertize
+                              (apply #'concat (make-list lsp-bridge-ui-icon-width "-"))
+                              'display (lsp-bridge-ui-icon (nth 0 icon) (nth 1 icon) (nth 2 icon))))
 
              (when (plist-get v :deprecated)
                (add-face-text-property 0 (length candidate) 'lsp-bridge-ui-deprecated 'append candidate))
