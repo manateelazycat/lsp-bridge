@@ -99,6 +99,68 @@
     ("octicons" . "https://raw.githubusercontent.com/primer/octicons/master/icons/%s-24.svg")
     ("boxicons" . "https://boxicons.com/static/img/svg/regular/bx-%s.svg")))
 
+(defvar lsp-bridge-ui-icon-alist
+  `((unknown . ("material" "file-find-outline" "#74d2e7"))
+    (text . ("material" "format-text" "#fe5000"))
+    (method . ("material" "cube" "#da1884"))
+    (function . ("material" "function" "#ff6a00"))
+    (fun . ("material" "function-variant" "#0abf53"))
+    (constructor . ("material" "all-inclusive" "#7ac143"))
+    (ctor . ("material" "cube" "#b84592"))
+    (field . ("material" "tag" "#ff6c5f"))
+    (variable . ("material" "variable" "#00b2a9"))
+    (var . ("material" "application-variable" "#e04646"))
+    (class . ("material" "video-input-component" "#ef5734"))
+    (interface . ("material" "share" "#6cbc35"))
+    (i/f . ("material" "share" "#ee3322"))
+    (module . ("material" "sim-outline" "#00c4cc"))
+    (mod . ("material" "view-module" "#ff6908"))
+    (property . ("material" "wrench" "#bf033b"))
+    (prop . ("material" "tools" "#0eb24e"))
+    (unit . ("material" "video-input-hdmi" "#98c807"))
+    (value . ("material" "format-align-right" "#ff0092"))
+    (enum . ("material" "database" "#dc5034"))
+    (keyword . ("material" "filter" "#0085c3"))
+    (k/w . ("material" "filter-outline" "#ed6856"))
+    (snippet . ("material" "format-align-center" "#f05d21"))
+    (sn . ("material" "format-align-center" "#f69653"))
+    (color . ("material" "palette" "#099d84"))
+    (file . ("material" "file-outline" "#e30061"))
+    (reference . ("material" "bookmark-box-multiple" "#954a97"))
+    (ref . ("material" "bookmark-box-multiple-outline" "#006e96"))
+    (folder . ("material" "folder" "#f56040"))
+    (dir . ("material" "folder" "#d25238"))
+    (enum-member . ("material" "google-circles-extended" "#ff9900"))
+    (enummember . ("material" "google-circles-extended" "#8a8acb"))
+    (member . ("material" "guitar-pick" "#e55e5e"))
+    (constant . ("material" "shape-square-plus" "#d1de3f"))
+    (const . ("material" "shape-square-rounded-plus" "#f65314"))
+    (struct . ("material" "vector-square-plus" "#96cbb3"))
+    (event . ("material" "bell" "#e990ab"))
+    (operator . ("material" "plus-circle-outline" "#f47b7b"))
+    (op . ("material" "plus-circle-multiple-outline" "#eb0973"))
+    (type-parameter . ("material" "arrow-split-vertical" "#39a6dd"))
+    (param . ("material" "arrow-split-horizontal" "#ff0e83"))
+    (template . ("material" "file-document-multiple" "#207c88"))
+    (t . ("material" "file-find-outline" "#90cef1"))))
+
+(defvar lsp-bridge-buffer-parameters
+  '((mode-line-format . nil)
+    (header-line-format . nil)
+    (tab-line-format . nil)
+    (tab-bar-format . nil)
+    (frame-title-format . "")
+    (truncate-lines . t)
+    (cursor-in-non-selected-windows . nil)
+    (cursor-type . nil)
+    (show-trailing-whitespace . nil)
+    (display-line-numbers . nil)
+    (left-fringe-width . nil)
+    (right-fringe-width . 0)
+    (left-margin-width . 0)
+    (right-margin-width . 0)
+    (fringes-outside-margins . 0)))
+
 (defvar lsp-bridge-ui-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [remap next-line] #'lsp-bridge-ui-select-next)
@@ -113,21 +175,45 @@
     map)
   "Keymap used when popup is shown.")
 
+(defvar lsp-bridge-ui-buffer " *lsp-bridge-ui-buffer*")
+(defvar lsp-bridge-ui-frame nil)
+
+(defvar lsp-bridge-ui-icon-cache (make-hash-table :test 'equal))
+(defvar lsp-bridge-ui-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))
+(defvar lsp-bridge-ui-icon-width 4)
+(defvar lsp-bridge-ui-menu-max-length-cache 0)
+
+(defvar lsp-bridge-ui-backend-global-items nil)
+(defvar-local lsp-bridge-ui-backend-local-items nil)
+(defvar-local lsp-bridge-ui-candidates nil)
+(defvar-local lsp-bridge-ui-menu-candidates nil)
+(defvar-local lsp-bridge-ui-menu-index -1)
+(defvar-local lsp-bridge-ui-menu-offset 0)
+
+(defface lsp-bridge-ui-default-face
+  '((t (:height 140)))
+  "Face for content area.")
+
+(defface lsp-bridge-ui-select-face
+  '((((class color) (min-colors 88) (background dark))
+     :background "#00415e" :foreground "white")
+    (((class color) (min-colors 88) (background light))
+     :background "#c0efff" :foreground "black")
+    (t :background "blue" :foreground "white"))
+  "Face used to highlight the currently selected candidate.")
+
+(defface lsp-bridge-ui-deprecated-face
+  '((t :inherit shadow :strike-through t))
+  "Face used for deprecated candidates.")
+
+(defsubst lsp-bridge-ui-indent-pixel (xpos)
+  "Return a display property that aligns to XPOS."
+  `(space :align-to (,xpos)))
+
 (define-minor-mode lsp-bridge-ui-mode
   "LSP Bridge mode."
   :keymap lsp-bridge-ui-mode-map
-  :init-value nil
-  (if lsp-bridge-ui-mode
-      (lsp-bridge-ui-enable)
-    (lsp-bridge-ui-disable)))
-
-(defun lsp-bridge-ui-enable ())
-
-(defun lsp-bridge-ui-disable ())
-
-(defvar lsp-bridge-ui-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))
-
-(defvar lsp-bridge-ui-icon-cache (make-hash-table :test 'equal))
+  :init-value nil)
 
 (defun lsp-bridge-ui-icon-filepath (collection name)
   (concat (file-name-as-directory lsp-bridge-ui-icon-dir) (format "%s_%s.svg" collection name)))
@@ -200,103 +286,6 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
         (svg-node svg 'path :d path :fill fill)))
     (svg-image svg :ascent 'center :scale 1)))
 
-(defvar lsp-bridge-ui-backend-global-items nil)
-(defvar-local lsp-bridge-ui-backend-local-items nil)
-(defvar-local lsp-bridge-ui-filter-candidates nil)
-(defvar-local lsp-bridge-ui-menu-candidates nil)
-(defvar-local lsp-bridge-ui-filter-index -1)
-(defvar-local lsp-bridge-ui-menu-index -1)
-(defvar-local lsp-bridge-ui-menu-offset 0)
-
-(defvar lsp-bridge-ui-icon-width 4)
-(defvar lsp-bridge-ui-menu-max-length-cache 0)
-
-(defface lsp-bridge-ui-default-face
-  '((t (:height 140)))
-  "Face for content area.")
-
-(defface lsp-bridge-ui-select-face
-  '((((class color) (min-colors 88) (background dark))
-     :background "#00415e" :foreground "white")
-    (((class color) (min-colors 88) (background light))
-     :background "#c0efff" :foreground "black")
-    (t :background "blue" :foreground "white"))
-  "Face used to highlight the currently selected candidate.")
-
-(defface lsp-bridge-ui-deprecated-face
-  '((t :inherit shadow :strike-through t))
-  "Face used for deprecated candidates.")
-
-(defvar lsp-bridge-ui-frame nil)
-
-(defvar lsp-bridge-ui-buffer " *lsp-bridge-ui-buffer*")
-
-(defsubst lsp-bridge-ui-indent-pixel (xpos)
-  "Return a display property that aligns to XPOS."
-  `(space :align-to (,xpos)))
-
-(defvar lsp-bridge-ui-icon-alist
-  `((unknown . ("material" "file-find-outline" "#74d2e7"))
-    (text . ("material" "format-text" "#fe5000"))
-    (method . ("material" "cube" "#da1884"))
-    (function . ("material" "function" "#ff6a00"))
-    (fun . ("material" "function-variant" "#0abf53"))
-    (constructor . ("material" "all-inclusive" "#7ac143"))
-    (ctor . ("material" "cube" "#b84592"))
-    (field . ("material" "tag" "#ff6c5f"))
-    (variable . ("material" "variable" "#00b2a9"))
-    (var . ("material" "application-variable" "#e04646"))
-    (class . ("material" "video-input-component" "#ef5734"))
-    (interface . ("material" "share" "#6cbc35"))
-    (i/f . ("material" "share" "#ee3322"))
-    (module . ("material" "sim-outline" "#00c4cc"))
-    (mod . ("material" "view-module" "#ff6908"))
-    (property . ("material" "wrench" "#bf033b"))
-    (prop . ("material" "tools" "#0eb24e"))
-    (unit . ("material" "video-input-hdmi" "#98c807"))
-    (value . ("material" "format-align-right" "#ff0092"))
-    (enum . ("material" "database" "#dc5034"))
-    (keyword . ("material" "filter" "#0085c3"))
-    (k/w . ("material" "filter-outline" "#ed6856"))
-    (snippet . ("material" "format-align-center" "#f05d21"))
-    (sn . ("material" "format-align-center" "#f69653"))
-    (color . ("material" "palette" "#099d84"))
-    (file . ("material" "file-outline" "#e30061"))
-    (reference . ("material" "bookmark-box-multiple" "#954a97"))
-    (ref . ("material" "bookmark-box-multiple-outline" "#006e96"))
-    (folder . ("material" "folder" "#f56040"))
-    (dir . ("material" "folder" "#d25238"))
-    (enum-member . ("material" "google-circles-extended" "#ff9900"))
-    (enummember . ("material" "google-circles-extended" "#8a8acb"))
-    (member . ("material" "guitar-pick" "#e55e5e"))
-    (constant . ("material" "shape-square-plus" "#d1de3f"))
-    (const . ("material" "shape-square-rounded-plus" "#f65314"))
-    (struct . ("material" "vector-square-plus" "#96cbb3"))
-    (event . ("material" "bell" "#e990ab"))
-    (operator . ("material" "plus-circle-outline" "#f47b7b"))
-    (op . ("material" "plus-circle-multiple-outline" "#eb0973"))
-    (type-parameter . ("material" "arrow-split-vertical" "#39a6dd"))
-    (param . ("material" "arrow-split-horizontal" "#ff0e83"))
-    (template . ("material" "file-document-multiple" "#207c88"))
-    (t . ("material" "file-find-outline" "#90cef1"))))
-
-(defvar lsp-bridge-buffer-parameters
-  '((mode-line-format . nil)
-    (header-line-format . nil)
-    (tab-line-format . nil)
-    (tab-bar-format . nil)
-    (frame-title-format . "")
-    (truncate-lines . t)
-    (cursor-in-non-selected-windows . nil)
-    (cursor-type . nil)
-    (show-trailing-whitespace . nil)
-    (display-line-numbers . nil)
-    (left-fringe-width . nil)
-    (right-fringe-width . 0)
-    (left-margin-width . 0)
-    (right-margin-width . 0)
-    (fringes-outside-margins . 0)))
-
 (defun lsp-bridge-ui-make-frame (frame-name)
   (make-frame
    `((name . ,frame-name)
@@ -339,8 +328,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
      ,@body
 
      (select-frame current-frame)
-     (switch-to-buffer current-buffer)
-     ))
+     (switch-to-buffer current-buffer)))
 
 (defun lsp-bridge-ui-popup ()
   (interactive)
@@ -442,16 +430,13 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
 (defun lsp-bridge-ui-icon-build (collection name fg-color)
   (let* ((icon-key (format "%s_%s" collection name))
-         (icon-cache (gethash icon-key lsp-bridge-ui-icon-cache))
-         icon-text)
-    (if icon-cache
-        icon-cache
+         (icon-text (gethash icon-key lsp-bridge-ui-icon-cache)))
+    (unless icon-text
       (setq icon-text (propertize
                        (apply #'concat (make-list lsp-bridge-ui-icon-width "-"))
                        'display (lsp-bridge-ui-icon collection name fg-color)))
-      (puthash icon-key icon-text lsp-bridge-ui-icon-cache)
-      icon-text
-      )))
+      (puthash icon-key icon-text lsp-bridge-ui-icon-cache))
+    icon-text))
 
 (defun lsp-bridge-ui-hide ()
   (interactive)
@@ -468,7 +453,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   (puthash backend-name completion-table lsp-bridge-ui-backend-local-items))
 
 (defun lsp-bridge-ui-search-items (keyboard)
-  (setq-local lsp-bridge-ui-filter-candidates (list))
+  (setq-local lsp-bridge-ui-candidates (list))
 
   (dolist (backend-hash-table (list lsp-bridge-ui-backend-global-items
                                     lsp-bridge-ui-backend-local-items))
@@ -478,25 +463,23 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
         (maphash
          (lambda (k v)
            (when (string-match-p (lsp-bridge-ui-build-fuzzy-regex keyboard) (plist-get v :candidate))
-             (add-to-list 'lsp-bridge-ui-filter-candidates v t)
+             (add-to-list 'lsp-bridge-ui-candidates v t)
              ))
          (gethash backend-name backend-hash-table)
          ))))
 
   (setq-local lsp-bridge-ui-menu-candidates
-              (cl-subseq lsp-bridge-ui-filter-candidates
-                         0 (min (length lsp-bridge-ui-filter-candidates)
+              (cl-subseq lsp-bridge-ui-candidates
+                         0 (min (length lsp-bridge-ui-candidates)
                                 lsp-bridge-ui-menu-length)))
-  (setq-local lsp-bridge-ui-filter-index
-              (if (zerop (length lsp-bridge-ui-menu-candidates)) -1 0))
-  (setq-local lsp-bridge-ui-menu-index lsp-bridge-ui-filter-index)
+  (setq-local lsp-bridge-ui-menu-index (if (zerop (length lsp-bridge-ui-menu-candidates)) -1 0))
   (setq-local lsp-bridge-ui-menu-offset 0))
 
 (defun lsp-bridge-ui-menu-update-candidates ()
   (let ((menu-length (length lsp-bridge-ui-menu-candidates)))
-    (when (> (length lsp-bridge-ui-filter-candidates) menu-length)
+    (when (> (length lsp-bridge-ui-candidates) menu-length)
       (setq-local lsp-bridge-ui-menu-candidates
-                  (cl-subseq lsp-bridge-ui-filter-candidates
+                  (cl-subseq lsp-bridge-ui-candidates
                              lsp-bridge-ui-menu-offset
                              (+ lsp-bridge-ui-menu-offset menu-length))))))
 
@@ -526,7 +509,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   (interactive)
   (lsp-bridge-ui-menu-update
    (let ((menu-length (length lsp-bridge-ui-menu-candidates)))
-     (setq-local lsp-bridge-ui-menu-offset (- (length lsp-bridge-ui-filter-candidates) menu-length))
+     (setq-local lsp-bridge-ui-menu-offset (- (length lsp-bridge-ui-candidates) menu-length))
      (setq-local lsp-bridge-ui-menu-index (- menu-length 1))
      )))
 
@@ -535,7 +518,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   (lsp-bridge-ui-menu-update
    (cond ((< lsp-bridge-ui-menu-index (1- (length lsp-bridge-ui-menu-candidates)))
           (setq-local lsp-bridge-ui-menu-index (1+ lsp-bridge-ui-menu-index)))
-         ((< (+ lsp-bridge-ui-menu-offset lsp-bridge-ui-menu-index) (1- (length lsp-bridge-ui-filter-candidates)))
+         ((< (+ lsp-bridge-ui-menu-offset lsp-bridge-ui-menu-index) (1- (length lsp-bridge-ui-candidates)))
           (setq-local lsp-bridge-ui-menu-offset (1+ lsp-bridge-ui-menu-offset))))))
 
 (defun lsp-bridge-ui-select-prev ()
