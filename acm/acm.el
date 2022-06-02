@@ -1,7 +1,7 @@
 ;; -*- lexical-binding: t; -*-
-;;; lsp-bridge-ui.el --- Asynchronous Completion Menu
+;;; acm.el --- Asynchronous Completion Menu
 
-;; Filename: lsp-bridge-ui.el
+;; Filename: acm.el
 ;; Description: Asynchronous Completion Menu
 ;; Author: Andy Stewart <lazycat.manatee@gmail.com>
 ;; Maintainer: Andy Stewart <lazycat.manatee@gmail.com>
@@ -10,7 +10,7 @@
 ;; Version: 0.1
 ;; Last-Updated: 2022-05-31 16:29:33
 ;;           By: Andy Stewart
-;; URL: https://www.github.org/manateelazycat/lsp-bridge-ui
+;; URL: https://www.github.org/manateelazycat/acm
 ;; Keywords:
 ;; Compatibility: GNU Emacs 28.1
 ;;
@@ -45,14 +45,14 @@
 
 ;;; Installation:
 ;;
-;; Put lsp-bridge-ui.el to your load-path.
+;; Put acm.el to your load-path.
 ;; The load-path is usually ~/elisp/.
 ;; It's set in your ~/.emacs like this:
 ;; (add-to-list 'load-path (expand-file-name "~/elisp"))
 ;;
 ;; And the following to your ~/.emacs startup file.
 ;;
-;; (require 'lsp-bridge-ui)
+;; (require 'acm)
 ;;
 ;; No need more.
 
@@ -61,7 +61,7 @@
 ;;
 ;;
 ;; All of the above can customize by:
-;;      M-x customize-group RET lsp-bridge-ui RET
+;;      M-x customize-group RET acm RET
 ;;
 
 ;;; Change log:
@@ -89,17 +89,17 @@
 
 ;;; Code:
 
-(defcustom lsp-bridge-ui-menu-length 10
+(defcustom acm-menu-length 10
   "Maximal number of candidates to show."
   :type 'integer)
 
-(defvar  lsp-bridge-ui-icon-collections
+(defvar  acm-icon-collections
   '(("bootstrap" . "https://icons.getbootstrap.com/icons/%s.svg")
     ("material" . "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/svg/%s.svg")
     ("octicons" . "https://raw.githubusercontent.com/primer/octicons/master/icons/%s-24.svg")
     ("boxicons" . "https://boxicons.com/static/img/svg/regular/bx-%s.svg")))
 
-(defvar lsp-bridge-ui-icon-alist
+(defvar acm-icon-alist
   `((unknown . ("material" "file-find-outline" "#74d2e7"))
     (text . ("material" "format-text" "#fe5000"))
     (method . ("material" "cube" "#da1884"))
@@ -161,41 +161,41 @@
     (right-margin-width . 0)
     (fringes-outside-margins . 0)))
 
-(defvar lsp-bridge-ui-mode-map
+(defvar acm-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map [remap next-line] #'lsp-bridge-ui-select-next)
-    (define-key map [remap previous-line] #'lsp-bridge-ui-select-prev)
-    (define-key map [down] #'lsp-bridge-ui-select-next)
-    (define-key map [up] #'lsp-bridge-ui-select-prev)
-    (define-key map "\M-n" #'lsp-bridge-ui-select-next)
-    (define-key map "\M-p" #'lsp-bridge-ui-select-prev)
-    (define-key map "\M-," #'lsp-bridge-ui-select-last)
-    (define-key map "\M-." #'lsp-bridge-ui-select-first)
-    (define-key map "\C-g" #'lsp-bridge-ui-hide)
+    (define-key map [remap next-line] #'acm-select-next)
+    (define-key map [remap previous-line] #'acm-select-prev)
+    (define-key map [down] #'acm-select-next)
+    (define-key map [up] #'acm-select-prev)
+    (define-key map "\M-n" #'acm-select-next)
+    (define-key map "\M-p" #'acm-select-prev)
+    (define-key map "\M-," #'acm-select-last)
+    (define-key map "\M-." #'acm-select-first)
+    (define-key map "\C-g" #'acm-hide)
     map)
   "Keymap used when popup is shown.")
 
-(defvar lsp-bridge-ui-buffer " *lsp-bridge-ui-buffer*")
-(defvar lsp-bridge-ui-frame nil)
+(defvar acm-buffer " *acm-buffer*")
+(defvar acm-frame nil)
 
-(defvar lsp-bridge-ui-icon-cache (make-hash-table :test 'equal))
-(defvar lsp-bridge-ui-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))
-(defvar lsp-bridge-ui-icon-width 4)
+(defvar acm-icon-cache (make-hash-table :test 'equal))
+(defvar acm-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))
+(defvar acm-icon-width 4)
 
-(defvar lsp-bridge-ui-menu-max-length-cache 0)
+(defvar acm-menu-max-length-cache 0)
 
-(defvar lsp-bridge-ui-backend-global-items nil)
-(defvar-local lsp-bridge-ui-backend-local-items nil)
-(defvar-local lsp-bridge-ui-candidates nil)
-(defvar-local lsp-bridge-ui-menu-candidates nil)
-(defvar-local lsp-bridge-ui-menu-index -1)
-(defvar-local lsp-bridge-ui-menu-offset 0)
+(defvar acm-backend-global-items nil)
+(defvar-local acm-backend-local-items nil)
+(defvar-local acm-candidates nil)
+(defvar-local acm-menu-candidates nil)
+(defvar-local acm-menu-index -1)
+(defvar-local acm-menu-offset 0)
 
-(defface lsp-bridge-ui-default-face
+(defface acm-default-face
   '((t (:height 140)))
   "Face for content area.")
 
-(defface lsp-bridge-ui-select-face
+(defface acm-select-face
   '((((class color) (min-colors 88) (background dark))
      :background "#00415e" :foreground "white")
     (((class color) (min-colors 88) (background light))
@@ -203,39 +203,39 @@
     (t :background "blue" :foreground "white"))
   "Face used to highlight the currently selected candidate.")
 
-(defface lsp-bridge-ui-deprecated-face
+(defface acm-deprecated-face
   '((t :inherit shadow :strike-through t))
   "Face used for deprecated candidates.")
 
-(defsubst lsp-bridge-ui-indent-pixel (xpos)
+(defsubst acm-indent-pixel (xpos)
   "Return a display property that aligns to XPOS."
   `(space :align-to (,xpos)))
 
-(define-minor-mode lsp-bridge-ui-mode
+(define-minor-mode acm-mode
   "LSP Bridge mode."
-  :keymap lsp-bridge-ui-mode-map
+  :keymap acm-mode-map
   :init-value nil)
 
-(defun lsp-bridge-ui-icon-filepath (collection name)
-  (concat (file-name-as-directory lsp-bridge-ui-icon-dir) (format "%s_%s.svg" collection name)))
+(defun acm-icon-filepath (collection name)
+  (concat (file-name-as-directory acm-icon-dir) (format "%s_%s.svg" collection name)))
 
-(defun lsp-bridge-ui-icon-fetch-all ()
+(defun acm-icon-fetch-all ()
   (interactive)
-  (dolist (icon lsp-bridge-ui-icon-alist)
+  (dolist (icon acm-icon-alist)
     (let* ((collection (nth 0 (cdr icon)))
            (name (nth 1 (cdr icon)))
-           (url (format (cdr (assoc collection lsp-bridge-ui-icon-collections)) name))
-           (filename (lsp-bridge-ui-icon-filepath collection name)))
+           (url (format (cdr (assoc collection acm-icon-collections)) name))
+           (filename (acm-icon-filepath collection name)))
       (with-temp-buffer
         (url-insert-file-contents url)
         (write-region (point-min) (point-max) filename)))))
 
-(defun lsp-bridge-ui-icon-parse (collection name)
+(defun acm-icon-parse (collection name)
   (with-temp-buffer
-    (insert-file-contents (lsp-bridge-ui-icon-filepath collection name))
+    (insert-file-contents (acm-icon-filepath collection name))
     (xml-parse-region (point-min) (point-max))))
 
-(defun lsp-bridge-ui-emacs-color-to-svg-color (color-name)
+(defun acm-emacs-color-to-svg-color (color-name)
   "Convert Emacs COLOR-NAME to #rrggbb form.
 If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   (let ((rgb-color (color-name-to-rgb color-name)))
@@ -243,8 +243,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
         (apply #'color-rgb-to-hex (append rgb-color '(2)))
       color-name)))
 
-(defun lsp-bridge-ui-icon (collection name &optional fg-color bg-color zoom)
-  (let* ((root (lsp-bridge-ui-icon-parse collection name))
+(defun acm-icon (collection name &optional fg-color bg-color zoom)
+  (let* ((root (acm-icon-parse collection name))
 
          ;; Read original viewbox
          (viewbox (cdr (assq 'viewBox (xml-node-attributes (car root)))))
@@ -255,7 +255,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          (view-height (nth 3 viewbox))
 
          ;; Set icon size (in pixels) to 4x1 characters
-         (svg-width  (* (window-font-width)  lsp-bridge-ui-icon-width))
+         (svg-width  (* (window-font-width)  acm-icon-width))
          (svg-height (* (window-font-height) 1))
 
          ;; Zoom the icon by using integer factor only
@@ -264,11 +264,11 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          (svg-height (* svg-height zoom))
 
          (svg-viewbox (format "%f %f %f %f" view-x view-y view-width view-height))
-         (fg-color (lsp-bridge-ui-emacs-color-to-svg-color
+         (fg-color (acm-emacs-color-to-svg-color
                     (or (when (facep fg-color)
                           (face-foreground fg-color nil t))
                         fg-color (face-attribute 'default :foreground))))
-         (bg-color (lsp-bridge-ui-emacs-color-to-svg-color
+         (bg-color (acm-emacs-color-to-svg-color
                     (or (when (facep bg-color)
                           (face-background bg-color nil t))
                         bg-color "transparent")))
@@ -287,7 +287,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
         (svg-node svg 'path :d path :fill fill)))
     (svg-image svg :ascent 'center :scale 1)))
 
-(defun lsp-bridge-ui-make-frame (frame-name)
+(defun acm-make-frame (frame-name)
   (make-frame
    `((name . ,frame-name)
      (parent-frame . (selected-frame))
@@ -319,11 +319,11 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
      (internal-border-width . 1)
      )))
 
-(defun lsp-bridge-ui-frame-background-color ()
+(defun acm-frame-background-color ()
   (let ((theme-mode (format "%s" (frame-parameter nil 'background-mode))))
     (if (string-equal theme-mode "dark") "#191a1b" "#f0f0f0")))
 
-(defmacro lsp-bridge-ui-save-frame (&rest body)
+(defmacro acm-save-frame (&rest body)
   `(let* ((current-frame ,(selected-frame))
           (current-buffer ,(current-buffer)))
      ,@body
@@ -331,41 +331,41 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
      (select-frame current-frame)
      (switch-to-buffer current-buffer)))
 
-(defun lsp-bridge-ui-popup ()
+(defun acm-popup ()
   (interactive)
-  (lsp-bridge-ui-save-frame
-   (lsp-bridge-ui-mode 1)
+  (acm-save-frame
+   (acm-mode 1)
 
-   (if (and lsp-bridge-ui-frame
-            (frame-live-p lsp-bridge-ui-frame))
-       (make-frame-visible lsp-bridge-ui-frame)
+   (if (and acm-frame
+            (frame-live-p acm-frame))
+       (make-frame-visible acm-frame)
 
-     (setq lsp-bridge-ui-frame (lsp-bridge-ui-make-frame "lsp-bridge-ui frame"))
-     (set-frame-parameter lsp-bridge-ui-frame 'background-color (lsp-bridge-ui-frame-background-color))
+     (setq acm-frame (acm-make-frame "acm frame"))
+     (set-frame-parameter acm-frame 'background-color (acm-frame-background-color))
 
-     (with-current-buffer (get-buffer-create lsp-bridge-ui-buffer)
+     (with-current-buffer (get-buffer-create acm-buffer)
        (dolist (var lsp-bridge-buffer-parameters)
          (set (make-local-variable (car var)) (cdr var)))
-       (buffer-face-set 'lsp-bridge-ui-default-face))
+       (buffer-face-set 'acm-default-face))
 
-     (with-selected-frame lsp-bridge-ui-frame
-       (switch-to-buffer lsp-bridge-ui-buffer))
+     (with-selected-frame acm-frame
+       (switch-to-buffer acm-buffer))
 
-     (lsp-bridge-ui-menu-render t)
+     (acm-menu-render t)
 
-     (make-frame-visible lsp-bridge-ui-frame)
+     (make-frame-visible acm-frame)
      )))
 
-(defun lsp-bridge-ui-menu-max-length ()
+(defun acm-menu-max-length ()
   (cl-reduce #'max
              (mapcar '(lambda (v)
                         (string-width (format "%s %s" (plist-get v :candidate) (plist-get v :annotation))))
-                     lsp-bridge-ui-menu-candidates)))
+                     acm-menu-candidates)))
 
-(defun lsp-bridge-ui-menu-render-items (items menu-index)
+(defun acm-menu-render-items (items menu-index)
   (let ((item-index 0))
     (dolist (v items)
-      (let* ((icon (cdr (assq (plist-get v :icon) lsp-bridge-ui-icon-alist)))
+      (let* ((icon (cdr (assq (plist-get v :icon) acm-icon-alist)))
              (candidate (plist-get v :candidate))
              (annotation (plist-get v :annotation))
              (annotation-text (if annotation annotation ""))
@@ -373,10 +373,10 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
              icon-text
              candidate-line)
 
-        (setq icon-text (lsp-bridge-ui-icon-build (nth 0 icon) (nth 1 icon) (nth 2 icon)))
+        (setq icon-text (acm-icon-build (nth 0 icon) (nth 1 icon) (nth 2 icon)))
 
         (when (plist-get v :deprecated)
-          (add-face-text-property 0 (length candidate) 'lsp-bridge-ui-deprecated-face 'append candidate))
+          (add-face-text-property 0 (length candidate) 'acm-deprecated-face 'append candidate))
 
         (setq candidate-line
               (concat
@@ -384,13 +384,13 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                candidate
                (propertize " "
                            'display
-                           (lsp-bridge-ui-indent-pixel
-                            (ceiling (* (window-font-width) (- (* lsp-bridge-ui-menu-max-length-cache 1.5) item-length)))))
+                           (acm-indent-pixel
+                            (ceiling (* (window-font-width) (- (* acm-menu-max-length-cache 1.5) item-length)))))
                (propertize (format "%s \n" annotation-text) 'face 'font-lock-doc-face)
                ))
 
         (when (equal item-index menu-index)
-          (add-face-text-property 0 (length candidate-line) 'lsp-bridge-ui-select-face 'append candidate-line))
+          (add-face-text-property 0 (length candidate-line) 'acm-select-face 'append candidate-line))
 
         (insert candidate-line)
 
@@ -399,15 +399,15 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
         (setq item-index (1+ item-index))))))
 
-(defun lsp-bridge-ui-menu-adjust-pos ()
+(defun acm-menu-adjust-pos ()
   (let* ((emacs-width (frame-pixel-width))
          (emacs-height (frame-pixel-height))
-         (completion-frame-width (frame-pixel-width lsp-bridge-ui-frame))
-         (completion-frame-height (frame-pixel-height lsp-bridge-ui-frame))
+         (completion-frame-width (frame-pixel-width acm-frame))
+         (completion-frame-height (frame-pixel-height acm-frame))
          (cursor-pos (window-absolute-pixel-position))
          (cursor-x (car cursor-pos))
          (cursor-y (cdr cursor-pos))
-         (offset-x (* (window-font-width) lsp-bridge-ui-icon-width))
+         (offset-x (* (window-font-width) acm-icon-width))
          (offset-y (line-pixel-height))
          (completion-x (if (> (+ cursor-x completion-frame-width) emacs-width)
                            (- cursor-x completion-frame-width)
@@ -415,137 +415,137 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          (completion-y (if (> (+ cursor-y completion-frame-height) emacs-height)
                            (- cursor-y completion-frame-height)
                          (+ cursor-y offset-y))))
-    (set-frame-position lsp-bridge-ui-frame completion-x completion-y)))
+    (set-frame-position acm-frame completion-x completion-y)))
 
-(defun lsp-bridge-ui-menu-render (adjust-size &optional menu-max-length)
-  (let* ((items lsp-bridge-ui-menu-candidates)
-         (menu-index lsp-bridge-ui-menu-index))
+(defun acm-menu-render (adjust-size &optional menu-max-length)
+  (let* ((items acm-menu-candidates)
+         (menu-index acm-menu-index))
 
-    (setq lsp-bridge-ui-menu-max-length-cache
-          (if menu-max-length menu-max-length (lsp-bridge-ui-menu-max-length)))
+    (setq acm-menu-max-length-cache
+          (if menu-max-length menu-max-length (acm-menu-max-length)))
 
-    (with-current-buffer (get-buffer-create lsp-bridge-ui-buffer)
+    (with-current-buffer (get-buffer-create acm-buffer)
       (erase-buffer)
-      (lsp-bridge-ui-menu-render-items items menu-index))
+      (acm-menu-render-items items menu-index))
 
     (when adjust-size
-      (fit-frame-to-buffer-1 lsp-bridge-ui-frame nil nil nil nil nil nil nil))
+      (fit-frame-to-buffer-1 acm-frame nil nil nil nil nil nil nil))
 
-    (lsp-bridge-ui-menu-adjust-pos)
+    (acm-menu-adjust-pos)
     ))
 
-(defun lsp-bridge-ui-icon-build (collection name fg-color)
+(defun acm-icon-build (collection name fg-color)
   (let* ((icon-key (format "%s_%s" collection name))
-         (icon-text (gethash icon-key lsp-bridge-ui-icon-cache)))
+         (icon-text (gethash icon-key acm-icon-cache)))
     (unless icon-text
       (setq icon-text (propertize
-                       (apply #'concat (make-list lsp-bridge-ui-icon-width "-"))
-                       'display (lsp-bridge-ui-icon collection name fg-color)))
-      (puthash icon-key icon-text lsp-bridge-ui-icon-cache))
+                       (apply #'concat (make-list acm-icon-width "-"))
+                       'display (acm-icon collection name fg-color)))
+      (puthash icon-key icon-text acm-icon-cache))
     icon-text))
 
-(defun lsp-bridge-ui-hide ()
+(defun acm-hide ()
   (interactive)
-  (when lsp-bridge-ui-frame
-    (lsp-bridge-ui-mode -1)
+  (when acm-frame
+    (acm-mode -1)
 
-    (make-frame-invisible lsp-bridge-ui-frame)
-    (delete-frame lsp-bridge-ui-frame)
-    (kill-buffer lsp-bridge-ui-buffer)
-    (setq lsp-bridge-ui-frame nil)))
+    (make-frame-invisible acm-frame)
+    (delete-frame acm-frame)
+    (kill-buffer acm-buffer)
+    (setq acm-frame nil)))
 
-(defun lsp-bridge-ui-update-completion-data (backend-name completion-table)
+(defun acm-update-completion-data (backend-name completion-table)
   ;; Update completion table that match backend-name.
-  (puthash backend-name completion-table lsp-bridge-ui-backend-local-items))
+  (puthash backend-name completion-table acm-backend-local-items))
 
-(defun lsp-bridge-ui-search-items (keyboard)
-  (setq-local lsp-bridge-ui-candidates (list))
+(defun acm-search-items (keyboard)
+  (setq-local acm-candidates (list))
 
-  (dolist (backend-hash-table (list lsp-bridge-ui-backend-global-items
-                                    lsp-bridge-ui-backend-local-items))
+  (dolist (backend-hash-table (list acm-backend-global-items
+                                    acm-backend-local-items))
     (when (and backend-hash-table
                (hash-table-p backend-hash-table))
       (dolist (backend-name (hash-table-keys backend-hash-table))
         (maphash
          (lambda (k v)
-           (when (string-match-p (lsp-bridge-ui-build-fuzzy-regex keyboard) (plist-get v :candidate))
-             (add-to-list 'lsp-bridge-ui-candidates v t)
+           (when (string-match-p (acm-build-fuzzy-regex keyboard) (plist-get v :candidate))
+             (add-to-list 'acm-candidates v t)
              ))
          (gethash backend-name backend-hash-table)
          ))))
 
-  (setq-local lsp-bridge-ui-menu-candidates
-              (cl-subseq lsp-bridge-ui-candidates
-                         0 (min (length lsp-bridge-ui-candidates)
-                                lsp-bridge-ui-menu-length)))
-  (setq-local lsp-bridge-ui-menu-index (if (zerop (length lsp-bridge-ui-menu-candidates)) -1 0))
-  (setq-local lsp-bridge-ui-menu-offset 0))
+  (setq-local acm-menu-candidates
+              (cl-subseq acm-candidates
+                         0 (min (length acm-candidates)
+                                acm-menu-length)))
+  (setq-local acm-menu-index (if (zerop (length acm-menu-candidates)) -1 0))
+  (setq-local acm-menu-offset 0))
 
-(defun lsp-bridge-ui-menu-update-candidates ()
-  (let ((menu-length (length lsp-bridge-ui-menu-candidates)))
-    (when (> (length lsp-bridge-ui-candidates) menu-length)
-      (setq-local lsp-bridge-ui-menu-candidates
-                  (cl-subseq lsp-bridge-ui-candidates
-                             lsp-bridge-ui-menu-offset
-                             (+ lsp-bridge-ui-menu-offset menu-length))))))
+(defun acm-menu-update-candidates ()
+  (let ((menu-length (length acm-menu-candidates)))
+    (when (> (length acm-candidates) menu-length)
+      (setq-local acm-menu-candidates
+                  (cl-subseq acm-candidates
+                             acm-menu-offset
+                             (+ acm-menu-offset menu-length))))))
 
-(defmacro lsp-bridge-ui-menu-update (&rest body)
-  `(let* ((menu-old-index lsp-bridge-ui-menu-index)
-          (menu-old-offset lsp-bridge-ui-menu-offset)
-          (menu-old-max-length lsp-bridge-ui-menu-max-length-cache)
+(defmacro acm-menu-update (&rest body)
+  `(let* ((menu-old-index acm-menu-index)
+          (menu-old-offset acm-menu-offset)
+          (menu-old-max-length acm-menu-max-length-cache)
           menu-new-max-length)
      ,@body
 
-     (when (or (not (equal menu-old-index lsp-bridge-ui-menu-index))
-               (not (equal menu-old-offset lsp-bridge-ui-menu-offset)))
-       (lsp-bridge-ui-save-frame
-        (lsp-bridge-ui-menu-update-candidates)
-        (setq menu-new-max-length (lsp-bridge-ui-menu-max-length))
-        (lsp-bridge-ui-menu-render (not (equal menu-old-max-length menu-new-max-length))
-                                   menu-new-max-length
-                                   )))))
+     (when (or (not (equal menu-old-index acm-menu-index))
+               (not (equal menu-old-offset acm-menu-offset)))
+       (acm-save-frame
+        (acm-menu-update-candidates)
+        (setq menu-new-max-length (acm-menu-max-length))
+        (acm-menu-render (not (equal menu-old-max-length menu-new-max-length))
+                         menu-new-max-length
+                         )))))
 
-(defun lsp-bridge-ui-select-first ()
+(defun acm-select-first ()
   (interactive)
-  (lsp-bridge-ui-menu-update
-   (setq-local lsp-bridge-ui-menu-offset 0)
-   (setq-local lsp-bridge-ui-menu-index 0)))
+  (acm-menu-update
+   (setq-local acm-menu-offset 0)
+   (setq-local acm-menu-index 0)))
 
-(defun lsp-bridge-ui-select-last ()
+(defun acm-select-last ()
   (interactive)
-  (lsp-bridge-ui-menu-update
-   (let ((menu-length (length lsp-bridge-ui-menu-candidates)))
-     (setq-local lsp-bridge-ui-menu-offset (- (length lsp-bridge-ui-candidates) menu-length))
-     (setq-local lsp-bridge-ui-menu-index (- menu-length 1))
+  (acm-menu-update
+   (let ((menu-length (length acm-menu-candidates)))
+     (setq-local acm-menu-offset (- (length acm-candidates) menu-length))
+     (setq-local acm-menu-index (- menu-length 1))
      )))
 
-(defun lsp-bridge-ui-select-next ()
+(defun acm-select-next ()
   (interactive)
-  (lsp-bridge-ui-menu-update
-   (cond ((< lsp-bridge-ui-menu-index (1- (length lsp-bridge-ui-menu-candidates)))
-          (setq-local lsp-bridge-ui-menu-index (1+ lsp-bridge-ui-menu-index)))
-         ((< (+ lsp-bridge-ui-menu-offset lsp-bridge-ui-menu-index) (1- (length lsp-bridge-ui-candidates)))
-          (setq-local lsp-bridge-ui-menu-offset (1+ lsp-bridge-ui-menu-offset))))))
+  (acm-menu-update
+   (cond ((< acm-menu-index (1- (length acm-menu-candidates)))
+          (setq-local acm-menu-index (1+ acm-menu-index)))
+         ((< (+ acm-menu-offset acm-menu-index) (1- (length acm-candidates)))
+          (setq-local acm-menu-offset (1+ acm-menu-offset))))))
 
-(defun lsp-bridge-ui-select-prev ()
+(defun acm-select-prev ()
   (interactive)
-  (lsp-bridge-ui-menu-update
-   (cond ((> lsp-bridge-ui-menu-index 0)
-          (setq-local lsp-bridge-ui-menu-index (1- lsp-bridge-ui-menu-index)))
-         ((> lsp-bridge-ui-menu-offset 0)
-          (setq-local lsp-bridge-ui-menu-offset (1- lsp-bridge-ui-menu-offset))))))
+  (acm-menu-update
+   (cond ((> acm-menu-index 0)
+          (setq-local acm-menu-index (1- acm-menu-index)))
+         ((> acm-menu-offset 0)
+          (setq-local acm-menu-offset (1- acm-menu-offset))))))
 
-(defun lsp-bridge-ui-build-fuzzy-regex (input)
+(defun acm-build-fuzzy-regex (input)
   "Create a fuzzy regexp of PATTERN."
   (mapconcat (lambda (ch)
                (let ((s (char-to-string ch)))
                  (format "[^%s]*%s" s (regexp-quote s))))
              input ""))
 
-(defun lsp-bridge-ui-test ()
+(defun acm-test ()
   (interactive)
-  (unless lsp-bridge-ui-backend-local-items
-    (setq-local lsp-bridge-ui-backend-local-items (make-hash-table :test 'equal)))
+  (unless acm-backend-local-items
+    (setq-local acm-backend-local-items (make-hash-table :test 'equal)))
 
   (let* ((completion-table (make-hash-table :test 'equal))
          items)
@@ -596,12 +596,12 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
     (dolist (item items)
       (puthash (plist-get item :key) item completion-table))
 
-    (lsp-bridge-ui-update-completion-data "lsp-bridge" completion-table)
+    (acm-update-completion-data "lsp-bridge" completion-table)
 
-    (lsp-bridge-ui-search-items "e")
+    (acm-search-items "e")
 
-    (lsp-bridge-ui-popup)))
+    (acm-popup)))
 
-(provide 'lsp-bridge-ui)
+(provide 'acm)
 
-;;; lsp-bridge-ui.el ends here
+;;; acm.el ends here
