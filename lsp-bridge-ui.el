@@ -97,6 +97,32 @@
     ("octicons" . "https://raw.githubusercontent.com/primer/octicons/master/icons/%s-24.svg")
     ("boxicons" . "https://boxicons.com/static/img/svg/regular/bx-%s.svg")))
 
+(defvar lsp-bridge-ui-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [remap next-line] #'lsp-bridge-ui-select-next)
+    (define-key map [remap previous-line] #'lsp-bridge-ui-select-prev)
+    (define-key map [down] #'lsp-bridge-ui-select-next)
+    (define-key map [up] #'lsp-bridge-ui-select-prev)
+    (define-key map "\M-n" #'lsp-bridge-ui-select-next)
+    (define-key map "\M-p" #'lsp-bridge-ui-select-prev)
+    (define-key map "\M-," #'lsp-bridge-ui-select-last)
+    (define-key map "\M-." #'lsp-bridge-ui-select-first)
+    (define-key map "\C-g" #'lsp-bridge-ui-hide)
+    map)
+  "Keymap used when popup is shown.")
+
+(define-minor-mode lsp-bridge-ui-mode
+  "LSP Bridge mode."
+  :keymap lsp-bridge-ui-mode-map
+  :init-value nil
+  (if lsp-bridge-ui-mode
+      (lsp-bridge-ui-enable)
+    (lsp-bridge-ui-disable)))
+
+(defun lsp-bridge-ui-enable ())
+
+(defun lsp-bridge-ui-disable ())
+
 (defvar lsp-bridge-ui-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))
 
 (defun lsp-bridge-ui-icon-filepath (collection name)
@@ -314,6 +340,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defun lsp-bridge-ui-popup ()
   (interactive)
   (lsp-bridge-ui-save-frame
+   (lsp-bridge-ui-mode 1)
+
    (if (and lsp-bridge-ui-frame
             (frame-live-p lsp-bridge-ui-frame))
        (make-frame-visible lsp-bridge-ui-frame)
@@ -407,6 +435,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defun lsp-bridge-ui-hide ()
   (interactive)
   (when lsp-bridge-ui-frame
+    (lsp-bridge-ui-mode -1)
+
     (make-frame-invisible lsp-bridge-ui-frame)
     (delete-frame lsp-bridge-ui-frame)
     (kill-buffer lsp-bridge-ui-buffer)
