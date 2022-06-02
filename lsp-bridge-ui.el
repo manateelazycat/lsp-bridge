@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 ;;; lsp-bridge-ui.el --- Asynchronous Completion Menu
 
 ;; Filename: lsp-bridge-ui.el
@@ -165,13 +166,14 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
         (svg-node svg 'path :d path :fill fill)))
     (svg-image svg :ascent 'center :scale 1)))
 
-(defvar-local lsp-bridge-ui-backend-global-items nil)
-
+(defvar lsp-bridge-ui-backend-global-items nil)
 (defvar-local lsp-bridge-ui-backend-local-items nil)
+(defvar-local lsp-bridge-ui-filter-candidates nil)
+(defvar-local lsp-bridge-ui-menu-candidates nil)
 
 (defvar lsp-bridge-ui-icon-width 4)
 
-(defface lsp-bridge-ui-frame-default-face
+(defface lsp-bridge-ui-default-face
   '((t (:height 140)))
   "Face for content area.")
 
@@ -183,7 +185,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
     (t :background "blue" :foreground "white"))
   "Face used to highlight the currently selected candidate.")
 
-(defface lsp-bridge-ui-deprecated
+(defface lsp-bridge-ui-deprecated-face
   '((t :inherit shadow :strike-through t))
   "Face used for deprecated candidates.")
 
@@ -295,7 +297,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
 (defun lsp-bridge-ui-popup ()
   (interactive)
-  (let* ((items lsp-bridge-ui-backend-local-items)
+  (let* ((items lsp-bridge-ui-filter-candidates)
          (item-max-length 0)
          (item-index 0))
     (if (and lsp-bridge-ui-frame
@@ -311,58 +313,52 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
         (erase-buffer)
 
-        (buffer-face-set 'lsp-bridge-ui-frame-default-face)
+        (buffer-face-set 'lsp-bridge-ui-default-face)
 
-        (maphash
-         (lambda (k v)
-           (let* ((candidate (plist-get v :candidate))
-                  (annotation (plist-get v :annotation))
-                  (item-length (string-width (format "%s %s" candidate annotation))))
-             (when (> item-length item-max-length)
-               (setq item-max-length item-length))
-             ))
-         (gethash "lsp-bridge" items))
+        (dolist (v items)
+          (let* ((candidate (plist-get v :candidate))
+                 (annotation (plist-get v :annotation))
+                 (item-length (string-width (format "%s %s" candidate annotation))))
+            (when (> item-length item-max-length)
+              (setq item-max-length item-length))
+            ))
 
-        (maphash
-         (lambda (k v)
-           (let* ((icon (cdr (assq (plist-get v :icon) lsp-bridge-ui-icon-alist)))
-                  (candidate (plist-get v :candidate))
-                  (annotation (plist-get v :annotation))
-                  (annotation-text (if annotation annotation ""))
-                  (item-length (string-width annotation-text))
-                  icon-text
-                  candidate-line)
+        (dolist (v items)
+          (let* ((icon (cdr (assq (plist-get v :icon) lsp-bridge-ui-icon-alist)))
+                 (candidate (plist-get v :candidate))
+                 (annotation (plist-get v :annotation))
+                 (annotation-text (if annotation annotation ""))
+                 (item-length (string-width annotation-text))
+                 icon-text
+                 candidate-line)
 
-             (setq icon-text (propertize
-                              (apply #'concat (make-list lsp-bridge-ui-icon-width "-"))
-                              'display (lsp-bridge-ui-icon (nth 0 icon) (nth 1 icon) (nth 2 icon))))
+            (setq icon-text (propertize
+                             (apply #'concat (make-list lsp-bridge-ui-icon-width "-"))
+                             'display (lsp-bridge-ui-icon (nth 0 icon) (nth 1 icon) (nth 2 icon))))
 
-             (when (plist-get v :deprecated)
-               (add-face-text-property 0 (length candidate) 'lsp-bridge-ui-deprecated 'append candidate))
+            (when (plist-get v :deprecated)
+              (add-face-text-property 0 (length candidate) 'lsp-bridge-ui-deprecated-face 'append candidate))
 
-             (setq candidate-line
-                   (concat
-                    icon-text
-                    candidate
-                    (propertize " " 'display (lsp-bridge-ui-indent-pixel (ceiling (* (window-font-width) (- (* item-max-length 1.5) item-length)))))
-                    (propertize (format "%s \n" annotation-text) 'face 'font-lock-doc-face)
-                    ))
+            (setq candidate-line
+                  (concat
+                   icon-text
+                   candidate
+                   (propertize " " 'display (lsp-bridge-ui-indent-pixel (ceiling (* (window-font-width) (- (* item-max-length 1.5) item-length)))))
+                   (propertize (format "%s \n" annotation-text) 'face 'font-lock-doc-face)
+                   ))
 
-             (when (equal item-index 0)
-               (add-face-text-property 0 (length candidate-line) 'lsp-bridge-ui-select-face 'append candidate-line))
+            (when (equal item-index 0)
+              (add-face-text-property 0 (length candidate-line) 'lsp-bridge-ui-select-face 'append candidate-line))
 
-             (insert candidate-line)
+            (insert candidate-line)
 
-             (setq item-index (1+ item-index))))
-         (gethash "lsp-bridge" items))
+            (setq item-index (1+ item-index))))
 
-        (when (> (length (hash-table-keys items)) 0)
-          (delete-backward-char 1))
-        )
+        (when (> (length items) 0)
+          (delete-backward-char 1)))
 
       (with-selected-frame lsp-bridge-ui-frame
-        (switch-to-buffer lsp-bridge-ui-buffer)
-        )
+        (switch-to-buffer lsp-bridge-ui-buffer))
 
       (fit-frame-to-buffer-1 lsp-bridge-ui-frame nil nil nil nil nil nil nil)
 
@@ -397,6 +393,30 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defun lsp-bridge-ui-update-completion-data (backend-name completion-table)
   ;; Update completion table that match backend-name.
   (puthash backend-name completion-table lsp-bridge-ui-backend-local-items))
+
+(defun lsp-bridge-ui-search-items (keyboard)
+  (setq-local lsp-bridge-ui-filter-candidates (list))
+  (setq-local lsp-bridge-ui-menu-candidates (list))
+
+  (dolist (backend-hash-table (list lsp-bridge-ui-backend-global-items
+                                    lsp-bridge-ui-backend-local-items))
+    (when (and backend-hash-table
+               (hash-table-p backend-hash-table))
+      (dolist (backend-name (hash-table-keys backend-hash-table))
+        (maphash
+         (lambda (k v)
+           (when (string-match-p (lsp-bridge-ui-build-fuzzy-regex keyboard) (plist-get v :candidate))
+             (add-to-list 'lsp-bridge-ui-filter-candidates v t)
+             ))
+         (gethash backend-name backend-hash-table)
+         )))))
+
+(defun lsp-bridge-ui-build-fuzzy-regex (input)
+  "Create a fuzzy regexp of PATTERN."
+  (mapconcat (lambda (ch)
+               (let ((s (char-to-string ch)))
+                 (format "[^%s]*%s" s (regexp-quote s))))
+             input ""))
 
 (defun lsp-bridge-ui-test ()
   (interactive)
@@ -453,6 +473,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
       (puthash (plist-get item :key) item completion-table))
 
     (lsp-bridge-ui-update-completion-data "lsp-bridge" completion-table)
+
+    (lsp-bridge-ui-search-items "expand")
 
     (lsp-bridge-ui-popup)))
 
