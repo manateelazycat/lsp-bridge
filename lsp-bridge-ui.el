@@ -85,6 +85,7 @@
 (require 'svg)
 (require 'color)
 (require 'subr-x)
+(require 'cl-seq)
 
 ;;; Code:
 
@@ -208,6 +209,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defvar-local lsp-bridge-ui-menu-offset 0)
 
 (defvar lsp-bridge-ui-icon-width 4)
+(defvar lsp-bridge-ui-menu-max-length-cache 0)
 
 (defface lsp-bridge-ui-default-face
   '((t (:height 140)))
@@ -357,11 +359,20 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
      (make-frame-visible lsp-bridge-ui-frame)
      )))
 
-(defun lsp-bridge-ui-menu-render (adjust-size)
+(defun lsp-bridge-ui-menu-max-length ()
+  (cl-reduce #'max
+             (mapcar '(lambda (v)
+                        (string-width (format "%s %s" (plist-get v :candidate) (plist-get v :annotation))))
+                     lsp-bridge-ui-menu-candidates)))
+
+(defun lsp-bridge-ui-menu-render (adjust-size &optional menu-max-length)
   (let* ((items lsp-bridge-ui-menu-candidates)
-         (item-max-length 0)
          (item-index 0)
          (menu-index lsp-bridge-ui-menu-index))
+    (if menu-max-length
+        (setq lsp-bridge-ui-menu-max-length-cache menu-max-length)
+      (setq lsp-bridge-ui-menu-max-length-cache (lsp-bridge-ui-menu-max-length)))
+
     (with-current-buffer (get-buffer-create lsp-bridge-ui-buffer)
       (dolist (var lsp-bridge-buffer-parameters)
         (set (make-local-variable (car var)) (cdr var)))
@@ -369,14 +380,6 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
       (erase-buffer)
 
       (buffer-face-set 'lsp-bridge-ui-default-face)
-
-      (dolist (v items)
-        (let* ((candidate (plist-get v :candidate))
-               (annotation (plist-get v :annotation))
-               (item-length (string-width (format "%s %s" candidate annotation))))
-          (when (> item-length item-max-length)
-            (setq item-max-length item-length))
-          ))
 
       (dolist (v items)
         (let* ((icon (cdr (assq (plist-get v :icon) lsp-bridge-ui-icon-alist)))
@@ -396,7 +399,10 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                 (concat
                  icon-text
                  candidate
-                 (propertize " " 'display (lsp-bridge-ui-indent-pixel (ceiling (* (window-font-width) (- (* item-max-length 1.5) item-length)))))
+                 (propertize " "
+                             'display
+                             (lsp-bridge-ui-indent-pixel
+                              (ceiling (* (window-font-width) (- (* lsp-bridge-ui-menu-max-length-cache 1.5) item-length)))))
                  (propertize (format "%s \n" annotation-text) 'face 'font-lock-doc-face)
                  ))
 
@@ -495,15 +501,20 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                              (+ lsp-bridge-ui-menu-offset menu-length))))))
 
 (defmacro lsp-bridge-ui-menu-update (&rest body)
-  `(let* ((menu-index lsp-bridge-ui-menu-index)
-          (menu-offset lsp-bridge-ui-menu-offset))
+  `(let* ((menu-old-index lsp-bridge-ui-menu-index)
+          (menu-old-offset lsp-bridge-ui-menu-offset)
+          (menu-old-max-length lsp-bridge-ui-menu-max-length-cache)
+          menu-new-max-length)
      ,@body
 
-     (when (or (not (equal menu-index lsp-bridge-ui-menu-index))
-               (not (equal menu-offset lsp-bridge-ui-menu-offset)))
+     (when (or (not (equal menu-old-index lsp-bridge-ui-menu-index))
+               (not (equal menu-old-offset lsp-bridge-ui-menu-offset)))
        (lsp-bridge-ui-save-frame
         (lsp-bridge-ui-menu-update-candidates)
-        (lsp-bridge-ui-menu-render (not (equal menu-offset lsp-bridge-ui-menu-offset)))))))
+        (setq menu-new-max-length (lsp-bridge-ui-menu-max-length))
+        (lsp-bridge-ui-menu-render (not (equal menu-old-max-length menu-new-max-length))
+                                   menu-new-max-length
+                                   )))))
 
 (defun lsp-bridge-ui-select-first ()
   (interactive)
