@@ -181,7 +181,6 @@
 (defvar acm-icon-cache (make-hash-table :test 'equal))
 (defvar acm-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))
 (defvar acm-icon-width 4)
-
 (defvar acm-menu-max-length-cache 0)
 
 (defvar acm-backend-global-items nil)
@@ -190,6 +189,9 @@
 (defvar-local acm-menu-candidates nil)
 (defvar-local acm-menu-index -1)
 (defvar-local acm-menu-offset 0)
+
+(defvar acm-doc-buffer " *acm-doc-buffer*")
+(defvar acm-doc-frame nil)
 
 (defface acm-default-face
   '((t (:height 140)))
@@ -402,20 +404,68 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defun acm-menu-adjust-pos ()
   (let* ((emacs-width (frame-pixel-width))
          (emacs-height (frame-pixel-height))
-         (completion-frame-width (frame-pixel-width acm-frame))
-         (completion-frame-height (frame-pixel-height acm-frame))
+         (acm-frame-width (frame-pixel-width acm-frame))
+         (acm-frame-height (frame-pixel-height acm-frame))
          (cursor-pos (window-absolute-pixel-position))
          (cursor-x (car cursor-pos))
          (cursor-y (cdr cursor-pos))
          (offset-x (* (window-font-width) acm-icon-width))
          (offset-y (line-pixel-height))
-         (completion-x (if (> (+ cursor-x completion-frame-width) emacs-width)
-                           (- cursor-x completion-frame-width)
-                         (- cursor-x offset-x)))
-         (completion-y (if (> (+ cursor-y completion-frame-height) emacs-height)
-                           (- cursor-y completion-frame-height)
-                         (+ cursor-y offset-y))))
-    (set-frame-position acm-frame completion-x completion-y)))
+         (acm-frame-x (if (> (+ cursor-x acm-frame-width) emacs-width)
+                          (- cursor-x acm-frame-width)
+                        (- cursor-x offset-x)))
+         (acm-frame-y (if (> (+ cursor-y acm-frame-height) emacs-height)
+                          (- cursor-y acm-frame-height)
+                        (+ cursor-y offset-y))))
+    (set-frame-position acm-frame acm-frame-x acm-frame-y)))
+
+(defun acm-doc-show ()
+  (let* ((candidate (acm-menu-current-candidate))
+         (candidate-doc (plist-get candidate :doc)))
+    (when (and candidate-doc
+               (not (string-equal candidate-doc "")))
+      (if (and acm-doc-frame
+               (frame-live-p acm-doc-frame))
+          (make-frame-visible acm-doc-frame)
+
+        (setq acm-doc-frame (acm-make-frame "acm doc frame"))
+        (set-frame-parameter acm-doc-frame 'background-color (acm-frame-background-color))
+        (set-frame-size acm-doc-frame
+                        (ceiling (* (frame-pixel-width acm-frame) 1.618))
+                        (ceiling (* (frame-pixel-height acm-frame) 0.618)) t)
+
+        (with-current-buffer (get-buffer-create acm-doc-buffer)
+          (dolist (var lsp-bridge-buffer-parameters)
+            (set (make-local-variable (car var)) (cdr var)))
+          (buffer-face-set 'acm-default-face))
+
+        (with-selected-frame acm-doc-frame
+          (switch-to-buffer acm-doc-buffer))
+
+        (make-frame-visible acm-doc-frame))
+
+      (with-current-buffer (get-buffer-create acm-doc-buffer)
+        (visual-line-mode 1)
+        (erase-buffer)
+        (insert candidate-doc))
+
+      (let* ((emacs-width (frame-pixel-width))
+             (acm-doc-frame-width (frame-pixel-width acm-doc-frame))
+             (acm-doc-frame-height (frame-pixel-height acm-doc-frame))
+             (acm-frame-width (frame-pixel-width acm-frame))
+             (acm-frame-pos (frame-position acm-frame))
+             (acm-frame-x (car acm-frame-pos))
+             (acm-frame-y (cdr acm-frame-pos))
+             (acm-doc-frame-x (if (> (+ acm-frame-x acm-frame-width acm-doc-frame-width) emacs-width)
+                                  (- acm-frame-x acm-doc-frame-width)
+                                (+ acm-frame-x acm-frame-width)))
+             (acm-doc-frame-y acm-frame-y))
+
+        (set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y)
+        ))))
+
+(defun acm-menu-current-candidate ()
+  (nth (+ acm-menu-offset acm-menu-index) acm-candidates))
 
 (defun acm-menu-render (adjust-size &optional menu-max-length)
   (let* ((items acm-menu-candidates)
@@ -432,6 +482,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
       (fit-frame-to-buffer-1 acm-frame nil nil nil nil nil nil nil))
 
     (acm-menu-adjust-pos)
+
+    (acm-doc-show)
     ))
 
 (defun acm-icon-build (collection name fg-color)
@@ -446,13 +498,21 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
 (defun acm-hide ()
   (interactive)
-  (when acm-frame
+  (when (and acm-frame
+             (frame-live-p acm-frame))
     (acm-mode -1)
 
     (make-frame-invisible acm-frame)
     (delete-frame acm-frame)
     (kill-buffer acm-buffer)
-    (setq acm-frame nil)))
+    (setq acm-frame nil))
+
+  (when (and acm-doc-frame
+             (frame-live-p acm-doc-frame))
+    (make-frame-invisible acm-doc-frame)
+    (delete-frame acm-doc-frame)
+    (kill-buffer acm-doc-buffer)
+    (setq acm-doc-frame nil)))
 
 (defun acm-update-completion-data (backend-name completion-table)
   ;; Update completion table that match backend-name.
@@ -551,7 +611,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          items)
     (setq items '(
                   (:key "1" :icon unknown :candidate "expanduser" :doc "Doc for expanduser.")
-                  (:key "2" :icon text :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser.")
+                  (:key "2" :icon text :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser dlkdjf lksjlfkjlsfd lskjdfljsljf slkjflskdjf lksdjfsdl jsdljfl sfljsdlf jsdlfjl sjlfd jsljflsdj lfjsd ldkflkdjf slkjflskdj jsdlfjsljf sljflsdj ljsdlfjsdlfj lsdjflsdjfl jsldfjlsdj ljfsdlfj aljsldjflsdjfl jslfjlsdkjfl jsdlfjs ljdflsjf ljsdlfj slfjl dsjlfjsldjf lsjfl jsldfjsldj flsdjfl jsldfj sljdf .")
                   (:key "3" :icon method :candidate "isabs" :annotation "Function" :doc "Doc for isabs.")
                   (:key "4" :icon function :candidate "isabs" :annotation "Snippet" :doc "Doc for isabs.")
                   (:key "5" :icon fun :candidate "exists" :annotation "Function" :doc "Doc for exists.")
