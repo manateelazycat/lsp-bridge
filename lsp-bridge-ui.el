@@ -181,6 +181,7 @@
 (defvar lsp-bridge-ui-icon-cache (make-hash-table :test 'equal))
 (defvar lsp-bridge-ui-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))
 (defvar lsp-bridge-ui-icon-width 4)
+
 (defvar lsp-bridge-ui-menu-max-length-cache 0)
 
 (defvar lsp-bridge-ui-backend-global-items nil)
@@ -342,6 +343,14 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
      (setq lsp-bridge-ui-frame (lsp-bridge-ui-make-frame "lsp-bridge-ui frame"))
      (set-frame-parameter lsp-bridge-ui-frame 'background-color (lsp-bridge-ui-frame-background-color))
 
+     (with-current-buffer (get-buffer-create lsp-bridge-ui-buffer)
+       (dolist (var lsp-bridge-buffer-parameters)
+         (set (make-local-variable (car var)) (cdr var)))
+       (buffer-face-set 'lsp-bridge-ui-default-face))
+
+     (with-selected-frame lsp-bridge-ui-frame
+       (switch-to-buffer lsp-bridge-ui-buffer))
+
      (lsp-bridge-ui-menu-render t)
 
      (make-frame-visible lsp-bridge-ui-frame)
@@ -353,79 +362,76 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                         (string-width (format "%s %s" (plist-get v :candidate) (plist-get v :annotation))))
                      lsp-bridge-ui-menu-candidates)))
 
+(defun lsp-bridge-ui-menu-render-items (items menu-index)
+  (let ((item-index 0))
+    (dolist (v items)
+      (let* ((icon (cdr (assq (plist-get v :icon) lsp-bridge-ui-icon-alist)))
+             (candidate (plist-get v :candidate))
+             (annotation (plist-get v :annotation))
+             (annotation-text (if annotation annotation ""))
+             (item-length (string-width annotation-text))
+             icon-text
+             candidate-line)
+
+        (setq icon-text (lsp-bridge-ui-icon-build (nth 0 icon) (nth 1 icon) (nth 2 icon)))
+
+        (when (plist-get v :deprecated)
+          (add-face-text-property 0 (length candidate) 'lsp-bridge-ui-deprecated-face 'append candidate))
+
+        (setq candidate-line
+              (concat
+               icon-text
+               candidate
+               (propertize " "
+                           'display
+                           (lsp-bridge-ui-indent-pixel
+                            (ceiling (* (window-font-width) (- (* lsp-bridge-ui-menu-max-length-cache 1.5) item-length)))))
+               (propertize (format "%s \n" annotation-text) 'face 'font-lock-doc-face)
+               ))
+
+        (when (equal item-index menu-index)
+          (add-face-text-property 0 (length candidate-line) 'lsp-bridge-ui-select-face 'append candidate-line))
+
+        (insert candidate-line)
+
+        (when (equal item-index (1- (length items)))
+          (delete-backward-char 1))
+
+        (setq item-index (1+ item-index))))))
+
+(defun lsp-bridge-ui-menu-adjust-pos ()
+  (let* ((emacs-width (frame-pixel-width))
+         (emacs-height (frame-pixel-height))
+         (completion-frame-width (frame-pixel-width lsp-bridge-ui-frame))
+         (completion-frame-height (frame-pixel-height lsp-bridge-ui-frame))
+         (cursor-pos (window-absolute-pixel-position))
+         (cursor-x (car cursor-pos))
+         (cursor-y (cdr cursor-pos))
+         (offset-x (* (window-font-width) lsp-bridge-ui-icon-width))
+         (offset-y (line-pixel-height))
+         (completion-x (if (> (+ cursor-x completion-frame-width) emacs-width)
+                           (- cursor-x completion-frame-width)
+                         (- cursor-x offset-x)))
+         (completion-y (if (> (+ cursor-y completion-frame-height) emacs-height)
+                           (- cursor-y completion-frame-height)
+                         (+ cursor-y offset-y))))
+    (set-frame-position lsp-bridge-ui-frame completion-x completion-y)))
+
 (defun lsp-bridge-ui-menu-render (adjust-size &optional menu-max-length)
   (let* ((items lsp-bridge-ui-menu-candidates)
-         (item-index 0)
          (menu-index lsp-bridge-ui-menu-index))
-    (if menu-max-length
-        (setq lsp-bridge-ui-menu-max-length-cache menu-max-length)
-      (setq lsp-bridge-ui-menu-max-length-cache (lsp-bridge-ui-menu-max-length)))
+
+    (setq lsp-bridge-ui-menu-max-length-cache
+          (if menu-max-length menu-max-length (lsp-bridge-ui-menu-max-length)))
 
     (with-current-buffer (get-buffer-create lsp-bridge-ui-buffer)
-      (dolist (var lsp-bridge-buffer-parameters)
-        (set (make-local-variable (car var)) (cdr var)))
-
       (erase-buffer)
-
-      (buffer-face-set 'lsp-bridge-ui-default-face)
-
-      (dolist (v items)
-        (let* ((icon (cdr (assq (plist-get v :icon) lsp-bridge-ui-icon-alist)))
-               (candidate (plist-get v :candidate))
-               (annotation (plist-get v :annotation))
-               (annotation-text (if annotation annotation ""))
-               (item-length (string-width annotation-text))
-               icon-text
-               candidate-line)
-
-          (setq icon-text (lsp-bridge-ui-icon-build (nth 0 icon) (nth 1 icon) (nth 2 icon)))
-
-          (when (plist-get v :deprecated)
-            (add-face-text-property 0 (length candidate) 'lsp-bridge-ui-deprecated-face 'append candidate))
-
-          (setq candidate-line
-                (concat
-                 icon-text
-                 candidate
-                 (propertize " "
-                             'display
-                             (lsp-bridge-ui-indent-pixel
-                              (ceiling (* (window-font-width) (- (* lsp-bridge-ui-menu-max-length-cache 1.5) item-length)))))
-                 (propertize (format "%s \n" annotation-text) 'face 'font-lock-doc-face)
-                 ))
-
-          (when (equal item-index menu-index)
-            (add-face-text-property 0 (length candidate-line) 'lsp-bridge-ui-select-face 'append candidate-line))
-
-          (insert candidate-line)
-
-          (setq item-index (1+ item-index))))
-
-      (when (> (length items) 0)
-        (delete-backward-char 1)))
-
-    (with-selected-frame lsp-bridge-ui-frame
-      (switch-to-buffer lsp-bridge-ui-buffer))
+      (lsp-bridge-ui-menu-render-items items menu-index))
 
     (when adjust-size
       (fit-frame-to-buffer-1 lsp-bridge-ui-frame nil nil nil nil nil nil nil))
 
-    (let* ((emacs-width (frame-pixel-width))
-           (emacs-height (frame-pixel-height))
-           (completion-frame-width (frame-pixel-width lsp-bridge-ui-frame))
-           (completion-frame-height (frame-pixel-height lsp-bridge-ui-frame))
-           (cursor-pos (window-absolute-pixel-position))
-           (cursor-x (car cursor-pos))
-           (cursor-y (cdr cursor-pos))
-           (offset-x (* (window-font-width) lsp-bridge-ui-icon-width))
-           (offset-y (line-pixel-height))
-           (completion-x (if (> (+ cursor-x completion-frame-width) emacs-width)
-                             (- cursor-x completion-frame-width)
-                           (- cursor-x offset-x)))
-           (completion-y (if (> (+ cursor-y completion-frame-height) emacs-height)
-                             (- cursor-y completion-frame-height)
-                           (+ cursor-y offset-y))))
-      (set-frame-position lsp-bridge-ui-frame completion-x completion-y))
+    (lsp-bridge-ui-menu-adjust-pos)
     ))
 
 (defun lsp-bridge-ui-icon-build (collection name fg-color)
