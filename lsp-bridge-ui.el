@@ -84,6 +84,7 @@
 (require 'xml)
 (require 'svg)
 (require 'color)
+(require 'subr-x)
 
 ;;; Code:
 
@@ -124,6 +125,8 @@
 (defun lsp-bridge-ui-disable ())
 
 (defvar lsp-bridge-ui-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))
+
+(defvar lsp-bridge-ui-icon-cache (make-hash-table :test 'equal))
 
 (defun lsp-bridge-ui-icon-filepath (collection name)
   (concat (file-name-as-directory lsp-bridge-ui-icon-dir) (format "%s_%s.svg" collection name)))
@@ -349,12 +352,12 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
      (setq lsp-bridge-ui-frame (lsp-bridge-ui-make-frame "lsp-bridge-ui frame"))
      (set-frame-parameter lsp-bridge-ui-frame 'background-color (lsp-bridge-ui-frame-background-color))
 
-     (lsp-bridge-ui-menu-render)
+     (lsp-bridge-ui-menu-render t)
 
      (make-frame-visible lsp-bridge-ui-frame)
      )))
 
-(defun lsp-bridge-ui-menu-render ()
+(defun lsp-bridge-ui-menu-render (adjust-size)
   (let* ((items lsp-bridge-ui-menu-candidates)
          (item-max-length 0)
          (item-index 0)
@@ -384,9 +387,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                icon-text
                candidate-line)
 
-          (setq icon-text (propertize
-                           (apply #'concat (make-list lsp-bridge-ui-icon-width "-"))
-                           'display (lsp-bridge-ui-icon (nth 0 icon) (nth 1 icon) (nth 2 icon))))
+          (setq icon-text (lsp-bridge-ui-icon-build (nth 0 icon) (nth 1 icon) (nth 2 icon)))
 
           (when (plist-get v :deprecated)
             (add-face-text-property 0 (length candidate) 'lsp-bridge-ui-deprecated-face 'append candidate))
@@ -412,7 +413,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
     (with-selected-frame lsp-bridge-ui-frame
       (switch-to-buffer lsp-bridge-ui-buffer))
 
-    (fit-frame-to-buffer-1 lsp-bridge-ui-frame nil nil nil nil nil nil nil)
+    (when adjust-size
+      (fit-frame-to-buffer-1 lsp-bridge-ui-frame nil nil nil nil nil nil nil))
 
     (let* ((emacs-width (frame-pixel-width))
            (emacs-height (frame-pixel-height))
@@ -431,6 +433,19 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                            (+ cursor-y offset-y))))
       (set-frame-position lsp-bridge-ui-frame completion-x completion-y))
     ))
+
+(defun lsp-bridge-ui-icon-build (collection name fg-color)
+  (let* ((icon-key (format "%s_%s" collection name))
+         (icon-cache (gethash icon-key lsp-bridge-ui-icon-cache))
+         icon-text)
+    (if icon-cache
+        icon-cache
+      (setq icon-text (propertize
+                       (apply #'concat (make-list lsp-bridge-ui-icon-width "-"))
+                       'display (lsp-bridge-ui-icon collection name fg-color)))
+      (puthash icon-key icon-text lsp-bridge-ui-icon-cache)
+      icon-text
+      )))
 
 (defun lsp-bridge-ui-hide ()
   (interactive)
@@ -479,45 +494,46 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                              lsp-bridge-ui-menu-offset
                              (+ lsp-bridge-ui-menu-offset menu-length))))))
 
-(defun lsp-bridge-ui-menu-update ()
-  (lsp-bridge-ui-save-frame
-   (lsp-bridge-ui-menu-update-candidates)
-   (lsp-bridge-ui-menu-render)))
+(defmacro lsp-bridge-ui-menu-update (&rest body)
+  `(let* ((menu-index lsp-bridge-ui-menu-index)
+          (menu-offset lsp-bridge-ui-menu-offset))
+     ,@body
+
+     (when (or (not (equal menu-index lsp-bridge-ui-menu-index))
+               (not (equal menu-offset lsp-bridge-ui-menu-offset)))
+       (lsp-bridge-ui-save-frame
+        (lsp-bridge-ui-menu-update-candidates)
+        (lsp-bridge-ui-menu-render (not (equal menu-offset lsp-bridge-ui-menu-offset)))))))
 
 (defun lsp-bridge-ui-select-first ()
   (interactive)
-  (setq-local lsp-bridge-ui-menu-offset 0)
-  (setq-local lsp-bridge-ui-menu-index 0)
-
-  (lsp-bridge-ui-menu-update)
-  )
+  (lsp-bridge-ui-menu-update
+   (setq-local lsp-bridge-ui-menu-offset 0)
+   (setq-local lsp-bridge-ui-menu-index 0)))
 
 (defun lsp-bridge-ui-select-last ()
   (interactive)
-  (let ((menu-length (length lsp-bridge-ui-menu-candidates)))
-    (setq-local lsp-bridge-ui-menu-offset (- (length lsp-bridge-ui-filter-candidates) menu-length))
-    (setq-local lsp-bridge-ui-menu-index (- menu-length 1))
-
-    (lsp-bridge-ui-menu-update)
-    ))
+  (lsp-bridge-ui-menu-update
+   (let ((menu-length (length lsp-bridge-ui-menu-candidates)))
+     (setq-local lsp-bridge-ui-menu-offset (- (length lsp-bridge-ui-filter-candidates) menu-length))
+     (setq-local lsp-bridge-ui-menu-index (- menu-length 1))
+     )))
 
 (defun lsp-bridge-ui-select-next ()
   (interactive)
-  (cond ((< lsp-bridge-ui-menu-index (1- (length lsp-bridge-ui-menu-candidates)))
-         (setq-local lsp-bridge-ui-menu-index (1+ lsp-bridge-ui-menu-index)))
-        ((< (+ lsp-bridge-ui-menu-offset lsp-bridge-ui-menu-index) (1- (length lsp-bridge-ui-filter-candidates)))
-         (setq-local lsp-bridge-ui-menu-offset (1+ lsp-bridge-ui-menu-offset))))
-
-  (lsp-bridge-ui-menu-update))
+  (lsp-bridge-ui-menu-update
+   (cond ((< lsp-bridge-ui-menu-index (1- (length lsp-bridge-ui-menu-candidates)))
+          (setq-local lsp-bridge-ui-menu-index (1+ lsp-bridge-ui-menu-index)))
+         ((< (+ lsp-bridge-ui-menu-offset lsp-bridge-ui-menu-index) (1- (length lsp-bridge-ui-filter-candidates)))
+          (setq-local lsp-bridge-ui-menu-offset (1+ lsp-bridge-ui-menu-offset))))))
 
 (defun lsp-bridge-ui-select-prev ()
   (interactive)
-  (cond ((> lsp-bridge-ui-menu-index 0)
-         (setq-local lsp-bridge-ui-menu-index (1- lsp-bridge-ui-menu-index)))
-        ((> lsp-bridge-ui-menu-offset 0)
-         (setq-local lsp-bridge-ui-menu-offset (1- lsp-bridge-ui-menu-offset))))
-
-  (lsp-bridge-ui-menu-update))
+  (lsp-bridge-ui-menu-update
+   (cond ((> lsp-bridge-ui-menu-index 0)
+          (setq-local lsp-bridge-ui-menu-index (1- lsp-bridge-ui-menu-index)))
+         ((> lsp-bridge-ui-menu-offset 0)
+          (setq-local lsp-bridge-ui-menu-offset (1- lsp-bridge-ui-menu-offset))))))
 
 (defun lsp-bridge-ui-build-fuzzy-regex (input)
   "Create a fuzzy regexp of PATTERN."
