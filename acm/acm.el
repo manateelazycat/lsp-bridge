@@ -177,6 +177,10 @@
 
 (defvar acm-buffer " *acm-buffer*")
 (defvar acm-frame nil)
+(defvar acm-frame-popup-pos nil)
+
+(defvar acm-insert-preview "")
+(defvar acm-insert-preview-overlay nil)
 
 (defvar acm-icon-cache (make-hash-table :test 'equal))
 (defvar acm-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))
@@ -338,6 +342,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   (acm-save-frame
    (acm-mode 1)
 
+   (setq acm-frame-popup-pos (window-absolute-pixel-position))
+
    (if (and acm-frame
             (frame-live-p acm-frame))
        (make-frame-visible acm-frame)
@@ -353,10 +359,36 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
      (with-selected-frame acm-frame
        (switch-to-buffer acm-buffer))
 
+     (setq acm-insert-preview-overlay (make-overlay (point) (point) nil t t))
+     (overlay-put acm-insert-preview-overlay 'intangible t)
+     (overlay-put acm-insert-preview-overlay 'window (get-buffer-window))
+
      (acm-menu-render t)
 
      (make-frame-visible acm-frame)
      )))
+
+(defun acm-hide ()
+  (interactive)
+  (when (and acm-frame
+             (frame-live-p acm-frame))
+    (acm-mode -1)
+
+    (make-frame-invisible acm-frame)
+    (delete-frame acm-frame)
+    (kill-buffer acm-buffer)
+    (setq acm-frame nil))
+
+  (when (and acm-doc-frame
+             (frame-live-p acm-doc-frame))
+    (make-frame-invisible acm-doc-frame)
+    (delete-frame acm-doc-frame)
+    (kill-buffer acm-doc-buffer)
+    (setq acm-doc-frame nil))
+
+  (when acm-insert-preview-overlay
+    (delete-overlay acm-insert-preview-overlay)
+    (setq acm-insert-preview-overlay nil)))
 
 (defun acm-menu-max-length ()
   (cl-reduce #'max
@@ -406,9 +438,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          (emacs-height (frame-pixel-height))
          (acm-frame-width (frame-pixel-width acm-frame))
          (acm-frame-height (frame-pixel-height acm-frame))
-         (cursor-pos (window-absolute-pixel-position))
-         (cursor-x (car cursor-pos))
-         (cursor-y (cdr cursor-pos))
+         (cursor-x (car acm-frame-popup-pos))
+         (cursor-y (cdr acm-frame-popup-pos))
          (offset-x (* (window-font-width) acm-icon-width))
          (offset-y (line-pixel-height))
          (acm-frame-x (if (> (+ cursor-x acm-frame-width) emacs-width)
@@ -483,6 +514,13 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
     (acm-menu-adjust-pos)
 
+    (overlay-put acm-insert-preview-overlay
+                 'after-string
+                 (propertize (plist-get (acm-menu-current-candidate) :candidate)
+                             'face 'font-lock-doc-face
+                             ;; Make cursor show before insert preview overlay.
+                             'cursor t))
+
     (acm-doc-show)
     ))
 
@@ -495,24 +533,6 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                        'display (acm-icon collection name fg-color)))
       (puthash icon-key icon-text acm-icon-cache))
     icon-text))
-
-(defun acm-hide ()
-  (interactive)
-  (when (and acm-frame
-             (frame-live-p acm-frame))
-    (acm-mode -1)
-
-    (make-frame-invisible acm-frame)
-    (delete-frame acm-frame)
-    (kill-buffer acm-buffer)
-    (setq acm-frame nil))
-
-  (when (and acm-doc-frame
-             (frame-live-p acm-doc-frame))
-    (make-frame-invisible acm-doc-frame)
-    (delete-frame acm-doc-frame)
-    (kill-buffer acm-doc-buffer)
-    (setq acm-doc-frame nil)))
 
 (defun acm-update-completion-data (backend-name completion-table)
   ;; Update completion table that match backend-name.
@@ -659,6 +679,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
     (acm-update-completion-data "lsp-bridge" completion-table)
 
     (acm-search-items "e")
+
+    (setq acm-insert-preview "hello")
 
     (acm-popup)))
 
