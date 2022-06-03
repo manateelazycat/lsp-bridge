@@ -1342,7 +1342,10 @@ If optional MARKER, return a marker instead"
        (defun ,intern-pre (info)
          (let ((file-name (->> info caddr (alist-get :file))))
            (unless file-name
-             (setq file-name (make-temp-file "babel-lsp-")))
+             (setq file-name (make-temp-file (let ((lsp-babel-dir (concat default-directory ".lsp/babel/")))
+					       (if (not (file-directory-p lsp-babel-dir))
+						   (make-directory lsp-babel-dir t))
+					       (concat lsp-babel-dir "babel-lsp-")))))
            (setq buffer-file-name file-name)
            (lsp-bridge-mode 1)))
        (put ',intern-pre 'function-documentation
