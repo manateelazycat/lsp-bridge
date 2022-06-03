@@ -151,6 +151,12 @@ class LspBridge:
         project_path = get_project_path(filepath)
         lang_server = get_emacs_func_result("get-lang-server", project_path, filepath)
 
+        if (lang_server == "clojure-lsp") and (not os.path.isdir(project_path)):
+            message_emacs("ERROR: can't determine the project root for {}, initialize a Git repository for the project before you open this file.".format(filepath))
+            eval_in_emacs("lsp-bridge-turn-off", filepath)
+
+            return False
+
         if not lang_server:
             message_emacs("ERROR: can't find the corresponding server for {}, disable lsp-bridge-mode.".format(filepath))
             eval_in_emacs("lsp-bridge-turn-off", filepath)
