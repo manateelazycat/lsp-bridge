@@ -93,6 +93,13 @@
   "Maximal number of candidates to show."
   :type 'integer)
 
+(defcustom acm-continue-commands
+  ;; nil is undefined command
+  '(nil ignore universal-argument universal-argument-more digit-argument
+        "\\`acm-" "\\`scroll-other-window")
+  "Continue ACM completion after executing these commands."
+  :type '(repeat (choice regexp symbol)))
+
 (defvar  acm-icon-collections
   '(("bootstrap" . "https://icons.getbootstrap.com/icons/%s.svg")
     ("material" . "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/svg/%s.svg")
@@ -358,6 +365,19 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
      ,@body
      ))
 
+(defun acm-match-symbol-p (pattern sym)
+  "Return non-nil if SYM is matching an element of the PATTERN list."
+  (and (symbolp sym)
+       (cl-loop for x in pattern
+                thereis (if (symbolp x)
+                            (eq sym x)
+                          (string-match-p x (symbol-name sym))))))
+
+(defun acm-pre-command ()
+  "Insert selected candidate unless command is marked to continue completion."
+  (unless (acm-match-symbol-p acm-continue-commands this-command)
+    (acm-hide)))
+
 (defun acm-popup ()
   (interactive)
   (acm-save-frame
@@ -372,6 +392,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
    (overlay-put acm-insert-preview-overlay 'window (get-buffer-window))
 
    (acm-menu-render t)
+
+   (add-hook 'pre-command-hook #'acm-pre-command nil 'local)
    ))
 
 (defun acm-hide ()
@@ -394,7 +416,10 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
   (when acm-insert-preview-overlay
     (delete-overlay acm-insert-preview-overlay)
-    (setq acm-insert-preview-overlay nil)))
+    (setq acm-insert-preview-overlay nil))
+
+  (remove-hook 'pre-command-hook #'acm-pre-command 'local)
+  )
 
 (defun acm-menu-max-length ()
   (cl-reduce #'max
