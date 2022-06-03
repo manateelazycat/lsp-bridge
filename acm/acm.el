@@ -337,6 +337,27 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
      (select-frame current-frame)
      (switch-to-buffer current-buffer)))
 
+(defmacro acm-create-frame (frame frame-buffer frame-name &rest body)
+  `(if (and ,frame
+            (frame-live-p ,frame))
+       (make-frame-visible ,frame)
+
+     (setq ,frame (acm-make-frame ,frame-name))
+     (set-frame-parameter ,frame 'background-color (acm-frame-background-color))
+
+     (with-current-buffer (get-buffer-create ,frame-buffer)
+       (dolist (var lsp-bridge-buffer-parameters)
+         (set (make-local-variable (car var)) (cdr var)))
+       (buffer-face-set 'acm-default-face))
+
+     (with-selected-frame ,frame
+       (switch-to-buffer ,frame-buffer))
+
+     (make-frame-visible ,frame)
+
+     ,@body
+     ))
+
 (defun acm-popup ()
   (interactive)
   (acm-save-frame
@@ -344,29 +365,14 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
    (setq acm-frame-popup-pos (window-absolute-pixel-position))
 
-   (if (and acm-frame
-            (frame-live-p acm-frame))
-       (make-frame-visible acm-frame)
+   (acm-create-frame acm-frame acm-buffer "acm frame")
 
-     (setq acm-frame (acm-make-frame "acm frame"))
-     (set-frame-parameter acm-frame 'background-color (acm-frame-background-color))
+   (setq acm-insert-preview-overlay (make-overlay (point) (point) nil t t))
+   (overlay-put acm-insert-preview-overlay 'intangible t)
+   (overlay-put acm-insert-preview-overlay 'window (get-buffer-window))
 
-     (with-current-buffer (get-buffer-create acm-buffer)
-       (dolist (var lsp-bridge-buffer-parameters)
-         (set (make-local-variable (car var)) (cdr var)))
-       (buffer-face-set 'acm-default-face))
-
-     (with-selected-frame acm-frame
-       (switch-to-buffer acm-buffer))
-
-     (setq acm-insert-preview-overlay (make-overlay (point) (point) nil t t))
-     (overlay-put acm-insert-preview-overlay 'intangible t)
-     (overlay-put acm-insert-preview-overlay 'window (get-buffer-window))
-
-     (acm-menu-render t)
-
-     (make-frame-visible acm-frame)
-     )))
+   (acm-menu-render t)
+   ))
 
 (defun acm-hide ()
   (interactive)
@@ -455,25 +461,14 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          (candidate-doc (plist-get candidate :doc)))
     (when (and candidate-doc
                (not (string-equal candidate-doc "")))
-      (if (and acm-doc-frame
-               (frame-live-p acm-doc-frame))
-          (make-frame-visible acm-doc-frame)
 
-        (setq acm-doc-frame (acm-make-frame "acm doc frame"))
-        (set-frame-parameter acm-doc-frame 'background-color (acm-frame-background-color))
-        (set-frame-size acm-doc-frame
-                        (ceiling (* (frame-pixel-width acm-frame) 1.618))
-                        (ceiling (* (frame-pixel-height acm-frame) 0.618)) t)
-
-        (with-current-buffer (get-buffer-create acm-doc-buffer)
-          (dolist (var lsp-bridge-buffer-parameters)
-            (set (make-local-variable (car var)) (cdr var)))
-          (buffer-face-set 'acm-default-face))
-
-        (with-selected-frame acm-doc-frame
-          (switch-to-buffer acm-doc-buffer))
-
-        (make-frame-visible acm-doc-frame))
+      (acm-create-frame
+       acm-doc-frame
+       acm-doc-buffer
+       "acm doc frame"
+       (set-frame-size acm-doc-frame
+                       (ceiling (* (frame-pixel-width acm-frame) 1.618))
+                       (ceiling (* (frame-pixel-height acm-frame) 0.618)) t))
 
       (with-current-buffer (get-buffer-create acm-doc-buffer)
         (visual-line-mode 1)
@@ -482,7 +477,6 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
       (let* ((emacs-width (frame-pixel-width))
              (acm-doc-frame-width (frame-pixel-width acm-doc-frame))
-             (acm-doc-frame-height (frame-pixel-height acm-doc-frame))
              (acm-frame-width (frame-pixel-width acm-frame))
              (acm-frame-pos (frame-position acm-frame))
              (acm-frame-x (car acm-frame-pos))
