@@ -12,10 +12,6 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 
 1. Install Python dependencies: [python-epc](https://github.com/tkf/python-epc)
 2. Install Elisp dependencies:
-+ [corfu](https://github.com/minad/corfu)
-+ [corfu-doc](https://github.com/galeo/corfu-doc)
-+ [orderless](https://github.com/oantolin/orderless) 
-+ [all-the-icons](https://github.com/domtronn/all-the-icons.el) (need execute command `all-the-icons-install-fonts` to install all-the-icons fonts)
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
 + [yasnippet](https://github.com/joaotavora/yasnippet)
@@ -27,15 +23,10 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 
 (require 'yasnippet)
 (require 'lsp-bridge)
-(require 'lsp-bridge-icon)        ;; show icons for completion items, optional
 (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
-(yas-global-mode 1)
 
-(require 'corfu-history)
-(require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
-(corfu-history-mode t)
+(yas-global-mode 1)
 (global-lsp-bridge-mode)
-(when (> (frame-pixel-width) 3000) (custom-set-faces '(corfu-default ((t (:height 1.3))))))  ;; adjust default font height when running in HiDPI screen.
 ```
 
 ## Commands
@@ -141,8 +132,6 @@ The following is the directory structure of the lsp-bridge project:
 | lsp-bridge.el           | Elisp main logic part that provides custom options and elisp functions for python sub-process calls like code jumping, renaming, etc.                          |
 | lsp-bridge-epc.el       | Communicating with lsp-bridge python sub-process, which mainly implements elisp IPC to connect to python EPC for data serialization, sending, receiving, and deserialization |
 | lsp-bridge-ref.el       | Framework of code referencing, providing references viewing, batch renames, regex filtering of reference results, etc. The core code is forked from color-rg.el                                    |
-| lsp-bridge-orderless.el | Fuzzy search for completion items, i.e. for long candidate you do not need to type the word in correct order to get the correct item                 |
-| lsp-bridge-icon.el      | Rendering the completion menu icons, which is used to distinguish different types of completion options                                                                           |
  | lsp-bridge-jdtls.el      | Provide java language third-party library jumping function                                                           |
 | lsp-bridge.py           | Python main logic part that provides event loop, message scheduling and status management                                                                                     |
 | core/fileaction.py      | Tracking the status of each file, processing LSP response messages, calling Emacs elisp function                                                                                           |

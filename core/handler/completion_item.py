@@ -10,8 +10,8 @@ class CompletionItem(Handler):
     cancel_on_change = True
     send_document_uri = False
 
-    def process_request(self, label, item) -> dict:
-        self.label = label
+    def process_request(self, item_key, item) -> dict:
+        self.item_key = item_key
         return item
 
     def process_response(self, response: dict) -> None:
@@ -19,10 +19,11 @@ class CompletionItem(Handler):
             response_doc = response["documentation"]
             additional_text_edits = response["additionalTextEdits"] if "additionalTextEdits" in response else []
             documentation = response_doc["value"] if response_doc and "value" in response_doc else ""
+
             eval_in_emacs("lsp-bridge-update-completion-item-info",
                           {
                               "filepath": self.file_action.filepath,
-                              "label": self.label,
+                              "key": self.item_key,
                               "additionalTextEdits": additional_text_edits,
                               "documentation": documentation
                           })

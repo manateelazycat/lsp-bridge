@@ -12,10 +12,6 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 
 1. 安装Python依赖: [python-epc](https://github.com/tkf/python-epc)
 2. 安装Elisp依赖:
-+ [corfu](https://github.com/minad/corfu)
-+ [corfu-doc](https://github.com/galeo/corfu-doc)
-+ [orderless](https://github.com/oantolin/orderless)
-+ [all-the-icons](https://github.com/domtronn/all-the-icons.el) (需要在安装all-the-icons后执行命令`all-the-icons-install-fonts`安装图标字体)
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
 + [yasnippet](https://github.com/joaotavora/yasnippet)
@@ -27,15 +23,10 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 
 (require 'yasnippet)
 (require 'lsp-bridge)
-(require 'lsp-bridge-icon)        ;; 显示图标在补全菜单中，可选
 (require 'lsp-bridge-jdtls)       ;; 提供Java第三方库跳转和-data目录支持， Java用户必选
-(yas-global-mode 1)
 
-(require 'corfu-history)
-(require 'lsp-bridge-orderless)   ;; 支持模糊搜索，可选
-(corfu-history-mode t)
+(yas-global-mode 1)
 (global-lsp-bridge-mode)
-(when (> (frame-pixel-width) 3000) (custom-set-faces '(corfu-default ((t (:height 1.3))))))  ;; 让corfu适应高分屏
 ```
 
 ## 命令列表
@@ -140,8 +131,6 @@ lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是
 | lsp-bridge.el           | lsp-bridge的Elisp主逻辑部分，提供自定义选项和Elisp函数供python子进程调用，比如代码跳转、重命名等             |
 | lsp-bridge-epc.el       | 和lsp-bridge python子进程通讯的代码，主要实现Elisp IPC来对接Python EPC, 实现数据序列化、发送、接收和反序列化 |
 | lsp-bridge-ref.el       | 代码引用查看框架，提供引用查看、批量重命名、引用结果正则过滤等，核心代码 fork 自color-rg.el                  |
-| lsp-bridge-orderless.el | 提供模糊查找的功能，就是代码补全的时候不需要按照单词顺序敲就可以快速补全较长的后选项                         |
-| lsp-bridge-icon.el      | 提供补全菜单Icon渲染，用于区分不同类型的补全后选项                                                           |
 | lsp-bridge-jdtls.el      | 提供Java语言第三方库跳转功能                                                           |
 | lsp-bridge.py           | lsp-bridge的Python主逻辑部分，提供事件循环、消息调度和状态管理                                               |
 | core/fileaction.py      | 主要记录每个文件状态，处理LSP响应消息，调用Emacs Elisp函数                                                   |

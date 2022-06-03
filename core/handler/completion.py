@@ -30,15 +30,18 @@ class Completion(Handler):
 
         if response is not None:
             for item in response["items"] if "items" in response else response:
-                kind = KIND_MAP[item.get("kind", 0)]
+                kind = KIND_MAP[item.get("kind", 0)].lower()
                 label = item["label"]
+                key = "{},{}".format(label, kind)
+                annotation = kind if kind != "" else item.get("detail", "")
 
                 candidate = {
+                    "key": key,
+                    "icon": kind,
                     "label": label,
-                    "tags": item.get("tags", []),
+                    "annotation": annotation,
+                    "deprecated": 1 in item.get("tags", []),
                     "insertText": item.get('insertText', None),
-                    "kind": kind,
-                    "annotation": item.get("detail", kind),
                     "insertTextFormat": item.get("insertTextFormat", ''),
                     "textEdit": item.get("textEdit", None)
                 }
@@ -48,7 +51,7 @@ class Completion(Handler):
 
                 completion_candidates.append(candidate)
                 
-                self.file_action.completion_items["{},{}".format(label, kind)] = item
+                self.file_action.completion_items[key] = item
 
         # Calculate completion common string.
         completion_common_string = os.path.commonprefix(list(map(lambda candidate: candidate["label"], completion_candidates)))

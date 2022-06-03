@@ -128,7 +128,7 @@ class AcceptCompletion(unittest.TestCase):
                 map(lambda c: f'(execute-kbd-macro (read-kbd-macro "{c}"))\n(sleep-for 0.08)', user_input[1]))
             eval_sexp_sync(file_buffer(filename, inserts))
             eval_sexp_sync("(sleep-for 2)")
-            eval_sexp_sync(file_buffer(filename, "(corfu-insert)"))
+            eval_sexp_sync(file_buffer(filename, "(acm-complete)"))
             eval_sexp_sync("(sleep-for 2)")
             result = eval_sexp_sync(file_buffer(filename, "(buffer-string)"))
             logger.debug("After accepting completion: %s", result)
