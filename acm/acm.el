@@ -100,6 +100,20 @@
   "Continue ACM completion after executing these commands."
   :type '(repeat (choice regexp symbol)))
 
+(defcustom acm-dabbrev-min-length 4
+  "Minimum length of dabbrev expansions.
+This setting ensures that words which are too short
+are not offered as completion candidates, such that
+auto completion does not pop up too aggressively."
+  :type 'integer)
+
+(defcustom acm-elisp-min-length 3
+  "Minimum length of elisp symbol.
+This setting ensures that words which are too short
+are not offered as completion candidates, such that
+auto completion does not pop up too aggressively."
+  :type 'integer)
+
 (defvar  acm-icon-collections
   '(("bootstrap" . "https://icons.getbootstrap.com/icons/%s.svg")
     ("material" . "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/svg/%s.svg")
@@ -570,18 +584,44 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
         (t
          "variable")))
 
+(defmacro acm--silent (&rest body)
+  "Silence BODY."
+  (declare (indent 0))
+  `(cl-letf ((inhibit-message t)
+             (message-log-max nil)
+             ((symbol-function #'minibuffer-message) #'ignore))
+     (ignore-errors ,@body)))
+
+(defun acm-dabbrev-list (word)
+  "Find all dabbrev expansions for WORD."
+  (require 'dabbrev)
+  (acm--silent
+    (let ((dabbrev-check-other-buffers t)
+          (dabbrev-check-all-buffers t))
+      (dabbrev--reset-global-variables))
+    (cl-loop with min-len = (+ acm-dabbrev-min-length (length word))
+             for w in (dabbrev--find-all-expansions word (dabbrev--ignore-case-p word))
+             if (>= (length w) min-len) collect w)))
+
 (defun acm-search-items (keyword)
   (setq-local acm-candidates (list))
 
   (when (and (or (derived-mode-p 'emacs-lisp-mode)
                  (derived-mode-p 'inferior-emacs-lisp-mode))
-             (>= (length keyword) 3))
+             (>= (length keyword) acm-elisp-min-length))
     (dolist (elisp-symbol (all-completions keyword obarray))
       (let ((symbol-type (acm-elisp-symbol-type (intern elisp-symbol))))
         (add-to-list 'acm-candidates (list :key elisp-symbol
                                            :icon symbol-type
                                            :candidate elisp-symbol
                                            :annotation (capitalize symbol-type)) t))))
+
+  (when (>= (length keyword) acm-dabbrev-min-length)
+    (dolist (dabbrev-word (acm-dabbrev-list keyword))
+      (add-to-list 'acm-candidates (list :key dabbrev-word
+                                         :icon "text"
+                                         :candidate dabbrev-word
+                                         :annotation "Dabbrev") t)))
 
   (dolist (backend-hash-table (list acm-backend-global-items
                                     acm-backend-local-items))
@@ -704,7 +744,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
     (acm-update-completion-data "lsp-bridge" completion-table)
 
-    (acm-search-items "e")
+    (acm-search-items "acm-frame")
 
     (setq acm-insert-preview "hello")
 
