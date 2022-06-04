@@ -400,11 +400,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
      (switch-to-buffer acm-frame-popup-buffer)
      ))
 
-(defmacro acm-create-frame (frame frame-buffer frame-name &rest body)
-  `(if (and ,frame
-            (frame-live-p ,frame))
-       (make-frame-visible ,frame)
-
+(defmacro acm-get-create-frame (frame frame-buffer frame-name)
+  `(unless (frame-live-p ,frame)
      (setq ,frame (acm-make-frame ,frame-name))
      (set-frame-parameter ,frame 'background-color (acm-frame-background-color))
 
@@ -417,11 +414,21 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
      (with-selected-frame ,frame
        (switch-to-buffer ,frame-buffer))
-
-     (make-frame-visible ,frame)
-
-     ,@body
      ))
+
+(defun acm-set-frame-position (frame x y)
+  (if (frame-visible-p frame)
+      ;; Avoid flicker when frame is already visible.
+      ;; Redisplay, wait for resize and then move the frame.
+      (unless (equal (frame-position frame) (cons x y))
+        (redisplay 'force)
+        (sleep-for 0.01)
+        (set-frame-position frame x y))
+    ;; Force redisplay, otherwise the popup sometimes does not
+    ;; display content.
+    (set-frame-position frame x y)
+    (redisplay 'force)
+    (make-frame-visible frame)))
 
 (defun acm-match-symbol-p (pattern sym)
   "Return non-nil if SYM is matching an element of the PATTERN list."
@@ -503,7 +510,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
          (setq acm-frame-popup-buffer (current-buffer))
 
-         (acm-create-frame acm-frame acm-buffer "acm frame")
+         (acm-get-create-frame acm-frame acm-buffer "acm frame")
 
          (setq menu-new-max-length (acm-menu-max-length))
          (acm-menu-render (not (equal menu-old-max-length menu-new-max-length))
@@ -517,12 +524,10 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   (interactive)
   (acm-mode -1)
 
-  (when (and acm-frame
-             (frame-live-p acm-frame))
+  (when (frame-live-p acm-frame)
     (make-frame-invisible acm-frame))
 
-  (when (and acm-doc-frame
-             (frame-live-p acm-doc-frame))
+  (when (frame-live-p acm-doc-frame)
     (make-frame-invisible acm-doc-frame))
 
   (acm-insert-preview-delete)
@@ -613,7 +618,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          (acm-frame-y (if (> (+ cursor-y acm-frame-height) emacs-height)
                           (- cursor-y acm-frame-height)
                         (+ cursor-y offset-y))))
-    (set-frame-position acm-frame acm-frame-x acm-frame-y)))
+    (acm-set-frame-position acm-frame acm-frame-x acm-frame-y)))
 
 (defun acm-doc-show ()
   (let* ((candidate (acm-menu-current-candidate))
@@ -621,13 +626,12 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
     (when (and candidate-doc
                (not (string-equal candidate-doc "")))
 
-      (acm-create-frame
-       acm-doc-frame
-       acm-doc-buffer
-       "acm doc frame"
-       (set-frame-size acm-doc-frame
-                       (ceiling (* (frame-pixel-width acm-frame) 1.618))
-                       (ceiling (* (frame-pixel-height acm-frame) 0.618)) t))
+      (acm-get-create-frame acm-doc-frame acm-doc-buffer "acm doc frame")
+
+      (set-frame-size acm-doc-frame
+                      (ceiling (* (frame-pixel-width acm-frame) 1.618))
+                      (ceiling (* (frame-pixel-height acm-frame) 0.618))
+                      t)
 
       (with-current-buffer (get-buffer-create acm-doc-buffer)
         (visual-line-mode 1)
@@ -645,7 +649,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                                 (+ acm-frame-x acm-frame-width)))
              (acm-doc-frame-y acm-frame-y))
 
-        (set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y)
+        (acm-set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y)
         ))))
 
 (defun acm-menu-current-candidate ()
@@ -790,13 +794,6 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
           (setq-local acm-menu-index (1- acm-menu-index)))
          ((> acm-menu-offset 0)
           (setq-local acm-menu-offset (1- acm-menu-offset))))))
-
-(defun acm-build-fuzzy-regex (input)
-  "Create a fuzzy regexp of PATTERN."
-  (mapconcat (lambda (ch)
-               (let ((s (char-to-string ch)))
-                 (format "[^%s]*%s" s (regexp-quote s))))
-             input ""))
 
 (provide 'acm)
 
