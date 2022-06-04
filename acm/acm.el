@@ -433,20 +433,20 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   (let* ((keyword (acm-get-point-symbol))
          (candidates (list))
          (bounds (bounds-of-thing-at-point 'symbol))
-         (elisp-symbols (sort (all-completions keyword obarray) 'string<))
          ;; (dabbrev-words (acm-dabbrev-list keyword))
          )
 
     (when (and (or (derived-mode-p 'emacs-lisp-mode)
                    (derived-mode-p 'inferior-emacs-lisp-mode))
                (>= (length keyword) acm-elisp-min-length))
-      (dolist (elisp-symbol (cl-subseq elisp-symbols 0 (min (length elisp-symbols) 10)))
-        (let ((symbol-type (acm-elisp-symbol-type (intern elisp-symbol))))
-          (add-to-list 'candidates (list :key elisp-symbol
-                                         :icon symbol-type
-                                         :label elisp-symbol
-                                         :annotation (capitalize symbol-type)
-                                         :backend "elisp") t))))
+      (let ((elisp-symbols (sort (all-completions keyword obarray) 'string<)))
+        (dolist (elisp-symbol (cl-subseq elisp-symbols 0 (min (length elisp-symbols) 10)))
+          (let ((symbol-type (acm-elisp-symbol-type (intern elisp-symbol))))
+            (add-to-list 'candidates (list :key elisp-symbol
+                                           :icon symbol-type
+                                           :label elisp-symbol
+                                           :annotation (capitalize symbol-type)
+                                           :backend "elisp") t)))))
 
     (dolist (backend-hash-table (list acm-backend-local-items))
       (when (and backend-hash-table
