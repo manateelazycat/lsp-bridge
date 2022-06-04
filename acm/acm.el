@@ -441,9 +441,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
              (not (equal acm-idle-completion-tick (acm-idle-auto-tick))))
     (let* ((keyword (acm-get-point-symbol))
            (candidates (list))
-           (dabbrev-words (acm-dabbrev-list keyword))
-           (menu-old-max-length acm-menu-max-length-cache)
-           (menu-old-number acm-menu-number-cache))
+           (dabbrev-words (acm-dabbrev-list keyword)))
       (when (>= (length keyword) acm-dabbrev-min-length)
         (dolist (dabbrev-word (cl-subseq dabbrev-words 0 (min (length dabbrev-words) 10)))
           (add-to-list 'candidates (list :key dabbrev-word
@@ -461,7 +459,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                                          (min (- acm-menu-length (length acm-menu-candidates))
                                               (length candidates))))))
 
-        (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates)))
+        (acm-menu-render))
 
       (setq acm-idle-completion-tick (acm-idle-auto-tick)))))
 
@@ -502,33 +500,31 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
       (acm-hide))
      ((> (length candidates) 0)
       (acm-save-frame
-       (let* ((menu-old-max-length acm-menu-max-length-cache)
-              (menu-old-number acm-menu-number-cache))
-         (acm-mode 1)
+       (acm-mode 1)
 
-         (add-hook 'pre-command-hook #'acm--pre-command nil 'local)
-         (unless acm-idle-completion-timer
-           (setq acm-idle-completion-timer
-                 (run-with-idle-timer 1 t #'acm-idle-completion)))
+       (add-hook 'pre-command-hook #'acm--pre-command nil 'local)
+       (unless acm-idle-completion-timer
+         (setq acm-idle-completion-timer
+               (run-with-idle-timer 1 t #'acm-idle-completion)))
 
-         (setq-local acm-candidates candidates)
-         (setq-local acm-menu-candidates
-                     (cl-subseq acm-candidates
-                                0 (min (length acm-candidates)
-                                       acm-menu-length)))
-         (setq-local acm-menu-index (if (zerop (length acm-menu-candidates)) -1 0))
-         (setq-local acm-menu-offset 0)
+       (setq-local acm-candidates candidates)
+       (setq-local acm-menu-candidates
+                   (cl-subseq acm-candidates
+                              0 (min (length acm-candidates)
+                                     acm-menu-length)))
+       (setq-local acm-menu-index (if (zerop (length acm-menu-candidates)) -1 0))
+       (setq-local acm-menu-offset 0)
 
-         (setq acm-frame-popup-point (or (car bounds) (point)))
-         (setq acm-frame-popup-pos
-               (save-excursion
-                 (backward-char (length (acm-get-point-symbol)))
-                 (window-absolute-pixel-position)))
-         (setq acm-frame-popup-buffer (current-buffer))
+       (setq acm-frame-popup-point (or (car bounds) (point)))
+       (setq acm-frame-popup-pos
+             (save-excursion
+               (backward-char (length (acm-get-point-symbol)))
+               (window-absolute-pixel-position)))
+       (setq acm-frame-popup-buffer (current-buffer))
 
-         (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
+       (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
 
-         (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates)))))
+       (acm-menu-render)))
      (t
       (acm-hide))))
   nil)
@@ -672,9 +668,13 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defun acm-menu-current-candidate ()
   (nth (+ acm-menu-offset acm-menu-index) acm-candidates))
 
-(defun acm-menu-render (menu-old-max-length menu-new-max-length menu-old-number menu-new-number)
+(defun acm-menu-render ()
   (let* ((items acm-menu-candidates)
-         (menu-index acm-menu-index))
+         (menu-index acm-menu-index)
+         (menu-old-max-length acm-menu-max-length-cache)
+         (menu-old-number acm-menu-number-cache)
+         (menu-new-max-length (acm-menu-max-length))
+         (menu-new-number (length acm-menu-candidates)))
     (setq acm-menu-max-length-cache menu-new-max-length)
     (setq acm-menu-number-cache menu-new-number)
 
@@ -743,16 +743,14 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
 (defmacro acm-menu-update (&rest body)
   `(let* ((menu-old-index acm-menu-index)
-          (menu-old-offset acm-menu-offset)
-          (menu-old-max-length acm-menu-max-length-cache)
-          (menu-old-number acm-menu-number-cache))
+          (menu-old-offset acm-menu-offset))
      ,@body
 
      (when (or (not (equal menu-old-index acm-menu-index))
                (not (equal menu-old-offset acm-menu-offset)))
        (acm-save-frame
         (acm-menu-update-candidates)
-        (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates))
+        (acm-menu-render)
         ))))
 
 (defun acm-select-first ()
