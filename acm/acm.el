@@ -213,6 +213,8 @@ auto completion does not pop up too aggressively."
 (defvar acm-icon-cache (make-hash-table :test 'equal))
 (defvar acm-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))
 (defvar acm-icon-width 4)
+
+(defvar acm-menu-number-cache 0)
 (defvar acm-menu-max-length-cache 0)
 
 (defvar-local acm-backend-local-items nil)
@@ -473,8 +475,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
       (acm-hide))
      ((> (length candidates) 0)
       (acm-save-frame
-       (let ((menu-old-max-length acm-menu-max-length-cache)
-             menu-new-max-length)
+       (let* ((menu-old-max-length acm-menu-max-length-cache)
+              (menu-old-number acm-menu-number-cache))
          (acm-mode 1)
          (add-hook 'pre-command-hook #'acm--pre-command nil 'local)
 
@@ -487,20 +489,15 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          (setq-local acm-menu-offset 0)
 
          (setq acm-frame-popup-point (or (car bounds) (point)))
-
          (setq acm-frame-popup-pos
                (save-excursion
                  (backward-char (length (acm-get-point-symbol)))
                  (window-absolute-pixel-position)))
-
          (setq acm-frame-popup-buffer (current-buffer))
 
          (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
 
-         (setq menu-new-max-length (acm-menu-max-length))
-         (acm-menu-render (not (equal menu-old-max-length menu-new-max-length))
-                          menu-new-max-length
-                          ))))
+         (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates)))))
      (t
       (acm-hide))))
   nil)
@@ -640,21 +637,21 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defun acm-menu-current-candidate ()
   (nth (+ acm-menu-offset acm-menu-index) acm-candidates))
 
-(defun acm-menu-render (adjust-size &optional menu-max-length)
+(defun acm-menu-render (menu-old-max-length menu-new-max-length menu-old-number menu-new-number)
   (let* ((items acm-menu-candidates)
          (menu-index acm-menu-index))
-    (setq acm-menu-max-length-cache
-          (if menu-max-length menu-max-length (acm-menu-max-length)))
+    (setq acm-menu-max-length-cache menu-new-max-length)
+    (setq acm-menu-number-cache menu-new-number)
 
     (with-current-buffer (get-buffer-create acm-buffer)
       (erase-buffer)
       (acm-menu-render-items items menu-index))
 
-    (when adjust-size
+    (when (or (not (equal menu-old-max-length menu-new-max-length))
+              (not (equal menu-old-number menu-new-number)))
       (acm-set-frame-size acm-frame))
 
-    (acm-menu-adjust-pos)
-    ))
+    (acm-menu-adjust-pos)))
 
 (defun acm-icon-build (collection name fg-color)
   (let* ((icon-key (format "%s_%s" collection name))
@@ -713,17 +710,15 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   `(let* ((menu-old-index acm-menu-index)
           (menu-old-offset acm-menu-offset)
           (menu-old-max-length acm-menu-max-length-cache)
-          menu-new-max-length)
+          (menu-old-number acm-menu-number-cache))
      ,@body
 
      (when (or (not (equal menu-old-index acm-menu-index))
                (not (equal menu-old-offset acm-menu-offset)))
        (acm-save-frame
         (acm-menu-update-candidates)
-        (setq menu-new-max-length (acm-menu-max-length))
-        (acm-menu-render (not (equal menu-old-max-length menu-new-max-length))
-                         menu-new-max-length
-                         )))))
+        (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates))
+        ))))
 
 (defun acm-select-first ()
   (interactive)
