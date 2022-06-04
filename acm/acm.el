@@ -332,24 +332,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
         (svg-node svg 'path :d path :fill fill)))
     (svg-image svg :ascent 'center :scale 1)))
 
-(defvar x-gtk-resize-child-frames) ;; Not present on non-gtk builds
 (defun acm-make-frame (frame-name)
-  (let* ((window-min-height 1)
-         (window-min-width 1)
-         (x-gtk-resize-child-frames
-          (let ((case-fold-search t))
-            (and
-             ;; XXX HACK to fix resizing on gtk3/gnome taken from posframe.el
-             ;; More information:
-             ;; * https://github.com/minad/corfu/issues/17
-             ;; * https://gitlab.gnome.org/GNOME/mutter/-/issues/840
-             ;; * https://lists.gnu.org/archive/html/emacs-devel/2020-02/msg00001.html
-             (string-match-p "gtk3" system-configuration-features)
-             (string-match-p "gnome\\|cinnamon"
-                             (or (getenv "XDG_CURRENT_DESKTOP")
-                                 (getenv "DESKTOP_SESSION") ""))
-             'resize-mode)))
-         (after-make-frame-functions))
+  (let* ((after-make-frame-functions))
     (make-frame
      `((name . ,frame-name)
        (parent-frame . (window-frame))
@@ -429,6 +413,25 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
     (set-frame-position frame x y)
     (redisplay 'force)
     (make-frame-visible frame)))
+
+(defvar x-gtk-resize-child-frames) ;; Not present on non-gtk builds
+(defun acm-set-frame-size (frame)
+  (let* ((window-min-height 0)
+         (window-min-width 0)
+         (x-gtk-resize-child-frames
+          (let ((case-fold-search t))
+            (and
+             ;; XXX HACK to fix resizing on gtk3/gnome taken from posframe.el
+             ;; More information:
+             ;; * https://github.com/minad/corfu/issues/17
+             ;; * https://gitlab.gnome.org/GNOME/mutter/-/issues/840
+             ;; * https://lists.gnu.org/archive/html/emacs-devel/2020-02/msg00001.html
+             (string-match-p "gtk3" system-configuration-features)
+             (string-match-p "gnome\\|cinnamon"
+                             (or (getenv "XDG_CURRENT_DESKTOP")
+                                 (getenv "DESKTOP_SESSION") ""))
+             'resize-mode))))
+    (fit-frame-to-buffer-1 frame)))
 
 (defun acm-match-symbol-p (pattern sym)
   "Return non-nil if SYM is matching an element of the PATTERN list."
@@ -680,7 +683,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
       (acm-menu-render-items items menu-index))
 
     (when adjust-size
-      (fit-frame-to-buffer-1 acm-frame nil nil nil nil nil nil nil))
+      (acm-set-frame-size acm-frame))
 
     (acm-menu-adjust-pos)
 
