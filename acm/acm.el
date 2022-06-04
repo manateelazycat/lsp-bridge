@@ -210,9 +210,6 @@ auto completion does not pop up too aggressively."
 (defvar acm-frame-popup-point nil)
 (defvar acm-frame-popup-pos nil)
 
-(defvar acm-insert-preview "")
-(defvar acm-insert-preview-overlay nil)
-
 (defvar acm-icon-cache (make-hash-table :test 'equal))
 (defvar acm-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))
 (defvar acm-icon-width 4)
@@ -369,15 +366,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   (let ((theme-mode (format "%s" (frame-parameter nil 'background-mode))))
     (if (string-equal theme-mode "dark") "#191a1b" "#f0f0f0")))
 
-(defun acm-insert-preview-delete ()
-  (when acm-insert-preview-overlay
-    (delete-overlay acm-insert-preview-overlay)
-    (setq acm-insert-preview-overlay nil)))
-
 (defmacro acm-save-frame (&rest body)
   `(let* ((current-frame ,(selected-frame)))
-     (acm-insert-preview-delete)
-
      ,@body
 
      (select-frame current-frame)
@@ -514,7 +504,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          (setq acm-frame-popup-buffer (current-buffer))
 
          (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
-
+         
          (setq menu-new-max-length (acm-menu-max-length))
          (acm-menu-render (not (equal menu-old-max-length menu-new-max-length))
                           menu-new-max-length
@@ -533,8 +523,6 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   (when (frame-live-p acm-doc-frame)
     (make-frame-invisible acm-doc-frame))
 
-  (acm-insert-preview-delete)
-
   (setq acm-menu-max-length-cache 0)
 
   (remove-hook 'pre-command-hook #'acm--pre-command 'local))
@@ -551,8 +539,6 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
 (defun acm-complete ()
   (interactive)
-  (acm-insert-preview-delete)
-
   (when acm-complete-function
     (funcall acm-complete-function (acm-menu-current-candidate) acm-frame-popup-point))
 
@@ -662,21 +648,9 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defun acm-menu-current-candidate ()
   (nth (+ acm-menu-offset acm-menu-index) acm-candidates))
 
-(defun acm-menu-current-candidate-expand-text ()
-  (let* ((candidate (acm-menu-current-candidate))
-         (label (plist-get candidate :label))
-         (insert-text (plist-get candidate :insertText))
-         (text-edit (plist-get candidate :textEdit))
-         (new-text (plist-get text-edit :newText)))
-    (or new-text insert-text label)))
-
 (defun acm-menu-render (adjust-size &optional menu-max-length)
   (let* ((items acm-menu-candidates)
-         (menu-index acm-menu-index)
-         (input-prefix (acm-get-point-symbol))
-         (expand-text (acm-menu-current-candidate-expand-text))
-         (insert-preview (string-remove-prefix input-prefix expand-text)))
-
+         (menu-index acm-menu-index))
     (setq acm-menu-max-length-cache
           (if menu-max-length menu-max-length (acm-menu-max-length)))
 
@@ -688,15 +662,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
       (acm-set-frame-size acm-frame))
 
     (acm-menu-adjust-pos)
-
-    (when (and (string-prefix-p input-prefix expand-text)
-               (> (length insert-preview) 0))
-      (let ((insert-preview-hint (propertize insert-preview 'face 'font-lock-doc-face)))
-        (setq acm-insert-preview-overlay (make-overlay (point) (point) nil t t))
-        ;; Elisp cursor position is wrong, other languages cursor position is correct.
-        (put-text-property 0 1 'cursor t insert-preview-hint)
-        (overlay-put acm-insert-preview-overlay 'after-string insert-preview-hint)
-        ))))
+    ))
 
 (defun acm-icon-build (collection name fg-color)
   (let* ((icon-key (format "%s_%s" collection name))
