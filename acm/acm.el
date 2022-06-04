@@ -386,11 +386,14 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   (let ((theme-mode (format "%s" (frame-parameter nil 'background-mode))))
     (if (string-equal theme-mode "dark") "#191a1b" "#f0f0f0")))
 
+(defun acm-insert-preview-delete ()
+  (when acm-insert-preview-overlay
+    (delete-overlay acm-insert-preview-overlay)
+    (setq acm-insert-preview-overlay nil)))
+
 (defmacro acm-save-frame (&rest body)
   `(let* ((current-frame ,(selected-frame)))
-     (when acm-insert-preview-overlay
-       (delete-overlay acm-insert-preview-overlay)
-       (setq acm-insert-preview-overlay nil))
+     (acm-insert-preview-delete)
 
      ,@body
 
@@ -523,9 +526,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
              (frame-live-p acm-doc-frame))
     (make-frame-invisible acm-doc-frame))
 
-  (when acm-insert-preview-overlay
-    (delete-overlay acm-insert-preview-overlay)
-    (setq acm-insert-preview-overlay nil))
+  (acm-insert-preview-delete)
 
   (setq acm-menu-max-length-cache 0)
 
@@ -539,9 +540,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
 (defun acm-complete ()
   (interactive)
-  (when acm-insert-preview-overlay
-    (delete-overlay acm-insert-preview-overlay)
-    (setq acm-insert-preview-overlay nil))
+  (acm-insert-preview-delete)
 
   (when acm-complete-function
     (funcall acm-complete-function (acm-menu-current-candidate) acm-frame-popup-point))
@@ -743,48 +742,6 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
     (cl-loop with min-len = (+ acm-dabbrev-min-length (length word))
              for w in (dabbrev--find-all-expansions word (dabbrev--ignore-case-p word))
              if (>= (length w) min-len) collect w)))
-
-(defun acm-search-items (keyword)
-  (setq-local acm-candidates (list))
-
-  (when (and (or (derived-mode-p 'emacs-lisp-mode)
-                 (derived-mode-p 'inferior-emacs-lisp-mode))
-             (>= (length keyword) acm-elisp-min-length))
-    (dolist (elisp-symbol (cl-subseq (all-completions keyword obarray) 0 10))
-      (let ((symbol-type (acm-elisp-symbol-type (intern elisp-symbol))))
-        (add-to-list 'acm-candidates (list :key elisp-symbol
-                                           :icon symbol-type
-                                           :label elisp-symbol
-                                           :annotation (capitalize symbol-type)) t))))
-
-  (dolist (backend-hash-table (list acm-backend-global-items
-                                    acm-backend-local-items))
-    (when (and backend-hash-table
-               (hash-table-p backend-hash-table))
-      (dolist (backend-name (hash-table-keys backend-hash-table))
-        (maphash
-         (lambda (k v)
-           (when (or
-                  (string-equal keyword "")
-                  (string-prefix-p keyword (plist-get v :label)))
-             (add-to-list 'acm-candidates v t)
-             ))
-         (gethash backend-name backend-hash-table)
-         ))))
-
-  (when (>= (length keyword) acm-dabbrev-min-length)
-    (dolist (dabbrev-word (cl-subseq (acm-dabbrev-list keyword) 0 10))
-      (add-to-list 'acm-candidates (list :key dabbrev-word
-                                         :icon "text"
-                                         :label dabbrev-word
-                                         :annotation "Dabbrev") t)))
-
-  (setq-local acm-menu-candidates
-              (cl-subseq acm-candidates
-                         0 (min (length acm-candidates)
-                                acm-menu-length)))
-  (setq-local acm-menu-index (if (zerop (length acm-menu-candidates)) -1 0))
-  (setq-local acm-menu-offset 0))
 
 (defun acm-menu-update-candidates ()
   (let ((menu-length (length acm-menu-candidates)))
