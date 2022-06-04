@@ -226,6 +226,9 @@ auto completion does not pop up too aggressively."
 (defvar acm-doc-buffer " *acm-doc-buffer*")
 (defvar acm-doc-frame nil)
 
+(defvar acm-idle-completion-timer nil)
+(defvar acm-idle-completion-tick nil)
+
 (defvar acm--mouse-ignore-map
   (let ((map (make-sparse-keymap)))
     (dotimes (i 7)
@@ -429,12 +432,43 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
         (buffer-substring-no-properties (car bound) (cdr bound))
       "")))
 
+(defun acm-idle-auto-tick ()
+  (list (current-buffer) (buffer-chars-modified-tick) (point)))
+
+(defun acm-idle-completion ()
+  (when (and (frame-live-p acm-frame)
+             (frame-visible-p acm-frame)
+             (not (equal acm-idle-completion-tick (acm-idle-auto-tick))))
+    (let* ((keyword (acm-get-point-symbol))
+           (candidates (list))
+           (dabbrev-words (acm-dabbrev-list keyword))
+           (menu-old-max-length acm-menu-max-length-cache)
+           (menu-old-number acm-menu-number-cache))
+      (when (>= (length keyword) acm-dabbrev-min-length)
+        (dolist (dabbrev-word (cl-subseq dabbrev-words 0 (min (length dabbrev-words) 10)))
+          (add-to-list 'candidates (list :key dabbrev-word
+                                         :icon "text"
+                                         :label dabbrev-word
+                                         :annotation "Dabbrev"
+                                         :backend "dabbrev") t)))
+
+      (when (> (length candidates) 0)
+        (setq-local acm-candidates (append acm-candidates candidates))
+        (when (< (length acm-menu-candidates) acm-menu-length)
+          (setq-local acm-menu-candidates
+                      (append acm-menu-candidates
+                              (cl-subseq candidates 0
+                                         (min (- acm-menu-length (length acm-menu-candidates))
+                                              (length candidates))))))
+
+        (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates)))
+
+      (setq acm-idle-completion-tick (acm-idle-auto-tick)))))
+
 (defun acm-update ()
   (let* ((keyword (acm-get-point-symbol))
          (candidates (list))
-         (bounds (bounds-of-thing-at-point 'symbol))
-         ;; (dabbrev-words (acm-dabbrev-list keyword))
-         )
+         (bounds (bounds-of-thing-at-point 'symbol)))
 
     (when (and (or (derived-mode-p 'emacs-lisp-mode)
                    (derived-mode-p 'inferior-emacs-lisp-mode))
@@ -461,13 +495,6 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
            (gethash backend-name backend-hash-table)
            ))))
 
-    ;; (when (>= (length keyword) acm-dabbrev-min-length)
-    ;;   (dolist (dabbrev-word (cl-subseq dabbrev-words 0 (min (length dabbrev-words) 10)))
-    ;;     (add-to-list 'candidates (list :key dabbrev-word
-    ;;                                    :icon "text"
-    ;;                                    :label dabbrev-word
-    ;;                                    :annotation "Dabbrev"
-    ;;                                    :backend "dabbrev") t)))
 
     (cond
      ((and (equal (length candidates) 1)
@@ -478,7 +505,11 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
        (let* ((menu-old-max-length acm-menu-max-length-cache)
               (menu-old-number acm-menu-number-cache))
          (acm-mode 1)
+
          (add-hook 'pre-command-hook #'acm--pre-command nil 'local)
+         (unless acm-idle-completion-timer
+           (setq acm-idle-completion-timer
+                 (run-with-idle-timer 1 t #'acm-idle-completion)))
 
          (setq-local acm-candidates candidates)
          (setq-local acm-menu-candidates
@@ -514,7 +545,11 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
   (setq acm-menu-max-length-cache 0)
 
-  (remove-hook 'pre-command-hook #'acm--pre-command 'local))
+  (remove-hook 'pre-command-hook #'acm--pre-command 'local)
+
+  (when acm-idle-completion-timer
+    (cancel-timer acm-idle-completion-timer)
+    (setq acm-idle-completion-timer nil)))
 
 (defun acm-doc-hide ()
   (when (frame-live-p acm-doc-frame)
