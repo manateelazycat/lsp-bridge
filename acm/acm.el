@@ -655,19 +655,23 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
         (erase-buffer)
         (insert candidate-doc))
 
-      (let* ((emacs-width (frame-pixel-width))
-             (acm-doc-frame-width (frame-pixel-width acm-doc-frame))
-             (acm-frame-width (frame-pixel-width acm-frame))
-             (acm-frame-pos (frame-position acm-frame))
-             (acm-frame-x (car acm-frame-pos))
-             (acm-frame-y (cdr acm-frame-pos))
-             (acm-doc-frame-x (if (> (+ acm-frame-x acm-frame-width acm-doc-frame-width) emacs-width)
-                                  (- acm-frame-x acm-doc-frame-width)
-                                (+ acm-frame-x acm-frame-width)))
-             (acm-doc-frame-y acm-frame-y))
+      (acm-doc-adjust-pos)
+      )))
 
-        (acm-set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y)
-        ))))
+(defun acm-doc-adjust-pos ()
+  (let* ((emacs-width (frame-pixel-width))
+         (acm-doc-frame-width (frame-pixel-width acm-doc-frame))
+         (acm-frame-width (frame-pixel-width acm-frame))
+         (acm-frame-pos (frame-position acm-frame))
+         (acm-frame-x (car acm-frame-pos))
+         (acm-frame-y (cdr acm-frame-pos))
+         (acm-doc-frame-x (if (> (+ acm-frame-x acm-frame-width acm-doc-frame-width) emacs-width)
+                              (- acm-frame-x acm-doc-frame-width)
+                            (+ acm-frame-x acm-frame-width)))
+         (acm-doc-frame-y acm-frame-y))
+
+    (acm-set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y)
+    ))
 
 (defun acm-menu-current-candidate ()
   (nth (+ acm-menu-offset acm-menu-index) acm-candidates))
@@ -684,7 +688,11 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
     (when (or (not (equal menu-old-max-length menu-new-max-length))
               (not (equal menu-old-number menu-new-number)))
-      (acm-set-frame-size acm-frame))
+      (acm-set-frame-size acm-frame)
+
+      (when (and (frame-live-p acm-doc-frame)
+                 (frame-visible-p acm-doc-frame))
+        (acm-doc-adjust-pos)))
 
     (acm-menu-adjust-pos)))
 
