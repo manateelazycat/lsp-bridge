@@ -442,7 +442,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          (candidates (list))
          (bounds (bounds-of-thing-at-point 'symbol))
          (elisp-symbols (sort (all-completions keyword obarray) 'string<))
-         (dabbrev-words (acm-dabbrev-list keyword)))
+         ;; (dabbrev-words (acm-dabbrev-list keyword))
+         )
 
     (when (and (or (derived-mode-p 'emacs-lisp-mode)
                    (derived-mode-p 'inferior-emacs-lisp-mode))
@@ -469,13 +470,13 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
            (gethash backend-name backend-hash-table)
            ))))
 
-    (when (>= (length keyword) acm-dabbrev-min-length)
-      (dolist (dabbrev-word (cl-subseq dabbrev-words 0 (min (length dabbrev-words) 10)))
-        (add-to-list 'candidates (list :key dabbrev-word
-                                       :icon "text"
-                                       :label dabbrev-word
-                                       :annotation "Dabbrev"
-                                       :backend "dabbrev") t)))
+    ;; (when (>= (length keyword) acm-dabbrev-min-length)
+    ;;   (dolist (dabbrev-word (cl-subseq dabbrev-words 0 (min (length dabbrev-words) 10)))
+    ;;     (add-to-list 'candidates (list :key dabbrev-word
+    ;;                                    :icon "text"
+    ;;                                    :label dabbrev-word
+    ;;                                    :annotation "Dabbrev"
+    ;;                                    :backend "dabbrev") t)))
 
     (cond
      ((and (equal (length candidates) 1)
