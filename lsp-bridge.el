@@ -1216,7 +1216,9 @@ If optional MARKER, return a marker instead"
              ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
              (unless (equal lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind))
                (lsp-bridge-call-async "fetch_completion_item_info" lsp-bridge-filepath (format "%s,%s" label kind))
-               (setq lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind))))))))
+               (setq lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind)))))
+          (t
+           (acm-doc-hide)))))
 
 (defvar-local lsp-bridge-completion-item-fetch-tick nil)
 (defvar-local lsp-bridge-completion-item-popup-doc-tick nil)

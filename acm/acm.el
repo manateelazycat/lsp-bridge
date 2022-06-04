@@ -539,6 +539,10 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
   (remove-hook 'pre-command-hook #'acm--pre-command 'local))
 
+(defun acm-doc-hide ()
+  (when (frame-live-p acm-doc-frame)
+    (make-frame-invisible acm-doc-frame)))
+
 (defun acm--pre-command ()
   (unless (acm-match-symbol-p acm-continue-commands this-command)
     (acm-hide)))
@@ -692,8 +696,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
         ;; Elisp cursor position is wrong, other languages cursor position is correct.
         (put-text-property 0 1 'cursor t insert-preview-hint)
         (overlay-put acm-insert-preview-overlay 'after-string insert-preview-hint)
-        ))
-    (acm-doc-show)))
+        ))))
 
 (defun acm-icon-build (collection name fg-color)
   (let* ((icon-key (format "%s_%s" collection name))
