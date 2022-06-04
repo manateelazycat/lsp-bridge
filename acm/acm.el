@@ -667,13 +667,11 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
     (or new-text insert-text label)))
 
 (defun acm-menu-render (adjust-size &optional menu-max-length)
-  (setq acm-insert-preview-overlay (make-overlay (point) (point) nil t t))
-  (overlay-put acm-insert-preview-overlay 'intangible t)
-  (overlay-put acm-insert-preview-overlay 'window (get-buffer-window))
-
   (let* ((items acm-menu-candidates)
          (menu-index acm-menu-index)
-         (expand-text (acm-menu-current-candidate-expand-text)))
+         (input-prefix (acm-get-point-symbol))
+         (expand-text (acm-menu-current-candidate-expand-text))
+         (insert-preview (string-remove-prefix input-prefix expand-text)))
 
     (setq acm-menu-max-length-cache
           (if menu-max-length menu-max-length (acm-menu-max-length)))
@@ -687,17 +685,15 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
     (acm-menu-adjust-pos)
 
-    (when (string-prefix-p (acm-get-point-symbol) expand-text)
-      (overlay-put acm-insert-preview-overlay
-                   'after-string
-                   (propertize
-                    (string-remove-prefix (acm-get-point-symbol) expand-text)
-                    'face 'font-lock-doc-face
-                    ;; Make cursor show before insert preview overlay.
-                    'cursor t)))
-
-    (acm-doc-show)
-    ))
+    (when (and (string-prefix-p input-prefix expand-text)
+               (> (length insert-preview) 0))
+      (let ((insert-preview-hint (propertize insert-preview 'face 'font-lock-doc-face)))
+        (setq acm-insert-preview-overlay (make-overlay (point) (point) nil t t))
+        ;; Elisp cursor position is wrong, other languages cursor position is correct.
+        (put-text-property 0 1 'cursor t insert-preview-hint)
+        (overlay-put acm-insert-preview-overlay 'after-string insert-preview-hint)
+        ))
+    (acm-doc-show)))
 
 (defun acm-icon-build (collection name fg-color)
   (let* ((icon-key (format "%s_%s" collection name))
