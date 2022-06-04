@@ -450,14 +450,12 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defun acm-update ()
   (let* ((keyword (acm-get-point-symbol))
          (candidates (list))
-         (bounds (bounds-of-thing-at-point 'symbol))
-         (elisp-symbols (sort (all-completions keyword obarray) 'string<))
-         (dabbrev-words (acm-dabbrev-list keyword)))
+         (bounds (bounds-of-thing-at-point 'symbol)))
 
     (when (and (or (derived-mode-p 'emacs-lisp-mode)
                    (derived-mode-p 'inferior-emacs-lisp-mode))
                (>= (length keyword) acm-elisp-min-length))
-      (dolist (elisp-symbol elisp-symbols)
+      (dolist (elisp-symbol (sort (all-completions keyword obarray) 'string<))
         (let ((symbol-type (acm-elisp-symbol-type (intern elisp-symbol))))
           (add-to-list 'candidates (list :key elisp-symbol
                                          :icon symbol-type
@@ -480,13 +478,12 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
            ))))
 
     (when (>= (length keyword) acm-dabbrev-min-length)
-      (dolist (dabbrev-word dabbrev-words)
-        (unless (member dabbrev-word elisp-symbols)
-          (add-to-list 'candidates (list :key dabbrev-word
-                                         :icon "text"
-                                         :label dabbrev-word
-                                         :annotation "Dabbrev"
-                                         :backend "dabbrev") t))))
+      (dolist (dabbrev-word (acm-dabbrev-list keyword))
+        (add-to-list 'candidates (list :key dabbrev-word
+                                       :icon "text"
+                                       :label dabbrev-word
+                                       :annotation "Dabbrev"
+                                       :backend "dabbrev") t)))
 
     (cond
      ((and (equal (length candidates) 1)
