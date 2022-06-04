@@ -200,7 +200,6 @@ auto completion does not pop up too aggressively."
     (define-key map "\n" #'acm-complete)
     (define-key map "\M-h" #'acm-complete)
     (define-key map "\M-H" #'acm-insert-common)
-    (define-key map "\M-m" #'acm-return)
     (define-key map "\C-g" #'acm-hide)
     map)
   "Keymap used when popup is shown.")
@@ -446,7 +445,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
     (when (and (or (derived-mode-p 'emacs-lisp-mode)
                    (derived-mode-p 'inferior-emacs-lisp-mode))
                (>= (length keyword) acm-elisp-min-length))
-      (dolist (elisp-symbol (all-completions keyword obarray))
+      (dolist (elisp-symbol (sort (all-completions keyword obarray) 'string<))
         (let ((symbol-type (acm-elisp-symbol-type (intern elisp-symbol))))
           (add-to-list 'candidates (list :key elisp-symbol
                                          :icon symbol-type
@@ -550,11 +549,6 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defun acm-insert-common ()
   (interactive)
   )
-
-(defun acm-return ()
-  (interactive)
-  (acm-hide)
-  (newline-and-indent))
 
 (defun acm-menu-max-length ()
   (cl-reduce #'max
