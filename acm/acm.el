@@ -215,7 +215,6 @@ auto completion does not pop up too aggressively."
 (defvar acm-icon-width 4)
 (defvar acm-menu-max-length-cache 0)
 
-(defvar acm-backend-global-items nil)
 (defvar-local acm-backend-local-items nil)
 (defvar-local acm-candidates nil)
 (defvar-local acm-menu-candidates nil)
@@ -391,18 +390,9 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
      ))
 
 (defun acm-set-frame-position (frame x y)
-  (if (frame-visible-p frame)
-      ;; Avoid flicker when frame is already visible.
-      ;; Redisplay, wait for resize and then move the frame.
-      (unless (equal (frame-position frame) (cons x y))
-        (redisplay 'force)
-        (sleep-for 0.01)
-        (set-frame-position frame x y))
-    ;; Force redisplay, otherwise the popup sometimes does not
-    ;; display content.
-    (set-frame-position frame x y)
-    (redisplay 'force)
-    (make-frame-visible frame)))
+  (unless (frame-visible-p frame)
+    (make-frame-visible frame))
+  (set-frame-position frame x y))
 
 (defvar x-gtk-resize-child-frames) ;; Not present on non-gtk builds
 (defun acm-set-frame-size (frame)
@@ -456,8 +446,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                                          :annotation (capitalize symbol-type)
                                          :backend "elisp") t))))
 
-    (dolist (backend-hash-table (list acm-backend-global-items
-                                      acm-backend-local-items))
+    (dolist (backend-hash-table (list acm-backend-local-items))
       (when (and backend-hash-table
                  (hash-table-p backend-hash-table))
         (dolist (backend-name (hash-table-keys backend-hash-table))
