@@ -440,12 +440,14 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defun acm-update ()
   (let* ((keyword (acm-get-point-symbol))
          (candidates (list))
-         (bounds (bounds-of-thing-at-point 'symbol)))
+         (bounds (bounds-of-thing-at-point 'symbol))
+         (elisp-symbols (sort (all-completions keyword obarray) 'string<))
+         (dabbrev-words (acm-dabbrev-list keyword)))
 
     (when (and (or (derived-mode-p 'emacs-lisp-mode)
                    (derived-mode-p 'inferior-emacs-lisp-mode))
                (>= (length keyword) acm-elisp-min-length))
-      (dolist (elisp-symbol (sort (all-completions keyword obarray) 'string<))
+      (dolist (elisp-symbol (cl-subseq elisp-symbols 0 (min (length elisp-symbols) 10)))
         (let ((symbol-type (acm-elisp-symbol-type (intern elisp-symbol))))
           (add-to-list 'candidates (list :key elisp-symbol
                                          :icon symbol-type
@@ -468,7 +470,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
            ))))
 
     (when (>= (length keyword) acm-dabbrev-min-length)
-      (dolist (dabbrev-word (acm-dabbrev-list keyword))
+      (dolist (dabbrev-word (cl-subseq dabbrev-words 0 (min (length dabbrev-words) 10)))
         (add-to-list 'candidates (list :key dabbrev-word
                                        :icon "text"
                                        :label dabbrev-word
@@ -504,7 +506,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          (setq acm-frame-popup-buffer (current-buffer))
 
          (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
-         
+
          (setq menu-new-max-length (acm-menu-max-length))
          (acm-menu-render (not (equal menu-old-max-length menu-new-max-length))
                           menu-new-max-length
