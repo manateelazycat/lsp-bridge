@@ -400,7 +400,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
      (switch-to-buffer acm-frame-popup-buffer)
      ))
 
-(defmacro acm-get-create-frame (frame frame-buffer frame-name)
+(defmacro acm-create-frame-if-not-exist (frame frame-buffer frame-name)
   `(unless (frame-live-p ,frame)
      (setq ,frame (acm-make-frame ,frame-name))
      (set-frame-parameter ,frame 'background-color (acm-frame-background-color))
@@ -510,7 +510,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
          (setq acm-frame-popup-buffer (current-buffer))
 
-         (acm-get-create-frame acm-frame acm-buffer "acm frame")
+         (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
 
          (setq menu-new-max-length (acm-menu-max-length))
          (acm-menu-render (not (equal menu-old-max-length menu-new-max-length))
@@ -614,7 +614,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          (offset-y (line-pixel-height))
          (acm-frame-x (if (> (+ cursor-x acm-frame-width) emacs-width)
                           (- cursor-x acm-frame-width)
-                        (- cursor-x offset-x)))
+                        (max (- cursor-x offset-x) 0)))
          (acm-frame-y (if (> (+ cursor-y acm-frame-height) emacs-height)
                           (- cursor-y acm-frame-height)
                         (+ cursor-y offset-y))))
@@ -626,7 +626,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
     (when (and candidate-doc
                (not (string-equal candidate-doc "")))
 
-      (acm-get-create-frame acm-doc-frame acm-doc-buffer "acm doc frame")
+      (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame")
 
       (set-frame-size acm-doc-frame
                       (ceiling (* (frame-pixel-width acm-frame) 1.618))
