@@ -881,7 +881,7 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-rename-file (filepath edits)
   (find-file-noselect filepath)
   (lsp-bridge--with-file-buffer filepath
-    (dolist (edit edits)
+    (dolist (edit (reverse edits))
       (let* ((bound-start (nth 0 edit))
              (bound-end (nth 1 edit))
              (new-text (nth 2 edit))
