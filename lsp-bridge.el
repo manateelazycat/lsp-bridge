@@ -264,7 +264,9 @@ Start discarding off end if gets this big."
   lsp-bridge-server)
 
 (defun lsp-bridge--eval-in-emacs-func (sexp-string)
-  (eval (read sexp-string)))
+  (eval (read sexp-string))
+  ;; Return nil to avoid epc error `Got too many arguments in the reply'.
+  nil)
 
 (defun lsp-bridge--get-emacs-var-func (var-name)
   (let* ((var-symbol (intern var-name))
