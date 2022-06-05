@@ -236,7 +236,7 @@ auto completion does not pop up too aggressively."
   "The background color used for the thin border.")
 
 (defface acm-buffer-size-face
-  '((t (:height 140)))
+  '()
   "Face for content area.")
 
 (defface acm-select-face
@@ -562,6 +562,8 @@ influence of C1 on the result."
                                       acm-menu-length)))
         (setq-local acm-menu-index (if (zerop (length acm-menu-candidates)) -1 0))
         (setq-local acm-menu-offset 0)
+
+        (set-face-attribute 'acm-buffer-size-face nil :height (face-attribute 'default :height))
 
         (when (equal (face-attribute 'acm-default-face :background) 'unspecified)
           (set-face-background 'acm-default-face (acm-color-blend (face-attribute 'default :background) blend-background (if is-dark-mode 0.8 0.9))))
