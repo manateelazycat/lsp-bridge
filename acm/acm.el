@@ -521,10 +521,12 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
         (setq-local acm-menu-offset 0)
 
         (setq acm-frame-popup-point (or (car bounds) (point)))
-        (setq acm-frame-popup-pos
-              (save-excursion
-                (backward-char (length (acm-get-point-symbol)))
-                (window-absolute-pixel-position)))
+        (let* ((edges (window-pixel-edges))
+               (pos (posn-x-y (posn-at-point acm-frame-popup-point))))
+          (setq acm-frame-popup-pos
+                (save-excursion
+                  (backward-char (length (acm-get-point-symbol)))
+                  (cons (+ (car pos) (nth 0 edges)) (+ (cdr pos) (nth 1 edges))))))
         (setq acm-frame-popup-buffer (current-buffer))
 
         (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
