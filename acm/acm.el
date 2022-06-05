@@ -549,8 +549,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   (when (frame-live-p acm-frame)
     (make-frame-invisible acm-frame))
 
-  (when (frame-live-p acm-doc-frame)
-    (make-frame-invisible acm-doc-frame))
+  (acm-doc-hide)
 
   (setq acm-menu-max-length-cache 0)
 
