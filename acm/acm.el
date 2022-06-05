@@ -578,7 +578,12 @@ influence of C1 on the result."
           (setq acm-frame-popup-pos
                 (save-excursion
                   (backward-char (length (acm-get-point-symbol)))
-                  (cons (+ (car pos) (nth 0 edges)) (+ (cdr pos) (nth 1 edges))))))
+                  (cons (+ (car pos) (nth 0 edges))
+                        (+ (cdr pos)
+                           (nth 1 edges)
+                           (if (version< emacs-version "27.0")
+                               (window-header-line-height)
+                             (window-tab-line-height)))))))
         (setq acm-frame-popup-buffer (current-buffer))
 
         (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
