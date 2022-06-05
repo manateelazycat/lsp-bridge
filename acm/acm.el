@@ -97,6 +97,12 @@
   "Maximal number of candidate of menu."
   :type 'integer)
 
+(defcustom acm-idle-completion-delay 1
+  "How many seconds to stay in your fingers will popup the enhance completion.
+
+Default is 1 second."
+  :type 'integer)
+
 (defcustom acm-continue-commands
   ;; nil is undefined command
   '(nil ignore universal-argument universal-argument-more digit-argument self-insert-command
@@ -550,7 +556,7 @@ influence of C1 on the result."
 
         (unless acm-idle-completion-timer
           (setq acm-idle-completion-timer
-                (run-with-idle-timer 1 t #'acm-idle-completion)))
+                (run-with-idle-timer acm-idle-completion-delay t #'acm-idle-completion)))
 
         (setq-local acm-candidates candidates)
         (setq-local acm-menu-candidates
