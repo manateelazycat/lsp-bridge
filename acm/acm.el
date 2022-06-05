@@ -334,50 +334,56 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
         (svg-node svg 'path :d path :fill fill)))
     (svg-image svg :ascent 'center :scale 1)))
 
+(defvar x-gtk-resize-child-frames) ;; not present on non-gtk builds
 (defun acm-make-frame (frame-name)
-  (let* ((after-make-frame-functions))
-    (make-frame
-     `((name . ,frame-name)
-       (parent-frame . (window-frame))
-       (no-accept-focus . t)
-       (no-focus-on-map . t)
-       (minibuffer . nil)
-       (min-width . t)
-       (min-height . t)
-       (width . 0)
-       (height . 0)
-       (border-width . 0)
-       (child-frame-border-width . 1)
-       (left-fringe . 0)
-       (right-fringe . 0)
-       (vertical-scroll-bars . nil)
-       (horizontal-scroll-bars . nil)
-       (menu-bar-lines . 0)
-       (tool-bar-lines . 0)
-       (tab-bar-lines . 0)
-       (no-other-frame . t)
-       (no-other-window . t)
-       (no-delete-other-windows . t)
-       (unsplittable . t)
-       (undecorated . t)
-       (cursor-type . nil)
-       (visibility . nil)
-       (no-special-glyphs . t)
-       (desktop-dont-save . t)
-       (internal-border-width . 1)
-       ))))
+  (let* ((after-make-frame-functions nil)
+         (parent (selected-frame))
+         (x-gtk-resize-child-frames
+          (let ((case-fold-search t))
+            (and
+             ;; Fix resizing frame on gtk3/gnome.
+             (string-match-p "gtk3" system-configuration-features)
+             (string-match-p "gnome\\|cinnamon"
+                             (or (getenv "XDG_CURRENT_DESKTOP")
+                                 (getenv "DESKTOP_SESSION") ""))
+             'resize-mode)))
+         frame)
+    (setq frame (make-frame
+                 `((name . ,frame-name)
+                   (parent-frame . ,parent)
+                   (no-accept-focus . t)
+                   (no-focus-on-map . t)
+                   (minibuffer . nil)
+                   (min-width . t)
+                   (min-height . t)
+                   (width . 0)
+                   (height . 0)
+                   (border-width . 0)
+                   (child-frame-border-width . 1)
+                   (left-fringe . 0)
+                   (right-fringe . 0)
+                   (vertical-scroll-bars . nil)
+                   (horizontal-scroll-bars . nil)
+                   (menu-bar-lines . 0)
+                   (tool-bar-lines . 0)
+                   (tab-bar-lines . 0)
+                   (no-other-frame . t)
+                   (no-other-window . t)
+                   (no-delete-other-windows . t)
+                   (unsplittable . t)
+                   (undecorated . t)
+                   (cursor-type . nil)
+                   (visibility . nil)
+                   (no-special-glyphs . t)
+                   (desktop-dont-save . t)
+                   (internal-border-width . 1)
+                   )))
+    (redirect-frame-focus frame parent)
+    frame))
 
 (defun acm-frame-background-color ()
   (let ((theme-mode (format "%s" (frame-parameter nil 'background-mode))))
     (if (string-equal theme-mode "dark") "#191a1b" "#f0f0f0")))
-
-(defmacro acm-save-frame (&rest body)
-  `(let* ((current-frame ,(selected-frame)))
-     ,@body
-
-     (select-frame current-frame)
-     (switch-to-buffer acm-frame-popup-buffer)
-     ))
 
 (defmacro acm-create-frame-if-not-exist (frame frame-buffer frame-name)
   `(unless (frame-live-p ,frame)
@@ -391,32 +397,19 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          (set (make-local-variable (car var)) (cdr var)))
        (buffer-face-set 'acm-default-face))
 
-     (with-selected-frame ,frame
-       (switch-to-buffer ,frame-buffer))
-     ))
+     (let ((win (frame-root-window ,frame)))
+       (set-window-buffer win ,frame-buffer)
+       ;; Mark window as dedicated to prevent frame reuse.
+       (set-window-dedicated-p win t))))
 
 (defun acm-set-frame-position (frame x y)
   (unless (frame-visible-p frame)
     (make-frame-visible frame))
   (set-frame-position frame x y))
 
-(defvar x-gtk-resize-child-frames) ;; Not present on non-gtk builds
 (defun acm-set-frame-size (frame)
   (let* ((window-min-height 0)
-         (window-min-width 0)
-         (x-gtk-resize-child-frames
-          (let ((case-fold-search t))
-            (and
-             ;; XXX HACK to fix resizing on gtk3/gnome taken from posframe.el
-             ;; More information:
-             ;; * https://github.com/minad/corfu/issues/17
-             ;; * https://gitlab.gnome.org/GNOME/mutter/-/issues/840
-             ;; * https://lists.gnu.org/archive/html/emacs-devel/2020-02/msg00001.html
-             (string-match-p "gtk3" system-configuration-features)
-             (string-match-p "gnome\\|cinnamon"
-                             (or (getenv "XDG_CURRENT_DESKTOP")
-                                 (getenv "DESKTOP_SESSION") ""))
-             'resize-mode))))
+         (window-min-width 0))
     (fit-frame-to-buffer-1 frame)))
 
 (defun acm-match-symbol-p (pattern sym)
@@ -507,37 +500,36 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
            (string-equal keyword (plist-get (nth 0 candidates) :label)))
       (acm-hide))
      ((> (length candidates) 0)
-      (acm-save-frame
-       (let* ((menu-old-max-length acm-menu-max-length-cache)
-              (menu-old-number acm-menu-number-cache))
-         (acm-mode 1)
+      (let* ((menu-old-max-length acm-menu-max-length-cache)
+             (menu-old-number acm-menu-number-cache))
+        (acm-mode 1)
 
-         (add-hook 'pre-command-hook #'acm--pre-command nil 'local)
+        (add-hook 'pre-command-hook #'acm--pre-command nil 'local)
 
-         (acm-doc-hide)
+        (acm-doc-hide)
 
-         (unless acm-idle-completion-timer
-           (setq acm-idle-completion-timer
-                 (run-with-idle-timer 1 t #'acm-idle-completion)))
+        (unless acm-idle-completion-timer
+          (setq acm-idle-completion-timer
+                (run-with-idle-timer 1 t #'acm-idle-completion)))
 
-         (setq-local acm-candidates candidates)
-         (setq-local acm-menu-candidates
-                     (cl-subseq acm-candidates
-                                0 (min (length acm-candidates)
-                                       acm-menu-length)))
-         (setq-local acm-menu-index (if (zerop (length acm-menu-candidates)) -1 0))
-         (setq-local acm-menu-offset 0)
+        (setq-local acm-candidates candidates)
+        (setq-local acm-menu-candidates
+                    (cl-subseq acm-candidates
+                               0 (min (length acm-candidates)
+                                      acm-menu-length)))
+        (setq-local acm-menu-index (if (zerop (length acm-menu-candidates)) -1 0))
+        (setq-local acm-menu-offset 0)
 
-         (setq acm-frame-popup-point (or (car bounds) (point)))
-         (setq acm-frame-popup-pos
-               (save-excursion
-                 (backward-char (length (acm-get-point-symbol)))
-                 (window-absolute-pixel-position)))
-         (setq acm-frame-popup-buffer (current-buffer))
+        (setq acm-frame-popup-point (or (car bounds) (point)))
+        (setq acm-frame-popup-pos
+              (save-excursion
+                (backward-char (length (acm-get-point-symbol)))
+                (window-absolute-pixel-position)))
+        (setq acm-frame-popup-buffer (current-buffer))
 
-         (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
+        (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
 
-         (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates)))))
+        (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates))))
      (t
       (acm-hide))))
   nil)
@@ -761,10 +753,9 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
      (when (or (not (equal menu-old-index acm-menu-index))
                (not (equal menu-old-offset acm-menu-offset)))
-       (acm-save-frame
-        (acm-menu-update-candidates)
-        (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates))
-        ))))
+       (acm-menu-update-candidates)
+       (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates))
+       )))
 
 (defun acm-select-first ()
   (interactive)
