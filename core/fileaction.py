@@ -129,6 +129,6 @@ class FileAction:
     def handle_server_response_message(self, request_id, request_type, response):
         self.handlers[request_type].handle_response(request_id, response)
         
-    def completion_item_resolve(self, label, item_key):
+    def completion_item_resolve(self, item_key):
         if item_key in self.completion_items:
-            self.handlers["completion_item_resolve"].send_request(label, self.completion_items[item_key])
+            self.handlers["completion_item_resolve"].send_request(item_key, self.completion_items[item_key])

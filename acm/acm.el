@@ -95,7 +95,7 @@
 
 (defcustom acm-continue-commands
   ;; nil is undefined command
-  '(nil ignore universal-argument universal-argument-more digit-argument
+  '(nil ignore universal-argument universal-argument-more digit-argument self-insert-command
         "\\`acm-" "\\`scroll-other-window")
   "Continue ACM completion after executing these commands."
   :type '(repeat (choice regexp symbol)))
@@ -122,7 +122,7 @@ auto completion does not pop up too aggressively."
 
 (defvar acm-icon-alist
   `(("unknown" . ("material" "file-find-outline" "#74d2e7"))
-    ("text" . ("material" "format-text" "#fe5000"))
+    ("text" . ("material" "format-text" "#98c807"))
     ("method" . ("material" "cube" "#da1884"))
     ("function" . ("material" "function" "#ff6a00"))
     ("fun" . ("material" "function-variant" "#0abf53"))
@@ -168,23 +168,6 @@ auto completion does not pop up too aggressively."
     ("custom" . ("material" "apple-keyboard-option" "#ed6856"))
     (t . ("material" "file-find-outline" "#90cef1"))))
 
-(defvar lsp-bridge-buffer-parameters
-  '((mode-line-format . nil)
-    (header-line-format . nil)
-    (tab-line-format . nil)
-    (tab-bar-format . nil)
-    (frame-title-format . "")
-    (truncate-lines . t)
-    (cursor-in-non-selected-windows . nil)
-    (cursor-type . nil)
-    (show-trailing-whitespace . nil)
-    (display-line-numbers . nil)
-    (left-fringe-width . nil)
-    (right-fringe-width . 0)
-    (left-margin-width . 0)
-    (right-margin-width . 0)
-    (fringes-outside-margins . 0)))
-
 (defvar acm-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [remap next-line] #'acm-select-next)
@@ -195,23 +178,28 @@ auto completion does not pop up too aggressively."
     (define-key map "\M-p" #'acm-select-prev)
     (define-key map "\M-," #'acm-select-last)
     (define-key map "\M-." #'acm-select-first)
+    (define-key map "\C-m" #'acm-complete)
+    (define-key map "\t" #'acm-complete)
+    (define-key map "\n" #'acm-complete)
+    (define-key map "\M-h" #'acm-complete)
+    (define-key map "\M-H" #'acm-insert-common)
     (define-key map "\C-g" #'acm-hide)
     map)
   "Keymap used when popup is shown.")
 
 (defvar acm-buffer " *acm-buffer*")
 (defvar acm-frame nil)
+(defvar acm-frame-popup-buffer nil)
+(defvar acm-frame-popup-point nil)
 (defvar acm-frame-popup-pos nil)
-
-(defvar acm-insert-preview "")
-(defvar acm-insert-preview-overlay nil)
 
 (defvar acm-icon-cache (make-hash-table :test 'equal))
 (defvar acm-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))
 (defvar acm-icon-width 4)
+
+(defvar acm-menu-number-cache 0)
 (defvar acm-menu-max-length-cache 0)
 
-(defvar acm-backend-global-items nil)
 (defvar-local acm-backend-local-items nil)
 (defvar-local acm-candidates nil)
 (defvar-local acm-menu-candidates nil)
@@ -221,7 +209,31 @@ auto completion does not pop up too aggressively."
 (defvar acm-doc-buffer " *acm-doc-buffer*")
 (defvar acm-doc-frame nil)
 
+(defvar acm-idle-completion-timer nil)
+(defvar acm-idle-completion-tick nil)
+(defvar acm-idle-completion-doc-candidate nil)
+
+(defvar acm--mouse-ignore-map
+  (let ((map (make-sparse-keymap)))
+    (dotimes (i 7)
+      (dolist (k '(mouse down-mouse drag-mouse double-mouse triple-mouse))
+        (define-key map (vector (intern (format "%s-%s" k (1+ i)))) #'ignore)))
+    map)
+  "Ignore all mouse clicks.")
+
 (defface acm-default-face
+  '((((class color) (min-colors 88) (background dark)) :background "#191a1b")
+    (((class color) (min-colors 88) (background light)) :background "#f0f0f0")
+    (t :background "gray"))
+  "Default face, foreground and background colors used for the popup.")
+
+(defface acm-border-face
+  '((((class color) (min-colors 88) (background dark)) :background "#323232")
+    (((class color) (min-colors 88) (background light)) :background "#d7d7d7")
+    (t :background "gray"))
+  "The background color used for the thin border.")
+
+(defface acm-buffer-size-face
   '((t (:height 140)))
   "Face for content area.")
 
@@ -317,70 +329,106 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
         (svg-node svg 'path :d path :fill fill)))
     (svg-image svg :ascent 'center :scale 1)))
 
-(defun acm-make-frame (frame-name)
-  (make-frame
-   `((name . ,frame-name)
-     (parent-frame . (selected-frame))
-     (no-accept-focus . t)
-     (no-focus-on-map . t)
-     (minibuffer . nil)
-     (min-width . t)
-     (min-height . t)
-     (width . 0)
-     (height . 0)
-     (border-width . 0)
-     (child-frame-border-width . 1)
-     (left-fringe . 0)
-     (right-fringe . 0)
-     (vertical-scroll-bars . nil)
-     (horizontal-scroll-bars . nil)
-     (menu-bar-lines . 0)
-     (tool-bar-lines . 0)
-     (tab-bar-lines . 0)
-     (no-other-frame . t)
-     (no-other-window . t)
-     (no-delete-other-windows . t)
-     (unsplittable . t)
-     (undecorated . t)
-     (cursor-type . nil)
-     (visibility . nil)
-     (no-special-glyphs . t)
-     (desktop-dont-save . t)
-     (internal-border-width . 1)
-     )))
+(defvar x-gtk-resize-child-frames) ;; not present on non-gtk builds
+(defun acm-make-frame (frame-name internal-border)
+  (let* ((after-make-frame-functions nil)
+         (parent (selected-frame))
+         (x-gtk-resize-child-frames
+          (let ((case-fold-search t))
+            (and
+             ;; Fix resizing frame on gtk3/gnome.
+             (string-match-p "gtk3" system-configuration-features)
+             (string-match-p "gnome\\|cinnamon"
+                             (or (getenv "XDG_CURRENT_DESKTOP")
+                                 (getenv "DESKTOP_SESSION") ""))
+             'resize-mode)))
+         (border-width (if internal-border internal-border 1))
+         frame)
+    (setq frame (make-frame
+                 `((name . ,frame-name)
+                   (parent-frame . ,parent)
+                   (no-accept-focus . t)
+                   (no-focus-on-map . t)
+                   (minibuffer . nil)
+                   (min-width . t)
+                   (min-height . t)
+                   (width . 0)
+                   (height . 0)
+                   (border-width . 0)
+                   (internal-border-width . ,border-width)
+                   (child-frame-border-width . ,border-width)
+                   (left-fringe . 0)
+                   (right-fringe . 0)
+                   (vertical-scroll-bars . nil)
+                   (horizontal-scroll-bars . nil)
+                   (menu-bar-lines . 0)
+                   (tool-bar-lines . 0)
+                   (tab-bar-lines . 0)
+                   (no-other-frame . t)
+                   (no-other-window . t)
+                   (no-delete-other-windows . t)
+                   (unsplittable . t)
+                   (undecorated . t)
+                   (cursor-type . nil)
+                   (visibility . nil)
+                   (no-special-glyphs . t)
+                   (desktop-dont-save . t)
+                   )))
 
-(defun acm-frame-background-color ()
-  (let ((theme-mode (format "%s" (frame-parameter nil 'background-mode))))
-    (if (string-equal theme-mode "dark") "#191a1b" "#f0f0f0")))
+    ;; Set frame border, if border-width more than 1 pixel, don't set border.
+    (when (equal border-width 1)
+      (let* ((face (if (facep 'child-frame-border) 'child-frame-border 'internal-border))
+             (new (face-attribute 'acm-border-face :background nil 'default)))
+        (unless (equal (face-attribute face :background frame 'default) new)
+          (set-face-background face new frame))))
 
-(defmacro acm-save-frame (&rest body)
-  `(let* ((current-frame ,(selected-frame))
-          (current-buffer ,(current-buffer)))
-     ,@body
+    ;; Set frame background.
+    (let ((new (face-attribute 'acm-default-face :background nil 'default)))
+      (unless (equal (frame-parameter frame 'background-color) new)
+        (set-frame-parameter frame 'background-color new)))
 
-     (select-frame current-frame)
-     (switch-to-buffer current-buffer)))
+    (redirect-frame-focus frame parent)
+    frame))
 
-(defmacro acm-create-frame (frame frame-buffer frame-name &rest body)
-  `(if (and ,frame
-            (frame-live-p ,frame))
-       (make-frame-visible ,frame)
-
-     (setq ,frame (acm-make-frame ,frame-name))
-     (set-frame-parameter ,frame 'background-color (acm-frame-background-color))
-
+(defmacro acm-create-frame-if-not-exist (frame frame-buffer frame-name &optional internal-border)
+  `(unless (frame-live-p ,frame)
+     (setq ,frame (acm-make-frame ,frame-name ,internal-border))
+     
      (with-current-buffer (get-buffer-create ,frame-buffer)
-       (dolist (var lsp-bridge-buffer-parameters)
+       ;; Install mouse ignore map
+       (use-local-map acm--mouse-ignore-map)
+       (dolist (var '((mode-line-format . nil)
+                      (header-line-format . nil)
+                      (tab-line-format . nil)
+                      (tab-bar-format . nil)
+                      (frame-title-format . "")
+                      (truncate-lines . t)
+                      (cursor-in-non-selected-windows . nil)
+                      (cursor-type . nil)
+                      (show-trailing-whitespace . nil)
+                      (display-line-numbers . nil)
+                      (left-fringe-width . nil)
+                      (right-fringe-width . nil)
+                      (left-margin-width . 0)
+                      (right-margin-width . 0)
+                      (fringes-outside-margins . 0)))
          (set (make-local-variable (car var)) (cdr var)))
-       (buffer-face-set 'acm-default-face))
+       (buffer-face-set 'acm-buffer-size-face))
 
-     (with-selected-frame ,frame
-       (switch-to-buffer ,frame-buffer))
+     (let ((win (frame-root-window ,frame)))
+       (set-window-buffer win ,frame-buffer)
+       ;; Mark window as dedicated to prevent frame reuse.
+       (set-window-dedicated-p win t))))
 
-     (make-frame-visible ,frame)
+(defun acm-set-frame-position (frame x y)
+  (unless (frame-visible-p frame)
+    (make-frame-visible frame))
+  (set-frame-position frame x y))
 
-     ,@body
-     ))
+(defun acm-set-frame-size (frame)
+  (let* ((window-min-height 0)
+         (window-min-width 0))
+    (fit-frame-to-buffer-1 frame)))
 
 (defun acm-match-symbol-p (pattern sym)
   "Return non-nil if SYM is matching an element of the PATTERN list."
@@ -390,65 +438,173 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                             (eq sym x)
                           (string-match-p x (symbol-name sym))))))
 
-(defun acm-pre-command ()
-  "Insert selected candidate unless command is marked to continue completion."
-  (unless (acm-match-symbol-p acm-continue-commands this-command)
-    (acm-hide)))
+(defun acm-get-point-symbol ()
+  (let ((bound (bounds-of-thing-at-point 'symbol)))
+    (if bound
+        (buffer-substring-no-properties (car bound) (cdr bound))
+      "")))
 
-(defun acm-popup ()
-  (interactive)
-  (acm-save-frame
-   (acm-mode 1)
+(defun acm-idle-auto-tick ()
+  (list (current-buffer) (buffer-chars-modified-tick) (point)))
 
-   (setq acm-frame-popup-pos (window-absolute-pixel-position))
+(defun acm-idle-completion ()
+  (when (and (frame-live-p acm-frame)
+             (frame-visible-p acm-frame))
+    (let ((current-candidate (acm-menu-current-candidate)))
+      (when (and acm-fetch-candidate-doc-function
+                 (not (equal acm-idle-completion-doc-candidate current-candidate)))
+        (funcall acm-fetch-candidate-doc-function current-candidate)
+        (setq acm-idle-completion-doc-candidate current-candidate)))
 
-   (acm-create-frame acm-frame acm-buffer "acm frame")
+    (when (not (equal acm-idle-completion-tick (acm-idle-auto-tick)))
+      (let* ((keyword (acm-get-point-symbol))
+             (candidates (list))
+             (dabbrev-words (acm-dabbrev-list keyword))
+             (menu-old-max-length acm-menu-max-length-cache)
+             (menu-old-number acm-menu-number-cache))
+        (when (>= (length keyword) acm-dabbrev-min-length)
+          (dolist (dabbrev-word (cl-subseq dabbrev-words 0 (min (length dabbrev-words) 10)))
+            (add-to-list 'candidates (list :key dabbrev-word
+                                           :icon "text"
+                                           :label dabbrev-word
+                                           :annotation "Dabbrev"
+                                           :backend "dabbrev") t)))
 
-   (setq acm-insert-preview-overlay (make-overlay (point) (point) nil t t))
-   (overlay-put acm-insert-preview-overlay 'intangible t)
-   (overlay-put acm-insert-preview-overlay 'window (get-buffer-window))
+        (when (> (length candidates) 0)
+          (setq-local acm-candidates (append acm-candidates candidates))
+          (when (< (length acm-menu-candidates) acm-menu-length)
+            (setq-local acm-menu-candidates
+                        (append acm-menu-candidates
+                                (cl-subseq candidates 0
+                                           (min (- acm-menu-length (length acm-menu-candidates))
+                                                (length candidates))))))
 
-   (acm-menu-render t)
+          (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates)))
 
-   (add-hook 'pre-command-hook #'acm-pre-command nil 'local)
-   ))
+        (setq acm-idle-completion-tick (acm-idle-auto-tick))))))
+
+(defun acm-update ()
+  (let* ((keyword (acm-get-point-symbol))
+         (candidates (list))
+         (bounds (bounds-of-thing-at-point 'symbol)))
+
+    (when (and (or (derived-mode-p 'emacs-lisp-mode)
+                   (derived-mode-p 'inferior-emacs-lisp-mode))
+               (>= (length keyword) acm-elisp-min-length))
+      (let ((elisp-symbols (sort (all-completions keyword obarray) 'string<)))
+        (dolist (elisp-symbol (cl-subseq elisp-symbols 0 (min (length elisp-symbols) 10)))
+          (let ((symbol-type (acm-elisp-symbol-type (intern elisp-symbol))))
+            (add-to-list 'candidates (list :key elisp-symbol
+                                           :icon symbol-type
+                                           :label elisp-symbol
+                                           :annotation (capitalize symbol-type)
+                                           :backend "elisp") t)))))
+
+    (dolist (backend-hash-table (list acm-backend-local-items))
+      (when (and backend-hash-table
+                 (hash-table-p backend-hash-table))
+        (dolist (backend-name (hash-table-keys backend-hash-table))
+          (maphash
+           (lambda (k v)
+             (when (or (string-equal keyword "")
+                       (string-prefix-p keyword (plist-get v :label)))
+               (plist-put v :backend "lsp")
+               (add-to-list 'candidates v t)))
+           (gethash backend-name backend-hash-table)
+           ))))
+
+    (cond
+     ((and (equal (length candidates) 1)
+           (string-equal keyword (plist-get (nth 0 candidates) :label)))
+      (acm-hide))
+     ((> (length candidates) 0)
+      (let* ((menu-old-max-length acm-menu-max-length-cache)
+             (menu-old-number acm-menu-number-cache))
+        (acm-mode 1)
+
+        (add-hook 'pre-command-hook #'acm--pre-command nil 'local)
+
+        (acm-doc-hide)
+
+        (unless acm-idle-completion-timer
+          (setq acm-idle-completion-timer
+                (run-with-idle-timer 1 t #'acm-idle-completion)))
+
+        (setq-local acm-candidates candidates)
+        (setq-local acm-menu-candidates
+                    (cl-subseq acm-candidates
+                               0 (min (length acm-candidates)
+                                      acm-menu-length)))
+        (setq-local acm-menu-index (if (zerop (length acm-menu-candidates)) -1 0))
+        (setq-local acm-menu-offset 0)
+
+        (setq acm-frame-popup-point (or (car bounds) (point)))
+        (let* ((edges (window-pixel-edges))
+               (pos (posn-x-y (posn-at-point acm-frame-popup-point))))
+          (setq acm-frame-popup-pos
+                (save-excursion
+                  (backward-char (length (acm-get-point-symbol)))
+                  (cons (+ (car pos) (nth 0 edges)) (+ (cdr pos) (nth 1 edges))))))
+        (setq acm-frame-popup-buffer (current-buffer))
+
+        (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
+
+        (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates))))
+     (t
+      (acm-hide))))
+  nil)
 
 (defun acm-hide ()
   (interactive)
-  (when (and acm-frame
-             (frame-live-p acm-frame))
-    (acm-mode -1)
+  (acm-mode -1)
 
-    (make-frame-invisible acm-frame)
-    (delete-frame acm-frame)
-    (kill-buffer acm-buffer)
-    (setq acm-frame nil))
+  (when (frame-live-p acm-frame)
+    (make-frame-invisible acm-frame))
 
-  (when (and acm-doc-frame
-             (frame-live-p acm-doc-frame))
-    (make-frame-invisible acm-doc-frame)
-    (delete-frame acm-doc-frame)
-    (kill-buffer acm-doc-buffer)
-    (setq acm-doc-frame nil))
+  (acm-doc-hide)
 
-  (when acm-insert-preview-overlay
-    (delete-overlay acm-insert-preview-overlay)
-    (setq acm-insert-preview-overlay nil))
+  (setq acm-menu-max-length-cache 0)
 
-  (remove-hook 'pre-command-hook #'acm-pre-command 'local)
+  (remove-hook 'pre-command-hook #'acm--pre-command 'local)
+
+  (when acm-idle-completion-timer
+    (cancel-timer acm-idle-completion-timer)
+    (setq acm-idle-completion-timer nil)))
+
+(defun acm-doc-hide ()
+  (when (frame-live-p acm-doc-frame)
+    (make-frame-invisible acm-doc-frame)))
+
+(defun acm--pre-command ()
+  (unless (acm-match-symbol-p acm-continue-commands this-command)
+    (acm-hide)))
+
+(defvar acm-complete-function nil)
+
+(defun acm-complete ()
+  (interactive)
+  (when acm-complete-function
+    (funcall acm-complete-function (acm-menu-current-candidate) acm-frame-popup-point))
+
+  (acm-hide))
+
+(defun acm-insert-common ()
+  (interactive)
   )
 
 (defun acm-menu-max-length ()
   (cl-reduce #'max
              (mapcar '(lambda (v)
-                        (string-width (format "%s %s" (plist-get v :candidate) (plist-get v :annotation))))
+                        (string-width (format "%s %s" (plist-get v :label) (plist-get v :annotation))))
                      acm-menu-candidates)))
+
+(defvar acm-fetch-candidate-doc-function nil)
 
 (defun acm-menu-render-items (items menu-index)
   (let ((item-index 0))
     (dolist (v items)
       (let* ((icon (cdr (assoc (plist-get v :icon) acm-icon-alist)))
-             (candidate (plist-get v :candidate))
+             (candidate (plist-get v :label))
              (annotation (plist-get v :annotation))
              (annotation-text (if annotation annotation ""))
              (item-length (string-width annotation-text))
@@ -465,12 +621,18 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                (propertize " "
                            'display
                            (acm-indent-pixel
-                            (ceiling (* (window-font-width) (- (* acm-menu-max-length-cache 1.5) item-length)))))
-               (propertize (format "%s \n" annotation-text) 'face 'font-lock-doc-face)
+                            (ceiling (* (window-font-width) (- (+ acm-menu-max-length-cache 20) item-length)))))
+               (propertize (format "%s \n" (capitalize annotation-text)) 'face 'font-lock-doc-face)
                ))
 
         (when (equal item-index menu-index)
-          (add-face-text-property 0 (length candidate-line) 'acm-select-face 'append candidate-line))
+          (add-face-text-property 0 (length candidate-line) 'acm-select-face 'append candidate-line)
+
+          (when (and
+                 (not (string-equal (plist-get v :backend) "lsp"))
+                 (frame-live-p acm-doc-frame)
+                 (frame-visible-p acm-doc-frame))
+            (acm-doc-hide)))
 
         (insert candidate-line)
 
@@ -490,73 +652,67 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          (offset-y (line-pixel-height))
          (acm-frame-x (if (> (+ cursor-x acm-frame-width) emacs-width)
                           (- cursor-x acm-frame-width)
-                        (- cursor-x offset-x)))
+                        (max (- cursor-x offset-x) 0)))
          (acm-frame-y (if (> (+ cursor-y acm-frame-height) emacs-height)
                           (- cursor-y acm-frame-height)
                         (+ cursor-y offset-y))))
-    (set-frame-position acm-frame acm-frame-x acm-frame-y)))
+    (acm-set-frame-position acm-frame acm-frame-x acm-frame-y)))
 
 (defun acm-doc-show ()
   (let* ((candidate (acm-menu-current-candidate))
-         (candidate-doc (plist-get candidate :doc)))
+         (candidate-doc (plist-get candidate :documentation)))
     (when (and candidate-doc
                (not (string-equal candidate-doc "")))
 
-      (acm-create-frame
-       acm-doc-frame
-       acm-doc-buffer
-       "acm doc frame"
-       (set-frame-size acm-doc-frame
-                       (ceiling (* (frame-pixel-width acm-frame) 1.618))
-                       (ceiling (* (frame-pixel-height acm-frame) 0.618)) t))
+      (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame" 10)
 
       (with-current-buffer (get-buffer-create acm-doc-buffer)
         (visual-line-mode 1)
         (erase-buffer)
         (insert candidate-doc))
 
-      (let* ((emacs-width (frame-pixel-width))
-             (acm-doc-frame-width (frame-pixel-width acm-doc-frame))
-             (acm-frame-width (frame-pixel-width acm-frame))
-             (acm-frame-pos (frame-position acm-frame))
-             (acm-frame-x (car acm-frame-pos))
-             (acm-frame-y (cdr acm-frame-pos))
-             (acm-doc-frame-x (if (> (+ acm-frame-x acm-frame-width acm-doc-frame-width) emacs-width)
-                                  (- acm-frame-x acm-doc-frame-width)
-                                (+ acm-frame-x acm-frame-width)))
-             (acm-doc-frame-y acm-frame-y))
+      (acm-set-frame-size acm-doc-frame)
 
-        (set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y)
-        ))))
+      (acm-doc-adjust-pos)
+      )))
+
+(defun acm-doc-adjust-pos ()
+  (let* ((emacs-width (frame-pixel-width))
+         (acm-doc-frame-width (frame-pixel-width acm-doc-frame))
+         (acm-frame-width (frame-pixel-width acm-frame))
+         (acm-frame-pos (frame-position acm-frame))
+         (acm-frame-x (car acm-frame-pos))
+         (acm-frame-y (cdr acm-frame-pos))
+         (acm-doc-frame-x (if (> (+ acm-frame-x acm-frame-width acm-doc-frame-width) emacs-width)
+                              (- acm-frame-x acm-doc-frame-width)
+                            (+ acm-frame-x acm-frame-width)))
+         (acm-doc-frame-y acm-frame-y))
+
+    (acm-set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y)
+    ))
 
 (defun acm-menu-current-candidate ()
   (nth (+ acm-menu-offset acm-menu-index) acm-candidates))
 
-(defun acm-menu-render (adjust-size &optional menu-max-length)
+(defun acm-menu-render (menu-old-max-length menu-new-max-length menu-old-number menu-new-number)
   (let* ((items acm-menu-candidates)
          (menu-index acm-menu-index))
-
-    (setq acm-menu-max-length-cache
-          (if menu-max-length menu-max-length (acm-menu-max-length)))
+    (setq acm-menu-max-length-cache menu-new-max-length)
+    (setq acm-menu-number-cache menu-new-number)
 
     (with-current-buffer (get-buffer-create acm-buffer)
       (erase-buffer)
       (acm-menu-render-items items menu-index))
 
-    (when adjust-size
-      (fit-frame-to-buffer-1 acm-frame nil nil nil nil nil nil nil))
+    (when (or (not (equal menu-old-max-length menu-new-max-length))
+              (not (equal menu-old-number menu-new-number)))
+      (acm-set-frame-size acm-frame)
 
-    (acm-menu-adjust-pos)
+      (when (and (frame-live-p acm-doc-frame)
+                 (frame-visible-p acm-doc-frame))
+        (acm-doc-adjust-pos)))
 
-    (overlay-put acm-insert-preview-overlay
-                 'after-string
-                 (propertize (plist-get (acm-menu-current-candidate) :candidate)
-                             'face 'font-lock-doc-face
-                             ;; Make cursor show before insert preview overlay.
-                             'cursor t))
-
-    (acm-doc-show)
-    ))
+    (acm-menu-adjust-pos)))
 
 (defun acm-icon-build (collection name fg-color)
   (let* ((icon-key (format "%s_%s" collection name))
@@ -584,7 +740,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
         (t
          "variable")))
 
-(defmacro acm--silent (&rest body)
+(defmacro acm-silent (&rest body)
   "Silence BODY."
   (declare (indent 0))
   `(cl-letf ((inhibit-message t)
@@ -595,53 +751,13 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defun acm-dabbrev-list (word)
   "Find all dabbrev expansions for WORD."
   (require 'dabbrev)
-  (acm--silent
+  (acm-silent
     (let ((dabbrev-check-other-buffers t)
           (dabbrev-check-all-buffers t))
       (dabbrev--reset-global-variables))
     (cl-loop with min-len = (+ acm-dabbrev-min-length (length word))
              for w in (dabbrev--find-all-expansions word (dabbrev--ignore-case-p word))
              if (>= (length w) min-len) collect w)))
-
-(defun acm-search-items (keyword)
-  (setq-local acm-candidates (list))
-
-  (when (and (or (derived-mode-p 'emacs-lisp-mode)
-                 (derived-mode-p 'inferior-emacs-lisp-mode))
-             (>= (length keyword) acm-elisp-min-length))
-    (dolist (elisp-symbol (all-completions keyword obarray))
-      (let ((symbol-type (acm-elisp-symbol-type (intern elisp-symbol))))
-        (add-to-list 'acm-candidates (list :key elisp-symbol
-                                           :icon symbol-type
-                                           :candidate elisp-symbol
-                                           :annotation (capitalize symbol-type)) t))))
-
-  (when (>= (length keyword) acm-dabbrev-min-length)
-    (dolist (dabbrev-word (acm-dabbrev-list keyword))
-      (add-to-list 'acm-candidates (list :key dabbrev-word
-                                         :icon "text"
-                                         :candidate dabbrev-word
-                                         :annotation "Dabbrev") t)))
-
-  (dolist (backend-hash-table (list acm-backend-global-items
-                                    acm-backend-local-items))
-    (when (and backend-hash-table
-               (hash-table-p backend-hash-table))
-      (dolist (backend-name (hash-table-keys backend-hash-table))
-        (maphash
-         (lambda (k v)
-           (when (string-match-p (acm-build-fuzzy-regex keyword) (plist-get v :candidate))
-             (add-to-list 'acm-candidates v t)
-             ))
-         (gethash backend-name backend-hash-table)
-         ))))
-
-  (setq-local acm-menu-candidates
-              (cl-subseq acm-candidates
-                         0 (min (length acm-candidates)
-                                acm-menu-length)))
-  (setq-local acm-menu-index (if (zerop (length acm-menu-candidates)) -1 0))
-  (setq-local acm-menu-offset 0))
 
 (defun acm-menu-update-candidates ()
   (let ((menu-length (length acm-menu-candidates)))
@@ -655,17 +771,14 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   `(let* ((menu-old-index acm-menu-index)
           (menu-old-offset acm-menu-offset)
           (menu-old-max-length acm-menu-max-length-cache)
-          menu-new-max-length)
+          (menu-old-number acm-menu-number-cache))
      ,@body
 
      (when (or (not (equal menu-old-index acm-menu-index))
                (not (equal menu-old-offset acm-menu-offset)))
-       (acm-save-frame
-        (acm-menu-update-candidates)
-        (setq menu-new-max-length (acm-menu-max-length))
-        (acm-menu-render (not (equal menu-old-max-length menu-new-max-length))
-                         menu-new-max-length
-                         )))))
+       (acm-menu-update-candidates)
+       (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates))
+       )))
 
 (defun acm-select-first ()
   (interactive)
@@ -696,59 +809,6 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
           (setq-local acm-menu-index (1- acm-menu-index)))
          ((> acm-menu-offset 0)
           (setq-local acm-menu-offset (1- acm-menu-offset))))))
-
-(defun acm-build-fuzzy-regex (input)
-  "Create a fuzzy regexp of PATTERN."
-  (mapconcat (lambda (ch)
-               (let ((s (char-to-string ch)))
-                 (format "[^%s]*%s" s (regexp-quote s))))
-             input ""))
-
-(defun acm-test ()
-  (interactive)
-  (unless acm-backend-local-items
-    (setq-local acm-backend-local-items (make-hash-table :test 'equal)))
-
-  (let* ((completion-table (make-hash-table :test 'equal))
-         items)
-    (setq items '(
-                  (:key "1" :icon "unknown" :candidate "expanduser" :doc "Doc for expanduser.")
-                  (:key "2" :icon "text" :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser dlkdjf lksjlfkjlsfd lskjdfljsljf slkjflskdjf lksdjfsdl jsdljfl sfljsdlf jsdlfjl sjlfd jsljflsdj lfjsd ldkflkdjf slkjflskdj jsdlfjsljf sljflsdj ljsdlfjsdlfj lsdjflsdjfl jsldfjlsdj ljfsdlfj aljsldjflsdjfl jslfjlsdkjfl jsdlfjs ljdflsjf ljsdlfj slfjl dsjlfjsldjf lsjfl jsldfjsldj flsdjfl jsldfj sljdf .")
-                  (:key "3" :icon "method" :candidate "isabs" :annotation "Function" :doc "Doc for isabs.")
-                  (:key "4" :icon "function" :candidate "isabs" :annotation "Snippet" :doc "Doc for isabs.")
-                  (:key "5" :icon "fun" :candidate "exists" :annotation "Function" :doc "Doc for exists.")
-                  (:key "6" :icon "constructor" :candidate "exists" :annotation "Snippet" :doc "Doc for exists.")
-                  (:key "7" :icon "ctor" :candidate "append" :annotation "Function" :doc "Doc for append.")
-                  (:key "8" :icon "field" :candidate "append" :annotation "Snippet" :doc "Doc for append.")
-                  (:key "9" :icon "variable" :candidate "remove" :annotation "Function" :doc "Doc for remove.")
-                  (:key "10" :icon "var" :candidate "remove" :annotation "Snippet" :doc "Doc for remove.")
-                  (:key "11" :icon "class" :candidate "startswith" :annotation "Function" :doc "Doc for startswith.")
-                  (:key "12" :icon "interface" :candidate "startswith" :doc "Doc for startswith.")
-                  (:key "13" :icon "i/f" :candidate "endswith" :annotation "Function" :doc "Doc for endswith.")
-                  (:key "14" :icon "module" :candidate "endswith" :annotation "Snippet" :doc "Doc for endswith.")
-                  (:key "15" :icon "mod" :candidate "long-function-name" :annotation "Function" :doc "Doc for long-function-name.")
-                  (:key "16" :icon "property" :candidate "long-function-name" :doc "Doc for long-function-name.")
-                  (:key "17" :icon "prop" :candidate "cool-vars-name" :annotation "Function" :doc "Doc for cool-vars-name.")
-                  (:key "18" :icon "unit" :candidate "cool-vars-name" :annotation "Snippet" :doc "Doc for cool-vars-name.")
-                  (:key "19" :icon "value" :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser." :deprecated t)
-                  (:key "20" :icon "enum" :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser.")
-                  (:key "21" :icon "keyword" :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser.")
-                  (:key "22" :icon "k/w" :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser.")
-                  (:key "23" :icon "snippet" :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser.")
-                  (:key "24" :icon "color" :candidate "expanduser" :annotation "Snippet" :doc "Doc for expanduser.")
-                  (:key "25" :icon "file" :candidate "expanduser" :annotation "Function" :doc "Doc for expanduser.")
-                  ))
-
-    (dolist (item items)
-      (puthash (plist-get item :key) item completion-table))
-
-    (acm-update-completion-data "lsp-bridge" completion-table)
-
-    (acm-search-items "acm-frame")
-
-    (setq acm-insert-preview "hello")
-
-    (acm-popup)))
 
 (provide 'acm)
 

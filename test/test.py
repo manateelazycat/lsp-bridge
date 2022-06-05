@@ -44,10 +44,6 @@ def test_entrypoint():
         (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
         (package-initialize)
         (package-refresh-contents)
-        (package-install 'corfu)
-        (package-install 'corfu-doc)
-        (package-install 'all-the-icons)
-        (package-install 'orderless)
         (package-install 'posframe)
         (package-install 'markdown-mode)
         (package-install 'yasnippet)
@@ -65,14 +61,6 @@ def test_entrypoint():
         (require 'lsp-bridge)
         (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
         (yas-global-mode 1)
-        (require 'corfu)
-        (require 'corfu-doc)
-        (require 'corfu-info)
-        (require 'corfu-history)
-        (require 'lsp-bridge-icon)        ;; show icons for completion items, optional
-        (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
-        (global-corfu-mode)
-        (corfu-history-mode t)
         (global-lsp-bridge-mode)
     )"""
     run([

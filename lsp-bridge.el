@@ -81,20 +81,73 @@
 (require 'posframe)
 (require 'markdown-mode)
 
-(require 'corfu)
-(require 'corfu-info)
-(require 'corfu-doc)
-
 (defgroup lsp-bridge nil
   "LSP-Bridge group."
   :group 'applications)
 
+(defvar acm-library-path (expand-file-name "acm" (file-name-directory load-file-name)))
+(add-to-list 'load-path acm-library-path t)
+(require 'acm)
 
-(defcustom lsp-bridge-completion-popup-predicates '(lsp-bridge-not-empty-candidates
-                                                    lsp-bridge-not-only-blank-before-cursor
+(setq acm-complete-function 'lsp-bridge-expand-candidate)
+(setq acm-fetch-candidate-doc-function 'lsp-bridge-fetch-candidate-doc)
+
+(defun lsp-bridge-expand-candidate (candidate-info bound-start)
+  (let ((backend (plist-get candidate-info :backend)))
+    (cond
+     ((string-equal backend "lsp")
+      (let* ((label (plist-get candidate-info :label))
+             (insert-text (plist-get candidate-info :insertText))
+             (insert-text-format (plist-get candidate-info :insertTextFormat))
+             (text-edit (plist-get candidate-info :textEdit))
+             (new-text (plist-get text-edit :newText))
+             (additionalTextEdits (plist-get candidate-info :additionalTextEdits))
+             (kind (plist-get candidate-info :icon))
+             (snippet-fn (and (or (eql insert-text-format 2) (string= kind "snippet")) (lsp-bridge--snippet-expansion-fn)))
+             (completion-start-pos (lsp-bridge--lsp-position-to-point lsp-bridge-completion-position))
+             (delete-start-pos (if text-edit
+                                   (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :start))
+                                 bound-start))
+             (range-end-pos (if text-edit
+                                (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :end))
+                              completion-start-pos))
+             (delete-end-pos (+ (point) (- range-end-pos completion-start-pos)))
+             (insert-candidate (or new-text insert-text label)))
+
+        ;; Move bound start position forward one character, if the following situation is satisfied:
+        ;; 1. `textEdit' is not exist
+        ;; 2. bound-start character is `lsp-bridge-completion-trigger-characters'
+        ;; 3. `label' start with bound-start character
+        ;; 4. `insertText' is not start with bound-start character
+        (unless text-edit
+          (let* ((bound-start-char (save-excursion
+                                     (goto-char delete-start-pos)
+                                     (char-to-string (char-after)))))
+            (when (and (member bound-start-char lsp-bridge-completion-trigger-characters)
+                       (string-prefix-p bound-start-char label)
+                       (not (string-prefix-p bound-start-char insert-text)))
+              (setq delete-start-pos (1+ delete-start-pos)))))
+
+        ;; Delete region.
+        (delete-region delete-start-pos delete-end-pos)
+
+        ;; Insert candidate or expand snippet.
+        (funcall (or snippet-fn #'insert) insert-candidate)
+
+        ;; Do `additionalTextEdits' if return auto-imprt information.
+        (when (and lsp-bridge-enable-auto-import
+                   (cl-plusp (length additionalTextEdits)))
+          (lsp-bridge--apply-text-edits additionalTextEdits))))
+     (t
+      (delete-region bound-start (point))
+      (insert (plist-get candidate-info :label)))
+     )))
+
+(defcustom lsp-bridge-completion-popup-predicates '(lsp-bridge-not-only-blank-before-cursor
                                                     lsp-bridge-not-match-hide-characters
                                                     lsp-bridge-not-match-completion-position
                                                     lsp-bridge-not-match-stop-commands
+                                                    lsp-bridge-not-in-string
                                                     lsp-bridge-is-evil-insert-state
                                                     )
   "A list of predicate functions with no argument to enable popup completion in callback."
@@ -109,9 +162,8 @@ Setting this to nil or 0 will turn off the indicator."
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-completion-stop-commands
-  '("corfu-complete" "corfu-insert"
-    "undo-tree-undo" "undo-tree-redo"
-    "kill-region" "delete-block-backward" "company-complete-selection")
+  '("undo-tree-undo" "undo-tree-redo"
+    "kill-region" "delete-block-backward")
   "If last command is match this option, stop popup completion ui."
   :type 'cons
   :group 'lsp-bridge)
@@ -318,7 +370,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     sh-mode-hook
     web-mode-hook
     css-mode-hook
-    elm-mode-hook)
+    elm-mode-hook
+    emacs-lisp-mode-hook)
   "The default mode hook to enable lsp-bridge."
   :type 'list)
 
@@ -503,36 +556,34 @@ Auto completion is only performed if the tick did not change."
     (if prev-char (char-to-string prev-char) "")))
 
 (defun lsp-bridge-monitor-post-command ()
-  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (unless (equal (point) lsp-bridge-last-position)
-      (lsp-bridge-call-async "change_cursor" lsp-bridge-filepath (lsp-bridge--position))
-      (setq-local lsp-bridge-last-position (point))))
+  (when lsp-bridge-mode
+    (when (eq this-command 'self-insert-command)
+      (lsp-bridge-try-completion)))
 
-  ;; Hide hover tooltip.
-  (if (not (string-prefix-p "lsp-bridge-popup-documentation-scroll" (format "%s" this-command)))
-      (lsp-bridge-hide-doc-tooltip))
+  (unless (derived-mode-p 'emacs-lisp-mode)
+    (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+      (unless (equal (point) lsp-bridge-last-position)
+        (lsp-bridge-call-async "change_cursor" lsp-bridge-filepath (lsp-bridge--position))
+        (setq-local lsp-bridge-last-position (point))))
 
-  ;; Hide diagnostic tooltip.
-  (unless (member (format "%s" this-command) '("lsp-bridge-jump-to-next-diagnostic"
-                                               "lsp-bridge-jump-to-prev-diagnostic"))
-    (lsp-bridge-hide-diagnostic-tooltip)))
+    ;; Hide hover tooltip.
+    (if (not (string-prefix-p "lsp-bridge-popup-documentation-scroll" (format "%s" this-command)))
+        (lsp-bridge-hide-doc-tooltip))
+
+    ;; Hide diagnostic tooltip.
+    (unless (member (format "%s" this-command) '("lsp-bridge-jump-to-next-diagnostic"
+                                                 "lsp-bridge-jump-to-prev-diagnostic"))
+      (lsp-bridge-hide-diagnostic-tooltip))))
 
 (defun lsp-bridge-close-buffer-file ()
-  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (lsp-bridge-call-async "close_file" lsp-bridge-filepath)))
+  (unless (derived-mode-p 'emacs-lisp-mode)
+    (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+      (lsp-bridge-call-async "close_file" lsp-bridge-filepath))))
 
 (defun lsp-bridge-is-empty-list (list)
   (or (and (eq (length list) 1)
            (string-empty-p (format "%s" (car list))))
       (and (eq (length list) 0))))
-
-(defun lsp-bridge-add-candidate-item (label item)
-  (if (gethash label lsp-bridge-completion-candidates)
-      (lsp-bridge-add-candidate-item (format "%s " label) item)
-    (puthash label item lsp-bridge-completion-candidates)))
-
-(defun lsp-bridge-get-candidate-item (label)
-  (gethash label lsp-bridge-completion-candidates))
 
 (defun lsp-bridge-record-completion-items (filepath
                                            common items position
@@ -547,51 +598,28 @@ Auto completion is only performed if the tick did not change."
     (setq-local lsp-bridge-completion-trigger-characters completion-trigger-characters)
     (setq-local lsp-bridge-completion-resolve-provider completion-resolve-provider)
 
-    (setq-local lsp-bridge-completion-candidates (make-hash-table :test 'equal))
-    (dolist (item items)
-      (lsp-bridge-add-candidate-item (plist-get item :label) item))
+    (unless acm-backend-local-items
+      (setq-local acm-backend-local-items (make-hash-table :test 'equal)))
 
-    (if lsp-bridge-prohibit-completion
-        (setq lsp-bridge-prohibit-completion nil)
+    (let* ((completion-table (make-hash-table :test 'equal)))
+      (dolist (item items)
+        (puthash (plist-get item :key) item completion-table))
+      (acm-update-completion-data "lsp-bridge" completion-table))
 
-      ;; Try popup completion frame.
-      (when (cl-every (lambda (pred)
-                        (if (functionp pred) (funcall pred) t))
-                      lsp-bridge-completion-popup-predicates)
-        (lsp-bridge-update-candidates)
-        ))))
+    (lsp-bridge-try-completion)
+    ))
 
-(defun lsp-bridge-update-candidates ()
-  (pcase (while-no-input ;; Interruptible capf query
-           (run-hook-wrapped 'completion-at-point-functions #'corfu--capf-wrapper))
-    (`(,fun ,beg ,end ,table . ,plist)
-     (let ((completion-in-region-mode-predicate
-            (lambda () (eq beg (car-safe (funcall fun)))))
-           (completion-extra-properties plist))
-       (setq completion-in-region--data
-             (list (if (markerp beg) beg (copy-marker beg))
-                   (copy-marker end t)
-                   table
-                   (plist-get plist :predicate)))
+(defun lsp-bridge-try-completion ()
+  (if lsp-bridge-prohibit-completion
+      (setq lsp-bridge-prohibit-completion nil)
 
-       ;; Refresh candidates forcibly!!!
-       (pcase-let* ((`(,beg ,end ,table ,pred) completion-in-region--data)
-                    (pt (- (point) beg))
-                    (str (buffer-substring-no-properties beg end)))
-         (corfu--update-candidates str pt table (plist-get plist :predicate)))
-
-       ;; Setup hook.
-       (corfu--setup)
-
-       ;; When you finger faster than LSP server,
-       ;; Corfu will **auto insert** select candidate when lsp-bridge push newest completion data,
-       ;; so we need set `corfu-on-exact-match' to quit to prohibit corfu insert select candidate.
-       (let ((corfu-on-exact-match 'quit))
-         (corfu--update))))))
-
-(defun lsp-bridge-not-empty-candidates ()
-  "Hide completion if candidates list is empty."
-  (not (lsp-bridge-is-empty-list (hash-table-keys lsp-bridge-completion-candidates))))
+    ;; Try popup completion frame.
+    (if (cl-every (lambda (pred)
+                    (if (functionp pred) (funcall pred) t))
+                  lsp-bridge-completion-popup-predicates)
+        (acm-update)
+      (acm-hide)
+      )))
 
 (defun lsp-bridge-not-match-completion-position ()
   "Hide completion if the position of cursor has changed."
@@ -605,6 +633,36 @@ Auto completion is only performed if the tick did not change."
   "Hide completion if cursor after hide character match `lsp-bridge-completion-hide-characters'."
   (not (member (char-to-string (char-before)) lsp-bridge-completion-hide-characters)))
 
+(defun lsp-bridge-not-in-string ()
+  "Hide completion if cursor in string area."
+  (not (lsp-bridge-in-string-p)))
+
+(defun lsp-bridge-in-string-p (&optional state)
+  (ignore-errors
+    (unless (or (bobp) (eobp))
+      (save-excursion
+        (or
+         ;; In most situation, point inside a string when 4rd state `parse-partial-sexp' is non-nil.
+         ;; but at this time, if the string delimiter is the last character of the line, the point is not in the string.
+         ;; So we need exclude this situation when check state of `parse-partial-sexp'.
+         (and
+          (nth 3 (or state (awesome-pair-current-parse-state)))
+          (not (equal (point) (line-end-position))))
+         (and
+          (eq (get-text-property (point) 'face) 'font-lock-string-face)
+          (eq (get-text-property (- (point) 1) 'face) 'font-lock-string-face))
+         (and
+          (eq (get-text-property (point) 'face) 'font-lock-doc-face)
+          (eq (get-text-property (- (point) 1) 'face) 'font-lock-doc-face))
+         )))))
+
+(defun lsp-bridge-current-parse-state ()
+  (let ((point (point)))
+    (beginning-of-defun)
+    (when (equal point (point))
+      (beginning-of-line))
+    (parse-partial-sexp (point) point)))
+
 (defun lsp-bridge-not-only-blank-before-cursor ()
   "Hide completion if only blank before cursor."
   (split-string (buffer-substring-no-properties
@@ -614,99 +672,6 @@ Auto completion is only performed if the tick did not change."
 (defun lsp-bridge-is-evil-insert-state ()
   "If `evil' mode is enable, only show completion when evil is in insert mode."
   (or (not (featurep 'evil)) (evil-insert-state-p)))
-
-(defun lsp-bridge-capf ()
-  "Capf function"
-  (let* ((candidates (hash-table-keys lsp-bridge-completion-candidates))
-         (bounds (bounds-of-thing-at-point 'symbol))
-         (bounds-start (or (car bounds) (point)))
-         (bounds-end (or (cdr bounds) (point))))
-    (list
-     bounds-start
-     bounds-end
-     candidates
-
-     :company-cache
-     t
-
-     :annotation-function
-     (lambda (candidate)
-       (let* ((annotation (plist-get (lsp-bridge-get-candidate-item candidate) :annotation)))
-         (setq lsp-bridge-completion-prefix (buffer-substring-no-properties bounds-start (point)))
-         (when annotation
-           (concat " " (propertize annotation 'face 'font-lock-doc-face)))))
-
-     :company-kind
-     (lambda (candidate)
-       (when-let* ((kind (plist-get (lsp-bridge-get-candidate-item candidate) :kind)))
-         (intern (downcase kind))))
-
-     :company-deprecated
-     (lambda (candidate)
-       (seq-contains-p (plist-get (lsp-bridge-get-candidate-item candidate) :tags) 1))
-
-     :exit-function
-     (lambda (candidate status)
-       ;; Only expand candidate when status is `finished'.
-       ;; Otherwise we execute command `backward-delete-char-untabify' will cause candidate expand.
-       (when (memq status '(finished))
-         ;; Because lsp-bridge will push new candidates when company/lsp-bridge-ui completing.
-         ;; We need extract newest candidates when insert, avoid insert old candidate content.
-         (let* ((candidate-index (cl-find candidate candidates :test #'string=)))
-           (with-current-buffer (if (minibufferp)
-                                    (window-buffer (minibuffer-selected-window))
-                                  (current-buffer))
-             (cond
-              ;; Don't expand candidate if the user enters all characters manually.
-              ((and (member candidate candidates)
-                    (eq this-command 'self-insert-command)))
-              ;; Just insert candidate if it has expired.
-              ((null candidate-index))
-              (t
-               (let* ((label (string-trim candidate)) ; we need trim candidate
-                      (candidate-info (lsp-bridge-get-candidate-item candidate))
-                      (insert-text (plist-get candidate-info :insertText))
-                      (insert-text-format (plist-get candidate-info :insertTextFormat))
-                      (text-edit (plist-get candidate-info :textEdit))
-                      (new-text (plist-get text-edit :newText))
-                      (additionalTextEdits (plist-get candidate-info :additionalTextEdits))
-                      (kind (plist-get candidate-info :kind))
-                      (snippet-fn (and (or (eql insert-text-format 2) (string= kind "Snippet")) (lsp-bridge--snippet-expansion-fn)))
-                      (completion-start-pos (lsp-bridge--lsp-position-to-point lsp-bridge-completion-position))
-                      (delete-start-pos (if text-edit
-                                            (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :start))
-                                          bounds-start))
-                      (range-end-pos (if text-edit
-                                         (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :end))
-                                       completion-start-pos))
-                      (delete-end-pos (+ (point) (- range-end-pos completion-start-pos)))
-                      (insert-candidate (or new-text insert-text label)))
-
-                 ;; Move bound start position forward one character, if the following situation is satisfied:
-                 ;; 1. `textEdit' is not exist
-                 ;; 2. bound-start character is `lsp-bridge-completion-trigger-characters'
-                 ;; 3. `label' start with bound-start character
-                 ;; 4. `insertText' is not start with bound-start character
-                 (unless text-edit
-                   (let* ((bound-start-char (save-excursion
-                                              (goto-char delete-start-pos)
-                                              (char-to-string (char-after)))))
-                     (when (and (member bound-start-char lsp-bridge-completion-trigger-characters)
-                                (string-prefix-p bound-start-char label)
-                                (not (string-prefix-p bound-start-char insert-text)))
-                       (setq delete-start-pos (1+ delete-start-pos)))))
-
-                 ;; Delete region.
-                 (delete-region delete-start-pos delete-end-pos)
-
-                 ;; Insert candidate or expand snippet.
-                 (funcall (or snippet-fn #'insert) insert-candidate)
-
-                 ;; Do `additionalTextEdits' if return auto-imprt information.
-                 (when (and lsp-bridge-enable-auto-import
-                            (cl-plusp (length additionalTextEdits)))
-                   (lsp-bridge--apply-text-edits additionalTextEdits))
-                 ))))))))))
 
 (defun lsp-bridge--snippet-expansion-fn ()
   "Compute a function to expand snippets.
@@ -770,34 +735,38 @@ If optional MARKER, return a marker instead"
 (defvar-local lsp-bridge--before-change-end-pos nil)
 
 (defun lsp-bridge-monitor-before-change (begin end)
-  (setq lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
-  (setq lsp-bridge--before-change-end-pos (lsp-bridge--point-position end)))
+  (unless (derived-mode-p 'emacs-lisp-mode)
+    (setq lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
+    (setq lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))))
 
 (defun lsp-bridge-monitor-after-change (begin end length)
   ;; Record last command to `lsp-bridge-last-change-command'.
   (setq lsp-bridge-last-change-command (format "%s" this-command))
 
   ;; Send change_file request.
-  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (setq-local lsp-bridge-current-tick (lsp-bridge--auto-tick))
-    (lsp-bridge-call-async "change_file"
-                           lsp-bridge-filepath
-                           lsp-bridge--before-change-begin-pos
-                           lsp-bridge--before-change-end-pos
-                           length
-                           (buffer-substring-no-properties begin end)
-                           (lsp-bridge--position)
-                           (lsp-bridge-char-before)
-                           (buffer-substring-no-properties (line-beginning-position) (point))
-                           (lsp-bridge-completion-ui-visible-p)
-                           )))
+  (setq-local lsp-bridge-current-tick (lsp-bridge--auto-tick))
+
+  (unless (derived-mode-p 'emacs-lisp-mode)
+    (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+      (lsp-bridge-call-async "change_file"
+                             lsp-bridge-filepath
+                             lsp-bridge--before-change-begin-pos
+                             lsp-bridge--before-change-end-pos
+                             length
+                             (buffer-substring-no-properties begin end)
+                             (lsp-bridge--position)
+                             (lsp-bridge-char-before)
+                             (buffer-substring-no-properties (line-beginning-position) (point))
+                             (lsp-bridge-completion-ui-visible-p)
+                             ))))
 
 (defun lsp-bridge-completion-ui-visible-p ()
-  (and (frame-live-p corfu--frame)
-       (frame-visible-p corfu--frame)))
+  (and (frame-live-p acm-frame)
+       (frame-visible-p acm-frame)))
 
 (defun lsp-bridge-monitor-after-save ()
-  (lsp-bridge-call-async "save_file" lsp-bridge-filepath))
+  (unless (derived-mode-p 'emacs-lisp-mode)
+    (lsp-bridge-call-async "save_file" lsp-bridge-filepath)))
 
 (defalias 'lsp-bridge-find-define #'lsp-bridge-find-def)
 
@@ -913,18 +882,6 @@ If optional MARKER, return a marker instead"
         (pulse-delay lsp-bridge-flash-line-delay))
     (pulse-momentary-highlight-one-line (point) 'lsp-bridge-font-lock-flash)))
 
-(defun lsp-bridge-insert-common-prefix ()
-  (interactive)
-  (if lsp-bridge-mode
-      (if (and (> (length (hash-table-keys lsp-bridge-completion-candidates)) 0)
-               lsp-bridge-completion-prefix
-               lsp-bridge-completion-common
-               (not (string-equal lsp-bridge-completion-common ""))
-               (not (string-equal lsp-bridge-completion-common lsp-bridge-completion-prefix)))
-          (insert (substring lsp-bridge-completion-common (length lsp-bridge-completion-prefix)))
-        (message "Not found common part to insert."))
-    (message "Only works for lsp-bridge mode.")))
-
 (defun lsp-bridge-popup-documentation-scroll-up (&optional arg)
   (interactive)
   (posframe-funcall lsp-bridge-lookup-doc-tooltip
@@ -997,7 +954,6 @@ If optional MARKER, return a marker instead"
     (post-command-hook . lsp-bridge-monitor-post-command)
     (after-save-hook . lsp-bridge-monitor-after-save)
     (kill-buffer-hook . lsp-bridge-close-buffer-file)
-    (completion-at-point-functions . lsp-bridge-capf)
     (before-revert-hook . lsp-bridge-close-buffer-file)
     ))
 
@@ -1079,22 +1035,7 @@ If optional MARKER, return a marker instead"
     (setq lsp-bridge-filepath (file-truename buffer-file-name))
     (setq lsp-bridge-last-position 0)
 
-    (setq-local corfu-auto-prefix 0)
-    (setq-local corfu-auto nil)
-    (setq-local corfu-preview-current nil)
-
-    (remove-hook 'post-command-hook #'corfu--auto-post-command 'local)
-
-    (advice-add #'corfu--popup-hide :after #'lsp-bridge--completion-hide-advisor)
-
-    (when (featurep 'lsp-bridge-icon)
-      (add-to-list 'corfu-margin-formatters #'lsp-bridge-icon-margin-formatter))
-
-    ;; Add fuzzy match.
-    (when (functionp 'lsp-bridge-orderless-setup)
-      (lsp-bridge-orderless-setup))
-
-    (corfu-doc-mode 1)
+    (advice-add #'acm-hide :after #'lsp-bridge--completion-hide-advisor)
 
     ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
     (unless lsp-bridge-is-starting
@@ -1102,18 +1043,10 @@ If optional MARKER, return a marker instead"
 
 (defun lsp-bridge--disable ()
   "Disable LSP Bridge mode."
-  (kill-local-variable 'corfu-auto-prefix)
-  (kill-local-variable 'corfu-auto)
-  (kill-local-variable 'corfu-preview-current)
-
-  (and corfu-auto (add-hook 'post-command-hook #'corfu--auto-post-command nil 'local))
-
-  (advice-remove #'corfu--popup-hide #'lsp-bridge--completion-hide-advisor)
+  (advice-remove #'acm-hide #'lsp-bridge--completion-hide-advisor)
 
   (dolist (hook lsp-bridge--internal-hooks)
-    (remove-hook (car hook) (cdr hook) t))
-
-  (corfu-doc-mode -1))
+    (remove-hook (car hook) (cdr hook) t)))
 
 (defun lsp-bridge-turn-off (filepath)
   (lsp-bridge--with-file-buffer filepath
@@ -1213,52 +1146,30 @@ If optional MARKER, return a marker instead"
 
 (defun lsp-bridge-update-completion-item-info (info)
   (let* ((filepath (plist-get info :filepath))
-         (label (plist-get info :label))
+         (key (plist-get info :key))
          (additional-text-edits (plist-get info :additionalTextEdits))
          (documentation (plist-get info :documentation)))
     (lsp-bridge--with-file-buffer filepath
       ;; Update `documentation' and `additionalTextEdits'
-      (when-let (item (lsp-bridge-get-candidate-item label))
+      (when-let (item (gethash key (gethash "lsp-bridge" acm-backend-local-items)))
         (when additional-text-edits
           (plist-put item :additionalTextEdits additional-text-edits))
 
         (unless (string-equal documentation "")
           (plist-put item :documentation documentation))
 
-        (puthash label item lsp-bridge-completion-candidates))
+        (puthash key item (gethash "lsp-bridge" acm-backend-local-items)))
 
       ;; Popup documentation window if same documentation window not exist.
-      (unless (string-equal label lsp-bridge-completion-item-popup-doc-tick)
-        (lsp-bridge-popup-completion-item-doc documentation))
+      (unless (string-equal key lsp-bridge-completion-item-popup-doc-tick)
+        (acm-doc-show))
       )))
-
-(defun lsp-bridge-popup-completion-item-doc (documentation)
-  (unless (string-equal documentation "")
-    (unless (corfu-doc--popup-support-p)
-      (error "Corfu-doc requires child frames to display documentation."))
-    (when (corfu-doc--should-show-popup)
-      (when-let ((candidate (corfu-doc--get-candidate))
-                 (cf-popup-edges (corfu-doc--get-cf-popup-edges)))
-        (if (corfu-doc--should-refresh-popup candidate)
-            (corfu-doc--refresh-popup)
-          (corfu-doc--update-popup documentation)
-          (with-current-buffer (get-buffer-create " *corfu-doc*")
-            (lsp-bridge-render-markdown-content))
-          (corfu-doc--set-vars
-           candidate cf-popup-edges (selected-window))
-          ))))
-  ;;  TODO: I will get errors like:
-  ;; ERROR:epc:(return 74 ...): Got too many arguments in the reply: [Symbol('#<window'), 3, Symbol('on'), Symbol('main.py>')]
-  ;; which may be from the last command in `corfu-doc--set-vars'. A `nil' value fixes it but I don't know why.
-  nil)
 
 (defun lsp-bridge-render-markdown-content ()
   (let ((inhibit-message t))
     (if (fboundp 'gfm-view-mode)
         (gfm-view-mode)
       (gfm-mode)))
-  (setq-local mode-line-format nil) ;; Hide mode-line for corfu-doc buffer.
-  (display-line-numbers-mode -1)
   (read-only-mode 0)
   (font-lock-ensure))
 
@@ -1266,11 +1177,8 @@ If optional MARKER, return a marker instead"
 (defun global-lsp-bridge-mode ()
   (interactive)
 
-  (setq corfu-auto t)
-
   (dolist (hook lsp-bridge-default-mode-hooks)
     (add-hook hook (lambda ()
-                     (corfu-mode 1)
                      (lsp-bridge-mode 1)
                      )))
 
@@ -1293,34 +1201,27 @@ If optional MARKER, return a marker instead"
   (apply orig-fun arg args))
 (advice-add #'rename-file :around #'lsp-bridge--rename-file-advisor)
 
-(defun lsp-bridge--monitor-candidate-select-advisor (&rest args)
-  (when (and lsp-bridge-mode
-             lsp-bridge-enable-candidate-doc-preview
-             lsp-bridge-completion-resolve-provider
-             (not (null lsp-bridge-completion-candidates))
-             (member (nth corfu--index corfu--candidates) (hash-table-keys lsp-bridge-completion-candidates))) ;; Check whether current candidate comes from lsp-bridge
-    (lsp-bridge-completion-item-fetch (nth corfu--index corfu--candidates))))
-(advice-add #'corfu--goto :after #'lsp-bridge--monitor-candidate-select-advisor)
-(advice-add #'corfu--popup-show :after #'lsp-bridge--monitor-candidate-select-advisor)
+(defun lsp-bridge-fetch-candidate-doc (candidate)
+  (let ((backend (plist-get candidate :backend)))
+    (cond ((string-equal backend "lsp")
+           (let* ((label (plist-get candidate :label))
+                  (kind (plist-get candidate :icon))
+                  (documentation (plist-get candidate :documentation)))
+
+             ;; Popup candidate documentation directly if `documentation' is exist in candidate.
+             (when documentation
+               (setq-local lsp-bridge-completion-item-popup-doc-tick (format "%s,%s" label kind))
+               (acm-doc-show))
+
+             ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
+             (unless (equal lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind))
+               (lsp-bridge-call-async "fetch_completion_item_info" lsp-bridge-filepath (format "%s,%s" label kind))
+               (setq lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind)))))
+          (t
+           (acm-doc-hide)))))
 
 (defvar-local lsp-bridge-completion-item-fetch-tick nil)
 (defvar-local lsp-bridge-completion-item-popup-doc-tick nil)
-
-(defun lsp-bridge-completion-item-fetch (label)
-  (let* ((candidate-info (gethash label lsp-bridge-completion-candidates))
-         (candidate (string-trim label))
-         (kind (plist-get candidate-info :kind))
-         (documentation (plist-get candidate-info :documentation)))
-
-    ;; Popup candidate documentation directly if `documentation' is exist in candidate.
-    (when documentation
-      (setq-local lsp-bridge-completion-item-popup-doc-tick label)
-      (lsp-bridge-popup-completion-item-doc documentation))
-
-    ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
-    (unless (equal lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind))
-      (lsp-bridge-call-async "fetch_completion_item_info" lsp-bridge-filepath label (format "%s,%s" candidate kind))
-      (setq lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind)))))
 
 (defun lsp-bridge--completion-hide-advisor (&rest args)
   (when lsp-bridge-mode
