@@ -238,11 +238,7 @@ auto completion does not pop up too aggressively."
   "Face for content area.")
 
 (defface acm-select-face
-  '((((class color) (min-colors 88) (background dark))
-     :background "#00415e" :foreground "white")
-    (((class color) (min-colors 88) (background light))
-     :background "#c0efff" :foreground "black")
-    (t :background "blue" :foreground "white"))
+  '()
   "Face used to highlight the currently selected candidate.")
 
 (defface acm-deprecated-face
@@ -393,7 +389,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defmacro acm-create-frame-if-not-exist (frame frame-buffer frame-name &optional internal-border)
   `(unless (frame-live-p ,frame)
      (setq ,frame (acm-make-frame ,frame-name ,internal-border))
-     
+
      (with-current-buffer (get-buffer-create ,frame-buffer)
        ;; Install mouse ignore map
        (use-local-map acm--mouse-ignore-map)
@@ -483,6 +479,21 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 
         (setq acm-idle-completion-tick (acm-idle-auto-tick))))))
 
+(defun acm-color-blend (c1 c2 alpha)
+  "Blend two colors C1 and C2 with ALPHA.
+C1 and C2 are hexidecimal strings.
+ALPHA is a number between 0.0 and 1.0 which corresponds to the
+influence of C1 on the result."
+  (apply #'(lambda (r g b)
+             (format "#%02x%02x%02x"
+                     (ash r -8)
+                     (ash g -8)
+                     (ash b -8)))
+         (cl-mapcar
+          (lambda (x y)
+            (round (+ (* x alpha) (* y (- 1 alpha)))))
+          (color-values c1) (color-values c2))))
+
 (defun acm-update ()
   (let* ((keyword (acm-get-point-symbol))
          (candidates (list))
@@ -537,6 +548,11 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                                       acm-menu-length)))
         (setq-local acm-menu-index (if (zerop (length acm-menu-candidates)) -1 0))
         (setq-local acm-menu-offset 0)
+
+        (when (equal (face-attribute 'acm-select-face :background) 'unspecified)
+          (set-face-background 'acm-select-face (acm-color-blend (face-attribute 'default :foreground) "#000000" 0.7)))
+        (when (equal (face-attribute 'acm-select-face :foreground) 'unspecified)
+          (set-face-foreground 'acm-select-face (face-attribute 'default :background)))
 
         (setq acm-frame-popup-point (or (car bounds) (point)))
         (let* ((edges (window-pixel-edges))
@@ -622,7 +638,11 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                            'display
                            (acm-indent-pixel
                             (ceiling (* (window-font-width) (- (+ acm-menu-max-length-cache 20) item-length)))))
-               (propertize (format "%s \n" (capitalize annotation-text)) 'face 'font-lock-doc-face)
+               (propertize (format "%s \n" (capitalize annotation-text))
+                           'face
+                           (if (equal item-index menu-index)
+                               'acm-select-face
+                             'font-lock-doc-face))
                ))
 
         (when (equal item-index menu-index)
