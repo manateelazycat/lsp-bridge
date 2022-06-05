@@ -93,6 +93,10 @@
   "Maximal number of candidates to show."
   :type 'integer)
 
+(defcustom acm-menu-candidate-limit 30
+  "Maximal number of candidate of menu."
+  :type 'integer)
+
 (defcustom acm-continue-commands
   ;; nil is undefined command
   '(nil ignore universal-argument universal-argument-more digit-argument self-insert-command
@@ -518,10 +522,14 @@ influence of C1 on the result."
         (dolist (backend-name (hash-table-keys backend-hash-table))
           (maphash
            (lambda (k v)
-             (when (or (string-equal keyword "")
-                       (string-prefix-p keyword (plist-get v :label)))
-               (plist-put v :backend "lsp")
-               (add-to-list 'candidates v t)))
+             (let ((candidate-label (plist-get v :label)))
+               (when (or (string-equal keyword "")
+                         (string-prefix-p keyword candidate-label))
+                 (when (> (length candidate-label) acm-menu-candidate-limit)
+                   (plist-put v :label (format "%s ..." (substring candidate-label 0 acm-menu-candidate-limit))))
+
+                 (plist-put v :backend "lsp")
+                 (add-to-list 'candidates v t))))
            (gethash backend-name backend-hash-table)
            ))))
 
