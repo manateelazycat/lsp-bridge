@@ -222,9 +222,7 @@ auto completion does not pop up too aggressively."
   "Ignore all mouse clicks.")
 
 (defface acm-default-face
-  '((((class color) (min-colors 88) (background dark)) :background "#191a1b")
-    (((class color) (min-colors 88) (background light)) :background "#f0f0f0")
-    (t :background "gray"))
+  '()
   "Default face, foreground and background colors used for the popup.")
 
 (defface acm-border-face
@@ -494,6 +492,9 @@ influence of C1 on the result."
             (round (+ (* x alpha) (* y (- 1 alpha)))))
           (color-values c1) (color-values c2))))
 
+(defun acm-get-theme-mode ()
+  (format "%s" (frame-parameter nil 'background-mode)))
+
 (defun acm-update ()
   (let* ((keyword (acm-get-point-symbol))
          (candidates (list))
@@ -530,7 +531,9 @@ influence of C1 on the result."
       (acm-hide))
      ((> (length candidates) 0)
       (let* ((menu-old-max-length acm-menu-max-length-cache)
-             (menu-old-number acm-menu-number-cache))
+             (menu-old-number acm-menu-number-cache)
+             (is-dark-mode (string-equal (acm-get-theme-mode) "dark"))
+             (blend-background (if is-dark-mode "#000000" "#AAAAAA")))
         (acm-mode 1)
 
         (add-hook 'pre-command-hook #'acm--pre-command nil 'local)
@@ -549,10 +552,12 @@ influence of C1 on the result."
         (setq-local acm-menu-index (if (zerop (length acm-menu-candidates)) -1 0))
         (setq-local acm-menu-offset 0)
 
+        (when (equal (face-attribute 'acm-default-face :background) 'unspecified)
+          (set-face-background 'acm-default-face (acm-color-blend (face-attribute 'default :background) blend-background (if is-dark-mode 0.8 0.9))))
         (when (equal (face-attribute 'acm-select-face :background) 'unspecified)
-          (set-face-background 'acm-select-face (acm-color-blend (face-attribute 'default :foreground) "#000000" 0.7)))
+          (set-face-background 'acm-select-face (acm-color-blend (face-attribute 'default :background) blend-background 0.6)))
         (when (equal (face-attribute 'acm-select-face :foreground) 'unspecified)
-          (set-face-foreground 'acm-select-face (face-attribute 'default :background)))
+          (set-face-foreground 'acm-select-face (face-attribute 'font-lock-function-name-face :foreground)))
 
         (setq acm-frame-popup-point (or (car bounds) (point)))
         (let* ((edges (window-pixel-edges))
