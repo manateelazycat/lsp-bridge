@@ -371,6 +371,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     web-mode-hook
     css-mode-hook
     elm-mode-hook
+    ielm-mode-hook
     emacs-lisp-mode-hook)
   "The default mode hook to enable lsp-bridge."
   :type 'list)
@@ -560,7 +561,8 @@ Auto completion is only performed if the tick did not change."
     (when (eq this-command 'self-insert-command)
       (lsp-bridge-try-completion)))
 
-  (unless (derived-mode-p 'emacs-lisp-mode)
+  (unless (or (derived-mode-p 'emacs-lisp-mode)
+              (derived-mode-p 'inferior-emacs-lisp-mode))
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       (unless (equal (point) lsp-bridge-last-position)
         (lsp-bridge-call-async "change_cursor" lsp-bridge-filepath (lsp-bridge--position))
@@ -576,7 +578,8 @@ Auto completion is only performed if the tick did not change."
       (lsp-bridge-hide-diagnostic-tooltip))))
 
 (defun lsp-bridge-close-buffer-file ()
-  (unless (derived-mode-p 'emacs-lisp-mode)
+  (unless (or (derived-mode-p 'emacs-lisp-mode)
+              (derived-mode-p 'inferior-emacs-lisp-mode))
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       (lsp-bridge-call-async "close_file" lsp-bridge-filepath))))
 
@@ -735,7 +738,8 @@ If optional MARKER, return a marker instead"
 (defvar-local lsp-bridge--before-change-end-pos nil)
 
 (defun lsp-bridge-monitor-before-change (begin end)
-  (unless (derived-mode-p 'emacs-lisp-mode)
+  (unless (or (derived-mode-p 'emacs-lisp-mode)
+              (derived-mode-p 'inferior-emacs-lisp-mode))
     (setq lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
     (setq lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))))
 
@@ -746,7 +750,8 @@ If optional MARKER, return a marker instead"
   ;; Send change_file request.
   (setq-local lsp-bridge-current-tick (lsp-bridge--auto-tick))
 
-  (unless (derived-mode-p 'emacs-lisp-mode)
+  (unless (or (derived-mode-p 'emacs-lisp-mode)
+              (derived-mode-p 'inferior-emacs-lisp-mode))
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       (lsp-bridge-call-async "change_file"
                              lsp-bridge-filepath
@@ -765,7 +770,8 @@ If optional MARKER, return a marker instead"
        (frame-visible-p acm-frame)))
 
 (defun lsp-bridge-monitor-after-save ()
-  (unless (derived-mode-p 'emacs-lisp-mode)
+  (unless (or (derived-mode-p 'emacs-lisp-mode)
+              (derived-mode-p 'inferior-emacs-lisp-mode))
     (lsp-bridge-call-async "save_file" lsp-bridge-filepath)))
 
 (defalias 'lsp-bridge-find-define #'lsp-bridge-find-def)
@@ -1013,7 +1019,8 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge--enable ()
   "Enable LSP Bridge mode."
   (cond
-   ((not buffer-file-name)
+   ((and (not buffer-file-name)
+         (not (derived-mode-p 'inferior-emacs-lisp-mode)))
     (message "[LSP-Bridge] cannot be enabled in non-file buffers.")
     (setq lsp-bridge-mode nil))
    (t
@@ -1026,13 +1033,15 @@ If optional MARKER, return a marker instead"
 
     ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
     ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
-    (unless (file-exists-p (buffer-file-name))
-      (save-buffer))
+    (when (not (derived-mode-p 'inferior-emacs-lisp-mode))
+      (unless (file-exists-p (buffer-file-name))
+        (save-buffer)))
 
     (dolist (hook lsp-bridge--internal-hooks)
       (add-hook (car hook) (cdr hook) nil t))
 
-    (setq lsp-bridge-filepath (file-truename buffer-file-name))
+    (when (not (derived-mode-p 'inferior-emacs-lisp-mode))
+      (setq lsp-bridge-filepath (file-truename buffer-file-name)))
     (setq lsp-bridge-last-position 0)
 
     (advice-add #'acm-hide :after #'lsp-bridge--completion-hide-advisor)
@@ -1244,9 +1253,9 @@ If optional MARKER, return a marker instead"
          (let ((file-name (->> info caddr (alist-get :file))))
            (unless file-name
              (setq file-name (make-temp-file (let ((lsp-babel-dir (concat default-directory ".lsp/babel/")))
-					       (if (not (file-directory-p lsp-babel-dir))
-						   (make-directory lsp-babel-dir t))
-					       (concat lsp-babel-dir "babel-lsp-")))))
+                                               (if (not (file-directory-p lsp-babel-dir))
+                                                   (make-directory lsp-babel-dir t))
+                                               (concat lsp-babel-dir "babel-lsp-")))))
            (setq buffer-file-name file-name)
            (lsp-bridge-mode 1)))
        (put ',intern-pre 'function-documentation
