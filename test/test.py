@@ -57,6 +57,8 @@ def test_entrypoint():
     """
     setup_eval = """
     (progn
+        (set-face-background 'default "#000000")
+        (set-face-background 'font-lock-function-name-face "#FFFFFF")
         (require 'yasnippet)
         (require 'lsp-bridge)
         (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
