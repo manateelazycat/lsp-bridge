@@ -465,6 +465,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
             (add-to-list 'candidates (list :key dabbrev-word
                                            :icon "text"
                                            :label dabbrev-word
+                                           :display-label dabbrev-word
                                            :annotation "Dabbrev"
                                            :backend "dabbrev") t)))
 
@@ -513,6 +514,7 @@ influence of C1 on the result."
             (add-to-list 'candidates (list :key elisp-symbol
                                            :icon symbol-type
                                            :label elisp-symbol
+                                           :display-label elisp-symbol
                                            :annotation (capitalize symbol-type)
                                            :backend "elisp") t)))))
 
@@ -525,8 +527,9 @@ influence of C1 on the result."
              (let ((candidate-label (plist-get v :label)))
                (when (or (string-equal keyword "")
                          (string-prefix-p keyword candidate-label))
-                 (when (> (length candidate-label) acm-menu-candidate-limit)
-                   (plist-put v :label (format "%s ..." (substring candidate-label 0 acm-menu-candidate-limit))))
+                 (if (> (length candidate-label) acm-menu-candidate-limit)
+                     (plist-put v :display-label (format "%s ..." (substring candidate-label 0 acm-menu-candidate-limit)))
+                   (plist-put v :display-label candidate-label))
 
                  (plist-put v :backend "lsp")
                  (add-to-list 'candidates v t))))
@@ -624,7 +627,7 @@ influence of C1 on the result."
 (defun acm-menu-max-length ()
   (cl-reduce #'max
              (mapcar '(lambda (v)
-                        (string-width (format "%s %s" (plist-get v :label) (plist-get v :annotation))))
+                        (string-width (format "%s %s" (plist-get v :display-label) (plist-get v :annotation))))
                      acm-menu-candidates)))
 
 (defvar acm-fetch-candidate-doc-function nil)
@@ -633,7 +636,7 @@ influence of C1 on the result."
   (let ((item-index 0))
     (dolist (v items)
       (let* ((icon (cdr (assoc (plist-get v :icon) acm-icon-alist)))
-             (candidate (plist-get v :label))
+             (candidate (plist-get v :display-label))
              (annotation (plist-get v :annotation))
              (annotation-text (if annotation annotation ""))
              (item-length (string-width annotation-text))
