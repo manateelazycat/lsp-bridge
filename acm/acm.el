@@ -215,7 +215,6 @@ auto completion does not pop up too aggressively."
 
 (defvar acm-idle-completion-timer nil)
 (defvar acm-idle-completion-tick nil)
-(defvar acm-idle-completion-doc-candidate nil)
 
 (defvar acm--mouse-ignore-map
   (let ((map (make-sparse-keymap)))
@@ -449,10 +448,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   (when (and (frame-live-p acm-frame)
              (frame-visible-p acm-frame))
     (let ((current-candidate (acm-menu-current-candidate)))
-      (when (and acm-fetch-candidate-doc-function
-                 (not (equal acm-idle-completion-doc-candidate current-candidate)))
-        (funcall acm-fetch-candidate-doc-function current-candidate)
-        (setq acm-idle-completion-doc-candidate current-candidate)))
+      (when acm-fetch-candidate-doc-function
+        (funcall acm-fetch-candidate-doc-function current-candidate)))
 
     (when (not (equal acm-idle-completion-tick (acm-idle-auto-tick)))
       (let* ((keyword (acm-get-point-symbol))
@@ -672,7 +669,7 @@ influence of C1 on the result."
           (add-face-text-property 0 (length candidate-line) 'acm-select-face 'append candidate-line)
 
           (when (and
-                 (not (string-equal (plist-get v :backend) "lsp"))
+                 (not (member (plist-get v :backend) '("lsp" "elisp")))
                  (frame-live-p acm-doc-frame)
                  (frame-visible-p acm-doc-frame))
             (acm-doc-hide)))
@@ -702,22 +699,28 @@ influence of C1 on the result."
     (acm-set-frame-position acm-frame acm-frame-x acm-frame-y)))
 
 (defun acm-doc-show ()
-  (let* ((candidate (acm-menu-current-candidate))
-         (candidate-doc (plist-get candidate :documentation)))
-    (when (and candidate-doc
-               (not (string-equal candidate-doc "")))
+  (acm-silent
+    (let* ((candidate (acm-menu-current-candidate))
+           (backend (plist-get candidate :backend))
+           (candidate-doc
+            (pcase backend
+              ("lsp" (plist-get candidate :documentation))
+              ("elisp" (documentation (intern (plist-get candidate :label))))
+              (t ""))))
+      (when (and candidate-doc
+                 (not (string-equal candidate-doc "")))
 
-      (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame" 10)
+        (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame" 10)
 
-      (with-current-buffer (get-buffer-create acm-doc-buffer)
-        (visual-line-mode 1)
-        (erase-buffer)
-        (insert candidate-doc))
+        (with-current-buffer (get-buffer-create acm-doc-buffer)
+          (visual-line-mode 1)
+          (erase-buffer)
+          (insert candidate-doc))
 
-      (acm-set-frame-size acm-doc-frame)
+        (acm-set-frame-size acm-doc-frame)
 
-      (acm-doc-adjust-pos)
-      )))
+        (acm-doc-adjust-pos)
+        ))))
 
 (defun acm-doc-adjust-pos ()
   (let* ((emacs-width (frame-pixel-width))
