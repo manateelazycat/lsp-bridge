@@ -1213,19 +1213,20 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-fetch-candidate-doc (candidate)
   (let ((backend (plist-get candidate :backend)))
     (cond ((string-equal backend "lsp")
-           (let* ((label (plist-get candidate :label))
-                  (kind (plist-get candidate :icon))
-                  (documentation (plist-get candidate :documentation)))
+           (when lsp-bridge-completion-resolve-provider
+             (let* ((label (plist-get candidate :label))
+                    (kind (plist-get candidate :icon))
+                    (documentation (plist-get candidate :documentation)))
 
-             ;; Popup candidate documentation directly if `documentation' is exist in candidate.
-             (when documentation
-               (setq-local lsp-bridge-completion-item-popup-doc-tick (format "%s,%s" label kind))
-               (acm-doc-show))
+               ;; Popup candidate documentation directly if `documentation' is exist in candidate.
+               (when documentation
+                 (setq-local lsp-bridge-completion-item-popup-doc-tick (format "%s,%s" label kind))
+                 (acm-doc-show))
 
-             ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
-             (unless (equal lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind))
-               (lsp-bridge-call-async "fetch_completion_item_info" lsp-bridge-filepath (format "%s,%s" label kind))
-               (setq lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind)))))
+               ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
+               (unless (equal lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind))
+                 (lsp-bridge-call-async "fetch_completion_item_info" lsp-bridge-filepath (format "%s,%s" label kind))
+                 (setq lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind))))))
           (t
            (acm-doc-hide)))))
 
