@@ -129,6 +129,11 @@ auto completion does not pop up too aggressively."
   :type 'boolean
   :group 'lsp-bridge)
 
+(defcustom acm-enable-icon t
+  "Show icon in completion menu."
+  :type 'boolean
+  :group 'lsp-bridge)
+
 (defvar  acm-icon-collections
   '(("bootstrap" . "https://icons.getbootstrap.com/icons/%s.svg")
     ("material" . "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/svg/%s.svg")
@@ -783,14 +788,16 @@ influence of C1 on the result."
     (acm-menu-adjust-pos)))
 
 (defun acm-icon-build (collection name fg-color)
-  (let* ((icon-key (format "%s_%s" collection name))
-         (icon-text (gethash icon-key acm-icon-cache)))
-    (unless icon-text
-      (setq icon-text (propertize
-                       (apply #'concat (make-list acm-icon-width "-"))
-                       'display (acm-icon collection name fg-color)))
-      (puthash icon-key icon-text acm-icon-cache))
-    icon-text))
+  (if acm-enable-icon
+      (let* ((icon-key (format "%s_%s" collection name))
+             (icon-text (gethash icon-key acm-icon-cache)))
+        (unless icon-text
+          (setq icon-text (propertize
+                           (apply #'concat (make-list acm-icon-width "-"))
+                           'display (acm-icon collection name fg-color)))
+          (puthash icon-key icon-text acm-icon-cache))
+        icon-text)
+    ""))
 
 (defun acm-update-completion-data (backend-name completion-table)
   ;; Update completion table that match backend-name.
