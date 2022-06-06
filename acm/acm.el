@@ -124,6 +124,11 @@ are not offered as completion candidates, such that
 auto completion does not pop up too aggressively."
   :type 'integer)
 
+(defcustom acm-enable-dabbrev nil
+  "Popup dabbrev completions when this option is turn on."
+  :type 'boolean
+  :group 'lsp-bridge)
+
 (defvar  acm-icon-collections
   '(("bootstrap" . "https://icons.getbootstrap.com/icons/%s.svg")
     ("material" . "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/svg/%s.svg")
@@ -457,7 +462,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
       (when acm-fetch-candidate-doc-function
         (funcall acm-fetch-candidate-doc-function current-candidate)))
 
-    (when (not (equal acm-idle-completion-tick (acm-idle-auto-tick)))
+    (when (and acm-enable-dabbrev
+               (not (equal acm-idle-completion-tick (acm-idle-auto-tick))))
       (let* ((keyword (acm-get-point-symbol))
              (candidates (list))
              (dabbrev-words (acm-dabbrev-list keyword))
