@@ -433,10 +433,10 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
     (make-frame-visible frame))
   (set-frame-position frame x y))
 
-(defun acm-set-frame-size (frame)
+(defun acm-set-frame-size (frame &optional max-width max-height)
   (let* ((window-min-height 0)
          (window-min-width 0))
-    (fit-frame-to-buffer-1 frame)))
+    (fit-frame-to-buffer-1 frame max-height nil max-width nil)))
 
 (defun acm-match-symbol-p (pattern sym)
   "Return non-nil if SYM is matching an element of the PATTERN list."
@@ -711,43 +711,53 @@ influence of C1 on the result."
     (acm-set-frame-position acm-frame acm-frame-x acm-frame-y)))
 
 (defun acm-doc-show ()
-  (acm-silent
-    (let* ((candidate (acm-menu-current-candidate))
-           (backend (plist-get candidate :backend))
-           (candidate-doc
-            (pcase backend
-              ("lsp" (plist-get candidate :documentation))
-              ("elisp" (documentation (intern (plist-get candidate :label))))
-              (_ ""))))
-      (when (and candidate-doc
-                 (not (string-equal candidate-doc "")))
+  (let* ((candidate (acm-menu-current-candidate))
+         (backend (plist-get candidate :backend))
+         (candidate-doc
+          (pcase backend
+            ("lsp" (plist-get candidate :documentation))
+            ("elisp" (documentation (intern (plist-get candidate :label))))
+            (_ ""))))
+    (when (and candidate-doc
+               (not (string-equal candidate-doc "")))
 
-        (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame" 10)
+      (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame" 10)
 
-        (with-current-buffer (get-buffer-create acm-doc-buffer)
-          (visual-line-mode 1)
-          (erase-buffer)
-          (insert candidate-doc))
+      (with-current-buffer (get-buffer-create acm-doc-buffer)
+        (erase-buffer)
+        (insert candidate-doc)
+        (visual-line-mode 1))
 
-        (acm-set-frame-size acm-doc-frame)
+      (acm-doc-adjust-size-and-pos)
+      )))
 
-        (acm-doc-adjust-pos)
-        ))))
-
-(defun acm-doc-adjust-pos ()
+(defun acm-doc-adjust-size-and-pos ()
   (let* ((emacs-width (frame-pixel-width))
-         (acm-doc-frame-width (frame-pixel-width acm-doc-frame))
+         (emacs-height (frame-pixel-height))
          (acm-frame-width (frame-pixel-width acm-frame))
+         (acm-frame-height (frame-pixel-height acm-frame))
          (acm-frame-pos (frame-position acm-frame))
          (acm-frame-x (car acm-frame-pos))
          (acm-frame-y (cdr acm-frame-pos))
-         (acm-doc-frame-x (if (> (+ acm-frame-x acm-frame-width acm-doc-frame-width) emacs-width)
-                              (- acm-frame-x acm-doc-frame-width)
-                            (+ acm-frame-x acm-frame-width)))
-         (acm-doc-frame-y acm-frame-y))
 
-    (acm-set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y)
-    ))
+         (acm-frame-left-distance acm-frame-x)
+         (acm-frame-right-distance (- emacs-width acm-frame-x acm-frame-width))
+         (acm-frame-top-distance acm-frame-y)
+         (acm-frame-bottom-distance (- emacs-height acm-frame-y acm-frame-height))
+
+         (acm-doc-frame-max-width (max acm-frame-left-distance acm-frame-right-distance))
+         (acm-doc-frame-max-height (max acm-frame-top-distance acm-frame-bottom-distance)))
+
+    (acm-set-frame-size acm-doc-frame
+                        (ceiling (/ acm-doc-frame-max-width (frame-char-width)))
+                        (ceiling (/ acm-doc-frame-max-height (window-default-line-height))))
+
+    (let* ((acm-doc-frame-width (frame-pixel-width acm-doc-frame))
+           (acm-doc-frame-x (if (> acm-frame-left-distance acm-frame-right-distance)
+                                (- acm-frame-x acm-doc-frame-width)
+                              (+ acm-frame-x acm-frame-width)))
+           (acm-doc-frame-y acm-frame-y))
+      (acm-set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y))))
 
 (defun acm-menu-current-candidate ()
   (nth (+ acm-menu-offset acm-menu-index) acm-candidates))
@@ -768,7 +778,7 @@ influence of C1 on the result."
 
       (when (and (frame-live-p acm-doc-frame)
                  (frame-visible-p acm-doc-frame))
-        (acm-doc-adjust-pos)))
+        (acm-doc-adjust-size-and-pos)))
 
     (acm-menu-adjust-pos)))
 
