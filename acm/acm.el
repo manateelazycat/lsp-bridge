@@ -97,6 +97,10 @@
   "Maximal number of candidate of menu."
   :type 'integer)
 
+(defcustom acm-menu-yas-limit 3
+  "Maximal number of yas candidate of menu."
+  :type 'integer)
+
 (defcustom acm-idle-completion-delay 1
   "How many seconds to stay in your fingers will popup the enhance completion.
 
@@ -166,6 +170,7 @@ auto completion does not pop up too aggressively."
     ("keyword" . ("material" "filter" "#0085c3"))
     ("k/w" . ("material" "filter-outline" "#ed6856"))
     ("snippet" . ("material" "format-align-center" "#f05d21"))
+    ("yas-snippet" . ("material" "format-align-center" "#f05d21"))
     ("sn" . ("material" "format-align-center" "#f69653"))
     ("color" . ("material" "palette" "#099d84"))
     ("file" . ("material" "file-outline" "#e30061"))
@@ -526,11 +531,35 @@ influence of C1 on the result."
 (defun acm-get-theme-mode ()
   (format "%s" (frame-parameter nil 'background-mode)))
 
-(defun acm-update ()
-  (let* ((keyword (acm-get-point-symbol))
-         (candidates (list))
-         (bounds (bounds-of-thing-at-point 'symbol)))
+(defun acm-get-snippet (candidate)
+  (let ((snippet-file (expand-file-name (plist-get candidate :label)
+                                        (expand-file-name (format "%s" major-mode) (car yas/root-directory)))))
+    (with-temp-buffer
+      (insert-file-contents snippet-file)
+      (search-forward "# --\n" nil t)
+      (buffer-substring-no-properties (point) (point-max)))
+    ))
 
+(defun acm-update-yas-candidates (keyword)
+  (let* ((candidates (list))
+         (snippets (cl-remove-if #'(lambda (subdir) (or (member subdir '("." ".."))
+                                                    (string-prefix-p "." subdir)))
+                                 (directory-files (expand-file-name (format "%s" major-mode) (car yas/root-directory)))))
+         (match-snippets (seq-filter #'(lambda (s) (string-match-p (regexp-quote (downcase keyword)) (downcase s))) snippets))
+         )
+    (dolist (snippet (cl-subseq match-snippets 0 (min (length match-snippets) acm-menu-yas-limit)))
+      (when (string-match-p (regexp-quote (downcase keyword)) (downcase snippet))
+        (add-to-list 'candidates (list :key snippet
+                                       :icon "snippet"
+                                       :label snippet
+                                       :display-label snippet
+                                       :annotation "Yas-Snippet"
+                                       :backend "yas") t)
+        ))
+    candidates))
+
+(defun acm-update-mode-candidates (keyword)
+  (let* ((candidates (list)))
     (when (and (or (derived-mode-p 'emacs-lisp-mode)
                    (derived-mode-p 'inferior-emacs-lisp-mode))
                (>= (length keyword) acm-elisp-min-length))
@@ -561,6 +590,26 @@ influence of C1 on the result."
                  (add-to-list 'candidates v t))))
            (gethash backend-name backend-hash-table)
            ))))
+
+    candidates))
+
+(defun acm-update ()
+  (let* ((keyword (acm-get-point-symbol))
+         (candidates (list))
+         (bounds (bounds-of-thing-at-point 'symbol))
+         yas-candidates
+         mode-candidates)
+
+    (setq mode-candidates (acm-update-mode-candidates keyword))
+    (setq yas-candidates (acm-update-yas-candidates keyword))
+
+    (setq candidates
+          (if (> (length mode-candidates) acm-menu-yas-limit)
+              (append (cl-subseq mode-candidates 0 acm-menu-yas-limit)
+                      yas-candidates
+                      (cl-subseq mode-candidates acm-menu-yas-limit))
+            (append mode-candidates yas-candidates)
+            ))
 
     (cond
      ((and (equal (length candidates) 1)
@@ -709,7 +758,7 @@ influence of C1 on the result."
           (add-face-text-property 0 (length candidate-line) 'acm-select-face 'append candidate-line)
 
           (when (and
-                 (not (member (plist-get v :backend) '("lsp" "elisp")))
+                 (not (member (plist-get v :backend) '("lsp" "elisp" "yas")))
                  (frame-live-p acm-doc-frame)
                  (frame-visible-p acm-doc-frame))
             (acm-doc-hide)))
@@ -745,6 +794,7 @@ influence of C1 on the result."
           (pcase backend
             ("lsp" (plist-get candidate :documentation))
             ("elisp" (acm-elisp-symbol-doc (intern (plist-get candidate :label))))
+            ("yas" (acm-get-snippet candidate))
             (_ ""))))
     (when (and candidate-doc
                (not (string-equal candidate-doc "")))

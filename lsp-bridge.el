@@ -95,54 +95,57 @@
 
 (defun lsp-bridge-expand-candidate (candidate-info bound-start)
   (let ((backend (plist-get candidate-info :backend)))
-    (cond
-     ((string-equal backend "lsp")
-      (let* ((label (plist-get candidate-info :label))
-             (insert-text (plist-get candidate-info :insertText))
-             (insert-text-format (plist-get candidate-info :insertTextFormat))
-             (text-edit (plist-get candidate-info :textEdit))
-             (new-text (plist-get text-edit :newText))
-             (additionalTextEdits (plist-get candidate-info :additionalTextEdits))
-             (kind (plist-get candidate-info :icon))
-             (snippet-fn (and (or (eql insert-text-format 2) (string= kind "snippet")) (lsp-bridge--snippet-expansion-fn)))
-             (completion-start-pos (lsp-bridge--lsp-position-to-point lsp-bridge-completion-position))
-             (delete-start-pos (if text-edit
-                                   (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :start))
-                                 bound-start))
-             (range-end-pos (if text-edit
-                                (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :end))
-                              completion-start-pos))
-             (delete-end-pos (+ (point) (- range-end-pos completion-start-pos)))
-             (insert-candidate (or new-text insert-text label)))
+    (pcase backend
+      ("lsp"
+       (let* ((label (plist-get candidate-info :label))
+              (insert-text (plist-get candidate-info :insertText))
+              (insert-text-format (plist-get candidate-info :insertTextFormat))
+              (text-edit (plist-get candidate-info :textEdit))
+              (new-text (plist-get text-edit :newText))
+              (additionalTextEdits (plist-get candidate-info :additionalTextEdits))
+              (kind (plist-get candidate-info :icon))
+              (snippet-fn (and (or (eql insert-text-format 2) (string= kind "snippet")) (lsp-bridge--snippet-expansion-fn)))
+              (completion-start-pos (lsp-bridge--lsp-position-to-point lsp-bridge-completion-position))
+              (delete-start-pos (if text-edit
+                                    (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :start))
+                                  bound-start))
+              (range-end-pos (if text-edit
+                                 (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :end))
+                               completion-start-pos))
+              (delete-end-pos (+ (point) (- range-end-pos completion-start-pos)))
+              (insert-candidate (or new-text insert-text label)))
 
-        ;; Move bound start position forward one character, if the following situation is satisfied:
-        ;; 1. `textEdit' is not exist
-        ;; 2. bound-start character is `lsp-bridge-completion-trigger-characters'
-        ;; 3. `label' start with bound-start character
-        ;; 4. `insertText' is not start with bound-start character
-        (unless text-edit
-          (let* ((bound-start-char (save-excursion
-                                     (goto-char delete-start-pos)
-                                     (char-to-string (char-after)))))
-            (when (and (member bound-start-char lsp-bridge-completion-trigger-characters)
-                       (string-prefix-p bound-start-char label)
-                       (not (string-prefix-p bound-start-char insert-text)))
-              (setq delete-start-pos (1+ delete-start-pos)))))
+         ;; Move bound start position forward one character, if the following situation is satisfied:
+         ;; 1. `textEdit' is not exist
+         ;; 2. bound-start character is `lsp-bridge-completion-trigger-characters'
+         ;; 3. `label' start with bound-start character
+         ;; 4. `insertText' is not start with bound-start character
+         (unless text-edit
+           (let* ((bound-start-char (save-excursion
+                                      (goto-char delete-start-pos)
+                                      (char-to-string (char-after)))))
+             (when (and (member bound-start-char lsp-bridge-completion-trigger-characters)
+                        (string-prefix-p bound-start-char label)
+                        (not (string-prefix-p bound-start-char insert-text)))
+               (setq delete-start-pos (1+ delete-start-pos)))))
 
-        ;; Delete region.
-        (delete-region delete-start-pos delete-end-pos)
+         ;; Delete region.
+         (delete-region delete-start-pos delete-end-pos)
 
-        ;; Insert candidate or expand snippet.
-        (funcall (or snippet-fn #'insert) insert-candidate)
+         ;; Insert candidate or expand snippet.
+         (funcall (or snippet-fn #'insert) insert-candidate)
 
-        ;; Do `additionalTextEdits' if return auto-imprt information.
-        (when (and lsp-bridge-enable-auto-import
-                   (cl-plusp (length additionalTextEdits)))
-          (lsp-bridge--apply-text-edits additionalTextEdits))))
-     (t
-      (delete-region bound-start (point))
-      (insert (plist-get candidate-info :label)))
-     )))
+         ;; Do `additionalTextEdits' if return auto-imprt information.
+         (when (and lsp-bridge-enable-auto-import
+                    (cl-plusp (length additionalTextEdits)))
+           (lsp-bridge--apply-text-edits additionalTextEdits))))
+      ("yas"
+       (delete-region bound-start (point))
+       (yas-expand-snippet (acm-get-snippet candidate-info)))
+      (_
+       (delete-region bound-start (point))
+       (insert (plist-get candidate-info :label)))
+      )))
 
 (defcustom lsp-bridge-completion-popup-predicates '(lsp-bridge-not-only-blank-before-cursor
                                                     lsp-bridge-not-match-hide-characters
@@ -1217,6 +1220,8 @@ If optional MARKER, return a marker instead"
            (lsp-bridge-call-async "fetch_completion_item_info" lsp-bridge-filepath (format "%s,%s" label kind))
            (setq lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind)))))
       ("elisp"
+       (acm-doc-show))
+      ("yas"
        (acm-doc-show))
       (_
        (acm-doc-hide)))))
