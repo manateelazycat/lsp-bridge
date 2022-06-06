@@ -551,11 +551,11 @@ influence of C1 on the result."
 (defun acm-update-yas-candidates (keyword)
   (when acm-enable-yas
     (let* ((candidates (list))
-           (snippets (cl-remove-if #'(lambda (subdir) (or (member subdir '("." ".."))
-                                                      (string-prefix-p "." subdir)))
-                                   (directory-files (expand-file-name (format "%s" major-mode) (car yas/root-directory)))))
-           (match-snippets (seq-filter #'(lambda (s) (string-match-p (regexp-quote (downcase keyword)) (downcase s))) snippets))
-           )
+           (snippets (ignore-errors
+                       (cl-remove-if #'(lambda (subdir) (or (member subdir '("." ".."))
+                                                        (string-prefix-p "." subdir)))
+                                     (directory-files (expand-file-name (format "%s" major-mode) (car yas/root-directory))))))
+           (match-snippets (seq-filter #'(lambda (s) (string-match-p (regexp-quote (downcase keyword)) (downcase s))) snippets)))
       (dolist (snippet (cl-subseq match-snippets 0 (min (length match-snippets) acm-menu-yas-limit)))
         (when (string-match-p (regexp-quote (downcase keyword)) (downcase snippet))
           (add-to-list 'candidates (list :key snippet
