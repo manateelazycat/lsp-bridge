@@ -142,6 +142,12 @@
       ("yas"
        (delete-region bound-start (point))
        (yas-expand-snippet (acm-get-snippet candidate-info)))
+      ("path"
+       (let* ((keyword (acm-get-point-symbol))
+              (file-name (plist-get candidate-info :label))
+              (parent-dir (file-name-directory keyword)))
+         (delete-region bound-start (point))
+         (insert (expand-file-name file-name parent-dir))))
       (_
        (delete-region bound-start (point))
        (insert (plist-get candidate-info :label)))

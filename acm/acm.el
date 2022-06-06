@@ -144,6 +144,10 @@ auto completion does not pop up too aggressively."
   "Popup yasnippet completions when this option is turn on."
   :type 'boolean)
 
+(defcustom acm-enable-path t
+  "Popup path completions when this option is turn on."
+  :type 'boolean)
+
 (defcustom acm-enable-icon t
   "Show icon in completion menu."
   :type 'boolean)
@@ -553,7 +557,7 @@ influence of C1 on the result."
     (let* ((candidates (list))
            (snippets (ignore-errors
                        (cl-remove-if #'(lambda (subdir) (or (member subdir '("." ".."))
-                                                        (string-prefix-p "." subdir)))
+                                                            (string-prefix-p "." subdir)))
                                      (directory-files (expand-file-name (format "%s" major-mode) (car yas/root-directory))))))
            (match-snippets (seq-filter #'(lambda (s) (string-match-p (regexp-quote (downcase keyword)) (downcase s))) snippets)))
       (dolist (snippet (cl-subseq match-snippets 0 (min (length match-snippets) acm-menu-yas-limit)))
@@ -603,23 +607,51 @@ influence of C1 on the result."
 
     candidates))
 
+(defun acm-update-path-candidates (keyword)
+  (when acm-enable-path
+    (let ((candidates (list))
+          (parent-dir (ignore-errors (expand-file-name (file-name-directory keyword)))))
+      (when (and parent-dir
+                 (file-exists-p parent-dir))
+        (let ((current-file (file-name-base keyword))
+              (files (cl-remove-if #'(lambda (subdir) (or (member subdir '("." ".."))))
+                                   (directory-files parent-dir))))
+          (dolist (file files)
+            (when (string-match-p (regexp-quote (downcase current-file)) (downcase file))
+              (let* ((file-path (expand-file-name file parent-dir))
+                     (file-type (if (file-directory-p file-path) "dir" "file")))
+                (add-to-list 'candidates (list :key file
+                                               :icon file-type
+                                               :label file
+                                               :display-label file
+                                               :annotation (capitalize file-type)
+                                               :backend "path") t))
+              ))
+          ))
+      candidates)))
+
 (defun acm-update ()
   (let* ((keyword (acm-get-point-symbol))
          (candidates (list))
          (bounds (bounds-of-thing-at-point 'symbol))
+         path-candidates
          yas-candidates
          mode-candidates)
 
-    (setq mode-candidates (acm-update-mode-candidates keyword))
-    (setq yas-candidates (acm-update-yas-candidates keyword))
+    (setq path-candidates (acm-update-path-candidates keyword))
 
-    (setq candidates
-          (if (> (length mode-candidates) acm-menu-yas-insert-index)
-              (append (cl-subseq mode-candidates 0 acm-menu-yas-insert-index)
-                      yas-candidates
-                      (cl-subseq mode-candidates acm-menu-yas-insert-index))
-            (append mode-candidates yas-candidates)
-            ))
+    (if (> (length path-candidates) 0)
+        (setq candidates path-candidates)
+      (setq mode-candidates (acm-update-mode-candidates keyword))
+      (setq yas-candidates (acm-update-yas-candidates keyword))
+
+      (setq candidates
+            (if (> (length mode-candidates) acm-menu-yas-insert-index)
+                (append (cl-subseq mode-candidates 0 acm-menu-yas-insert-index)
+                        yas-candidates
+                        (cl-subseq mode-candidates acm-menu-yas-insert-index))
+              (append mode-candidates yas-candidates)
+              )))
 
     (cond
      ((and (equal (length candidates) 1)
