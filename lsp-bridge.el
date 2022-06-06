@@ -896,8 +896,6 @@ If optional MARKER, return a marker instead"
   (with-current-buffer (get-buffer-create lsp-bridge-lookup-doc-tooltip)
     (erase-buffer)
     (text-scale-set lsp-bridge-lookup-doc-tooltip-text-scale)
-    (insert (propertize name 'face 'font-lock-function-name-face))
-    (insert "\n\n")
     (setq-local markdown-fontify-code-blocks-natively t)
     (insert value)
     (lsp-bridge-render-markdown-content))
