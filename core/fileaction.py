@@ -143,6 +143,10 @@ class FileAction:
                     
     def completion_item_update(self, item_key, documentation, additional_text_edits):
         if documentation != "" or additional_text_edits != "":
+            if type(documentation) == dict:
+                if "kind" in documentation:
+                    if documentation["kind"] == "markdown":
+                        documentation = documentation["value"]
             eval_in_emacs("lsp-bridge-update-completion-item-info",
                           {
                               "filepath": self.filepath,
