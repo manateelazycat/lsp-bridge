@@ -262,6 +262,12 @@ auto completion does not pop up too aggressively."
   '((t :inherit shadow :strike-through t))
   "Face used for deprecated candidates.")
 
+(defconst acm-fit-frame-to-buffer
+  (if (functionp 'fit-frame-to-buffer-1)
+      'fit-frame-to-buffer-1
+    'fit-frame-to-buffer)
+  "Function used to fit frame to buffer.")
+
 (defsubst acm-indent-pixel (xpos)
   "Return a display property that aligns to XPOS."
   `(space :align-to (,xpos)))
@@ -441,7 +447,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defun acm-set-frame-size (frame &optional max-width max-height)
   (let* ((window-min-height 0)
          (window-min-width 0))
-    (fit-frame-to-buffer-1 frame max-height nil max-width nil)))
+    (funcall acm-fit-frame-to-buffer frame max-height nil max-width nil)))
 
 (defun acm-match-symbol-p (pattern sym)
   "Return non-nil if SYM is matching an element of the PATTERN list."
