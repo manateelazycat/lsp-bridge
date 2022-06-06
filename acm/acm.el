@@ -852,8 +852,8 @@ influence of C1 on the result."
   "Find all dabbrev expansions for WORD."
   (require 'dabbrev)
   (acm-silent
-    (let ((dabbrev-check-other-buffers t)
-          (dabbrev-check-all-buffers t))
+    (let ((dabbrev-check-other-buffers nil)
+          (dabbrev-check-all-buffers nil))
       (dabbrev--reset-global-variables))
     (cl-loop with min-len = (+ acm-dabbrev-min-length (length word))
              for w in (dabbrev--find-all-expansions word (dabbrev--ignore-case-p word))
