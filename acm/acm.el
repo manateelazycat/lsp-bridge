@@ -736,7 +736,7 @@ influence of C1 on the result."
          (candidate-doc
           (pcase backend
             ("lsp" (plist-get candidate :documentation))
-            ("elisp" (documentation (intern (plist-get candidate :label))))
+            ("elisp" (acm-elisp-symbol-doc (intern (plist-get candidate :label))))
             (_ ""))))
     (when (and candidate-doc
                (not (string-equal candidate-doc "")))
@@ -829,6 +829,16 @@ influence of C1 on the result."
          "custom")
         (t
          "variable")))
+
+(defun acm-elisp-symbol-doc (symbol)
+  (let ((doc (ignore-errors (documentation symbol))))
+    (cond (doc
+           doc)
+          ((facep symbol)
+           (documentation-property symbol 'face-documentation))
+          (t
+           (documentation-property symbol 'variable-documentation)
+           ))))
 
 (defmacro acm-silent (&rest body)
   "Silence BODY."
