@@ -124,15 +124,17 @@ are not offered as completion candidates, such that
 auto completion does not pop up too aggressively."
   :type 'integer)
 
+(defcustom acm-enable-doc t
+  "Popup candidate documentation when this option is turn on."
+  :type 'boolean)
+
 (defcustom acm-enable-dabbrev nil
   "Popup dabbrev completions when this option is turn on."
-  :type 'boolean
-  :group 'lsp-bridge)
+  :type 'boolean)
 
 (defcustom acm-enable-icon t
   "Show icon in completion menu."
-  :type 'boolean
-  :group 'lsp-bridge)
+  :type 'boolean)
 
 (defvar  acm-icon-collections
   '(("bootstrap" . "https://icons.getbootstrap.com/icons/%s.svg")
@@ -231,6 +233,9 @@ auto completion does not pop up too aggressively."
 
 (defvar acm-idle-completion-timer nil)
 (defvar acm-idle-completion-tick nil)
+
+(defvar acm-complete-function nil)
+(defvar acm-fetch-candidate-doc-function nil)
 
 (defvar acm--mouse-ignore-map
   (let ((map (make-sparse-keymap)))
@@ -470,7 +475,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
   (when (and (frame-live-p acm-frame)
              (frame-visible-p acm-frame))
     (let ((current-candidate (acm-menu-current-candidate)))
-      (when acm-fetch-candidate-doc-function
+      (when (and acm-enable-doc
+                 acm-fetch-candidate-doc-function)
         (funcall acm-fetch-candidate-doc-function current-candidate)))
 
     (when (and acm-enable-dabbrev
@@ -638,8 +644,6 @@ influence of C1 on the result."
   (unless (acm-match-symbol-p acm-continue-commands this-command)
     (acm-hide)))
 
-(defvar acm-complete-function nil)
-
 (defun acm-complete ()
   (interactive)
   (when acm-complete-function
@@ -671,8 +675,6 @@ influence of C1 on the result."
              (mapcar #'(lambda (v)
                          (string-width (format "%s %s" (plist-get v :display-label) (plist-get v :annotation))))
                      acm-menu-candidates)))
-
-(defvar acm-fetch-candidate-doc-function nil)
 
 (defun acm-menu-render-items (items menu-index)
   (let ((item-index 0))
