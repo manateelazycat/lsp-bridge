@@ -1217,7 +1217,7 @@ If optional MARKER, return a marker instead"
            (setq lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind)))))
       ("elisp"
        (acm-doc-show))
-      (t
+      (_
        (acm-doc-hide)))))
 
 (defvar-local lsp-bridge-completion-item-fetch-tick nil)
