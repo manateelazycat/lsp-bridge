@@ -97,8 +97,12 @@
   "Maximal number of candidate of menu."
   :type 'integer)
 
-(defcustom acm-menu-yas-limit 3
+(defcustom acm-menu-yas-limit 2
   "Maximal number of yas candidate of menu."
+  :type 'integer)
+
+(defcustom acm-menu-yas-insert-index 8
+  "Insert index of yas candidate of menu."
   :type 'integer)
 
 (defcustom acm-idle-completion-delay 1
@@ -610,10 +614,10 @@ influence of C1 on the result."
     (setq yas-candidates (acm-update-yas-candidates keyword))
 
     (setq candidates
-          (if (> (length mode-candidates) acm-menu-yas-limit)
-              (append (cl-subseq mode-candidates 0 acm-menu-yas-limit)
+          (if (> (length mode-candidates) acm-menu-yas-insert-index)
+              (append (cl-subseq mode-candidates 0 acm-menu-yas-insert-index)
                       yas-candidates
-                      (cl-subseq mode-candidates acm-menu-yas-limit))
+                      (cl-subseq mode-candidates acm-menu-yas-insert-index))
             (append mode-candidates yas-candidates)
             ))
 
