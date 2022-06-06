@@ -43,7 +43,8 @@ class Completion(Handler):
                     "deprecated": 1 in item.get("tags", []),
                     "insertText": item.get('insertText', None),
                     "insertTextFormat": item.get("insertTextFormat", ''),
-                    "textEdit": item.get("textEdit", None)
+                    "textEdit": item.get("textEdit", None),
+                    "sortText": item.get("sortText", "")
                 }
 
                 if self.file_action.enable_auto_import:
@@ -52,7 +53,7 @@ class Completion(Handler):
                 completion_candidates.append(candidate)
                 
                 self.file_action.completion_items[key] = item
-
+            completion_candidates = sorted(completion_candidates, key=lambda m:m["sortText"])
         self.file_action.last_completion_candidates = completion_candidates
         
         logger.info("\n--- Completion items number: {}".format(len(completion_candidates)))
