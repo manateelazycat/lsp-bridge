@@ -642,8 +642,8 @@ influence of C1 on the result."
 
 (defun acm-menu-max-length ()
   (cl-reduce #'max
-             (mapcar '(lambda (v)
-                        (string-width (format "%s %s" (plist-get v :display-label) (plist-get v :annotation))))
+             (mapcar #'(lambda (v)
+                         (string-width (format "%s %s" (plist-get v :display-label) (plist-get v :annotation))))
                      acm-menu-candidates)))
 
 (defvar acm-fetch-candidate-doc-function nil)
@@ -718,7 +718,7 @@ influence of C1 on the result."
             (pcase backend
               ("lsp" (plist-get candidate :documentation))
               ("elisp" (documentation (intern (plist-get candidate :label))))
-              (t ""))))
+              (_ ""))))
       (when (and candidate-doc
                  (not (string-equal candidate-doc "")))
 
