@@ -136,6 +136,10 @@ auto completion does not pop up too aggressively."
   "Popup dabbrev completions when this option is turn on."
   :type 'boolean)
 
+(defcustom acm-enable-yas t
+  "Popup yasnippet completions when this option is turn on."
+  :type 'boolean)
+
 (defcustom acm-enable-icon t
   "Show icon in completion menu."
   :type 'boolean)
@@ -541,22 +545,24 @@ influence of C1 on the result."
     ))
 
 (defun acm-update-yas-candidates (keyword)
-  (let* ((candidates (list))
-         (snippets (cl-remove-if #'(lambda (subdir) (or (member subdir '("." ".."))
-                                                    (string-prefix-p "." subdir)))
-                                 (directory-files (expand-file-name (format "%s" major-mode) (car yas/root-directory)))))
-         (match-snippets (seq-filter #'(lambda (s) (string-match-p (regexp-quote (downcase keyword)) (downcase s))) snippets))
-         )
-    (dolist (snippet (cl-subseq match-snippets 0 (min (length match-snippets) acm-menu-yas-limit)))
-      (when (string-match-p (regexp-quote (downcase keyword)) (downcase snippet))
-        (add-to-list 'candidates (list :key snippet
-                                       :icon "snippet"
-                                       :label snippet
-                                       :display-label snippet
-                                       :annotation "Yas-Snippet"
-                                       :backend "yas") t)
-        ))
-    candidates))
+  (when acm-enable-yas
+    (let* ((candidates (list))
+           (snippets (cl-remove-if #'(lambda (subdir) (or (member subdir '("." ".."))
+                                                      (string-prefix-p "." subdir)))
+                                   (directory-files (expand-file-name (format "%s" major-mode) (car yas/root-directory)))))
+           (match-snippets (seq-filter #'(lambda (s) (string-match-p (regexp-quote (downcase keyword)) (downcase s))) snippets))
+           )
+      (dolist (snippet (cl-subseq match-snippets 0 (min (length match-snippets) acm-menu-yas-limit)))
+        (when (string-match-p (regexp-quote (downcase keyword)) (downcase snippet))
+          (add-to-list 'candidates (list :key snippet
+                                         :icon "snippet"
+                                         :label snippet
+                                         :display-label snippet
+                                         :annotation "Yas-Snippet"
+                                         :backend "yas") t)
+          ))
+      candidates)
+    ))
 
 (defun acm-update-mode-candidates (keyword)
   (let* ((candidates (list)))
