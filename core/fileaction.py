@@ -46,14 +46,14 @@ class FileAction:
         self.last_change_file_before_cursor_text = ""
         self.last_change_cursor_time = -1.0
         self.version = 1
-        
+
         self.last_completion_candidates = []
-        
+
         self.completion_items = {}
 
         self.try_completion_timer = None
         self.try_signature_help_timer = None
-        
+
         self.diagnostics = []
 
         # Initialize handlers.
@@ -97,7 +97,7 @@ class FileAction:
         # Send textDocument/completion 100ms later.
         self.try_completion_timer = threading.Timer(0.1, lambda : self.try_completion(position, before_char, completion_visible))
         self.try_completion_timer.start()
-        
+
     def try_completion(self, position, before_char, completion_visible):
         # Only send textDocument/completion request when match one of following rules:
         # 1. Character before cursor is match completion trigger characters.
@@ -107,7 +107,7 @@ class FileAction:
             (not completion_visible) or
             len(self.last_completion_candidates) == 0):
             self.handlers["completion"].send_request(position, before_char)
-            
+
     def change_cursor(self, position):
         # Record change cursor time.
         self.last_change_cursor_time = time.time()
@@ -128,7 +128,25 @@ class FileAction:
 
     def handle_server_response_message(self, request_id, request_type, response):
         self.handlers[request_type].handle_response(request_id, response)
-        
+
     def completion_item_resolve(self, item_key):
         if item_key in self.completion_items:
-            self.handlers["completion_item_resolve"].send_request(item_key, self.completion_items[item_key])
+            if self.lsp_server.completion_resolve_provider:
+                self.handlers["completion_item_resolve"].send_request(item_key, self.completion_items[item_key])
+            else:
+                item = self.completion_items[item_key]
+                
+                self.completion_item_update(
+                    item_key, 
+                    item["documentation"] if "documentation" in item else "",
+                    item["additionalTextEdits"] if "additionalTextEdits" in item else "")
+                    
+    def completion_item_update(self, item_key, documentation, additional_text_edits):
+        if documentation != "" or additional_text_edits != "":
+            eval_in_emacs("lsp-bridge-update-completion-item-info",
+                          {
+                              "filepath": self.filepath,
+                              "key": item_key,
+                              "additionalTextEdits": additional_text_edits,
+                              "documentation": documentation
+                          })

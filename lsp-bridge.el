@@ -542,12 +542,7 @@ Auto completion is only performed if the tick did not change."
   (setq lsp-bridge-is-starting nil))
 
 (defvar-local lsp-bridge-last-position 0)
-(defvar-local lsp-bridge-completion-candidates nil)
-(defvar-local lsp-bridge-completion-server-name nil)
 (defvar-local lsp-bridge-completion-trigger-characters nil)
-(defvar-local lsp-bridge-completion-resolve-provider nil)
-(defvar-local lsp-bridge-completion-prefix nil)
-(defvar-local lsp-bridge-completion-common nil)
 (defvar-local lsp-bridge-completion-position nil)
 (defvar-local lsp-bridge-filepath "")
 (defvar-local lsp-bridge-prohibit-completion nil)
@@ -590,18 +585,11 @@ Auto completion is only performed if the tick did not change."
            (string-empty-p (format "%s" (car list))))
       (and (eq (length list) 0))))
 
-(defun lsp-bridge-record-completion-items (filepath
-                                           common items position
-                                           server-name
-                                           completion-trigger-characters
-                                           completion-resolve-provider)
+(defun lsp-bridge-record-completion-items (filepath items position completion-trigger-characters)
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
-    (setq-local lsp-bridge-completion-common common)
     (setq-local lsp-bridge-completion-position position)
-    (setq-local lsp-bridge-completion-server-name server-name)
     (setq-local lsp-bridge-completion-trigger-characters completion-trigger-characters)
-    (setq-local lsp-bridge-completion-resolve-provider completion-resolve-provider)
 
     (unless acm-backend-local-items
       (setq-local acm-backend-local-items (make-hash-table :test 'equal)))
@@ -1216,20 +1204,19 @@ If optional MARKER, return a marker instead"
   (let ((backend (plist-get candidate :backend)))
     (pcase backend
       ("lsp"
-       (when lsp-bridge-completion-resolve-provider
-         (let* ((label (plist-get candidate :label))
-                (kind (plist-get candidate :icon))
-                (documentation (plist-get candidate :documentation)))
+       (let* ((label (plist-get candidate :label))
+              (kind (plist-get candidate :icon))
+              (documentation (plist-get candidate :documentation)))
 
-           ;; Popup candidate documentation directly if `documentation' is exist in candidate.
-           (when documentation
-             (setq-local lsp-bridge-completion-item-popup-doc-tick (format "%s,%s" label kind))
-             (acm-doc-show))
+         ;; Popup candidate documentation directly if `documentation' is exist in candidate.
+         (when documentation
+           (setq-local lsp-bridge-completion-item-popup-doc-tick (format "%s,%s" label kind))
+           (acm-doc-show))
 
-           ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
-           (unless (equal lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind))
-             (lsp-bridge-call-async "fetch_completion_item_info" lsp-bridge-filepath (format "%s,%s" label kind))
-             (setq lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind))))))
+         ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
+         (unless (equal lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind))
+           (lsp-bridge-call-async "fetch_completion_item_info" lsp-bridge-filepath (format "%s,%s" label kind))
+           (setq lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind)))))
       ("elisp"
        (acm-doc-show))
       (t

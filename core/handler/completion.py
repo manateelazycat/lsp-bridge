@@ -53,9 +53,6 @@ class Completion(Handler):
                 
                 self.file_action.completion_items[key] = item
 
-        # Calculate completion common string.
-        completion_common_string = os.path.commonprefix(list(map(lambda candidate: candidate["label"], completion_candidates)))
-        
         self.file_action.last_completion_candidates = completion_candidates
         
         logger.info("\n--- Completion items number: {}".format(len(completion_candidates)))
@@ -63,9 +60,6 @@ class Completion(Handler):
         if len(completion_candidates) > 0:
             eval_in_emacs("lsp-bridge-record-completion-items",
                           self.file_action.filepath,
-                          completion_common_string,
                           completion_candidates,
                           self.position,
-                          self.file_action.lsp_server.server_info["name"],
-                          self.file_action.lsp_server.completion_trigger_characters,
-                          self.file_action.lsp_server.completion_resolve_provider)
+                          self.file_action.lsp_server.completion_trigger_characters)
