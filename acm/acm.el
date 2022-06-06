@@ -557,7 +557,7 @@ influence of C1 on the result."
     (let* ((candidates (list))
            (snippets (ignore-errors
                        (cl-remove-if #'(lambda (subdir) (or (member subdir '("." ".."))
-                                                            (string-prefix-p "." subdir)))
+                                                        (string-prefix-p "." subdir)))
                                      (directory-files (expand-file-name (format "%s" major-mode) (car yas/root-directory))))))
            (match-snippets (seq-filter #'(lambda (s) (string-match-p (regexp-quote (downcase keyword)) (downcase s))) snippets)))
       (dolist (snippet (cl-subseq match-snippets 0 (min (length match-snippets) acm-menu-yas-limit)))
@@ -700,7 +700,8 @@ influence of C1 on the result."
                            (nth 1 edges)
                            (if (version< emacs-version "27.0")
                                (window-header-line-height)
-                             (window-tab-line-height)))))))
+                             (+ (window-tab-line-height)
+                                (window-header-line-height))))))))
         (setq acm-frame-popup-buffer (current-buffer))
 
         (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
