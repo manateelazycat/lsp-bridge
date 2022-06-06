@@ -530,11 +530,11 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 C1 and C2 are hexidecimal strings.
 ALPHA is a number between 0.0 and 1.0 which corresponds to the
 influence of C1 on the result."
-  (apply #'(lambda (r g b)
-             (format "#%02x%02x%02x"
-                     (ash r -8)
-                     (ash g -8)
-                     (ash b -8)))
+  (apply (lambda (r g b)
+           (format "#%02x%02x%02x"
+                   (ash r -8)
+                   (ash g -8)
+                   (ash b -8)))
          (cl-mapcar
           (lambda (x y)
             (round (+ (* x alpha) (* y (- 1 alpha)))))
@@ -556,10 +556,10 @@ influence of C1 on the result."
   (when acm-enable-yas
     (let* ((candidates (list))
            (snippets (ignore-errors
-                       (cl-remove-if #'(lambda (subdir) (or (member subdir '("." ".."))
-                                                        (string-prefix-p "." subdir)))
+                       (cl-remove-if (lambda (subdir) (or (member subdir '("." ".."))
+                                                          (string-prefix-p "." subdir)))
                                      (directory-files (expand-file-name (format "%s" major-mode) (car yas/root-directory))))))
-           (match-snippets (seq-filter #'(lambda (s) (string-match-p (regexp-quote (downcase keyword)) (downcase s))) snippets)))
+           (match-snippets (seq-filter (lambda (s) (string-match-p (regexp-quote (downcase keyword)) (downcase s))) snippets)))
       (dolist (snippet (cl-subseq match-snippets 0 (min (length match-snippets) acm-menu-yas-limit)))
         (when (string-match-p (regexp-quote (downcase keyword)) (downcase snippet))
           (add-to-list 'candidates (list :key snippet
@@ -614,7 +614,7 @@ influence of C1 on the result."
       (when (and parent-dir
                  (file-exists-p parent-dir))
         (let ((current-file (file-name-base keyword))
-              (files (cl-remove-if #'(lambda (subdir) (or (member subdir '("." ".."))))
+              (files (cl-remove-if (lambda (subdir) (or (member subdir '("." ".."))))
                                    (directory-files parent-dir))))
           (dolist (file files)
             (when (string-match-p (regexp-quote (downcase current-file)) (downcase file))
@@ -748,11 +748,11 @@ influence of C1 on the result."
   (when (and (frame-live-p acm-frame)
              (frame-visible-p acm-frame))
     (let* ((common-string "")
-           (items (mapcar '(lambda (v) (plist-get v :label)) acm-menu-candidates))
+           (items (mapcar (lambda (v) (plist-get v :label)) acm-menu-candidates))
            (item-min-length (cl-reduce #'min (mapcar #'string-width items)))
            (input-prefix (acm-get-point-symbol)))
       (dolist (index (number-sequence 0 (1- item-min-length)))
-        (let* ((char-list (mapcar #'(lambda (i) (substring i index (1+ index))) items))
+        (let* ((char-list (mapcar (lambda (i) (substring i index (1+ index))) items))
                (first-char (first char-list)))
           (when (every (lambda (x) (string-equal x first-char)) char-list)
             (setq common-string (concat common-string first-char)))))
@@ -764,8 +764,8 @@ influence of C1 on the result."
 
 (defun acm-menu-max-length ()
   (cl-reduce #'max
-             (mapcar #'(lambda (v)
-                         (string-width (format "%s %s" (plist-get v :display-label) (plist-get v :annotation))))
+             (mapcar (lambda (v)
+                       (string-width (format "%s %s" (plist-get v :display-label) (plist-get v :annotation))))
                      acm-menu-candidates)))
 
 (defun acm-menu-render-items (items menu-index)
