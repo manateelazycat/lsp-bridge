@@ -643,7 +643,22 @@ influence of C1 on the result."
 
 (defun acm-insert-common ()
   (interactive)
-  )
+  (when (and (frame-live-p acm-frame)
+             (frame-visible-p acm-frame))
+    (let* ((common-string "")
+           (items (mapcar '(lambda (v) (plist-get v :label)) acm-menu-candidates))
+           (item-min-length (cl-reduce #'min (mapcar #'string-width items)))
+           (input-prefix (acm-get-point-symbol)))
+      (dolist (index (number-sequence 0 (1- item-min-length)))
+        (let* ((char-list (mapcar #'(lambda (i) (substring i index (1+ index))) items))
+               (first-char (first char-list)))
+          (when (every (lambda (x) (string-equal x first-char)) char-list)
+            (setq common-string (concat common-string first-char)))))
+
+      (if (and (> (length common-string) 0)
+               (> (length common-string) (length input-prefix)))
+          (insert (substring common-string (length (acm-get-point-symbol))))
+        (message "No common string found")))))
 
 (defun acm-menu-max-length ()
   (cl-reduce #'max
