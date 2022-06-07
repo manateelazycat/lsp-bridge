@@ -448,8 +448,7 @@ influence of C1 on the result."
            (string-equal keyword (plist-get (nth 0 candidates) :label)))
       (acm-hide))
      ((> (length candidates) 0)
-      (let* ((menu-old-max-length acm-menu-max-length-cache)
-             (menu-old-number acm-menu-number-cache)
+      (let* ((menu-old-cache (cons acm-menu-max-length-cache acm-menu-number-cache))
              (is-dark-mode (string-equal (acm-get-theme-mode) "dark"))
              (blend-background (if is-dark-mode "#000000" "#AAAAAA")))
         ;; Enable acm-mode to inject mode keys.
@@ -512,7 +511,7 @@ influence of C1 on the result."
         (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
 
         ;; Render menu.
-        (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates))))
+        (acm-menu-render menu-old-cache)))
      (t
       (acm-hide)))))
 
@@ -733,8 +732,12 @@ influence of C1 on the result."
   "Get current candiate with menu index and offset."
   (nth (+ acm-menu-offset acm-menu-index) acm-candidates))
 
-(defun acm-menu-render (menu-old-max-length menu-new-max-length menu-old-number menu-new-number)
+(defun acm-menu-render (menu-old-cache)
   (let* ((items acm-menu-candidates)
+         (menu-old-max-length (car menu-old-cache))
+         (menu-old-number (cdr menu-old-cache))
+         (menu-new-max-length (acm-menu-max-length))
+         (menu-new-number (length items))
          (menu-index acm-menu-index))
     ;; Record newest cache.
     (setq acm-menu-max-length-cache menu-new-max-length)
@@ -782,15 +785,14 @@ influence of C1 on the result."
 (defmacro acm-menu-update (&rest body)
   `(let* ((menu-old-index acm-menu-index)
           (menu-old-offset acm-menu-offset)
-          (menu-old-max-length acm-menu-max-length-cache)
-          (menu-old-number acm-menu-number-cache))
+          (menu-old-cache (cons acm-menu-max-length-cache acm-menu-number-cache)))
      ,@body
 
      ;; Only update menu candidates when menu index or offset changed.
      (when (or (not (equal menu-old-index acm-menu-index))
                (not (equal menu-old-offset acm-menu-offset)))
        (acm-menu-update-candidates)
-       (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates))
+       (acm-menu-render menu-old-cache)
        )))
 
 (defun acm-is-elisp-mode ()

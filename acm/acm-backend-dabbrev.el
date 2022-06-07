@@ -103,8 +103,7 @@ auto completion does not pop up too aggressively."
     (let* ((keyword (acm-get-input-prefix))
            (candidates (list))
            (dabbrev-words (acm-backend-dabbrev-get-words keyword))
-           (menu-old-max-length acm-menu-max-length-cache)
-           (menu-old-number acm-menu-number-cache))
+           (menu-old-cache (cons acm-menu-max-length-cache acm-menu-number-cache)))
       (when (>= (length keyword) acm-backend-dabbrev-min-length)
         (dolist (dabbrev-word (cl-subseq dabbrev-words 0 (min (length dabbrev-words) 10)))
           (add-to-list 'candidates (list :key dabbrev-word
@@ -123,7 +122,7 @@ auto completion does not pop up too aggressively."
                                          (min (- acm-menu-length (length acm-menu-candidates))
                                               (length candidates))))))
 
-        (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates)))
+        (acm-menu-render menu-old-cache))
 
       (setq acm-backend-dabbrev-completion-tick (acm-backend-dabbrev-auto-tick)))))
 
