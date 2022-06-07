@@ -96,58 +96,9 @@
 (defun lsp-bridge-expand-candidate (candidate-info bound-start)
   (let ((backend (plist-get candidate-info :backend)))
     (pcase backend
-      ("lsp"
-       (let* ((label (plist-get candidate-info :label))
-              (insert-text (plist-get candidate-info :insertText))
-              (insert-text-format (plist-get candidate-info :insertTextFormat))
-              (text-edit (plist-get candidate-info :textEdit))
-              (new-text (plist-get text-edit :newText))
-              (additionalTextEdits (plist-get candidate-info :additionalTextEdits))
-              (kind (plist-get candidate-info :icon))
-              (snippet-fn (and (or (eql insert-text-format 2) (string= kind "snippet")) (lsp-bridge--snippet-expansion-fn)))
-              (completion-start-pos (lsp-bridge--lsp-position-to-point lsp-bridge-completion-position))
-              (delete-start-pos (if text-edit
-                                    (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :start))
-                                  bound-start))
-              (range-end-pos (if text-edit
-                                 (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :end))
-                               completion-start-pos))
-              (delete-end-pos (+ (point) (- range-end-pos completion-start-pos)))
-              (insert-candidate (or new-text insert-text label)))
-
-         ;; Move bound start position forward one character, if the following situation is satisfied:
-         ;; 1. `textEdit' is not exist
-         ;; 2. bound-start character is `lsp-bridge-completion-trigger-characters'
-         ;; 3. `label' start with bound-start character
-         ;; 4. `insertText' is not start with bound-start character
-         (unless text-edit
-           (let* ((bound-start-char (save-excursion
-                                      (goto-char delete-start-pos)
-                                      (char-to-string (char-after)))))
-             (when (and (member bound-start-char lsp-bridge-completion-trigger-characters)
-                        (string-prefix-p bound-start-char label)
-                        (not (string-prefix-p bound-start-char insert-text)))
-               (setq delete-start-pos (1+ delete-start-pos)))))
-
-         ;; Delete region.
-         (delete-region delete-start-pos delete-end-pos)
-
-         ;; Insert candidate or expand snippet.
-         (funcall (or snippet-fn #'insert) insert-candidate)
-
-         ;; Do `additionalTextEdits' if return auto-imprt information.
-         (when (and lsp-bridge-enable-auto-import
-                    (cl-plusp (length additionalTextEdits)))
-           (lsp-bridge--apply-text-edits additionalTextEdits))))
-      ("yas"
-       (delete-region bound-start (point))
-       (yas-expand-snippet (acm-get-snippet candidate-info)))
-      ("path"
-       (let* ((keyword (acm-get-point-symbol))
-              (file-name (plist-get candidate-info :label))
-              (parent-dir (file-name-directory keyword)))
-         (delete-region bound-start (point))
-         (insert (expand-file-name file-name parent-dir))))
+      ("lsp" (acm-backend-lsp-candidate-expand candidate-info bound-start))
+      ("yas" (acm-backend-yas-candidate-expand candidate-info bound-start))
+      ("path" (acm-backend-path-candidate-expand candidate-info bound-start))
       (_
        (delete-region bound-start (point))
        (insert (plist-get candidate-info :label)))
@@ -1211,24 +1162,9 @@ If optional MARKER, return a marker instead"
 (defun lsp-bridge-fetch-candidate-doc (candidate)
   (let ((backend (plist-get candidate :backend)))
     (pcase backend
-      ("lsp"
-       (let* ((label (plist-get candidate :label))
-              (kind (plist-get candidate :icon))
-              (documentation (plist-get candidate :documentation)))
-
-         ;; Popup candidate documentation directly if `documentation' is exist in candidate.
-         (when documentation
-           (setq-local lsp-bridge-completion-item-popup-doc-tick (format "%s,%s" label kind))
-           (acm-doc-show))
-
-         ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
-         (unless (equal lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind))
-           (lsp-bridge-call-async "fetch_completion_item_info" lsp-bridge-filepath (format "%s,%s" label kind))
-           (setq lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind)))))
-      ("elisp"
-       (acm-doc-show))
-      ("yas"
-       (acm-doc-show))
+      ("lsp" (acm-backend-lsp-candidate-fetch-doc candidate))
+      ("elisp" (acm-backend-elisp-candidate-fetch-doc candidate))
+      ("yas" (acm-backend-yas-candidate-fetch-doc candidate))
       (_
        (acm-doc-hide)))))
 

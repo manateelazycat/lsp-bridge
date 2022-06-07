@@ -87,6 +87,12 @@
 (require 'subr-x)
 (require 'cl-seq)
 
+(require 'acm-backend-yas)
+(require 'acm-backend-elisp)
+(require 'acm-backend-lsp)
+(require 'acm-backend-path)
+(require 'acm-backend-dabbrev)
+
 ;;; Code:
 
 (defcustom acm-menu-length 10
@@ -95,14 +101,6 @@
 
 (defcustom acm-menu-candidate-limit 30
   "Maximal number of candidate of menu."
-  :type 'integer)
-
-(defcustom acm-menu-yas-limit 2
-  "Maximal number of yas candidate of menu."
-  :type 'integer)
-
-(defcustom acm-menu-yas-insert-index 8
-  "Insert index of yas candidate of menu."
   :type 'integer)
 
 (defcustom acm-idle-completion-delay 1
@@ -118,34 +116,8 @@ Default is 1 second."
   "Continue ACM completion after executing these commands."
   :type '(repeat (choice regexp symbol)))
 
-(defcustom acm-dabbrev-min-length 4
-  "Minimum length of dabbrev expansions.
-This setting ensures that words which are too short
-are not offered as completion candidates, such that
-auto completion does not pop up too aggressively."
-  :type 'integer)
-
-(defcustom acm-elisp-min-length 3
-  "Minimum length of elisp symbol.
-This setting ensures that words which are too short
-are not offered as completion candidates, such that
-auto completion does not pop up too aggressively."
-  :type 'integer)
-
 (defcustom acm-enable-doc t
-  "Popup candidate documentation when this option is turn on."
-  :type 'boolean)
-
-(defcustom acm-enable-dabbrev nil
-  "Popup dabbrev completions when this option is turn on."
-  :type 'boolean)
-
-(defcustom acm-enable-yas t
-  "Popup yasnippet completions when this option is turn on."
-  :type 'boolean)
-
-(defcustom acm-enable-path t
-  "Popup path completions when this option is turn on."
+  "Popup documentation when this option is turn on."
   :type 'boolean)
 
 (defcustom acm-enable-icon t
@@ -249,7 +221,6 @@ auto completion does not pop up too aggressively."
 (defvar acm-doc-frame nil)
 
 (defvar acm-idle-completion-timer nil)
-(defvar acm-idle-completion-tick nil)
 
 (defvar acm-complete-function nil)
 (defvar acm-fetch-candidate-doc-function nil)
@@ -496,34 +467,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                  acm-fetch-candidate-doc-function)
         (funcall acm-fetch-candidate-doc-function current-candidate)))
 
-    (when (and acm-enable-dabbrev
-               (not (equal acm-idle-completion-tick (acm-idle-auto-tick))))
-      (let* ((keyword (acm-get-point-symbol))
-             (candidates (list))
-             (dabbrev-words (acm-dabbrev-list keyword))
-             (menu-old-max-length acm-menu-max-length-cache)
-             (menu-old-number acm-menu-number-cache))
-        (when (>= (length keyword) acm-dabbrev-min-length)
-          (dolist (dabbrev-word (cl-subseq dabbrev-words 0 (min (length dabbrev-words) 10)))
-            (add-to-list 'candidates (list :key dabbrev-word
-                                           :icon "text"
-                                           :label dabbrev-word
-                                           :display-label dabbrev-word
-                                           :annotation "Dabbrev"
-                                           :backend "dabbrev") t)))
-
-        (when (> (length candidates) 0)
-          (setq-local acm-candidates (append acm-candidates candidates))
-          (when (< (length acm-menu-candidates) acm-menu-length)
-            (setq-local acm-menu-candidates
-                        (append acm-menu-candidates
-                                (cl-subseq candidates 0
-                                           (min (- acm-menu-length (length acm-menu-candidates))
-                                                (length candidates))))))
-
-          (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates)))
-
-        (setq acm-idle-completion-tick (acm-idle-auto-tick))))))
+    (acm-backend-dabbrev-candidates-append)
+    ))
 
 (defun acm-color-blend (c1 c2 alpha)
   "Blend two colors C1 and C2 with ALPHA.
@@ -543,92 +488,8 @@ influence of C1 on the result."
 (defun acm-get-theme-mode ()
   (format "%s" (frame-parameter nil 'background-mode)))
 
-(defun acm-get-snippet (candidate)
-  (let ((snippet-file (expand-file-name (plist-get candidate :label)
-                                        (expand-file-name (format "%s" major-mode) (car yas/root-directory)))))
-    (with-temp-buffer
-      (insert-file-contents snippet-file)
-      (search-forward "# --\n" nil t)
-      (buffer-substring-no-properties (point) (point-max)))
-    ))
-
-(defun acm-update-yas-candidates (keyword)
-  (when acm-enable-yas
-    (let* ((candidates (list))
-           (snippets (ignore-errors
-                       (cl-remove-if (lambda (subdir) (or (member subdir '("." ".."))
-                                                          (string-prefix-p "." subdir)))
-                                     (directory-files (expand-file-name (format "%s" major-mode) (car yas/root-directory))))))
-           (match-snippets (seq-filter (lambda (s) (string-match-p (regexp-quote (downcase keyword)) (downcase s))) snippets)))
-      (dolist (snippet (cl-subseq match-snippets 0 (min (length match-snippets) acm-menu-yas-limit)))
-        (when (string-match-p (regexp-quote (downcase keyword)) (downcase snippet))
-          (add-to-list 'candidates (list :key snippet
-                                         :icon "snippet"
-                                         :label snippet
-                                         :display-label snippet
-                                         :annotation "Yas-Snippet"
-                                         :backend "yas") t)
-          ))
-      candidates)
-    ))
-
-(defun acm-update-mode-candidates (keyword)
-  (let* ((candidates (list)))
-    (when (and (or (derived-mode-p 'emacs-lisp-mode)
-                   (derived-mode-p 'inferior-emacs-lisp-mode))
-               (>= (length keyword) acm-elisp-min-length))
-      (let ((elisp-symbols (sort (all-completions keyword obarray) 'string<)))
-        (dolist (elisp-symbol (cl-subseq elisp-symbols 0 (min (length elisp-symbols) 10)))
-          (let ((symbol-type (acm-elisp-symbol-type (intern elisp-symbol))))
-            (add-to-list 'candidates (list :key elisp-symbol
-                                           :icon symbol-type
-                                           :label elisp-symbol
-                                           :display-label elisp-symbol
-                                           :annotation (capitalize symbol-type)
-                                           :backend "elisp") t)))))
-
-    (dolist (backend-hash-table (list acm-backend-local-items))
-      (when (and backend-hash-table
-                 (hash-table-p backend-hash-table))
-        (dolist (backend-name (hash-table-keys backend-hash-table))
-          (maphash
-           (lambda (k v)
-             (let ((candidate-label (plist-get v :label)))
-               (when (or (string-equal keyword "")
-                         (string-match-p (regexp-quote (downcase keyword)) (downcase candidate-label)))
-                 (if (> (length candidate-label) acm-menu-candidate-limit)
-                     (plist-put v :display-label (format "%s ..." (substring candidate-label 0 acm-menu-candidate-limit)))
-                   (plist-put v :display-label candidate-label))
-
-                 (plist-put v :backend "lsp")
-                 (add-to-list 'candidates v t))))
-           (gethash backend-name backend-hash-table)
-           ))))
-
-    candidates))
-
-(defun acm-update-path-candidates (keyword)
-  (when acm-enable-path
-    (let ((candidates (list))
-          (parent-dir (ignore-errors (expand-file-name (file-name-directory keyword)))))
-      (when (and parent-dir
-                 (file-exists-p parent-dir))
-        (let ((current-file (file-name-base keyword))
-              (files (cl-remove-if (lambda (subdir) (or (member subdir '("." ".."))))
-                                   (directory-files parent-dir))))
-          (dolist (file files)
-            (when (string-match-p (regexp-quote (downcase current-file)) (downcase file))
-              (let* ((file-path (expand-file-name file parent-dir))
-                     (file-type (if (file-directory-p file-path) "dir" "file")))
-                (add-to-list 'candidates (list :key file
-                                               :icon file-type
-                                               :label file
-                                               :display-label file
-                                               :annotation (capitalize file-type)
-                                               :backend "path") t))
-              ))
-          ))
-      candidates)))
+(defun acm-candidate-fuzzy-search (keyword candiate)
+  (string-match-p (regexp-quote (downcase keyword)) (downcase candiate)))
 
 (defun acm-update ()
   (let* ((keyword (acm-get-point-symbol))
@@ -638,18 +499,20 @@ influence of C1 on the result."
          yas-candidates
          mode-candidates)
 
-    (setq path-candidates (acm-update-path-candidates keyword))
+    (setq path-candidates (acm-backend-path-candidates keyword))
 
     (if (> (length path-candidates) 0)
         (setq candidates path-candidates)
-      (setq mode-candidates (acm-update-mode-candidates keyword))
-      (setq yas-candidates (acm-update-yas-candidates keyword))
+      (setq mode-candidates (append
+                             (acm-backend-elisp-candidates keyword)
+                             (acm-backend-lsp-candidates keyword)))
+      (setq yas-candidates (acm-backend-yas-candidates keyword))
 
       (setq candidates
-            (if (> (length mode-candidates) acm-menu-yas-insert-index)
-                (append (cl-subseq mode-candidates 0 acm-menu-yas-insert-index)
+            (if (> (length mode-candidates) acm-backend-yas-insert-index)
+                (append (cl-subseq mode-candidates 0 acm-backend-yas-insert-index)
                         yas-candidates
-                        (cl-subseq mode-candidates acm-menu-yas-insert-index))
+                        (cl-subseq mode-candidates acm-backend-yas-insert-index))
               (append mode-candidates yas-candidates)
               )))
 
@@ -835,9 +698,9 @@ influence of C1 on the result."
          (backend (plist-get candidate :backend))
          (candidate-doc
           (pcase backend
-            ("lsp" (plist-get candidate :documentation))
-            ("elisp" (acm-elisp-symbol-doc (intern (plist-get candidate :label))))
-            ("yas" (acm-get-snippet candidate))
+            ("lsp" (acm-backend-lsp-candidate-doc candidate))
+            ("elisp" (acm-backend-elisp-candidate-doc candidate))
+            ("yas" (acm-backend-yas-candidate-doc candidate))
             (_ ""))))
     (when (and candidate-doc
                (not (string-equal candidate-doc "")))
@@ -931,16 +794,6 @@ influence of C1 on the result."
         (t
          "variable")))
 
-(defun acm-elisp-symbol-doc (symbol)
-  (let ((doc (ignore-errors (documentation symbol))))
-    (cond (doc
-           doc)
-          ((facep symbol)
-           (documentation-property symbol 'face-documentation))
-          (t
-           (documentation-property symbol 'variable-documentation)
-           ))))
-
 (defmacro acm-silent (&rest body)
   "Silence BODY."
   (declare (indent 0))
@@ -948,17 +801,6 @@ influence of C1 on the result."
              (message-log-max nil)
              ((symbol-function #'minibuffer-message) #'ignore))
      (ignore-errors ,@body)))
-
-(defun acm-dabbrev-list (word)
-  "Find all dabbrev expansions for WORD."
-  (require 'dabbrev)
-  (acm-silent
-    (let ((dabbrev-check-other-buffers nil)
-          (dabbrev-check-all-buffers nil))
-      (dabbrev--reset-global-variables))
-    (cl-loop with min-len = (+ acm-dabbrev-min-length (length word))
-             for w in (dabbrev--find-all-expansions word (dabbrev--ignore-case-p word))
-             if (>= (length w) min-len) collect w)))
 
 (defun acm-menu-update-candidates ()
   (let ((menu-length (length acm-menu-candidates)))
