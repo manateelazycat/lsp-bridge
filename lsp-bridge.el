@@ -465,7 +465,6 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge--kill-python-process ()
   "Kill LSP-Bridge background python process."
-  (interactive)
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     ;; Cleanup before exit LSP-Bridge server process.
     (lsp-bridge-call-async "cleanup")
@@ -802,7 +801,6 @@ If optional MARKER, return a marker instead"
   (setq lsp-bridge-prohibit-completion t))
 
 (defun lsp-bridge--jump-to-def (filepath position)
-  (interactive)
   ;; Record postion.
   (set-marker (mark-marker) (point) (current-buffer))
   (add-to-history 'lsp-bridge-mark-ring (copy-marker (mark-marker)) lsp-bridge-mark-ring-max t)
