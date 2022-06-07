@@ -176,6 +176,7 @@ Default is 1 second."
     ("template" . ("material" "file-document-multiple" "#207c88"))
     ("macro" . ("material" "alpha-m-circle" "#ff9900"))
     ("face" . ("material" "palette-swatch" "#98c807"))
+    ("translate" . ("material" "translate" "#98c807"))
     ("custom" . ("material" "apple-keyboard-option" "#ed6856"))
     (t . ("material" "file-find-outline" "#90cef1"))))
 

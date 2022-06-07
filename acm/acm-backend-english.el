@@ -93,7 +93,7 @@
       (dolist (candidate acm-backend-english-completions)
         (when (string-prefix-p (downcase keyword) candidate)
           (add-to-list 'candidates (list :key candidate
-                                         :icon "snippet"
+                                         :icon "translate"
                                          :label candidate
                                          :display-label candidate
                                          :annotation (get-text-property 0 :initials candidate)
