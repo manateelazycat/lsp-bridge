@@ -100,15 +100,17 @@
   "Maximal number of candidates to show."
   :type 'integer)
 
-(defcustom acm-menu-candidate-limit 30
-  "Maximal number of candidate of menu."
-  :type 'integer)
+(defcustom acm-idle-doc-delay 0.5
+  "How many seconds to stay in your fingers will popup the candidate documentation.
+
+Default is 0.5 second."
+  :type 'float)
 
 (defcustom acm-idle-completion-delay 1
   "How many seconds to stay in your fingers will popup the enhance completion.
 
 Default is 1 second."
-  :type 'integer)
+  :type 'float)
 
 (defcustom acm-continue-commands
   ;; nil is undefined command
@@ -227,10 +229,11 @@ Default is 1 second."
 
 (defvar-local acm-enable-english-helper nil)
 
-(defvar acm-doc-buffer " *acm-doc-buffer*")
 (defvar acm-doc-frame nil)
+(defvar acm-doc-buffer " *acm-doc-buffer*")
 
 (defvar acm-idle-completion-timer nil)
+(defvar acm-idle-doc-timer nil)
 
 (defvar acm--mouse-ignore-map
   (let ((map (make-sparse-keymap)))
@@ -244,12 +247,6 @@ Default is 1 second."
   '()
   "Default face, foreground and background colors used for the popup.")
 
-(defface acm-border-face
-  '((((class color) (min-colors 88) (background dark)) :background "#323232")
-    (((class color) (min-colors 88) (background light)) :background "#d7d7d7")
-    (t :background "gray"))
-  "The background color used for the thin border.")
-
 (defface acm-buffer-size-face
   '()
   "Face for content area.")
@@ -257,6 +254,12 @@ Default is 1 second."
 (defface acm-select-face
   '()
   "Face used to highlight the currently selected candidate.")
+
+(defface acm-border-face
+  '((((class color) (min-colors 88) (background dark)) :background "#323232")
+    (((class color) (min-colors 88) (background light)) :background "#d7d7d7")
+    (t :background "gray"))
+  "The background color used for the thin border.")
 
 (defface acm-deprecated-face
   '((t :inherit shadow :strike-through t))
@@ -466,7 +469,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defun acm-idle-auto-tick ()
   (list (current-buffer) (buffer-chars-modified-tick) (point)))
 
-(defun acm-idle-completion ()
+(defun acm-idle-fetch-doc ()
   (when (and (frame-live-p acm-frame)
              (frame-visible-p acm-frame))
     (let ((candidate (acm-menu-current-candidate)))
@@ -478,10 +481,12 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
             ("yas" (acm-backend-yas-candidate-fetch-doc candidate))
             ("tempel" (acm-backend-tempel-candidate-fetch-doc candidate))
             (_
-             (acm-doc-hide))))))
+             (acm-doc-hide))))))))
 
-    (acm-backend-dabbrev-candidates-append)
-    ))
+(defun acm-idle-completion ()
+  (when (and (frame-live-p acm-frame)
+             (frame-visible-p acm-frame))
+    (acm-backend-dabbrev-candidates-append)))
 
 (defun acm-color-blend (c1 c2 alpha)
   "Blend two colors C1 and C2 with ALPHA.
@@ -574,6 +579,10 @@ influence of C1 on the result."
         (unless acm-idle-completion-timer
           (setq acm-idle-completion-timer
                 (run-with-idle-timer acm-idle-completion-delay t #'acm-idle-completion)))
+        
+        (unless acm-idle-doc-timer
+          (setq acm-idle-doc-timer
+                (run-with-idle-timer acm-idle-doc-delay t #'acm-idle-fetch-doc)))
 
         (setq-local acm-candidates candidates)
         (setq-local acm-menu-candidates
@@ -628,7 +637,11 @@ influence of C1 on the result."
 
   (when acm-idle-completion-timer
     (cancel-timer acm-idle-completion-timer)
-    (setq acm-idle-completion-timer nil)))
+    (setq acm-idle-completion-timer nil))
+  
+  (when acm-idle-doc-timer
+    (cancel-timer acm-idle-doc-timer)
+    (setq acm-idle-doc-timer nil)))
 
 (defun acm-doc-hide ()
   (when (frame-live-p acm-doc-frame)
