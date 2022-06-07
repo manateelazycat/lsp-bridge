@@ -491,10 +491,9 @@ influence of C1 on the result."
 (defun acm-candidate-fuzzy-search (keyword candiate)
   (string-match-p (regexp-quote (downcase keyword)) (downcase candiate)))
 
-(defun acm-update ()
+(defun acm-update-candiates ()
   (let* ((keyword (acm-get-point-symbol))
          (candidates (list))
-         (bounds (bounds-of-thing-at-point 'symbol))
          path-candidates
          yas-candidates
          mode-candidates)
@@ -515,6 +514,13 @@ influence of C1 on the result."
                         (cl-subseq mode-candidates acm-backend-yas-insert-index))
               (append mode-candidates yas-candidates)
               )))
+
+    candidates))
+
+(defun acm-update ()
+  (let* ((keyword (acm-get-point-symbol))
+         (candidates (acm-update-candiates))
+         (bounds (bounds-of-thing-at-point 'symbol)))
 
     (cond
      ((and (equal (length candidates) 1)
@@ -571,8 +577,7 @@ influence of C1 on the result."
 
         (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates))))
      (t
-      (acm-hide))))
-  nil)
+      (acm-hide)))))
 
 (defun acm-hide ()
   (interactive)
