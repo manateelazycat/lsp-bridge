@@ -1,5 +1,4 @@
 ;;; acm-backend-tempel.el -*- lexical-binding: t; -*-
-(require 'tempel)
 
 (defcustom acm-enable-tempel t
   "Popup tempel completions when this option is turn on."
@@ -14,7 +13,8 @@
   :type 'integer)
   
 (defun acm-backend-tempel-candidates (keyword)
-  (when acm-enable-tempel
+  (when (and acm-enable-tempel
+             (ignore-errors (require 'tempel)))
     (let* ((candidates (list))
            (snippets (cl-loop for template in (tempel--templates) 
                               collect (format "%s" (car template))))
