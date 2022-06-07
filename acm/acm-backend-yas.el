@@ -92,10 +92,6 @@
   "Maximal number of yas candidate of menu."
   :type 'integer)
 
-(defcustom acm-backend-yas-insert-index 8
-  "Insert index of yas candidate of menu."
-  :type 'integer)
-
 (defun acm-backend-yas-candidates (keyword)
   (when acm-enable-yas
     (let* ((candidates (list))

@@ -5,11 +5,11 @@
   :type 'boolean)
 
 (defcustom acm-backend-tempel-candidates-number 2
-  "Maximal number of yas candidate of menu."
+  "Maximal number of tempel candidate of menu."
   :type 'integer)
 
 (defcustom acm-backend-tempel-insert-index 8
-  "Insert index of yas candidate of menu."
+  "Insert index of tempel candidate of menu."
   :type 'integer)
   
 (defun acm-backend-tempel-candidates (keyword)

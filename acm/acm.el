@@ -125,6 +125,10 @@ Default is 1 second."
   "Show icon in completion menu."
   :type 'boolean)
 
+(defcustom acm-snippet-insert-index 8
+  "Insert index of snippet candidate of menu."
+  :type 'integer)
+
 (defvar  acm-icon-collections
   '(("bootstrap" . "https://icons.getbootstrap.com/icons/%s.svg")
     ("material" . "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/svg/%s.svg")
@@ -537,11 +541,11 @@ influence of C1 on the result."
         (setq tempel-candidates (acm-backend-tempel-candidates keyword))
 
         (setq candidates
-              (if (> (length mode-candidates) acm-backend-yas-insert-index)
-                  (append (cl-subseq mode-candidates 0 acm-backend-yas-insert-index)
+              (if (> (length mode-candidates) acm-snippet-insert-index)
+                  (append (cl-subseq mode-candidates 0 acm-snippet-insert-index)
                           yas-candidates
                           tempel-candidates
-                          (cl-subseq mode-candidates acm-backend-yas-insert-index))
+                          (cl-subseq mode-candidates acm-snippet-insert-index))
                 (append mode-candidates yas-candidates tempel-candidates)
                 ))))
 
