@@ -102,7 +102,7 @@
            (snippets (ignore-errors
                        (cl-remove-if (lambda (subdir) (or (member subdir '("." ".."))
                                                       (string-prefix-p "." subdir)))
-                                     (directory-files (expand-file-name (format "%s" major-mode) (car yas/root-directory))))))
+                                     (directory-files (expand-file-name (prin1-to-string major-mode) (car yas/root-directory))))))
            (match-snippets (seq-filter (lambda (s) (acm-candidate-fuzzy-search keyword s)) snippets)))
       (dolist (snippet (cl-subseq match-snippets 0 (min (length match-snippets) acm-backend-yas-candidates-number)))
         (add-to-list 'candidates (list :key snippet
@@ -112,7 +112,8 @@
                                        :annotation "Yas-Snippet"
                                        :backend "yas")
                      t))
-      candidates)))
+      
+      (acm-candidate-sort-by-prefix keyword candidates))))
 
 (defun acm-backend-yas-candidate-expand (candidate-info bound-start)
   (delete-region bound-start (point))
@@ -126,7 +127,7 @@
 
 (defun acm-backend-yas-get-snippet (candidate)
   (let ((snippet-file (expand-file-name (plist-get candidate :label)
-                                        (expand-file-name (format "%s" major-mode) (car yas/root-directory)))))
+                                        (expand-file-name (prin1-to-string major-mode) (car yas/root-directory)))))
     (with-temp-buffer
       (insert-file-contents snippet-file)
       (search-forward "# --\n" nil t)

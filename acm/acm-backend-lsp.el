@@ -103,7 +103,7 @@
                  (add-to-list 'candidates v t))))
            (gethash backend-name backend-hash-table)))))
 
-    candidates))
+    (acm-candidate-sort-by-prefix keyword candidates)))
 
 (defun acm-backend-lsp-candidate-expand (candidate-info bound-start)
   (let* ((label (plist-get candidate-info :label))

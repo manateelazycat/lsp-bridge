@@ -486,10 +486,21 @@ influence of C1 on the result."
           (color-values c1) (color-values c2))))
 
 (defun acm-get-theme-mode ()
-  (format "%s" (frame-parameter nil 'background-mode)))
+  (prin1-to-string (frame-parameter nil 'background-mode)))
 
 (defun acm-candidate-fuzzy-search (keyword candiate)
   (string-match-p (regexp-quote (downcase keyword)) (downcase candiate)))
+
+(defun acm-candidate-sort-by-prefix (keyword candiates)
+  (when (and candiates
+             (consp candiates))
+    (unless keyword
+      (setq keyword ""))
+
+    (cl-sort candiates (lambda (a b)
+                         (let ((a-include-prefix (string-prefix-p keyword (plist-get a :label)))
+                               (b-include-prefix (string-prefix-p keyword (plist-get b :label))))
+                           (not (and b-include-prefix (not a-include-prefix))))))))
 
 (defun acm-update-candiates ()
   (let* ((keyword (acm-get-point-symbol))
