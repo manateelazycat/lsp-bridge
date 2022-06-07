@@ -47,6 +47,7 @@ def test_entrypoint():
         (package-install 'posframe)
         (package-install 'markdown-mode)
         (package-install 'yasnippet)
+        (package-install 'tempel)
         ;; (all-the-icons-install-fonts 't)
         
         ;; for Windows
@@ -62,6 +63,7 @@ def test_entrypoint():
         (require 'yasnippet)
         (require 'lsp-bridge)
         (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
+        (require 'tempel)
         (yas-global-mode 1)
         (global-lsp-bridge-mode)
     )"""
