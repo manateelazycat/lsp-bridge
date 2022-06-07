@@ -329,14 +329,11 @@ Default is 1 second."
                             (eq sym x)
                           (string-match-p x (symbol-name sym))))))
 
-(defun acm-get-point-symbol ()
+(defun acm-get-input-prefix ()
   (let ((bound (bounds-of-thing-at-point 'symbol)))
     (if bound
         (buffer-substring-no-properties (car bound) (cdr bound))
       "")))
-
-(defun acm-idle-auto-tick ()
-  (list (current-buffer) (buffer-chars-modified-tick) (point)))
 
 (defun acm-fetch-candidate-doc ()
   (when (and (frame-live-p acm-frame)
@@ -390,7 +387,7 @@ influence of C1 on the result."
                            (not (and b-include-prefix (not a-include-prefix))))))))
 
 (defun acm-update-candiates ()
-  (let* ((keyword (acm-get-point-symbol))
+  (let* ((keyword (acm-get-input-prefix))
          (candidates (list))
          path-candidates
          yas-candidates
@@ -426,7 +423,7 @@ influence of C1 on the result."
     candidates))
 
 (defun acm-update ()
-  (let* ((keyword (acm-get-point-symbol))
+  (let* ((keyword (acm-get-input-prefix))
          (candidates (acm-update-candiates))
          (bounds (bounds-of-thing-at-point 'symbol)))
 
@@ -475,7 +472,7 @@ influence of C1 on the result."
                (pos (posn-x-y (posn-at-point acm-frame-popup-point))))
           (setq acm-frame-popup-pos
                 (save-excursion
-                  (backward-char (length (acm-get-point-symbol)))
+                  (backward-char (length (acm-get-input-prefix)))
                   (cons (+ (car pos) (nth 0 edges))
                         (+ (cdr pos)
                            (nth 1 edges)
@@ -545,7 +542,7 @@ influence of C1 on the result."
     (let* ((common-string "")
            (items (mapcar (lambda (v) (plist-get v :label)) acm-menu-candidates))
            (item-min-length (cl-reduce #'min (mapcar #'string-width items)))
-           (input-prefix (acm-get-point-symbol)))
+           (input-prefix (acm-get-input-prefix)))
       (dolist (index (number-sequence 0 (1- item-min-length)))
         (let* ((char-list (mapcar (lambda (i) (substring i index (1+ index))) items))
                (first-char (first char-list)))
@@ -554,7 +551,7 @@ influence of C1 on the result."
 
       (if (and (> (length common-string) 0)
                (> (length common-string) (length input-prefix)))
-          (insert (substring common-string (length (acm-get-point-symbol))))
+          (insert (substring common-string (length (acm-get-input-prefix))))
         (message "No common string found")))))
 
 (defun acm-toggle-english-helper ()
@@ -652,10 +649,10 @@ influence of C1 on the result."
         (insert candidate-doc)
         (visual-line-mode 1))
 
-      (acm-doc-adjust-size-and-pos)
+      (acm-doc-fame-adjust)
       )))
 
-(defun acm-doc-adjust-size-and-pos ()
+(defun acm-doc-fame-adjust ()
   (let* ((emacs-width (frame-pixel-width))
          (emacs-height (frame-pixel-height))
          (acm-frame-width (frame-pixel-width acm-frame))
@@ -702,7 +699,7 @@ influence of C1 on the result."
 
       (when (and (frame-live-p acm-doc-frame)
                  (frame-visible-p acm-doc-frame))
-        (acm-doc-adjust-size-and-pos)))
+        (acm-doc-fame-adjust)))
 
     (acm-menu-adjust-pos)))
 

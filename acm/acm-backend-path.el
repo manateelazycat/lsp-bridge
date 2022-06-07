@@ -112,7 +112,7 @@
       (acm-candidate-sort-by-prefix keyword candidates))))
 
 (defun acm-backend-path-candidate-expand (candidate-info bound-start)
-  (let* ((keyword (acm-get-point-symbol))
+  (let* ((keyword (acm-get-input-prefix))
          (file-name (plist-get candidate-info :label))
          (parent-dir (file-name-directory keyword)))
     (delete-region bound-start (point))

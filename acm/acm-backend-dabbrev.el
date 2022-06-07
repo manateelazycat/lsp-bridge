@@ -99,8 +99,8 @@ auto completion does not pop up too aggressively."
 
 (defun acm-backend-dabbrev-candidates-append ()
   (when (and acm-enable-dabbrev
-             (not (equal acm-backend-dabbrev-completion-tick (acm-idle-auto-tick))))
-    (let* ((keyword (acm-get-point-symbol))
+             (not (equal acm-backend-dabbrev-completion-tick (acm-backend-dabbrev-auto-tick))))
+    (let* ((keyword (acm-get-input-prefix))
            (candidates (list))
            (dabbrev-words (acm-backend-dabbrev-get-words keyword))
            (menu-old-max-length acm-menu-max-length-cache)
@@ -125,7 +125,7 @@ auto completion does not pop up too aggressively."
 
         (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates)))
 
-      (setq acm-backend-dabbrev-completion-tick (acm-idle-auto-tick)))))
+      (setq acm-backend-dabbrev-completion-tick (acm-backend-dabbrev-auto-tick)))))
 
 (defun acm-backend-dabbrev-get-words (word)
   "Find all dabbrev expansions for WORD."
@@ -137,6 +137,9 @@ auto completion does not pop up too aggressively."
     (cl-loop with min-len = (+ acm-backend-dabbrev-min-length (length word))
              for w in (dabbrev--find-all-expansions word (dabbrev--ignore-case-p word))
              if (>= (length w) min-len) collect w)))
+
+(defun acm-backend-dabbrev-auto-tick ()
+  (list (current-buffer) (buffer-chars-modified-tick) (point)))
 
 (provide 'acm-backend-dabbrev)
 
