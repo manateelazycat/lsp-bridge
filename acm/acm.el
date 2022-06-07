@@ -177,6 +177,7 @@ Default is 1 second."
     ("macro" . ("material" "alpha-m-circle" "#ff9900"))
     ("face" . ("material" "palette-swatch" "#98c807"))
     ("translate" . ("material" "translate" "#98c807"))
+    ("emmet abbreviation" . ("material" "expand-all-outline" "#98c807"))
     ("custom" . ("material" "apple-keyboard-option" "#ed6856"))
     (t . ("material" "file-find-outline" "#90cef1"))))
 
@@ -680,7 +681,7 @@ influence of C1 on the result."
 (defun acm-menu-render-items (items menu-index)
   (let ((item-index 0))
     (dolist (v items)
-      (let* ((icon (cdr (assoc (plist-get v :icon) acm-icon-alist)))
+      (let* ((icon (cdr (assoc (downcase (plist-get v :icon)) acm-icon-alist)))
              (candidate (plist-get v :display-label))
              (annotation (plist-get v :annotation))
              (annotation-text (if annotation annotation ""))

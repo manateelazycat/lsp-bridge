@@ -32,14 +32,14 @@ class Completion(Handler):
             for item in response["items"] if "items" in response else response:
                 kind = KIND_MAP[item.get("kind", 0)].lower()
                 label = item["label"]
-                key = "{},{}".format(label, kind)
                 annotation = kind if kind != "" else item.get("detail", "")
+                key = "{},{}".format(label, annotation)
 
                 candidate = {
                     "key": key,
-                    "icon": kind,
+                    "icon": annotation,
                     "label": label,
-                    "annotation": annotation,
+                    "annotation": annotation.capitalize(),
                     "deprecated": 1 in item.get("tags", []),
                     "insertText": item.get('insertText', None),
                     "insertTextFormat": item.get("insertTextFormat", ''),
