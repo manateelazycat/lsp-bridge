@@ -92,6 +92,7 @@
 (setq acm-complete-function 'lsp-bridge-expand-candidate)
 (setq acm-fetch-candidate-doc-function 'lsp-bridge-fetch-candidate-doc)
 (defalias 'lsp-bridge-insert-common-prefix #'acm-insert-common)
+(defalias 'lsp-bridge-toggle-english-helper #'acm-toggle-english-helper)
 
 (defun lsp-bridge-expand-candidate (candidate-info bound-start)
   (let ((backend (plist-get candidate-info :backend)))
