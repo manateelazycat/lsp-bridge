@@ -90,8 +90,7 @@
 
 (defun acm-backend-elisp-candidates (keyword)
   (let* ((candidates (list)))
-    (when (and (or (derived-mode-p 'emacs-lisp-mode)
-                   (derived-mode-p 'inferior-emacs-lisp-mode))
+    (when (and (acm-is-elisp-mode)
                (>= (length keyword) acm-backend-elisp-min-length))
       (let ((elisp-symbols (sort (all-completions keyword obarray) 'string<)))
         (dolist (elisp-symbol (cl-subseq elisp-symbols 0 (min (length elisp-symbols) 10)))

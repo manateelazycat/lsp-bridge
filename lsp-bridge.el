@@ -507,8 +507,7 @@ Auto completion is only performed if the tick did not change."
     (when (eq this-command 'self-insert-command)
       (lsp-bridge-try-completion)))
 
-  (unless (or (derived-mode-p 'emacs-lisp-mode)
-              (derived-mode-p 'inferior-emacs-lisp-mode))
+  (unless  (acm-is-elisp-mode)
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       (unless (equal (point) lsp-bridge-last-position)
         (lsp-bridge-call-async "change_cursor" lsp-bridge-filepath (lsp-bridge--position))
@@ -524,8 +523,7 @@ Auto completion is only performed if the tick did not change."
       (lsp-bridge-hide-diagnostic-tooltip))))
 
 (defun lsp-bridge-close-buffer-file ()
-  (unless (or (derived-mode-p 'emacs-lisp-mode)
-              (derived-mode-p 'inferior-emacs-lisp-mode))
+  (unless (acm-is-elisp-mode)
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       (lsp-bridge-call-async "close_file" lsp-bridge-filepath))))
 
@@ -677,8 +675,7 @@ If optional MARKER, return a marker instead"
 (defvar-local lsp-bridge--before-change-end-pos nil)
 
 (defun lsp-bridge-monitor-before-change (begin end)
-  (unless (or (derived-mode-p 'emacs-lisp-mode)
-              (derived-mode-p 'inferior-emacs-lisp-mode))
+  (unless (acm-is-elisp-mode)
     (setq lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
     (setq lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))))
 
@@ -689,8 +686,7 @@ If optional MARKER, return a marker instead"
   ;; Send change_file request.
   (setq-local lsp-bridge-current-tick (lsp-bridge--auto-tick))
 
-  (unless (or (derived-mode-p 'emacs-lisp-mode)
-              (derived-mode-p 'inferior-emacs-lisp-mode))
+  (unless (acm-is-elisp-mode)
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       (lsp-bridge-call-async "change_file"
                              lsp-bridge-filepath
@@ -709,8 +705,7 @@ If optional MARKER, return a marker instead"
        (frame-visible-p acm-frame)))
 
 (defun lsp-bridge-monitor-after-save ()
-  (unless (or (derived-mode-p 'emacs-lisp-mode)
-              (derived-mode-p 'inferior-emacs-lisp-mode))
+  (unless (acm-is-elisp-mode)
     (lsp-bridge-call-async "save_file" lsp-bridge-filepath)))
 
 (defalias 'lsp-bridge-find-define #'lsp-bridge-find-def)
@@ -957,7 +952,7 @@ If optional MARKER, return a marker instead"
   "Enable LSP Bridge mode."
   (cond
    ((and (not buffer-file-name)
-         (not (derived-mode-p 'inferior-emacs-lisp-mode)))
+         (not (acm-is-elisp-mode)))
     (message "[LSP-Bridge] cannot be enabled in non-file buffers.")
     (setq lsp-bridge-mode nil))
    (t
@@ -970,14 +965,14 @@ If optional MARKER, return a marker instead"
 
     ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
     ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
-    (when (not (derived-mode-p 'inferior-emacs-lisp-mode))
+    (unless (acm-is-elisp-mode)
       (unless (file-exists-p (buffer-file-name))
         (save-buffer)))
 
     (dolist (hook lsp-bridge--internal-hooks)
       (add-hook (car hook) (cdr hook) nil t))
 
-    (when (not (derived-mode-p 'inferior-emacs-lisp-mode))
+    (unless (acm-is-elisp-mode)
       (setq lsp-bridge-filepath (file-truename buffer-file-name)))
     (setq lsp-bridge-last-position 0)
 

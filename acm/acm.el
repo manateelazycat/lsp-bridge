@@ -857,6 +857,11 @@ influence of C1 on the result."
        (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates))
        )))
 
+(defun acm-is-elisp-mode ()
+  (or (derived-mode-p 'emacs-lisp-mode)
+      (derived-mode-p 'inferior-emacs-lisp-mode)
+      (derived-mode-p 'lisp-interaction-mode)))
+
 (defun acm-select-first ()
   (interactive)
   (acm-menu-update
