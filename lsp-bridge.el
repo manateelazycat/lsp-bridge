@@ -89,21 +89,8 @@
 (add-to-list 'load-path acm-library-path t)
 (require 'acm)
 
-(setq acm-complete-function 'lsp-bridge-expand-candidate)
-(setq acm-fetch-candidate-doc-function 'lsp-bridge-fetch-candidate-doc)
 (defalias 'lsp-bridge-insert-common-prefix #'acm-insert-common)
 (defalias 'lsp-bridge-toggle-english-helper #'acm-toggle-english-helper)
-
-(defun lsp-bridge-expand-candidate (candidate-info bound-start)
-  (let ((backend (plist-get candidate-info :backend)))
-    (pcase backend
-      ("lsp" (acm-backend-lsp-candidate-expand candidate-info bound-start))
-      ("yas" (acm-backend-yas-candidate-expand candidate-info bound-start))
-      ("path" (acm-backend-path-candidate-expand candidate-info bound-start))
-      (_
-       (delete-region bound-start (point))
-       (insert (plist-get candidate-info :label)))
-      )))
 
 (defcustom lsp-bridge-completion-popup-predicates '(lsp-bridge-not-only-blank-before-cursor
                                                     lsp-bridge-not-match-hide-characters
@@ -1159,15 +1146,6 @@ If optional MARKER, return a marker instead"
       (setq lsp-bridge-filepath new-name)))
   (apply orig-fun arg args))
 (advice-add #'rename-file :around #'lsp-bridge--rename-file-advisor)
-
-(defun lsp-bridge-fetch-candidate-doc (candidate)
-  (let ((backend (plist-get candidate :backend)))
-    (pcase backend
-      ("lsp" (acm-backend-lsp-candidate-fetch-doc candidate))
-      ("elisp" (acm-backend-elisp-candidate-fetch-doc candidate))
-      ("yas" (acm-backend-yas-candidate-fetch-doc candidate))
-      (_
-       (acm-doc-hide)))))
 
 (defvar-local lsp-bridge-completion-item-fetch-tick nil)
 (defvar-local lsp-bridge-completion-item-popup-doc-tick nil)

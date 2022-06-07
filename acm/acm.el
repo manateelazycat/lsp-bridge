@@ -225,9 +225,6 @@ Default is 1 second."
 
 (defvar acm-idle-completion-timer nil)
 
-(defvar acm-complete-function nil)
-(defvar acm-fetch-candidate-doc-function nil)
-
 (defvar acm--mouse-ignore-map
   (let ((map (make-sparse-keymap)))
     (dotimes (i 7)
@@ -465,10 +462,15 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defun acm-idle-completion ()
   (when (and (frame-live-p acm-frame)
              (frame-visible-p acm-frame))
-    (let ((current-candidate (acm-menu-current-candidate)))
-      (when (and acm-enable-doc
-                 acm-fetch-candidate-doc-function)
-        (funcall acm-fetch-candidate-doc-function current-candidate)))
+    (let ((candidate (acm-menu-current-candidate)))
+      (when acm-enable-doc
+        (let ((backend (plist-get candidate :backend)))
+          (pcase backend
+            ("lsp" (acm-backend-lsp-candidate-fetch-doc candidate))
+            ("elisp" (acm-backend-elisp-candidate-fetch-doc candidate))
+            ("yas" (acm-backend-yas-candidate-fetch-doc candidate))
+            (_
+             (acm-doc-hide))))))
 
     (acm-backend-dabbrev-candidates-append)
     ))
@@ -627,8 +629,18 @@ influence of C1 on the result."
 
 (defun acm-complete ()
   (interactive)
-  (when acm-complete-function
-    (funcall acm-complete-function (acm-menu-current-candidate) acm-frame-popup-point))
+
+  (let ((candidate-info (acm-menu-current-candidate))
+        (bound-start acm-frame-popup-point))
+    (let ((backend (plist-get candidate-info :backend)))
+      (pcase backend
+        ("lsp" (acm-backend-lsp-candidate-expand candidate-info bound-start))
+        ("yas" (acm-backend-yas-candidate-expand candidate-info bound-start))
+        ("path" (acm-backend-path-candidate-expand candidate-info bound-start))
+        (_
+         (delete-region bound-start (point))
+         (insert (plist-get candidate-info :label)))
+        )))
 
   (acm-hide))
 
