@@ -278,6 +278,7 @@ Default is 1 second."
       (unless (equal (frame-parameter frame 'background-color) new)
         (set-frame-parameter frame 'background-color new)))
 
+    ;; Reset to the input focus to the parent frame.
     (redirect-frame-focus frame parent)
     frame))
 
@@ -288,6 +289,8 @@ Default is 1 second."
      (with-current-buffer (get-buffer-create ,frame-buffer)
        ;; Install mouse ignore map
        (use-local-map acm--mouse-ignore-map)
+
+       ;; Set buffer arguments.
        (dolist (var '((mode-line-format . nil)
                       (header-line-format . nil)
                       (tab-line-format . nil)
@@ -306,17 +309,21 @@ Default is 1 second."
          (set (make-local-variable (car var)) (cdr var)))
        (buffer-face-set 'acm-buffer-size-face))
 
+     ;; Set frame window and buffer.
      (let ((win (frame-root-window ,frame)))
        (set-window-buffer win ,frame-buffer)
        ;; Mark window as dedicated to prevent frame reuse.
        (set-window-dedicated-p win t))))
 
 (defun acm-set-frame-position (frame x y)
+  ;; Make sure frame visible before set position.
   (unless (frame-visible-p frame)
     (make-frame-visible frame))
+
   (set-frame-position frame x y))
 
 (defun acm-set-frame-size (frame &optional max-width max-height)
+  ;; Set the smallest window size value to ensure that frame adjusts to the accurate size of its content.
   (let* ((window-min-height 0)
          (window-min-width 0))
     (funcall acm-fit-frame-to-buffer frame max-height nil max-width nil)))
@@ -330,6 +337,7 @@ Default is 1 second."
                           (string-match-p x (symbol-name sym))))))
 
 (defun acm-get-input-prefix ()
+  "Get user input prefix."
   (let ((bound (bounds-of-thing-at-point 'symbol)))
     (if bound
         (buffer-substring-no-properties (car bound) (cdr bound))
@@ -346,10 +354,11 @@ Default is 1 second."
             ("elisp" (acm-backend-elisp-candidate-fetch-doc candidate))
             ("yas" (acm-backend-yas-candidate-fetch-doc candidate))
             ("tempel" (acm-backend-tempel-candidate-fetch-doc candidate))
-            (_
-             (acm-doc-hide))))))))
+            ;; Hide doc frame for backend that not support fetch candiate documentation.
+            (_ (acm-doc-hide))))))))
 
 (defun acm-idle-completion ()
+  ;; Only append dabbrev when idle, make sure not to get stuck when typing.
   (when (and (frame-live-p acm-frame)
              (frame-visible-p acm-frame))
     (acm-backend-dabbrev-candidates-append)))
@@ -370,12 +379,15 @@ influence of C1 on the result."
           (color-values c1) (color-values c2))))
 
 (defun acm-get-theme-mode ()
+  "Get theme mode, dark or light."
   (prin1-to-string (frame-parameter nil 'background-mode)))
 
 (defun acm-candidate-fuzzy-search (keyword candiate)
+  "Fuzzy search candiate."
   (string-match-p (regexp-quote (downcase keyword)) (downcase candiate)))
 
 (defun acm-candidate-sort-by-prefix (keyword candiates)
+  "Priority display of the candiates of the prefix matching."
   (when (and candiates
              (consp candiates))
     (unless keyword
@@ -395,6 +407,7 @@ influence of C1 on the result."
          mode-candidates)
 
     (if acm-enable-english-helper
+        ;; Completion english if option `acm-enable-english-helper' is enable.
         (progn
           (require 'acm-backend-english-data)
           (require 'acm-backend-english)
@@ -402,15 +415,18 @@ influence of C1 on the result."
           (setq candidates (acm-backend-english-candidates keyword)))
 
       (setq path-candidates (acm-backend-path-candidates keyword))
-
       (if (> (length path-candidates) 0)
+          ;; Only show path candiates if prefix is valid path.
           (setq candidates path-candidates)
+
+        ;; Fetch syntax completion candidates.
         (setq mode-candidates (append
                                (acm-backend-elisp-candidates keyword)
                                (acm-backend-lsp-candidates keyword)))
         (setq yas-candidates (acm-backend-yas-candidates keyword))
         (setq tempel-candidates (acm-backend-tempel-candidates keyword))
 
+        ;; Insert snippet candiates in first page of menu.
         (setq candidates
               (if (> (length mode-candidates) acm-snippet-insert-index)
                   (append (cl-subseq mode-candidates 0 acm-snippet-insert-index)
@@ -426,8 +442,8 @@ influence of C1 on the result."
   (let* ((keyword (acm-get-input-prefix))
          (candidates (acm-update-candiates))
          (bounds (bounds-of-thing-at-point 'symbol)))
-
     (cond
+     ;; Hide completion menu if user type first candiate completely.
      ((and (equal (length candidates) 1)
            (string-equal keyword (plist-get (nth 0 candidates) :label)))
       (acm-hide))
@@ -436,20 +452,26 @@ influence of C1 on the result."
              (menu-old-number acm-menu-number-cache)
              (is-dark-mode (string-equal (acm-get-theme-mode) "dark"))
              (blend-background (if is-dark-mode "#000000" "#AAAAAA")))
+        ;; Enable acm-mode to inject mode keys.
         (acm-mode 1)
 
+        ;; Use `pre-command-hook' to hide completion menu when command match `acm-continue-commands'.
         (add-hook 'pre-command-hook #'acm--pre-command nil 'local)
 
+        ;; Hide doc frame first.
         (acm-doc-hide)
 
+        ;; Start idle completion timer.
         (unless acm-idle-completion-timer
           (setq acm-idle-completion-timer
                 (run-with-idle-timer acm-idle-completion-delay t #'acm-idle-completion)))
 
+        ;; Start fetch documentation timer.
         (unless acm-fetch-doc-timer
           (setq acm-fetch-doc-timer
                 (run-with-idle-timer acm-fetch-candidate-doc-delay t #'acm-fetch-candidate-doc)))
 
+        ;; Init candiates, menu index and offset.
         (setq-local acm-candidates candidates)
         (setq-local acm-menu-candidates
                     (cl-subseq acm-candidates
@@ -458,8 +480,10 @@ influence of C1 on the result."
         (setq-local acm-menu-index (if (zerop (length acm-menu-candidates)) -1 0))
         (setq-local acm-menu-offset 0)
 
+        ;; Make sure font size of frame same as Emacs.
         (set-face-attribute 'acm-buffer-size-face nil :height (face-attribute 'default :height))
 
+        ;; Make sure menu follow the theme of Emacs.
         (when (equal (face-attribute 'acm-default-face :background) 'unspecified)
           (set-face-background 'acm-default-face (acm-color-blend (face-attribute 'default :background) blend-background (if is-dark-mode 0.8 0.9))))
         (when (equal (face-attribute 'acm-select-face :background) 'unspecified)
@@ -467,6 +491,7 @@ influence of C1 on the result."
         (when (equal (face-attribute 'acm-select-face :foreground) 'unspecified)
           (set-face-foreground 'acm-select-face (face-attribute 'font-lock-function-name-face :foreground)))
 
+        ;; Record menu popup position and buffer.
         (setq acm-frame-popup-point (or (car bounds) (point)))
         (let* ((edges (window-pixel-edges))
                (pos (posn-x-y (posn-at-point acm-frame-popup-point))))
@@ -476,31 +501,40 @@ influence of C1 on the result."
                   (cons (+ (car pos) (nth 0 edges))
                         (+ (cdr pos)
                            (nth 1 edges)
+                           ;; We need move down to skip tab-line and header-line.
                            (if (version< emacs-version "27.0")
                                (window-header-line-height)
                              (+ (window-tab-line-height)
                                 (window-header-line-height))))))))
         (setq acm-frame-popup-buffer (current-buffer))
 
+        ;; Create menu frame if it not exists.
         (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
 
+        ;; Render menu.
         (acm-menu-render menu-old-max-length (acm-menu-max-length) menu-old-number (length acm-menu-candidates))))
      (t
       (acm-hide)))))
 
 (defun acm-hide ()
   (interactive)
+  ;; Turn off `acm-mode'.
   (acm-mode -1)
 
+  ;; Hide menu frame.
   (when (frame-live-p acm-frame)
     (make-frame-invisible acm-frame))
 
+  ;; Hide doc frame.
   (acm-doc-hide)
 
+  ;; Clean `acm-menu-max-length-cache'.
   (setq acm-menu-max-length-cache 0)
 
+  ;; Remove hook of `acm--pre-command'.
   (remove-hook 'pre-command-hook #'acm--pre-command 'local)
 
+  ;; Cancel timers.
   (when acm-idle-completion-timer
     (cancel-timer acm-idle-completion-timer)
     (setq acm-idle-completion-timer nil))
@@ -514,6 +548,7 @@ influence of C1 on the result."
     (make-frame-invisible acm-doc-frame)))
 
 (defun acm--pre-command ()
+  ;; Use `pre-command-hook' to hide completion menu when command match `acm-continue-commands'.
   (unless (acm-match-symbol-p acm-continue-commands this-command)
     (acm-hide)))
 
@@ -533,9 +568,11 @@ influence of C1 on the result."
          (insert (plist-get candidate-info :label)))
         )))
 
+  ;; Hide menu and doc frame after complete candiate.
   (acm-hide))
 
 (defun acm-insert-common ()
+  "Insert common prefix of menu."
   (interactive)
   (when (and (frame-live-p acm-frame)
              (frame-visible-p acm-frame))
@@ -555,6 +592,7 @@ influence of C1 on the result."
         (message "No common string found")))))
 
 (defun acm-toggle-english-helper ()
+  "Toggle english helper."
   (interactive)
   (if acm-enable-english-helper
       (message "Turn off english helper.")
@@ -562,6 +600,7 @@ influence of C1 on the result."
   (setq-local acm-enable-english-helper (not acm-enable-english-helper)))
 
 (defun acm-menu-max-length ()
+  "Get max length of menu candiates, use for adjust menu size dynamically."
   (cl-reduce #'max
              (mapcar (lambda (v)
                        (string-width (format "%s %s" (plist-get v :display-label) (plist-get v :annotation))))
@@ -578,41 +617,47 @@ influence of C1 on the result."
              (icon-text (if icon (acm-icon-build (nth 0 icon) (nth 1 icon) (nth 2 icon)) ""))
              candidate-line)
 
+        ;; Render deprecated candiate.
         (when (plist-get v :deprecated)
           (add-face-text-property 0 (length candidate) 'acm-deprecated-face 'append candidate))
 
+        ;; Build candiate line.
         (setq candidate-line
               (concat
                icon-text
                candidate
+               ;; Fill in the blank according to the maximum width, make sure marks align right of menu.
                (propertize " "
                            'display
                            (acm-indent-pixel
                             (ceiling (* (window-font-width) (- (+ acm-menu-max-length-cache 20) item-length)))))
                (propertize (format "%s \n" (capitalize annotation-text))
                            'face
-                           (if (equal item-index menu-index)
-                               'acm-select-face
-                             'font-lock-doc-face))
-               ))
+                           (if (equal item-index menu-index) 'acm-select-face 'font-lock-doc-face))))
 
+        ;; Render current candiate.
         (when (equal item-index menu-index)
           (add-face-text-property 0 (length candidate-line) 'acm-select-face 'append candidate-line)
 
+          ;; Hide doc frame if some backend not support fetch candiate documentation.
           (when (and
                  (not (member (plist-get v :backend) '("lsp" "elisp" "yas")))
                  (frame-live-p acm-doc-frame)
                  (frame-visible-p acm-doc-frame))
             (acm-doc-hide)))
 
+        ;; Insert candiate line.
         (insert candidate-line)
 
+        ;; Delete the last extra return line.
         (when (equal item-index (1- (length items)))
           (delete-backward-char 1))
 
+        ;; Update item index.
         (setq item-index (1+ item-index))))))
 
 (defun acm-menu-adjust-pos ()
+  "Adjust menu frame position."
   (let* ((emacs-width (frame-pixel-width))
          (emacs-height (frame-pixel-height))
          (acm-frame-width (frame-pixel-width acm-frame))
@@ -641,14 +686,16 @@ influence of C1 on the result."
             (_ ""))))
     (when (and candidate-doc
                (not (string-equal candidate-doc "")))
-
+      ;; Create doc frame if it not exist.
       (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame" 10)
 
+      ;; Insert documentation and turn on wrap line.
       (with-current-buffer (get-buffer-create acm-doc-buffer)
         (erase-buffer)
         (insert candidate-doc)
         (visual-line-mode 1))
 
+      ;; Adjust doc frame position and size.
       (acm-doc-fame-adjust)
       )))
 
@@ -669,10 +716,12 @@ influence of C1 on the result."
          (acm-doc-frame-max-width (max acm-frame-left-distance acm-frame-right-distance))
          (acm-doc-frame-max-height (max acm-frame-top-distance acm-frame-bottom-distance)))
 
+    ;; Make sure doc frame size not out of Emacs area.
     (acm-set-frame-size acm-doc-frame
                         (ceiling (/ acm-doc-frame-max-width (frame-char-width)))
                         (ceiling (/ acm-doc-frame-max-height (window-default-line-height))))
 
+    ;; Adjust doc frame with it's size.
     (let* ((acm-doc-frame-width (frame-pixel-width acm-doc-frame))
            (acm-doc-frame-x (if (> acm-frame-left-distance acm-frame-right-distance)
                                 (- acm-frame-x acm-doc-frame-width)
@@ -681,26 +730,34 @@ influence of C1 on the result."
       (acm-set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y))))
 
 (defun acm-menu-current-candidate ()
+  "Get current candiate with menu index and offset."
   (nth (+ acm-menu-offset acm-menu-index) acm-candidates))
 
 (defun acm-menu-render (menu-old-max-length menu-new-max-length menu-old-number menu-new-number)
   (let* ((items acm-menu-candidates)
          (menu-index acm-menu-index))
+    ;; Record newest cache.
     (setq acm-menu-max-length-cache menu-new-max-length)
     (setq acm-menu-number-cache menu-new-number)
 
+    ;; Insert menu candiates.
     (with-current-buffer (get-buffer-create acm-buffer)
       (erase-buffer)
       (acm-menu-render-items items menu-index))
 
+    ;; Not adjust menu frame size if not necessary,
+    ;; such as select candidate just change index,
+    ;; or menu width not change when switch to next page.
     (when (or (not (equal menu-old-max-length menu-new-max-length))
               (not (equal menu-old-number menu-new-number)))
       (acm-set-frame-size acm-frame)
 
+      ;; Adjust doc frame with menu frame position.
       (when (and (frame-live-p acm-doc-frame)
                  (frame-visible-p acm-doc-frame))
         (acm-doc-fame-adjust)))
 
+    ;; Adjust menu frame position.
     (acm-menu-adjust-pos)))
 
 (defun acm-update-completion-data (backend-name completion-table)
@@ -717,11 +774,10 @@ influence of C1 on the result."
 
 (defun acm-menu-update-candidates ()
   (let ((menu-length (length acm-menu-candidates)))
+    ;; Only change menu candidates when filter candidate length bigger than menu length.
     (when (> (length acm-candidates) menu-length)
       (setq-local acm-menu-candidates
-                  (cl-subseq acm-candidates
-                             acm-menu-offset
-                             (+ acm-menu-offset menu-length))))))
+                  (cl-subseq acm-candidates acm-menu-offset (+ acm-menu-offset menu-length))))))
 
 (defmacro acm-menu-update (&rest body)
   `(let* ((menu-old-index acm-menu-index)
@@ -730,6 +786,7 @@ influence of C1 on the result."
           (menu-old-number acm-menu-number-cache))
      ,@body
 
+     ;; Only update menu candidates when menu index or offset changed.
      (when (or (not (equal menu-old-index acm-menu-index))
                (not (equal menu-old-offset acm-menu-offset)))
        (acm-menu-update-candidates)
@@ -737,17 +794,20 @@ influence of C1 on the result."
        )))
 
 (defun acm-is-elisp-mode ()
+  "Current mode is elisp mode?"
   (or (derived-mode-p 'emacs-lisp-mode)
       (derived-mode-p 'inferior-emacs-lisp-mode)
       (derived-mode-p 'lisp-interaction-mode)))
 
 (defun acm-select-first ()
+  "Select first candidate."
   (interactive)
   (acm-menu-update
    (setq-local acm-menu-offset 0)
    (setq-local acm-menu-index 0)))
 
 (defun acm-select-last ()
+  "Select last candidate."
   (interactive)
   (acm-menu-update
    (let ((menu-length (length acm-menu-candidates)))
@@ -756,6 +816,7 @@ influence of C1 on the result."
      )))
 
 (defun acm-select-next ()
+  "Select next candidate."
   (interactive)
   (acm-menu-update
    (cond ((< acm-menu-index (1- (length acm-menu-candidates)))
@@ -764,6 +825,7 @@ influence of C1 on the result."
           (setq-local acm-menu-offset (1+ acm-menu-offset))))))
 
 (defun acm-select-prev ()
+  "Select previous candidate."
   (interactive)
   (acm-menu-update
    (cond ((> acm-menu-index 0)
