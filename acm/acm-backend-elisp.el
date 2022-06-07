@@ -85,9 +85,7 @@
 ;;; Code:
 
 (defcustom acm-backend-elisp-min-length 2
-  "Minimum length of elisp symbol.
-This setting ensures that words which are too short
-are not offered as completion candidates, such that"
+  "Minimum length of elisp symbol."
   :type 'integer)
 
 (defun acm-backend-elisp-candidates (keyword)

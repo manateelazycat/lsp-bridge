@@ -217,6 +217,8 @@ Default is 1 second."
 (defvar-local acm-menu-index -1)
 (defvar-local acm-menu-offset 0)
 
+(defvar-local acm-enable-english-helper nil)
+
 (defvar acm-doc-buffer " *acm-doc-buffer*")
 (defvar acm-doc-frame nil)
 
@@ -509,22 +511,29 @@ influence of C1 on the result."
          yas-candidates
          mode-candidates)
 
-    (setq path-candidates (acm-backend-path-candidates keyword))
+    (if acm-enable-english-helper
+        (progn
+          (require 'acm-backend-english-data)
+          (require 'acm-backend-english)
 
-    (if (> (length path-candidates) 0)
-        (setq candidates path-candidates)
-      (setq mode-candidates (append
-                             (acm-backend-elisp-candidates keyword)
-                             (acm-backend-lsp-candidates keyword)))
-      (setq yas-candidates (acm-backend-yas-candidates keyword))
+          (setq candidates (acm-backend-english-candidates keyword)))
 
-      (setq candidates
-            (if (> (length mode-candidates) acm-backend-yas-insert-index)
-                (append (cl-subseq mode-candidates 0 acm-backend-yas-insert-index)
-                        yas-candidates
-                        (cl-subseq mode-candidates acm-backend-yas-insert-index))
-              (append mode-candidates yas-candidates)
-              )))
+      (setq path-candidates (acm-backend-path-candidates keyword))
+
+      (if (> (length path-candidates) 0)
+          (setq candidates path-candidates)
+        (setq mode-candidates (append
+                               (acm-backend-elisp-candidates keyword)
+                               (acm-backend-lsp-candidates keyword)))
+        (setq yas-candidates (acm-backend-yas-candidates keyword))
+
+        (setq candidates
+              (if (> (length mode-candidates) acm-backend-yas-insert-index)
+                  (append (cl-subseq mode-candidates 0 acm-backend-yas-insert-index)
+                          yas-candidates
+                          (cl-subseq mode-candidates acm-backend-yas-insert-index))
+                (append mode-candidates yas-candidates)
+                ))))
 
     candidates))
 
@@ -640,6 +649,13 @@ influence of C1 on the result."
                (> (length common-string) (length input-prefix)))
           (insert (substring common-string (length (acm-get-point-symbol))))
         (message "No common string found")))))
+
+(defun acm-toggle-english-helper ()
+  (interactive)
+  (if acm-enable-english-helper
+      (message "Turn off english helper.")
+    (message "Turn on english helper."))
+  (setq-local acm-enable-english-helper (not acm-enable-english-helper)))
 
 (defun acm-menu-max-length ()
   (cl-reduce #'max
