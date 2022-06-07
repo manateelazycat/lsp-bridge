@@ -827,18 +827,6 @@ influence of C1 on the result."
   ;; Update completion table that match backend-name.
   (puthash backend-name completion-table acm-backend-local-items))
 
-(defun acm-elisp-symbol-type (symbol)
-  (cond ((functionp symbol)
-         "function")
-        ((macrop symbol)
-         "macro")
-        ((facep symbol)
-         "face")
-        ((custom-variable-p symbol)
-         "custom")
-        (t
-         "variable")))
-
 (defmacro acm-silent (&rest body)
   "Silence BODY."
   (declare (indent 0))

@@ -95,7 +95,7 @@
                (>= (length keyword) acm-backend-elisp-min-length))
       (let ((elisp-symbols (sort (all-completions keyword obarray) 'string<)))
         (dolist (elisp-symbol (cl-subseq elisp-symbols 0 (min (length elisp-symbols) 10)))
-          (let ((symbol-type (acm-elisp-symbol-type (intern elisp-symbol))))
+          (let ((symbol-type (acm-backend-elisp-symbol-type (intern elisp-symbol))))
             (add-to-list 'candidates (list :key elisp-symbol
                                            :icon symbol-type
                                            :label elisp-symbol
@@ -119,6 +119,18 @@
           (t
            (documentation-property symbol 'variable-documentation)
            ))))
+
+(defun acm-backend-elisp-symbol-type (symbol)
+  (cond ((functionp symbol)
+         "function")
+        ((macrop symbol)
+         "macro")
+        ((facep symbol)
+         "face")
+        ((custom-variable-p symbol)
+         "custom")
+        (t
+         "variable")))
 
 (provide 'acm-backend-elisp)
 
