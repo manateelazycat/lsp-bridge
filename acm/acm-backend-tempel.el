@@ -7,10 +7,6 @@
 (defcustom acm-backend-tempel-candidates-number 2
   "Maximal number of tempel candidate of menu."
   :type 'integer)
-
-(defcustom acm-backend-tempel-insert-index 8
-  "Insert index of tempel candidate of menu."
-  :type 'integer)
   
 (defun acm-backend-tempel-candidates (keyword)
   (when (and acm-enable-tempel
