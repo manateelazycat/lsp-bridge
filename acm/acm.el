@@ -92,6 +92,7 @@
 (require 'acm-backend-lsp)
 (require 'acm-backend-path)
 (require 'acm-backend-dabbrev)
+(require 'acm-backend-tempel)
 
 ;;; Code:
 
@@ -471,6 +472,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
             ("lsp" (acm-backend-lsp-candidate-fetch-doc candidate))
             ("elisp" (acm-backend-elisp-candidate-fetch-doc candidate))
             ("yas" (acm-backend-yas-candidate-fetch-doc candidate))
+            ("tempel" (acm-backend-tempel-candidate-fetch-doc candidate))
             (_
              (acm-doc-hide))))))
 
@@ -514,6 +516,7 @@ influence of C1 on the result."
          (candidates (list))
          path-candidates
          yas-candidates
+         tempel-candidates
          mode-candidates)
 
     (if acm-enable-english-helper
@@ -531,13 +534,15 @@ influence of C1 on the result."
                                (acm-backend-elisp-candidates keyword)
                                (acm-backend-lsp-candidates keyword)))
         (setq yas-candidates (acm-backend-yas-candidates keyword))
+        (setq tempel-candidates (acm-backend-tempel-candidates keyword))
 
         (setq candidates
               (if (> (length mode-candidates) acm-backend-yas-insert-index)
                   (append (cl-subseq mode-candidates 0 acm-backend-yas-insert-index)
                           yas-candidates
+                          tempel-candidates
                           (cl-subseq mode-candidates acm-backend-yas-insert-index))
-                (append mode-candidates yas-candidates)
+                (append mode-candidates yas-candidates tempel-candidates)
                 ))))
 
     candidates))
@@ -639,6 +644,7 @@ influence of C1 on the result."
         ("lsp" (acm-backend-lsp-candidate-expand candidate-info bound-start))
         ("yas" (acm-backend-yas-candidate-expand candidate-info bound-start))
         ("path" (acm-backend-path-candidate-expand candidate-info bound-start))
+        ("tempel" (acm-backend-tempel-candidate-expand candidate-info bound-start))
         (_
          (delete-region bound-start (point))
          (insert (plist-get candidate-info :label)))
@@ -748,6 +754,7 @@ influence of C1 on the result."
             ("lsp" (acm-backend-lsp-candidate-doc candidate))
             ("elisp" (acm-backend-elisp-candidate-doc candidate))
             ("yas" (acm-backend-yas-candidate-doc candidate))
+            ("tempel" (acm-backend-tempel-candidate-doc candidate))
             (_ ""))))
     (when (and candidate-doc
                (not (string-equal candidate-doc "")))
