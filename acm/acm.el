@@ -195,6 +195,7 @@ Default is 1 second."
     (define-key map "\n" #'acm-complete)
     (define-key map "\M-h" #'acm-complete)
     (define-key map "\M-H" #'acm-insert-common)
+    (define-key map "\M-k" #'acm-hide)
     (define-key map "\C-g" #'acm-hide)
     map)
   "Keymap used when popup is shown.")
