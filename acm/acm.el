@@ -87,6 +87,7 @@
 (require 'subr-x)
 (require 'cl-seq)
 
+(require 'acm-icon)
 (require 'acm-backend-yas)
 (require 'acm-backend-elisp)
 (require 'acm-backend-lsp)
@@ -100,7 +101,7 @@
   "Maximal number of candidates to show."
   :type 'integer)
 
-(defcustom acm-idle-doc-delay 0.5
+(defcustom acm-fetch-candidate-doc-delay 0.5
   "How many seconds to stay in your fingers will popup the candidate documentation.
 
 Default is 0.5 second."
@@ -131,63 +132,6 @@ Default is 1 second."
   "Insert index of snippet candidate of menu."
   :type 'integer)
 
-(defvar  acm-icon-collections
-  '(("bootstrap" . "https://icons.getbootstrap.com/icons/%s.svg")
-    ("material" . "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/svg/%s.svg")
-    ("octicons" . "https://raw.githubusercontent.com/primer/octicons/master/icons/%s-24.svg")
-    ("boxicons" . "https://boxicons.com/static/img/svg/regular/bx-%s.svg")))
-
-(defvar acm-icon-alist
-  `(("unknown" . ("material" "file-find-outline" "#74d2e7"))
-    ("text" . ("material" "format-text" "#98c807"))
-    ("method" . ("material" "cube" "#da1884"))
-    ("function" . ("material" "function" "#ff6a00"))
-    ("fun" . ("material" "function-variant" "#0abf53"))
-    ("constructor" . ("material" "all-inclusive" "#7ac143"))
-    ("ctor" . ("material" "cube" "#b84592"))
-    ("field" . ("material" "tag" "#ff6c5f"))
-    ("variable" . ("material" "variable" "#00b2a9"))
-    ("var" . ("material" "application-variable" "#e04646"))
-    ("class" . ("material" "video-input-component" "#ef5734"))
-    ("interface" . ("material" "share" "#6cbc35"))
-    ("i/f" . ("material" "share" "#ee3322"))
-    ("module" . ("material" "sim-outline" "#00c4cc"))
-    ("mod" . ("material" "view-module" "#ff6908"))
-    ("property" . ("material" "wrench" "#bf033b"))
-    ("prop" . ("material" "tools" "#0eb24e"))
-    ("unit" . ("material" "video-input-hdmi" "#98c807"))
-    ("value" . ("material" "format-align-right" "#ff0092"))
-    ("enum" . ("material" "database" "#dc5034"))
-    ("keyword" . ("material" "filter" "#0085c3"))
-    ("k/w" . ("material" "filter-outline" "#ed6856"))
-    ("snippet" . ("material" "format-align-center" "#f05d21"))
-    ("yas-snippet" . ("material" "format-align-center" "#f05d21"))
-    ("sn" . ("material" "format-align-center" "#f69653"))
-    ("color" . ("material" "palette" "#099d84"))
-    ("file" . ("material" "file-outline" "#e30061"))
-    ("reference" . ("material" "bookmark-box-multiple" "#954a97"))
-    ("ref" . ("material" "bookmark-box-multiple-outline" "#006e96"))
-    ("folder" . ("material" "folder" "#f56040"))
-    ("dir" . ("material" "folder" "#d25238"))
-    ("enum-member" . ("material" "google-circles-extended" "#ff9900"))
-    ("enummember" . ("material" "google-circles-extended" "#8a8acb"))
-    ("member" . ("material" "guitar-pick" "#e55e5e"))
-    ("constant" . ("material" "shape-square-plus" "#d1de3f"))
-    ("const" . ("material" "shape-square-rounded-plus" "#f65314"))
-    ("struct" . ("material" "vector-square-plus" "#96cbb3"))
-    ("event" . ("material" "bell" "#e990ab"))
-    ("operator" . ("material" "plus-circle-outline" "#f47b7b"))
-    ("op" . ("material" "plus-circle-multiple-outline" "#eb0973"))
-    ("type-parameter" . ("material" "arrow-split-vertical" "#39a6dd"))
-    ("param" . ("material" "arrow-split-horizontal" "#ff0e83"))
-    ("template" . ("material" "file-document-multiple" "#207c88"))
-    ("macro" . ("material" "alpha-m-circle" "#ff9900"))
-    ("face" . ("material" "palette-swatch" "#98c807"))
-    ("translate" . ("material" "translate" "#98c807"))
-    ("emmet abbreviation" . ("material" "expand-all-outline" "#98c807"))
-    ("custom" . ("material" "apple-keyboard-option" "#ed6856"))
-    (t . ("material" "file-find-outline" "#90cef1"))))
-
 (defvar acm-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [remap next-line] #'acm-select-next)
@@ -214,10 +158,6 @@ Default is 1 second."
 (defvar acm-frame-popup-point nil)
 (defvar acm-frame-popup-pos nil)
 
-(defvar acm-icon-cache (make-hash-table :test 'equal))
-(defvar acm-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))
-(defvar acm-icon-width 4)
-
 (defvar acm-menu-number-cache 0)
 (defvar acm-menu-max-length-cache 0)
 
@@ -233,7 +173,7 @@ Default is 1 second."
 (defvar acm-doc-buffer " *acm-doc-buffer*")
 
 (defvar acm-idle-completion-timer nil)
-(defvar acm-idle-doc-timer nil)
+(defvar acm-fetch-doc-timer nil)
 
 (defvar acm--mouse-ignore-map
   (let ((map (make-sparse-keymap)))
@@ -279,77 +219,6 @@ Default is 1 second."
   "LSP Bridge mode."
   :keymap acm-mode-map
   :init-value nil)
-
-(defun acm-icon-filepath (collection name)
-  (concat (file-name-as-directory acm-icon-dir) (format "%s_%s.svg" collection name)))
-
-(defun acm-icon-fetch-all ()
-  (interactive)
-  (dolist (icon acm-icon-alist)
-    (let* ((collection (nth 0 (cdr icon)))
-           (name (nth 1 (cdr icon)))
-           (url (format (cdr (assoc collection acm-icon-collections)) name))
-           (filename (acm-icon-filepath collection name)))
-      (with-temp-buffer
-        (url-insert-file-contents url)
-        (write-region (point-min) (point-max) filename)))))
-
-(defun acm-icon-parse (collection name)
-  (with-temp-buffer
-    (insert-file-contents (acm-icon-filepath collection name))
-    (xml-parse-region (point-min) (point-max))))
-
-(defun acm-emacs-color-to-svg-color (color-name)
-  "Convert Emacs COLOR-NAME to #rrggbb form.
-If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
-  (let ((rgb-color (color-name-to-rgb color-name)))
-    (if rgb-color
-        (apply #'color-rgb-to-hex (append rgb-color '(2)))
-      color-name)))
-
-(defun acm-icon (collection name &optional fg-color bg-color zoom)
-  (let* ((root (acm-icon-parse collection name))
-
-         ;; Read original viewbox
-         (viewbox (cdr (assq 'viewBox (xml-node-attributes (car root)))))
-         (viewbox (mapcar 'string-to-number (split-string viewbox)))
-         (view-x (nth 0 viewbox))
-         (view-y (nth 1 viewbox))
-         (view-width (nth 2 viewbox))
-         (view-height (nth 3 viewbox))
-
-         ;; Set icon size (in pixels) to 4x1 characters
-         (svg-width  (* (window-font-width)  acm-icon-width))
-         (svg-height (* (window-font-height) 1))
-
-         ;; Zoom the icon by using integer factor only
-         (zoom (max 1 (truncate (or zoom 1))))
-         (svg-width  (* svg-width zoom))
-         (svg-height (* svg-height zoom))
-
-         (svg-viewbox (format "%f %f %f %f" view-x view-y view-width view-height))
-         (fg-color (acm-emacs-color-to-svg-color
-                    (or (when (facep fg-color)
-                          (face-foreground fg-color nil t))
-                        fg-color (face-attribute 'default :foreground))))
-         (bg-color (acm-emacs-color-to-svg-color
-                    (or (when (facep bg-color)
-                          (face-background bg-color nil t))
-                        bg-color "transparent")))
-         (svg (svg-create svg-width svg-height
-                          :viewBox svg-viewbox
-                          :stroke-width 0
-                          :fill fg-color)))
-    (svg-rectangle svg
-                   view-x view-y view-width view-height
-                   :fill bg-color)
-
-    (dolist (item (xml-get-children (car root) 'path))
-      (let* ((attrs (xml-node-attributes item))
-             (path (cdr (assoc 'd attrs)))
-             (fill (or (cdr (assoc 'fill attrs)) fg-color)))
-        (svg-node svg 'path :d path :fill fill)))
-    (svg-image svg :ascent 'center :scale 1)))
 
 (defvar x-gtk-resize-child-frames) ;; not present on non-gtk builds
 (defun acm-make-frame (frame-name internal-border)
@@ -469,7 +338,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
 (defun acm-idle-auto-tick ()
   (list (current-buffer) (buffer-chars-modified-tick) (point)))
 
-(defun acm-idle-fetch-doc ()
+(defun acm-fetch-candidate-doc ()
   (when (and (frame-live-p acm-frame)
              (frame-visible-p acm-frame))
     (let ((candidate (acm-menu-current-candidate)))
@@ -579,10 +448,10 @@ influence of C1 on the result."
         (unless acm-idle-completion-timer
           (setq acm-idle-completion-timer
                 (run-with-idle-timer acm-idle-completion-delay t #'acm-idle-completion)))
-        
-        (unless acm-idle-doc-timer
-          (setq acm-idle-doc-timer
-                (run-with-idle-timer acm-idle-doc-delay t #'acm-idle-fetch-doc)))
+
+        (unless acm-fetch-doc-timer
+          (setq acm-fetch-doc-timer
+                (run-with-idle-timer acm-fetch-candidate-doc-delay t #'acm-fetch-candidate-doc)))
 
         (setq-local acm-candidates candidates)
         (setq-local acm-menu-candidates
@@ -638,10 +507,10 @@ influence of C1 on the result."
   (when acm-idle-completion-timer
     (cancel-timer acm-idle-completion-timer)
     (setq acm-idle-completion-timer nil))
-  
-  (when acm-idle-doc-timer
-    (cancel-timer acm-idle-doc-timer)
-    (setq acm-idle-doc-timer nil)))
+
+  (when acm-fetch-doc-timer
+    (cancel-timer acm-fetch-doc-timer)
+    (setq acm-fetch-doc-timer nil)))
 
 (defun acm-doc-hide ()
   (when (frame-live-p acm-doc-frame)
@@ -836,18 +705,6 @@ influence of C1 on the result."
         (acm-doc-adjust-size-and-pos)))
 
     (acm-menu-adjust-pos)))
-
-(defun acm-icon-build (collection name fg-color)
-  (if acm-enable-icon
-      (let* ((icon-key (format "%s_%s" collection name))
-             (icon-text (gethash icon-key acm-icon-cache)))
-        (unless icon-text
-          (setq icon-text (propertize
-                           (apply #'concat (make-list acm-icon-width "-"))
-                           'display (acm-icon collection name fg-color)))
-          (puthash icon-key icon-text acm-icon-cache))
-        icon-text)
-    ""))
 
 (defun acm-update-completion-data (backend-name completion-table)
   ;; Update completion table that match backend-name.
