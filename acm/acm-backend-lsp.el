@@ -88,24 +88,38 @@
   "Maximal number of candidate of menu."
   :type 'integer)
 
-(defun acm-backend-lsp-candidates (keyword)
-  (let* ((candidates (list)))
-    (dolist (backend-hash-table (list acm-backend-local-items))
-      (when (and backend-hash-table
-                 (hash-table-p backend-hash-table))
-        (dolist (backend-name (hash-table-keys backend-hash-table))
-          (maphash
-           (lambda (k v)
-             (let ((candidate-label (plist-get v :label)))
-               (when (or (string-equal keyword "")
-                         (acm-candidate-fuzzy-search keyword candidate-label))
-                 (if (> (length candidate-label) acm-backend-lsp-candidate-limit)
-                     (plist-put v :display-label (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-limit)))
-                   (plist-put v :display-label candidate-label))
+(defcustom acm-backend-lsp-empty-search-limit 100
+  "Maximal number of candidate of menu when input prefix is empty string."
+  :type 'integer)
 
-                 (plist-put v :backend "lsp")
-                 (add-to-list 'candidates v t))))
-           (gethash backend-name backend-hash-table)))))
+(defun acm-backend-lsp-candidates (keyword)
+  (let* ((candidates (list))
+         (match-number 0))
+    (catch 'limit
+      (dolist (backend-hash-table (list acm-backend-local-items))
+        (when (and backend-hash-table
+                   (hash-table-p backend-hash-table))
+          (dolist (backend-name (hash-table-keys backend-hash-table))
+            (maphash
+             (lambda (k v)
+               (let ((candidate-label (plist-get v :label)))
+                 (when (or (string-equal keyword "")
+                           (acm-candidate-fuzzy-search keyword candidate-label))
+                   (if (> (length candidate-label) acm-backend-lsp-candidate-limit)
+                       (plist-put v :display-label (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-limit)))
+                     (plist-put v :display-label candidate-label))
+
+                   (plist-put v :backend "lsp")
+                   (add-to-list 'candidates v t)
+
+                   ;; We only show 100 candiates if search keyword is empty string.
+                   ;; It will trigger Emacs automatic GC if got too candiates, such as typescript return 3000 candiates sometimes.
+                   (when (and (string-equal keyword "")
+                              (> match-number acm-backend-lsp-empty-search-limit))
+                     (throw 'limit nil))
+
+                   (setq match-number (1+ match-number)))))
+             (gethash backend-name backend-hash-table))))))
 
     (acm-candidate-sort-by-prefix keyword candidates)))
 

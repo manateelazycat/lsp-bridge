@@ -390,21 +390,21 @@ influence of C1 on the result."
   "Priority display of the candiates of the prefix matching."
   (when (and candiates
              (consp candiates))
-    (unless keyword
-      (setq keyword ""))
-
-    (cl-sort candiates (lambda (a b)
-                         (let ((a-include-prefix (string-prefix-p keyword (plist-get a :label)))
-                               (b-include-prefix (string-prefix-p keyword (plist-get b :label))))
-                           (cond
-                            ;; Sort by prefix first.
-                            ((and b-include-prefix (not a-include-prefix))
-                             nil)
-                            ((and a-include-prefix (not b-include-prefix))
-                             t)
-                            ;; Then sort by candiate length.
-                            (t
-                             (< (length a) (length b)))))))))
+    (if keyword
+        (cl-sort candiates (lambda (a b)
+                             (let ((a-include-prefix (string-prefix-p keyword (plist-get a :label)))
+                                   (b-include-prefix (string-prefix-p keyword (plist-get b :label))))
+                               (cond
+                                ;; Sort by prefix first.
+                                ((and b-include-prefix (not a-include-prefix))
+                                 nil)
+                                ((and a-include-prefix (not b-include-prefix))
+                                 t)
+                                ;; Then sort by candiate length.
+                                (t
+                                 (< (length a) (length b)))))))
+      ;; Don't sort candiates is keyword is empty string.
+      candiates)))
 
 (defun acm-update-candiates ()
   (let* ((keyword (acm-get-input-prefix))
