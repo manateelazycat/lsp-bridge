@@ -463,4 +463,7 @@ class LspServer:
 
             # Don't need to wait LSP server response, kill immediately.
             if self.p is not None:
-                os.kill(self.p.pid, 9)
+                try:
+                    os.kill(self.p.pid, 9)
+                except ProcessLookupError:
+                    logger.info("\n--- Lsp server process {} already exited!".format(self.p.pid))
