@@ -1034,23 +1034,31 @@ If optional MARKER, return a marker instead"
 
     (setq lsp-bridge-diagnostic-overlays nil)
 
-    (dolist (diagnostic diagnostics)
-      (let* ((diagnostic-start (lsp-bridge--lsp-position-to-point (plist-get (plist-get diagnostic :range) :start)))
-             (diagnostic-end (lsp-bridge--lsp-position-to-point (plist-get (plist-get diagnostic :range) :end)))
-             (overlay (if (eq diagnostic-start diagnostic-end)
-                          ;; Adjust diagnostic end position if start and end is same position.
-                          (make-overlay diagnostic-start (1+ diagnostic-start))
-                        (make-overlay diagnostic-start diagnostic-end)))
-             (severity (plist-get diagnostic :severity))
-             (message (plist-get diagnostic :message))
-             (overlay-face (cl-case severity
-                             (1 'lsp-bridge-diagnostics-error-face)
-                             (2 'lsp-bridge-diagnostics-warning-face)
-                             (3 'lsp-bridge-diagnostics-info-face)
-                             (4 'lsp-bridge-diagnostics-hint-face))))
-        (overlay-put overlay 'face overlay-face)
-        (overlay-put overlay 'help-echo message)
-        (push  overlay lsp-bridge-diagnostic-overlays)))
+    (let ((diagnostic-index 0)
+          (diagnostic-number (length diagnostics)))
+      (dolist (diagnostic diagnostics)
+        (let* ((diagnostic-start (lsp-bridge--lsp-position-to-point (plist-get (plist-get diagnostic :range) :start)))
+               (diagnostic-end (lsp-bridge--lsp-position-to-point (plist-get (plist-get diagnostic :range) :end)))
+               (overlay (if (eq diagnostic-start diagnostic-end)
+                            ;; Adjust diagnostic end position if start and end is same position.
+                            (make-overlay diagnostic-start (1+ diagnostic-start))
+                          (make-overlay diagnostic-start diagnostic-end)))
+               (severity (plist-get diagnostic :severity))
+               (message (plist-get diagnostic :message))
+               (overlay-face (cl-case severity
+                               (1 'lsp-bridge-diagnostics-error-face)
+                               (2 'lsp-bridge-diagnostics-warning-face)
+                               (3 'lsp-bridge-diagnostics-info-face)
+                               (4 'lsp-bridge-diagnostics-hint-face))))
+          (overlay-put overlay 'face overlay-face)
+          (overlay-put overlay
+                       'help-echo
+                       (if (> diagnostic-number 1)
+                           (format "[%s:%s] %s" (1+ diagnostic-index) diagnostic-number message)
+                         message))
+          (push  overlay lsp-bridge-diagnostic-overlays))
+
+        (setq diagnostic-index (1+ diagnostic-index))))
     (setq lsp-bridge-diagnostic-overlays (reverse lsp-bridge-diagnostic-overlays))))
 
 (defvar lsp-bridge-diagnostic-frame nil)
