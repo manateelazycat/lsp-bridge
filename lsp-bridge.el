@@ -97,6 +97,7 @@
                                                     lsp-bridge-not-match-completion-position
                                                     lsp-bridge-not-match-stop-commands
                                                     lsp-bridge-not-in-string
+                                                    lsp-bridge-not-follow-complete
                                                     lsp-bridge-is-evil-insert-state
                                                     )
   "A list of predicate functions with no argument to enable popup completion in callback."
@@ -597,6 +598,10 @@ Auto completion is only performed if the tick did not change."
 (defun lsp-bridge-not-in-string ()
   "Hide completion if cursor in string area."
   (not (lsp-bridge-in-string-p)))
+
+(defun lsp-bridge-not-follow-complete ()
+  "Hide completion if last command is `acm-complete'."
+  (not (eq last-command 'acm-complete)))
 
 (defun lsp-bridge-in-string-p (&optional state)
   (ignore-errors
