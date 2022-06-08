@@ -156,16 +156,17 @@
 (defun acm-backend-lsp-candidate-fetch-doc (candidate)
   (let* ((label (plist-get candidate :label))
          (kind (plist-get candidate :icon))
+         (key (plist-get candidate :key))
          (documentation (plist-get candidate :documentation)))
 
     ;; Popup candidate documentation directly if `documentation' is exist in candidate.
     (when documentation
-      (setq-local lsp-bridge-completion-item-popup-doc-tick (format "%s,%s" label kind))
+      (setq-local lsp-bridge-completion-item-popup-doc-tick key)
       (acm-doc-show))
 
     ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
     (unless (equal lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind))
-      (lsp-bridge-call-async "fetch_completion_item_info" lsp-bridge-filepath (format "%s,%s" label kind))
+      (lsp-bridge-call-async "fetch_completion_item_info" lsp-bridge-filepath key)
       (setq lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind)))))
 
 (defun acm-backend-lsp-candidate-doc (candidate)

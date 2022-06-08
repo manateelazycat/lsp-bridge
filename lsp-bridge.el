@@ -565,6 +565,7 @@ Auto completion is only performed if the tick did not change."
 
     (let* ((completion-table (make-hash-table :test 'equal)))
       (dolist (item items)
+        (plist-put item :annotation (capitalize (plist-get item :icon)))
         (puthash (plist-get item :key) item completion-table))
       (acm-update-completion-data "lsp-bridge" completion-table))
 
