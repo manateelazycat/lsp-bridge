@@ -410,7 +410,7 @@ influence of C1 on the result."
   (let* ((keyword (acm-get-input-prefix))
          (char-before-keyword (save-excursion
                                 (backward-char (length keyword))
-                                (char-to-string (char-before))))
+                                (acm-char-before)))
          (candidates (list))
          path-candidates
          yas-candidates
@@ -808,6 +808,10 @@ influence of C1 on the result."
        (acm-menu-update-candidates)
        (acm-menu-render menu-old-cache)
        )))
+
+(defun acm-char-before ()
+  (let ((prev-char (char-before)))
+    (if prev-char (char-to-string prev-char) "")))
 
 (defun acm-is-elisp-mode ()
   "Current mode is elisp mode?"

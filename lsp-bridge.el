@@ -520,10 +520,6 @@ Auto completion is only performed if the tick did not change."
 (defvar-local lsp-bridge-current-tick nil)
 (defvar-local lsp-bridge-diagnostic-overlays '())
 
-(defun lsp-bridge-char-before ()
-  (let ((prev-char (char-before)))
-    (if prev-char (char-to-string prev-char) "")))
-
 (defun lsp-bridge-monitor-post-command ()
   (when lsp-bridge-mode
     (when (eq this-command 'self-insert-command)
@@ -594,7 +590,7 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge-not-match-hide-characters ()
   "Hide completion if cursor after hide character match `lsp-bridge-completion-hide-characters'."
-  (not (member (char-to-string (char-before)) lsp-bridge-completion-hide-characters)))
+  (not (member (acm-char-before) lsp-bridge-completion-hide-characters)))
 
 (defun lsp-bridge-not-in-string ()
   "Hide completion if cursor in string area."
@@ -721,7 +717,7 @@ If optional MARKER, return a marker instead"
                                 length
                                 (buffer-substring-no-properties begin end)
                                 (lsp-bridge--position)
-                                (lsp-bridge-char-before)
+                                (acm-char-before)
                                 (buffer-substring-no-properties (line-beginning-position) (point))
                                 (lsp-bridge-completion-ui-visible-p)
                                 ))))

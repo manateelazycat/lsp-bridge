@@ -136,7 +136,7 @@
     (unless text-edit
       (let* ((bound-start-char (save-excursion
                                  (goto-char delete-start-pos)
-                                 (char-to-string (char-after)))))
+                                 (acm-char-before))))
         (when (and (member bound-start-char lsp-bridge-completion-trigger-characters)
                    (string-prefix-p bound-start-char label)
                    (not (string-prefix-p bound-start-char insert-text)))
