@@ -318,6 +318,8 @@ Default is 1 second."
 (defun acm-set-frame-position (frame x y)
   ;; Make sure frame visible before set position.
   (unless (frame-visible-p frame)
+    ;; Force redisplay, otherwise the popup sometimes does not display content.
+    (redisplay 'force)
     (make-frame-visible frame))
 
   (set-frame-position frame x y))
@@ -453,7 +455,10 @@ influence of C1 on the result."
     candidates))
 
 (defun acm-update ()
-  (let* ((keyword (acm-get-input-prefix))
+  ;; Adjust `gc-cons-threshold' to maximize temporary, 
+  ;; make sure Emacs not do GC when filter/sort candiates. 
+  (let* ((gc-cons-threshold most-positive-fixnum)
+         (keyword (acm-get-input-prefix))
          (candidates (acm-update-candiates))
          (bounds (bounds-of-thing-at-point 'symbol)))
     (cond
