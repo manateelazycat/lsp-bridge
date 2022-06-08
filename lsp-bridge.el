@@ -636,6 +636,11 @@ Auto completion is only performed if the tick did not change."
                  (max (1- (point)) (line-beginning-position))
                  (point))))
 
+(eval-when (not (version< emacs-version "28"))
+  (defun lsp-bridge-cursor-in-double-quote ()
+    "Hide completion when cursor in double quote."
+    (not (bounds-of-thing-at-point 'string))))
+
 (defun lsp-bridge-is-evil-insert-state ()
   "If `evil' mode is enable, only show completion when evil is in insert mode."
   (or (not (featurep 'evil)) (evil-insert-state-p)))
