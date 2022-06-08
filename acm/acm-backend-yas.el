@@ -92,8 +92,12 @@
   "Maximal number of yas candidate of menu."
   :type 'integer)
 
+(defcustom acm-backend-yas-hide-characters '(".")
+  "If keyword before match this option, hide yas completion"
+  :type 'cons)
+
 (defun acm-backend-yas-candidates (keyword)
-  (when acm-enable-yas
+  (when (and acm-enable-yas (acm-backend-yas-not-hide-completion keyword))
     (let* ((candidates (list))
            (snippets (ignore-errors
                        (cl-remove-if (lambda (subdir) (or (member subdir '("." ".."))
@@ -108,8 +112,15 @@
                                        :annotation "Yas-Snippet"
                                        :backend "yas")
                      t))
-      
+
       (acm-candidate-sort-by-prefix keyword candidates))))
+
+(defun acm-backend-yas-not-hide-completion (keyword)
+   "hide yas completion after `acm-backend-yas-hide-characters'."
+   (let* ((position (- (point) (length keyword)))
+         (char (buffer-substring-no-properties (- position 1) position)))
+     (not (member char acm-backend-yas-hide-characters))
+  ))
 
 (defun acm-backend-yas-candidate-expand (candidate-info bound-start)
   (delete-region bound-start (point))
