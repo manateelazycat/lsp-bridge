@@ -408,6 +408,9 @@ influence of C1 on the result."
 
 (defun acm-update-candiates ()
   (let* ((keyword (acm-get-input-prefix))
+         (char-before-keyword (save-excursion
+                                (backward-char (length keyword))
+                                (char-to-string (char-before))))
          (candidates (list))
          path-candidates
          yas-candidates
@@ -431,8 +434,11 @@ influence of C1 on the result."
         (setq mode-candidates (append
                                (acm-backend-elisp-candidates keyword)
                                (acm-backend-lsp-candidates keyword)))
-        (setq yas-candidates (acm-backend-yas-candidates keyword))
-        (setq tempel-candidates (acm-backend-tempel-candidates keyword))
+
+        ;; Don't search snippet if char before keyword is not in `lsp-bridge-completion-trigger-characters'.
+        (unless (member char-before-keyword lsp-bridge-completion-trigger-characters)
+          (setq yas-candidates (acm-backend-yas-candidates keyword))
+          (setq tempel-candidates (acm-backend-tempel-candidates keyword)))
 
         ;; Insert snippet candiates in first page of menu.
         (setq candidates
