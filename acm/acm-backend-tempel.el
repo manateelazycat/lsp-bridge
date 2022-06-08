@@ -36,7 +36,7 @@
   (let ((snippet
          (alist-get (intern-soft (plist-get candidate :label)) 
                     (tempel--templates))))            
-    (mapconcat (lambda (s) (format "%s" s)) snippet " ")))
+    (mapconcat #'tempel--print-element snippet " ")))
     
 (provide 'acm-backend-tempel)
 

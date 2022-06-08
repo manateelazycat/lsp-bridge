@@ -132,6 +132,16 @@ Default is 1 second."
   "Insert index of snippet candidate of menu."
   :type 'integer)
 
+(defcustom acm-candidate-match-function 'regexp-quote
+  "acm candidate match function."
+  :type '(choice (const regexp-quote)
+                 (const orderless-literal) 
+                 (const orderless-prefixes)
+                 (const orderless-flex) 
+                 (const orderless-regexp)
+                 (const orderless-initialism)))
+
+
 (defvar acm-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [remap next-line] #'acm-select-next)
@@ -386,7 +396,8 @@ influence of C1 on the result."
 
 (defun acm-candidate-fuzzy-search (keyword candiate)
   "Fuzzy search candiate."
-  (string-match-p (regexp-quote (downcase keyword)) (downcase candiate)))
+  (string-match-p (funcall acm-candidate-match-function (downcase keyword)) 
+                  (downcase candiate)))
 
 (defun acm-candidate-sort-by-prefix (keyword candiates)
   "Priority display of the candiates of the prefix matching."
