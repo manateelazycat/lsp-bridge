@@ -145,7 +145,8 @@
          (snippet-fn (and (or (eql insert-text-format 2) (string= kind "snippet")) (acm-backend-lsp-snippet-expansion-fn)))
          (completion-start-pos (acm-backend-lsp-position-to-point acm-backend-lsp-completion-position))
          (delete-start-pos (if text-edit
-                               (acm-backend-lsp-position-to-point (plist-get (plist-get text-edit :range) :start))
+                               ;; Use smaller one between `bound-start' and `range-start' used as the starting point of delete.
+                               (min (acm-backend-lsp-position-to-point (plist-get (plist-get text-edit :range) :start)) bound-start)
                              bound-start))
          (range-end-pos (if text-edit
                             (acm-backend-lsp-position-to-point (plist-get (plist-get text-edit :range) :end))
