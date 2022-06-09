@@ -108,6 +108,11 @@ class FileAction:
             len(self.last_completion_candidates) == 0):
             self.handlers["completion"].send_request(position, before_char)
 
+    def try_prepare_rename(self, position):
+        # Send textDocument/prepareRename request if LSP server has this capability.
+        if self.lsp_server.rename_prepare_provider:
+            self.handlers["prepare_rename"].send_request(position)
+            
     def change_cursor(self, position):
         # Record change cursor time.
         self.last_change_cursor_time = time.time()

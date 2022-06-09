@@ -184,6 +184,7 @@ class LspServer:
         # LSP server information.
         self.completion_trigger_characters = list()
         self.completion_resolve_provider = False
+        self.rename_prepare_provider = False
 
         # Start LSP server.
         self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
@@ -417,6 +418,11 @@ class LspServer:
                 try:
                     self.completion_resolve_provider = message["result"]["capabilities"]["completionProvider"]["resolveProvider"]
                 except KeyError:
+                    pass
+
+                try:
+                    self.rename_prepare_provider = message["result"]["capabilities"]["renameProvider"]["prepareProvider"]
+                except Exception:
                     pass
                 
                 self.sender.send_notification("initialized", {}, init=True)

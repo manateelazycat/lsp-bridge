@@ -752,7 +752,7 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge-rename ()
   (interactive)
-  (lsp-bridge-call-file-api "prepare_rename" (lsp-bridge--position))
+  (lsp-bridge-call-file-api "try_prepare_rename" (lsp-bridge--position))
   (let ((new-name (read-string "Rename to: " (thing-at-point 'symbol 'no-properties))))
     (lsp-bridge-call-file-api "rename" (lsp-bridge--position) new-name)))
 
