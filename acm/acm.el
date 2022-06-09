@@ -165,7 +165,7 @@ Default is 1 second."
 (defvar acm-buffer " *acm-buffer*")
 (defvar acm-frame nil)
 (defvar acm-frame-popup-point nil)
-(defvar acm-frame-popup-pos nil)
+(defvar acm-frame-popup-position nil)
 
 (defvar acm-menu-number-cache 0)
 (defvar acm-menu-max-length-cache 0)
@@ -402,17 +402,17 @@ influence of C1 on the result."
              (consp candidates))
     (if keyword
         (cl-sort candidates (lambda (a b)
-                             (let ((a-include-prefix (string-prefix-p keyword (plist-get a :label)))
-                                   (b-include-prefix (string-prefix-p keyword (plist-get b :label))))
-                               (cond
-                                ;; Sort by prefix first.
-                                ((and b-include-prefix (not a-include-prefix))
-                                 nil)
-                                ((and a-include-prefix (not b-include-prefix))
-                                 t)
-                                ;; Then sort by candidate length.
-                                (t
-                                 (< (length a) (length b)))))))
+                              (let ((a-include-prefix (string-prefix-p keyword (plist-get a :label)))
+                                    (b-include-prefix (string-prefix-p keyword (plist-get b :label))))
+                                (cond
+                                 ;; Sort by prefix first.
+                                 ((and b-include-prefix (not a-include-prefix))
+                                  nil)
+                                 ((and a-include-prefix (not b-include-prefix))
+                                  t)
+                                 ;; Then sort by candidate length.
+                                 (t
+                                  (< (length a) (length b)))))))
       ;; Don't sort candidates is keyword is empty string.
       candidates)))
 
@@ -519,23 +519,11 @@ influence of C1 on the result."
 
         ;; Record menu popup position and buffer.
         (setq acm-frame-popup-point (or (car bounds) (point)))
-        
+
         ;; `posn-at-point' will failed in CI, add checker make sure CI can pass.
         ;; CI don't need popup completion menu.
         (when (posn-at-point acm-frame-popup-point)
-          (let* ((edges (window-absolute-pixel-edges))
-                 (pos (posn-x-y (posn-at-point acm-frame-popup-point))))
-            (setq acm-frame-popup-pos
-                  (save-excursion
-                    (backward-char (length (acm-get-input-prefix)))
-                    (cons (+ (car pos) (nth 0 edges))
-                          (+ (cdr pos)
-                             (nth 1 edges)
-                             ;; We need move down to skip tab-line and header-line.
-                             (if (version< emacs-version "27.0")
-                                 (window-header-line-height)
-                               (+ (window-tab-line-height)
-                                  (window-header-line-height))))))))
+          (setq acm-frame-popup-position (acm-frame-get-popup-position))
 
           ;; Create menu frame if it not exists.
           (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
@@ -545,6 +533,25 @@ influence of C1 on the result."
         ))
      (t
       (acm-hide)))))
+
+(defun acm-frame-get-popup-position ()
+  (let* ((edges (if (eq system-type 'darwin)
+                    ;; We can't use `window-absolute-pixel-edges' for macOS.
+                    (window-pixel-edges)
+                  (window-absolute-pixel-edges)))
+         (window-left (nth 0 edges))
+         (window-top (nth 1 edges))
+         (pos (posn-x-y (posn-at-point acm-frame-popup-point)))
+         (x (car pos))
+         (y (cdr pos))
+         (offset-y
+          ;; We need move down to skip tab-line and header-line.
+          (if (version< emacs-version "27.0")
+              (window-header-line-height)
+            (+ (window-tab-line-height)
+               (window-header-line-height)))))
+    (cons (+ x window-left)
+          (+ y window-top offset-y))))
 
 (defun acm-hide ()
   (interactive)
@@ -693,8 +700,8 @@ influence of C1 on the result."
          (emacs-height (frame-pixel-height))
          (acm-frame-width (frame-pixel-width acm-frame))
          (acm-frame-height (frame-pixel-height acm-frame))
-         (cursor-x (car acm-frame-popup-pos))
-         (cursor-y (cdr acm-frame-popup-pos))
+         (cursor-x (car acm-frame-popup-position))
+         (cursor-y (cdr acm-frame-popup-position))
          (offset-x (* (window-font-width) acm-icon-width))
          (offset-y (line-pixel-height))
          (acm-frame-x (if (> (+ cursor-x acm-frame-width) emacs-width)
