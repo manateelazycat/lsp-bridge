@@ -355,8 +355,7 @@ Default is 1 second."
       "")))
 
 (defun acm-fetch-candidate-doc ()
-  (when (and (frame-live-p acm-frame)
-             (frame-visible-p acm-frame))
+  (when (acm-frame-visible-p acm-frame)
     (let ((candidate (acm-menu-current-candidate)))
       (when acm-enable-doc
         (let ((backend (plist-get candidate :backend)))
@@ -370,8 +369,7 @@ Default is 1 second."
 
 (defun acm-idle-completion ()
   ;; Only append dabbrev when idle, make sure not to get stuck when typing.
-  (when (and (frame-live-p acm-frame)
-             (frame-visible-p acm-frame))
+  (when (acm-frame-visible-p acm-frame)
     (acm-backend-dabbrev-candidates-append)))
 
 (defun acm-color-blend (c1 c2 alpha)
@@ -609,8 +607,7 @@ influence of C1 on the result."
 (defun acm-insert-common ()
   "Insert common prefix of menu."
   (interactive)
-  (when (and (frame-live-p acm-frame)
-             (frame-visible-p acm-frame))
+  (when (acm-frame-visible-p acm-frame)
     (let* ((common-string "")
            (items (mapcar (lambda (v) (plist-get v :label)) acm-menu-candidates))
            (item-min-length (cl-reduce #'min (mapcar #'string-width items)))
@@ -677,8 +674,7 @@ influence of C1 on the result."
           ;; Hide doc frame if some backend not support fetch candiate documentation.
           (when (and
                  (not (member (plist-get v :backend) '("lsp" "elisp" "yas")))
-                 (frame-live-p acm-doc-frame)
-                 (frame-visible-p acm-doc-frame))
+                 (acm-frame-visible-p acm-doc-frame))
             (acm-doc-hide)))
 
         ;; Insert candiate line.
@@ -792,8 +788,7 @@ influence of C1 on the result."
       (acm-set-frame-size acm-frame)
 
       ;; Adjust doc frame with menu frame position.
-      (when (and (frame-live-p acm-doc-frame)
-                 (frame-visible-p acm-doc-frame))
+      (when (acm-frame-visible-p acm-doc-frame)
         (acm-doc-fame-adjust)))
 
     ;; Adjust menu frame position.
@@ -840,6 +835,10 @@ influence of C1 on the result."
   (or (derived-mode-p 'emacs-lisp-mode)
       (derived-mode-p 'inferior-emacs-lisp-mode)
       (derived-mode-p 'lisp-interaction-mode)))
+
+(defun acm-frame-visible-p (frame)
+  (and (frame-live-p frame)
+       (frame-visible-p frame)))
 
 (defun acm-select-first ()
   "Select first candidate."
