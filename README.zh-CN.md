@@ -52,7 +52,6 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 * `lsp-bridge-completion-stop-commands`: 这些命令执行以后，不再弹出补全菜单
 * `lsp-bridge-completion-hide-characters`: 这些字符的后面不再弹出补全菜单
 * `lsp-bridge-diagnostics-fetch-idle`： 诊断延迟，默认是停止敲键盘后1秒开始拉取诊断信息
-* `lsp-bridge-enable-auto-import`: 支持自动导入， 默认打开
 * `lsp-bridge-enable-diagnostics`: 代码诊断， 默认打开
 * `lsp-bridge-enable-candidate-doc-preview`: 支持后选词文档预览， 默认打开
 * `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认关闭
@@ -60,6 +59,7 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 * `lsp-bridge-disable-backup`: 禁止emacs对文件做版本管理， 默认打开
 * `lsp-bridge-enable-log`: 启用LSP消息日志， 默认关闭
 * `lsp-bridge-enable-debug`: 启用程序调试， 默认关闭
+* `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
 
 ## 自定义语言服务器配置
 lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).

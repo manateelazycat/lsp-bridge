@@ -148,11 +148,6 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'integer
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-enable-auto-import t
-  "Whether to enable auto-import."
-  :type 'boolean
-  :group 'lsp-bridge)
-
 (defcustom lsp-bridge-enable-candidate-doc-preview t
   "Whether to enable candidate documentation."
   :type 'boolean
@@ -206,7 +201,7 @@ Start discarding off end if gets this big."
                (lsp-bridge-epc-define-method mngr 'get-emacs-vars 'lsp-bridge--get-emacs-vars-func)
                (lsp-bridge-epc-define-method mngr 'get-lang-server 'lsp-bridge--get-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-version 'emacs-version)
-               (lsp-bridge-epc-define-method mngr 'is-snippet-support 'lsp-bridge--snippet-expansion-fn)
+               (lsp-bridge-epc-define-method mngr 'is-snippet-support 'acm-backend-lsp-snippet-expansion-fn)
                ))))
     (if lsp-bridge-server
         (setq lsp-bridge-server-port (process-contact lsp-bridge-server :service))
@@ -410,16 +405,16 @@ Auto completion is only performed if the tick did not change."
 (defvar-local lsp-bridge-buffer-file-deleted nil)
 
 (defun lsp-bridge-call-file-api (method &rest args)
-  (if (file-exists-p lsp-bridge-filepath)
+  (if (file-exists-p acm-backend-lsp-filepath)
       (if lsp-bridge-buffer-file-deleted
           ;; If buffer's file create again (such as switch branch back), we need save buffer first,
           ;; send the LSP request after the file is changed next time.
           (progn
             (save-buffer)
             (setq-local lsp-bridge-buffer-file-deleted nil)
-            (message "[LSP-Bridge] %s is back, will send the LSP request after the file is changed next time." lsp-bridge-filepath))
+            (message "[LSP-Bridge] %s is back, will send the LSP request after the file is changed next time." acm-backend-lsp-filepath))
         (lsp-bridge-deferred-chain
-          (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) (append (list lsp-bridge-filepath) args))))
+          (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) (append (list acm-backend-lsp-filepath) args))))
     ;; We need send `closeFile' request to lsp server if we found buffer's file is not exist,
     ;; it is usually caused by switching branch or other tools to delete file.
     ;;
@@ -427,7 +422,7 @@ Auto completion is only performed if the tick did not change."
     (unless lsp-bridge-buffer-file-deleted
       (lsp-bridge-close-buffer-file)
       (setq-local lsp-bridge-buffer-file-deleted t)
-      (message "[LSP-Bridge] %s is not exist, stop send the LSP request until file create again." lsp-bridge-filepath))))
+      (message "[LSP-Bridge] %s is not exist, stop send the LSP request until file create again." acm-backend-lsp-filepath))))
 
 (defvar lsp-bridge-is-starting nil)
 
@@ -513,9 +508,6 @@ Auto completion is only performed if the tick did not change."
   (setq lsp-bridge-is-starting nil))
 
 (defvar-local lsp-bridge-last-position 0)
-(defvar-local lsp-bridge-completion-trigger-characters nil)
-(defvar-local lsp-bridge-completion-position nil)
-(defvar-local lsp-bridge-filepath "")
 (defvar-local lsp-bridge-prohibit-completion nil)
 (defvar-local lsp-bridge-current-tick nil)
 (defvar-local lsp-bridge-diagnostic-overlays '())
@@ -543,7 +535,7 @@ Auto completion is only performed if the tick did not change."
 (defun lsp-bridge-close-buffer-file ()
   (unless (acm-is-elisp-mode)
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-      (lsp-bridge-call-async "close_file" lsp-bridge-filepath))))
+      (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath))))
 
 (defun lsp-bridge-is-empty-list (list)
   (or (and (eq (length list) 1)
@@ -553,8 +545,8 @@ Auto completion is only performed if the tick did not change."
 (defun lsp-bridge-record-completion-items (filepath items position completion-trigger-characters)
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
-    (setq-local lsp-bridge-completion-position position)
-    (setq-local lsp-bridge-completion-trigger-characters completion-trigger-characters)
+    (setq-local acm-backend-lsp-completion-position position)
+    (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
 
     (unless acm-backend-local-items
       (setq-local acm-backend-local-items (make-hash-table :test 'equal)))
@@ -635,47 +627,6 @@ Auto completion is only performed if the tick did not change."
 (defun lsp-bridge-is-evil-insert-state ()
   "If `evil' mode is enable, only show completion when evil is in insert mode."
   (or (not (featurep 'evil)) (evil-insert-state-p)))
-
-(defun lsp-bridge--snippet-expansion-fn ()
-  "Compute a function to expand snippets.
-Doubles as an indicator of snippet support."
-  (and (boundp 'yas-minor-mode)
-       (symbol-value 'yas-minor-mode)
-       'yas-expand-snippet))
-
-(defun lsp-bridge--apply-text-edits (edits)
-  (dolist (edit edits)
-    (let* ((range (plist-get edit :range))
-           (range-start-pos (lsp-bridge--lsp-position-to-point (plist-get range :start)))
-           (range-end-pos (lsp-bridge--lsp-position-to-point (plist-get range :start))))
-      (save-excursion
-        (goto-char range-start-pos)
-        (delete-region range-start-pos range-end-pos)
-        (insert (plist-get edit :newText))))))
-
-(defun lsp-bridge--lsp-position-to-point (pos-plist &optional marker)
-  "Convert LSP position POS-PLIST to Emacs point.
-If optional MARKER, return a marker instead"
-  (save-excursion
-    (save-restriction
-      (widen)
-      (goto-char (point-min))
-      (forward-line (min most-positive-fixnum
-                         (plist-get pos-plist :line)))
-      (unless (eobp) ;; if line was excessive leave point at eob
-        (let ((tab-width 1)
-              (character (plist-get pos-plist :character)))
-          (unless (wholenump character)
-            (message
-             "[LSP Bridge] Caution: LSP server sent invalid character position %s. Using 0 instead."
-             character)
-            (setq character 0))
-          ;; We cannot use `move-to-column' here, because it moves to *visual*
-          ;; columns, which can be different from LSP columns in case of
-          ;; `whitespace-mode', `prettify-symbols-mode', etc.
-          (goto-char (min (+ (line-beginning-position) character)
-                          (line-end-position)))))
-      (if marker (copy-marker (point-marker)) (point)))))
 
 (defun lsp-bridge--point-position (pos)
   "Get position of POS."
@@ -797,8 +748,8 @@ If optional MARKER, return a marker instead"
     (let ((pulse-iterations 1)
           (pulse-delay lsp-bridge-flash-line-delay))
       (pulse-momentary-highlight-region
-       (lsp-bridge--lsp-position-to-point bound-start)
-       (lsp-bridge--lsp-position-to-point bound-end)
+       (acm-backend-lsp-position-to-point bound-start)
+       (acm-backend-lsp-position-to-point bound-end)
        'lsp-bridge-font-lock-flash))))
 
 (defun lsp-bridge-lookup-documentation ()
@@ -816,8 +767,8 @@ If optional MARKER, return a marker instead"
       (let* ((bound-start (nth 0 edit))
              (bound-end (nth 1 edit))
              (new-text (nth 2 edit))
-             (replace-start-pos (lsp-bridge--lsp-position-to-point bound-start))
-             (replace-end-pos (lsp-bridge--lsp-position-to-point bound-end)))
+             (replace-start-pos (acm-backend-lsp-position-to-point bound-start))
+             (replace-end-pos (acm-backend-lsp-position-to-point bound-end)))
         (delete-region replace-start-pos replace-end-pos)
         (goto-char replace-start-pos)
         (insert new-text))))
@@ -834,7 +785,7 @@ If optional MARKER, return a marker instead"
       (find-file-other-window filepath)
     (find-file filepath))
 
-  (goto-char (lsp-bridge--lsp-position-to-point position))
+  (goto-char (acm-backend-lsp-position-to-point position))
   (recenter)
 
   ;; Flash define line.
@@ -994,7 +945,7 @@ If optional MARKER, return a marker instead"
       (add-hook (car hook) (cdr hook) nil t))
 
     (unless (acm-is-elisp-mode)
-      (setq lsp-bridge-filepath (file-truename buffer-file-name)))
+      (setq acm-backend-lsp-filepath (file-truename buffer-file-name)))
     (setq lsp-bridge-last-position 0)
 
     (advice-add #'acm-hide :after #'lsp-bridge--completion-hide-advisor)
@@ -1020,7 +971,7 @@ If optional MARKER, return a marker instead"
              (process-live-p lsp-bridge-server)
              (not (lsp-bridge-completion-ui-visible-p))
              (buffer-file-name))
-    (when (string-equal (file-truename (buffer-file-name)) lsp-bridge-filepath)
+    (when (string-equal (file-truename (buffer-file-name)) acm-backend-lsp-filepath)
       (lsp-bridge-call-file-api "pull_diagnostics"))))
 
 (defun lsp-bridge-diagnostics-render (filepath diagnostics)
@@ -1034,8 +985,8 @@ If optional MARKER, return a marker instead"
     (let ((diagnostic-index 0)
           (diagnostic-number (length diagnostics)))
       (dolist (diagnostic diagnostics)
-        (let* ((diagnostic-start (lsp-bridge--lsp-position-to-point (plist-get (plist-get diagnostic :range) :start)))
-               (diagnostic-end (lsp-bridge--lsp-position-to-point (plist-get (plist-get diagnostic :range) :end)))
+        (let* ((diagnostic-start (acm-backend-lsp-position-to-point (plist-get (plist-get diagnostic :range) :start)))
+               (diagnostic-end (acm-backend-lsp-position-to-point (plist-get (plist-get diagnostic :range) :end)))
                (overlay (if (eq diagnostic-start diagnostic-end)
                             ;; Adjust diagnostic end position if start and end is same position.
                             (make-overlay diagnostic-start (1+ diagnostic-start))
@@ -1131,7 +1082,7 @@ If optional MARKER, return a marker instead"
         (puthash key item (gethash "lsp-bridge" acm-backend-local-items)))
 
       ;; Popup documentation window if same documentation window not exist.
-      (unless (string-equal key lsp-bridge-completion-item-popup-doc-tick)
+      (unless (string-equal key acm-backend-lsp-completion-item-popup-doc-tick)
         (acm-doc-show))
       )))
 
@@ -1165,24 +1116,16 @@ If optional MARKER, return a marker instead"
   (when lsp-bridge-mode
     (let ((new-name (expand-file-name (nth 0 args))))
       (lsp-bridge-call-file-api "rename_file" new-name)
-      (lsp-bridge-call-async "close_file" lsp-bridge-filepath)
+      (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath)
       (set-visited-file-name new-name t t)
-      (setq lsp-bridge-filepath new-name)))
+      (setq acm-backend-lsp-filepath new-name)))
   (apply orig-fun arg args))
 (advice-add #'rename-file :around #'lsp-bridge--rename-file-advisor)
-
-(defvar-local lsp-bridge-completion-item-fetch-tick nil)
-(defvar-local lsp-bridge-completion-item-popup-doc-tick nil)
 
 (defun lsp-bridge--completion-hide-advisor (&rest args)
   (when lsp-bridge-mode
     ;; Hide completion ui.
-    (lsp-bridge-call-file-api "completion_hide")
-
-    ;; Clean completion item tick.
-    (setq-local lsp-bridge-completion-item-fetch-tick nil)
-    (setq-local lsp-bridge-completion-item-popup-doc-tick nil)
-    ))
+    (lsp-bridge-call-file-api "completion_hide")))
 
 ;; https://tecosaur.github.io/emacs-config/config.html#lsp-support-src
 (cl-defmacro lsp-org-babel-enable (lang)

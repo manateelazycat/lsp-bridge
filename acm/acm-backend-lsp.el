@@ -92,6 +92,16 @@
   "Maximal number of candidate of menu when input prefix is empty string."
   :type 'integer)
 
+(defcustom acm-backend-lsp-enable-auto-import t
+  "Whether to enable auto-import."
+  :type 'boolean)
+
+(defvar-local acm-backend-lsp-completion-trigger-characters nil)
+(defvar-local acm-backend-lsp-completion-position nil)
+(defvar-local acm-backend-lsp-completion-item-fetch-tick nil)
+(defvar-local acm-backend-lsp-completion-item-popup-doc-tick nil)
+(defvar-local acm-backend-lsp-filepath "")
+
 (defun acm-backend-lsp-candidates (keyword)
   (let* ((candidates (list))
          (match-number 0))
@@ -131,27 +141,27 @@
          (new-text (plist-get text-edit :newText))
          (additionalTextEdits (plist-get candidate-info :additionalTextEdits))
          (kind (plist-get candidate-info :icon))
-         (snippet-fn (and (or (eql insert-text-format 2) (string= kind "snippet")) (lsp-bridge--snippet-expansion-fn)))
-         (completion-start-pos (lsp-bridge--lsp-position-to-point lsp-bridge-completion-position))
+         (snippet-fn (and (or (eql insert-text-format 2) (string= kind "snippet")) (acm-backend-lsp-snippet-expansion-fn)))
+         (completion-start-pos (acm-backend-lsp-position-to-point acm-backend-lsp-completion-position))
          (delete-start-pos (if text-edit
-                               (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :start))
+                               (acm-backend-lsp-position-to-point (plist-get (plist-get text-edit :range) :start))
                              bound-start))
          (range-end-pos (if text-edit
-                            (lsp-bridge--lsp-position-to-point (plist-get (plist-get text-edit :range) :end))
+                            (acm-backend-lsp-position-to-point (plist-get (plist-get text-edit :range) :end))
                           completion-start-pos))
          (delete-end-pos (+ (point) (- range-end-pos completion-start-pos)))
          (insert-candidate (or new-text insert-text label)))
 
     ;; Move bound start position forward one character, if the following situation is satisfied:
     ;; 1. `textEdit' is not exist
-    ;; 2. bound-start character is `lsp-bridge-completion-trigger-characters'
+    ;; 2. bound-start character is `acm-backend-lsp-completion-trigger-characters'
     ;; 3. `label' start with bound-start character
     ;; 4. `insertText' is not start with bound-start character
     (unless text-edit
       (let* ((bound-start-char (save-excursion
                                  (goto-char delete-start-pos)
                                  (acm-char-before))))
-        (when (and (member bound-start-char lsp-bridge-completion-trigger-characters)
+        (when (and (member bound-start-char acm-backend-lsp-completion-trigger-characters)
                    (string-prefix-p bound-start-char label)
                    (not (string-prefix-p bound-start-char insert-text)))
           (setq delete-start-pos (1+ delete-start-pos)))))
@@ -163,9 +173,9 @@
     (funcall (or snippet-fn #'insert) insert-candidate)
 
     ;; Do `additionalTextEdits' if return auto-imprt information.
-    (when (and lsp-bridge-enable-auto-import
+    (when (and acm-backend-lsp-enable-auto-import
                (cl-plusp (length additionalTextEdits)))
-      (lsp-bridge--apply-text-edits additionalTextEdits))))
+      (acm-backend-lsp-apply-text-edits additionalTextEdits))))
 
 (defun acm-backend-lsp-candidate-fetch-doc (candidate)
   (let* ((label (plist-get candidate :label))
@@ -175,16 +185,57 @@
 
     ;; Popup candidate documentation directly if `documentation' is exist in candidate.
     (when documentation
-      (setq-local lsp-bridge-completion-item-popup-doc-tick key)
+      (setq-local acm-backend-lsp-completion-item-popup-doc-tick key)
       (acm-doc-show))
 
     ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
-    (unless (equal lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind))
-      (lsp-bridge-call-async "fetch_completion_item_info" lsp-bridge-filepath key)
-      (setq lsp-bridge-completion-item-fetch-tick (list lsp-bridge-filepath label kind)))))
+    (unless (equal acm-backend-lsp-completion-item-fetch-tick (list acm-backend-lsp-filepath label kind))
+      (lsp-bridge-call-async "fetch_completion_item_info" acm-backend-lsp-filepath key)
+      (setq acm-backend-lsp-completion-item-fetch-tick (list acm-backend-lsp-filepath label kind)))))
 
 (defun acm-backend-lsp-candidate-doc (candidate)
   (plist-get candidate :documentation))
+
+(defun acm-backend-lsp-position-to-point (pos-plist &optional marker)
+  "Convert LSP position POS-PLIST to Emacs point.
+If optional MARKER, return a marker instead"
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (forward-line (min most-positive-fixnum
+                         (plist-get pos-plist :line)))
+      (unless (eobp) ;; if line was excessive leave point at eob
+        (let ((tab-width 1)
+              (character (plist-get pos-plist :character)))
+          (unless (wholenump character)
+            (message
+             "[LSP Bridge] Caution: LSP server sent invalid character position %s. Using 0 instead."
+             character)
+            (setq character 0))
+          ;; We cannot use `move-to-column' here, because it moves to *visual*
+          ;; columns, which can be different from LSP columns in case of
+          ;; `whitespace-mode', `prettify-symbols-mode', etc.
+          (goto-char (min (+ (line-beginning-position) character)
+                          (line-end-position)))))
+      (if marker (copy-marker (point-marker)) (point)))))
+
+(defun acm-backend-lsp-apply-text-edits (edits)
+  (dolist (edit edits)
+    (let* ((range (plist-get edit :range))
+           (range-start-pos (acm-backend-lsp-position-to-point (plist-get range :start)))
+           (range-end-pos (acm-backend-lsp-position-to-point (plist-get range :start))))
+      (save-excursion
+        (goto-char range-start-pos)
+        (delete-region range-start-pos range-end-pos)
+        (insert (plist-get edit :newText))))))
+
+(defun acm-backend-lsp-snippet-expansion-fn ()
+  "Compute a function to expand snippets.
+Doubles as an indicator of snippet support."
+  (and (boundp 'yas-minor-mode)
+       (symbol-value 'yas-minor-mode)
+       'yas-expand-snippet))
 
 (provide 'acm-backend-lsp)
 

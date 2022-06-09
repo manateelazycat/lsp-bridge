@@ -63,7 +63,7 @@ class FileAction:
             self.handlers[handler_cls.name] = handler_cls(self)
 
         (self.enable_auto_import, self.enable_signature_help) = get_emacs_vars([
-            "lsp-bridge-enable-auto-import",
+            "acm-backend-lsp-enable-auto-import",
             "lsp-bridge-enable-signature-help"
         ])
 

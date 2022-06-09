@@ -448,8 +448,8 @@ influence of C1 on the result."
                                (acm-backend-elisp-candidates keyword)
                                (acm-backend-lsp-candidates keyword)))
 
-        ;; Don't search snippet if char before keyword is not in `lsp-bridge-completion-trigger-characters'.
-        (unless (member char-before-keyword lsp-bridge-completion-trigger-characters)
+        ;; Don't search snippet if char before keyword is not in `acm-backend-lsp-completion-trigger-characters'.
+        (unless (member char-before-keyword acm-backend-lsp-completion-trigger-characters)
           (setq yas-candidates (acm-backend-yas-candidates keyword))
           (setq tempel-candidates (acm-backend-tempel-candidates keyword)))
 
@@ -570,7 +570,12 @@ influence of C1 on the result."
 
   (when acm-fetch-doc-timer
     (cancel-timer acm-fetch-doc-timer)
-    (setq acm-fetch-doc-timer nil)))
+    (setq acm-fetch-doc-timer nil))
+  
+  ;; Clean LSP backend completion tick.
+  (setq-local acm-backend-lsp-completion-item-fetch-tick nil)
+  (setq-local acm-backend-lsp-completion-item-popup-doc-tick nil)
+  )
 
 (defun acm-doc-hide ()
   (when (frame-live-p acm-doc-frame)
