@@ -103,6 +103,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 20 | [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | html | |
 | 21 | [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | css | |
 | 22 | [elm-language-server](https://github.com/elm-tooling/elm-language-server) | elm | |
+| 23 | [intelephense](https://github.com/bmewburn/vscode-intelephense) | php | |
 
 
 ### 需要完成的功能：

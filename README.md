@@ -104,6 +104,7 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 | 20 | [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | html | |
 | 21 | [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | css | |
 | 22 | [elm-language-server](https://github.com/elm-tooling/elm-language-server) | elm | |
+| 23 | [intelephense](https://github.com/bmewburn/vscode-intelephense) | php | |
 
 ### TODO:
 
