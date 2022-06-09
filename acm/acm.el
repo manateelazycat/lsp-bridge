@@ -523,7 +523,7 @@ influence of C1 on the result."
         ;; `posn-at-point' will failed in CI, add checker make sure CI can pass.
         ;; CI don't need popup completion menu.
         (when (posn-at-point acm-frame-popup-point)
-          (let* ((edges (window-pixel-edges))
+          (let* ((edges (window-absolute-pixel-edges))
                  (pos (posn-x-y (posn-at-point acm-frame-popup-point))))
             (setq acm-frame-popup-pos
                   (save-excursion
