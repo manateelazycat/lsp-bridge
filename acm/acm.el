@@ -135,9 +135,9 @@ Default is 1 second."
 (defcustom acm-candidate-match-function 'regexp-quote
   "acm candidate match function."
   :type '(choice (const regexp-quote)
-                 (const orderless-literal) 
+                 (const orderless-literal)
                  (const orderless-prefixes)
-                 (const orderless-flex) 
+                 (const orderless-flex)
                  (const orderless-regexp)
                  (const orderless-initialism)))
 
@@ -164,7 +164,6 @@ Default is 1 second."
 
 (defvar acm-buffer " *acm-buffer*")
 (defvar acm-frame nil)
-(defvar acm-frame-popup-buffer nil)
 (defvar acm-frame-popup-point nil)
 (defvar acm-frame-popup-pos nil)
 
@@ -396,7 +395,7 @@ influence of C1 on the result."
 
 (defun acm-candidate-fuzzy-search (keyword candiate)
   "Fuzzy search candiate."
-  (string-match-p (funcall acm-candidate-match-function (downcase keyword)) 
+  (string-match-p (funcall acm-candidate-match-function (downcase keyword))
                   (downcase candiate)))
 
 (defun acm-candidate-sort-by-prefix (keyword candiates)
@@ -466,8 +465,8 @@ influence of C1 on the result."
     candidates))
 
 (defun acm-update ()
-  ;; Adjust `gc-cons-threshold' to maximize temporary, 
-  ;; make sure Emacs not do GC when filter/sort candiates. 
+  ;; Adjust `gc-cons-threshold' to maximize temporary,
+  ;; make sure Emacs not do GC when filter/sort candiates.
   (let* ((gc-cons-threshold most-positive-fixnum)
          (keyword (acm-get-input-prefix))
          (candidates (acm-update-candiates))
@@ -522,26 +521,30 @@ influence of C1 on the result."
 
         ;; Record menu popup position and buffer.
         (setq acm-frame-popup-point (or (car bounds) (point)))
-        (let* ((edges (window-pixel-edges))
-               (pos (posn-x-y (posn-at-point acm-frame-popup-point))))
-          (setq acm-frame-popup-pos
-                (save-excursion
-                  (backward-char (length (acm-get-input-prefix)))
-                  (cons (+ (car pos) (nth 0 edges))
-                        (+ (cdr pos)
-                           (nth 1 edges)
-                           ;; We need move down to skip tab-line and header-line.
-                           (if (version< emacs-version "27.0")
-                               (window-header-line-height)
-                             (+ (window-tab-line-height)
-                                (window-header-line-height))))))))
-        (setq acm-frame-popup-buffer (current-buffer))
+        
+        ;; `posn-at-point' will failed in CI, add checker make sure CI can pass.
+        ;; CI don't need popup completion menu.
+        (when (posn-at-point acm-frame-popup-point)
+          (let* ((edges (window-pixel-edges))
+                 (pos (posn-x-y (posn-at-point acm-frame-popup-point))))
+            (setq acm-frame-popup-pos
+                  (save-excursion
+                    (backward-char (length (acm-get-input-prefix)))
+                    (cons (+ (car pos) (nth 0 edges))
+                          (+ (cdr pos)
+                             (nth 1 edges)
+                             ;; We need move down to skip tab-line and header-line.
+                             (if (version< emacs-version "27.0")
+                                 (window-header-line-height)
+                               (+ (window-tab-line-height)
+                                  (window-header-line-height))))))))
 
-        ;; Create menu frame if it not exists.
-        (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
+          ;; Create menu frame if it not exists.
+          (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
 
-        ;; Render menu.
-        (acm-menu-render menu-old-cache)))
+          ;; Render menu.
+          (acm-menu-render menu-old-cache))
+        ))
      (t
       (acm-hide)))))
 
@@ -571,7 +574,7 @@ influence of C1 on the result."
   (when acm-fetch-doc-timer
     (cancel-timer acm-fetch-doc-timer)
     (setq acm-fetch-doc-timer nil))
-  
+
   ;; Clean LSP backend completion tick.
   (setq-local acm-backend-lsp-completion-item-popup-doc-tick nil))
 

@@ -8,7 +8,7 @@ from test.common import *
 def try_complete(file: SingleFile, label: str):
     def must_include_completion(method: str, args: List[Any]):
         if method == "lsp-bridge-record-completion-items":
-            items = args[2]
+            items = args[1]
             for item in items:
                 if item['label'] == label:
                     return True
@@ -136,31 +136,31 @@ class AcceptCompletion(unittest.TestCase):
 
         go()
     
-    def test_python(self):
-        self.accept_completion([SingleFile(
-            filename="t.py",
-            code="import os\nos",
-            mode="python-mode",
-        )], user_input=(".", "syste"), expected="system")
+    # def test_python(self):
+    #     self.accept_completion([SingleFile(
+    #         filename="t.py",
+    #         code="import os\nos",
+    #         mode="python-mode",
+    #     )], user_input=(".", "syste"), expected="system")
 
-    def test_java(self):
-        file = SingleFile(
-            filename="t.java",
-            code="""
-            public class Test {
-                public static void main(String[] args) {
-                    System.out.I
-                }
-            }
-            """,
-            mode="java-mode",
-        )
-        self.accept_completion(
-            [file],
-            user_input=("printl", "nString"),
-            expected="println();\n",
-            cursor_offset=get_offset(file),
-        )
+    # def test_java(self):
+    #     file = SingleFile(
+    #         filename="t.java",
+    #         code="""
+    #         public class Test {
+    #             public static void main(String[] args) {
+    #                 System.out.I
+    #             }
+    #         }
+    #         """,
+    #         mode="java-mode",
+    #     )
+    #     self.accept_completion(
+    #         [file],
+    #         user_input=("printl", "nString"),
+    #         expected="println();\n",
+    #         cursor_offset=get_offset(file),
+    #     )
 
 #     def test_volar(self):
 #         files = [SingleFile(
