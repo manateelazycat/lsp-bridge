@@ -123,8 +123,8 @@
                    (plist-put v :backend "lsp")
                    (add-to-list 'candidates v t)
 
-                   ;; We only show 100 candiates if search keyword is empty string.
-                   ;; It will trigger Emacs automatic GC if got too candiates, such as typescript return 3000 candiates sometimes.
+                   ;; We only show 100 candidates if search keyword is empty string.
+                   ;; It will trigger Emacs automatic GC if got too candidates, such as typescript return 3000 candidates sometimes.
                    (when (and (string-equal keyword "")
                               (> match-number acm-backend-lsp-empty-search-limit))
                      (throw 'limit nil))

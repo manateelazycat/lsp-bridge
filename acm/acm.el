@@ -364,7 +364,7 @@ Default is 1 second."
             ("elisp" (acm-backend-elisp-candidate-fetch-doc candidate))
             ("yas" (acm-backend-yas-candidate-fetch-doc candidate))
             ("tempel" (acm-backend-tempel-candidate-fetch-doc candidate))
-            ;; Hide doc frame for backend that not support fetch candiate documentation.
+            ;; Hide doc frame for backend that not support fetch candidate documentation.
             (_ (acm-doc-hide))))))))
 
 (defun acm-idle-completion ()
@@ -391,17 +391,17 @@ influence of C1 on the result."
   "Get theme mode, dark or light."
   (prin1-to-string (frame-parameter nil 'background-mode)))
 
-(defun acm-candidate-fuzzy-search (keyword candiate)
-  "Fuzzy search candiate."
+(defun acm-candidate-fuzzy-search (keyword candidate)
+  "Fuzzy search candidate."
   (string-match-p (funcall acm-candidate-match-function (downcase keyword))
-                  (downcase candiate)))
+                  (downcase candidate)))
 
-(defun acm-candidate-sort-by-prefix (keyword candiates)
-  "Priority display of the candiates of the prefix matching."
-  (when (and candiates
-             (consp candiates))
+(defun acm-candidate-sort-by-prefix (keyword candidates)
+  "Priority display of the candidates of the prefix matching."
+  (when (and candidates
+             (consp candidates))
     (if keyword
-        (cl-sort candiates (lambda (a b)
+        (cl-sort candidates (lambda (a b)
                              (let ((a-include-prefix (string-prefix-p keyword (plist-get a :label)))
                                    (b-include-prefix (string-prefix-p keyword (plist-get b :label))))
                                (cond
@@ -410,13 +410,13 @@ influence of C1 on the result."
                                  nil)
                                 ((and a-include-prefix (not b-include-prefix))
                                  t)
-                                ;; Then sort by candiate length.
+                                ;; Then sort by candidate length.
                                 (t
                                  (< (length a) (length b)))))))
-      ;; Don't sort candiates is keyword is empty string.
-      candiates)))
+      ;; Don't sort candidates is keyword is empty string.
+      candidates)))
 
-(defun acm-update-candiates ()
+(defun acm-update-candidates ()
   (let* ((keyword (acm-get-input-prefix))
          (char-before-keyword (save-excursion
                                 (backward-char (length keyword))
@@ -437,7 +437,7 @@ influence of C1 on the result."
 
       (setq path-candidates (acm-backend-path-candidates keyword))
       (if (> (length path-candidates) 0)
-          ;; Only show path candiates if prefix is valid path.
+          ;; Only show path candidates if prefix is valid path.
           (setq candidates path-candidates)
 
         ;; Fetch syntax completion candidates.
@@ -450,7 +450,7 @@ influence of C1 on the result."
           (setq yas-candidates (acm-backend-yas-candidates keyword))
           (setq tempel-candidates (acm-backend-tempel-candidates keyword)))
 
-        ;; Insert snippet candiates in first page of menu.
+        ;; Insert snippet candidates in first page of menu.
         (setq candidates
               (if (> (length mode-candidates) acm-snippet-insert-index)
                   (append (cl-subseq mode-candidates 0 acm-snippet-insert-index)
@@ -464,13 +464,13 @@ influence of C1 on the result."
 
 (defun acm-update ()
   ;; Adjust `gc-cons-threshold' to maximize temporary,
-  ;; make sure Emacs not do GC when filter/sort candiates.
+  ;; make sure Emacs not do GC when filter/sort candidates.
   (let* ((gc-cons-threshold most-positive-fixnum)
          (keyword (acm-get-input-prefix))
-         (candidates (acm-update-candiates))
+         (candidates (acm-update-candidates))
          (bounds (bounds-of-thing-at-point 'symbol)))
     (cond
-     ;; Hide completion menu if user type first candiate completely.
+     ;; Hide completion menu if user type first candidate completely.
      ((and (equal (length candidates) 1)
            (string-equal keyword (plist-get (nth 0 candidates) :label)))
       (acm-hide))
@@ -497,7 +497,7 @@ influence of C1 on the result."
           (setq acm-fetch-doc-timer
                 (run-with-idle-timer acm-fetch-candidate-doc-delay t #'acm-fetch-candidate-doc)))
 
-        ;; Init candiates, menu index and offset.
+        ;; Init candidates, menu index and offset.
         (setq-local acm-candidates candidates)
         (setq-local acm-menu-candidates
                     (cl-subseq acm-candidates
@@ -601,7 +601,7 @@ influence of C1 on the result."
          (insert (plist-get candidate-info :label)))
         )))
 
-  ;; Hide menu and doc frame after complete candiate.
+  ;; Hide menu and doc frame after complete candidate.
   (acm-hide))
 
 (defun acm-insert-common ()
@@ -632,7 +632,7 @@ influence of C1 on the result."
   (setq-local acm-enable-english-helper (not acm-enable-english-helper)))
 
 (defun acm-menu-max-length ()
-  "Get max length of menu candiates, use for adjust menu size dynamically."
+  "Get max length of menu candidates, use for adjust menu size dynamically."
   (cl-reduce #'max
              (mapcar (lambda (v)
                        (string-width (format "%s %s" (plist-get v :display-label) (plist-get v :annotation))))
@@ -649,11 +649,11 @@ influence of C1 on the result."
              (icon-text (if icon (acm-icon-build (nth 0 icon) (nth 1 icon) (nth 2 icon)) ""))
              candidate-line)
 
-        ;; Render deprecated candiate.
+        ;; Render deprecated candidate.
         (when (plist-get v :deprecated)
           (add-face-text-property 0 (length candidate) 'acm-deprecated-face 'append candidate))
 
-        ;; Build candiate line.
+        ;; Build candidate line.
         (setq candidate-line
               (concat
                icon-text
@@ -667,17 +667,17 @@ influence of C1 on the result."
                            'face
                            (if (equal item-index menu-index) 'acm-select-face 'font-lock-doc-face))))
 
-        ;; Render current candiate.
+        ;; Render current candidate.
         (when (equal item-index menu-index)
           (add-face-text-property 0 (length candidate-line) 'acm-select-face 'append candidate-line)
 
-          ;; Hide doc frame if some backend not support fetch candiate documentation.
+          ;; Hide doc frame if some backend not support fetch candidate documentation.
           (when (and
                  (not (member (plist-get v :backend) '("lsp" "elisp" "yas")))
                  (acm-frame-visible-p acm-doc-frame))
             (acm-doc-hide)))
 
-        ;; Insert candiate line.
+        ;; Insert candidate line.
         (insert candidate-line)
 
         ;; Delete the last extra return line.
@@ -761,7 +761,7 @@ influence of C1 on the result."
       (acm-set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y))))
 
 (defun acm-menu-current-candidate ()
-  "Get current candiate with menu index and offset."
+  "Get current candidate with menu index and offset."
   (nth (+ acm-menu-offset acm-menu-index) acm-candidates))
 
 (defun acm-menu-render (menu-old-cache)
@@ -775,7 +775,7 @@ influence of C1 on the result."
     (setq acm-menu-max-length-cache menu-new-max-length)
     (setq acm-menu-number-cache menu-new-number)
 
-    ;; Insert menu candiates.
+    ;; Insert menu candidates.
     (with-current-buffer (get-buffer-create acm-buffer)
       (erase-buffer)
       (acm-menu-render-items items menu-index))

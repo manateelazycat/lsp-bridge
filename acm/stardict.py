@@ -23,12 +23,12 @@ if __name__ == "__main__":
                 first_line_translation = start_dictionary.dict[word].split()[0]
                 no_phonetic_translation = first_line_translation.split(">")[-1]
 
-                candiate_word  = word.lower().replace('\"', ' ')
-                candiate_translateion = no_phonetic_translation.strip().replace('\"', ' ')
-                f.write('    #(\"'  + candiate_word + '\" ' + '0 1' + '\n' +
-                     '      (:initials \"' + candiate_translateion  + '\"))\n')
+                candidate_word  = word.lower().replace('\"', ' ')
+                candidate_translateion = no_phonetic_translation.strip().replace('\"', ' ')
+                f.write('    #(\"'  + candidate_word + '\" ' + '0 1' + '\n' +
+                     '      (:initials \"' + candidate_translateion  + '\"))\n')
 
-                print(index, candiate_word, candiate_translateion)
+                print(index, candidate_word, candidate_translateion)
                 index += 1
 
         f.write("    ))\n\n")
