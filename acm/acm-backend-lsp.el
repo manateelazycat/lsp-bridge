@@ -98,9 +98,10 @@
 
 (defvar-local acm-backend-lsp-completion-trigger-characters nil)
 (defvar-local acm-backend-lsp-completion-position nil)
-(defvar-local acm-backend-lsp-completion-item-fetch-tick nil)
 (defvar-local acm-backend-lsp-completion-item-popup-doc-tick nil)
 (defvar-local acm-backend-lsp-filepath "")
+
+(defvar acm-backend-lsp-fetch-completion-item-func nil)
 
 (defun acm-backend-lsp-candidates (keyword)
   (let* ((candidates (list))
@@ -178,9 +179,7 @@
       (acm-backend-lsp-apply-text-edits additionalTextEdits))))
 
 (defun acm-backend-lsp-candidate-fetch-doc (candidate)
-  (let* ((label (plist-get candidate :label))
-         (kind (plist-get candidate :icon))
-         (key (plist-get candidate :key))
+  (let* ((key (plist-get candidate :key))
          (documentation (plist-get candidate :documentation)))
 
     ;; Popup candidate documentation directly if `documentation' is exist in candidate.
@@ -188,10 +187,9 @@
       (setq-local acm-backend-lsp-completion-item-popup-doc-tick key)
       (acm-doc-show))
 
-    ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
-    (unless (equal acm-backend-lsp-completion-item-fetch-tick (list acm-backend-lsp-filepath label kind))
-      (lsp-bridge-call-async "fetch_completion_item_info" acm-backend-lsp-filepath key)
-      (setq acm-backend-lsp-completion-item-fetch-tick (list acm-backend-lsp-filepath label kind)))))
+    ;; Call fetch documentation function.
+    (when acm-backend-lsp-fetch-completion-item-func
+      (funcall acm-backend-lsp-fetch-completion-item-func candidate))))
 
 (defun acm-backend-lsp-candidate-doc (candidate)
   (plist-get candidate :documentation))

@@ -573,9 +573,7 @@ influence of C1 on the result."
     (setq acm-fetch-doc-timer nil))
   
   ;; Clean LSP backend completion tick.
-  (setq-local acm-backend-lsp-completion-item-fetch-tick nil)
-  (setq-local acm-backend-lsp-completion-item-popup-doc-tick nil)
-  )
+  (setq-local acm-backend-lsp-completion-item-popup-doc-tick nil))
 
 (defun acm-doc-hide ()
   (when (frame-live-p acm-doc-frame)

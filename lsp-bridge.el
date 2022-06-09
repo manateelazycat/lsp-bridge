@@ -89,6 +89,18 @@
 (add-to-list 'load-path acm-library-path t)
 (require 'acm)
 
+(setq acm-backend-lsp-fetch-completion-item-func 'lsp-bridge-fetch-completion-item-info)
+
+(defvar-local lsp-bridge-completion-item-fetch-tick nil)
+(defun lsp-bridge-fetch-completion-item-info (candidate)
+  (let* ((label (plist-get candidate :label))
+         (kind (plist-get candidate :icon))
+         (key (plist-get candidate :key)))
+    ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
+    (unless (equal lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath label kind))
+      (lsp-bridge-call-async "fetch_completion_item_info" acm-backend-lsp-filepath key)
+      (setq lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath label kind)))))
+
 (defalias 'lsp-bridge-insert-common-prefix #'acm-insert-common)
 (defalias 'lsp-bridge-toggle-english-helper #'acm-toggle-english-helper)
 
@@ -1125,7 +1137,10 @@ Auto completion is only performed if the tick did not change."
 (defun lsp-bridge--completion-hide-advisor (&rest args)
   (when lsp-bridge-mode
     ;; Hide completion ui.
-    (lsp-bridge-call-file-api "completion_hide")))
+    (lsp-bridge-call-file-api "completion_hide")
+
+    ;; Clean LSP backend completion tick.
+    (setq-local lsp-bridge-completion-item-fetch-tick nil)))
 
 ;; https://tecosaur.github.io/emacs-config/config.html#lsp-support-src
 (cl-defmacro lsp-org-babel-enable (lang)
