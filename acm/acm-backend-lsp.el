@@ -156,16 +156,16 @@
 
     ;; Move bound start position forward one character, if the following situation is satisfied:
     ;; 1. `textEdit' is not exist
-    ;; 2. bound-start character is `acm-backend-lsp-completion-trigger-characters'
-    ;; 3. `label' start with bound-start character
-    ;; 4. `insertText' is not start with bound-start character
+    ;; 2. `char-before-input' is `acm-backend-lsp-completion-trigger-characters'
+    ;; 3. `label' start with `char-before-input'
+    ;; 4. `insertText' is not start with `char-before-input'
     (unless text-edit
-      (let* ((bound-start-char (save-excursion
-                                 (goto-char delete-start-pos)
-                                 (acm-char-before))))
-        (when (and (member bound-start-char acm-backend-lsp-completion-trigger-characters)
-                   (string-prefix-p bound-start-char label)
-                   (not (string-prefix-p bound-start-char insert-text)))
+      (let* ((char-before-input (save-excursion
+                                  (goto-char delete-start-pos)
+                                  (acm-char-before))))
+        (when (and (member char-before-input acm-backend-lsp-completion-trigger-characters)
+                   (string-prefix-p char-before-input label)
+                   (not (string-prefix-p char-before-input insert-text)))
           (setq delete-start-pos (1+ delete-start-pos)))))
 
     ;; Delete region.
