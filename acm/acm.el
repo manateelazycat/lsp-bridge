@@ -535,10 +535,7 @@ influence of C1 on the result."
       (acm-hide)))))
 
 (defun acm-frame-get-popup-position ()
-  (let* ((edges (if (eq system-type 'darwin)
-                    ;; We can't use `window-absolute-pixel-edges' for macOS.
-                    (window-pixel-edges)
-                  (window-absolute-pixel-edges)))
+  (let* ((edges (window-pixel-edges))
          (window-left (nth 0 edges))
          (window-top (nth 1 edges))
          (pos (posn-x-y (posn-at-point acm-frame-popup-point)))
