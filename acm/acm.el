@@ -525,6 +525,16 @@ influence of C1 on the result."
         (when (posn-at-point acm-frame-popup-point)
           (setq acm-frame-popup-position (acm-frame-get-popup-position))
 
+          ;; We need delete frame first when user switch to different frame.
+          (when (and (frame-live-p acm-frame)
+                     (not (eq (frame-parent acm-frame) (selected-frame))))
+            (delete-frame acm-frame)
+            (setq acm-frame nil)
+
+            (when (frame-live-p acm-doc-frame)
+              (delete-frame acm-doc-frame)
+              (setq acm-doc-frame nil)))
+
           ;; Create menu frame if it not exists.
           (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
 
