@@ -43,7 +43,7 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 * `lsp-bridge-rename`: 重命名
 * `lsp-bridge-jump-to-next-diagnostic`: 跳转到下一个诊断位置
 * `lsp-bridge-jump-to-prev-diagnostic`: 跳转到上一个诊断位置
-* `lsp-bridge-show-signature-help-in-minibuffer`: 在minibuffer显示参数信息
+* `lsp-bridge-signature-help-fetch`: 在minibuffer显示参数信息
 * `lsp-bridge-insert-common-prefix`: 插入补全后选词的公共前缀
 * `lsp-bridge-restart-process`: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)
 
@@ -109,7 +109,6 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 ### 需要完成的功能：
 
 - [ ] Code Action: 代码动作， 比如自动修复代码
-- [ ] 用eldoc来显示参数信息
 
 ### 不会支持的特性：
 lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是实现LSP协议最全的LSP客户端。

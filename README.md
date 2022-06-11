@@ -43,7 +43,7 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 * `lsp-bridge-rename`: rename symbol under the cursor
 * `lsp-bridge-jump-to-next-diagnostic`: Jump to the next diagnostic position
 * `lsp-bridge-jump-to-prev-diagnostic`: Jump to the previous diagnostic position
-* `lsp-bridge-show-signature-help-in-minibuffer`: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
+* `lsp-bridge-signature-help-fetch`: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
 * `lsp-bridge-insert-common-prefix`: insert common prefix of candidates
 * `lsp-bridge-restart-process`: restart lsp-bridge process (only used for development)
 
@@ -109,7 +109,6 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 ### TODO:
 
 - [ ] Code action
-- [ ] Show signature help with eldoc
 
 ### Features that won't be supported
 

@@ -170,9 +170,14 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'boolean
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-enable-signature-help nil
+(defcustom lsp-bridge-enable-signature-help t
   "Whether to enable signature-help."
   :type 'boolean
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-signature-help-fetch-idle 0.5
+  "The idle seconds to fetch signature help.."
+  :type 'float
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-enable-diagnostics t
@@ -429,8 +434,10 @@ Auto completion is only performed if the tick did not change."
             (save-buffer)
             (setq-local lsp-bridge-buffer-file-deleted nil)
             (message "[LSP-Bridge] %s is back, will send the LSP request after the file is changed next time." acm-backend-lsp-filepath))
-        (lsp-bridge-deferred-chain
-          (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) (append (list acm-backend-lsp-filepath) args))))
+        (when (and acm-backend-lsp-filepath
+                   (not (string-equal acm-backend-lsp-filepath "")))
+          (lsp-bridge-deferred-chain
+            (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) (append (list acm-backend-lsp-filepath) args)))))
     ;; We need send `closeFile' request to lsp server if we found buffer's file is not exist,
     ;; it is usually caused by switching branch or other tools to delete file.
     ;;
@@ -773,7 +780,7 @@ Auto completion is only performed if the tick did not change."
   (interactive)
   (lsp-bridge-call-file-api "hover" (lsp-bridge--position)))
 
-(defun lsp-bridge-show-signature-help-in-minibuffer ()
+(defun lsp-bridge-signature-help-fetch ()
   (interactive)
   (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))
 
@@ -847,19 +854,16 @@ Auto completion is only performed if the tick did not change."
 (defun lsp-bridge-hide-diagnostic-tooltip ()
   (posframe-hide lsp-bridge-diagnostic-tooltip))
 
-(defun lsp-bridge-show-signature-help (help)
-  (cond
-   ;; Trim signature help length make sure `awesome-tray' won't wrap line display.
-   ((ignore-errors (require 'awesome-tray))
-    (message (substring help
-                        0
-                        (min (string-width help)
-                             (- (awesome-tray-get-frame-width)
-                                (string-width (awesome-tray-build-active-info))
-                                )))))
-   ;; Other minibuffer plugin similar `awesome-tray' welcome to send PR here. ;)
-   (t
-    (message help))))
+(defun lsp-bridge-signature-help-update (help-infos help-index)
+  (let ((index 0)
+        (help ""))
+    (dolist (help-info help-infos)
+      (setq help (concat help
+                         (propertize help-info 'face (if (equal index help-index) 'font-lock-function-name-face 'default))
+                         (if (equal index (1- (length help-infos))) "" ", ")))
+      (setq index (1+ index)))
+
+    (message help)))
 
 (defvar lsp-bridge--last-buffer nil)
 
@@ -894,7 +898,7 @@ Auto completion is only performed if the tick did not change."
 
 (defcustom lsp-bridge-diagnostics-fetch-idle 1
   "The idle seconds to fetch diagnostics."
-  :type 'integer
+  :type 'float
   :group 'lsp-bridge)
 
 (defface lsp-bridge-diagnostics-error-face
@@ -928,6 +932,8 @@ Auto completion is only performed if the tick did not change."
   :group 'lsp-bridge)
 
 (defvar lsp-bridge-diagnostics-timer nil)
+
+(defvar lsp-bridge-signature-help-timer nil)
 
 ;;;###autoload
 (define-minor-mode lsp-bridge-mode
@@ -1123,7 +1129,11 @@ Auto completion is only performed if the tick did not change."
 
   (when lsp-bridge-enable-diagnostics
     (setq lsp-bridge-diagnostics-timer
-          (run-with-idle-timer lsp-bridge-diagnostics-fetch-idle t #'lsp-bridge-diagnostics-fetch))))
+          (run-with-idle-timer lsp-bridge-diagnostics-fetch-idle t #'lsp-bridge-diagnostics-fetch)))
+
+  (when lsp-bridge-enable-signature-help
+    (setq lsp-bridge-signature-help-timer
+          (run-with-idle-timer lsp-bridge-signature-help-fetch-idle t #'lsp-bridge-signature-help-fetch))))
 
 (with-eval-after-load 'evil
   (evil-add-command-properties #'lsp-bridge-find-def :jump t)

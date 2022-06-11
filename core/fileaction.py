@@ -52,7 +52,6 @@ class FileAction:
         self.completion_items = {}
 
         self.try_completion_timer = None
-        self.try_signature_help_timer = None
 
         self.diagnostics = []
 
@@ -62,10 +61,7 @@ class FileAction:
         for handler_cls in Handler.__subclasses__():
             self.handlers[handler_cls.name] = handler_cls(self)
 
-        (self.enable_auto_import, self.enable_signature_help) = get_emacs_vars([
-            "acm-backend-lsp-enable-auto-import",
-            "lsp-bridge-enable-signature-help"
-        ])
+        (self.enable_auto_import) = get_emacs_vars(["acm-backend-lsp-enable-auto-import"])
 
         self.lsp_server.attach(self)
 
@@ -116,18 +112,7 @@ class FileAction:
     def change_cursor(self, position):
         # Record change cursor time.
         self.last_change_cursor_time = time.time()
-
-        if self.enable_signature_help:
-            # Try cancel expired signature help timer.
-            if self.try_signature_help_timer is not None and self.try_signature_help_timer.is_alive():
-                self.try_signature_help_timer.cancel()
-
-            # Send textDocument/signatureHelp 200ms later.
-            self.try_signature_help_timer = threading.Timer(
-                0.2, lambda: self.handlers["signature_help"].send_request(position)
-            )
-            self.try_signature_help_timer.start()
-
+        
     def save_file(self):
         self.lsp_server.send_did_save_notification(self.filepath)
 
