@@ -115,7 +115,7 @@ Default is 1 second."
 
 (defcustom acm-continue-commands
   ;; nil is undefined command
-  '(nil ignore universal-argument universal-argument-more digit-argument self-insert-command
+  '(nil ignore universal-argument universal-argument-more digit-argument self-insert-command org-self-insert-command
         "\\`acm-" "\\`scroll-other-window")
   "Continue ACM completion after executing these commands."
   :type '(repeat (choice regexp symbol)))
@@ -844,11 +844,12 @@ influence of C1 on the result."
   (let ((prev-char (char-before)))
     (if prev-char (char-to-string prev-char) "")))
 
-(defun acm-is-elisp-mode ()
-  "Current mode is elisp mode?"
+(defun acm-is-non-lsp-completion-mode ()
+  "We can add new mode in this function, to popup completion menu that except LSP backend."
   (or (derived-mode-p 'emacs-lisp-mode)
       (derived-mode-p 'inferior-emacs-lisp-mode)
-      (derived-mode-p 'lisp-interaction-mode)))
+      (derived-mode-p 'lisp-interaction-mode)
+      (derived-mode-p 'org-mode)))
 
 (defun acm-frame-visible-p (frame)
   (and (frame-live-p frame)
