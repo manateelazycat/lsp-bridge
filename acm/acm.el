@@ -579,16 +579,16 @@ influence of C1 on the result."
   (remove-hook 'pre-command-hook #'acm--pre-command 'local)
 
   ;; Cancel timers.
-  (when acm-idle-completion-timer
-    (cancel-timer acm-idle-completion-timer)
-    (setq acm-idle-completion-timer nil))
-
-  (when acm-fetch-doc-timer
-    (cancel-timer acm-fetch-doc-timer)
-    (setq acm-fetch-doc-timer nil))
+  (acm-cancel-timer acm-idle-completion-timer)
+  (acm-cancel-timer acm-fetch-doc-timer)
 
   ;; Clean LSP backend completion tick.
   (setq-local acm-backend-lsp-completion-item-popup-doc-tick nil))
+
+(defun acm-cancel-timer (timer)
+  `(when ,timer
+     (cancel-timer ,timer)
+     (setq ,timer nil)))
 
 (defun acm-doc-hide ()
   (when (frame-live-p acm-doc-frame)

@@ -958,18 +958,24 @@ Auto completion is only performed if the tick did not change."
       (setq auto-save-default nil)
       (setq create-lockfiles nil))
 
-    ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
-    ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
     (when (lsp-bridge-get-lang-server-by-mode)
+      ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
+      ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
       (unless (file-exists-p (buffer-file-name))
-        (save-buffer)))
+        (save-buffer))
+
+      (setq acm-backend-lsp-filepath (file-truename buffer-file-name))
+
+      (when lsp-bridge-enable-diagnostics
+        (setq lsp-bridge-diagnostics-timer
+              (run-with-idle-timer lsp-bridge-diagnostics-fetch-idle t #'lsp-bridge-diagnostics-fetch)))
+
+      (when lsp-bridge-enable-signature-help
+        (setq lsp-bridge-signature-help-timer
+              (run-with-idle-timer lsp-bridge-signature-help-fetch-idle t #'lsp-bridge-signature-help-fetch))))
 
     (dolist (hook lsp-bridge--internal-hooks)
       (add-hook (car hook) (cdr hook) nil t))
-
-    (when (lsp-bridge-get-lang-server-by-mode)
-      (setq acm-backend-lsp-filepath (file-truename buffer-file-name)))
-    (setq lsp-bridge-last-position 0)
 
     (advice-add #'acm-hide :after #'lsp-bridge--completion-hide-advisor)
 
@@ -979,10 +985,13 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge--disable ()
   "Disable LSP Bridge mode."
-  (advice-remove #'acm-hide #'lsp-bridge--completion-hide-advisor)
-
   (dolist (hook lsp-bridge--internal-hooks)
-    (remove-hook (car hook) (cdr hook) t)))
+    (remove-hook (car hook) (cdr hook) t))
+
+  (acm-cancel-timer lsp-bridge-diagnostics-timer)
+  (acm-cancel-timer lsp-bridge-signature-help-timer)
+
+  (advice-remove #'acm-hide #'lsp-bridge--completion-hide-advisor))
 
 (defun lsp-bridge-turn-off (filepath)
   (lsp-bridge--with-file-buffer filepath
@@ -1124,15 +1133,7 @@ Auto completion is only performed if the tick did not change."
   (dolist (hook lsp-bridge-default-mode-hooks)
     (add-hook hook (lambda ()
                      (lsp-bridge-mode 1)
-                     )))
-
-  (when lsp-bridge-enable-diagnostics
-    (setq lsp-bridge-diagnostics-timer
-          (run-with-idle-timer lsp-bridge-diagnostics-fetch-idle t #'lsp-bridge-diagnostics-fetch)))
-
-  (when lsp-bridge-enable-signature-help
-    (setq lsp-bridge-signature-help-timer
-          (run-with-idle-timer lsp-bridge-signature-help-fetch-idle t #'lsp-bridge-signature-help-fetch))))
+                     ))))
 
 (with-eval-after-load 'evil
   (evil-add-command-properties #'lsp-bridge-find-def :jump t)
