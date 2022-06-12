@@ -43,7 +43,6 @@ class FileAction:
 
         self.request_dict = {}
         self.last_change_file_time = -1.0
-        self.last_change_file_before_cursor_text = ""
         self.last_change_cursor_time = -1.0
         self.version = 1
 
@@ -76,7 +75,7 @@ class FileAction:
             return self.handlers[method].send_request(*args, **kwargs)
         getattr(self, method)(*args, **kwargs)
 
-    def change_file(self, start, end, range_length, change_text, position, before_char, before_cursor_text, completion_visible):
+    def change_file(self, start, end, range_length, change_text, position, before_char, completion_visible):
         # Send didChange request to LSP server.
         self.lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
 
@@ -88,7 +87,6 @@ class FileAction:
 
         # Record last change information.
         self.last_change_file_time = time.time()
-        self.last_change_file_before_cursor_text = before_cursor_text
 
         # Send textDocument/completion 100ms later.
         self.try_completion_timer = threading.Timer(0.1, lambda : self.try_completion(position, before_char, completion_visible))

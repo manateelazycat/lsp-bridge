@@ -693,7 +693,6 @@ Auto completion is only performed if the tick did not change."
                                 (buffer-substring-no-properties begin end)
                                 (lsp-bridge--position)
                                 (acm-char-before)
-                                (buffer-substring-no-properties (line-beginning-position) (point))
                                 (lsp-bridge-completion-ui-visible-p)
                                 ))))
 
