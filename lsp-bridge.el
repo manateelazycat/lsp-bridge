@@ -862,7 +862,8 @@ Auto completion is only performed if the tick did not change."
                          (if (equal index (1- (length help-infos))) "" ", ")))
       (setq index (1+ index)))
 
-    (message help)))
+    (let ((message-log-max nil))
+      (message help))))
 
 (defvar lsp-bridge--last-buffer nil)
 
