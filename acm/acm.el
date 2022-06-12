@@ -844,13 +844,6 @@ influence of C1 on the result."
   (let ((prev-char (char-before)))
     (if prev-char (char-to-string prev-char) "")))
 
-(defun acm-is-non-lsp-completion-mode ()
-  "We can add new mode in this function, to popup completion menu that except LSP backend."
-  (or (derived-mode-p 'emacs-lisp-mode)
-      (derived-mode-p 'inferior-emacs-lisp-mode)
-      (derived-mode-p 'lisp-interaction-mode)
-      (derived-mode-p 'org-mode)))
-
 (defun acm-frame-visible-p (frame)
   (and (frame-live-p frame)
        (frame-visible-p frame)))
