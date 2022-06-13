@@ -409,6 +409,16 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
         (cdr langserver-info)
       nil)))
 
+(defun lsp-bridge-has-lsp-server-p ()
+  (let ((filepath (ignore-errors (file-truename buffer-file-name)))
+        lang-server-by-extension)
+    (when filepath
+      (setq lang-server-by-extension (lsp-bridge-get-lang-server-by-extension filepath))
+      (if lang-server-by-extension
+          lang-server-by-extension
+        (lsp-bridge--with-file-buffer filepath
+          (lsp-bridge-get-lang-server-by-mode))))))
+
 (defun lsp-bridge--auto-tick ()
   "Return the current tick/status of the buffer.
 Auto completion is only performed if the tick did not change."
@@ -541,7 +551,7 @@ Auto completion is only performed if the tick did not change."
               (eq this-command 'org-self-insert-command))
       (lsp-bridge-try-completion)))
 
-  (when  (lsp-bridge-get-lang-server-by-mode)
+  (when  (lsp-bridge-has-lsp-server-p)
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       (unless (equal (point) lsp-bridge-last-position)
         (lsp-bridge-call-file-api "change_cursor" (lsp-bridge--position))
@@ -557,7 +567,7 @@ Auto completion is only performed if the tick did not change."
       (lsp-bridge-hide-diagnostic-tooltip))))
 
 (defun lsp-bridge-close-buffer-file ()
-  (when (lsp-bridge-get-lang-server-by-mode)
+  (when (lsp-bridge-has-lsp-server-p)
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath))))
 
@@ -673,7 +683,7 @@ Auto completion is only performed if the tick did not change."
 (defvar-local lsp-bridge--before-change-end-pos nil)
 
 (defun lsp-bridge-monitor-before-change (begin end)
-  (when (lsp-bridge-get-lang-server-by-mode)
+  (when (lsp-bridge-has-lsp-server-p)
     (setq lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
     (setq lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))))
 
@@ -684,7 +694,7 @@ Auto completion is only performed if the tick did not change."
   ;; Send change_file request.
   (setq-local lsp-bridge-current-tick (lsp-bridge--auto-tick))
 
-  (when (lsp-bridge-get-lang-server-by-mode)
+  (when (lsp-bridge-has-lsp-server-p)
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       (lsp-bridge-call-file-api "change_file"
                                 lsp-bridge--before-change-begin-pos
@@ -701,7 +711,7 @@ Auto completion is only performed if the tick did not change."
        (frame-visible-p acm-frame)))
 
 (defun lsp-bridge-monitor-after-save ()
-  (when (lsp-bridge-get-lang-server-by-mode)
+  (when (lsp-bridge-has-lsp-server-p)
     (lsp-bridge-call-file-api "save_file")))
 
 (defalias 'lsp-bridge-find-define #'lsp-bridge-find-def)
@@ -946,43 +956,38 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge--enable ()
   "Enable LSP Bridge mode."
-  (cond
-   ((and (lsp-bridge-get-lang-server-by-mode)
-         (not buffer-file-name))
-    (message "[LSP-Bridge] cannot be enabled in non-file buffers.")
-    (setq lsp-bridge-mode nil))
-   (t
-    ;; Disable backup file.
-    ;; Please use my another plugin `https://github.com/manateelazycat/auto-save' and use git for file version management.
-    (when lsp-bridge-disable-backup
-      (setq make-backup-files nil)
-      (setq auto-save-default nil)
-      (setq create-lockfiles nil))
 
-    (when (lsp-bridge-get-lang-server-by-mode)
-      ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
-      ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
-      (unless (file-exists-p (buffer-file-name))
-        (save-buffer))
+  ;; Disable backup file.
+  ;; Please use my another plugin `https://github.com/manateelazycat/auto-save' and use git for file version management.
+  (when lsp-bridge-disable-backup
+    (setq make-backup-files nil)
+    (setq auto-save-default nil)
+    (setq create-lockfiles nil))
 
-      (setq acm-backend-lsp-filepath (file-truename buffer-file-name))
+  (when (lsp-bridge-has-lsp-server-p)
+    ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
+    ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
+    (unless (file-exists-p (buffer-file-name))
+      (save-buffer))
 
-      (when lsp-bridge-enable-diagnostics
-        (setq lsp-bridge-diagnostics-timer
-              (run-with-idle-timer lsp-bridge-diagnostics-fetch-idle t #'lsp-bridge-diagnostics-fetch)))
+    (setq acm-backend-lsp-filepath (file-truename buffer-file-name))
 
-      (when lsp-bridge-enable-signature-help
-        (setq lsp-bridge-signature-help-timer
-              (run-with-idle-timer lsp-bridge-signature-help-fetch-idle t #'lsp-bridge-signature-help-fetch))))
+    (when lsp-bridge-enable-diagnostics
+      (setq lsp-bridge-diagnostics-timer
+            (run-with-idle-timer lsp-bridge-diagnostics-fetch-idle t #'lsp-bridge-diagnostics-fetch)))
 
-    (dolist (hook lsp-bridge--internal-hooks)
-      (add-hook (car hook) (cdr hook) nil t))
+    (when lsp-bridge-enable-signature-help
+      (setq lsp-bridge-signature-help-timer
+            (run-with-idle-timer lsp-bridge-signature-help-fetch-idle t #'lsp-bridge-signature-help-fetch))))
 
-    (advice-add #'acm-hide :after #'lsp-bridge--completion-hide-advisor)
+  (dolist (hook lsp-bridge--internal-hooks)
+    (add-hook (car hook) (cdr hook) nil t))
 
-    ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
-    (unless lsp-bridge-is-starting
-      (lsp-bridge-start-process)))))
+  (advice-add #'acm-hide :after #'lsp-bridge--completion-hide-advisor)
+
+  ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
+  (unless lsp-bridge-is-starting
+    (lsp-bridge-start-process)))
 
 (defun lsp-bridge--disable ()
   "Disable LSP Bridge mode."
