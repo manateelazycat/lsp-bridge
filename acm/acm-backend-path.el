@@ -116,7 +116,7 @@
          (file-name (plist-get candidate-info :label))
          (parent-dir (file-name-directory keyword)))
     (delete-region bound-start (point))
-    (insert (expand-file-name file-name parent-dir))))
+    (insert (concat parent-dir file-name))))
 
 (provide 'acm-backend-path)
 
