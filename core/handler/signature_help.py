@@ -12,12 +12,7 @@ class SignatureHelp(Handler):
 
     def process_response(self, response: dict) -> None:
         if response is not None:
-            parameters = []
-            if "activeSignature" in response:
-                parameters = response["signatures"][response["activeSignature"]]["parameters"]
-            else:
-                parameters = response["signatures"][0]["parameters"]
-            
-            eval_in_emacs("lsp-bridge-signature-help-update", 
-                          list(map(lambda p: p["label"].split(":")[0], parameters)),
-                          response["activeParameter"])
+            if "parameters" in response["signatures"][0]:
+                eval_in_emacs("lsp-bridge-signature-help-update", 
+                              list(map(lambda p: p["label"].split(":")[0], response["signatures"][response.get("activeSignature", 0)]["parameters"])),
+                              response.get("activeParameter", 0))
