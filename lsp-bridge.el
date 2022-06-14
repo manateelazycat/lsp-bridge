@@ -1136,7 +1136,7 @@ Auto completion is only performed if the tick did not change."
                                  (goto-line line)
                                  (buffer-substring-no-properties (line-beginning-position) (line-end-position))))))
           (insert (concat "\033[93m" (format "%s %s" (1+ diagnostic-counter) message) "\033[0m" "\n"))
-          (insert (format "%s:%s:%s\n"
+          (insert (format "%s:%s:%s\n\n"
                           line
                           start-column
                           (concat (substring line-content 0 start-column)

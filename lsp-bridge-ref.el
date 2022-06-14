@@ -394,7 +394,7 @@ user more freedom to use rg with special arguments."
 
     ;; Highlight diagnostics.
     (goto-char (point-min))
-    (while (re-search-forward "\033\\[93m\\(.*?\\)\033\\[0m" nil t)
+    (while (re-search-forward "\\[93m\\(.*?\n?.*?\\)\\[0m" nil t)
       (replace-match (concat (propertize (match-string 1)
                                          'face nil 'font-lock-face 'lsp-bridge-ref-font-lock-diagnostic))
                      t t))
