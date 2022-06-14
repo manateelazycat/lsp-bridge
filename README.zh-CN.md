@@ -52,6 +52,7 @@ lsp-bridge开箱即用， 安装好文件对应的LSP服务器命令以后， �
 * `lsp-bridge-rename`: 重命名
 * `lsp-bridge-jump-to-next-diagnostic`: 跳转到下一个诊断位置
 * `lsp-bridge-jump-to-prev-diagnostic`: 跳转到上一个诊断位置
+* `lsp-bridge-ignore-current-diagnostic`: 插入注视忽略当前诊断
 * `lsp-bridge-signature-help-fetch`: 在minibuffer显示参数信息
 * `lsp-bridge-insert-common-prefix`: 插入补全后选词的公共前缀
 * `lsp-bridge-restart-process`: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)

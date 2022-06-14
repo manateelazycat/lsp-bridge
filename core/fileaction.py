@@ -111,6 +111,12 @@ class FileAction:
         # Record change cursor time.
         self.last_change_cursor_time = time.time()
         
+    def ignore_diagnostic(self):
+        if "ignore-diagnostic" in self.lsp_server.server_info:
+            eval_in_emacs("lsp-bridge-insert-ignore-diagnostic-comment", self.lsp_server.server_info["ignore-diagnostic"])
+        else:
+            message_emacs("Not found 'ignore_diagnostic' field in LSP server configure file.")
+        
     def save_file(self):
         self.lsp_server.send_did_save_notification(self.filepath)
 

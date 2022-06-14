@@ -52,6 +52,7 @@ If you expect lsp-bridge to automatically scan the files of the entire project, 
 * `lsp-bridge-rename`: rename symbol under the cursor
 * `lsp-bridge-jump-to-next-diagnostic`: Jump to the next diagnostic position
 * `lsp-bridge-jump-to-prev-diagnostic`: Jump to the previous diagnostic position
+* `lsp-bridge-ignore-current-diagnostic`: Insert comment to ignore the current diagnosis
 * `lsp-bridge-signature-help-fetch`: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
 * `lsp-bridge-insert-common-prefix`: insert common prefix of candidates
 * `lsp-bridge-restart-process`: restart lsp-bridge process (only used for development)

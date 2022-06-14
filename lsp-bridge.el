@@ -1103,6 +1103,15 @@ Auto completion is only performed if the tick did not change."
       (lsp-bridge-show-diagnostic-tooltip diagnostic-overlay)
     (message "[LSP-Bridge] Reach first diagnostic.")))
 
+(defun lsp-bridge-ignore-current-diagnostic()
+  (interactive)
+  (when (lsp-bridge-has-lsp-server-p)
+    (lsp-bridge-call-file-api "ignore_diagnostic")))
+
+(defun lsp-bridge-insert-ignore-diagnostic-comment (comment-string)
+  (move-end-of-line 1)
+  (insert (format "    %s" comment-string)))
+
 (defun lsp-bridge-update-completion-item-info (info)
   (let* ((filepath (plist-get info :filepath))
          (key (plist-get info :key))
