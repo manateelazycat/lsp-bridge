@@ -161,7 +161,7 @@
     ;; 4. `insertText' is not start with `char-before-input'
     (unless text-edit
       (let* ((char-before-input (save-excursion
-                                  (goto-char delete-start-pos)
+                                  (goto-char (1+ delete-start-pos))
                                   (acm-char-before))))
         (when (and (member char-before-input acm-backend-lsp-completion-trigger-characters)
                    (string-prefix-p char-before-input label)
