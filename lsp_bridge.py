@@ -43,7 +43,7 @@ class LspBridge:
         # Build EPC interfaces.
         for name in ["change_file", "find_define", "find_implementation", "find_references",
                      "try_prepare_rename", "prepare_rename", "rename", "change_cursor", "save_file", 
-                     "hover", "signature_help", "ignore_diagnostic"]:
+                     "hover", "signature_help", "ignore_diagnostic", "list_diagnostics"]:
             self.build_file_action_function(name)
 
         for cls in Handler.__subclasses__():

@@ -116,7 +116,13 @@ class FileAction:
             eval_in_emacs("lsp-bridge-insert-ignore-diagnostic-comment", self.lsp_server.server_info["ignore-diagnostic"])
         else:
             message_emacs("Not found 'ignore_diagnostic' field in LSP server configure file.")
-        
+            
+    def list_diagnostics(self):
+        if len(self.diagnostics) == 0:
+            message_emacs("No diagnostics found.")
+        else:
+            eval_in_emacs("lsp-bridge-list-diagnostics-popup", self.diagnostics)
+            
     def save_file(self):
         self.lsp_server.send_did_save_notification(self.filepath)
 
