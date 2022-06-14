@@ -70,7 +70,13 @@ lsp-bridge开箱即用， 安装好文件对应的LSP服务器命令以后， �
 * `lsp-bridge-disable-backup`: 禁止emacs对文件做版本管理， 默认打开
 * `lsp-bridge-enable-log`: 启用LSP消息日志， 默认关闭
 * `lsp-bridge-enable-debug`: 启用程序调试， 默认关闭
+* `lsp-bridge-python-command`: Python命令的路径, 如果你用 `conda`， 你也许会定制这个选项
 * `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
+* `acm-candidate-match-function`: 补全菜单匹配算法， orderless-* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
+* `acm-enable-doc`: 补全菜单是否显示帮助文档
+* `acm-enable-icon`: 补全菜单是否显示图标
+* `acm-fetch-candidate-doc-delay`: 补全菜单弹出文档的延时， 不建议设置成0， 会降低菜单选择性能
+* `acm-snippet-insert-index`: 代码模板后选词在补全菜单中的显示位置
 
 ## 自定义语言服务器配置
 lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
