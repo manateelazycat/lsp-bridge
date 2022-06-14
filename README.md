@@ -90,8 +90,8 @@ Anyway you can customize server configuration with the following priority:
 ## Add support for new language?
 
 1. Create configuration file under lsp-bridge/langserver, such as `pyright.json` for pyright (windows user please uses `pyright_windows.json`, macOS user please uses `pyright_darwin.json`).
-2. Add `(mode . server_name)` in ```lsp-bridge-lang-server-list```, such as `(python-mode . "pyright")`
-3. Add new mode-hook to `lsp-bridge-default-mode-hooks`
+2. Add `(mode . server_name)` to `lsp-bridge-lang-server-mode-list` in `lsp-bridge.el`, such as `(python-mode . "pyright")`.
+3. Add new mode-hook to `lsp-bridge-default-mode-hooks` in `lsp-bridge.el`.
 
 Welcome to send PR to help us improve support for LSP servers, thanks for your contribution!
 
@@ -101,7 +101,7 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 | :--- | :--- | :--- | :--- |
 | 1 | [clangd](https://github.com/clangd/clangd) | c, c++ |  |
 | 2 | [pyright](https://github.com/microsoft/pyright) | python | `pip install pyright`|
-| 3 | [solargraph](https://github.com/castwide/solargraph) | ruby | | 
+| 3 | [solargraph](https://github.com/castwide/solargraph) | ruby | |
 | 4 | [rust-analyzer](https://github.com/rust-lang/rust-analyzer) | rust | |
 | 5 | [elixirLS](https://github.com/elixir-lsp/elixir-ls) | elixir | please ensure that the `elixir-ls` release directory is in your system PATH at first |
 | 6 | [gopls](https://github.com/golang/tools/tree/master/gopls) | go | make sure gopls in PATH, please do `ln -s ~/go/bin/gopls ~/.local/bin`, and do `go mod init` first |
@@ -122,6 +122,7 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 | 21 | [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | css | |
 | 22 | [elm-language-server](https://github.com/elm-tooling/elm-language-server) | elm | |
 | 23 | [intelephense](https://github.com/bmewburn/vscode-intelephense) | php | |
+| 24 | [yaml-language-server](https://github.com/redhat-developer/yaml-language-server) | yaml | `npm install -g yaml-language-server` |
 
 ### TODO:
 

@@ -297,6 +297,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ((css-mode) . "vscode-css-language-server")
     (elm-mode . "elm-language-server")
     (php-mode . "intelephense")
+    (yaml-mode . "yaml-language-server")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -340,7 +341,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ielm-mode-hook
     lisp-interaction-mode-hook
     org-mode-hook
-    php-mode-hook)
+    php-mode-hook
+    yaml-mode-hook)
   "The default mode hook to enable lsp-bridge."
   :type 'list)
 

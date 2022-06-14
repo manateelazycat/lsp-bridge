@@ -88,9 +88,9 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 
 ## 添加新的编程语言支持?
 
-1. 在lsp-bridge/langserver目录下创建配置文件， 比如`pyright.json`就是pyright服务器的配置文件 (windows平台用`pyright_windows.json`, macOS平台用`pyright_darwin.json`).
-2. 添加 `(mode . server_name)` 到选项 ```lsp-bridge-lang-server-list``` 中, 比如 `(python-mode . "pyright")`
-3. 添加新的 mode-hook 到 `lsp-bridge-default-mode-hooks`
+1. 在 lsp-bridge/langserver 目录下创建配置文件， 比如`pyright.json`就是 pyright 服务器的配置文件 (windows 平台用`pyright_windows.json`, macOS 平台用`pyright_darwin.json`)。
+2. 添加 `(mode . server_name)` 到 `lsp-bridge.el` 文件中的 `lsp-bridge-lang-server-mode-list` 选项中, 比如 `(python-mode . "pyright")`。
+3. 添加新的 mode-hook 到 `lsp-bridge.el` 文件中的 `lsp-bridge-default-mode-hooks` 选项中。
 
 欢迎发送补丁帮助我们支持更多的LSP服务器，感谢你的帮助！
 
@@ -100,7 +100,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | :--- | :--- | :--- | :--- |
 | 1 | [clangd](https://github.com/clangd/clangd) | c, c++ |  |
 | 2 | [pyright](https://github.com/microsoft/pyright) | python | `pip install pyright`|
-| 3 | [solargraph](https://github.com/castwide/solargraph) | ruby | | 
+| 3 | [solargraph](https://github.com/castwide/solargraph) | ruby | |
 | 4 | [rust-analyzer](https://github.com/rust-lang/rust-analyzer) | rust | |
 | 5 | [elixirLS](https://github.com/elixir-lsp/elixir-ls) | elixir | 请确保导出 `elixir-ls` 目录到你系统的PATH路径 |
 | 6 | [gopls](https://github.com/golang/tools/tree/master/gopls) | go | make sure gopls in PATH, please do `ln -s ~/go/bin/gopls ~/.local/bin`, 还要在补全之前执行 `go mod init` 命令 |
@@ -121,6 +121,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 21 | [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | css | |
 | 22 | [elm-language-server](https://github.com/elm-tooling/elm-language-server) | elm | |
 | 23 | [intelephense](https://github.com/bmewburn/vscode-intelephense) | php | |
+| 24 | [yaml-language-server](https://github.com/redhat-developer/yaml-language-server) | yaml | `npm install -g yaml-language-server` |
 
 
 ### 需要完成的功能：
