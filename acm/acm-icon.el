@@ -217,7 +217,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
     (svg-image svg :ascent 'center :scale 1)))
 
 (defun acm-icon-build (collection name fg-color)
-  (if acm-enable-icon
+  (if (and acm-enable-icon
+           (image-type-available-p 'svg))
       (let* ((icon-key (format "%s_%s" collection name))
              (icon-text (gethash icon-key acm-icon-cache)))
         (unless icon-text
