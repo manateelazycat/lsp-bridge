@@ -27,6 +27,7 @@ import re
 import subprocess
 import threading
 import traceback
+import shutil
 from subprocess import PIPE
 from sys import stderr
 from threading import Thread
@@ -80,8 +81,8 @@ class LspServerSender(Thread):
     def _send_message(self, message: dict):
         message_str = "Content-Length: {}\r\n\r\n{}".format(len(json.dumps(message)), json.dumps(message))
 
-        self.process.stdin.write(message_str.encode("utf-8"))
-        self.process.stdin.flush()
+        self.process.stdin.write(message_str.encode("utf-8"))    # type: ignore
+        self.process.stdin.flush()    # type: ignore
 
         logger.info("\n--- Send ({}): {}".format(
             message.get('id', 'notification'), message.get('method', 'response')))
@@ -140,7 +141,7 @@ class LspServerReceiver(Thread):
 
                         buffer = buffer[end:]
                     else:
-                        line = self.process.stdout.readline()
+                        line = self.process.stdout.readline()    # type: ignore
                         # dart_analysis_server 会发送 Content-Type,
                         # 导致解析的 json 回包内容不完整
                         if re.search(b"Content-Type", line) is None:
@@ -156,7 +157,7 @@ class LspServerReceiver(Thread):
                             content_length = None
                             self.emit_message(msg.decode("utf-8"))
                         else:
-                            line = self.process.stdout.readline(content_length - len(buffer))
+                            line = self.process.stdout.readline(content_length - len(buffer))    # type: ignore
                             buffer = buffer + line
                     else:
                         msg = buffer[0: content_length]
@@ -166,7 +167,7 @@ class LspServerReceiver(Thread):
             except:
                 logger.error(traceback.format_exc())
         logger.info("\n--- Lsp server exited, exit code: {}".format(self.process.returncode))
-        logger.info(self.process.stdout.read())
+        logger.info(self.process.stdout.read())    # type: ignore
         if self.process.stderr:
             logger.info(self.process.stderr.read())
 
@@ -187,6 +188,11 @@ class LspServer:
         self.rename_prepare_provider = False
 
         # Start LSP server.
+        if get_os_name() == "windows":
+            server_command = self.server_info["command"][0]
+            if not shutil.which(server_command) and shutil.which(server_command + ".cmd"):
+                self.server_info["command"] = [server_command + ".cmd"] + self.server_info["command"][1:]
+        
         self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
 
         # Notify user server is start.
