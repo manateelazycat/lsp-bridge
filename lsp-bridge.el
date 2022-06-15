@@ -548,7 +548,7 @@ Auto completion is only performed if the tick did not change."
   (lsp-bridge-epc-init-epc-layer lsp-bridge-epc-process)
   (setq lsp-bridge-is-starting nil)
 
-  (lsp-bridge-search-words-send-files))
+  (lsp-bridge-search-words-index-files))
 
 (defvar-local lsp-bridge-last-position 0)
 (defvar-local lsp-bridge-prohibit-completion nil)
@@ -718,41 +718,30 @@ Auto completion is only performed if the tick did not change."
                                 (lsp-bridge-completion-ui-visible-p)
                                 )))
 
+  ;; Send change file to search-words backend.
   (when (and buffer-file-name
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
-    (let ((current-word (lsp-bridge-string-at-point)))
+    (let ((current-word (acm-backend-search-words-get-point-string)))
+      ;; Search words if current prefix is not empty.
       (when (not (string-equal current-word ""))
         (lsp-bridge-call-async "search_words_search" current-word)))
 
-    (lsp-bridge-call-async "search_words_change_file" buffer-file-name)
-    ))
+    (lsp-bridge-call-async "search_words_change_file" buffer-file-name)))
 
 (defun lsp-bridge-search-words-open-file ()
   (when (and buffer-file-name
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
-    (lsp-bridge-call-async "search_words_change_file" buffer-file-name)
-    ))
+    (lsp-bridge-call-async "search_words_change_file" buffer-file-name)))
 
-(defun lsp-bridge-search-words-send-files ()
+(defun lsp-bridge-search-words-index-files ()
+  "Index files when lsp-bridge python process finish."
   (let ((files (cl-remove-if 'null (mapcar #'buffer-file-name (buffer-list)))))
-    (lsp-bridge-call-async "search_words_append_files" files)
-    ))
+    (lsp-bridge-call-async "search_words_index_files" files)))
 
 (defun lsp-bridge-search-words-rebuild-cache ()
+  "Rebuild words cache when idle."
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (lsp-bridge-call-async "search_words_rebuild_cache")))
-
-(defun lsp-bridge-string-at-point ()
-  (if (or (derived-mode-p 'emacs-lisp-mode)
-          (derived-mode-p 'inferior-emacs-lisp-mode)
-          (derived-mode-p 'lisp-interaction-mode))
-      (or (thing-at-point 'symbol t) "")
-    (save-excursion
-      (let ((beg (progn (skip-syntax-backward "^ " (line-beginning-position))
-                        (point)))
-            (end (progn (skip-syntax-forward "^ " (line-end-position))
-                        (point))))
-        (buffer-substring-no-properties beg end)))))
 
 (defun lsp-bridge-completion-ui-visible-p ()
   (and (frame-live-p acm-frame)
@@ -1053,6 +1042,7 @@ Auto completion is only performed if the tick did not change."
 
   (acm-cancel-timer lsp-bridge-diagnostics-timer)
   (acm-cancel-timer lsp-bridge-signature-help-timer)
+  (acm-cancel-timer lsp-bridge-search-words-timer)
 
   (advice-remove #'acm-hide #'lsp-bridge--completion-hide-advisor))
 

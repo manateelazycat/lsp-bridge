@@ -235,8 +235,7 @@ class LspBridge:
             logger.info("Exit server: {}".format(server_name))
             del self.lsp_server_dict[server_name]
             
-            
-    def search_words_append_files(self, filepaths):
+    def search_words_index_files(self, filepaths):
         for filepath in filepaths:
             self.search_file_words.change_file(filepath)
         

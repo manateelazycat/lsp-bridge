@@ -151,7 +151,7 @@ lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是
 | lsp-bridge-ref.el       | 代码引用查看框架，提供引用查看、批量重命名、引用结果正则过滤等，核心代码 fork 自color-rg.el                  |
 | lsp-bridge-jdtls.el      | 提供Java语言第三方库跳转功能                                                           |
 | lsp-bridge.py           | lsp-bridge的Python主逻辑部分，提供事件循环、消息调度和状态管理                                               |
-| acm/acm.el      | 异步补全菜单， 专门为 lsp-bridge 后端而设计， 支持lsp, elisp, dabbrev等后端                                                                                           |
+| acm/acm.el      | 异步补全菜单， 专门为 lsp-bridge 后端而设计， 支持lsp, elisp, words等后端                                                                                           |
 | core/fileaction.py      | 主要记录每个文件状态，处理LSP响应消息，调用Emacs Elisp函数                                                   |
 | core/lspserver.py       | LSP消息处理模块，主要是解析、发送和接受LSP消息，并保证LSP请求顺序符合LSP协议规范                             |
 | core/utils.py           | 一些全局工具函数，方便各模块调用                                                                             |
