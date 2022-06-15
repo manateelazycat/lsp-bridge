@@ -92,7 +92,6 @@
 (require 'acm-backend-elisp)
 (require 'acm-backend-lsp)
 (require 'acm-backend-path)
-(require 'acm-backend-dabbrev)
 (require 'acm-backend-search-words)
 (require 'acm-backend-tempel)
 
@@ -106,12 +105,6 @@
   "How many seconds to stay in your fingers will popup the candidate documentation.
 
 Default is 0.5 second."
-  :type 'float)
-
-(defcustom acm-idle-completion-delay 1
-  "How many seconds to stay in your fingers will popup the enhance completion.
-
-Default is 1 second."
   :type 'float)
 
 (defcustom acm-continue-commands
@@ -181,8 +174,6 @@ Default is 1 second."
 
 (defvar acm-doc-frame nil)
 (defvar acm-doc-buffer " *acm-doc-buffer*")
-
-(defvar acm-idle-completion-timer nil)
 (defvar acm-fetch-doc-timer nil)
 
 (defvar acm--mouse-ignore-map
@@ -368,11 +359,6 @@ Default is 1 second."
             ;; Hide doc frame for backend that not support fetch candidate documentation.
             (_ (acm-doc-hide))))))))
 
-(defun acm-idle-completion ()
-  ;; Only append dabbrev when idle, make sure not to get stuck when typing.
-  (when (acm-frame-visible-p acm-frame)
-    (acm-backend-dabbrev-candidates-append)))
-
 (defun acm-color-blend (c1 c2 alpha)
   "Blend two colors C1 and C2 with ALPHA.
 C1 and C2 are hexidecimal strings.
@@ -492,11 +478,6 @@ influence of C1 on the result."
         ;; Hide doc frame first.
         (acm-doc-hide)
 
-        ;; Start idle completion timer.
-        (unless acm-idle-completion-timer
-          (setq acm-idle-completion-timer
-                (run-with-idle-timer acm-idle-completion-delay t #'acm-idle-completion)))
-
         ;; Start fetch documentation timer.
         (unless acm-fetch-doc-timer
           (setq acm-fetch-doc-timer
@@ -584,7 +565,6 @@ influence of C1 on the result."
   (remove-hook 'pre-command-hook #'acm--pre-command 'local)
 
   ;; Cancel timers.
-  (acm-cancel-timer acm-idle-completion-timer)
   (acm-cancel-timer acm-fetch-doc-timer)
 
   ;; Clean LSP backend completion tick.
