@@ -105,22 +105,25 @@
 (defun acm-backend-search-words-candidate-expand (candidate-info bound-start)
   (if (acm-backend-search-words-is-elisp-mode)
       (delete-region (car (bounds-of-thing-at-point 'symbol)) (point))
-    (save-excursion
-      (let ((beg (progn (skip-syntax-backward "^ " (line-beginning-position))
-                        (point))))
-        (delete-region beg (point)))))
+    (delete-region
+     (save-excursion
+       (skip-syntax-backward "^ " (line-beginning-position))
+       (point))
+     (point)))
   (insert (plist-get candidate-info :label)))
 
 (defun acm-backend-search-words-get-point-string ()
   "Get string around point."
   (if (acm-backend-search-words-is-elisp-mode)
       (or (thing-at-point 'symbol t) "")
-    (save-excursion
-      (let ((beg (progn (skip-syntax-backward "^ " (line-beginning-position))
-                        (point)))
-            (end (progn (skip-syntax-forward "^ " (line-end-position))
-                        (point))))
-        (buffer-substring-no-properties beg end)))))
+    (buffer-substring-no-properties
+     (save-excursion
+       (skip-syntax-backward "^ " (line-beginning-position))
+       (point))
+     (save-excursion
+       (skip-syntax-forward "^ " (line-end-position))
+       (point))
+     )))
 
 (defun acm-backend-search-words-is-elisp-mode ()
   (or (derived-mode-p 'emacs-lisp-mode)
