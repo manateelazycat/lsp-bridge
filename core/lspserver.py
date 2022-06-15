@@ -187,7 +187,12 @@ class LspServer:
         self.rename_prepare_provider = False
 
         # Start LSP server.
-        self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
+        try:
+            self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
+        except FileNotFoundError:
+            self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr, shell=True)
+        except Exception as e:
+            print('Err type : {} {}'.format(type(e), e))
 
         # Notify user server is start.
         message_emacs("Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path))
