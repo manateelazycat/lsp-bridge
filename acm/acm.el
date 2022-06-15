@@ -164,7 +164,6 @@ Default is 0.5 second."
 (defvar acm-menu-number-cache 0)
 (defvar acm-menu-max-length-cache 0)
 
-(defvar-local acm-backend-local-items nil)
 (defvar-local acm-candidates nil)
 (defvar-local acm-menu-candidates nil)
 (defvar-local acm-menu-index -1)
@@ -793,10 +792,6 @@ influence of C1 on the result."
 
     ;; Adjust menu frame position.
     (acm-menu-adjust-pos)))
-
-(defun acm-update-completion-data (backend-name completion-table)
-  ;; Update completion table that match backend-name.
-  (puthash backend-name completion-table acm-backend-local-items))
 
 (defmacro acm-silent (&rest body)
   "Silence BODY."

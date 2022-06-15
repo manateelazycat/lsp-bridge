@@ -441,10 +441,6 @@ Auto completion is only performed if the tick did not change."
   (lsp-bridge-deferred-chain
     (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) args)))
 
-(defun lsp-bridge-call-sync (method &rest args)
-  "Call Python EPC function METHOD and ARGS synchronously."
-  (lsp-bridge-epc-call-sync lsp-bridge-epc-process (read method) args))
-
 (defvar-local lsp-bridge-buffer-file-deleted nil)
 
 (defun lsp-bridge-call-file-api (method &rest args)
@@ -590,25 +586,17 @@ Auto completion is only performed if the tick did not change."
     (lsp-bridge-call-async "search_words_close_file" buffer-file-name)
     ))
 
-(defun lsp-bridge-is-empty-list (list)
-  (or (and (eq (length list) 1)
-           (string-empty-p (format "%s" (car list))))
-      (and (eq (length list) 0))))
-
 (defun lsp-bridge-record-completion-items (filepath candidates position completion-trigger-characters)
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
     (setq-local acm-backend-lsp-completion-position position)
     (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
 
-    (unless acm-backend-local-items
-      (setq-local acm-backend-local-items (make-hash-table :test 'equal)))
-
     (let* ((completion-table (make-hash-table :test 'equal)))
       (dolist (item candidates)
         (plist-put item :annotation (capitalize (plist-get item :icon)))
         (puthash (plist-get item :key) item completion-table))
-      (acm-update-completion-data "lsp-bridge" completion-table))
+      (setq-local acm-backend-lsp-items completion-table))
 
     (lsp-bridge-try-completion)
     ))
@@ -617,7 +605,6 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge-record-search-words-items (candidates)
   (setq-local lsp-bridge-search-words-candidates candidates)
-
   (lsp-bridge-try-completion))
 
 (defun lsp-bridge-try-completion ()
@@ -629,8 +616,7 @@ Auto completion is only performed if the tick did not change."
                     (if (functionp pred) (funcall pred) t))
                   lsp-bridge-completion-popup-predicates)
         (acm-update)
-      (acm-hide)
-      )))
+      (acm-hide))))
 
 (defun lsp-bridge-not-match-completion-position ()
   "Hide completion if the position of cursor has changed."
@@ -661,7 +647,7 @@ Auto completion is only performed if the tick did not change."
          ;; but at this time, if the string delimiter is the last character of the line, the point is not in the string.
          ;; So we need exclude this situation when check state of `parse-partial-sexp'.
          (and
-          (nth 3 (or state (awesome-pair-current-parse-state)))
+          (nth 3 (or state (lsp-bridge-current-parse-state)))
           (not (equal (point) (line-end-position))))
          (and
           (eq (get-text-property (point) 'face) 'font-lock-string-face)
@@ -1226,14 +1212,14 @@ Auto completion is only performed if the tick did not change."
          (documentation (plist-get info :documentation)))
     (lsp-bridge--with-file-buffer filepath
       ;; Update `documentation' and `additionalTextEdits'
-      (when-let (item (gethash key (gethash "lsp-bridge" acm-backend-local-items)))
+      (when-let (item (gethash key acm-backend-lsp-items))
         (when additional-text-edits
           (plist-put item :additionalTextEdits additional-text-edits))
 
         (unless (string-equal documentation "")
           (plist-put item :documentation documentation))
 
-        (puthash key item (gethash "lsp-bridge" acm-backend-local-items)))
+        (puthash key item acm-backend-lsp-items))
 
       ;; Popup documentation window if same documentation window not exist.
       (unless (string-equal key acm-backend-lsp-completion-item-popup-doc-tick)
