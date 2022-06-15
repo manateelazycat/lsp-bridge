@@ -180,6 +180,16 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'float
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-enable-search-words t
+  "Whether to enable search words of files."
+  :type 'boolean
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-search-words-rebuild-cache-idle 1
+  "The idle seconds to rebuild words cache."
+  :type 'float
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-enable-diagnostics t
   "Whether to enable diagnostics."
   :type 'boolean
@@ -540,7 +550,9 @@ Auto completion is only performed if the tick did not change."
                                 :connection (lsp-bridge-epc-connect "localhost" lsp-bridge-epc-port)
                                 ))
   (lsp-bridge-epc-init-epc-layer lsp-bridge-epc-process)
-  (setq lsp-bridge-is-starting nil))
+  (setq lsp-bridge-is-starting nil)
+
+  (lsp-bridge-search-words-send-files))
 
 (defvar-local lsp-bridge-last-position 0)
 (defvar-local lsp-bridge-prohibit-completion nil)
@@ -571,14 +583,19 @@ Auto completion is only performed if the tick did not change."
 (defun lsp-bridge-close-buffer-file ()
   (when (lsp-bridge-has-lsp-server-p)
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-      (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath))))
+      (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath)))
+
+  (when (and buffer-file-name
+             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
+    (lsp-bridge-call-async "search_words_close_file" buffer-file-name)
+    ))
 
 (defun lsp-bridge-is-empty-list (list)
   (or (and (eq (length list) 1)
            (string-empty-p (format "%s" (car list))))
       (and (eq (length list) 0))))
 
-(defun lsp-bridge-record-completion-items (filepath items position completion-trigger-characters)
+(defun lsp-bridge-record-completion-items (filepath candidates position completion-trigger-characters)
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
     (setq-local acm-backend-lsp-completion-position position)
@@ -588,13 +605,20 @@ Auto completion is only performed if the tick did not change."
       (setq-local acm-backend-local-items (make-hash-table :test 'equal)))
 
     (let* ((completion-table (make-hash-table :test 'equal)))
-      (dolist (item items)
+      (dolist (item candidates)
         (plist-put item :annotation (capitalize (plist-get item :icon)))
         (puthash (plist-get item :key) item completion-table))
       (acm-update-completion-data "lsp-bridge" completion-table))
 
     (lsp-bridge-try-completion)
     ))
+
+(defvar-local lsp-bridge-search-words-candidates nil)
+
+(defun lsp-bridge-record-search-words-items (candidates)
+  (setq-local lsp-bridge-search-words-candidates candidates)
+
+  (lsp-bridge-try-completion))
 
 (defun lsp-bridge-try-completion ()
   (if lsp-bridge-prohibit-completion
@@ -706,7 +730,43 @@ Auto completion is only performed if the tick did not change."
                                 (lsp-bridge--position)
                                 (acm-char-before)
                                 (lsp-bridge-completion-ui-visible-p)
-                                ))))
+                                )))
+
+  (when (and buffer-file-name
+             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
+    (let ((current-word (lsp-bridge-string-at-point)))
+      (when (not (string-equal current-word ""))
+        (lsp-bridge-call-async "search_words_search" current-word)))
+
+    (lsp-bridge-call-async "search_words_change_file" buffer-file-name)
+    ))
+
+(defun lsp-bridge-search-words-open-file ()
+  (when (and buffer-file-name
+             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
+    (lsp-bridge-call-async "search_words_change_file" buffer-file-name)
+    ))
+
+(defun lsp-bridge-search-words-send-files ()
+  (let ((files (cl-remove-if 'null (mapcar #'buffer-file-name (buffer-list)))))
+    (lsp-bridge-call-async "search_words_append_files" files)
+    ))
+
+(defun lsp-bridge-search-words-rebuild-cache ()
+  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+    (lsp-bridge-call-async "search_words_rebuild_cache")))
+
+(defun lsp-bridge-string-at-point ()
+  (if (or (derived-mode-p 'emacs-lisp-mode)
+          (derived-mode-p 'inferior-emacs-lisp-mode)
+          (derived-mode-p 'lisp-interaction-mode))
+      (or (thing-at-point 'symbol t) "")
+    (save-excursion
+      (let ((beg (progn (skip-syntax-backward "^ " (line-beginning-position))
+                        (point)))
+            (end (progn (skip-syntax-forward "^ " (line-end-position))
+                        (point))))
+        (buffer-substring-no-properties beg end)))))
 
 (defun lsp-bridge-completion-ui-visible-p ()
   (and (frame-live-p acm-frame)
@@ -789,11 +849,13 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge-lookup-documentation ()
   (interactive)
-  (lsp-bridge-call-file-api "hover" (lsp-bridge--position)))
+  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+    (lsp-bridge-call-file-api "hover" (lsp-bridge--position))))
 
 (defun lsp-bridge-signature-help-fetch ()
   (interactive)
-  (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))
+  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+    (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position))))
 
 (defun lsp-bridge-rename-file (filepath edits)
   (find-file-noselect filepath)
@@ -898,6 +960,7 @@ Auto completion is only performed if the tick did not change."
     (post-command-hook . lsp-bridge-monitor-post-command)
     (after-save-hook . lsp-bridge-monitor-after-save)
     (kill-buffer-hook . lsp-bridge-close-buffer-file)
+    (find-file-hook . lsp-bridge-search-words-open-file)
     (before-revert-hook . lsp-bridge-close-buffer-file)
     ))
 
@@ -947,6 +1010,8 @@ Auto completion is only performed if the tick did not change."
 
 (defvar lsp-bridge-signature-help-timer nil)
 
+(defvar lsp-bridge-search-words-timer nil)
+
 ;;;###autoload
 (define-minor-mode lsp-bridge-mode
   "LSP Bridge mode."
@@ -980,7 +1045,11 @@ Auto completion is only performed if the tick did not change."
 
     (when lsp-bridge-enable-signature-help
       (setq lsp-bridge-signature-help-timer
-            (run-with-idle-timer lsp-bridge-signature-help-fetch-idle t #'lsp-bridge-signature-help-fetch))))
+            (run-with-idle-timer lsp-bridge-signature-help-fetch-idle t #'lsp-bridge-signature-help-fetch)))
+
+    (when lsp-bridge-enable-search-words
+      (setq lsp-bridge-search-words-timer
+            (run-with-idle-timer lsp-bridge-search-words-rebuild-cache-idle t #'lsp-bridge-search-words-rebuild-cache))))
 
   (dolist (hook lsp-bridge--internal-hooks)
     (add-hook (car hook) (cdr hook) nil t))
@@ -1008,7 +1077,7 @@ Auto completion is only performed if the tick did not change."
 (defun lsp-bridge-diagnostics-fetch ()
   (when (and lsp-bridge-mode
              lsp-bridge-enable-diagnostics
-             (process-live-p lsp-bridge-server)
+             (lsp-bridge-epc-live-p lsp-bridge-epc-process)
              (not (lsp-bridge-completion-ui-visible-p))
              (buffer-file-name))
     (when (string-equal (file-truename (buffer-file-name)) acm-backend-lsp-filepath)

@@ -97,6 +97,7 @@
     ("function" . ("material" "function" "#ff6a00"))
     ("fun" . ("material" "function-variant" "#0abf53"))
     ("constructor" . ("material" "all-inclusive" "#7ac143"))
+    ("search" . ("material" "feature-search" "#7ac143"))
     ("ctor" . ("material" "cube" "#b84592"))
     ("field" . ("material" "tag" "#ff6c5f"))
     ("variable" . ("material" "variable" "#00b2a9"))

@@ -29,9 +29,9 @@ from epc.server import ThreadingEPCServer
 
 from core.fileaction import FileAction
 from core.lspserver import LspServer
+from core.search_file_words import SearchFileWords
 from core.utils import *
 from core.handler import *
-
 
 class LspBridge:
     def __init__(self, args):
@@ -39,6 +39,7 @@ class LspBridge:
         # Object cache to exchange information between Emacs and LSP server.
         self.file_action_dict: Dict[str, FileAction] = {}  # use for contain file action
         self.lsp_server_dict: Dict[str, LspServer] = {}  # use for contain lsp server
+        self.search_file_words = SearchFileWords()
 
         # Build EPC interfaces.
         for name in ["change_file", "find_define", "find_implementation", "find_references",
@@ -233,7 +234,24 @@ class LspBridge:
         if server_name in self.lsp_server_dict:
             logger.info("Exit server: {}".format(server_name))
             del self.lsp_server_dict[server_name]
-
+            
+            
+    def search_words_append_files(self, filepaths):
+        for filepath in filepaths:
+            self.search_file_words.change_file(filepath)
+        
+    def search_words_change_file(self, filepath):
+        self.search_file_words.change_file(filepath)
+        
+    def search_words_close_file(self, filepath):
+        self.search_file_words.close_file(filepath)
+        
+    def search_words_rebuild_cache(self):
+        self.search_file_words.rebuild_words_cache()
+        
+    def search_words_search(self, prefix):
+        self.search_file_words.search_words(prefix)
+        
     def cleanup(self):
         """Do some cleanup before exit python process."""
         close_epc_client()

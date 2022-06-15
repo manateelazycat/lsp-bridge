@@ -93,6 +93,7 @@
 (require 'acm-backend-lsp)
 (require 'acm-backend-path)
 (require 'acm-backend-dabbrev)
+(require 'acm-backend-search-words)
 (require 'acm-backend-tempel)
 
 ;;; Code:
@@ -443,7 +444,8 @@ influence of C1 on the result."
         ;; Fetch syntax completion candidates.
         (setq mode-candidates (append
                                (acm-backend-elisp-candidates keyword)
-                               (acm-backend-lsp-candidates keyword)))
+                               (acm-backend-lsp-candidates keyword)
+                               (acm-backend-search-words-candidates keyword)))
 
         ;; Don't search snippet if char before keyword is not in `acm-backend-lsp-completion-trigger-characters'.
         (unless (member char-before-keyword acm-backend-lsp-completion-trigger-characters)
@@ -612,6 +614,7 @@ influence of C1 on the result."
         ("lsp" (acm-backend-lsp-candidate-expand candidate-info bound-start))
         ("yas" (acm-backend-yas-candidate-expand candidate-info bound-start))
         ("path" (acm-backend-path-candidate-expand candidate-info bound-start))
+        ("search-words" (acm-backend-search-words-candidate-expand candidate-info bound-start))
         ("tempel" (acm-backend-tempel-candidate-expand candidate-info bound-start))
         (_
          (delete-region bound-start (point))
