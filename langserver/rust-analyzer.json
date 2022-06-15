@@ -1,8 +1,6 @@
 {
   "name": "rust-analyzer",
   "languageId": "rust",
-  "command": [
-    "rust-analyzer"
-  ],
+  "command": ["rust-analyzer"],
   "settings": {}
 }

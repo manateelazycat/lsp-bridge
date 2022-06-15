@@ -1,9 +1,9 @@
 {
   "name": "php",
   "languageId": "php",
-    "command": [
-        "intelephense",
-        "--stdio"
-    ],
+  "command": [
+    "intelephense",
+    "--stdio"
+  ],
   "settings": {}
 }

@@ -1,7 +1,10 @@
 {
   "name": "gopls",
   "languageId": "go",
-  "command": ["gopls", "-remote=auto"],
+  "command": [
+    "gopls",
+    "-remote=auto"
+  ],
   "settings":{
     "gopls": {
       "usePlaceholders": true,

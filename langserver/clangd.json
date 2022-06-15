@@ -1,12 +1,12 @@
 {
-    "name": "clangd",
-    "languageId": "c++",
-    "command": [
-        "clangd",
-        "--all-scopes-completion",
-        "--clang-tidy",
-        "--enable-config",
-        "--header-insertion-decorators=0"
-    ],
-    "settings": {}
+  "name": "clangd",
+  "languageId": "c++",
+  "command": [
+    "clangd",
+    "--all-scopes-completion",
+    "--clang-tidy",
+    "--enable-config",
+    "--header-insertion-decorators=0"
+  ],
+  "settings": {}
 }
