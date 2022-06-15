@@ -52,9 +52,6 @@ class SearchFileWords:
             self.search_words_queue.put("search_words")
     
     def search_words(self, prefix: str):
-        if self.search_words_thread != None and self.search_words_thread.is_alive():
-            self.search_words_thread.terminate()    # type: ignore
-            
         self.search_words_thread = threading.Thread(target=lambda : self.search_words_from_files(prefix))
         self.search_words_thread.start()
         
