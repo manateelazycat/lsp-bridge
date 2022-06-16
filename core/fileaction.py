@@ -125,6 +125,18 @@ class FileAction:
             
     def save_file(self):
         self.lsp_server.send_did_save_notification(self.filepath)
+        
+    def code_fix(self):
+        if self.lsp_server.code_action_provider and len(self.lsp_server.code_action_kinds) > 0:
+            eval_in_emacs("lsp-bridge-input-message", 
+                          self.filepath, 
+                          "Execute code action (default is all): ", 
+                          "code-action", 
+                          "list", 
+                          "", 
+                          self.lsp_server.code_action_kinds)
+        else:
+            message_emacs("Current server not support code action.")
 
     def handle_server_response_message(self, request_id, request_type, response):
         self.handlers[request_type].handle_response(request_id, response)
@@ -154,3 +166,16 @@ class FileAction:
                               "additionalTextEdits": additional_text_edits,
                               "documentation": documentation
                           })
+
+    def handle_input_response(self, range_start, range_end, callback_tag, callback_result):
+        ''' Handle input message for specified buffer.'''
+        if callback_tag == "code-action":
+            self.handlers["code_action"].send_request(range_start, range_end, self.diagnostics, self.lsp_server.code_action_kinds, callback_result)
+
+    def cancel_input_response(self, callback_tag):
+        ''' Cancel input message for specified buffer.'''
+        if callback_tag == "code-action":
+            message_emacs("Cancel code action.")
+        
+            
+            

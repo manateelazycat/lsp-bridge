@@ -186,6 +186,15 @@ class LspServer:
         self.completion_trigger_characters = list()
         self.completion_resolve_provider = False
         self.rename_prepare_provider = False
+        self.code_action_provider = False
+        self.code_action_kinds = [
+            "quickfix",
+            "refactor",
+            "refactor.extract",
+            "refactor.inline",
+            "refactor.rewrite",
+            "source",
+            "source.organizeImports"]
 
         # Start LSP server.
         if get_os_name() == "windows":
@@ -237,6 +246,8 @@ class LspServer:
                 logger.error(traceback.format_exc())
 
     def send_initialize_request(self):
+        logger.info("\n--- Send initialize for {} ({})".format(self.project_path, self.server_info["name"]))
+        
         self.sender.send_request("initialize", {
             "processId": os.getpid(),
             "rootPath": self.root_path,
@@ -270,6 +281,23 @@ class LspServer:
                         }
                     }
                 }
+            },
+            "codeAction": {
+                "dynamicRegistration": False,
+                "codeActionLiteralSupport": {
+                    "codeActionKind": {
+                        "valueSet": [
+                            "quickfix",
+                            "refactor",
+                            "refactor.extract",
+                            "refactor.inline",
+                            "refactor.rewrite",
+                            "source",
+                            "source.organizeImports"
+                        ]
+                    }
+                },
+                "isPreferredSupport": True
             }
         })
 
@@ -418,16 +446,22 @@ class LspServer:
                     # We pick up completion trigger characters from server.
                     # But some LSP server haven't this value, such as html/css LSP server.
                     self.completion_trigger_characters = message["result"]["capabilities"]["completionProvider"]["triggerCharacters"]
-                except KeyError:
+                except Exception:
                     pass
-                
+
                 try:
                     self.completion_resolve_provider = message["result"]["capabilities"]["completionProvider"]["resolveProvider"]
-                except KeyError:
+                except Exception:
                     pass
 
                 try:
                     self.rename_prepare_provider = message["result"]["capabilities"]["renameProvider"]["prepareProvider"]
+                except Exception:
+                    pass
+
+                try:
+                    self.code_action_provider = message["result"]["capabilities"]["codeActionProvider"]
+                    self.code_action_kinds = message["result"]["capabilities"]["codeActionProvider"]["codeActionKinds"]
                 except Exception:
                     pass
                 

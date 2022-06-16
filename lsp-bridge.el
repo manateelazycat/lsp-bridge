@@ -1160,6 +1160,44 @@ Auto completion is only performed if the tick did not change."
   (when (lsp-bridge-has-lsp-server-p)
     (lsp-bridge-call-file-api "ignore_diagnostic")))
 
+(defun lsp-bridge-code-action ()
+  (interactive)
+  (when (lsp-bridge-has-lsp-server-p)
+    (lsp-bridge-call-file-api "code_fix")))
+
+(defun lsp-bridge-get-range-start ()
+  (if (region-active-p)
+      (lsp-bridge--point-position (region-beginning))
+    (lsp-bridge--position)))
+
+(defun lsp-bridge-get-range-end ()
+  (if (region-active-p)
+      (lsp-bridge--point-position (region-end))
+    (lsp-bridge--position)))
+
+(defun lsp-bridge-input-message (filepath interactive-string callback-tag interactive-type initial-content completion-list)
+  "Handles input message INTERACTIVE-STRING on the Python side given FILEPATH and CALLBACK-TYPE."
+  (let* ((input-message (lsp-bridge-read-input (concat "[LSP-BRIDGE] " interactive-string) interactive-type initial-content completion-list)))
+    (if input-message
+        (lsp-bridge-call-async "handle_input_response" filepath (lsp-bridge-get-range-start) (lsp-bridge-get-range-end) callback-tag input-message)
+      (lsp-bridge-call-async "cancel_input_response" filepath callback-tag))))
+
+(defun lsp-bridge-read-input (interactive-string interactive-type initial-content completion-list)
+  "lsp-bridge's multi-purpose read-input function which read an INTERACTIVE-STRING with INITIAL-CONTENT, determines the function base on INTERACTIVE-TYPE."
+  (condition-case nil
+      (cond ((or (string-equal interactive-type "string")
+                 (string-equal interactive-type "marker"))
+             (read-string interactive-string initial-content))
+            ((string-equal interactive-type "file")
+             (expand-file-name (read-file-name interactive-string initial-content)))
+            ((string-equal interactive-type "directory")
+             (expand-file-name (read-directory-name interactive-string initial-content)))
+            ((string-equal interactive-type "yes-or-no")
+             (yes-or-no-p interactive-string))
+            ((string-equal interactive-type "list")
+             (completing-read interactive-string completion-list)))
+    (quit nil)))
+
 (defun lsp-bridge-insert-ignore-diagnostic-comment (comment-string)
   (move-end-of-line 1)
   (insert (format "    %s" comment-string)))

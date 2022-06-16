@@ -74,3 +74,4 @@ from core.handler.signature_help import SignatureHelp
 from core.handler.prepare_rename import PrepareRename
 from core.handler.rename import Rename
 from core.handler.jdt_uri_resolver import JDTUriResolver
+from core.handler.code_action import CodeAction
