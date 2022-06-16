@@ -1321,6 +1321,32 @@ Auto completion is only performed if the tick did not change."
   (dolist (lang lsp-bridge-org-babel-lang-list)
     (eval `(lsp-org-babel-enable ,lang))))
 
+;;; Mode-line
+;;;
+
+(defface lsp-bridge-alive-mode-line
+  '((t (:inherit font-lock-constant-face :weight bold)))
+  "Face for activity in LSP-bridge's mode line.")
+
+(defface lsp-bridge-kill-mode-line
+  '((t (:inherit font-lock-comment-face :weight bold)))
+  "Face for kill process in LSP-bridge's mode line.")
+
+(defvar lsp-bridge--mode-line-format `(:eval (lsp-bridge--mode-line-format)))
+
+(put 'lsp-bridge--mode-line-format 'risky-local-variable t)
+
+(defun lsp-bridge--mode-line-format ()
+  "Compose the LSP-bridge's mode-line."
+  (if (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+      (setq-local mode-face 'lsp-bridge-alive-mode-line)
+    (setq-local mode-face 'lsp-bridge-kill-mode-line))
+  (when lsp-bridge-server
+    (propertize (format "lsp-bridge:%s" lsp-bridge-server-port) 'face mode-face)))
+
+(add-to-list 'mode-line-misc-info
+             `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] ")))
+
 (provide 'lsp-bridge)
 
 ;;; lsp-bridge.el ends here
