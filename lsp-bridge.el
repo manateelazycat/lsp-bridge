@@ -1015,16 +1015,19 @@ Auto completion is only performed if the tick did not change."
     (setq acm-backend-lsp-filepath (file-truename buffer-file-name))
 
     (when lsp-bridge-enable-diagnostics
-      (setq lsp-bridge-diagnostics-timer
-            (run-with-idle-timer lsp-bridge-diagnostics-fetch-idle t #'lsp-bridge-diagnostics-fetch)))
+      (unless lsp-bridge-diagnostics-timer
+        (setq lsp-bridge-diagnostics-timer
+              (run-with-idle-timer lsp-bridge-diagnostics-fetch-idle t #'lsp-bridge-diagnostics-fetch))))
 
     (when lsp-bridge-enable-signature-help
-      (setq lsp-bridge-signature-help-timer
-            (run-with-idle-timer lsp-bridge-signature-help-fetch-idle t #'lsp-bridge-signature-help-fetch)))
+      (unless lsp-bridge-signature-help-timer
+        (setq lsp-bridge-signature-help-timer
+              (run-with-idle-timer lsp-bridge-signature-help-fetch-idle t #'lsp-bridge-signature-help-fetch))))
 
     (when lsp-bridge-enable-search-words
-      (setq lsp-bridge-search-words-timer
-            (run-with-idle-timer lsp-bridge-search-words-rebuild-cache-idle t #'lsp-bridge-search-words-rebuild-cache))))
+      (unless lsp-bridge-search-words-timer
+        (setq lsp-bridge-search-words-timer
+              (run-with-idle-timer lsp-bridge-search-words-rebuild-cache-idle t #'lsp-bridge-search-words-rebuild-cache)))))
 
   (dolist (hook lsp-bridge--internal-hooks)
     (add-hook (car hook) (cdr hook) nil t))
@@ -1041,8 +1044,11 @@ Auto completion is only performed if the tick did not change."
     (remove-hook (car hook) (cdr hook) t))
 
   (acm-cancel-timer lsp-bridge-diagnostics-timer)
+  (setq lsp-bridge-diagnostics-timer nil)
   (acm-cancel-timer lsp-bridge-signature-help-timer)
+  (setq lsp-bridge-signature-help-timer nil)
   (acm-cancel-timer lsp-bridge-search-words-timer)
+  (setq lsp-bridge-search-words-timer nil)
 
   (advice-remove #'acm-hide #'lsp-bridge--completion-hide-advisor))
 
@@ -1055,9 +1061,9 @@ Auto completion is only performed if the tick did not change."
              lsp-bridge-enable-diagnostics
              (lsp-bridge-epc-live-p lsp-bridge-epc-process)
              (not (lsp-bridge-completion-ui-visible-p))
-             (buffer-file-name))
-    (when (string-equal (file-truename (buffer-file-name)) acm-backend-lsp-filepath)
-      (lsp-bridge-call-file-api "pull_diagnostics"))))
+             (buffer-file-name)
+             (string-equal (file-truename (buffer-file-name)) acm-backend-lsp-filepath))
+    (lsp-bridge-call-file-api "pull_diagnostics")))
 
 (defun lsp-bridge-diagnostics-render (filepath diagnostics)
   (lsp-bridge--with-file-buffer filepath
