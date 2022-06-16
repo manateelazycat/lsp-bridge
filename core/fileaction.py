@@ -43,12 +43,16 @@ class FileAction:
 
         self.request_dict = {}
         self.last_change_file_time = -1.0
-        self.last_change_file_before_cursor_text = ""
         self.last_change_cursor_time = -1.0
         self.version = 1
 
+        self.last_completion_candidates = []
+
+        self.completion_items = {}
+
         self.try_completion_timer = None
-        self.try_signature_help_timer = None
+
+        self.diagnostics = []
 
         # Initialize handlers.
         self.handlers: Dict[str, Handler] = dict()
@@ -56,10 +60,7 @@ class FileAction:
         for handler_cls in Handler.__subclasses__():
             self.handlers[handler_cls.name] = handler_cls(self)
 
-        (self.enable_auto_import, self.enable_signature_help) = get_emacs_vars([
-            "lsp-bridge-enable-auto-import",
-            "lsp-bridge-enable-signature-help"
-        ])
+        (self.enable_auto_import) = get_emacs_vars(["acm-backend-lsp-enable-auto-import"])
 
         self.lsp_server.attach(self)
 
@@ -74,7 +75,7 @@ class FileAction:
             return self.handlers[method].send_request(*args, **kwargs)
         getattr(self, method)(*args, **kwargs)
 
-    def change_file(self, start, end, range_length, change_text, position, before_char, before_cursor_text):
+    def change_file(self, start, end, range_length, change_text, position, before_char, completion_visible):
         # Send didChange request to LSP server.
         self.lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
 
@@ -86,31 +87,95 @@ class FileAction:
 
         # Record last change information.
         self.last_change_file_time = time.time()
-        self.last_change_file_before_cursor_text = before_cursor_text
 
         # Send textDocument/completion 100ms later.
-        self.try_completion_timer = threading.Timer(
-            0.1, lambda: self.handlers["completion"].send_request(position, before_char)
-        )
+        self.try_completion_timer = threading.Timer(0.1, lambda : self.try_completion(position, before_char, completion_visible))
         self.try_completion_timer.start()
 
+    def try_completion(self, position, before_char, completion_visible):
+        # Only send textDocument/completion request when match one of following rules:
+        # 1. Character before cursor is match completion trigger characters.
+        # 2. Completion UI is invisible.
+        # 3. Last completion candidates is empty.
+        if ((before_char in self.lsp_server.completion_trigger_characters) or
+            (not completion_visible) or
+            len(self.last_completion_candidates) == 0):
+            self.handlers["completion"].send_request(position, before_char)
+
+    def try_prepare_rename(self, position):
+        # Send textDocument/prepareRename request if LSP server has this capability.
+        if self.lsp_server.rename_prepare_provider:
+            self.handlers["prepare_rename"].send_request(position)
+            
     def change_cursor(self, position):
         # Record change cursor time.
         self.last_change_cursor_time = time.time()
-
-        if self.enable_signature_help:
-            # Try cancel expired signature help timer.
-            if self.try_signature_help_timer is not None and self.try_signature_help_timer.is_alive():
-                self.try_signature_help_timer.cancel()
-
-            # Send textDocument/signatureHelp 200ms later.
-            self.try_signature_help_timer = threading.Timer(
-                0.2, lambda: self.handlers["signature_help"].send_request(position)
-            )
-            self.try_signature_help_timer.start()
-
+        
+    def ignore_diagnostic(self):
+        if "ignore-diagnostic" in self.lsp_server.server_info:
+            eval_in_emacs("lsp-bridge-insert-ignore-diagnostic-comment", self.lsp_server.server_info["ignore-diagnostic"])
+        else:
+            message_emacs("Not found 'ignore_diagnostic' field in LSP server configure file.")
+            
+    def list_diagnostics(self):
+        if len(self.diagnostics) == 0:
+            message_emacs("No diagnostics found.")
+        else:
+            eval_in_emacs("lsp-bridge-list-diagnostics-popup", self.diagnostics)
+            
     def save_file(self):
         self.lsp_server.send_did_save_notification(self.filepath)
+        
+    def code_fix(self):
+        if self.lsp_server.code_action_provider and len(self.lsp_server.code_action_kinds) > 0:
+            eval_in_emacs("lsp-bridge-input-message", 
+                          self.filepath, 
+                          "Execute code action (default is all): ", 
+                          "code-action", 
+                          "list", 
+                          "", 
+                          self.lsp_server.code_action_kinds)
+        else:
+            message_emacs("Current server not support code action.")
 
     def handle_server_response_message(self, request_id, request_type, response):
         self.handlers[request_type].handle_response(request_id, response)
+
+    def completion_item_resolve(self, item_key):
+        if item_key in self.completion_items:
+            if self.lsp_server.completion_resolve_provider:
+                self.handlers["completion_item_resolve"].send_request(item_key, self.completion_items[item_key])
+            else:
+                item = self.completion_items[item_key]
+                
+                self.completion_item_update(
+                    item_key, 
+                    item["documentation"] if "documentation" in item else "",
+                    item["additionalTextEdits"] if "additionalTextEdits" in item else "")
+                    
+    def completion_item_update(self, item_key, documentation, additional_text_edits):
+        if documentation != "" or additional_text_edits != "":
+            if type(documentation) == dict:
+                if "kind" in documentation:
+                    if documentation["kind"] == "markdown":
+                        documentation = documentation["value"]
+            eval_in_emacs("lsp-bridge-update-completion-item-info",
+                          {
+                              "filepath": self.filepath,
+                              "key": item_key,
+                              "additionalTextEdits": additional_text_edits,
+                              "documentation": documentation
+                          })
+
+    def handle_input_response(self, range_start, range_end, callback_tag, callback_result):
+        ''' Handle input message for specified buffer.'''
+        if callback_tag == "code-action":
+            self.handlers["code_action"].send_request(range_start, range_end, self.diagnostics, self.lsp_server.code_action_kinds, callback_result)
+
+    def cancel_input_response(self, callback_tag):
+        ''' Cancel input message for specified buffer.'''
+        if callback_tag == "code-action":
+            message_emacs("Cancel code action.")
+        
+            
+            

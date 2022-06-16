@@ -1,0 +1,9 @@
+{
+  "name": "yaml-language-server",
+  "languageId": "yaml",
+  "command": [
+    "yaml-language-server",
+    "--stdio"
+  ],
+  "settings": {}
+}

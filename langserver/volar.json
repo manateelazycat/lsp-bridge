@@ -1,7 +1,10 @@
 {
   "name": "volar",
   "languageId": "vue",
-  "command": ["vue-language-server", "--stdio"],
+  "command": [
+    "vue-language-server",
+    "--stdio"
+  ],
   "settings": {},
   "initializationOptions": {
     "typescript": {

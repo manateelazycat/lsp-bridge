@@ -156,6 +156,11 @@ Default is enable, set this variable to nil if you don't like this feature."
   "Face for keyword match."
   :group 'lsp-bridge-ref)
 
+(defface lsp-bridge-ref-font-lock-diagnostic
+  '((t (:foreground "Red3" :bold t)))
+  "Face for keyword diagnostic."
+  :group 'lsp-bridge-ref)
+
 (defface lsp-bridge-ref-font-lock-mark-changed
   '((t (:foreground "White" :background "#007aff" :bold t)))
   "Face for keyword match."
@@ -283,10 +288,10 @@ used to restore window configuration after apply changed.")
    nil
    '(
      ("^rg\\s-.*" . 'lsp-bridge-ref-font-lock-command)
-     ("^\\([1-9][0-9]*\\)\\(:\\)\\([1-9][0-9]*\\)\\(:\\)" 1 'lsp-bridge-ref-font-lock-line-number)
-     ("^\\([1-9][0-9]*\\)\\(:\\)\\([1-9][0-9]*\\)\\(:\\)" 2 'lsp-bridge-ref-font-lock-position-splitter)
-     ("^\\([1-9][0-9]*\\)\\(:\\)\\([1-9][0-9]*\\)\\(:\\)" 3 'lsp-bridge-ref-font-lock-column-number)
-     ("^\\([1-9][0-9]*\\)\\(:\\)\\([1-9][0-9]*\\)\\(:\\)" 4 'lsp-bridge-ref-font-lock-position-splitter)
+     ("^\\([1-9][0-9]*\\)\\(:\\)\\([0-9][0-9]*\\)\\(:\\)" 2 'lsp-bridge-ref-font-lock-position-splitter)
+     ("^\\([1-9][0-9]*\\)\\(:\\)\\([0-9][0-9]*\\)\\(:\\)" 1 'lsp-bridge-ref-font-lock-line-number)
+     ("^\\([1-9][0-9]*\\)\\(:\\)\\([0-9][0-9]*\\)\\(:\\)" 3 'lsp-bridge-ref-font-lock-column-number)
+     ("^\\([1-9][0-9]*\\)\\(:\\)\\([0-9][0-9]*\\)\\(:\\)" 4 'lsp-bridge-ref-font-lock-position-splitter)
      ("^[/\\~].*\\|^[a-z]:.*" . 'lsp-bridge-ref-font-lock-file)
      ))
   ;; NOTE:
@@ -385,6 +390,13 @@ user more freedom to use rg with special arguments."
     (while (re-search-forward "\033\\[94m\\(.*?\\)\033\\[0m" nil t)
       (replace-match (concat (propertize (match-string 1)
                                          'face nil 'font-lock-face 'lsp-bridge-ref-font-lock-match))
+                     t t))
+
+    ;; Highlight diagnostics.
+    (goto-char (point-min))
+    (while (re-search-forward "\\[93m\\(.*?\n?.*?\\)\\[0m" nil t)
+      (replace-match (concat (propertize (match-string 1)
+                                         'face nil 'font-lock-face 'lsp-bridge-ref-font-lock-diagnostic))
                      t t))
 
     (lsp-bridge-ref-update-header-line)

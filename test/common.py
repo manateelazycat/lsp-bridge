@@ -4,6 +4,7 @@ import tempfile
 import time
 import pathlib
 import sys
+from dataclasses import dataclass
 from typing import Any, List, Tuple, Callable, Optional, NamedTuple
 
 import core.utils
@@ -49,7 +50,8 @@ def interceptor(expectation: Callable[[str, List[Any]], bool],
     return decorator
 
 
-class SingleFile(NamedTuple):
+@dataclass
+class SingleFile:
     filename: str
     code: str
     mode: str
@@ -87,7 +89,9 @@ def with_multiple_files(files: List[SingleFile]):
             t_dir = tempfile.mkdtemp()
             os.system(f"git init --quiet {t_dir}")
             for file in files:
-                with open(os.path.join(t_dir, file.filename), "wb") as t_file:
+                path = os.path.join(t_dir, file.filename)
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                with open(path, "wb") as t_file:
                     t_file.write(file.code.encode('utf-8'))
                     t_file.close()
                     d[file.filename] = _buffer_file_name(t_file.name)
@@ -96,12 +100,6 @@ def with_multiple_files(files: List[SingleFile]):
                 os.remove(name)
         return wrapper
     return decorator
-
-
-def get_offset(code: str, target: str):
-    pos = code.find(target)
-    assert pos >= 0
-    return pos
 
 
 def eval_sexp_sync(sexp: str, timeout=40) -> Any:

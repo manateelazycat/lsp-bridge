@@ -1,7 +1,10 @@
 {
   "name": "solargraph",
   "languageId": "ruby",
-  "command": ["solargraph", "stdio"],
+  "command": [
+    "solargraph",
+    "stdio"
+  ],
   "settings": {
     "solargraph": {
       "logLevel": "warn",

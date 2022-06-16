@@ -12,10 +12,6 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 
 1. Install Python dependencies: [python-epc](https://github.com/tkf/python-epc)
 2. Install Elisp dependencies:
-+ [corfu](https://github.com/minad/corfu) (for corfu users)
-+ [company-mode](https://github.com/company-mode/company-mode), [company-box](https://github.com/sebastiencs/company-box) (for company users)
-+ [all-the-icons](https://github.com/domtronn/all-the-icons.el) (need execute command `auto-the-icons-install-fonts` to install all-the-icons fonts)
-+ [orderless](https://github.com/oantolin/orderless)
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
 + [yasnippet](https://github.com/joaotavora/yasnippet)
@@ -28,52 +24,59 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 (require 'yasnippet)
 (require 'lsp-bridge)
 (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
+
 (yas-global-mode 1)
-
-;; For corfu users:
-(setq lsp-bridge-completion-provider 'corfu)
-(require 'corfu)
-(require 'corfu-info)
-(require 'corfu-history)
-(require 'lsp-bridge-icon)        ;; show icons for completion items, optional
-(require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
-(global-corfu-mode)
-(corfu-history-mode t)
 (global-lsp-bridge-mode)
-(when (> (frame-pixel-width) 3000) (custom-set-faces '(corfu-default ((t (:height 1.3))))))  ;; adjust default font height when running in HiDPI screen.
-
-;; For company-mode users, only experimental support, recommended corfu.
-(setq lsp-bridge-completion-provider 'company)
-(require 'company)
-(require 'company-box)
-(require 'lsp-bridge-icon)        ;; show icons for completion items, optional
-(company-box-mode 1)
-(global-lsp-bridge-mode)
-
-;; For Xref support
-(add-hook 'lsp-bridge-mode-hook (lambda ()
-  (add-hook 'xref-backend-functions #'lsp-bridge-xref-backend nil t)))
 ```
+
+## Usage
+lsp-bridge is design for out the box. After installing the LSP server command corresponding to the open file, you can write the code directly without additional settings.
+
+There are two modes in lsp-bridge:
+1. When detecting the .git directory (to judge by command `git rev-parse-is-inside-work-tree`), lsp-bridge scan the entire directory files to provide completion
+2. When the .git directory was not detected, lsp-bridge only provided a single file complementary to the open file
+
+If you expect lsp-bridge to automatically scan the files of the entire project, please execute the `git init` command in the project root directory.
 
 ## Commands
 
-* lsp-bridge-find-def: jump to the definition
-* lsp-bridge-find-def-other-window: jump to the definition in other-window
-* lsp-bridge-find-impl: jump to the implementation
-* lsp-bridge-find-impl-other-window: jump to the implementation in other-window
-* lsp-bridge-return-from-def: return to the location before calling `lsp-bridge-find-def`
-* lsp-bridge-find-references: traverse across code references (forked from color-rg.el)
-* lsp-bridge-lookup-documentation: lookup documentation of symbol under the cursor
-* lsp-bridge-rename: rename symbol under the cursor
-* lsp-bridge-show-signature-help-in-minibuffer: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
-* lsp-bridge-insert-common-prefix: insert common prefix of candidates
-* lsp-bridge-restart-process: restart lsp-bridge process (only used for development)
+* `lsp-bridge-find-def`: jump to the definition
+* `lsp-bridge-find-def-other-window`: jump to the definition in other-window
+* `lsp-bridge-find-impl`: jump to the implementation
+* `lsp-bridge-find-impl-other-window`: jump to the implementation in other-window
+* `lsp-bridge-return-from-def`: return to the location before calling `lsp-bridge-find-def`
+* `lsp-bridge-find-references`: traverse across code references (forked from color-rg.el)
+* `lsp-bridge-lookup-documentation`: lookup documentation of symbol under the cursor
+* `lsp-bridge-popup-documentation-scroll-up`: scroll up popup document.
+* `lsp-bridge-popup-documentation-scroll-down`: scroll down popup document.
+* `lsp-bridge-rename`: rename symbol under the cursor
+* `lsp-bridge-jump-to-next-diagnostic`: Jump to the next diagnostic position
+* `lsp-bridge-jump-to-prev-diagnostic`: Jump to the previous diagnostic position
+* `lsp-bridge-list-diagnostics`: List all diagnostic information
+* `lsp-bridge-ignore-current-diagnostic`: Insert comment to ignore the current diagnosis
+* `lsp-bridge-signature-help-fetch`: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
+* `lsp-bridge-insert-common-prefix`: insert common prefix of candidates
+* `lsp-bridge-restart-process`: restart lsp-bridge process (only used for development)
 
-After enable Xref support, the commands for Xref is available, we currently supported and tested those:
-
-* xref-find-definitions: jump to the definition
-* xref-go-back: return to the location before calling `xref-find-definitions`
-* xref-go-forward: jump to the location before calling `xref-go-back`
+## Options
+* `lsp-bridge-completion-popup-predicates`: the predicate function for completion menu, completion menu popup after all the functions pass
+* `lsp-bridge-completion-stop-commands`: completion menu will not popup if these commands are executed
+* `lsp-bridge-completion-hide-characters`: completion menu will not popup when cursor after those characters
+* `lsp-bridge-diagnostics-fetch-idle`: diagnostic delay, start pulling diagnostic information 1 second after stopping typing
+* `lsp-bridge-enable-diagnostics`: code diagnostic, enable by default
+* `lsp-bridge-enable-candidate-doc-preview`: preview of the candidate document, enable by default
+* `lsp-bridge-enable-signature-help`: show function parameter in minibufer, disable by default
+* `lsp-bridge-org-babel-lang-list`: list of language to support org-mode code block completion
+* `lsp-bridge-disable-backup`: forbidden version manage of emacs, enable by default
+* `lsp-bridge-enable-log`: enable the LSP message log, disable by default
+* `lsp-bridge-enable-debug`: enable program debugging, disable by default
+* `lsp-bridge-python-command`: The path of the python command, if you use `conda`, you may customize this option
+* `acm-backend-lsp-enable-auto-import`: automatic insert import code, enable by default
+* `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
+* `acm-enable-doc`: Whether the complete menu display the help document
+* `acm-enable-icon`: Whether the complete menu shows the icon
+* `acm-fetch-candidate-doc-delay`: The complete menu pops up the delay of the document. It is not recommended to set it to 0, which will reduce the menu selection performance
+* `acm-snippet-insert-index`: The display position of snippet candidate in the complementary menu
 
 ## Customize language server configuration
 
@@ -87,8 +90,8 @@ Anyway you can customize server configuration with the following priority:
 ## Add support for new language?
 
 1. Create configuration file under lsp-bridge/langserver, such as `pyright.json` for pyright (windows user please uses `pyright_windows.json`, macOS user please uses `pyright_darwin.json`).
-2. Add `(mode . server_name)` in ```lsp-bridge-lang-server-list```, such as `(python-mode . "pyright")`
-3. Add new mode-hook to `lsp-bridge-default-mode-hooks`
+2. Add `(mode . server_name)` to `lsp-bridge-lang-server-mode-list` in `lsp-bridge.el`, such as `(python-mode . "pyright")`.
+3. Add new mode-hook to `lsp-bridge-default-mode-hooks` in `lsp-bridge.el`.
 
 Welcome to send PR to help us improve support for LSP servers, thanks for your contribution!
 
@@ -98,10 +101,10 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 | :--- | :--- | :--- | :--- |
 | 1 | [clangd](https://github.com/clangd/clangd) | c, c++ |  |
 | 2 | [pyright](https://github.com/microsoft/pyright) | python | `pip install pyright`|
-| 3 | [solargraph](https://github.com/castwide/solargraph) | ruby | | 
+| 3 | [solargraph](https://github.com/castwide/solargraph) | ruby | |
 | 4 | [rust-analyzer](https://github.com/rust-lang/rust-analyzer) | rust | |
 | 5 | [elixirLS](https://github.com/elixir-lsp/elixir-ls) | elixir | please ensure that the `elixir-ls` release directory is in your system PATH at first |
-| 6 | [gopls](https://github.com/golang/tools/tree/master/gopls) | go | make sure gopls in PATH, please do `ln -s ~/go/bin/gopls ~/.local/bin` |
+| 6 | [gopls](https://github.com/golang/tools/tree/master/gopls) | go | make sure gopls in PATH, please do `ln -s ~/go/bin/gopls ~/.local/bin`, and do `go mod init` first |
 | 7 | [hls](https://github.com/haskell/haskell-language-server) | haskell | |
 | 8 | [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) | dart | |
 | 9 | [metals](https://scalameta.org/metals/) | scala | |
@@ -118,14 +121,12 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 | 20 | [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | html | |
 | 21 | [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | css | |
 | 22 | [elm-language-server](https://github.com/elm-tooling/elm-language-server) | elm | |
+| 23 | [intelephense](https://github.com/bmewburn/vscode-intelephense) | php | |
+| 24 | [yaml-language-server](https://github.com/redhat-developer/yaml-language-server) | yaml | `npm install -g yaml-language-server` |
 
-### TODO Features:
+### TODO:
 
-- [ ] Show signature help with eldoc
 - [ ] Code action
-- [ ] Inline Value
-- [ ] Caches diagnostic information, displaying the diagnostic information through Flycheck after user stop typing 1 second
-- [ ] JavaSctipt different code blocks use different language servers
 
 ### Features that won't be supported
 
@@ -134,6 +135,7 @@ The goal of lsp-bridge is to become the fastest LSP client in Emacs, not a compl
 Emacs can do better for the following tasks, we will not reinvent the wheel in lsp-bridge:
 1. Code formatting: each LSP server has its own formatting specification, we can gain finer control using Emacs' builtin formatting tool.
 2. Syntax highlighting: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) is a wonderful incremental parsing library for syntax highlighting.
+2. Xref: Xref's mechanism is simultaneously. lsp-bridge is completely asynchronous, recommended to use wrap function to uniformly key
 
 ## Join development
 
@@ -148,12 +150,13 @@ The following is the directory structure of the lsp-bridge project:
 | lsp-bridge.el           | Elisp main logic part that provides custom options and elisp functions for python sub-process calls like code jumping, renaming, etc.                          |
 | lsp-bridge-epc.el       | Communicating with lsp-bridge python sub-process, which mainly implements elisp IPC to connect to python EPC for data serialization, sending, receiving, and deserialization |
 | lsp-bridge-ref.el       | Framework of code referencing, providing references viewing, batch renames, regex filtering of reference results, etc. The core code is forked from color-rg.el                                    |
-| lsp-bridge-orderless.el | Fuzzy search for completion items, i.e. for long candidate you do not need to type the word in correct order to get the correct item                 |
-| lsp-bridge-icon.el      | Rendering the completion menu icons, which is used to distinguish different types of completion options                                                                           |
+ | lsp-bridge-jdtls.el      | Provide java language third-party library jumping function                                                           |
 | lsp-bridge.py           | Python main logic part that provides event loop, message scheduling and status management                                                                                     |
+| acm/acm.el      | Asynchronous completion menu, specially designed for lsp-bridge backend, supports LSP, elisp, words and other backend                                                                                           |
 | core/fileaction.py      | Tracking the status of each file, processing LSP response messages, calling Emacs elisp function                                                                                           |
 | core/lspserver.py       | LSP message processing module, mainly to analyze, send and receive LSP messages, and ensure that the sequence of LSP requests conforms with the LSP protocol specification                 |
 | core/utils.py           | Utility functions of convenience for each module call                                                                                                                                 |
+| core/mergedeep.py           | JSON information merger is mainly used to send custom options to LSP server                                                                             |
 | core/hanlder/           | The implementation of sending and receiving LSP message, where __init__.py is a base class                                                                                             |
 | langserver              | The configurations of the LSP servers, each server corresponding to a JSON file that defines the name of the server, language ID, starting command, options, etc.                        |
 

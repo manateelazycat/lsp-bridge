@@ -1,6 +1,3 @@
-(defun corfu--auto-complete (&rest _)
-  "Disable UI")
-
 (defun lsp-bridge-start-test ()
   "Start the LSP bridge test."
   (message "Starting LSP bridge test...")

@@ -29,6 +29,12 @@ import platform
 import sys
 from epc.client import EPCClient
 
+KIND_MAP = ["", "Text", "Method", "Function", "Constructor", "Field",
+            "Variable", "Class", "Interface", "Module", "Property",
+            "Unit", "Value", "Enum", "Keyword", "Snippet", "Color",
+            "File", "Reference", "Folder", "EnumMember", "Constant",
+            "Struct", "Event", "Operator", "TypeParameter"]
+
 epc_client: Optional[EPCClient] = None
 
 # for test purpose
@@ -60,12 +66,12 @@ def eval_in_emacs(method_name, *args):
     if test_interceptor:  # for test purpose, record all eval_in_emacs calls
         test_interceptor(method_name, args)
 
-    args = [sexpdata.Symbol(method_name)] + list(map(sexpdata.Quoted, args))
+    args = [sexpdata.Symbol(method_name)] + list(map(sexpdata.Quoted, args))    # type: ignore
     sexp = sexpdata.dumps(args)
 
     logger.debug("Eval in Emacs: %s", sexp)
     # Call eval-in-emacs elisp function.
-    epc_client.call("eval-in-emacs", [sexp])
+    epc_client.call("eval-in-emacs", [sexp])    # type: ignore
 
 
 def message_emacs(message: str):
@@ -99,18 +105,18 @@ def convert_emacs_bool(symbol_value, symbol_is_boolean):
 
 def get_emacs_vars(args):
     return list(map(lambda result: convert_emacs_bool(result[0], result[1]) if result != [] else False,
-                    epc_client.call_sync("get-emacs-vars", args)))
+                    epc_client.call_sync("get-emacs-vars", args)))    # type: ignore
 
 
 def get_emacs_var(var_name):
-    symbol_value, symbol_is_boolean = epc_client.call_sync("get-emacs-var", [var_name])
+    symbol_value, symbol_is_boolean = epc_client.call_sync("get-emacs-var", [var_name])    # type: ignore
 
     return convert_emacs_bool(symbol_value, symbol_is_boolean)
 
 
 def get_emacs_func_result(method_name, *args):
     """Call eval-in-emacs elisp function synchronously and return the result."""
-    result = epc_client.call_sync(method_name, args)
+    result = epc_client.call_sync(method_name, args)    # type: ignore
     return result
 
 
@@ -120,7 +126,7 @@ def get_command_result(command_string, cwd):
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                encoding="utf-8")
     ret = process.wait()
-    return "".join((process.stdout if ret == 0 else process.stderr).readlines()).strip()
+    return "".join((process.stdout if ret == 0 else process.stderr).readlines()).strip()    # type: ignore
 
 
 def generate_request_id():

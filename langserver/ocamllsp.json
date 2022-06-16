@@ -1,8 +1,6 @@
 {
-    "name": "ocamllsp",
-    "languageId": "ocaml",
-    "command": [
-        "ocamllsp"
-    ],
-    "settings": {}
+  "name": "ocamllsp",
+  "languageId": "ocaml",
+  "command": ["ocamllsp"],
+  "settings": {}
 }

@@ -44,27 +44,36 @@ def test_entrypoint():
         (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
         (package-initialize)
         (package-refresh-contents)
-        (package-install 'corfu)
-        (package-install 'all-the-icons)
-        (package-install 'orderless)
         (package-install 'posframe)
         (package-install 'markdown-mode)
+        (package-install 'yasnippet)
+        (package-install 'tempel)
         ;; (all-the-icons-install-fonts 't)
         
         ;; for Windows
         (prefer-coding-system 'utf-8-unix)
         (set-language-environment 'utf-8)
         (setq default-buffer-file-coding-system 'utf-8-unix)
-        
-        (require 'corfu)
     )
     """
+    setup_eval = """
+    (progn
+        (set-face-background 'default "#000000")
+        (set-face-background 'font-lock-function-name-face "#FFFFFF")
+        (require 'yasnippet)
+        (require 'lsp-bridge)
+        (require 'lsp-bridge-jdtls)       ;; provide Java third-party library jump and -data directory support, optional
+        (require 'tempel)
+        (yas-global-mode 1)
+        (global-lsp-bridge-mode)
+    )"""
     run([
         EMACS, '-Q', '--batch',
         '--eval', init_eval,
         '-L', '.',
         '-l', os.path.join(BASE_DIR, 'lsp-bridge.el'),
         '-l', os.path.join(BASE_DIR, 'test', 'lsp-bridge-test.el'),
+        '--eval', setup_eval,
         '--eval', '(lsp-bridge-start-test)'
     ])
 
@@ -88,10 +97,6 @@ def start_test(lsp_bridge):
     (with-current-buffer lsp-bridge-name
       (message (buffer-string)))
     """)
-    # eval_sexp_in_emacs("""
-    # (with-current-buffer (get-buffer-create "*lsp-bridge-epc-log*")
-    #   (message (buffer-string)))
-    # """)
 
     if test_result.wasSuccessful():
         logger.info('All tests passed!')

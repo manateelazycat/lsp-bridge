@@ -80,8 +80,8 @@ class LspServerSender(Thread):
     def _send_message(self, message: dict):
         message_str = "Content-Length: {}\r\n\r\n{}".format(len(json.dumps(message)), json.dumps(message))
 
-        self.process.stdin.write(message_str.encode("utf-8"))
-        self.process.stdin.flush()
+        self.process.stdin.write(message_str.encode("utf-8"))    # type: ignore
+        self.process.stdin.flush()    # type: ignore
 
         logger.info("\n--- Send ({}): {}".format(
             message.get('id', 'notification'), message.get('method', 'response')))
@@ -140,7 +140,7 @@ class LspServerReceiver(Thread):
 
                         buffer = buffer[end:]
                     else:
-                        line = self.process.stdout.readline()
+                        line = self.process.stdout.readline()    # type: ignore
                         # dart_analysis_server 会发送 Content-Type,
                         # 导致解析的 json 回包内容不完整
                         if re.search(b"Content-Type", line) is None:
@@ -156,7 +156,7 @@ class LspServerReceiver(Thread):
                             content_length = None
                             self.emit_message(msg.decode("utf-8"))
                         else:
-                            line = self.process.stdout.readline(content_length - len(buffer))
+                            line = self.process.stdout.readline(content_length - len(buffer))    # type: ignore
                             buffer = buffer + line
                     else:
                         msg = buffer[0: content_length]
@@ -166,7 +166,7 @@ class LspServerReceiver(Thread):
             except:
                 logger.error(traceback.format_exc())
         logger.info("\n--- Lsp server exited, exit code: {}".format(self.process.returncode))
-        logger.info(self.process.stdout.read())
+        logger.info(self.process.stdout.read())    # type: ignore
         if self.process.stderr:
             logger.info(self.process.stderr.read())
 
@@ -183,6 +183,17 @@ class LspServer:
 
         # LSP server information.
         self.completion_trigger_characters = list()
+        self.completion_resolve_provider = False
+        self.rename_prepare_provider = False
+        self.code_action_provider = False
+        self.code_action_kinds = [
+            "quickfix",
+            "refactor",
+            "refactor.extract",
+            "refactor.inline",
+            "refactor.rewrite",
+            "source",
+            "source.organizeImports"]
 
         # Start LSP server.
         self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
@@ -229,6 +240,8 @@ class LspServer:
                 logger.error(traceback.format_exc())
 
     def send_initialize_request(self):
+        logger.info("\n--- Send initialize for {} ({})".format(self.project_path, self.server_info["name"]))
+        
         self.sender.send_request("initialize", {
             "processId": os.getpid(),
             "rootPath": self.root_path,
@@ -262,6 +275,23 @@ class LspServer:
                         }
                     }
                 }
+            },
+            "codeAction": {
+                "dynamicRegistration": False,
+                "codeActionLiteralSupport": {
+                    "codeActionKind": {
+                        "valueSet": [
+                            "quickfix",
+                            "refactor",
+                            "refactor.extract",
+                            "refactor.inline",
+                            "refactor.rewrite",
+                            "source",
+                            "source.organizeImports"
+                        ]
+                    }
+                },
+                "isPreferredSupport": True
             }
         })
 
@@ -394,8 +424,13 @@ class LspServer:
                 # others
                 logger.info("\n--- Recv message")
 
-        if not ("method" in message and message["method"] in ["textDocument/publishDiagnostics"]):
-            logger.debug(json.dumps(message, indent=3))
+        if "method" in message and message["method"] == "textDocument/publishDiagnostics":
+            filepath = uri_to_path(message["params"]["uri"])
+            if is_in_path_dict(self.files, filepath):
+                file_action = get_from_path_dict(self.files, filepath)
+                file_action.diagnostics = message["params"]["diagnostics"]
+        
+        logger.debug(json.dumps(message, indent=3))
 
         if "id" in message:
             if message["id"] == self.initialize_id:
@@ -405,9 +440,25 @@ class LspServer:
                     # We pick up completion trigger characters from server.
                     # But some LSP server haven't this value, such as html/css LSP server.
                     self.completion_trigger_characters = message["result"]["capabilities"]["completionProvider"]["triggerCharacters"]
-                except KeyError:
+                except Exception:
                     pass
 
+                try:
+                    self.completion_resolve_provider = message["result"]["capabilities"]["completionProvider"]["resolveProvider"]
+                except Exception:
+                    pass
+
+                try:
+                    self.rename_prepare_provider = message["result"]["capabilities"]["renameProvider"]["prepareProvider"]
+                except Exception:
+                    pass
+
+                try:
+                    self.code_action_provider = message["result"]["capabilities"]["codeActionProvider"]
+                    self.code_action_kinds = message["result"]["capabilities"]["codeActionProvider"]["codeActionKinds"]
+                except Exception:
+                    pass
+                
                 self.sender.send_notification("initialized", {}, init=True)
 
                 # STEP 3: Configure LSP server parameters.
@@ -419,9 +470,10 @@ class LspServer:
                 self.sender.initialized.set()
 
                 # Notify user server is ready.
-                message_emacs("Start LSP server ({}) for {} complete, enjoy hacking!".format(
-                        self.server_info["name"],
-                        self.root_path
+                message_emacs("Start LSP server ({}) for {} with '{}' mode, enjoy hacking!".format(
+                    self.server_info["name"],
+                    self.root_path,
+                    "project" if os.path.isdir(self.root_path) else "single-file"
                 ))
             else:
                 if "method" not in message and message["id"] in self.request_dict:
@@ -452,4 +504,7 @@ class LspServer:
 
             # Don't need to wait LSP server response, kill immediately.
             if self.p is not None:
-                os.kill(self.p.pid, 9)
+                try:
+                    os.kill(self.p.pid, 9)
+                except ProcessLookupError:
+                    logger.info("\n--- Lsp server process {} already exited!".format(self.p.pid))

@@ -45,37 +45,37 @@ class SimpleFindDefinition(unittest.TestCase):
         logger.debug("result_position: %s", result_position)
         self.assertDictEqual(target_position, result_position)
 
-    def test_jump_same_file(self):
-        file = SingleFile(
-            filename="test.py",
-            code="""
-for i in range(10):
-    print(i)
-""",
-            mode="python-mode"
-        )
-        cursor_offset = get_offset(file.code, "i)")
-        target_offset = get_offset(file.code, "i in")
-        with_file(file)(self.jump_definition)(file, cursor_offset, target_offset)
+#     def test_jump_same_file(self):
+#         file = SingleFile(
+#             filename="test.py",
+#             code="""
+# for i in range(10):
+#     print(i)
+# """,
+#             mode="python-mode"
+#         )
+#         cursor_offset = get_offset(file.code, "i)")
+#         target_offset = get_offset(file.code, "i in")
+#         with_file(file)(self.jump_definition)(file, cursor_offset, target_offset)
 
-    def test_jump_column_calculation(self):
-        file = SingleFile(
-            filename="test.go",
-            code="""
-package main
+#     def test_jump_column_calculation(self):
+#         file = SingleFile(
+#             filename="test.go",
+#             code="""
+# package main
 
-import "fmt"
+# import "fmt"
 
-func main() {
-\tfor i := 0; i < 3; i++ {
-\t\tfmt.Println(i)
-\t}
-}""",
-            mode="go-mode"
-        )
-        cursor_offset = get_offset(file.code, "i)")
-        target_offset = get_offset(file.code, "i := 0")
-        with_file(file)(self.jump_definition)(file, cursor_offset, target_offset)
+# func main() {
+# \tfor i := 0; i < 3; i++ {
+# \t\tfmt.Println(i)
+# \t}
+# }""",
+#             mode="go-mode"
+#         )
+#         cursor_offset = get_offset(file.code, "i)")
+#         target_offset = get_offset(file.code, "i := 0")
+#         with_file(file)(self.jump_definition)(file, cursor_offset, target_offset)
 
 
 class JumpOtherFile(unittest.TestCase):

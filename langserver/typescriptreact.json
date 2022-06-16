@@ -1,0 +1,9 @@
+{
+  "name": "typescriptreact",
+  "languageId": "typescriptreact",
+  "command": [
+    "typescript-language-server",
+    "--stdio"
+  ],
+  "settings": {}
+}

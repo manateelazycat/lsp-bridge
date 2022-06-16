@@ -12,10 +12,6 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 
 1. 安装Python依赖: [python-epc](https://github.com/tkf/python-epc)
 2. 安装Elisp依赖:
-+ [corfu](https://github.com/minad/corfu) (使用 corfu 补全)
-+ [company-mode](https://github.com/company-mode/company-mode), [company-box](https://github.com/sebastiencs/company-box) (使用 company-mode 补全)
-+ [all-the-icons](https://github.com/domtronn/all-the-icons.el) (需要在安装all-the-icons后执行命令`auto-the-icons-install-fonts`安装图标字体)
-+ [orderless](https://github.com/oantolin/orderless)
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
 + [yasnippet](https://github.com/joaotavora/yasnippet)
@@ -28,53 +24,59 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (require 'yasnippet)
 (require 'lsp-bridge)
 (require 'lsp-bridge-jdtls)       ;; 提供Java第三方库跳转和-data目录支持， Java用户必选
+
 (yas-global-mode 1)
-
-;; corfu 配置:
-(setq lsp-bridge-completion-provider 'corfu)
-(require 'corfu)
-(require 'corfu-info)
-(require 'corfu-history)
-(require 'lsp-bridge-icon)        ;; 显示图标在补全菜单中，可选
-(require 'lsp-bridge-orderless)   ;; 支持模糊搜索，可选
-(global-corfu-mode)
-(corfu-history-mode t)
 (global-lsp-bridge-mode)
-(when (> (frame-pixel-width) 3000) (custom-set-faces '(corfu-default ((t (:height 1.3))))))  ;; 让corfu适应高分屏
-
-;; company-mode 配置, company-mode目前只是试验支持，推荐用corfu
-(setq lsp-bridge-completion-provider 'company)
-(require 'company)
-(require 'company-box)
-(require 'lsp-bridge-icon)        ;; 显示图标在补全菜单中，可选
-(company-box-mode 1)
-(global-lsp-bridge-mode)
-
-;; For Xref support
-(add-hook 'lsp-bridge-mode-hook (lambda ()
-  (add-hook 'xref-backend-functions #'lsp-bridge-xref-backend nil t)))
 ```
+
+## 使用
+lsp-bridge开箱即用， 安装好文件对应的LSP服务器命令以后， 直接写代码即可， 不需要额外的设置。
+
+需要注意的是 lsp-bridge 有两种模式： 
+1. 检测到.git目录时(通过命令 `git rev-parse --is-inside-work-tree` 来判断)， lsp-bridge会扫描整个目录文件来提供补全
+2. 没有检测到.git目录时， lsp-bridge只会对打开的文件提供单文件补全
+
+如果你期望lsp-bridge能够自动扫描整个项目的文件， 请在项目根目录执行`git init`命令。
 
 ## 命令列表
 
-* lsp-bridge-find-def: 跳转到定义位置
-* lsp-bridge-find-def-other-window: 在其他窗口跳转到定义位置
-* lsp-bridge-find-impl: 跳转到接口实现位置
-* lsp-bridge-find-impl-other-window: 在其他窗口跳转到接口实现位置
-* lsp-bridge-return-from-def: 返回跳转之前的位置
-* lsp-bridge-find-references: 查看代码引用
-* lsp-bridge-lookup-documentation: 查看管标处的文档
-* lsp-bridge-rename: 重命名
-* lsp-bridge-show-signature-help-in-minibuffer: 在minibuffer显示参数信息
-* lsp-bridge-insert-common-prefix: 插入补全后选词的公共前缀
-* lsp-bridge-restart-process: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)
+* `lsp-bridge-find-def`: 跳转到定义位置
+* `lsp-bridge-find-def-other-window`: 在其他窗口跳转到定义位置
+* `lsp-bridge-find-impl`: 跳转到接口实现位置
+* `lsp-bridge-find-impl-other-window`: 在其他窗口跳转到接口实现位置
+* `lsp-bridge-return-from-def`: 返回跳转之前的位置
+* `lsp-bridge-find-references`: 查看代码引用
+* `lsp-bridge-lookup-documentation`: 查看光标处的文档
+* `lsp-bridge-popup-documentation-scroll-up`: 文档窗口向上滚动
+* `lsp-bridge-popup-documentation-scroll-down`: 文档窗口向下滚动
+* `lsp-bridge-rename`: 重命名
+* `lsp-bridge-jump-to-next-diagnostic`: 跳转到下一个诊断位置
+* `lsp-bridge-jump-to-prev-diagnostic`: 跳转到上一个诊断位置
+* `lsp-bridge-list-diagnostics`: 列出所有诊断信息
+* `lsp-bridge-ignore-current-diagnostic`: 插入注视忽略当前诊断
+* `lsp-bridge-signature-help-fetch`: 在minibuffer显示参数信息
+* `lsp-bridge-insert-common-prefix`: 插入补全后选词的公共前缀
+* `lsp-bridge-restart-process`: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)
 
-
-配置 Xref 后，可以使用 Xref 命令查找函数定义和跳转，当前支持命令如下：
-
-* xref-find-definitions: 跳转到定义的位置
-* xref-go-back: 返回 Xref 跳转之前的位置
-* xref-go-forward: 跳转到调用 `xref-go-back` 命令之前的位置
+## 选项
+* `lsp-bridge-completion-popup-predicates`: 补全菜单显示的检查函数， 这个选项包括的所有函数都检查过以后， 补全菜单才能显示
+* `lsp-bridge-completion-stop-commands`: 这些命令执行以后，不再弹出补全菜单
+* `lsp-bridge-completion-hide-characters`: 这些字符的后面不再弹出补全菜单
+* `lsp-bridge-diagnostics-fetch-idle`： 诊断延迟，默认是停止敲键盘后1秒开始拉取诊断信息
+* `lsp-bridge-enable-diagnostics`: 代码诊断， 默认打开
+* `lsp-bridge-enable-candidate-doc-preview`: 支持后选词文档预览， 默认打开
+* `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认关闭
+* `lsp-bridge-org-babel-lang-list`: 支持org-mode代码块补全的语言列表
+* `lsp-bridge-disable-backup`: 禁止emacs对文件做版本管理， 默认打开
+* `lsp-bridge-enable-log`: 启用LSP消息日志， 默认关闭
+* `lsp-bridge-enable-debug`: 启用程序调试， 默认关闭
+* `lsp-bridge-python-command`: Python命令的路径, 如果你用 `conda`， 你也许会定制这个选项
+* `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
+* `acm-candidate-match-function`: 补全菜单匹配算法， orderless-* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
+* `acm-enable-doc`: 补全菜单是否显示帮助文档
+* `acm-enable-icon`: 补全菜单是否显示图标
+* `acm-fetch-candidate-doc-delay`: 补全菜单弹出文档的延时， 不建议设置成0， 会降低菜单选择性能
+* `acm-snippet-insert-index`: 代码模板后选词在补全菜单中的显示位置
 
 ## 自定义语言服务器配置
 lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
@@ -86,9 +88,9 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 
 ## 添加新的编程语言支持?
 
-1. 在lsp-bridge/langserver目录下创建配置文件， 比如`pyright.json`就是pyright服务器的配置文件 (windows平台用`pyright_windows.json`, macOS平台用`pyright_darwin.json`).
-2. 添加 `(mode . server_name)` 到选项 ```lsp-bridge-lang-server-list``` 中, 比如 `(python-mode . "pyright")`
-3. 添加新的 mode-hook 到 `lsp-bridge-default-mode-hooks`
+1. 在 lsp-bridge/langserver 目录下创建配置文件， 比如`pyright.json`就是 pyright 服务器的配置文件 (windows 平台用`pyright_windows.json`, macOS 平台用`pyright_darwin.json`)。
+2. 添加 `(mode . server_name)` 到 `lsp-bridge.el` 文件中的 `lsp-bridge-lang-server-mode-list` 选项中, 比如 `(python-mode . "pyright")`。
+3. 添加新的 mode-hook 到 `lsp-bridge.el` 文件中的 `lsp-bridge-default-mode-hooks` 选项中。
 
 欢迎发送补丁帮助我们支持更多的LSP服务器，感谢你的帮助！
 
@@ -98,10 +100,10 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | :--- | :--- | :--- | :--- |
 | 1 | [clangd](https://github.com/clangd/clangd) | c, c++ |  |
 | 2 | [pyright](https://github.com/microsoft/pyright) | python | `pip install pyright`|
-| 3 | [solargraph](https://github.com/castwide/solargraph) | ruby | | 
+| 3 | [solargraph](https://github.com/castwide/solargraph) | ruby | |
 | 4 | [rust-analyzer](https://github.com/rust-lang/rust-analyzer) | rust | |
 | 5 | [elixirLS](https://github.com/elixir-lsp/elixir-ls) | elixir | 请确保导出 `elixir-ls` 目录到你系统的PATH路径 |
-| 6 | [gopls](https://github.com/golang/tools/tree/master/gopls) | go | make sure gopls in PATH, please do `ln -s ~/go/bin/gopls ~/.local/bin` |
+| 6 | [gopls](https://github.com/golang/tools/tree/master/gopls) | go | make sure gopls in PATH, please do `ln -s ~/go/bin/gopls ~/.local/bin`, 还要在补全之前执行 `go mod init` 命令 |
 | 7 | [hls](https://github.com/haskell/haskell-language-server) | haskell | |
 | 8 | [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) | dart | |
 | 9 | [metals](https://scalameta.org/metals/) | scala | |
@@ -118,15 +120,13 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 20 | [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | html | |
 | 21 | [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | css | |
 | 22 | [elm-language-server](https://github.com/elm-tooling/elm-language-server) | elm | |
+| 23 | [intelephense](https://github.com/bmewburn/vscode-intelephense) | php | |
+| 24 | [yaml-language-server](https://github.com/redhat-developer/yaml-language-server) | yaml | `npm install -g yaml-language-server` |
 
 
 ### 需要完成的功能：
 
-- [ ] 用eldoc来显示参数信息
 - [ ] Code Action: 代码动作， 比如自动修复代码
-- [ ] Inline Value: 行类值显示
-- [ ] 缓存诊断信息，用户停止输入1秒以后再通过flycheck显示诊断信息
-- [ ] JavaSctipt不同的代码块使用不同的语言服务器
 
 ### 不会支持的特性：
 lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是实现LSP协议最全的LSP客户端。
@@ -134,6 +134,7 @@ lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是
 下面的功能用Emacs现有生态做更好：
 1. 代码格式化: 每个LSP服务器都有自己的格式配置，使用Emacs内置的格式化工具，我们可以获得更细腻一致的格式化风格
 2. 语法高亮: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) 是一个静态高性能的语法分析库，比LSP更适合完成语法高亮
+2. Xref: Xref的机制是同步等待， lsp-bridge是完全异步的， 两个机制无法融合， 建议自己编写包装函数来统一按键
 
 ## 加入开发
 
@@ -148,12 +149,13 @@ lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是
 | lsp-bridge.el           | lsp-bridge的Elisp主逻辑部分，提供自定义选项和Elisp函数供python子进程调用，比如代码跳转、重命名等             |
 | lsp-bridge-epc.el       | 和lsp-bridge python子进程通讯的代码，主要实现Elisp IPC来对接Python EPC, 实现数据序列化、发送、接收和反序列化 |
 | lsp-bridge-ref.el       | 代码引用查看框架，提供引用查看、批量重命名、引用结果正则过滤等，核心代码 fork 自color-rg.el                  |
-| lsp-bridge-orderless.el | 提供模糊查找的功能，就是代码补全的时候不需要按照单词顺序敲就可以快速补全较长的后选项                         |
-| lsp-bridge-icon.el      | 提供补全菜单Icon渲染，用于区分不同类型的补全后选项                                                           |
+| lsp-bridge-jdtls.el      | 提供Java语言第三方库跳转功能                                                           |
 | lsp-bridge.py           | lsp-bridge的Python主逻辑部分，提供事件循环、消息调度和状态管理                                               |
+| acm/acm.el      | 异步补全菜单， 专门为 lsp-bridge 后端而设计， 支持lsp, elisp, words等后端                                                                                           |
 | core/fileaction.py      | 主要记录每个文件状态，处理LSP响应消息，调用Emacs Elisp函数                                                   |
 | core/lspserver.py       | LSP消息处理模块，主要是解析、发送和接受LSP消息，并保证LSP请求顺序符合LSP协议规范                             |
 | core/utils.py           | 一些全局工具函数，方便各模块调用                                                                             |
+| core/mergedeep.py           | JSON信息合并， 主要用于发送自定义选项给LSP服务器                                                                             |
 | core/hanlder/           | LSP消息发送和接受的实现，其中 __init__.py 是基类                                                             |
 | langserver              | 主要放置LSP服务器的配置，每一个服务器一个 json 文件，分别定义服务器的名称、语言ID、启动命令和设置选项等      |
 

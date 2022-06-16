@@ -29,9 +29,9 @@ from epc.server import ThreadingEPCServer
 
 from core.fileaction import FileAction
 from core.lspserver import LspServer
+from core.search_file_words import SearchFileWords
 from core.utils import *
 from core.handler import *
-
 
 class LspBridge:
     def __init__(self, args):
@@ -39,10 +39,13 @@ class LspBridge:
         # Object cache to exchange information between Emacs and LSP server.
         self.file_action_dict: Dict[str, FileAction] = {}  # use for contain file action
         self.lsp_server_dict: Dict[str, LspServer] = {}  # use for contain lsp server
+        self.search_file_words = SearchFileWords()
 
         # Build EPC interfaces.
         for name in ["change_file", "find_define", "find_implementation", "find_references",
-                     "prepare_rename", "rename", "change_cursor", "save_file", "hover", "signature_help"]:
+                     "try_prepare_rename", "prepare_rename", "rename", "change_cursor", "save_file", 
+                     "hover", "signature_help", "ignore_diagnostic", "list_diagnostics", "code_fix",
+                     "handle_input_response", "cancel_input_response"]:
             self.build_file_action_function(name)
 
         for cls in Handler.__subclasses__():
@@ -61,7 +64,7 @@ class LspBridge:
         # ch.setFormatter(formatter)
         # ch.setLevel(logging.DEBUG)
         # self.server.logger.addHandler(ch)
-        self.server.logger = logger
+        # self.server.logger = logger
 
         self.server.register_instance(self)  # register instance functions let elisp side call
 
@@ -126,6 +129,18 @@ class LspBridge:
             get_from_path_dict(self.file_action_dict, old_filepath).lsp_server.send_did_rename_files_notification(
                 old_filepath, new_filepath)
         
+    def completion_hide(self, filepath):
+        if is_in_path_dict(self.file_action_dict, filepath):
+            get_from_path_dict(self.file_action_dict, filepath).last_completion_candidates = []
+            
+    def pull_diagnostics(self, filepath):
+        if is_in_path_dict(self.file_action_dict, filepath):
+            eval_in_emacs("lsp-bridge-diagnostics-render", filepath, get_from_path_dict(self.file_action_dict, filepath).diagnostics)
+            
+    def fetch_completion_item_info(self, filepath, item_key):
+        if is_in_path_dict(self.file_action_dict, filepath):
+            get_from_path_dict(self.file_action_dict, filepath).completion_item_resolve(item_key)
+    
     def create_file_action(self, filepath, lang_server_info, lsp_server, **kwargs):
         if is_in_path_dict(self.file_action_dict, filepath):
             if get_from_path_dict(self.file_action_dict, filepath).lsp_server != lsp_server:
@@ -139,6 +154,12 @@ class LspBridge:
         project_path = get_project_path(filepath)
         lang_server = get_emacs_func_result("get-lang-server", project_path, filepath)
 
+        if (lang_server == "clojure-lsp") and (not os.path.isdir(project_path)):
+            message_emacs("ERROR: can't determine the project root for {}, initialize a Git repository for the project before you open this file.".format(filepath))
+            eval_in_emacs("lsp-bridge-turn-off", filepath)
+
+            return False
+
         if not lang_server:
             message_emacs("ERROR: can't find the corresponding server for {}, disable lsp-bridge-mode.".format(filepath))
             eval_in_emacs("lsp-bridge-turn-off", filepath)
@@ -146,13 +167,23 @@ class LspBridge:
             return False
 
         lang_server_info = load_lang_server_info(lang_server)
+        
+        if len(lang_server_info["command"]) > 0:
+            server_command_path = shutil.which(lang_server_info["command"][0])
+            if server_command_path:
+                # We always replace LSP server command with absolute path of 'which' command.
+                lang_server_info["command"][0] = server_command_path
+            else:
+                message_emacs("Error: can't find command {} for {}, disable lsp-bridge-mode.".format(server_command_path, filepath))
+                eval_in_emacs("lsp-bridge-turn-off", filepath)
 
-        if not(len(lang_server_info["command"]) > 0 and shutil.which(lang_server_info["command"][0])):
-            message_emacs("Error: can't find command {} for {}, disable lsp-bridge-mode.".format(lang_server_info["command"][0], filepath))
+                return False
+        else:
+            message_emacs("Error: {}'s command argument is empty, disable lsp-bridge-mode.".format(filepath))
             eval_in_emacs("lsp-bridge-turn-off", filepath)
 
             return False
-
+        
         lsp_server_name = "{}#{}".format(path_as_key(project_path), lang_server_info["name"])
 
         if lsp_server_name not in self.lsp_server_dict:
@@ -187,7 +218,7 @@ class LspBridge:
 
             # Clean file_action_dict after close file.
             remove_from_path_dict(self.file_action_dict, filepath)
-
+            
     def build_file_action_function(self, name):
         def _do(filepath, *args):
             open_file_success = True
@@ -214,7 +245,23 @@ class LspBridge:
         if server_name in self.lsp_server_dict:
             logger.info("Exit server: {}".format(server_name))
             del self.lsp_server_dict[server_name]
-
+            
+    def search_words_index_files(self, filepaths):
+        for filepath in filepaths:
+            self.search_file_words.change_file(filepath)
+        
+    def search_words_change_file(self, filepath):
+        self.search_file_words.change_file(filepath)
+        
+    def search_words_close_file(self, filepath):
+        self.search_file_words.close_file(filepath)
+        
+    def search_words_rebuild_cache(self):
+        self.search_file_words.rebuild_words_cache()
+        
+    def search_words_search(self, prefix):
+        self.search_file_words.search_words(prefix)
+        
     def cleanup(self):
         """Do some cleanup before exit python process."""
         close_epc_client()
@@ -227,7 +274,7 @@ class LspBridge:
 
 def load_lang_server_info(lang_server):
     lang_server_info_path = ""
-    if os.path.exists(lang_server) and os.path.sep in lang_server:
+    if os.path.exists(lang_server) and os.path.dirname(lang_server) != "":
         # If lang_server is real file path, we load the LSP server configuration from the user specified file.
         lang_server_info_path = lang_server
     else:

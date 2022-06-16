@@ -43,10 +43,11 @@ jobs:
 
       - name: Install Dependencies (Linux)
         run: |
-          sudo apt-get install clangd-12
-          sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
+          # sudo apt-get install clangd-12
+          # sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
           pip install epc pyright
           go install golang.org/x/tools/gopls@latest
+          curl https://raw.githubusercontent.com/eruizc-dev/jdtls-launcher/master/install.sh | bash
         if: matrix.os == 'ubuntu-latest'
 
       - name: Install Dependencies (Windows)

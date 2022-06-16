@@ -1,9 +1,9 @@
 {
-    "name": "wxml-language-server",
-    "languageId": "wxml-language-server",
-    "command": [
-        "wxml-langserver",
-        "--stdio"
-    ],
-    "settings": {}
+  "name": "wxml-language-server",
+  "languageId": "wxml-language-server",
+  "command": [
+    "wxml-langserver",
+    "--stdio"
+  ],
+  "settings": {}
 }
