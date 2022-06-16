@@ -1015,20 +1015,12 @@ Auto completion is only performed if the tick did not change."
     (setq acm-backend-lsp-filepath (file-truename buffer-file-name))
 
     (when lsp-bridge-enable-diagnostics
-      (unless lsp-bridge-diagnostics-timer
-        (setq lsp-bridge-diagnostics-timer
-              (run-with-idle-timer lsp-bridge-diagnostics-fetch-idle t #'lsp-bridge-diagnostics-fetch))))
-
+      (acm-run-idle-func lsp-bridge-diagnostics-timer lsp-bridge-diagnostics-fetch-idle 'lsp-bridge-diagnostics-fetch))
     (when lsp-bridge-enable-signature-help
-      (unless lsp-bridge-signature-help-timer
-        (setq lsp-bridge-signature-help-timer
-              (run-with-idle-timer lsp-bridge-signature-help-fetch-idle t #'lsp-bridge-signature-help-fetch))))
-
+      (acm-run-idle-func lsp-bridge-signature-help-timer lsp-bridge-signature-help-fetch-idle 'lsp-bridge-signature-help-fetch))
     (when lsp-bridge-enable-search-words
-      (unless lsp-bridge-search-words-timer
-        (setq lsp-bridge-search-words-timer
-              (run-with-idle-timer lsp-bridge-search-words-rebuild-cache-idle t #'lsp-bridge-search-words-rebuild-cache)))))
-
+      (acm-run-idle-func lsp-bridge-search-words-timer lsp-bridge-search-words-rebuild-cache-idle 'lsp-bridge-search-words-rebuild-cache)))
+  
   (dolist (hook lsp-bridge--internal-hooks)
     (add-hook (car hook) (cdr hook) nil t))
 
@@ -1044,11 +1036,8 @@ Auto completion is only performed if the tick did not change."
     (remove-hook (car hook) (cdr hook) t))
 
   (acm-cancel-timer lsp-bridge-diagnostics-timer)
-  (setq lsp-bridge-diagnostics-timer nil)
   (acm-cancel-timer lsp-bridge-signature-help-timer)
-  (setq lsp-bridge-signature-help-timer nil)
   (acm-cancel-timer lsp-bridge-search-words-timer)
-  (setq lsp-bridge-search-words-timer nil)
 
   (advice-remove #'acm-hide #'lsp-bridge--completion-hide-advisor))
 

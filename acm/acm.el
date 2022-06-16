@@ -136,6 +136,11 @@ Default is 0.5 second."
                  (const orderless-initialism)))
 
 
+(defmacro acm-run-idle-func (timer idle func)
+  `(unless ,timer
+     (setq ,timer
+           (run-with-idle-timer ,idle t #'(lambda () (funcall ,func))))))
+
 (defvar acm-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [remap next-line] #'acm-select-next)
@@ -347,16 +352,15 @@ Default is 0.5 second."
 
 (defun acm-fetch-candidate-doc ()
   (when (acm-frame-visible-p acm-frame)
-    (let ((candidate (acm-menu-current-candidate)))
-      (when acm-enable-doc
-        (let ((backend (plist-get candidate :backend)))
-          (pcase backend
-            ("lsp" (acm-backend-lsp-candidate-fetch-doc candidate))
-            ("elisp" (acm-backend-elisp-candidate-fetch-doc candidate))
-            ("yas" (acm-backend-yas-candidate-fetch-doc candidate))
-            ("tempel" (acm-backend-tempel-candidate-fetch-doc candidate))
-            ;; Hide doc frame for backend that not support fetch candidate documentation.
-            (_ (acm-doc-hide))))))))
+    (let* ((candidate (acm-menu-current-candidate))
+           (backend (plist-get candidate :backend)))
+      (pcase backend
+        ("lsp" (acm-backend-lsp-candidate-fetch-doc candidate))
+        ("elisp" (acm-backend-elisp-candidate-fetch-doc candidate))
+        ("yas" (acm-backend-yas-candidate-fetch-doc candidate))
+        ("tempel" (acm-backend-tempel-candidate-fetch-doc candidate))
+        ;; Hide doc frame for backend that not support fetch candidate documentation.
+        (_ (acm-doc-hide))))))
 
 (defun acm-color-blend (c1 c2 alpha)
   "Blend two colors C1 and C2 with ALPHA.
@@ -478,9 +482,8 @@ influence of C1 on the result."
         (acm-doc-hide)
 
         ;; Start fetch documentation timer.
-        (unless acm-fetch-doc-timer
-          (setq acm-fetch-doc-timer
-                (run-with-idle-timer acm-fetch-candidate-doc-delay t #'acm-fetch-candidate-doc)))
+        (when acm-enable-doc
+          (acm-run-idle-func acm-fetch-doc-timer acm-fetch-candidate-doc-delay 'acm-fetch-candidate-doc))
 
         ;; Init candidates, menu index and offset.
         (setq-local acm-candidates candidates)
@@ -565,7 +568,6 @@ influence of C1 on the result."
 
   ;; Cancel timers.
   (acm-cancel-timer acm-fetch-doc-timer)
-  (setq acm-fetch-doc-timer nil)
 
   ;; Clean LSP backend completion tick.
   (setq-local acm-backend-lsp-completion-item-popup-doc-tick nil))
