@@ -902,6 +902,40 @@ Auto completion is only performed if the tick did not change."
 (defun lsp-bridge-hide-diagnostic-tooltip ()
   (posframe-hide lsp-bridge-diagnostic-tooltip))
 
+(defvar lsp-bridge-signature-posframe-params
+  (list :poshandler #'posframe-poshandler-point-bottom-left-corner-upward
+        :border-width 1
+        :max-width 60
+        :max-height 12)
+   "Params for signature and `posframe-show'.")
+
+(defcustom lsp-bridge-signature-function 'message
+  "Function to render signature help. Set to `lsp-bridge-signature-posframe' to use the posframe."
+  :type 'function
+  :group 'lsp-bridge)
+
+(defface lsp-bridge-signature-posframe
+  '((t :inherit tooltip))
+  "Background and foreground for `lsp-bridge-signature-posframe'."
+  :group 'lsp-bridge)
+
+(defun lsp-bridge-signature-posframe (str)
+  "Use posframe to show the STR signatureHelp string."
+  (if (not (string-empty-p str))
+      (apply #'posframe-show
+             (with-current-buffer (get-buffer-create " *lsp-bridge-signature*")
+               (erase-buffer)
+               (insert str)
+               (visual-line-mode 1)
+               (current-buffer))
+             (append
+              lsp-bridge-signature-posframe-params
+              (list :position (point)
+                    :background-color (face-attribute 'lsp-bridge-signature-posframe :background nil t)
+                    :foreground-color (face-attribute 'lsp-bridge-signature-posframe :foreground nil t)
+                    :border-color (face-attribute 'font-lock-comment-face :foreground nil t))))
+    (posframe-hide " *lsp-bridge-signature*")))
+
 (defun lsp-bridge-signature-help-update (help-infos help-index)
   (let ((index 0)
         (help ""))
@@ -912,7 +946,7 @@ Auto completion is only performed if the tick did not change."
       (setq index (1+ index)))
 
     (let ((message-log-max nil))
-      (message help))))
+      (funcall lsp-bridge-signature-function help))))
 
 (defvar lsp-bridge--last-buffer nil)
 
@@ -1020,7 +1054,7 @@ Auto completion is only performed if the tick did not change."
       (acm-run-idle-func lsp-bridge-signature-help-timer lsp-bridge-signature-help-fetch-idle 'lsp-bridge-signature-help-fetch))
     (when lsp-bridge-enable-search-words
       (acm-run-idle-func lsp-bridge-search-words-timer lsp-bridge-search-words-rebuild-cache-idle 'lsp-bridge-search-words-rebuild-cache)))
-  
+
   (dolist (hook lsp-bridge--internal-hooks)
     (add-hook (car hook) (cdr hook) nil t))
 

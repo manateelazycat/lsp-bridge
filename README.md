@@ -73,6 +73,7 @@ If you expect lsp-bridge to automatically scan the files of the entire project, 
 * `lsp-bridge-enable-log`: enable the LSP message log, disable by default
 * `lsp-bridge-enable-debug`: enable program debugging, disable by default
 * `lsp-bridge-python-command`: The path of the python command, if you use `conda`, you may customize this option
+* `lsp-bridge-signature-function`: The function used for displaying signature info
 * `acm-backend-lsp-enable-auto-import`: automatic insert import code, enable by default
 * `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
 * `acm-enable-doc`: Whether the complete menu display the help document
