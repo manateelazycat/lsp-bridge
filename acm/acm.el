@@ -565,6 +565,7 @@ influence of C1 on the result."
 
   ;; Cancel timers.
   (acm-cancel-timer acm-fetch-doc-timer)
+  (setq acm-fetch-doc-timer nil)
 
   ;; Clean LSP backend completion tick.
   (setq-local acm-backend-lsp-completion-item-popup-doc-tick nil))
