@@ -574,7 +574,10 @@ Auto completion is only performed if the tick did not change."
     ;; Hide diagnostic tooltip.
     (unless (member (format "%s" this-command) '("lsp-bridge-jump-to-next-diagnostic"
                                                  "lsp-bridge-jump-to-prev-diagnostic"))
-      (lsp-bridge-hide-diagnostic-tooltip))))
+      (lsp-bridge-hide-diagnostic-tooltip))
+
+    ;; Hide signature tooltip.
+    (lsp-bridge-hide-signature-tooltip)))
 
 (defun lsp-bridge-close-buffer-file ()
   (when (lsp-bridge-has-lsp-server-p)
