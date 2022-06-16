@@ -190,8 +190,8 @@ class LspServer:
         # Start LSP server.
         if get_os_name() == "windows":
             server_command = self.server_info["command"][0]
-            if not shutil.which(server_command) and shutil.which(server_command + ".cmd"):
-                self.server_info["command"] = [server_command + ".cmd"] + self.server_info["command"][1:]
+            if shutil.which(server_command):
+                server_info["command"][0] = shutil.which(server_command)
         
         self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
 
