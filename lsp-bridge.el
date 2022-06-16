@@ -574,7 +574,10 @@ Auto completion is only performed if the tick did not change."
     ;; Hide diagnostic tooltip.
     (unless (member (format "%s" this-command) '("lsp-bridge-jump-to-next-diagnostic"
                                                  "lsp-bridge-jump-to-prev-diagnostic"))
-      (lsp-bridge-hide-diagnostic-tooltip))))
+      (lsp-bridge-hide-diagnostic-tooltip))
+
+    ;; Hide signature tooltip.
+    (lsp-bridge-hide-signature-tooltip)))
 
 (defun lsp-bridge-close-buffer-file ()
   (when (lsp-bridge-has-lsp-server-p)
@@ -895,6 +898,41 @@ Auto completion is only performed if the tick did not change."
 (defun lsp-bridge-hide-diagnostic-tooltip ()
   (posframe-hide lsp-bridge-diagnostic-tooltip))
 
+(defvar lsp-bridge-signature-posframe-params
+  (list :poshandler #'posframe-poshandler-point-bottom-left-corner-upward
+        :internal-border-width 20
+        :max-width 60
+        :max-height 12)
+   "Params for signature and `posframe-show'.")
+
+(defcustom lsp-bridge-signature-function 'message
+  "Function to render signature help. Set to `lsp-bridge-signature-posframe' to use the posframe."
+  :type 'function
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-signature-tooltip " *lsp-bridge-signature*"
+  "Buffer for display signature information."
+  :type 'string
+  :group 'lsp-bridge)
+
+(defun lsp-bridge-hide-signature-tooltip ()
+  (posframe-hide lsp-bridge-signature-tooltip))
+
+(defun lsp-bridge-signature-posframe (str)
+  "Use posframe to show the STR signatureHelp string."
+  (if (not (string-empty-p str))
+      (apply #'posframe-show
+             (with-current-buffer (get-buffer-create lsp-bridge-signature-tooltip)
+               (erase-buffer)
+               (insert str)
+               (visual-line-mode 1)
+               (current-buffer))
+             (append
+              lsp-bridge-signature-posframe-params
+              (list :position (point)
+                    :background-color (lsp-bridge-frame-background-color))))
+    (lsp-bridge-hide-signature-tooltip)))
+
 (defun lsp-bridge-signature-help-update (help-infos help-index)
   (let ((index 0)
         (help ""))
@@ -905,16 +943,17 @@ Auto completion is only performed if the tick did not change."
       (setq index (1+ index)))
 
     (let ((message-log-max nil))
-      (message help))))
+      (funcall lsp-bridge-signature-function help))))
 
 (defvar lsp-bridge--last-buffer nil)
 
 (defun lsp-bridge-monitor-window-buffer-change ()
-  ;; Hide completion frame when buffer or window changed.
+  ;; Hide completion, diagnostic and signature frame when buffer or window changed.
   (unless (eq (current-buffer)
               lsp-bridge--last-buffer)
     (lsp-bridge-hide-doc-tooltip)
-    (lsp-bridge-hide-diagnostic-tooltip))
+    (lsp-bridge-hide-diagnostic-tooltip)
+    (lsp-bridge-hide-signature-tooltip))
 
   (unless (or (minibufferp)
               (string-equal (buffer-name) "*Messages*"))
