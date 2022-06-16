@@ -642,20 +642,13 @@ Auto completion is only performed if the tick did not change."
   (ignore-errors
     (unless (or (bobp) (eobp))
       (save-excursion
-        (or
-         ;; In most situation, point inside a string when 4rd state `parse-partial-sexp' is non-nil.
-         ;; but at this time, if the string delimiter is the last character of the line, the point is not in the string.
-         ;; So we need exclude this situation when check state of `parse-partial-sexp'.
-         (and
-          (nth 3 (or state (lsp-bridge-current-parse-state)))
-          (not (equal (point) (line-end-position))))
-         (and
-          (eq (get-text-property (point) 'face) 'font-lock-string-face)
-          (eq (get-text-property (- (point) 1) 'face) 'font-lock-string-face))
-         (and
-          (eq (get-text-property (point) 'face) 'font-lock-doc-face)
-          (eq (get-text-property (- (point) 1) 'face) 'font-lock-doc-face))
-         )))))
+        ;; In most situation, point inside a string when 4rd state `parse-partial-sexp' is non-nil.
+        ;; but at this time, if the string delimiter is the last character of the line, the point is not in the string.
+        ;; So we need exclude this situation when check state of `parse-partial-sexp'.
+        (and
+         (nth 3 (or state (lsp-bridge-current-parse-state)))
+         (not (equal (point) (line-end-position))))
+        ))))
 
 (defun lsp-bridge-current-parse-state ()
   (let ((point (point)))
@@ -1020,7 +1013,7 @@ Auto completion is only performed if the tick did not change."
       (acm-run-idle-func lsp-bridge-signature-help-timer lsp-bridge-signature-help-fetch-idle 'lsp-bridge-signature-help-fetch))
     (when lsp-bridge-enable-search-words
       (acm-run-idle-func lsp-bridge-search-words-timer lsp-bridge-search-words-rebuild-cache-idle 'lsp-bridge-search-words-rebuild-cache)))
-  
+
   (dolist (hook lsp-bridge--internal-hooks)
     (add-hook (car hook) (cdr hook) nil t))
 
