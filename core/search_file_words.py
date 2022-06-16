@@ -101,7 +101,7 @@ class SearchFileWords:
             try:
                 if message == "search_words":
                     for search_file in self.search_files:
-                        words = set(open(search_file).read().split())
+                        words = set(re.findall("[\w|-]+", open(search_file).read()))
                         filter_words = set(map(lambda word: re.sub('[^A-Za-z0-9-_]+', '', word),
                                                set(filter(self.filter_word, words))))
                         filter_words.discard("")
