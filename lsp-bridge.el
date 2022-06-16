@@ -914,16 +914,24 @@ Auto completion is only performed if the tick did not change."
   :type 'function
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-signature-tooltip " *lsp-bridge-signature*"
+  "Buffer for display signature information."
+  :type 'string
+  :group 'lsp-bridge)
+
 (defface lsp-bridge-signature-posframe
   '((t :inherit tooltip))
   "Background and foreground for `lsp-bridge-signature-posframe'."
   :group 'lsp-bridge)
 
+(defun lsp-bridge-hide-signature-tooltip ()
+  (posframe-hide lsp-bridge-signature-tooltip))
+
 (defun lsp-bridge-signature-posframe (str)
   "Use posframe to show the STR signatureHelp string."
   (if (not (string-empty-p str))
       (apply #'posframe-show
-             (with-current-buffer (get-buffer-create " *lsp-bridge-signature*")
+             (with-current-buffer (get-buffer-create lsp-bridge-signature-tooltip)
                (erase-buffer)
                (insert str)
                (visual-line-mode 1)
@@ -934,7 +942,7 @@ Auto completion is only performed if the tick did not change."
                     :background-color (face-attribute 'lsp-bridge-signature-posframe :background nil t)
                     :foreground-color (face-attribute 'lsp-bridge-signature-posframe :foreground nil t)
                     :border-color (face-attribute 'font-lock-comment-face :foreground nil t))))
-    (posframe-hide " *lsp-bridge-signature*")))
+    (lsp-bridge-hide-signature-tooltip)))
 
 (defun lsp-bridge-signature-help-update (help-infos help-index)
   (let ((index 0)
@@ -951,11 +959,12 @@ Auto completion is only performed if the tick did not change."
 (defvar lsp-bridge--last-buffer nil)
 
 (defun lsp-bridge-monitor-window-buffer-change ()
-  ;; Hide completion frame when buffer or window changed.
+  ;; Hide completion, diagnostic and signature frame when buffer or window changed.
   (unless (eq (current-buffer)
               lsp-bridge--last-buffer)
     (lsp-bridge-hide-doc-tooltip)
-    (lsp-bridge-hide-diagnostic-tooltip))
+    (lsp-bridge-hide-diagnostic-tooltip)
+    (lsp-bridge-hide-signature-tooltip))
 
   (unless (or (minibufferp)
               (string-equal (buffer-name) "*Messages*"))
