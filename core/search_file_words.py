@@ -30,7 +30,7 @@ class SearchFileWords:
     def __init__(self):
         self.files = {}
         self.search_files = set()
-        
+        self.search_files_mutex = threading.Lock()
         self.search_words_thread = None
         
         self.search_words_queue = queue.Queue()
@@ -39,13 +39,17 @@ class SearchFileWords:
     
     def close_file(self, filepath):
         if filepath in self.files:
+            self.search_files_mutex.acquire()
             if filepath in self.search_files:
                 self.search_files.remove(filepath)
+            self.search_files_mutex.release()
             
             del self.files[filepath]
     
     def change_file(self, filepath):
+        self.search_files_mutex.acquire()
         self.search_files.add(filepath)
+        self.search_files_mutex.release()
         
         if filepath not in self.files:
             self.files[filepath] = set()
@@ -100,6 +104,7 @@ class SearchFileWords:
             message = self.search_words_queue.get(block=True)
             try:
                 if message == "search_words":
+                    self.search_files_mutex.acquire()
                     for search_file in self.search_files:
                         words = set(re.findall("[\w|-]+", open(search_file).read()))
                         filter_words = set(map(lambda word: re.sub('[^A-Za-z0-9-_]+', '', word),
@@ -108,6 +113,7 @@ class SearchFileWords:
                         self.files[search_file] = filter_words
                         
                     self.search_files.clear()
+                    self.search_files_mutex.release()
             except:
                 traceback.print_exc()
 
