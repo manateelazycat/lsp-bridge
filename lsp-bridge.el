@@ -1154,14 +1154,16 @@ Auto completion is only performed if the tick did not change."
     (lsp-bridge-call-file-api "code_fix")))
 
 (defun lsp-bridge-get-range-start ()
-  (if (region-active-p)
-      (lsp-bridge--point-position (region-beginning))
-    (lsp-bridge--position)))
+  (lsp-bridge--point-position
+   (if (region-active-p)
+       (region-beginning)
+     (car (bounds-of-thing-at-point 'sexp)))))
 
 (defun lsp-bridge-get-range-end ()
-  (if (region-active-p)
-      (lsp-bridge--point-position (region-end))
-    (lsp-bridge--position)))
+  (lsp-bridge--point-position
+   (if (region-active-p)
+       (region-end)
+     (cdr (bounds-of-thing-at-point 'sexp)))))
 
 (defun lsp-bridge-input-message (filepath interactive-string callback-tag interactive-type initial-content completion-list)
   "Handles input message INTERACTIVE-STRING on the Python side given FILEPATH and CALLBACK-TYPE."
