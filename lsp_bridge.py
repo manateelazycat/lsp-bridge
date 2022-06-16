@@ -167,13 +167,23 @@ class LspBridge:
             return False
 
         lang_server_info = load_lang_server_info(lang_server)
+        
+        if len(lang_server_info["command"]) > 0:
+            server_command_path = shutil.which(lang_server_info["command"][0])
+            if server_command_path:
+                # We always replace LSP server command with absolute path of 'which' command.
+                lang_server_info["command"][0] = server_command_path
+            else:
+                message_emacs("Error: can't find command {} for {}, disable lsp-bridge-mode.".format(server_command_path, filepath))
+                eval_in_emacs("lsp-bridge-turn-off", filepath)
 
-        if not(len(lang_server_info["command"]) > 0 and shutil.which(lang_server_info["command"][0])):
-            message_emacs("Error: can't find command {} for {}, disable lsp-bridge-mode.".format(lang_server_info["command"][0], filepath))
+                return False
+        else:
+            message_emacs("Error: {}'s command argument is empty, disable lsp-bridge-mode.".format(filepath))
             eval_in_emacs("lsp-bridge-turn-off", filepath)
 
             return False
-
+        
         lsp_server_name = "{}#{}".format(path_as_key(project_path), lang_server_info["name"])
 
         if lsp_server_name not in self.lsp_server_dict:
@@ -208,7 +218,7 @@ class LspBridge:
 
             # Clean file_action_dict after close file.
             remove_from_path_dict(self.file_action_dict, filepath)
-
+            
     def build_file_action_function(self, name):
         def _do(filepath, *args):
             open_file_success = True

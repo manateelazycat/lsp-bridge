@@ -27,7 +27,6 @@ import re
 import subprocess
 import threading
 import traceback
-import shutil
 from subprocess import PIPE
 from sys import stderr
 from threading import Thread
@@ -197,11 +196,6 @@ class LspServer:
             "source.organizeImports"]
 
         # Start LSP server.
-        if get_os_name() == "windows":
-            server_command = self.server_info["command"][0]
-            if shutil.which(server_command):
-                server_info["command"][0] = shutil.which(server_command)
-        
         self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
 
         # Notify user server is start.
