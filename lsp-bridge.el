@@ -904,7 +904,7 @@ Auto completion is only performed if the tick did not change."
 
 (defvar lsp-bridge-signature-posframe-params
   (list :poshandler #'posframe-poshandler-point-bottom-left-corner-upward
-        :border-width 1
+        :internal-border-width 20
         :max-width 60
         :max-height 12)
    "Params for signature and `posframe-show'.")
@@ -917,11 +917,6 @@ Auto completion is only performed if the tick did not change."
 (defcustom lsp-bridge-signature-tooltip " *lsp-bridge-signature*"
   "Buffer for display signature information."
   :type 'string
-  :group 'lsp-bridge)
-
-(defface lsp-bridge-signature-posframe
-  '((t :inherit tooltip))
-  "Background and foreground for `lsp-bridge-signature-posframe'."
   :group 'lsp-bridge)
 
 (defun lsp-bridge-hide-signature-tooltip ()
@@ -939,9 +934,7 @@ Auto completion is only performed if the tick did not change."
              (append
               lsp-bridge-signature-posframe-params
               (list :position (point)
-                    :background-color (face-attribute 'lsp-bridge-signature-posframe :background nil t)
-                    :foreground-color (face-attribute 'lsp-bridge-signature-posframe :foreground nil t)
-                    :border-color (face-attribute 'font-lock-comment-face :foreground nil t))))
+                    :background-color (lsp-bridge-frame-background-color))))
     (lsp-bridge-hide-signature-tooltip)))
 
 (defun lsp-bridge-signature-help-update (help-infos help-index)
