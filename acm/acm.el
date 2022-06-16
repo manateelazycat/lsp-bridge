@@ -156,7 +156,9 @@ Default is 0.5 second."
     (define-key map "\n" #'acm-complete)
     (define-key map "\M-h" #'acm-complete)
     (define-key map "\M-H" #'acm-insert-common)
-    (define-key map "\M-k" #'acm-hide)
+    (define-key map "\M-j" #'acm-doc-scroll-up)
+    (define-key map "\M-k" #'acm-doc-scroll-down)
+    (define-key map "\M-l" #'acm-hide)
     (define-key map "\C-g" #'acm-hide)
     map)
   "Keymap used when popup is shown.")
@@ -352,15 +354,17 @@ Default is 0.5 second."
 
 (defun acm-fetch-candidate-doc ()
   (when (acm-frame-visible-p acm-frame)
-    (let* ((candidate (acm-menu-current-candidate))
-           (backend (plist-get candidate :backend)))
-      (pcase backend
-        ("lsp" (acm-backend-lsp-candidate-fetch-doc candidate))
-        ("elisp" (acm-backend-elisp-candidate-fetch-doc candidate))
-        ("yas" (acm-backend-yas-candidate-fetch-doc candidate))
-        ("tempel" (acm-backend-tempel-candidate-fetch-doc candidate))
-        ;; Hide doc frame for backend that not support fetch candidate documentation.
-        (_ (acm-doc-hide))))))
+    ;; Don't fetch candidate documentation if last command is scroll operation.
+    (unless (string-prefix-p "acm-doc-scroll-" (prin1-to-string last-command))
+      (let* ((candidate (acm-menu-current-candidate))
+             (backend (plist-get candidate :backend)))
+        (pcase backend
+          ("lsp" (acm-backend-lsp-candidate-fetch-doc candidate))
+          ("elisp" (acm-backend-elisp-candidate-fetch-doc candidate))
+          ("yas" (acm-backend-yas-candidate-fetch-doc candidate))
+          ("tempel" (acm-backend-tempel-candidate-fetch-doc candidate))
+          ;; Hide doc frame for backend that not support fetch candidate documentation.
+          (_ (acm-doc-hide)))))))
 
 (defun acm-color-blend (c1 c2 alpha)
   "Blend two colors C1 and C2 with ALPHA.
@@ -865,6 +869,20 @@ influence of C1 on the result."
           (setq-local acm-menu-index (1- acm-menu-index)))
          ((> acm-menu-offset 0)
           (setq-local acm-menu-offset (1- acm-menu-offset))))))
+
+(defun acm-doc-scroll-up ()
+  (interactive)
+  (with-current-buffer acm-doc-buffer
+    (when (framep acm-frame)
+      (with-selected-frame acm-doc-frame
+        (scroll-up-command)))))
+
+(defun acm-doc-scroll-down ()
+  (interactive)
+  (with-current-buffer acm-doc-buffer
+    (when (framep acm-frame)
+      (with-selected-frame acm-doc-frame
+        (scroll-down-command)))))
 
 (provide 'acm)
 

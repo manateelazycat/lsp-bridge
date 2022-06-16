@@ -57,6 +57,8 @@ lsp-bridge开箱即用， 安装好文件对应的LSP服务器命令以后， �
 * `lsp-bridge-signature-help-fetch`: 在minibuffer显示参数信息
 * `lsp-bridge-insert-common-prefix`: 插入补全后选词的公共前缀
 * `lsp-bridge-restart-process`: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)
+* `acm-doc-scroll-up`: API文档窗口向上滚动
+* `acm-doc-scroll-down`: API文档窗口向下滚动
 
 ## 选项
 * `lsp-bridge-completion-popup-predicates`: 补全菜单显示的检查函数， 这个选项包括的所有函数都检查过以后， 补全菜单才能显示

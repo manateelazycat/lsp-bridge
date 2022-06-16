@@ -57,6 +57,8 @@ If you expect lsp-bridge to automatically scan the files of the entire project, 
 * `lsp-bridge-signature-help-fetch`: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
 * `lsp-bridge-insert-common-prefix`: insert common prefix of candidates
 * `lsp-bridge-restart-process`: restart lsp-bridge process (only used for development)
+* `acm-doc-scroll-up`: API document window scroll up
+* `acm-doc-scroll-down`: API document window scroll down
 
 ## Options
 * `lsp-bridge-completion-popup-predicates`: the predicate function for completion menu, completion menu popup after all the functions pass
