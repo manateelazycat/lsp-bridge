@@ -274,24 +274,24 @@ class LspServer:
                             ]
                         }
                     }
-                }
-            },
-            "codeAction": {
-                "dynamicRegistration": False,
-                "codeActionLiteralSupport": {
-                    "codeActionKind": {
-                        "valueSet": [
-                            "quickfix",
-                            "refactor",
-                            "refactor.extract",
-                            "refactor.inline",
-                            "refactor.rewrite",
-                            "source",
-                            "source.organizeImports"
-                        ]
-                    }
                 },
-                "isPreferredSupport": True
+                "codeAction": {
+                    "dynamicRegistration": False,
+                    "codeActionLiteralSupport": {
+                        "codeActionKind": {
+                            "valueSet": [
+                                "quickfix",
+                                "refactor",
+                                "refactor.extract",
+                                "refactor.inline",
+                                "refactor.rewrite",
+                                "source",
+                                "source.organizeImports"
+                            ]
+                        }
+                    },
+                    "isPreferredSupport": True
+                }
             }
         })
 

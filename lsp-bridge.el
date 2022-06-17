@@ -825,8 +825,10 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge-signature-help-fetch ()
   (interactive)
-  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position))))
+  (if lsp-bridge-code-action-notify
+      (setq-local lsp-bridge-code-action-notify nil)
+    (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+      (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))))
 
 (defun lsp-bridge-rename-file (filepath edits)
   (find-file-noselect filepath)
@@ -903,7 +905,7 @@ Auto completion is only performed if the tick did not change."
         :internal-border-width 20
         :max-width 60
         :max-height 12)
-   "Params for signature and `posframe-show'.")
+  "Params for signature and `posframe-show'.")
 
 (defcustom lsp-bridge-signature-function 'message
   "Function to render signature help. Set to `lsp-bridge-signature-posframe' to use the posframe."
@@ -1192,6 +1194,28 @@ Auto completion is only performed if the tick did not change."
   (interactive)
   (when (lsp-bridge-has-lsp-server-p)
     (lsp-bridge-call-file-api "code_fix")))
+
+(defvar-local lsp-bridge-code-action-notify nil)
+
+(defun lsp-bridge-code-action-quickfix (title changes)
+  (dolist (change changes)
+    (let* ((filepath (nth 0 change))
+           (change-infos (nth 1 change)))
+      (lsp-bridge--with-file-buffer filepath
+        ;; reverse `change-infos` make sure the previous modification will not affect the subsequent modification.
+        (dolist (change-info (reverse change-infos))
+          (let* ((range (plist-get change-info :range))
+                 (start (acm-backend-lsp-position-to-point (plist-get range :start)))
+                 (end (acm-backend-lsp-position-to-point (plist-get range :end)))
+                 (new-text (plist-get change-info :newText)))
+            (goto-char start)
+            (delete-region start end)
+            (insert new-text)
+            )))))
+
+  (unless (string-equal title "")
+    (message "[LSP-BRIDGE] Quickfix: '%s'" title)
+    (setq-local lsp-bridge-code-action-notify t)))
 
 (defun lsp-bridge-get-range-start ()
   (lsp-bridge--point-position
