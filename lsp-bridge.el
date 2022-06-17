@@ -1023,6 +1023,7 @@ Auto completion is only performed if the tick did not change."
 (define-minor-mode lsp-bridge-mode
   "LSP Bridge mode."
   :keymap lsp-bridge-mode-map
+  :lighter " 橋"
   :init-value nil
   (if lsp-bridge-mode
       (lsp-bridge--enable)
