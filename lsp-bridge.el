@@ -359,7 +359,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defvar lsp-bridge-get-lang-server-by-project nil
   "Get lang server with project path and file path.")
 
-(defmacro lsp-bridge--with-file-buffer (filepath &rest body)
+(cl-defmacro lsp-bridge--with-file-buffer (filepath &rest body)
   "Evaluate BODY in buffer with FILEPATH."
   (declare (indent 1))
   `(let ((buffer (lsp-bridge-get-match-buffer ,filepath)))

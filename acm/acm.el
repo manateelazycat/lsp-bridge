@@ -86,6 +86,9 @@
 (require 'color)
 (require 'subr-x)
 (require 'cl-seq)
+(require 'cl-lib)
+(require 'cl-extra)
+(require 'cl-macs)
 
 (require 'acm-icon)
 (require 'acm-backend-yas)
@@ -136,7 +139,7 @@ Default is 0.5 second."
                  (const orderless-initialism)))
 
 
-(defmacro acm-run-idle-func (timer idle func)
+(cl-defmacro acm-run-idle-func (timer idle func)
   `(unless ,timer
      (setq ,timer
            (run-with-idle-timer ,idle t #'(lambda () (funcall ,func))))))
@@ -289,7 +292,7 @@ Default is 0.5 second."
     (redirect-frame-focus frame parent)
     frame))
 
-(defmacro acm-create-frame-if-not-exist (frame frame-buffer frame-name &optional internal-border)
+(cl-defmacro acm-create-frame-if-not-exist (frame frame-buffer frame-name &optional internal-border)
   `(unless (frame-live-p ,frame)
      (setq ,frame (acm-make-frame ,frame-name ,internal-border))
 
@@ -620,8 +623,8 @@ influence of C1 on the result."
            (input-prefix (acm-get-input-prefix)))
       (dolist (index (number-sequence 0 (1- item-min-length)))
         (let* ((char-list (mapcar (lambda (i) (substring i index (1+ index))) items))
-               (first-char (first char-list)))
-          (when (every (lambda (x) (string-equal x first-char)) char-list)
+               (first-char (cl-first char-list)))
+          (when (cl-every (lambda (x) (string-equal x first-char)) char-list)
             (setq common-string (concat common-string first-char)))))
 
       (if (and (> (length common-string) 0)
@@ -800,7 +803,7 @@ influence of C1 on the result."
     ;; Adjust menu frame position.
     (acm-menu-adjust-pos)))
 
-(defmacro acm-silent (&rest body)
+(cl-defmacro acm-silent (&rest body)
   "Silence BODY."
   (declare (indent 0))
   `(cl-letf ((inhibit-message t)
@@ -815,7 +818,7 @@ influence of C1 on the result."
       (setq-local acm-menu-candidates
                   (cl-subseq acm-candidates acm-menu-offset (+ acm-menu-offset menu-length))))))
 
-(defmacro acm-menu-update (&rest body)
+(cl-defmacro acm-menu-update (&rest body)
   `(let* ((menu-old-index acm-menu-index)
           (menu-old-offset acm-menu-offset)
           (menu-old-cache (cons acm-menu-max-length-cache acm-menu-number-cache)))

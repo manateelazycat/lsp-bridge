@@ -28,7 +28,7 @@
 (require 'subr-x)
 
 ;; deferred
-(defmacro lsp-bridge-deferred-chain (&rest elements)
+(cl-defmacro lsp-bridge-deferred-chain (&rest elements)
   "Anaphoric function chain macro for deferred chains."
   (declare (debug (&rest form))
            (indent 0))
@@ -60,7 +60,7 @@ value in the `condition-case' form in deferred
 implementations. Then, Emacs debugger can catch an error occurred
 in the asynchronous tasks.")
 
-(defmacro lsp-bridge-deferred-condition-case (var protected-form &rest handlers)
+(cl-defmacro lsp-bridge-deferred-condition-case (var protected-form &rest handlers)
   "[internal] Custom condition-case. See the comment for
 `lsp-bridge-deferred-debug-on-signal'."
   (declare (debug condition-case)
