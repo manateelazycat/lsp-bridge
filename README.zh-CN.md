@@ -22,10 +22,9 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (add-to-list 'load-path "<path-to-lsp-bridge>")
 
 (require 'yasnippet)
-(require 'lsp-bridge)
-(require 'lsp-bridge-jdtls)       ;; 提供Java第三方库跳转和-data目录支持， Java用户必选
-
 (yas-global-mode 1)
+
+(require 'lsp-bridge)
 (global-lsp-bridge-mode)
 ```
 

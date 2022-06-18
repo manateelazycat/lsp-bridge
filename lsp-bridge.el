@@ -76,8 +76,11 @@
 (require 'map)
 (require 'seq)
 (require 'subr-x)
+
 (require 'lsp-bridge-epc)
 (require 'lsp-bridge-ref)
+(require 'lsp-bridge-jdtls)
+
 (require 'posframe)
 (require 'markdown-mode)
 
