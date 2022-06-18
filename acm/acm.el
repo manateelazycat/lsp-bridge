@@ -632,14 +632,6 @@ influence of C1 on the result."
           (insert (substring common-string (length (acm-get-input-prefix))))
         (message "No common string found")))))
 
-(defun acm-toggle-english-helper ()
-  "Toggle english helper."
-  (interactive)
-  (if acm-enable-english-helper
-      (message "Turn off english helper.")
-    (message "Turn on english helper."))
-  (setq-local acm-enable-english-helper (not acm-enable-english-helper)))
-
 (defun acm-menu-max-length ()
   "Get max length of menu candidates, use for adjust menu size dynamically."
   (cl-reduce #'max

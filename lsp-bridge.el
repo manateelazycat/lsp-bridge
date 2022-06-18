@@ -105,7 +105,6 @@
       (setq lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath label kind)))))
 
 (defalias 'lsp-bridge-insert-common-prefix #'acm-insert-common)
-(defalias 'lsp-bridge-toggle-english-helper #'acm-toggle-english-helper)
 
 (defcustom lsp-bridge-completion-popup-predicates '(lsp-bridge-not-only-blank-before-cursor
                                                     lsp-bridge-not-match-hide-characters
@@ -1203,6 +1202,8 @@ Auto completion is only performed if the tick did not change."
 
 (defvar-local lsp-bridge-code-action-notify nil)
 
+(defvar lsp-bridge-english-helper-dict nil)
+
 (defun lsp-bridge-code-action-fix (actions action-kind)
   (let* ((menu-items
           (or
@@ -1325,6 +1326,28 @@ Auto completion is only performed if the tick did not change."
       (gfm-mode)))
   (read-only-mode 0)
   (font-lock-ensure))
+
+(defun lsp-bridge-toggle-english-helper ()
+  "Toggle english helper."
+  (interactive)
+  (unless lsp-bridge-english-helper-dict
+    (setq lsp-bridge-english-helper-dict (make-hash-table :test 'equal)))
+
+  (if acm-enable-english-helper
+      (progn
+        ;; Disable `lsp-bridge-mode' if it is enable temporality.
+        (when (gethash (buffer-name) lsp-bridge-english-helper-dict)
+          (lsp-bridge-mode -1)
+          (remhash (buffer-name) lsp-bridge-english-helper-dict))
+
+        (message "Turn off english helper."))
+    ;; We enable `lsp-bridge-mode' temporality if current-mode not enable `lsp-bridge-mode' yet.
+    (unless lsp-bridge-mode
+      (puthash (buffer-name) t lsp-bridge-english-helper-dict)
+      (lsp-bridge-mode 1))
+
+    (message "Turn on english helper."))
+  (setq-local acm-enable-english-helper (not acm-enable-english-helper)))
 
 ;;;###autoload
 (defun global-lsp-bridge-mode ()
