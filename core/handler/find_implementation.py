@@ -19,6 +19,6 @@ class FindImplementation(Handler):
         # volar return only LocationLink (using targetUri)
         fileuri = file_info["uri"] if "uri" in file_info else file_info["targetUri"]
         filepath = uri_to_path(fileuri)
-        range1 = file_info["range"] if "range" in file_info else file_info["targetRange"]
-        startpos = range1["start"]
+        range = file_info["range"] if "range" in file_info else file_info["targetRange"]
+        startpos = range["start"]
         eval_in_emacs("lsp-bridge--jump-to-def", filepath, startpos)
