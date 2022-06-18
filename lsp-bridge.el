@@ -606,10 +606,8 @@ Auto completion is only performed if the tick did not change."
     (lsp-bridge-try-completion)
     ))
 
-(defvar-local lsp-bridge-search-words-candidates nil)
-
 (defun lsp-bridge-record-search-words-items (candidates)
-  (setq-local lsp-bridge-search-words-candidates candidates)
+  (setq-local acm-backend-search-words-items candidates)
   (lsp-bridge-try-completion))
 
 (defun lsp-bridge-try-completion ()

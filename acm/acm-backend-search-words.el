@@ -88,10 +88,12 @@
   "Popup search words completions when this option is turn on."
   :type 'boolean)
 
+(defvar-local acm-backend-search-words-items nil)
+
 (defun acm-backend-search-words-candidates (keyword)
   (when acm-enable-search-words
     (let* ((candidates (list)))
-      (dolist (candidate-label lsp-bridge-search-words-candidates)
+      (dolist (candidate-label acm-backend-search-words-items)
         (add-to-list 'candidates (list :key candidate-label
                                        :icon "search"
                                        :label candidate-label
