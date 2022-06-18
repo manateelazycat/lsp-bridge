@@ -196,16 +196,16 @@ class LspServer:
             "source.organizeImports"]
 
         # Start LSP server.
-        self.p = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
+        self.lsp_subprocess = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
 
         # Notify user server is start.
         message_emacs("Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path))
 
         # Two separate thread (read/write) to communicate with LSP server.
-        self.receiver = LspServerReceiver(self.p)
+        self.receiver = LspServerReceiver(self.lsp_subprocess)
         self.receiver.start()
 
-        self.sender = LspServerSender(self.p)
+        self.sender = LspServerSender(self.lsp_subprocess)
         self.sender.start()
 
         # All LSP server response running in ls_message_thread.
@@ -503,8 +503,8 @@ class LspServer:
             })
 
             # Don't need to wait LSP server response, kill immediately.
-            if self.p is not None:
+            if self.lsp_subprocess is not None:
                 try:
-                    os.kill(self.p.pid, 9)
+                    os.kill(self.lsp_subprocess.pid, 9)
                 except ProcessLookupError:
-                    logger.info("\n--- Lsp server process {} already exited!".format(self.p.pid))
+                    logger.info("\n--- Lsp server process {} already exited!".format(self.lsp_subprocess.pid))
