@@ -1190,28 +1190,56 @@ Auto completion is only performed if the tick did not change."
   (when (lsp-bridge-has-lsp-server-p)
     (lsp-bridge-call-file-api "ignore_diagnostic")))
 
-(defun lsp-bridge-code-action ()
+(defun lsp-bridge-code-action (&optional action-kind)
   (interactive)
   (when (lsp-bridge-has-lsp-server-p)
-    (lsp-bridge-call-file-api "code_fix")))
+    (lsp-bridge-call-file-api "code_fix" (lsp-bridge-get-range-start) (lsp-bridge-get-range-end) action-kind)))
 
 (defvar-local lsp-bridge-code-action-notify nil)
 
-(defun lsp-bridge-code-action-quickfix (title changes)
-  (dolist (change changes)
-    (let* ((filepath (nth 0 change))
-           (change-infos (nth 1 change)))
-      (lsp-bridge--with-file-buffer filepath
-        ;; reverse `change-infos` make sure the previous modification will not affect the subsequent modification.
-        (dolist (change-info (reverse change-infos))
-          (let* ((range (plist-get change-info :range))
-                 (start (acm-backend-lsp-position-to-point (plist-get range :start)))
-                 (end (acm-backend-lsp-position-to-point (plist-get range :end)))
-                 (new-text (plist-get change-info :newText)))
-            (goto-char start)
-            (delete-region start end)
-            (insert new-text)
-            )))))
+(defun lsp-bridge-code-action-fix (actions action-kind)
+  (let* ((menu-items
+          (or
+           (mapcar #'(lambda (action)
+                       (when (or (not action-kind)
+                                 (equal action-kind (plist-get action :kind)))
+                         (cons (plist-get action :title) action)))
+                   actions)
+           (apply #'error
+                  (if action-kind
+                      (format "No '%s' code action here" action-kind)
+                    "No code actions here"))))
+         (preferred-action (cl-find-if
+                            (lambda (menu-item)
+                              (plist-get (cdr menu-item) :isPreferred))
+                            menu-items))
+         (default-action (car (or preferred-action (car menu-items))))
+         (action (if (and action-kind (null (cadr menu-items)))
+                     (cdr (car menu-items))
+                   (cdr (assoc (completing-read
+                                (format "[LSP-BRIDGE] Pick an action (default: %s): " default-action)
+                                menu-items nil t nil nil default-action)
+                               menu-items)))))
+
+    (pcase (plist-get action :kind)
+      ("quickfix" (lsp-bridge-code-action-quickfix (plist-get action :title) (plist-get (plist-get action :edit) :changes)))
+      (_ (message "[LSP-BRIDGE] code action '%s' not implement yet." (plist-get action :kind))))
+    ))
+
+(defun lsp-bridge-code-action-quickfix (title change)
+  (let* ((filepath (string-remove-prefix ":file://" (format "%s" (nth 0 change))))
+         (change-infos (nth 1 change)))
+    (lsp-bridge--with-file-buffer filepath
+      ;; reverse `change-infos` make sure the previous modification will not affect the subsequent modification.
+      (dolist (change-info (reverse change-infos))
+        (let* ((range (plist-get change-info :range))
+               (start (acm-backend-lsp-position-to-point (plist-get range :start)))
+               (end (acm-backend-lsp-position-to-point (plist-get range :end)))
+               (new-text (plist-get change-info :newText)))
+          (goto-char start)
+          (delete-region start end)
+          (insert new-text)
+          ))))
 
   (unless (string-equal title "")
     (message "[LSP-BRIDGE] Quickfix: '%s'" title)
@@ -1228,29 +1256,6 @@ Auto completion is only performed if the tick did not change."
    (if (region-active-p)
        (region-end)
      (cdr (bounds-of-thing-at-point 'sexp)))))
-
-(defun lsp-bridge-input-message (filepath interactive-string callback-tag interactive-type initial-content completion-list)
-  "Handles input message INTERACTIVE-STRING on the Python side given FILEPATH and CALLBACK-TYPE."
-  (let* ((input-message (lsp-bridge-read-input (concat "[LSP-BRIDGE] " interactive-string) interactive-type initial-content completion-list)))
-    (if input-message
-        (lsp-bridge-call-async "handle_input_response" filepath (lsp-bridge-get-range-start) (lsp-bridge-get-range-end) callback-tag input-message)
-      (lsp-bridge-call-async "cancel_input_response" filepath callback-tag))))
-
-(defun lsp-bridge-read-input (interactive-string interactive-type initial-content completion-list)
-  "lsp-bridge's multi-purpose read-input function which read an INTERACTIVE-STRING with INITIAL-CONTENT, determines the function base on INTERACTIVE-TYPE."
-  (condition-case nil
-      (cond ((or (string-equal interactive-type "string")
-                 (string-equal interactive-type "marker"))
-             (read-string interactive-string initial-content))
-            ((string-equal interactive-type "file")
-             (expand-file-name (read-file-name interactive-string initial-content)))
-            ((string-equal interactive-type "directory")
-             (expand-file-name (read-directory-name interactive-string initial-content)))
-            ((string-equal interactive-type "yes-or-no")
-             (yes-or-no-p interactive-string))
-            ((string-equal interactive-type "list")
-             (completing-read interactive-string completion-list)))
-    (quit nil)))
 
 (defun lsp-bridge-insert-ignore-diagnostic-comment (comment-string)
   (move-end-of-line 1)

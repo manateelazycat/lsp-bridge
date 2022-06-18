@@ -8,7 +8,9 @@ class CodeAction(Handler):
     method = "textDocument/codeAction"
     cancel_on_change = True
 
-    def process_request(self, range_start, range_end, diagnostics, kinds, kind) -> dict:
+    def process_request(self, range_start, range_end, diagnostics, action_kind) -> dict:
+        self.action_kind = action_kind
+        
         range = {
             "start": range_start,
             "end": range_end
@@ -23,22 +25,18 @@ class CodeAction(Handler):
                 match_diagnostic.append(diagnostic)
                 break
         
-        context = {
-            "diagnostics": match_diagnostic,
-            "only": kinds if kind == "" else [kind]
-        }
+        if isinstance(action_kind, str):
+            context = {
+                "diagnostics": match_diagnostic,
+                "only": [action_kind]
+            }
+        else:
+            context = {
+                "diagnostics": match_diagnostic
+            }
         
         return dict(range=range, context=context)
 
     def process_response(self, response) -> None:
         if response != None:
-            for solution in response:
-                if solution.get("kind", "") == "quickfix":
-                    change_infos = []
-                    for (uri, info) in solution["edit"]["changes"].items():
-                        change_infos.append([uri_to_path(uri), info])
-                    
-                    eval_in_emacs("lsp-bridge-code-action-quickfix", solution.get("title", ""), change_infos)
-                else:
-                    print("***** ", solution)
-        
+            eval_in_emacs("lsp-bridge-code-action-fix", response, self.action_kind)
