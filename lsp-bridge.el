@@ -1193,7 +1193,9 @@ Auto completion is only performed if the tick did not change."
 (defun lsp-bridge-code-action (&optional action-kind)
   (interactive)
   (when (lsp-bridge-has-lsp-server-p)
-    (lsp-bridge-call-file-api "code_fix" (lsp-bridge-get-range-start) (lsp-bridge-get-range-end) action-kind)))
+    (lsp-bridge-call-file-api "code_fix" (lsp-bridge-get-range-start) (lsp-bridge-get-range-end) action-kind)
+
+    (setq-local lsp-bridge-code-action-notify t)))
 
 (defvar-local lsp-bridge-code-action-notify nil)
 
@@ -1242,8 +1244,7 @@ Auto completion is only performed if the tick did not change."
           ))))
 
   (unless (string-equal title "")
-    (message "[LSP-BRIDGE] Quickfix: '%s'" title)
-    (setq-local lsp-bridge-code-action-notify t)))
+    (message "[LSP-BRIDGE] Quickfix: '%s'" title)))
 
 (defun lsp-bridge-get-range-start ()
   (lsp-bridge--point-position
