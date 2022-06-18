@@ -168,6 +168,17 @@ Please read [LSP Specification](https://microsoft.github.io/language-server-prot
 
 Then turn on option ```lsp-bridge-enable-log``` and happy hacking! ;)
 
+## FAQ
+
+> Why lsp-bridge can't complete the code of other files in the project directory?
+
+lsp-bridge relies on `git` to find the project path. lsp-bridge will enter a `single file mode` if it cannot find git information. You need to find the project path and execute `git init` command to solve this problem.
+
+> When you open the *.json file, why is it always prompting `[LSP-BRIDGE] error: cann’t find command for *.json, disable lsp-bride-mode.` ?
+
+Because Emacs defaults to set the mode of json file to js-mode, you need to install [json-mode](https://github.com/joshwnj/json-mode) to solve this problem.
+
+
 ## Report bug
 
 Please use `emacs -q` and load a minimal setup with only lsp-bridge to verify that the bug is reproducible. If `emacs -q` works fine, probably something is wrong with your Emacs config.
