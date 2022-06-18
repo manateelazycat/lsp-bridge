@@ -16,5 +16,3 @@ class SignatureHelp(Handler):
                 eval_in_emacs("lsp-bridge-signature-help-update",
                               list(map(lambda p: p["label"].split(":")[0], response["signatures"][response.get("activeSignature", 0)]["parameters"])),
                               response.get("activeParameter", 0))
-        else:
-            eval_in_emacs("lsp-bridge-signature-help-update", [], 0)

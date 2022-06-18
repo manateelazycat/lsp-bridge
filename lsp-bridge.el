@@ -947,8 +947,9 @@ Auto completion is only performed if the tick did not change."
                          (if (equal index (1- (length help-infos))) "" ", ")))
       (setq index (1+ index)))
 
-    (let ((message-log-max nil))
-      (funcall lsp-bridge-signature-function help))))
+    (unless (string-equal help "")
+      (let ((message-log-max nil))
+        (funcall lsp-bridge-signature-function help)))))
 
 (defvar lsp-bridge--last-buffer nil)
 
@@ -1368,7 +1369,7 @@ Auto completion is only performed if the tick did not change."
          (let ((file-name (->> info caddr (alist-get :file))))
            (unless file-name
              (setq file-name (concat default-directory ".org-src-babel"))
-	     (write-region (point-min) (point-max) file-name))
+             (write-region (point-min) (point-max) file-name))
            (setq buffer-file-name file-name)
            (lsp-bridge-mode 1)))
        (put ',intern-pre 'function-documentation
