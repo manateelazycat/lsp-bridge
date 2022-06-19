@@ -14,7 +14,7 @@ if __name__ == "__main__":
         f.write(";;\n")
         f.write(";; This file is generate by stardict.py, please don't edit this file.\n")
         f.write(";;\n\n")
-        f.write("(defconst corfu-english-helper-completions\n  '(\n")
+        f.write("(defconst acm-backend-english-completions\n  '(\n")
 
         index = 0
         for word in start_dictionary.keys():
