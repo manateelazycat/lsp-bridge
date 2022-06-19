@@ -605,6 +605,7 @@ influence of C1 on the result."
         ("path" (acm-backend-path-candidate-expand candidate-info bound-start))
         ("search-words" (acm-backend-search-words-candidate-expand candidate-info bound-start))
         ("tempel" (acm-backend-tempel-candidate-expand candidate-info bound-start))
+        ("english" (acm-backend-english-candidate-expand candidate-info bound-start))
         (_
          (delete-region bound-start (point))
          (insert (plist-get candidate-info :label)))

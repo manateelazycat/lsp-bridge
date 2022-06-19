@@ -102,6 +102,29 @@
 
     candidates))
 
+(defun acm-backend-english-candidate-expand (candidate-info bound-start)
+  (let* ((keyword (acm-get-input-prefix))
+         (label (plist-get candidate-info :label)))
+    (delete-region bound-start (point))
+    (insert (acm-backend-english-convert-candidate keyword label))
+    ))
+
+(defun acm-backend-english-convert-candidate (input candidate)
+  (cond ((acm-backend-english-upcase-string-p input)
+         (upcase candidate))
+        ((acm-backend-english-capitalize-string-p input)
+         (capitalize candidate))
+        (t candidate)))
+
+(defun acm-backend-english-upcase-string-p (str)
+  (let ((case-fold-search nil))
+    (and (> (length str) 1)
+         (string-match-p "\\`[A-Z]*\\'" str))))
+
+(defun acm-backend-english-capitalize-string-p (str)
+  (let ((case-fold-search nil))
+    (string-match-p "\\`[A-Z][a-z]*\\'" str)))
+
 (provide 'acm-backend-english)
 
 ;;; acm-backend-english.el ends here
