@@ -633,11 +633,16 @@ influence of C1 on the result."
           (insert (substring common-string (length (acm-get-input-prefix))))
         (message "No common string found")))))
 
+(defvar acm-string-width-function (if (fboundp 'string-pixel-width)
+                                      'string-pixel-width
+                                    'string-width))
+
 (defun acm-menu-max-length ()
   "Get max length of menu candidates, use for adjust menu size dynamically."
   (cl-reduce #'max
              (mapcar (lambda (v)
-                       (string-width (format "%s %s" (plist-get v :display-label) (plist-get v :annotation))))
+                       (funcall acm-string-width-function
+                                (format "%s %s" (plist-get v :display-label) (plist-get v :annotation))))
                      acm-menu-candidates)))
 
 (defun acm-menu-render-items (items menu-index)
@@ -647,7 +652,7 @@ influence of C1 on the result."
              (candidate (plist-get v :display-label))
              (annotation (plist-get v :annotation))
              (annotation-text (if annotation annotation ""))
-             (item-length (string-width annotation-text))
+             (item-length (funcall acm-string-width-function annotation-text))
              (icon-text (if icon (acm-icon-build (nth 0 icon) (nth 1 icon) (nth 2 icon)) ""))
              candidate-line)
 
@@ -664,7 +669,9 @@ influence of C1 on the result."
                (propertize " "
                            'display
                            (acm-indent-pixel
-                            (ceiling (* (window-font-width) (- (+ acm-menu-max-length-cache 20) item-length)))))
+                            (if (equal acm-string-width-function 'string-pixel-width)
+                                (- (+ acm-menu-max-length-cache (* 20 (string-pixel-width " "))) item-length)
+                              (ceiling (* (window-font-width) (- (+ acm-menu-max-length-cache 20) item-length))))))
                (propertize (format "%s \n" (capitalize annotation-text))
                            'face
                            (if (equal item-index menu-index) 'acm-select-face 'font-lock-doc-face))))
