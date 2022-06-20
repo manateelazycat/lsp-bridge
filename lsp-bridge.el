@@ -635,7 +635,8 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge-not-in-string ()
   "Hide completion if cursor in string area."
-  (not (lsp-bridge-in-string-p)))
+  (or acm-enable-english-helper ;allow english completion in string area
+      (not (lsp-bridge-in-string-p))))
 
 (defun lsp-bridge-not-follow-complete ()
   "Hide completion if last command is `acm-complete'."
