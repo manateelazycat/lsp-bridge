@@ -541,7 +541,11 @@ influence of C1 on the result."
 
 (defun acm-frame-get-popup-position ()
   (let* ((edges (window-pixel-edges))
-         (window-left (nth 0 edges))
+         (window-left (+ (nth 0 edges)
+                         ;; We need adjust left margin for buffer centering module.
+                         (/ (- (window-pixel-width)
+                               (window-body-width nil t))
+                            2)))
          (window-top (nth 1 edges))
          (pos (posn-x-y (posn-at-point acm-frame-popup-point)))
          (x (car pos))
