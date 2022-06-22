@@ -541,7 +541,9 @@ influence of C1 on the result."
 
 (defun acm-frame-get-popup-position ()
   (let* ((edges (window-pixel-edges))
-         (window-left (nth 0 edges))
+         (window-left (+ (nth 0 edges)
+                         (/ (- (window-pixel-width)
+                             (nth 0 (window-text-pixel-size))) 2)))
          (window-top (nth 1 edges))
          (pos (posn-x-y (posn-at-point acm-frame-popup-point)))
          (x (car pos))
@@ -736,10 +738,10 @@ influence of C1 on the result."
         (visual-line-mode 1))
 
       ;; Adjust doc frame position and size.
-      (acm-doc-fame-adjust)
+      (acm-doc-frame-adjust)
       )))
 
-(defun acm-doc-fame-adjust ()
+(defun acm-doc-frame-adjust ()
   (let* ((emacs-width (frame-pixel-width))
          (emacs-height (frame-pixel-height))
          (acm-frame-width (frame-pixel-width acm-frame))
@@ -798,7 +800,7 @@ influence of C1 on the result."
 
       ;; Adjust doc frame with menu frame position.
       (when (acm-frame-visible-p acm-doc-frame)
-        (acm-doc-fame-adjust)))
+        (acm-doc-frame-adjust)))
 
     ;; Adjust menu frame position.
     (acm-menu-adjust-pos)))
