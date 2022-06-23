@@ -222,7 +222,7 @@ If optional MARKER, return a marker instead"
   (dolist (edit edits)
     (let* ((range (plist-get edit :range))
            (range-start-pos (acm-backend-lsp-position-to-point (plist-get range :start)))
-           (range-end-pos (acm-backend-lsp-position-to-point (plist-get range :start))))
+           (range-end-pos (acm-backend-lsp-position-to-point (plist-get range :end))))
       (save-excursion
         (goto-char range-start-pos)
         (delete-region range-start-pos range-end-pos)
