@@ -125,6 +125,7 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 | 22 | [elm-language-server](https://github.com/elm-tooling/elm-language-server) | elm | |
 | 23 | [intelephense](https://github.com/bmewburn/vscode-intelephense) | php | |
 | 24 | [yaml-language-server](https://github.com/redhat-developer/yaml-language-server) | yaml | `npm install -g yaml-language-server` |
+| 25 | [zls](https://github.com/zigtools/zls) | zig | execute `zls config` to generate configuration for zls. see [Configuration Options](https://github.com/zigtools/zls#configuration-options) |
 
 ### TODO:
 

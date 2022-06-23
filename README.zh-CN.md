@@ -31,7 +31,7 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 ## 使用
 lsp-bridge开箱即用， 安装好文件对应的LSP服务器命令以后， 直接写代码即可， 不需要额外的设置。
 
-需要注意的是 lsp-bridge 有两种模式： 
+需要注意的是 lsp-bridge 有两种模式：
 1. 检测到.git目录时(通过命令 `git rev-parse --is-inside-work-tree` 来判断)， lsp-bridge会扫描整个目录文件来提供补全
 2. 没有检测到.git目录时， lsp-bridge只会对打开的文件提供单文件补全
 
@@ -124,7 +124,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 22 | [elm-language-server](https://github.com/elm-tooling/elm-language-server) | elm | |
 | 23 | [intelephense](https://github.com/bmewburn/vscode-intelephense) | php | |
 | 24 | [yaml-language-server](https://github.com/redhat-developer/yaml-language-server) | yaml | `npm install -g yaml-language-server` |
-
+| 25 | [zls](https://github.com/zigtools/zls) | zig | 运行 `zls config` 来生成 zls 的配置。参考 [Configuration Options](https://github.com/zigtools/zls#configuration-options) |
 
 ### 需要完成的功能：
 
