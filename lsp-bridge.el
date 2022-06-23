@@ -635,8 +635,14 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge-not-in-string ()
   "Hide completion if cursor in string area."
-  (or acm-enable-english-helper ;allow english completion in string area
-      (not (lsp-bridge-in-string-p))))
+  (or
+   ;; Allow english completion in string area
+   acm-enable-english-helper
+   ;; Allow volar popup completion menu in string.
+   (and acm-backend-lsp-filepath
+        (string-suffix-p ".vue" acm-backend-lsp-filepath))
+   ;; Other language not allowed popup completion in string, it's annoy
+   (not (lsp-bridge-in-string-p))))
 
 (defun lsp-bridge-not-follow-complete ()
   "Hide completion if last command is `acm-complete'."
