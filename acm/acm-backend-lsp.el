@@ -98,7 +98,6 @@
 
 (defvar-local acm-backend-lsp-completion-trigger-characters nil)
 (defvar-local acm-backend-lsp-completion-position nil)
-(defvar-local acm-backend-lsp-completion-item-popup-doc-tick nil)
 (defvar-local acm-backend-lsp-filepath "")
 (defvar-local acm-backend-lsp-items nil)
 
@@ -184,7 +183,6 @@
 
     ;; Popup candidate documentation directly if `documentation' is exist in candidate.
     (when documentation
-      (setq-local acm-backend-lsp-completion-item-popup-doc-tick key)
       (acm-doc-show))
 
     ;; Call fetch documentation function.

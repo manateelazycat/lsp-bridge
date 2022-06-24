@@ -104,12 +104,6 @@
   "Maximal number of candidates to show."
   :type 'integer)
 
-(defcustom acm-fetch-candidate-doc-delay 0.5
-  "How many seconds to stay in your fingers will popup the candidate documentation.
-
-Default is 0.5 second."
-  :type 'float)
-
 (defcustom acm-continue-commands
   ;; nil is undefined command
   '(nil ignore universal-argument universal-argument-more digit-argument self-insert-command org-self-insert-command
@@ -183,8 +177,6 @@ Default is 0.5 second."
 
 (defvar acm-doc-frame nil)
 (defvar acm-doc-buffer " *acm-doc-buffer*")
-(defvar acm-fetch-doc-timer nil)
-
 (defvar acm--mouse-ignore-map
   (let ((map (make-sparse-keymap)))
     (dotimes (i 7)
@@ -485,13 +477,6 @@ influence of C1 on the result."
         ;; Use `pre-command-hook' to hide completion menu when command match `acm-continue-commands'.
         (add-hook 'pre-command-hook #'acm--pre-command nil 'local)
 
-        ;; Hide doc frame first.
-        (acm-doc-hide)
-
-        ;; Start fetch documentation timer.
-        (when acm-enable-doc
-          (acm-run-idle-func acm-fetch-doc-timer acm-fetch-candidate-doc-delay 'acm-fetch-candidate-doc))
-
         ;; Init candidates, menu index and offset.
         (setq-local acm-candidates candidates)
         (setq-local acm-menu-candidates
@@ -575,13 +560,7 @@ influence of C1 on the result."
   (setq acm-menu-max-length-cache 0)
 
   ;; Remove hook of `acm--pre-command'.
-  (remove-hook 'pre-command-hook #'acm--pre-command 'local)
-
-  ;; Cancel timers.
-  (acm-cancel-timer acm-fetch-doc-timer)
-
-  ;; Clean LSP backend completion tick.
-  (setq-local acm-backend-lsp-completion-item-popup-doc-tick nil))
+  (remove-hook 'pre-command-hook #'acm--pre-command 'local))
 
 (defun acm-cancel-timer (timer)
   `(when ,timer
@@ -719,29 +698,30 @@ influence of C1 on the result."
     (acm-set-frame-position acm-frame acm-frame-x acm-frame-y)))
 
 (defun acm-doc-show ()
-  (let* ((candidate (acm-menu-current-candidate))
-         (backend (plist-get candidate :backend))
-         (candidate-doc
-          (pcase backend
-            ("lsp" (acm-backend-lsp-candidate-doc candidate))
-            ("elisp" (acm-backend-elisp-candidate-doc candidate))
-            ("yas" (acm-backend-yas-candidate-doc candidate))
-            ("tempel" (acm-backend-tempel-candidate-doc candidate))
-            (_ ""))))
-    (when (and candidate-doc
-               (not (string-equal candidate-doc "")))
-      ;; Create doc frame if it not exist.
-      (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame" 10)
+  (when acm-enable-doc
+    (let* ((candidate (acm-menu-current-candidate))
+           (backend (plist-get candidate :backend))
+           (candidate-doc
+            (pcase backend
+              ("lsp" (acm-backend-lsp-candidate-doc candidate))
+              ("elisp" (acm-backend-elisp-candidate-doc candidate))
+              ("yas" (acm-backend-yas-candidate-doc candidate))
+              ("tempel" (acm-backend-tempel-candidate-doc candidate))
+              (_ ""))))
+      (when (and candidate-doc
+                 (not (string-equal candidate-doc "")))
+        ;; Create doc frame if it not exist.
+        (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame" 10)
 
-      ;; Insert documentation and turn on wrap line.
-      (with-current-buffer (get-buffer-create acm-doc-buffer)
-        (erase-buffer)
-        (insert candidate-doc)
-        (visual-line-mode 1))
+        ;; Insert documentation and turn on wrap line.
+        (with-current-buffer (get-buffer-create acm-doc-buffer)
+          (erase-buffer)
+          (insert candidate-doc)
+          (visual-line-mode 1))
 
-      ;; Adjust doc frame position and size.
-      (acm-doc-frame-adjust)
-      )))
+        ;; Adjust doc frame position and size.
+        (acm-doc-frame-adjust)
+        ))))
 
 (defun acm-doc-frame-adjust ()
   (let* ((emacs-width (frame-pixel-width))
@@ -805,7 +785,11 @@ influence of C1 on the result."
         (acm-doc-frame-adjust)))
 
     ;; Adjust menu frame position.
-    (acm-menu-adjust-pos)))
+    (acm-menu-adjust-pos)
+
+    ;; Fetch `documentation' and `additionalTextEdits' information.
+    (acm-fetch-candidate-doc)
+    ))
 
 (cl-defmacro acm-silent (&rest body)
   "Silence BODY."

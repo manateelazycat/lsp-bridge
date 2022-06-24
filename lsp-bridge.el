@@ -1322,8 +1322,7 @@ Auto completion is only performed if the tick did not change."
         (puthash key item acm-backend-lsp-items))
 
       ;; Popup documentation window if same documentation window not exist.
-      (unless (string-equal key acm-backend-lsp-completion-item-popup-doc-tick)
-        (acm-doc-show))
+      (acm-doc-show)
       )))
 
 (defun lsp-bridge-render-markdown-content ()

@@ -7,7 +7,7 @@ from core.utils import *
 class CompletionItem(Handler):
     name = "completion_item_resolve"
     method = "completionItem/resolve"
-    cancel_on_change = True
+    cancel_on_change = False
     send_document_uri = False
 
     def process_request(self, item_key, item) -> dict:

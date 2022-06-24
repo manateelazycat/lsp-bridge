@@ -77,7 +77,6 @@ If you expect lsp-bridge to automatically scan the files of the entire project, 
 * `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
 * `acm-enable-doc`: Whether the complete menu display the help document
 * `acm-enable-icon`: Whether the complete menu shows the icon
-* `acm-fetch-candidate-doc-delay`: The complete menu pops up the delay of the document. It is not recommended to set it to 0, which will reduce the menu selection performance
 * `acm-snippet-insert-index`: The display position of snippet candidate in the complementary menu
 
 ## Customize language server configuration
