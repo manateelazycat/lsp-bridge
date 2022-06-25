@@ -23,7 +23,6 @@ class CodeAction(Handler):
                 range["end"]["line"] <= diagnostic["range"]["end"]["line"] and 
                 range["end"]["character"] <= diagnostic["range"]["end"]["character"]):
                 match_diagnostic.append(diagnostic)
-                break
         
         if isinstance(action_kind, str):
             context = {
