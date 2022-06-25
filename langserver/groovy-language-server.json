@@ -1,0 +1,8 @@
+{
+  "name": "groovy-language-server",
+  "languageId": "groovy",
+    "command": [
+      "groovy-language-server"
+    ],
+  "settings": {}
+}

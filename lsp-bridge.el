@@ -294,6 +294,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ((rust-mode rustic-mode) . "rust-analyzer")
     (elixir-mode . "elixirLS")
     (go-mode . "gopls")
+    (groovy-mode . "groovy-language-server")
     (haskell-mode . "hls")
     (lua-mode . "sumneko")
     (dart-mode . "dart-analysis-server")
@@ -356,7 +357,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     org-mode-hook
     php-mode-hook
     yaml-mode-hook
-    zig-mode-hook)
+    zig-mode-hook
+    groovy-mode-hook)
   "The default mode hook to enable lsp-bridge."
   :type 'list)
 
