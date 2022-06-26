@@ -168,12 +168,13 @@ class LspBridge:
         lang_server_info = load_lang_server_info(lang_server)
         
         if len(lang_server_info["command"]) > 0:
-            server_command_path = shutil.which(lang_server_info["command"][0])
+            server_command = lang_server_info["command"][0]
+            server_command_path = shutil.which(server_command)
             if server_command_path:
                 # We always replace LSP server command with absolute path of 'which' command.
                 lang_server_info["command"][0] = server_command_path
             else:
-                message_emacs("Error: can't find command {} for {}, disable lsp-bridge-mode.".format(server_command_path, filepath))
+                message_emacs("Error: can't find LSP server '{}' for {}, disable lsp-bridge-mode.".format(server_command, filepath))
                 eval_in_emacs("lsp-bridge-turn-off", filepath)
 
                 return False
