@@ -29,7 +29,7 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 ```
 
 ## 使用
-lsp-bridge开箱即用， 安装好文件对应的LSP服务器命令以后， 直接写代码即可， 不需要额外的设置。
+lsp-bridge开箱即用， **安装好文件对应的LSP服务器命令**以后， 直接写代码即可， 不需要额外的设置。
 
 需要注意的是 lsp-bridge 有两种模式：
 1. 检测到.git目录时(通过命令 `git rev-parse --is-inside-work-tree` 来判断)， lsp-bridge会扫描整个目录文件来提供补全
