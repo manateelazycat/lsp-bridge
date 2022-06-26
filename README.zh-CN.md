@@ -125,6 +125,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 23 | [intelephense](https://github.com/bmewburn/vscode-intelephense) | php | |
 | 24 | [yaml-language-server](https://github.com/redhat-developer/yaml-language-server) | yaml | `npm install -g yaml-language-server` |
 | 25 | [zls](https://github.com/zigtools/zls) | zig | 运行 `zls config` 来生成 zls 的配置。参考 [Configuration Options](https://github.com/zigtools/zls#configuration-options) |
+| 26 | [groovy-language-server](https://github.com/GroovyLanguageServer/groovy-language-server) | groovy | 在 PATH 中创建一个名为 "groovy-language-server" 的脚本, 内容为 `$JAVA_HOME/bin/java -jar <path>/groovy-language-server-all.jar` |
 
 ### 需要完成的功能：
 
