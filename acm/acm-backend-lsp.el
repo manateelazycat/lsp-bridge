@@ -84,12 +84,12 @@
 
 ;;; Code:
 
-(defcustom acm-backend-lsp-candidate-limit 30
-  "Maximal number of candidate of menu."
+(defcustom acm-backend-lsp-candidate-max-length 30
+  "Maximal length of candidate."
   :type 'integer)
 
-(defcustom acm-backend-lsp-empty-search-limit 100
-  "Maximal number of candidate of menu when input prefix is empty string."
+(defcustom acm-backend-lsp-candidates-max-number 1000
+  "Maximal number of candidate of menu."
   :type 'integer)
 
 (defcustom acm-backend-lsp-enable-auto-import t
@@ -104,31 +104,21 @@
 (defvar acm-backend-lsp-fetch-completion-item-func nil)
 
 (defun acm-backend-lsp-candidates (keyword)
-  (let* ((candidates (list))
-         (match-number 0))
-    (catch 'limit
-      (when (and acm-backend-lsp-items
-                 (hash-table-p acm-backend-lsp-items))
-        (maphash
-         (lambda (k v)
-           (let ((candidate-label (plist-get v :label)))
-             (when (or (string-equal keyword "")
-                       (acm-candidate-fuzzy-search keyword candidate-label))
-               (if (> (length candidate-label) acm-backend-lsp-candidate-limit)
-                   (plist-put v :display-label (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-limit)))
-                 (plist-put v :display-label candidate-label))
+  (let* ((candidates (list)))
+    (when (and acm-backend-lsp-items
+               (hash-table-p acm-backend-lsp-items))
+      (maphash
+       (lambda (k v)
+         (let ((candidate-label (plist-get v :label)))
+           (when (or (string-equal keyword "")
+                     (acm-candidate-fuzzy-search keyword candidate-label))
+             (if (> (length candidate-label) acm-backend-lsp-candidate-max-length)
+                 (plist-put v :display-label (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-max-length)))
+               (plist-put v :display-label candidate-label))
 
-               (plist-put v :backend "lsp")
-               (add-to-list 'candidates v t)
-
-               ;; We only show 100 candidates if search keyword is empty string.
-               ;; It will trigger Emacs automatic GC if got too candidates, such as typescript return 3000 candidates sometimes.
-               (when (and (string-equal keyword "")
-                          (> match-number acm-backend-lsp-empty-search-limit))
-                 (throw 'limit nil))
-
-               (setq match-number (1+ match-number)))))
-         acm-backend-lsp-items)))
+             (plist-put v :backend "lsp")
+             (add-to-list 'candidates v t))))
+       acm-backend-lsp-items))
 
     (acm-candidate-sort-by-prefix keyword candidates)))
 

@@ -60,6 +60,10 @@ class Completion(Handler):
                 item_index += 1
                 
             completion_candidates = sorted(completion_candidates, key=lambda candidate: sort_dict[candidate["key"]])
+            
+        # Avoid returning too many items to cause Emacs to do GC operation.
+        completion_candidates = completion_candidates[:min(len(completion_candidates), self.file_action.completion_items_limit)]
+        
         self.file_action.last_completion_candidates = completion_candidates
         
         logger.info("\n--- Completion items number: {}".format(len(completion_candidates)))
