@@ -62,11 +62,18 @@ def close_epc_client():
         epc_client.close()
 
 
+def handle_arg_types(arg):
+    if type(arg) is str and arg.startswith("'"):
+        arg = sexpdata.Symbol(arg.partition("'")[2])
+
+    return sexpdata.Quoted(arg)
+
+
 def eval_in_emacs(method_name, *args):
     if test_interceptor:  # for test purpose, record all eval_in_emacs calls
         test_interceptor(method_name, args)
 
-    args = [sexpdata.Symbol(method_name)] + list(map(sexpdata.Quoted, args))    # type: ignore
+    args = [sexpdata.Symbol(method_name)] + list(map(handle_arg_types, args))    # type: ignore
     sexp = sexpdata.dumps(args)
 
     logger.debug("Eval in Emacs: %s", sexp)
