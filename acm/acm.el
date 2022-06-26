@@ -72,7 +72,7 @@
 
 ;;; Acknowledgements:
 ;;
-;;
+;;      * Daniel Mendler: reference some code from corfu, thanks
 ;;
 
 ;;; TODO
