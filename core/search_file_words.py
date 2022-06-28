@@ -106,7 +106,10 @@ class SearchFileWords:
                 if message == "search_words":
                     self.search_files_mutex.acquire()
                     for search_file in self.search_files:
-                        words = set(re.findall("[\w|-]+", open(search_file).read()))
+                        try:
+                            words = set(re.findall("[\w|-]+", open(search_file).read()))
+                        except UnicodeDecodeError:
+                            continue
                         filter_words = set(map(lambda word: re.sub('[^A-Za-z0-9-_]+', '', word),
                                                set(filter(self.filter_word, words))))
                         filter_words.discard("")
