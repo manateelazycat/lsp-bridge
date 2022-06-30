@@ -136,8 +136,7 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 The goal of lsp-bridge is to become the fastest LSP client in Emacs, not a complete implementation of LSP protocol.
 
 Emacs can do better for the following tasks, we will not reinvent the wheel in lsp-bridge:
-1. Code formatting: each LSP server has its own formatting specification, we can gain finer control using Emacs' builtin formatting tool.
-2. Syntax highlighting: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) is a wonderful incremental parsing library for syntax highlighting.
+1. Syntax highlighting: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) is a wonderful incremental parsing library for syntax highlighting.
 2. Xref: Xref's mechanism is synchronous, but lsp-bridge is completely asynchronous. I recommended binding your xref key to a wrapper function that combines xref and lsp-bridge together.
 
 ## Join development

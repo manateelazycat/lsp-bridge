@@ -186,6 +186,7 @@ class LspServer:
         self.completion_resolve_provider = False
         self.rename_prepare_provider = False
         self.code_action_provider = False
+        self.code_format_provider = False
         self.code_action_kinds = [
             "quickfix",
             "refactor",
@@ -456,6 +457,11 @@ class LspServer:
                 try:
                     self.code_action_provider = message["result"]["capabilities"]["codeActionProvider"]
                     self.code_action_kinds = message["result"]["capabilities"]["codeActionProvider"]["codeActionKinds"]
+                except Exception:
+                    pass
+
+                try:
+                    self.code_format_provider = message["result"]["capabilities"]["documentFormattingProvider"]
                 except Exception:
                     pass
                 

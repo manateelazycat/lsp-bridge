@@ -1,6 +1,5 @@
 from core.handler import Handler
 from core.utils import *
-from typing import Union
 
 
 class CodeAction(Handler):

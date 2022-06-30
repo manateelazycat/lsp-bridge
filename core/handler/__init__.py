@@ -75,3 +75,4 @@ from core.handler.prepare_rename import PrepareRename
 from core.handler.rename import Rename
 from core.handler.jdt_uri_resolver import JDTUriResolver
 from core.handler.code_action import CodeAction
+from core.handler.formatting import Formatting

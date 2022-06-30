@@ -130,6 +130,12 @@ class FileAction:
     def save_file(self):
         self.lsp_server.send_did_save_notification(self.filepath)
         
+    def code_format(self):
+        if self.lsp_server.code_format_provider:
+            self.handlers["formatting"].send_request()
+        else:
+            message_emacs("Current server not support code format.")
+        
     def code_fix(self, range_start, range_end, action_kind):
         if self.lsp_server.code_action_provider and len(self.lsp_server.code_action_kinds) > 0:
             self.handlers["code_action"].send_request(range_start, range_end, self.diagnostics, action_kind)

@@ -1211,6 +1211,25 @@ Auto completion is only performed if the tick did not change."
 
 (defvar-local lsp-bridge-code-action-notify nil)
 
+(defun lsp-bridge-code-format ()
+  (interactive)
+  (when (lsp-bridge-has-lsp-server-p)
+    (lsp-bridge-call-file-api "code_format")))
+
+(defun lsp-bridge-code-format-fix (filepath edits)
+  (find-file-noselect filepath)
+  (save-excursion
+    (find-file filepath)
+    (dolist (edit (reverse edits))
+      (let* ((range (plist-get edit :range))
+             (replace-start-pos (acm-backend-lsp-position-to-point (plist-get range :start)))
+             (replace-end-pos (acm-backend-lsp-position-to-point (plist-get range :end)))
+             (new-text (plist-get edit :newText)))
+        (delete-region replace-start-pos replace-end-pos)
+        (goto-char replace-start-pos)
+        (insert new-text))))
+  (message "[LSP-BRIDGE] Complete code formatting."))
+
 (defvar lsp-bridge-english-helper-dict nil)
 
 (defun lsp-bridge-code-action-fix (actions action-kind)
