@@ -208,13 +208,8 @@ If optional MARKER, return a marker instead"
 
 (defun acm-backend-lsp-apply-text-edits (edits)
   (dolist (edit edits)
-    (let* ((range (plist-get edit :range))
-           (range-start-pos (acm-backend-lsp-position-to-point (plist-get range :start)))
-           (range-end-pos (acm-backend-lsp-position-to-point (plist-get range :end))))
-      (save-excursion
-        (goto-char range-start-pos)
-        (delete-region range-start-pos range-end-pos)
-        (insert (plist-get edit :newText))))))
+    (let* ((range (plist-get edit :range)))
+      (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get edit :newText)))))
 
 (defun acm-backend-lsp-snippet-expansion-fn ()
   "Compute a function to expand snippets.
@@ -222,6 +217,14 @@ Doubles as an indicator of snippet support."
   (and (boundp 'yas-minor-mode)
        (symbol-value 'yas-minor-mode)
        'yas-expand-snippet))
+
+(defun acm-backend-lsp-insert-new-text (start-pos end-pos new-text)
+  (let* ((start-point (acm-backend-lsp-position-to-point start-pos))
+         (end-point (acm-backend-lsp-position-to-point end-pos)))
+    (save-excursion
+      (delete-region start-point end-point)
+      (goto-char start-point)
+      (insert new-text))))
 
 (provide 'acm-backend-lsp)
 

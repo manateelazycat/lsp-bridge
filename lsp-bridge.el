@@ -848,12 +848,9 @@ Auto completion is only performed if the tick did not change."
     (dolist (edit (reverse edits))
       (let* ((bound-start (nth 0 edit))
              (bound-end (nth 1 edit))
-             (new-text (nth 2 edit))
-             (replace-start-pos (acm-backend-lsp-position-to-point bound-start))
-             (replace-end-pos (acm-backend-lsp-position-to-point bound-end)))
-        (delete-region replace-start-pos replace-end-pos)
-        (goto-char replace-start-pos)
-        (insert new-text))))
+             (new-text (nth 2 edit)))
+        (acm-backend-lsp-insert-new-text bound-start bound-end new-text)
+        )))
   (setq lsp-bridge-prohibit-completion t))
 
 (defun lsp-bridge--jump-to-def (filepath position)
@@ -1221,13 +1218,9 @@ Auto completion is only performed if the tick did not change."
   (save-excursion
     (find-file filepath)
     (dolist (edit (reverse edits))
-      (let* ((range (plist-get edit :range))
-             (replace-start-pos (acm-backend-lsp-position-to-point (plist-get range :start)))
-             (replace-end-pos (acm-backend-lsp-position-to-point (plist-get range :end)))
-             (new-text (plist-get edit :newText)))
-        (delete-region replace-start-pos replace-end-pos)
-        (goto-char replace-start-pos)
-        (insert new-text))))
+      (let* ((range (plist-get edit :range)))
+        (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get edit :newText))
+        )))
   (message "[LSP-BRIDGE] Complete code formatting."))
 
 (defvar lsp-bridge-english-helper-dict nil)
@@ -1267,13 +1260,8 @@ Auto completion is only performed if the tick did not change."
     (lsp-bridge--with-file-buffer filepath
       ;; reverse `change-infos` make sure the previous modification will not affect the subsequent modification.
       (dolist (change-info (reverse change-infos))
-        (let* ((range (plist-get change-info :range))
-               (start (acm-backend-lsp-position-to-point (plist-get range :start)))
-               (end (acm-backend-lsp-position-to-point (plist-get range :end)))
-               (new-text (plist-get change-info :newText)))
-          (goto-char start)
-          (delete-region start end)
-          (insert new-text)
+        (let* ((range (plist-get change-info :range)))
+          (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get change-info :newText))
           ))))
 
   (unless (string-equal title "")
