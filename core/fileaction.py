@@ -52,6 +52,7 @@ class FileAction:
 
         self.try_completion_timer = None
         self.completion_item_resolve_key = None
+        self.code_action_response = None
 
         self.diagnostics = []
 
@@ -135,12 +136,15 @@ class FileAction:
             self.handlers["formatting"].send_request()
         else:
             message_emacs("Current server not support code format.")
-        
+            
     def code_fix(self, range_start, range_end, action_kind):
         if self.lsp_server.code_action_provider and len(self.lsp_server.code_action_kinds) > 0:
             self.handlers["code_action"].send_request(range_start, range_end, self.diagnostics, action_kind)
         else:
             message_emacs("Current server not support code action.")
+            
+    def execute_command(self, command):
+        self.handlers["execute_command"].send_request(command)
 
     def handle_server_response_message(self, request_id, request_type, response):
         self.handlers[request_type].handle_response(request_id, response)

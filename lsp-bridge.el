@@ -853,6 +853,21 @@ Auto completion is only performed if the tick did not change."
         )))
   (setq lsp-bridge-prohibit-completion t))
 
+(defun lsp-bridge-workspace-apply-edit (document-changes)
+  (dolist (document-change document-changes)
+    (let* ((filepath (nth 0 document-change))
+           (edits (nth 1 document-change)))
+      (find-file-noselect filepath)
+      (save-excursion
+        (find-file filepath)
+        (dolist (edit (reverse edits))
+          (let* ((bound-start (nth 0 edit))
+                 (bound-end (nth 1 edit))
+                 (new-text (nth 2 edit)))
+            (acm-backend-lsp-insert-new-text bound-start bound-end new-text)
+            )))
+      )))
+
 (defun lsp-bridge--jump-to-def (filepath position)
   ;; Record postion.
   (set-marker (mark-marker) (point) (current-buffer))
@@ -1249,9 +1264,13 @@ Auto completion is only performed if the tick did not change."
                                 menu-items nil t nil nil default-action)
                                menu-items)))))
 
-    (pcase (plist-get action :kind)
-      ("quickfix" (lsp-bridge-code-action-quickfix (plist-get action :title) (plist-get (plist-get action :edit) :changes)))
-      (_ (message "[LSP-BRIDGE] code action '%s' not implement yet." (plist-get action :kind))))
+    (let* ((command (plist-get action :command)))
+      (if command
+          (lsp-bridge-call-file-api "execute_command" command)
+        (pcase (plist-get action :kind)
+          ("quickfix" (lsp-bridge-code-action-quickfix (plist-get action :title) (plist-get (plist-get action :edit) :changes)))
+          (_ (message "[LSP-BRIDGE] code action '%s' not implement yet." (plist-get action :kind))))
+        ))
     ))
 
 (defun lsp-bridge-code-action-quickfix (title change)
