@@ -1250,7 +1250,8 @@ Auto completion is only performed if the tick did not change."
                                menu-items)))))
 
     (pcase (plist-get action :kind)
-      ("quickfix" (lsp-bridge-code-action-quickfix (plist-get action :title) (plist-get (plist-get action :edit) :changes)))
+      ("quickfix" (lsp-bridge-code-action-quickfix (plist-get action :title)
+                                                   (plist-get (nth 0 (plist-get (plist-get action :command) :arguments)) :changes)))
       (_ (message "[LSP-BRIDGE] code action '%s' not implement yet." (plist-get action :kind))))
     ))
 
