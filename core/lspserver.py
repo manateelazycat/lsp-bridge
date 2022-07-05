@@ -78,7 +78,9 @@ class LspServerSender(Thread):
         ), **kwargs)
 
     def _send_message(self, message: dict):
-        message_str = "Content-Length: {}\r\n\r\n{}".format(len(json.dumps(message)), json.dumps(message))
+        json_content = json.dumps(message)
+        
+        message_str = "Content-Length: {}\r\n\r\n{}".format(len(json_content), json_content)
 
         self.process.stdin.write(message_str.encode("utf-8"))    # type: ignore
         self.process.stdin.flush()    # type: ignore

@@ -12,9 +12,15 @@ class ExecuteCommand(Handler):
         
         if self.file_action.code_action_response != None:
             for action in self.file_action.code_action_response:    # type: ignore
-                if action["command"] == command:
-                    arguments = action["arguments"]
-                    break
+                try:
+                    if action["command"] == command:
+                        arguments = action["arguments"]
+                        break
+                    elif action["command"]["command"] == command:
+                        arguments = action["command"]["arguments"]
+                        break
+                except:
+                    pass
         
         return dict(command=command, arguments=arguments)
 

@@ -1264,27 +1264,33 @@ Auto completion is only performed if the tick did not change."
                                 menu-items nil t nil nil default-action)
                                menu-items)))))
 
-    (let* ((command (plist-get action :command)))
-      (if command
-          (lsp-bridge-call-file-api "execute_command" command)
-        (pcase (plist-get action :kind)
-          ("quickfix" (lsp-bridge-code-action-quickfix (plist-get action :title) (plist-get (plist-get action :edit) :changes)))
-          (_ (message "[LSP-BRIDGE] code action '%s' not implement yet." (plist-get action :kind))))
-        ))
-    ))
+    (let* ((command (plist-get action :command))
+           (edit (plist-get action :edit)))
+      (cond (edit
+             (let (changes)
+               (setq changes (plist-get edit :changes))
+               (when changes
+                 (lsp-bridge-code-action-apply-changes changes))))
+            (command
+             (let (arguments)
+               (cond ((consp command)
+                      (setq arguments (plist-get command :arguments)))
+                     ((stringp command)
+                      (setq arguments (plist-get action :arguments))))
+               (dolist (argument arguments)
+                 (lsp-bridge-code-action-apply-changes (plist-get argument :changes)))
+               )))
+      (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
 
-(defun lsp-bridge-code-action-quickfix (title change)
-  (let* ((filepath (string-remove-prefix ":file://" (format "%s" (nth 0 change))))
-         (change-infos (nth 1 change)))
+(defun lsp-bridge-code-action-apply-changes (changes)
+  (let* ((filepath (string-remove-prefix ":file://" (format "%s" (nth 0 changes))))
+         (change-infos (nth 1 changes)))
     (lsp-bridge--with-file-buffer filepath
       ;; reverse `change-infos` make sure the previous modification will not affect the subsequent modification.
       (dolist (change-info (reverse change-infos))
         (let* ((range (plist-get change-info :range)))
           (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get change-info :newText))
-          ))))
-
-  (unless (string-equal title "")
-    (message "[LSP-BRIDGE] Quickfix: '%s'" title)))
+          )))))
 
 (defun lsp-bridge-get-range-start ()
   (lsp-bridge--point-position
