@@ -1296,25 +1296,23 @@ Auto completion is only performed if the tick did not change."
                  (lsp-bridge-call-file-api "execute_command" command)))))
       (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
 
+(defun lsp-bridge-code-action-apply-edits (filepath change-infos)
+  (lsp-bridge--with-file-buffer filepath
+    ;; reverse `change-infos` make sure the previous modification will not affect the subsequent modification.
+    (dolist (change-info (reverse change-infos))
+      (let* ((range (plist-get change-info :range)))
+        (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get change-info :newText))
+        ))))
+
 (defun lsp-bridge-code-action-apply-changes (changes)
-  (let* ((filepath (string-remove-prefix ":file://" (format "%s" (nth 0 changes))))
-         (change-infos (nth 1 changes)))
-    (lsp-bridge--with-file-buffer filepath
-      ;; reverse `change-infos` make sure the previous modification will not affect the subsequent modification.
-      (dolist (change-info (reverse change-infos))
-        (let* ((range (plist-get change-info :range)))
-          (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get change-info :newText))
-          )))))
+  (lsp-bridge-code-action-apply-edits
+   (string-remove-prefix ":file://" (format "%s" (nth 0 changes)))
+   (nth 1 changes)))
 
 (defun lsp-bridge-code-action-apply-document-changes (changes)
-  (let* ((filepath (string-remove-prefix "file://" (plist-get (plist-get (nth 0 changes) :textDocument) :uri)))
-         (change-infos (plist-get (nth 0 changes) :edits)))
-    (lsp-bridge--with-file-buffer filepath
-      ;; reverse `change-infos` make sure the previous modification will not affect the subsequent modification.
-      (dolist (change-info (reverse change-infos))
-        (let* ((range (plist-get change-info :range)))
-          (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get change-info :newText))
-          )))))
+  (lsp-bridge-code-action-apply-edits
+   (string-remove-prefix "file://" (plist-get (plist-get (nth 0 changes) :textDocument) :uri))
+   (plist-get (nth 0 changes) :edits)))
 
 (defun lsp-bridge-get-range-start ()
   (lsp-bridge--point-position
