@@ -127,10 +127,6 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 | 25 | [zls](https://github.com/zigtools/zls) | zig | execute `zls config` to generate configuration for zls. see [Configuration Options](https://github.com/zigtools/zls#configuration-options) |
 | 26 | [groovy-language-server](https://github.com/GroovyLanguageServer/groovy-language-server) | groovy | Create a script "groovy-language-server" in PATH, with `$JAVA_HOME/bin/java -jar <path>/groovy-language-server-all.jar` |
 
-### TODO:
-
-- [ ] Code action
-
 ### Features that won't be supported
 
 The goal of lsp-bridge is to become the fastest LSP client in Emacs, not a complete implementation of LSP protocol.

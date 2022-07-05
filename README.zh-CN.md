@@ -127,10 +127,6 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 25 | [zls](https://github.com/zigtools/zls) | zig | 运行 `zls config` 来生成 zls 的配置。参考 [Configuration Options](https://github.com/zigtools/zls#configuration-options) |
 | 26 | [groovy-language-server](https://github.com/GroovyLanguageServer/groovy-language-server) | groovy | 在 PATH 中创建一个名为 "groovy-language-server" 的脚本, 内容为 `$JAVA_HOME/bin/java -jar <path>/groovy-language-server-all.jar` |
 
-### 需要完成的功能：
-
-- [ ] Code Action: 代码动作， 比如自动修复代码
-
 ### 不会支持的特性：
 lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是实现LSP协议最全的LSP客户端。
 
