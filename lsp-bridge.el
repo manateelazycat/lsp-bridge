@@ -137,6 +137,11 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'cons
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-apply-edit-commands '("java.apply.workspaceEdit")
+  "Apply workspace edit if command match `lsp-bridge-apply-edit-commands', otherwise send workspace/executeCommand to LSP server."
+  :type 'cons
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-lookup-doc-tooltip " *lsp-bridge-hover*"
   "Buffer for display hover information."
   :type 'string
@@ -1273,15 +1278,22 @@ Auto completion is only performed if the tick did not change."
                  (lsp-bridge-code-action-apply-changes changes))))
             (command
              (let (arguments)
+               ;; Pick command and arguments.
                (cond ((consp command)
-                      (setq arguments (plist-get command :arguments)))
+                      (setq arguments (plist-get command :arguments))
+                      (setq command (plist-get command :command)))
                      ((stringp command)
                       (setq arguments (plist-get action :arguments))))
-               (dolist (argument arguments)
-                 (cond ((plist-get argument :changes)
-                        (lsp-bridge-code-action-apply-changes (plist-get argument :changes)))
-                       ((plist-get argument :documentChanges)
-                        (lsp-bridge-code-action-apply-document-changes (plist-get argument :documentChanges))))))))
+
+               (if (member command lsp-bridge-apply-edit-commands)
+                   ;; Apply workspace edit if command match `lsp-bridge-apply-edit-commands'.
+                   (dolist (argument arguments)
+                     (cond ((plist-get argument :changes)
+                            (lsp-bridge-code-action-apply-changes (plist-get argument :changes)))
+                           ((plist-get argument :documentChanges)
+                            (lsp-bridge-code-action-apply-document-changes (plist-get argument :documentChanges)))))
+                 ;; Otherwise send `workspace/executeCommand' request to LSP server.
+                 (lsp-bridge-call-file-api "execute_command" command)))))
       (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
 
 (defun lsp-bridge-code-action-apply-changes (changes)
