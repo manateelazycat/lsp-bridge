@@ -19,27 +19,10 @@ class Rename(Handler):
         if type(rename_infos) == dict:
             # JSON struct is 'changes'
             for rename_info in rename_infos.items():
-                rename_file = uri_to_path(rename_info[0])
-                
-                edits = []
-                
-                for edit_info in rename_info[1]:
-                    edits.append([edit_info["range"]["start"],
-                                  edit_info["range"]["end"],
-                                  edit_info["newText"]])
-                    
-                eval_in_emacs("lsp-bridge-rename-file", rename_file, edits)
+                eval_in_emacs("lsp-bridge-rename-file", uri_to_path(rename_info[0]), rename_info[1])
         else:
             # JSON struct is 'documentChanges'
             for rename_info in rename_infos:
-                rename_file = uri_to_path(rename_info["textDocument"]["uri"])
-                
-                edits = []
-                for edit_info in rename_info["edits"]:
-                    edits.append([edit_info["range"]["start"],
-                                  edit_info["range"]["end"],
-                                  edit_info["newText"]])
-                    
-                eval_in_emacs("lsp-bridge-rename-file", rename_file, edits)
+                eval_in_emacs("lsp-bridge-rename-file", uri_to_path(rename_info["textDocument"]["uri"]), rename_info["edits"])
 
         message_emacs("Rename done.")

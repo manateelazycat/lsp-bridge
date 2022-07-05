@@ -497,13 +497,7 @@ class LspServer:
                         changes = []
                         
                         for change_info in message["params"]["edit"]["documentChanges"]:
-                            edits = []
-                            for edit_info in change_info["edits"]:
-                                edits.append([edit_info["range"]["start"],
-                                              edit_info["range"]["end"],
-                                              edit_info["newText"]])
-                            
-                            changes.append([uri_to_path(change_info["textDocument"]["uri"]), edits])
+                            changes.append([uri_to_path(change_info["textDocument"]["uri"]), change_info["edits"]])
                         
                         eval_in_emacs("lsp-bridge-workspace-apply-edit", changes)
 

@@ -846,32 +846,22 @@ Auto completion is only performed if the tick did not change."
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))))
 
-(defun lsp-bridge-rename-file (filepath edits)
+(defun lsp-bridge-file-apply-edits (filepath edits)
   (find-file-noselect filepath)
   (save-excursion
     (find-file filepath)
     (dolist (edit (reverse edits))
-      (let* ((bound-start (nth 0 edit))
-             (bound-end (nth 1 edit))
-             (new-text (nth 2 edit)))
-        (acm-backend-lsp-insert-new-text bound-start bound-end new-text)
-        )))
+      (let* ((range (plist-get edit :range)))
+        (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get edit :newText))
+        ))))
+
+(defun lsp-bridge-rename-file (filepath edits)
+  (lsp-bridge-file-apply-edits filepath edits)
   (setq lsp-bridge-prohibit-completion t))
 
 (defun lsp-bridge-workspace-apply-edit (document-changes)
   (dolist (document-change document-changes)
-    (let* ((filepath (nth 0 document-change))
-           (edits (nth 1 document-change)))
-      (find-file-noselect filepath)
-      (save-excursion
-        (find-file filepath)
-        (dolist (edit (reverse edits))
-          (let* ((bound-start (nth 0 edit))
-                 (bound-end (nth 1 edit))
-                 (new-text (nth 2 edit)))
-            (acm-backend-lsp-insert-new-text bound-start bound-end new-text)
-            )))
-      )))
+    (lsp-bridge-file-apply-edits (nth 0 document-change) (nth 1 document-change))))
 
 (defun lsp-bridge--jump-to-def (filepath position)
   ;; Record postion.
@@ -1234,13 +1224,7 @@ Auto completion is only performed if the tick did not change."
     (lsp-bridge-call-file-api "code_format")))
 
 (defun lsp-bridge-code-format-fix (filepath edits)
-  (find-file-noselect filepath)
-  (save-excursion
-    (find-file filepath)
-    (dolist (edit (reverse edits))
-      (let* ((range (plist-get edit :range)))
-        (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get edit :newText))
-        )))
+  (lsp-bridge-file-apply-edits filepath edits)
   (message "[LSP-BRIDGE] Complete code formatting."))
 
 (defvar lsp-bridge-english-helper-dict nil)
