@@ -37,6 +37,8 @@ There are two modes in lsp-bridge:
 
 If you expect lsp-bridge to automatically scan the files of the entire project, please execute the `git init` command in the project root directory.
 
+If you expect that you do not run the `git` command but customize the project directory, you need to customize the function ```lsp-bridge-get-lang-server-project```, the input parameter is `project-path` and `file-path`, return the corresponding LSP server string, you can query all LSP servers in the list of `lsp-bridge-lang-server-mode-list` option, this function return nil default
+
 ## Commands
 
 * `lsp-bridge-find-def`: jump to the definition
@@ -84,7 +86,7 @@ If you expect lsp-bridge to automatically scan the files of the entire project, 
 The default configuration of for each language server is stored at [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
 
 Anyway you can customize server configuration with the following priority:
-1. ```lsp-bridge-get-lang-server-by-project```: write your own function to get server configuration based on project-path and file-path, this function is nil by default
+1. ```lsp-bridge-get-lang-server-by-project```: The user custom function, the input parameter is `project-path` and `file-path`, return the corresponding LSP server string, you can query all LSP servers in the list of `lsp-bridge-lang-server-mode-list` option, this function return nil default
 2. ```lsp-bridge-lang-server-extension-list```: load server configuration based on file extension, such as, we launch ```volar``` server instead ```javascript``` server when open *.vue file
 3. ```lsp-bridge-lang-server-mode-list```: load server configuration based on major-mode
 
