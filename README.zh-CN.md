@@ -31,13 +31,10 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 ## 使用
 lsp-bridge开箱即用， **安装好文件对应的LSP服务器命令**以后， 直接写代码即可， 不需要额外的设置。
 
-需要注意的是 lsp-bridge 有两种模式：
-1. 检测到.git目录时(通过命令 `git rev-parse --is-inside-work-tree` 来判断)， lsp-bridge会扫描整个目录文件来提供补全
-2. 没有检测到.git目录时， lsp-bridge只会对打开的文件提供单文件补全
-
-如果你期望lsp-bridge能够自动扫描整个项目的文件， 请在项目根目录执行`git init`命令。
-
-如果你期望不运行 git 命令但自定义项目目录， 你需要自定义函数 ```lsp-bridge-get-lang-server-by-project```, 这个函数的输入参数是 `project-path` 和 `file-path`, 返回对应的LSP服务器字符串， 可以在 `lsp-bridge-lang-server-mode-list` 列表中查询所有LSP服务器的名称， 默认这个函数返回 nil 。
+需要注意的是 lsp-bridge 有三种扫描模式：
+1. 检测到 `.git` 目录时(通过命令 `git rev-parse --is-inside-work-tree` 来判断)， lsp-bridge会扫描整个目录文件来提供补全
+2. 没有检测到 `.git` 目录时， lsp-bridge只会对打开的文件提供单文件补全
+3. 自定义 `lsp-bridge-get-project-path-by-filepath` 函数， 输入参数是打开文件的路径字符串， 输出参数是项目目录路径， lsp-bridge会根据输出目录路径来提供补全
 
 ## 命令列表
 

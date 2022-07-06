@@ -233,6 +233,7 @@ Start discarding off end if gets this big."
                (lsp-bridge-epc-define-method mngr 'eval-in-emacs 'lsp-bridge--eval-in-emacs-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-var 'lsp-bridge--get-emacs-var-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-vars 'lsp-bridge--get-emacs-vars-func)
+               (lsp-bridge-epc-define-method mngr 'get-project-path 'lsp-bridge--get-project-path-func)
                (lsp-bridge-epc-define-method mngr 'get-lang-server 'lsp-bridge--get-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-version 'emacs-version)
                (lsp-bridge-epc-define-method mngr 'is-snippet-support 'acm-backend-lsp-snippet-expansion-fn)
@@ -372,6 +373,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defvar lsp-bridge-get-lang-server-by-project nil
   "Get lang server with project path and file path.")
 
+(defvar lsp-bridge-get-project-path-by-filepath nil
+  "Default use command 'git rev-parse --show-toplevel' get project path,
+you can customize `lsp-bridge-get-project-path-by-filepath' to return project path by give file path.")
+
 (cl-defmacro lsp-bridge--with-file-buffer (filepath &rest body)
   "Evaluate BODY in buffer with FILEPATH."
   (declare (indent 1))
@@ -388,6 +393,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
                     (string-equal (file-truename file-name) filepath))
             (throw 'find-match buffer))))
     nil))
+
+(defun lsp-bridge--get-project-path-func (filepath)
+  (when lsp-bridge-get-project-path-by-filepath
+    (funcall lsp-bridge-get-project-path-by-filepath filepath)))
 
 (defun lsp-bridge--get-lang-server-func (project-path filepath)
   "Get lang server with project path, file path or file extension."

@@ -206,13 +206,17 @@ def get_from_path_dict(path_dict, filepath):
 
 
 def get_project_path(filepath):
-    import os
-    dir_path = os.path.dirname(filepath)
-    if get_command_result("git rev-parse --is-inside-work-tree", dir_path) == "true":
-        return get_command_result("git rev-parse --show-toplevel", dir_path)
+    project_path = get_emacs_func_result("get-project-path", filepath)
+    
+    if type(project_path) == str:
+        return project_path
     else:
-        return filepath
-
+        import os
+        dir_path = os.path.dirname(filepath)
+        if get_command_result("git rev-parse --is-inside-work-tree", dir_path) == "true":
+            return get_command_result("git rev-parse --show-toplevel", dir_path)
+        else:
+            return filepath
 
 @functools.lru_cache(maxsize=None)
 def get_emacs_version():

@@ -31,13 +31,10 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 ## Usage
 lsp-bridge is design for out the box. After **installing the LSP server command** corresponding to the open file, you can write the code directly without additional settings.
 
-There are two modes in lsp-bridge:
-1. When detecting the .git directory (to judge by command `git rev-parse-is-inside-work-tree`), lsp-bridge scan the entire directory files to provide completion
-2. When the .git directory was not detected, lsp-bridge only provided a single file complementary to the open file
-
-If you expect lsp-bridge to automatically scan the files of the entire project, please execute the `git init` command in the project root directory.
-
-If you expect that you do not run the `git` command but customize the project directory, you need to customize the function ```lsp-bridge-get-lang-server-project```, the input parameter is `project-path` and `file-path`, return the corresponding LSP server string, you can query all LSP servers in the list of `lsp-bridge-lang-server-mode-list` option, this function return nil default
+It should be noted that there are three scan modes of lsp-bridge:
+1. When detecting the `.git` directory (check by command `git rev-parse-is-inside-work-tree`), lsp-bridge scan the entire directory file to provide completion
+2. When the `.git` directory was not detected, lsp-bridge only scan opened file to provide completion
+3. Custom `lsp-bridge-get-project-path-by-filepath` function, the input parameter is the path string of opened file, the output parameter is the project directory path, lsp-bridge will scan project directory path to provide provide completion
 
 ## Commands
 
