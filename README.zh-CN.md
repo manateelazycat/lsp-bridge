@@ -162,17 +162,6 @@ lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是
 
 接着打开选项 ```lsp-bridge-enable-log``` ， happy hacking! ;)
 
-## 常见问题
-
-> 为什么 lsp-bridge 不能补全工程目录下其他文件的代码？
-
-lsp-bridge依靠git来查找工程目录的根路径， lsp-bridge找不到git信息就会进入单文件模式， 单文件模式下lsp-bridge只补全当前文件的内容, 你需要找到工程目录根路径， 执行 `git init` 命令来解决这个问题。
-
-> 打开 *.json 文件的时候， 为什么总是提示 `[LSP-Bridge] Error: can’t find command for *.json, disable lsp-bridge-mode.` 的错误?
-
-因为Emacs默认会把json文件的模式错误设置成js-mode, 你需要安装 [json-mode](https://github.com/joshwnj/json-mode) 来解决这个问题。
-
-
 ## 反馈问题
 
 请用命令 `emacs -q` 并只添加lsp-bridge配置做一个对比测试，如果 `emacs -q` 可以正常工作，请检查你个人的配置文件。
