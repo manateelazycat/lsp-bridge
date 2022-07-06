@@ -1,0 +1,6 @@
+{
+  "name": "serve-d",
+  "languageId": "d",
+  "command": ["serve-d"],
+  "settings": {}
+}
