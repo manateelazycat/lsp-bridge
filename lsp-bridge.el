@@ -319,6 +319,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (yaml-mode . "yaml-language-server")
     (zig-mode . "zls")
     (dockerfile-mode . "docker-langserver")
+    (d-mode . "serve-d")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -366,7 +367,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     yaml-mode-hook
     zig-mode-hook
     groovy-mode-hook
-    dockerfile-mode-hook)
+    dockerfile-mode-hook
+    d-mode-hook)
   "The default mode hook to enable lsp-bridge."
   :type 'list)
 
