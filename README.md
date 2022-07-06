@@ -158,11 +158,12 @@ The following is the directory structure of the lsp-bridge project:
 | core/hanlder/           | The implementation of sending and receiving LSP message, where __init__.py is a base class                                                                                             |
 | langserver              | The configurations of the LSP servers, each server corresponding to a JSON file that defines the name of the server, language ID, starting command, options, etc.                        |
 
+Please read below articles first:
+* [LSP Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/) 
+* [The Design of lsp-bridge](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html) 
+* [Why lsp-bridge not use capf](https://manateelazycat.github.io/emacs/2022/06/26/why-lsp-bridge-not-use-capf.html)
 
-
-Please read [LSP Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/) and [The Design of lsp-bridge](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html) first.
-
-Then turn on option ```lsp-bridge-enable-log``` and happy hacking! ;)
+Then turn on develop option ```lsp-bridge-enable-log``` and happy hacking! ;)
 
 ## Report bug
 
