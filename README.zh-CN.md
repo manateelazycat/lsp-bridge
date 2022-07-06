@@ -160,7 +160,7 @@ lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是
 
 请先阅读下面的文章:
 * [LSP协议规范](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
-* [lsp-bridge架构设计](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html)。
+* [lsp-bridge架构设计](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html)
 * [为什么lsp-bridge不用capf](https://manateelazycat.github.io/emacs/2022/06/26/why-lsp-bridge-not-use-capf.html)
 
 接着打开开发选项 ```lsp-bridge-enable-log``` ， happy hacking! ;)
