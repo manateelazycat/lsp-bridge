@@ -1100,7 +1100,7 @@ Auto completion is only performed if the tick did not change."
     (when lsp-bridge-enable-search-words
       (acm-run-idle-func lsp-bridge-search-words-timer lsp-bridge-search-words-rebuild-cache-idle 'lsp-bridge-search-words-rebuild-cache))
     (when lsp-bridge-enable-auto-format-code
-      (acm-run-idle-func lsp-bridge-auto-format-timer lsp-bridge-auto-format-code-idle 'lsp-bridge-code-format)))
+      (acm-run-idle-func lsp-bridge-auto-format-code-timer lsp-bridge-auto-format-code-idle 'lsp-bridge-code-format)))
 
   (dolist (hook lsp-bridge--internal-hooks)
     (add-hook (car hook) (cdr hook) nil t))
