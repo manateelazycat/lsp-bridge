@@ -62,9 +62,12 @@ class FileAction:
         for handler_cls in Handler.__subclasses__():
             self.handlers[handler_cls.name] = handler_cls(self)
 
-        (self.enable_auto_import, self.completion_items_limit) = get_emacs_vars([
-            "acm-backend-lsp-enable-auto-import",
-            "acm-backend-lsp-candidates-max-number"
+        (self.enable_auto_import, 
+         self.completion_items_limit,
+         self.insert_spaces) = get_emacs_vars([
+             "acm-backend-lsp-enable-auto-import",
+             "acm-backend-lsp-candidates-max-number",
+             "indent-tabs-mode"
         ])
 
         self.lsp_server.attach(self)
@@ -131,9 +134,9 @@ class FileAction:
     def save_file(self):
         self.lsp_server.send_did_save_notification(self.filepath)
         
-    def code_format(self):
+    def code_format(self, tab_size):
         if self.lsp_server.code_format_provider:
-            self.handlers["formatting"].send_request()
+            self.handlers["formatting"].send_request(tab_size)
         else:
             message_emacs("Current server not support code format.")
             

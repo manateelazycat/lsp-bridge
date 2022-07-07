@@ -7,10 +7,10 @@ class Formatting(Handler):
     method = "textDocument/formatting"
     cancel_on_change = True
 
-    def process_request(self) -> dict:
+    def process_request(self, tab_size) -> dict:
         options = {
-            "tabSize": 4,
-            "insertSpaces": True,
+            "tabSize": tab_size,
+            "insertSpaces": self.file_action.insert_spaces,
             "trimTrailingWhitespace": True,
             "insertFinalNewline": False,
             "trimFinalNewlines": True,
