@@ -66,6 +66,8 @@ lsp-bridge开箱即用， **安装好文件对应的LSP服务器命令**以后�
 * `lsp-bridge-enable-diagnostics`: 代码诊断， 默认打开
 * `lsp-bridge-enable-candidate-doc-preview`: 支持后选词文档预览， 默认打开
 * `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认关闭
+* `lsp-bridge-enable-search-words`: 索引打开文件的单词， 默认打开
+* `lsp-bridge-enable-auto-format-code`: 自动格式化代码, 默认关闭
 * `lsp-bridge-org-babel-lang-list`: 支持org-mode代码块补全的语言列表
 * `lsp-bridge-disable-backup`: 禁止emacs对文件做版本管理， 默认打开
 * `lsp-bridge-enable-log`: 启用LSP消息日志， 默认关闭

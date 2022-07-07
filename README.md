@@ -66,6 +66,8 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-enable-diagnostics`: code diagnostic, enable by default
 * `lsp-bridge-enable-candidate-doc-preview`: preview of the candidate document, enable by default
 * `lsp-bridge-enable-signature-help`: show function parameter in minibufer, disable by default
+* `lsp-bridge-enable-search-words`: index the word of the file, enable by default
+* `lsp-bridge-enable-auto-format-code`: automatic format code, disable by default
 * `lsp-bridge-org-babel-lang-list`: list of language to support org-mode code block completion
 * `lsp-bridge-disable-backup`: forbidden version manage of emacs, enable by default
 * `lsp-bridge-enable-log`: enable the LSP message log, disable by default

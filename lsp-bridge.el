@@ -197,6 +197,16 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'float
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-enable-auto-format-code nil
+  "Whether to auto format code."
+  :type 'boolean
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-auto-format-code-idle 1
+  "The idle seconds to auto format code."
+  :type 'float
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-enable-diagnostics t
   "Whether to enable diagnostics."
   :type 'boolean
@@ -1053,6 +1063,8 @@ Auto completion is only performed if the tick did not change."
 
 (defvar lsp-bridge-search-words-timer nil)
 
+(defvar lsp-bridge-auto-format-code-timer nil)
+
 ;;;###autoload
 (define-minor-mode lsp-bridge-mode
   "LSP Bridge mode."
@@ -1086,7 +1098,9 @@ Auto completion is only performed if the tick did not change."
     (when lsp-bridge-enable-signature-help
       (acm-run-idle-func lsp-bridge-signature-help-timer lsp-bridge-signature-help-fetch-idle 'lsp-bridge-signature-help-fetch))
     (when lsp-bridge-enable-search-words
-      (acm-run-idle-func lsp-bridge-search-words-timer lsp-bridge-search-words-rebuild-cache-idle 'lsp-bridge-search-words-rebuild-cache)))
+      (acm-run-idle-func lsp-bridge-search-words-timer lsp-bridge-search-words-rebuild-cache-idle 'lsp-bridge-search-words-rebuild-cache))
+    (when lsp-bridge-enable-auto-format-code
+      (acm-run-idle-func lsp-bridge-auto-format-timer lsp-bridge-auto-format-code-idle 'lsp-bridge-code-format)))
 
   (dolist (hook lsp-bridge--internal-hooks)
     (add-hook (car hook) (cdr hook) nil t))
@@ -1105,6 +1119,7 @@ Auto completion is only performed if the tick did not change."
   (acm-cancel-timer lsp-bridge-diagnostics-timer)
   (acm-cancel-timer lsp-bridge-signature-help-timer)
   (acm-cancel-timer lsp-bridge-search-words-timer)
+  (acm-cancel-timer lsp-bridge-auto-format-code-timer)
 
   (advice-remove #'acm-hide #'lsp-bridge--completion-hide-advisor))
 
