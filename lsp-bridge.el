@@ -1248,7 +1248,14 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge-code-format ()
   (interactive)
-  (when (lsp-bridge-has-lsp-server-p)
+  (when (and
+         ;; Current buffer has LSP server.
+         (lsp-bridge-has-lsp-server-p)
+         ;; Completion menu not show.
+         (not (lsp-bridge-completion-ui-visible-p))
+         ;; Yasnippet not active.
+         (or (not (boundp 'yas--active-snippets))
+             (not yas--active-snippets)))
     (lsp-bridge-call-file-api "code_format")))
 
 (defun lsp-bridge-code-format-fix (filepath edits)
