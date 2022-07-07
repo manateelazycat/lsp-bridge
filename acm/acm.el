@@ -223,7 +223,7 @@
   :init-value nil)
 
 (defvar x-gtk-resize-child-frames) ;; not present on non-gtk builds
-(defun acm-make-frame (frame-name internal-border)
+(defun acm-make-frame (frame-name)
   (let* ((after-make-frame-functions nil)
          (parent (selected-frame))
          (x-gtk-resize-child-frames
@@ -235,7 +235,6 @@
                              (or (getenv "XDG_CURRENT_DESKTOP")
                                  (getenv "DESKTOP_SESSION") ""))
              'resize-mode)))
-         (border-width (if internal-border internal-border 1))
          frame)
     (setq frame (make-frame
                  `((name . ,frame-name)
@@ -248,8 +247,8 @@
                    (width . 0)
                    (height . 0)
                    (border-width . 0)
-                   (internal-border-width . ,border-width)
-                   (child-frame-border-width . ,border-width)
+                   (internal-border-width . 1)
+                   (child-frame-border-width . 1)
                    (left-fringe . 0)
                    (right-fringe . 0)
                    (vertical-scroll-bars . nil)
@@ -268,14 +267,13 @@
                    (desktop-dont-save . t)
                    )))
 
-    ;; Set frame border, if border-width more than 1 pixel, don't set border.
-    (when (equal border-width 1)
-      (let* ((face (if (facep 'child-frame-border) 'child-frame-border 'internal-border))
-             (new (face-attribute 'acm-border-face :background nil 'default)))
-        (unless (equal (face-attribute face :background frame 'default) new)
-          (set-face-background face new frame))))
+    ;; Set frame border color.
+    (let* ((face (if (facep 'child-frame-border) 'child-frame-border 'internal-border))
+           (new (face-attribute 'acm-border-face :background nil 'default)))
+      (unless (equal (face-attribute face :background frame 'default) new)
+        (set-face-background face new frame)))
 
-    ;; Set frame background.
+    ;; Set frame background color.
     (let ((new (face-attribute 'acm-default-face :background nil 'default)))
       (unless (equal (frame-parameter frame 'background-color) new)
         (set-frame-parameter frame 'background-color new)))
@@ -284,9 +282,9 @@
     (redirect-frame-focus frame parent)
     frame))
 
-(cl-defmacro acm-create-frame-if-not-exist (frame frame-buffer frame-name &optional internal-border)
+(cl-defmacro acm-create-frame-if-not-exist (frame frame-buffer frame-name)
   `(unless (frame-live-p ,frame)
-     (setq ,frame (acm-make-frame ,frame-name ,internal-border))
+     (setq ,frame (acm-make-frame ,frame-name))
 
      (with-current-buffer (get-buffer-create ,frame-buffer)
        ;; Install mouse ignore map
@@ -711,7 +709,7 @@ influence of C1 on the result."
       (when (and candidate-doc
                  (not (string-equal candidate-doc "")))
         ;; Create doc frame if it not exist.
-        (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame" 10)
+        (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame")
 
         ;; Insert documentation and turn on wrap line.
         (with-current-buffer (get-buffer-create acm-doc-buffer)
