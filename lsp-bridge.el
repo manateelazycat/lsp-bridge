@@ -389,7 +389,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Default use command 'git rev-parse --show-toplevel' get project path,
 you can customize `lsp-bridge-get-project-path-by-filepath' to return project path by give file path.")
 
-(defvar lsp-bridge--formatting-indent-alist
+(defvar lsp-bridge-formatting-indent-alist
   '((c-mode                     . c-basic-offset) ; C
     (c++-mode                   . c-basic-offset) ; C++
     (csharp-mode                . c-basic-offset) ; C#
@@ -430,7 +430,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 
 (defun lsp-bridge--get-indent-width (mode)
   "Get indentation offset for MODE."
-  (or (alist-get mode lsp-bridge--formatting-indent-alist)
+  (or (alist-get mode lsp-bridge-formatting-indent-alist)
       (lsp-bridge--get-indent-width (or (get mode 'derived-mode-parent) 'default))))
 
 (cl-defmacro lsp-bridge--with-file-buffer (filepath &rest body)

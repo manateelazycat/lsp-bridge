@@ -94,7 +94,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 1. 在 lsp-bridge/langserver 目录下创建配置文件， 比如`pyright.json`就是 pyright 服务器的配置文件 (windows 平台用`pyright_windows.json`, macOS 平台用`pyright_darwin.json`)。
 2. 添加 `(mode . server_name)` 到 `lsp-bridge.el` 文件中的 `lsp-bridge-lang-server-mode-list` 选项中, 比如 `(python-mode . "pyright")`。
 3. 添加新的 mode-hook 到 `lsp-bridge.el` 文件中的 `lsp-bridge-default-mode-hooks` 选项中。
-4. 添加新的缩进变量到 `lsp-bridge.el` 文件中的 `lsp-bridge--formatting-indent-alist` 选项中。
+4. 添加新的缩进变量到 `lsp-bridge.el` 文件中的 `lsp-bridge-formatting-indent-alist` 选项中。
 
 欢迎发送补丁帮助我们支持更多的LSP服务器，感谢你的帮助！
 

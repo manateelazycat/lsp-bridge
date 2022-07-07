@@ -94,7 +94,7 @@ Anyway you can customize server configuration with the following priority:
 1. Create configuration file under lsp-bridge/langserver, such as `pyright.json` for pyright (windows user please uses `pyright_windows.json`, macOS user please uses `pyright_darwin.json`).
 2. Add `(mode . server_name)` to `lsp-bridge-lang-server-mode-list` in `lsp-bridge.el`, such as `(python-mode . "pyright")`.
 3. Add new mode-hook to `lsp-bridge-default-mode-hooks` in `lsp-bridge.el`.
-4. Add new mode indent to `lsp-bridge--formatting-indent-alist` in `lsp-bridge.el`.
+4. Add new mode indent to `lsp-bridge-formatting-indent-alist` in `lsp-bridge.el`.
 
 Welcome to send PR to help us improve support for LSP servers, thanks for your contribution!
 
