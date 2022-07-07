@@ -62,11 +62,12 @@ class FileAction:
         for handler_cls in Handler.__subclasses__():
             self.handlers[handler_cls.name] = handler_cls(self)
 
-        (self.enable_auto_import, self.completion_items_limit) = get_emacs_vars([
+        (self.enable_auto_import, self.completion_items_limit, self.insert_spaces) = get_emacs_vars([
              "acm-backend-lsp-enable-auto-import",
              "acm-backend-lsp-candidates-max-number",
+            "indent-tabs-mode"
         ])
-        self.insert_spaces = not get_emacs_var("indent-tabs-mode")
+        self.insert_spaces = not self.insert_spaces
 
         self.lsp_server.attach(self)
 
