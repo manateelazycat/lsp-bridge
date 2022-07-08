@@ -111,6 +111,7 @@
                                                     lsp-bridge-not-match-completion-position
                                                     lsp-bridge-not-match-stop-commands
                                                     lsp-bridge-not-in-string
+                                                    lsp-bridge-not-in-comment
                                                     lsp-bridge-not-follow-complete
                                                     lsp-bridge-is-evil-insert-state
                                                     )
@@ -720,17 +721,31 @@ Auto completion is only performed if the tick did not change."
    ;; Other language not allowed popup completion in string, it's annoy
    (not (lsp-bridge-in-string-p))))
 
+(defun lsp-bridge-not-in-comment ()
+  "Hide completion if cursor in comment area."
+  (or
+   ;; Allow english completion in string area
+   acm-enable-english-helper
+   ;; Other language not allowed popup completion in comment.
+   (not (lsp-bridge-in-comment-p))))
+
 (defun lsp-bridge-not-follow-complete ()
   "Hide completion if last command is `acm-complete'."
   (not (eq last-command 'acm-complete)))
+
+(defun lsp-bridge-in-comment-p (&optional state)
+  (ignore-errors
+    (unless (or (bobp) (eobp))
+      (save-excursion
+        (and
+         (nth 4 (or state (lsp-bridge-current-parse-state)))
+         (not (equal (point) (line-end-position))))
+        ))))
 
 (defun lsp-bridge-in-string-p (&optional state)
   (ignore-errors
     (unless (or (bobp) (eobp))
       (save-excursion
-        ;; In most situation, point inside a string when 4rd state `parse-partial-sexp' is non-nil.
-        ;; but at this time, if the string delimiter is the last character of the line, the point is not in the string.
-        ;; So we need exclude this situation when check state of `parse-partial-sexp'.
         (and
          (nth 3 (or state (lsp-bridge-current-parse-state)))
          (not (equal (point) (line-end-position))))
