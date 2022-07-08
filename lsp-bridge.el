@@ -1338,10 +1338,7 @@ Auto completion is only performed if the tick did not change."
     (let* ((command (plist-get action :command))
            (edit (plist-get action :edit)))
       (cond (edit
-             (let (changes)
-               (setq changes (plist-get edit :changes))
-               (when changes
-                 (lsp-bridge-code-action-apply-changes changes))))
+             (lsp-bridge-code-action-fix-edit edit))
             (command
              (let (arguments)
                ;; Pick command and arguments.
@@ -1354,10 +1351,7 @@ Auto completion is only performed if the tick did not change."
                (if (member command lsp-bridge-apply-edit-commands)
                    ;; Apply workspace edit if command match `lsp-bridge-apply-edit-commands'.
                    (dolist (argument arguments)
-                     (cond ((plist-get argument :changes)
-                            (lsp-bridge-code-action-apply-changes (plist-get argument :changes)))
-                           ((plist-get argument :documentChanges)
-                            (lsp-bridge-code-action-apply-document-changes (plist-get argument :documentChanges)))))
+                     (lsp-bridge-code-action-fix-edit argument))
                  ;; Otherwise send `workspace/executeCommand' request to LSP server.
                  (lsp-bridge-call-file-api "execute_command" command)))))
       (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
@@ -1369,6 +1363,12 @@ Auto completion is only performed if the tick did not change."
       (let* ((range (plist-get change-info :range)))
         (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get change-info :newText))
         ))))
+
+(defun lsp-bridge-code-action-fix-edit (edit)
+  (cond ((plist-get edit :changes)
+         (lsp-bridge-code-action-apply-changes (plist-get edit :changes)))
+        ((plist-get edit :documentChanges)
+         (lsp-bridge-code-action-apply-document-changes (plist-get edit :documentChanges)))))
 
 (defun lsp-bridge-code-action-apply-changes (changes)
   (lsp-bridge-code-action-apply-edits
