@@ -132,6 +132,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 26 | [groovy-language-server](https://github.com/GroovyLanguageServer/groovy-language-server) | groovy | 在 PATH 中创建一个名为 "groovy-language-server" 的脚本, 内容为 `$JAVA_HOME/bin/java -jar <path>/groovy-language-server-all.jar` |
 | 27 | [docker-language-server](https://github.com/rcjsuen/dockerfile-language-server-nodejs) | Dockerfiles | |
 | 28 | [serve-d](https://github.com/Pure-D/serve-d) | d | serve-d 不支持单文件模式, 使用前请先在项目目录下初始 git 仓库或者自定义 `lsp-bridge-get-project-path-by-filepath` 返回项目目录 |
+| 29 | [fortls](https://github.com/gnikit/fortls) | Fortran | |
 
 ### 不会支持的特性：
 lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是实现LSP协议最全的LSP客户端。
