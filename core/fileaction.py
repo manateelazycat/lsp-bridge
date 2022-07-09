@@ -139,6 +139,10 @@ class FileAction:
         else:
             message_emacs("Current server not support code format.")
             
+    def show_signature_help(self, position):
+        if self.lsp_server.signature_help_provider:
+            self.handlers["signature_help"].send_request(position)
+            
     def code_fix(self, range_start, range_end, action_kind):
         if self.lsp_server.code_action_provider and len(self.lsp_server.code_action_kinds) > 0:
             self.handlers["code_action"].send_request(range_start, range_end, self.diagnostics, action_kind)

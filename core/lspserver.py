@@ -189,6 +189,7 @@ class LspServer:
         self.rename_prepare_provider = False
         self.code_action_provider = False
         self.code_format_provider = False
+        self.signature_help_provider = False
         self.code_action_kinds = [
             "quickfix",
             "refactor",
@@ -464,6 +465,11 @@ class LspServer:
 
                 try:
                     self.code_format_provider = message["result"]["capabilities"]["documentFormattingProvider"]
+                except Exception:
+                    pass
+                
+                try:
+                    self.signature_help_provider = message["result"]["capabilities"]["signatureHelpProvider"]
                 except Exception:
                     pass
                 

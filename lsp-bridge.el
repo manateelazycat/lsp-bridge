@@ -926,7 +926,7 @@ Auto completion is only performed if the tick did not change."
   (if lsp-bridge-code-action-notify
       (setq-local lsp-bridge-code-action-notify nil)
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-      (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))))
+      (lsp-bridge-call-file-api "show_signature_help" (lsp-bridge--position)))))
 
 (defun lsp-bridge-file-apply-edits (filepath edits)
   (find-file-noselect filepath)
