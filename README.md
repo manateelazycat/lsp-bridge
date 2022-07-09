@@ -132,6 +132,7 @@ You need to install the LSP server corresponding to each programming language, t
 | 26 | [groovy-language-server](https://github.com/GroovyLanguageServer/groovy-language-server) | groovy | Create a script "groovy-language-server" in PATH, with `$JAVA_HOME/bin/java -jar <path>/groovy-language-server-all.jar` |
 | 27 | [docker-language-server](https://github.com/rcjsuen/dockerfile-language-server-nodejs) | Dockerfiles | |
 | 28 | [serve-d](https://github.com/Pure-D/serve-d) | d | serve-d does not support single file mode, please init .git repository under project root at first or custom `lsp-bridge-get-project-path-by-filepath` function |
+| 29 | [fortls](https://github.com/gnikit/fortls) | Fortran | |
 
 ### Features that won't be supported
 
