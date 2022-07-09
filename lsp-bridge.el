@@ -981,7 +981,7 @@ Auto completion is only performed if the tick did not change."
   (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode))))
     (if (string-equal theme-mode "dark") "#191a1b" "#f0f0f0")))
 
-(defun lsp-bridge-popup-documentation (kind name value)
+(defun lsp-bridge-popup-documentation (value)
   (with-current-buffer (get-buffer-create lsp-bridge-lookup-doc-tooltip)
     (erase-buffer)
     (text-scale-set lsp-bridge-lookup-doc-tooltip-text-scale)
