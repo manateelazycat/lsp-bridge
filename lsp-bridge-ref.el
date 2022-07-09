@@ -307,17 +307,31 @@ used to restore window configuration after apply changed.")
                             (propertize (format " %s matches" lsp-bridge-ref-hit-count) 'font-lock-face 'lsp-bridge-ref-font-lock-header-line-text)
                             (propertize " [ " 'font-lock-face 'lsp-bridge-ref-font-lock-line-number)
                             (propertize "Nav " 'font-lock-face 'lsp-bridge-ref-font-lock-header-line-text)
-                            (propertize "j / k / h / l" 'font-lock-face 'lsp-bridge-ref-font-lock-header-line-edit-mode)
+                            (propertize
+                             (substitute-command-keys
+                              "\\<lsp-bridge-ref-mode-map> \\[lsp-bridge-ref-jump-next-keyword] / \\[lsp-bridge-ref-jump-prev-keyword] / \\[lsp-bridge-ref-jump-next-file] / \\[lsp-bridge-ref-jump-prev-file]" t)
+                             'font-lock-face 'lsp-bridge-ref-font-lock-header-line-edit-mode)
                             (propertize "  Replace " 'font-lock-face 'lsp-bridge-ref-font-lock-header-line-text)
-                            (propertize "r" 'font-lock-face 'lsp-bridge-ref-font-lock-header-line-edit-mode)
+                            (propertize
+                             (substitute-command-keys
+                              "\\<lsp-bridge-ref-mode-map> \\[lsp-bridge-ref-replace-all-matches]" t)
+                             'font-lock-face 'lsp-bridge-ref-font-lock-header-line-edit-mode)
                             (propertize "  Edit " 'font-lock-face 'lsp-bridge-ref-font-lock-header-line-text)
-                            (propertize "e" 'font-lock-face 'lsp-bridge-ref-font-lock-header-line-edit-mode)
+                            (propertize
+                             (substitute-command-keys "\\<lsp-bridge-ref-mode-map> \\[lsp-bridge-ref-switch-to-edit-mode]" t)
+                             'font-lock-face 'lsp-bridge-ref-font-lock-header-line-edit-mode)
                             (propertize "  Filter files: " 'font-lock-face 'lsp-bridge-ref-font-lock-header-line-text)
-                            (propertize "x / X / u" 'font-lock-face 'lsp-bridge-ref-font-lock-header-line-edit-mode)
+                            (propertize
+                             (substitute-command-keys "\\<lsp-bridge-ref-mode-map> \\[lsp-bridge-ref-filter-match-files] / \\[lsp-bridge-ref-filter-mismatch-files] / \\[lsp-bridge-ref-unfilter]" t)
+                             'font-lock-face 'lsp-bridge-ref-font-lock-header-line-edit-mode)
                             (propertize "  Filter regex: " 'font-lock-face 'lsp-bridge-ref-font-lock-header-line-text)
-                            (propertize "f / F" 'font-lock-face 'lsp-bridge-ref-font-lock-header-line-edit-mode)
+                            (propertize
+                             (substitute-command-keys "\\<lsp-bridge-ref-mode-map> \\[lsp-bridge-ref-filter-match-results] / \\[lsp-bridge-ref-filter-mismatch-results]" t)
+                             'font-lock-face 'lsp-bridge-ref-font-lock-header-line-edit-mode)
                             (propertize "  Remove " 'font-lock-face 'lsp-bridge-ref-font-lock-header-line-text)
-                            (propertize "D" 'font-lock-face 'lsp-bridge-ref-font-lock-header-line-edit-mode)
+                            (propertize
+                             (substitute-command-keys "\\<lsp-bridge-ref-mode-map> \\[lsp-bridge-ref-remove-line-from-results]" t)
+                             'font-lock-face 'lsp-bridge-ref-font-lock-header-line-edit-mode)
                             (propertize " ]" 'font-lock-face 'lsp-bridge-ref-font-lock-line-number)
                             )))
 
