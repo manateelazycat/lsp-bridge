@@ -39,18 +39,11 @@ class Hover(Handler):
         return "\n".join(render_strings)
 
     def process_response(self, response: dict) -> None:
-        if response is None or "range" not in response or "contents" not in response:
+        if response is None or "contents" not in response or len(response["contents"]) == 0:
             message_emacs("No documentation available.")
             return
 
-        line = response["range"]["start"]["line"]
-        start_column = response["range"]["start"]["character"]
-        end_column = response["range"]["end"]["character"]
-
-        line_content = linecache.getline(self.file_action.filepath, line + 1)
-        linecache.clearcache()  # clear line cache
         contents = response["contents"]
         render_string = self.parse_hover_contents(contents, [])
 
-        eval_in_emacs("lsp-bridge-popup-documentation", "",
-                      line_content[start_column:end_column], render_string)
+        eval_in_emacs("lsp-bridge-popup-documentation", render_string)
