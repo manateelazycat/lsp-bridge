@@ -109,7 +109,7 @@ You need to install the LSP server corresponding to each programming language, t
 | 3 | [solargraph](https://github.com/castwide/solargraph) | ruby | |
 | 4 | [rust-analyzer](https://github.com/rust-lang/rust-analyzer) | rust | |
 | 5 | [elixirLS](https://github.com/elixir-lsp/elixir-ls) | elixir | please ensure that the `elixir-ls` release directory is in your system PATH at first |
-| 6 | [gopls](https://github.com/golang/tools/tree/master/gopls) | go | make sure gopls in PATH, please do `ln -s ~/go/bin/gopls ~/.local/bin`, and do `go mod init` first |
+| 6 | [gopls](https://github.com/golang/tools/tree/master/gopls) | go | make sure install [go-mode](https://github.com/dominikh/go-mode.el) and gopls in PATH, please do `ln -s ~/go/bin/gopls ~/.local/bin`, and do `go mod init` first |
 | 7 | [hls](https://github.com/haskell/haskell-language-server) | haskell | |
 | 8 | [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) | dart | |
 | 9 | [metals](https://scalameta.org/metals/) | scala | |
