@@ -1355,7 +1355,7 @@ Auto completion is only performed if the tick did not change."
     (let* ((command (plist-get action :command))
            (edit (plist-get action :edit)))
       (cond (edit
-             (lsp-bridge-code-action-fix-edit edit))
+             (lsp-bridge-code-action-apply-edit edit))
             (command
              (let (arguments)
                ;; Pick command and arguments.
@@ -1368,34 +1368,26 @@ Auto completion is only performed if the tick did not change."
                (if (member command lsp-bridge-apply-edit-commands)
                    ;; Apply workspace edit if command match `lsp-bridge-apply-edit-commands'.
                    (dolist (argument arguments)
-                     (lsp-bridge-code-action-fix-edit argument))
+                     (lsp-bridge-code-action-apply-edit argument))
                  ;; Otherwise send `workspace/executeCommand' request to LSP server.
                  (lsp-bridge-call-file-api "execute_command" command)))))
       (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
 
-(defun lsp-bridge-code-action-apply-edits (filepath change-infos)
-  (lsp-bridge--with-file-buffer filepath
-    ;; reverse `change-infos` make sure the previous modification will not affect the subsequent modification.
-    (dolist (change-info (reverse change-infos))
-      (let* ((range (plist-get change-info :range)))
-        (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get change-info :newText))
-        ))))
-
-(defun lsp-bridge-code-action-fix-edit (edit)
-  (cond ((plist-get edit :changes)
-         (lsp-bridge-code-action-apply-changes (plist-get edit :changes)))
-        ((plist-get edit :documentChanges)
-         (lsp-bridge-code-action-apply-document-changes (plist-get edit :documentChanges)))))
-
-(defun lsp-bridge-code-action-apply-changes (changes)
-  (lsp-bridge-code-action-apply-edits
-   (string-remove-prefix ":file://" (format "%s" (nth 0 changes)))
-   (nth 1 changes)))
-
-(defun lsp-bridge-code-action-apply-document-changes (changes)
-  (lsp-bridge-code-action-apply-edits
-   (string-remove-prefix "file://" (plist-get (plist-get (nth 0 changes) :textDocument) :uri))
-   (plist-get (nth 0 changes) :edits)))
+(defun lsp-bridge-code-action-apply-edit (edit)
+  (let (changes filepath change-infos)
+    (cond ((plist-get edit :changes)
+           (setq changes (plist-get edit :changes))
+           (setq filepath (string-remove-prefix ":file://" (format "%s" (nth 0 changes))))
+           (setq change-infos (nth 1 changes)))
+          ((plist-get edit :documentChanges)
+           (setq changes (plist-get edit :documentChanges))
+           (setq filepath (string-remove-prefix "file://" (plist-get (plist-get (nth 0 changes) :textDocument) :uri)))
+           (setq change-infos (plist-get (nth 0 changes) :edits))))
+    (lsp-bridge--with-file-buffer filepath
+      ;; reverse `change-infos` make sure the previous modification will not affect the subsequent modification.
+      (dolist (change-info (reverse change-infos))
+        (let* ((range (plist-get change-info :range)))
+          (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get change-info :newText)))))))
 
 (defun lsp-bridge-get-range-start ()
   (lsp-bridge--point-position
