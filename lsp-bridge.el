@@ -943,10 +943,6 @@ Auto completion is only performed if the tick did not change."
   (lsp-bridge-file-apply-edits filepath edits)
   (setq lsp-bridge-prohibit-completion t))
 
-(defun lsp-bridge-workspace-apply-edit (document-changes)
-  (dolist (document-change document-changes)
-    (lsp-bridge-file-apply-edits (nth 0 document-change) (nth 1 document-change))))
-
 (defun lsp-bridge--jump-to-def (filepath position)
   ;; Record postion.
   (set-marker (mark-marker) (point) (current-buffer))
@@ -1355,7 +1351,7 @@ Auto completion is only performed if the tick did not change."
     (let* ((command (plist-get action :command))
            (edit (plist-get action :edit)))
       (cond (edit
-             (lsp-bridge-code-action-apply-edit edit))
+             (lsp-bridge-workspace-apply-edit edit))
             (command
              (let (arguments)
                ;; Pick command and arguments.
@@ -1368,12 +1364,12 @@ Auto completion is only performed if the tick did not change."
                (if (member command lsp-bridge-apply-edit-commands)
                    ;; Apply workspace edit if command match `lsp-bridge-apply-edit-commands'.
                    (dolist (argument arguments)
-                     (lsp-bridge-code-action-apply-edit argument))
+                     (lsp-bridge-workspace-apply-edit argument))
                  ;; Otherwise send `workspace/executeCommand' request to LSP server.
                  (lsp-bridge-call-file-api "execute_command" command)))))
       (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
 
-(defun lsp-bridge-code-action-apply-edit (edit)
+(defun lsp-bridge-workspace-apply-edit (edit)
   (let (changes filepath change-infos)
     (cond ((plist-get edit :changes)
            (setq changes (plist-get edit :changes))
