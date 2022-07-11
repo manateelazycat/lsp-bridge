@@ -525,26 +525,29 @@ Auto completion is only performed if the tick did not change."
 (defvar-local lsp-bridge-buffer-file-deleted nil)
 
 (defun lsp-bridge-call-file-api (method &rest args)
-  (if (file-exists-p acm-backend-lsp-filepath)
-      (if lsp-bridge-buffer-file-deleted
-          ;; If buffer's file create again (such as switch branch back), we need save buffer first,
-          ;; send the LSP request after the file is changed next time.
-          (progn
-            (save-buffer)
-            (setq-local lsp-bridge-buffer-file-deleted nil)
-            (message "[LSP-Bridge] %s is back, will send the LSP request after the file is changed next time." acm-backend-lsp-filepath))
-        (when (and acm-backend-lsp-filepath
-                   (not (string-equal acm-backend-lsp-filepath "")))
-          (lsp-bridge-deferred-chain
-            (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) (append (list acm-backend-lsp-filepath) args)))))
-    ;; We need send `closeFile' request to lsp server if we found buffer's file is not exist,
-    ;; it is usually caused by switching branch or other tools to delete file.
-    ;;
-    ;; We won't send any lsp request until buffer's file create again.
-    (unless lsp-bridge-buffer-file-deleted
-      (lsp-bridge-close-buffer-file)
-      (setq-local lsp-bridge-buffer-file-deleted t)
-      (message "[LSP-Bridge] %s is not exist, stop send the LSP request until file create again." acm-backend-lsp-filepath))))
+  (when (and lsp-bridge-mode
+             (lsp-bridge-has-lsp-server-p)
+             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
+    (if (file-exists-p acm-backend-lsp-filepath)
+        (if lsp-bridge-buffer-file-deleted
+            ;; If buffer's file create again (such as switch branch back), we need save buffer first,
+            ;; send the LSP request after the file is changed next time.
+            (progn
+              (save-buffer)
+              (setq-local lsp-bridge-buffer-file-deleted nil)
+              (message "[LSP-Bridge] %s is back, will send the LSP request after the file is changed next time." acm-backend-lsp-filepath))
+          (when (and acm-backend-lsp-filepath
+                     (not (string-equal acm-backend-lsp-filepath "")))
+            (lsp-bridge-deferred-chain
+              (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) (append (list acm-backend-lsp-filepath) args)))))
+      ;; We need send `closeFile' request to lsp server if we found buffer's file is not exist,
+      ;; it is usually caused by switching branch or other tools to delete file.
+      ;;
+      ;; We won't send any lsp request until buffer's file create again.
+      (unless lsp-bridge-buffer-file-deleted
+        (lsp-bridge-close-buffer-file)
+        (setq-local lsp-bridge-buffer-file-deleted t)
+        (message "[LSP-Bridge] %s is not exist, stop send the LSP request until file create again." acm-backend-lsp-filepath)))))
 
 (defvar lsp-bridge-is-starting nil)
 
@@ -643,10 +646,9 @@ Auto completion is only performed if the tick did not change."
       (lsp-bridge-try-completion)))
 
   (when  (lsp-bridge-has-lsp-server-p)
-    (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-      (unless (equal (point) lsp-bridge-last-position)
-        (lsp-bridge-call-file-api "change_cursor" (lsp-bridge--position))
-        (setq-local lsp-bridge-last-position (point))))
+    (unless (equal (point) lsp-bridge-last-position)
+      (lsp-bridge-call-file-api "change_cursor" (lsp-bridge--position))
+      (setq-local lsp-bridge-last-position (point)))
 
     ;; Hide hover tooltip.
     (if (not (string-prefix-p "lsp-bridge-popup-documentation-scroll" (format "%s" this-command)))
@@ -802,17 +804,15 @@ Auto completion is only performed if the tick did not change."
   ;; Send change_file request.
   (setq-local lsp-bridge-current-tick (lsp-bridge--auto-tick))
 
-  (when (lsp-bridge-has-lsp-server-p)
-    (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-      (lsp-bridge-call-file-api "change_file"
-                                lsp-bridge--before-change-begin-pos
-                                lsp-bridge--before-change-end-pos
-                                length
-                                (buffer-substring-no-properties begin end)
-                                (lsp-bridge--position)
-                                (acm-char-before)
-                                (lsp-bridge-completion-ui-visible-p)
-                                )))
+  (lsp-bridge-call-file-api "change_file"
+                            lsp-bridge--before-change-begin-pos
+                            lsp-bridge--before-change-end-pos
+                            length
+                            (buffer-substring-no-properties begin end)
+                            (lsp-bridge--position)
+                            (acm-char-before)
+                            (lsp-bridge-completion-ui-visible-p)
+                            )
 
   ;; Send change file to search-words backend.
   (when (and buffer-file-name
@@ -844,8 +844,7 @@ Auto completion is only performed if the tick did not change."
        (frame-visible-p acm-frame)))
 
 (defun lsp-bridge-monitor-after-save ()
-  (when (lsp-bridge-has-lsp-server-p)
-    (lsp-bridge-call-file-api "save_file")))
+  (lsp-bridge-call-file-api "save_file"))
 
 (defalias 'lsp-bridge-find-define #'lsp-bridge-find-def)
 
@@ -920,15 +919,13 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge-lookup-documentation ()
   (interactive)
-  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (lsp-bridge-call-file-api "hover" (lsp-bridge--position))))
+  (lsp-bridge-call-file-api "hover" (lsp-bridge--position)))
 
 (defun lsp-bridge-signature-help-fetch ()
   (interactive)
   (if lsp-bridge-code-action-notify
       (setq-local lsp-bridge-code-action-notify nil)
-    (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-      (lsp-bridge-call-file-api "show_signature_help" (lsp-bridge--position)))))
+    (lsp-bridge-call-file-api "show_signature_help" (lsp-bridge--position))))
 
 (defun lsp-bridge-file-apply-edits (filepath edits)
   (find-file-noselect filepath)
@@ -1182,9 +1179,7 @@ Auto completion is only performed if the tick did not change."
     (lsp-bridge--disable)))
 
 (defun lsp-bridge-diagnostics-fetch ()
-  (when (and lsp-bridge-mode
-             lsp-bridge-enable-diagnostics
-             (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+  (when (and lsp-bridge-enable-diagnostics
              (not (lsp-bridge-completion-ui-visible-p))
              (buffer-file-name)
              (string-equal (file-truename (buffer-file-name)) acm-backend-lsp-filepath))
@@ -1283,13 +1278,11 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge-list-diagnostics ()
   (interactive)
-  (when (lsp-bridge-has-lsp-server-p)
-    (lsp-bridge-call-file-api "list_diagnostics")))
+  (lsp-bridge-call-file-api "list_diagnostics"))
 
 (defun lsp-bridge-ignore-current-diagnostic()
   (interactive)
-  (when (lsp-bridge-has-lsp-server-p)
-    (lsp-bridge-call-file-api "ignore_diagnostic")))
+  (lsp-bridge-call-file-api "ignore_diagnostic"))
 
 (defun lsp-bridge-code-action (&optional action-kind)
   (interactive)
