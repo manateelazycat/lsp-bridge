@@ -936,8 +936,9 @@ Auto completion is only performed if the tick did not change."
     (find-file filepath)
     (dolist (edit (reverse edits))
       (let* ((range (plist-get edit :range)))
-        (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get edit :newText))
-        ))))
+        (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get edit :newText)))))
+
+  (setq lsp-bridge-prohibit-completion t))
 
 (defun lsp-bridge--jump-to-def (filepath position)
   ;; Record postion.
@@ -1366,24 +1367,16 @@ Auto completion is only performed if the tick did not change."
       (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
 
 (defun lsp-bridge-workspace-apply-edit (edit)
-  (let (changes filepath change-infos)
+  (let (changes filepath edits)
     (cond ((plist-get edit :changes)
            (setq changes (plist-get edit :changes))
            (setq filepath (string-remove-prefix ":file://" (format "%s" (nth 0 changes))))
-           (setq change-infos (nth 1 changes)))
+           (setq edits (nth 1 changes)))
           ((plist-get edit :documentChanges)
            (setq changes (plist-get edit :documentChanges))
            (setq filepath (string-remove-prefix "file://" (plist-get (plist-get (nth 0 changes) :textDocument) :uri)))
-           (setq change-infos (plist-get (nth 0 changes) :edits))))
-    (find-file-noselect filepath)
-    (save-excursion
-      (find-file filepath)
-      ;; reverse `change-infos` make sure the previous modification will not affect the subsequent modification.
-      (dolist (change-info (reverse change-infos))
-        (let* ((range (plist-get change-info :range)))
-          (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get change-info :newText))))))
-
-  (setq lsp-bridge-prohibit-completion t))
+           (setq edits (plist-get (nth 0 changes) :edits))))
+    (lsp-bridge-file-apply-edits filepath edits)))
 
 (defun lsp-bridge-get-range-start ()
   (lsp-bridge--point-position
