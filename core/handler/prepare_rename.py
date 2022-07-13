@@ -5,6 +5,7 @@ from core.utils import *
 class PrepareRename(Handler):
     name = "prepare_rename"
     method = "textDocument/prepareRename"
+    provider = "rename_prepare_provider"
 
     def process_request(self, position) -> dict:
         return dict(position=position)

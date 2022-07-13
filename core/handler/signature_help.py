@@ -6,6 +6,7 @@ class SignatureHelp(Handler):
     name = "signature_help"
     method = "textDocument/signatureHelp"
     cancel_on_change = True
+    provider = "signature_help_provider"
 
     def process_request(self, position) -> dict:
         return dict(position=position)

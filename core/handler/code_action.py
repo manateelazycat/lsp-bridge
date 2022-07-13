@@ -6,8 +6,10 @@ class CodeAction(Handler):
     name = "code_action"
     method = "textDocument/codeAction"
     cancel_on_change = True
+    provider = "code_action_provider"
+    provider_message = "Current server not support code action."
 
-    def process_request(self, range_start, range_end, diagnostics, action_kind) -> dict:
+    def process_request(self, range_start, range_end, action_kind) -> dict:
         self.action_kind = action_kind
         
         range = {
@@ -16,6 +18,7 @@ class CodeAction(Handler):
         }
         
         match_diagnostic = []
+        diagnostics = self.file_action.diagnostics
         for diagnostic in diagnostics:
             if (range["start"]["line"] >= diagnostic["range"]["start"]["line"] and 
                 range["start"]["character"] >= diagnostic["range"]["start"]["character"] and 

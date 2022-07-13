@@ -79,8 +79,16 @@ class FileAction:
     def call(self, method, *args, **kwargs):
         """Call any handler or method of file action."""
         if method in self.handlers:
-            return self.handlers[method].send_request(*args, **kwargs)
-        getattr(self, method)(*args, **kwargs)
+            handler = self.handlers[method]
+            if hasattr(handler, "provider"):
+                if getattr(self.lsp_server, getattr(handler, "provider")):
+                   return handler.send_request(*args, **kwargs) 
+                elif hasattr(handler, "provider_message"):
+                    message_emacs(getattr(handler, "provider_message"))
+            else:
+                return handler.send_request(*args, **kwargs)
+        elif hasattr(self, method):
+            getattr(self, method)(*args, **kwargs)
 
     def change_file(self, start, end, range_length, change_text, position, before_char, completion_visible):
         # Send didChange request to LSP server.
@@ -109,11 +117,6 @@ class FileAction:
             len(self.last_completion_candidates) == 0):
             self.handlers["completion"].send_request(position, before_char)
 
-    def try_prepare_rename(self, position):
-        # Send textDocument/prepareRename request if LSP server has this capability.
-        if self.lsp_server.rename_prepare_provider:
-            self.handlers["prepare_rename"].send_request(position)
-            
     def change_cursor(self, position):
         # Record change cursor time.
         self.last_change_cursor_time = time.time()
@@ -133,25 +136,6 @@ class FileAction:
     def save_file(self):
         self.lsp_server.send_did_save_notification(self.filepath)
         
-    def code_format(self, tab_size):
-        if self.lsp_server.code_format_provider:
-            self.handlers["formatting"].send_request(tab_size)
-        else:
-            message_emacs("Current server not support code format.")
-            
-    def show_signature_help(self, position):
-        if self.lsp_server.signature_help_provider:
-            self.handlers["signature_help"].send_request(position)
-            
-    def code_fix(self, range_start, range_end, action_kind):
-        if self.lsp_server.code_action_provider and len(self.lsp_server.code_action_kinds) > 0:
-            self.handlers["code_action"].send_request(range_start, range_end, self.diagnostics, action_kind)
-        else:
-            message_emacs("Current server not support code action.")
-            
-    def execute_command(self, command):
-        self.handlers["execute_command"].send_request(command)
-
     def handle_server_response_message(self, request_id, request_type, response):
         self.handlers[request_type].handle_response(request_id, response)
 

@@ -903,7 +903,7 @@ Auto completion is only performed if the tick did not change."
 
 (defun lsp-bridge-rename ()
   (interactive)
-  (lsp-bridge-call-file-api "try_prepare_rename" (lsp-bridge--position))
+  (lsp-bridge-call-file-api "prepare_rename" (lsp-bridge--position))
   (let ((new-name (read-string "Rename to: " (thing-at-point 'symbol 'no-properties))))
     (lsp-bridge-call-file-api "rename" (lsp-bridge--position) new-name)))
 
@@ -925,7 +925,7 @@ Auto completion is only performed if the tick did not change."
   (interactive)
   (if lsp-bridge-code-action-notify
       (setq-local lsp-bridge-code-action-notify nil)
-    (lsp-bridge-call-file-api "show_signature_help" (lsp-bridge--position))))
+    (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position))))
 
 (defun lsp-bridge-file-apply-edits (filepath edits)
   (find-file-noselect filepath)
@@ -1287,7 +1287,7 @@ Auto completion is only performed if the tick did not change."
 (defun lsp-bridge-code-action (&optional action-kind)
   (interactive)
   (when (lsp-bridge-has-lsp-server-p)
-    (lsp-bridge-call-file-api "code_fix" (lsp-bridge-get-range-start) (lsp-bridge-get-range-end) action-kind)
+    (lsp-bridge-call-file-api "code_action" (lsp-bridge-get-range-start) (lsp-bridge-get-range-end) action-kind)
 
     (setq-local lsp-bridge-code-action-notify t)))
 
@@ -1306,7 +1306,7 @@ Auto completion is only performed if the tick did not change."
          ;; Tempel not active.
          (or (not (boundp 'tempel--active))
              (not tempel--active)))
-    (lsp-bridge-call-file-api "code_format" (symbol-value (lsp-bridge--get-indent-width major-mode)))))
+    (lsp-bridge-call-file-api "formatting" (symbol-value (lsp-bridge--get-indent-width major-mode)))))
 
 (defun lsp-bridge-code-format-fix (filepath edits)
   (lsp-bridge-file-apply-edits filepath edits)

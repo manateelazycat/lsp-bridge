@@ -6,6 +6,8 @@ class Formatting(Handler):
     name = "formatting"
     method = "textDocument/formatting"
     cancel_on_change = True
+    provider = "code_format_provider"
+    provider_message = "Current server not support code format."
 
     def process_request(self, tab_size) -> dict:
         options = {

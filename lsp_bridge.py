@@ -42,10 +42,7 @@ class LspBridge:
         self.search_file_words = SearchFileWords()
 
         # Build EPC interfaces.
-        for name in ["change_file", "find_define", "find_implementation", "find_references",
-                     "try_prepare_rename", "prepare_rename", "rename", "change_cursor", "save_file", 
-                     "hover", "show_signature_help", "ignore_diagnostic", "list_diagnostics", "code_fix", 
-                     "code_format", "execute_command"]:
+        for name in ["change_file", "change_cursor", "save_file", "ignore_diagnostic", "list_diagnostics"]:
             self.build_file_action_function(name)
 
         for cls in Handler.__subclasses__():
