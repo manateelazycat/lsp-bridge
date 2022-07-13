@@ -385,10 +385,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "The default mode hook to enable lsp-bridge."
   :type 'list)
 
-(defvar lsp-bridge-get-lang-server-by-project nil
+(defcustom lsp-bridge-get-lang-server-by-project nil
   "Get lang server with project path and file path.")
 
-(defvar lsp-bridge-get-project-path-by-filepath nil
+(defcustom lsp-bridge-get-project-path-by-filepath nil
   "Default use command 'git rev-parse --show-toplevel' get project path,
 you can customize `lsp-bridge-get-project-path-by-filepath' to return project path by give file path.")
 
