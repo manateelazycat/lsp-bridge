@@ -267,16 +267,7 @@
                    (desktop-dont-save . t)
                    )))
 
-    ;; Set frame border color.
-    (let* ((face (if (facep 'child-frame-border) 'child-frame-border 'internal-border))
-           (new (face-attribute 'acm-border-face :background nil 'default)))
-      (unless (equal (face-attribute face :background frame 'default) new)
-        (set-face-background face new frame)))
-
-    ;; Set frame background color.
-    (let ((new (face-attribute 'acm-default-face :background nil 'default)))
-      (unless (equal (frame-parameter frame 'background-color) new)
-        (set-frame-parameter frame 'background-color new)))
+    (acm-set-frame-colors frame)
 
     ;; Reset to the input focus to the parent frame.
     (redirect-frame-focus frame parent)
@@ -466,9 +457,7 @@ influence of C1 on the result."
            (not (string-equal "Emmet Abbreviation" (plist-get (nth 0 candidates) :annotation))))
       (acm-hide))
      ((> (length candidates) 0)
-      (let* ((menu-old-cache (cons acm-menu-max-length-cache acm-menu-number-cache))
-             (is-dark-mode (string-equal (acm-get-theme-mode) "dark"))
-             (blend-background (if is-dark-mode "#000000" "#AAAAAA")))
+      (let* ((menu-old-cache (cons acm-menu-max-length-cache acm-menu-number-cache)))
         ;; Enable acm-mode to inject mode keys.
         (acm-mode 1)
 
@@ -484,16 +473,8 @@ influence of C1 on the result."
         (setq-local acm-menu-index (if (zerop (length acm-menu-candidates)) -1 0))
         (setq-local acm-menu-offset 0)
 
-        ;; Make sure font size of frame same as Emacs.
-        (set-face-attribute 'acm-buffer-size-face nil :height (face-attribute 'default :height))
-
-        ;; Make sure menu follow the theme of Emacs.
-        (when (equal (face-attribute 'acm-default-face :background) 'unspecified)
-          (set-face-background 'acm-default-face (acm-color-blend (face-attribute 'default :background) blend-background (if is-dark-mode 0.8 0.9))))
-        (when (equal (face-attribute 'acm-select-face :background) 'unspecified)
-          (set-face-background 'acm-select-face (acm-color-blend (face-attribute 'default :background) blend-background 0.6)))
-        (when (equal (face-attribute 'acm-select-face :foreground) 'unspecified)
-          (set-face-foreground 'acm-select-face (face-attribute 'font-lock-function-name-face :foreground)))
+        ;; Init colors.
+        (acm-init-colors)
 
         ;; Record menu popup position and buffer.
         (setq acm-frame-popup-point (or (car bounds) (point)))
@@ -506,12 +487,7 @@ influence of C1 on the result."
           ;; We need delete frame first when user switch to different frame.
           (when (and (frame-live-p acm-frame)
                      (not (eq (frame-parent acm-frame) (selected-frame))))
-            (delete-frame acm-frame)
-            (setq acm-frame nil)
-
-            (when (frame-live-p acm-doc-frame)
-              (delete-frame acm-doc-frame)
-              (setq acm-doc-frame nil)))
+            (acm-delete-frames))
 
           ;; Create menu frame if it not exists.
           (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
@@ -521,6 +497,56 @@ influence of C1 on the result."
         ))
      (t
       (acm-hide)))))
+
+(defun acm-delete-frames ()
+  (when (frame-live-p acm-frame)
+    (delete-frame acm-frame)
+    (setq acm-frame nil))
+
+  (when (frame-live-p acm-doc-frame)
+    (delete-frame acm-doc-frame)
+    (setq acm-doc-frame nil)))
+
+(defun acm-init-colors (&optional force)
+  (let* ((is-dark-mode (string-equal (acm-get-theme-mode) "dark"))
+         (blend-background (if is-dark-mode "#000000" "#AAAAAA")))
+    ;; Make sure font size of frame same as Emacs.
+    (set-face-attribute 'acm-buffer-size-face nil :height (face-attribute 'default :height))
+
+    ;; Make sure menu follow the theme of Emacs.
+    (when (or force (equal (face-attribute 'acm-default-face :background) 'unspecified))
+      (set-face-background 'acm-default-face (acm-color-blend (face-attribute 'default :background) blend-background (if is-dark-mode 0.8 0.9))))
+    (when (or force (equal (face-attribute 'acm-select-face :background) 'unspecified))
+      (set-face-background 'acm-select-face (acm-color-blend (face-attribute 'default :background) blend-background 0.6)))
+    (when (or force (equal (face-attribute 'acm-select-face :foreground) 'unspecified))
+      (set-face-foreground 'acm-select-face (face-attribute 'font-lock-function-name-face :foreground)))))
+
+(defun acm-set-frame-colors (frame)
+  ;; Set frame border color.
+  (let* ((face (if (facep 'child-frame-border) 'child-frame-border 'internal-border))
+         (new (face-attribute 'acm-border-face :background nil 'default)))
+    (unless (equal (face-attribute face :background frame 'default) new)
+      (set-face-background face new frame)))
+
+  ;; Set frame background color.
+  (let ((new (face-attribute 'acm-default-face :background nil 'default)))
+    (unless (equal (frame-parameter frame 'background-color) new)
+      (set-frame-parameter frame 'background-color new))))
+
+(defun acm-reset-colors (&rest args)
+  ;; Reset colors.
+  (acm-init-colors t)
+
+  ;; Reset frame colors.
+  (when (frame-live-p acm-frame)
+    (acm-set-frame-colors acm-frame))
+  (when (frame-live-p acm-doc-frame)
+    (acm-set-frame-colors acm-doc-frame))
+
+  ;; Re-render menu.
+  (acm-menu-render (cons acm-menu-max-length-cache acm-menu-number-cache)))
+
+(advice-add #'load-theme :after #'acm-reset-colors)
 
 (defun acm-frame-get-popup-position ()
   (let* ((edges (window-pixel-edges))
