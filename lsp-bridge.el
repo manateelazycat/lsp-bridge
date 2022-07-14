@@ -113,6 +113,7 @@
                                                     lsp-bridge-not-in-comment
                                                     lsp-bridge-not-follow-complete
                                                     lsp-bridge-is-evil-insert-state
+                                                    lsp-bridge-multiple-cursors-disable
                                                     )
   "A list of predicate functions with no argument to enable popup completion in callback."
   :type 'list
@@ -756,6 +757,11 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 (defun lsp-bridge-is-evil-insert-state ()
   "If `evil' mode is enable, only show completion when evil is in insert mode."
   (or (not (featurep 'evil)) (evil-insert-state-p)))
+
+(defun lsp-bridge-multiple-cursors-disable ()
+  "If `multiple-cursors' mode is enable, hide completion menu."
+  (not (and (ignore-errors (require 'multiple-cursors))
+            multiple-cursors-mode)))
 
 (defun lsp-bridge--point-position (pos)
   "Get position of POS."
