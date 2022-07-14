@@ -108,7 +108,6 @@
 
 (defcustom lsp-bridge-completion-popup-predicates '(lsp-bridge-not-only-blank-before-cursor
                                                     lsp-bridge-not-match-hide-characters
-                                                    lsp-bridge-not-match-completion-position
                                                     lsp-bridge-not-match-stop-commands
                                                     lsp-bridge-not-in-string
                                                     lsp-bridge-not-in-comment
@@ -512,11 +511,6 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
         (lsp-bridge--with-file-buffer filepath
           (lsp-bridge-get-lang-server-by-mode))))))
 
-(defun lsp-bridge--auto-tick ()
-  "Return the current tick/status of the buffer.
-Auto completion is only performed if the tick did not change."
-  (list (current-buffer) (buffer-chars-modified-tick) (point)))
-
 (defun lsp-bridge-call-async (method &rest args)
   "Call Python EPC function METHOD and ARGS asynchronously."
   (lsp-bridge-deferred-chain
@@ -636,7 +630,6 @@ Auto completion is only performed if the tick did not change."
 
 (defvar-local lsp-bridge-last-position 0)
 (defvar-local lsp-bridge-prohibit-completion nil)
-(defvar-local lsp-bridge-current-tick nil)
 (defvar-local lsp-bridge-diagnostic-overlays '())
 
 (defun lsp-bridge-monitor-post-command ()
@@ -702,17 +695,9 @@ Auto completion is only performed if the tick did not change."
         (acm-update)
       (acm-hide))))
 
-(defun lsp-bridge-not-match-completion-position ()
-  "Hide completion if the position of cursor has changed."
-  (equal lsp-bridge-current-tick (lsp-bridge--auto-tick)))
-
 (defun lsp-bridge-not-match-stop-commands ()
   "Hide completion if `lsp-bridge-last-change-command' match commands in `lsp-bridge-completion-stop-commands'."
   (not (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands)))
-
-(defun lsp-bridge-not-match-hide-characters ()
-  "Hide completion if cursor after hide character match `lsp-bridge-completion-hide-characters'."
-  (not (member (acm-char-before) lsp-bridge-completion-hide-characters)))
 
 (defun lsp-bridge-not-in-string ()
   "Hide completion if cursor in string area."
@@ -800,9 +785,6 @@ Auto completion is only performed if the tick did not change."
 (defun lsp-bridge-monitor-after-change (begin end length)
   ;; Record last command to `lsp-bridge-last-change-command'.
   (setq lsp-bridge-last-change-command (format "%s" this-command))
-
-  ;; Send change_file request.
-  (setq-local lsp-bridge-current-tick (lsp-bridge--auto-tick))
 
   (lsp-bridge-call-file-api "change_file"
                             lsp-bridge--before-change-begin-pos
