@@ -741,9 +741,9 @@ Auto completion is only performed if the tick did not change."
   (ignore-errors
     (unless (or (bobp) (eobp))
       (save-excursion
-        (and
+        (or
          (nth 4 (or state (lsp-bridge-current-parse-state)))
-         (not (equal (point) (line-end-position))))
+         (eq (get-text-property (point) 'face) 'font-lock-comment-face))
         ))))
 
 (defun lsp-bridge-in-string-p (&optional state)
