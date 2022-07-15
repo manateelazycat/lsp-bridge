@@ -29,7 +29,7 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 ```
 
 ## Usage
-lsp-bridge is design for out the box. After installing the [LSP server](https://github.com/manateelazycat/lsp-bridge#supported-language-servers) corresponding to the open file, you can write the code directly without additional settings.
+lsp-bridge is design for out the box. After installing the [LSP server](https://github.com/manateelazycat/lsp-bridge#supported-language-servers) and mode plugin corresponding to the open file, you can write the code directly without additional settings.
 
 It should be noted that there are three scan modes of lsp-bridge:
 1. When detecting the `.git` directory (check by command `git rev-parse-is-inside-work-tree`), lsp-bridge scan the entire directory file to provide completion
