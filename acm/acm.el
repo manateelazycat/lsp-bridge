@@ -538,13 +538,11 @@ influence of C1 on the result."
   (acm-init-colors t)
 
   ;; Reset frame colors.
-  (when (frame-live-p acm-frame)
-    (acm-set-frame-colors acm-frame))
-  (when (frame-live-p acm-doc-frame)
-    (acm-set-frame-colors acm-doc-frame))
-
-  ;; Re-render menu.
-  (acm-menu-render (cons acm-menu-max-length-cache acm-menu-number-cache)))
+  (when (acm-frame-visible-p acm-frame)
+    (acm-set-frame-colors acm-frame)
+    (acm-menu-render (cons acm-menu-max-length-cache acm-menu-number-cache)))
+  (when (acm-frame-visible-p acm-doc-frame)
+    (acm-set-frame-colors acm-doc-frame)))
 
 (advice-add #'load-theme :after #'acm-reset-colors)
 
