@@ -754,6 +754,10 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
                  (max (1- (point)) (line-beginning-position))
                  (point))))
 
+(defun lsp-bridge-not-match-hide-characters ()
+  "Hide completion if char before cursor match `lsp-bridge-completion-hide-characters'."
+  (not (member (ignore-errors (char-to-string (char-before))) lsp-bridge-completion-hide-characters)))
+
 (defun lsp-bridge-is-evil-insert-state ()
   "If `evil' mode is enable, only show completion when evil is in insert mode."
   (or (not (featurep 'evil)) (evil-insert-state-p)))
