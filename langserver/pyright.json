@@ -18,7 +18,7 @@
       "autoSearchPaths": true,
       "extraPaths": []
     },
-    "pythonPath": "/usr/bin/python",
+    "pythonPath": "python",
     "venvPath": ""
   }
 }
