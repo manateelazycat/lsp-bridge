@@ -760,7 +760,9 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 
 (defun lsp-bridge-is-evil-insert-state ()
   "If `evil' mode is enable, only show completion when evil is in insert mode."
-  (or (not (featurep 'evil)) (evil-insert-state-p)))
+  (or (not (featurep 'evil))
+      (evil-insert-state-p)
+      (evil-emacs-state-p)))
 
 (defun lsp-bridge-multiple-cursors-disable ()
   "If `multiple-cursors' mode is enable, hide completion menu."
