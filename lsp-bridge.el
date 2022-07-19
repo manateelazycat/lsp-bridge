@@ -112,7 +112,7 @@
                                                     lsp-bridge-not-in-string
                                                     lsp-bridge-not-in-comment
                                                     lsp-bridge-not-follow-complete
-                                                    lsp-bridge-is-evil-insert-state
+                                                    lsp-bridge-is-evil-state
                                                     lsp-bridge-multiple-cursors-disable
                                                     )
   "A list of predicate functions with no argument to enable popup completion in callback."
@@ -758,7 +758,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
   "Hide completion if char before cursor match `lsp-bridge-completion-hide-characters'."
   (not (member (ignore-errors (char-to-string (char-before))) lsp-bridge-completion-hide-characters)))
 
-(defun lsp-bridge-is-evil-insert-state ()
+(defun lsp-bridge-is-evil-state ()
   "If `evil' mode is enable, only show completion when evil is in insert mode."
   (or (not (featurep 'evil))
       (evil-insert-state-p)
