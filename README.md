@@ -105,7 +105,7 @@ You need to install the LSP server corresponding to each programming language, t
 
 | Index | LSP Server              | Language | Note                                                                                                                                                               |
 | :--- | :--- | :--- | :--- |
-| 1 | [clangd](https://github.com/clangd/clangd) | c, c++ |  |
+| 1 | [clangd](https://github.com/clangd/clangd) | c, c++, object-c |  |
 | 2 | [pyright](https://github.com/microsoft/pyright) | python | `pip install pyright`|
 | 3 | [solargraph](https://github.com/castwide/solargraph) | ruby | |
 | 4 | [rust-analyzer](https://github.com/rust-lang/rust-analyzer) | rust | |
@@ -134,7 +134,7 @@ You need to install the LSP server corresponding to each programming language, t
 | 27 | [docker-language-server](https://github.com/rcjsuen/dockerfile-language-server-nodejs) | Dockerfiles | |
 | 28 | [serve-d](https://github.com/Pure-D/serve-d) | d | serve-d does not support single file mode, please init .git repository under project root at first or custom `lsp-bridge-get-project-path-by-filepath` function |
 | 29 | [fortls](https://github.com/gnikit/fortls) | Fortran | |
-| 30 | [ccls](https://github.com/MaskRay/ccls) | c, c++ |  |
+| 30 | [ccls](https://github.com/MaskRay/ccls) | c, c++, object-c | `lsp-bridge-c-lsp-server` set to` ccls` |
 
 ### Features that won't be supported
 
