@@ -1,5 +1,5 @@
 {
-  "name": "clangd",
+  "name": "ccls",
   "languageId": "c++",
   "command": ["ccls"],
   "settings": {
