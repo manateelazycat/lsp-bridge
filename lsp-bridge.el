@@ -503,7 +503,11 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
                                 (member major-mode mode))))
                           lsp-bridge-lang-server-mode-list)))
     (if langserver-info
-        (cdr langserver-info)
+        (let ((info (cdr langserver-info)))
+          (pcase (format "%s" (type-of info))
+            ("string" info)
+            ("symbol" (symbol-value info))
+            ))
       nil)))
 
 (defun lsp-bridge-has-lsp-server-p ()
