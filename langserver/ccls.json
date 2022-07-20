@@ -1,0 +1,10 @@
+{
+  "name": "clangd",
+  "languageId": "c++",
+  "command": ["ccls"],
+  "settings": {
+    "index": {
+      "comments": 0
+    }
+  }
+}
