@@ -74,6 +74,7 @@ lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.
 * `lsp-bridge-enable-debug`: 启用程序调试， 默认关闭
 * `lsp-bridge-python-command`: Python命令的路径, 如果你用 `conda`， 你也许会定制这个选项
 * `lsp-bridge-signature-function`: 用于显示签名信息的函数
+* `lsp-bridge-c-lsp-server`: C语言的服务器，可以选择`clangd`或者`ccls`
 * `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
 * `acm-candidate-match-function`: 补全菜单匹配算法， orderless-* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
 * `acm-enable-doc`: 补全菜单是否显示帮助文档

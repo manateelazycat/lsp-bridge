@@ -302,9 +302,13 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "The lang server rule for file extension."
   :type 'cons)
 
+(defcustom lsp-bridge-c-lsp-server "clangd"
+  "Default LSP server for C language, you can choose `clangd' or `ccls'."
+  :type 'string)
+
 (defcustom lsp-bridge-lang-server-mode-list
   '(
-    ((c-mode c++-mode) . "clangd")
+    ((c-mode c++-mode objc-mode) . lsp-bridge-c-lsp-server)
     (java-mode . "jdtls")
     (python-mode . "pyright")
     (ruby-mode . "solargraph")
