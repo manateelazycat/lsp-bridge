@@ -192,5 +192,6 @@ class FileAction:
             request_id=request_id,
         )
         
-
+    def completion_trigger_characters(self):
+        return self.lsp_server.completion_trigger_characters
         

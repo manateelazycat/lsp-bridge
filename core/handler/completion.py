@@ -16,7 +16,7 @@ class Completion(Handler):
     cancel_on_change = True
 
     def process_request(self, position, char) -> dict:
-        if char in self.file_action.lsp_server.completion_trigger_characters:
+        if char in self.file_action.completion_trigger_characters():
             context = dict(triggerCharacter=char,
                            triggerKind=CompletionTriggerKind.TriggerCharacter.value)
         else:
@@ -73,4 +73,4 @@ class Completion(Handler):
                           self.file_action.filepath,
                           completion_candidates,
                           self.position,
-                          self.file_action.lsp_server.completion_trigger_characters)
+                          self.file_action.completion_trigger_characters())
