@@ -123,8 +123,7 @@ class LspBridge:
 
     def rename_file(self, old_filepath, new_filepath):
         if is_in_path_dict(self.file_action_dict, old_filepath):
-            get_from_path_dict(self.file_action_dict, old_filepath).lsp_server.send_did_rename_files_notification(
-                old_filepath, new_filepath)
+            get_from_path_dict(self.file_action_dict, old_filepath).rename_file(old_filepath, new_filepath)
         
     def completion_hide(self, filepath):
         if is_in_path_dict(self.file_action_dict, filepath):

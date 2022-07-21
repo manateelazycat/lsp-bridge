@@ -24,7 +24,7 @@ class FindDefine(Handler):
 
         if file_uri.startswith("jdt://"):
             # for java
-            self.file_action.handlers["jdt_uri_resolver"].send_request(file_uri, start_pos)
+            self.file_action.send_request("jdt_uri_resolver", file_uri, start_pos)
         elif file_uri.startswith("csharp://"):
             # for csharp
             raise NotImplementedError()

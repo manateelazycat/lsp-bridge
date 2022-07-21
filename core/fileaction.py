@@ -63,10 +63,9 @@ class FileAction:
             self.handlers[handler_cls.name] = handler_cls(self)
 
         (self.enable_auto_import, self.completion_items_limit, self.insert_spaces) = get_emacs_vars([
-             "acm-backend-lsp-enable-auto-import",
-             "acm-backend-lsp-candidates-max-number",
-            "indent-tabs-mode"
-        ])
+            "acm-backend-lsp-enable-auto-import",
+            "acm-backend-lsp-candidates-max-number",
+            "indent-tabs-mode"])
         self.insert_spaces = not self.insert_spaces
 
         self.lsp_server.attach(self)
@@ -82,11 +81,11 @@ class FileAction:
             handler = self.handlers[method]
             if hasattr(handler, "provider"):
                 if getattr(self.lsp_server, getattr(handler, "provider")):
-                   return handler.send_request(*args, **kwargs) 
+                   return self.send_request(method, *args, **kwargs) 
                 elif hasattr(handler, "provider_message"):
                     message_emacs(getattr(handler, "provider_message"))
             else:
-                return handler.send_request(*args, **kwargs)
+                return self.send_request(method, *args, **kwargs)
         elif hasattr(self, method):
             getattr(self, method)(*args, **kwargs)
 
@@ -115,7 +114,7 @@ class FileAction:
         if ((before_char in self.lsp_server.completion_trigger_characters) or
             (not completion_visible) or
             len(self.last_completion_candidates) == 0):
-            self.handlers["completion"].send_request(position, before_char)
+            self.send_request("completion", position, before_char)
 
     def change_cursor(self, position):
         # Record change cursor time.
@@ -144,7 +143,7 @@ class FileAction:
             self.completion_item_resolve_key = item_key
             
             if self.lsp_server.completion_resolve_provider:
-                self.handlers["completion_item_resolve"].send_request(item_key, self.completion_items[item_key])
+                self.send_request("completion_item_resolve", item_key, self.completion_items[item_key])
             else:
                 item = self.completion_items[item_key]
                 
@@ -169,3 +168,29 @@ class FileAction:
                                   "documentation": documentation
                               })
 
+
+    def rename_file(self, old_filepath, new_filepath):
+        self.lsp_server.send_did_rename_files_notification(old_filepath, new_filepath)
+
+    def send_request(self, handler_name, *args, **kwargs):
+        handler: Handler = self.handlers[handler_name]
+        
+        handler.latest_request_id = request_id = generate_request_id()
+        handler.last_change = self.last_change
+
+        self.lsp_server.record_request_id(request_id, handler)
+        
+        params = handler.process_request(*args, **kwargs)
+        if handler.send_document_uri:
+            params["textDocument"] = {
+                "uri": self.lsp_server.parse_document_uri(self.filepath, self.external_file_link)
+            }
+
+        self.lsp_server.sender.send_request(
+            method=handler.method,
+            params=params,
+            request_id=request_id,
+        )
+        
+
+        
