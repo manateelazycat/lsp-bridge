@@ -1375,15 +1375,17 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 
 (defun lsp-bridge-get-range-start ()
   (lsp-bridge--point-position
-   (if (region-active-p)
-       (region-beginning)
-     (car (bounds-of-thing-at-point 'sexp)))))
+   (or (if (region-active-p)
+           (region-beginning)
+         (car (bounds-of-thing-at-point 'sexp)))
+       (point))))
 
 (defun lsp-bridge-get-range-end ()
   (lsp-bridge--point-position
-   (if (region-active-p)
-       (region-end)
-     (cdr (bounds-of-thing-at-point 'sexp)))))
+   (or (if (region-active-p)
+           (region-end)
+         (cdr (bounds-of-thing-at-point 'sexp)))
+       (point))))
 
 (defun lsp-bridge-insert-ignore-diagnostic-comment (comment-string)
   (move-end-of-line 1)
