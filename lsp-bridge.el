@@ -306,11 +306,15 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Default LSP server for C language, you can choose `clangd' or `ccls'."
   :type 'string)
 
+(defcustom lsp-bridge-python-lsp-server "pyright"
+  "Default LSP server for Python language, you can choose `pyright' or `jedi'."
+  :type 'string)
+
 (defcustom lsp-bridge-lang-server-mode-list
   '(
     ((c-mode c++-mode objc-mode) . lsp-bridge-c-lsp-server)
     (java-mode . "jdtls")
-    (python-mode . "pyright")
+    (python-mode . lsp-bridge-python-lsp-server)
     (ruby-mode . "solargraph")
     ((rust-mode rustic-mode) . "rust-analyzer")
     (elixir-mode . "elixirLS")

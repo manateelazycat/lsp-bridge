@@ -1,0 +1,6 @@
+{
+  "name": "jedi",
+  "languageId": "python",
+  "command": ["jedi-language-server"],
+  "settings": {}
+}
