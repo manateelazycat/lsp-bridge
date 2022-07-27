@@ -405,7 +405,11 @@ class LspServer:
             logger.error("\n--- Recv message (error):")
             logger.error(json.dumps(message, indent=3))
             
-            message_emacs(message["error"]["message"])
+            error_message = message["error"]["message"]
+            if error_message == "Unhandled method completionItem/resolve":
+                self.completion_resolve_provider = False
+            else:
+                message_emacs(error_message)
             
             return
 
