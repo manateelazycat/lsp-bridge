@@ -132,6 +132,9 @@
                  (const orderless-regexp)
                  (const orderless-initialism)))
 
+(defcustom acm-doc-frame-max-lines 20
+  "Max line lines of doc frame."
+  :type 'integer)
 
 (cl-defmacro acm-run-idle-func (timer idle func)
   `(unless ,timer
@@ -765,7 +768,8 @@ influence of C1 on the result."
     ;; Make sure doc frame size not out of Emacs area.
     (acm-set-frame-size acm-doc-frame
                         (ceiling (/ acm-doc-frame-max-width (frame-char-width)))
-                        (ceiling (/ acm-doc-frame-max-height (window-default-line-height))))
+                        (min (ceiling (/ acm-doc-frame-max-height (window-default-line-height)))
+                             acm-doc-frame-max-lines))
 
     ;; Adjust doc frame with it's size.
     (let* ((acm-doc-frame-width (frame-pixel-width acm-doc-frame))

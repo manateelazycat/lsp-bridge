@@ -81,6 +81,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `acm-enable-doc`: Whether the complete menu display the help document
 * `acm-enable-icon`: Whether the complete menu shows the icon
 * `acm-snippet-insert-index`: The display position of snippet candidate in the complementary menu
+* `acm-doc-frame-max-lines`: Max line number of help documentation
 
 ## Customize language server configuration
 

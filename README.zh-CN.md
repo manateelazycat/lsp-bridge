@@ -82,6 +82,7 @@ lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.
 * `acm-enable-icon`: 补全菜单是否显示图标
 * `acm-fetch-candidate-doc-delay`: 补全菜单弹出文档的延时， 不建议设置成0， 会降低菜单选择性能
 * `acm-snippet-insert-index`: 代码模板后选词在补全菜单中的显示位置
+* `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是20
 
 ## 自定义语言服务器配置
 lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
