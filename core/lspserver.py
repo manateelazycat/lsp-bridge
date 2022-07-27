@@ -408,6 +408,14 @@ class LspServer:
             error_message = message["error"]["message"]
             if error_message == "Unhandled method completionItem/resolve":
                 self.completion_resolve_provider = False
+            elif error_message == "Unhandled method textDocument/prepareRename":
+                self.rename_prepare_provider = False
+            elif error_message == "Unhandled method textDocument/codeAction":
+                self.code_action_provider = False
+            elif error_message == "Unhandled method textDocument/formatting":
+                self.code_format_provider = False
+            elif error_message == "Unhandled method textDocument/signatureHelp":
+                self.signature_help_provider = False
             else:
                 message_emacs(error_message)
             
