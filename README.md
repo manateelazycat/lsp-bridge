@@ -81,7 +81,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `acm-backend-lsp-enable-auto-import`: automatic insert import code, enable by default
 * `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
 * `acm-enable-doc`: Whether the complete menu display the help document
-* `acm-enable-icon`: Whether the complete menu shows the icon
+* `acm-enable-icon`: Whether the complete menu shows the icon, macOS users need to add option `--with-rsvg` to the brew command to install emacs to display SVG icon
 * `acm-snippet-insert-index`: The display position of snippet candidate in the complementary menu
 * `acm-doc-frame-max-lines`: Max line number of help documentation, default is 20
 
