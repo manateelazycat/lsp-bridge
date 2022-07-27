@@ -42,7 +42,10 @@ class LspBridge:
         # Build EPC interfaces.
         for name in ["change_file", "change_cursor", "save_file", "ignore_diagnostic", "list_diagnostics"]:
             self.build_file_action_function(name)
-
+            
+        for name in ["change_file", "close_file", "rebuild_cache", "search"]:
+            self.build_search_words_function(name)
+            
         for cls in Handler.__subclasses__():
             self.build_file_action_function(cls.name)
 
@@ -218,6 +221,12 @@ class LspBridge:
             })
 
         setattr(self, name, _do_wrap)
+        
+    def build_search_words_function(self, name):
+        def _do(*args, **kwargs):
+            getattr(self.search_file_words, name)(*args, **kwargs)
+
+        setattr(self, "search_words_{}".format(name), _do)
 
     def handle_server_process_exit(self, server_name):
         if server_name in LSP_SERVER_DICT:
@@ -227,18 +236,6 @@ class LspBridge:
     def search_words_index_files(self, filepaths):
         for filepath in filepaths:
             self.search_file_words.change_file(filepath)
-        
-    def search_words_change_file(self, filepath):
-        self.search_file_words.change_file(filepath)
-        
-    def search_words_close_file(self, filepath):
-        self.search_file_words.close_file(filepath)
-        
-    def search_words_rebuild_cache(self):
-        self.search_file_words.rebuild_words_cache()
-        
-    def search_words_search(self, prefix):
-        self.search_file_words.search_words(prefix)
         
     def cleanup(self):
         """Do some cleanup before exit python process."""

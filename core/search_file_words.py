@@ -55,7 +55,7 @@ class SearchFileWords:
             self.files[filepath] = set()
             self.search_words_queue.put("search_words")
     
-    def search_words(self, prefix: str):
+    def search(self, prefix: str):
         self.search_words_thread = threading.Thread(target=lambda : self.search_words_from_files(prefix))
         self.search_words_thread.start()
         
@@ -95,7 +95,7 @@ class SearchFileWords:
         
         return candidates
             
-    def rebuild_words_cache(self):
+    def rebuild_cache(self):
         if len(self.search_files) > 0:
             self.search_words_queue.put("search_words")
     
