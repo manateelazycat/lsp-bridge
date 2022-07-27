@@ -31,14 +31,23 @@ from core.handler import *
 if TYPE_CHECKING:
     from lsp_bridge import LspBridge
 
+def create_file_action(filepath, lang_server_info, lsp_server, **kwargs):
+    if is_in_path_dict(FILE_ACTION_DICT, filepath):
+        if get_from_path_dict(FILE_ACTION_DICT, filepath).lsp_server != lsp_server:
+            logger.warn("File {} is opened by different lsp server.".format(filepath))
+        return
+    action = FileAction(filepath, lang_server_info, lsp_server, **kwargs)
+    add_to_path_dict(FILE_ACTION_DICT, filepath, action)
+    return action
 
 class FileAction:
-    def __init__(self, filepath, lang_server_info, lsp_server, lsp_bridge, external_file_link=None):
+    def __init__(self, filepath, lang_server_info, lsp_server, external_file_link=None):
         # Init.
+        self.create_file_action = create_file_action
+        
         self.filepath = filepath
         self.lang_server_info = lang_server_info
         self.lsp_server: LspServer = lsp_server
-        self.lsp_bridge: "LspBridge" = lsp_bridge
         self.external_file_link = external_file_link
 
         self.request_dict = {}
@@ -195,3 +204,27 @@ class FileAction:
     def completion_trigger_characters(self):
         return self.lsp_server.completion_trigger_characters
         
+    def exit(self):
+        lsp_server_name = self.lsp_server.server_name
+        if lsp_server_name in LSP_SERVER_DICT:
+            lsp_server = LSP_SERVER_DICT[lsp_server_name]
+            lsp_server.close_file(self.filepath)
+
+        # Clean FILE_ACTION_DICT after close file.
+        remove_from_path_dict(FILE_ACTION_DICT, self.filepath)
+        
+    def get_lsp_server_project_path(self):
+        return self.lsp_server.project_path.encode('utf-8')
+    
+    def create_external_file_action(self, external_file, external_file_link=None):
+        create_file_action(
+            filepath=external_file,
+            lang_server_info=self.lang_server_info,
+            lsp_server=self.lsp_server,
+            external_file_link=external_file_link,
+        )
+        
+FILE_ACTION_DICT: Dict[str, FileAction] = {}  # use for contain file action
+LSP_SERVER_DICT: Dict[str, LspServer] = {}  # use for contain lsp server
+
+    

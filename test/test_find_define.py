@@ -99,10 +99,7 @@ class JumpOtherFile(unittest.TestCase):
             (lsp-bridge-find-define)
             """))
 
-        lsp_server_cnt_before = len(lsp_bridge.lsp_server_dict)
         go()
-        lsp_server_cnt_after = len(lsp_bridge.lsp_server_dict)
-        self.assertEqual(lsp_server_cnt_after, lsp_server_cnt_before + 1)
 
         return result
 

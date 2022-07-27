@@ -41,7 +41,7 @@ class JDTUriResolver(Handler):
                 data_dir = pathlib.Path(self.file_action.lang_server_info['command'][index + 1])
             except ValueError as e:
                 md5 = hashlib.md5()
-                md5.update(self.file_action.lsp_server.project_path.encode('utf-8'))
+                md5.update(self.file_action.get_lsp_server_project_path())
                 project_hash = md5.hexdigest()
                 data_dir = pathlib.Path(os.path.join(tempfile.gettempdir(), "lsp-bridge-jdtls", project_hash))
 
@@ -58,11 +58,6 @@ class JDTUriResolver(Handler):
                     f.write(response)
 
             external_file = external_file.as_posix()
-            self.file_action.lsp_bridge.create_file_action(
-                filepath=external_file,
-                lang_server_info=self.file_action.lang_server_info,
-                lsp_server=self.file_action.lsp_server,
-                external_file_link=self.external_file_link,
-            )
+            self.file_action.create_external_file_action(external_file, self.external_file_link)
             eval_in_emacs("lsp-bridge--jump-to-def", external_file, self.start_pos)
 

@@ -34,9 +34,5 @@ class FindDefine(Handler):
         else:
             # for normal file uri
             filepath = uri_to_path(file_uri)
-            self.file_action.lsp_bridge.create_file_action(
-                filepath=filepath,
-                lang_server_info=self.file_action.lang_server_info,
-                lsp_server=self.file_action.lsp_server,
-            )
+            self.file_action.create_external_file_action(filepath)
             eval_in_emacs("lsp-bridge--jump-to-def", filepath, start_pos)
