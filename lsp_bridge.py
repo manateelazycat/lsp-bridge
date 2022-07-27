@@ -46,6 +46,9 @@ class LspBridge:
         for name in ["change_file", "close_file", "rebuild_cache", "search"]:
             self.build_search_words_function(name)
             
+        for name in ["open_file", "close_file"]:
+            self.build_message_function(name)
+            
         for cls in Handler.__subclasses__():
             self.build_file_action_function(cls.name)
 
@@ -115,13 +118,6 @@ class LspBridge:
 
             self.message_queue.task_done()
 
-    def open_file(self, filepath):
-        # We need post function event_loop, otherwise long-time calculation will block Emacs.
-        self.event_queue.put({
-            "name": "open_file",
-            "content": filepath
-        })
-
     def rename_file(self, old_filepath, new_filepath):
         if is_in_path_dict(FILE_ACTION_DICT, old_filepath):
             get_from_path_dict(FILE_ACTION_DICT, old_filepath).rename_file(old_filepath, new_filepath)
@@ -189,13 +185,6 @@ class LspBridge:
         
         return True
 
-    def close_file(self, filepath):
-        # We need post function event_loop, otherwise long-time calculation will block Emacs.
-        self.event_queue.put({
-            "name": "close_file",
-            "content": filepath
-        })
-
     def _close_file(self, filepath):
         if is_in_path_dict(FILE_ACTION_DICT, filepath):
             get_from_path_dict(FILE_ACTION_DICT, filepath).exit()
@@ -228,6 +217,15 @@ class LspBridge:
 
         setattr(self, "search_words_{}".format(name), _do)
 
+    def build_message_function(self, name):
+        def _do(filepath):
+            self.event_queue.put({
+                "name": name,
+                "content": filepath
+            })
+            
+        setattr(self, name, _do)
+            
     def handle_server_process_exit(self, server_name):
         if server_name in LSP_SERVER_DICT:
             logger.info("Exit server: {}".format(server_name))
