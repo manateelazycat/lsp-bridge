@@ -43,8 +43,6 @@ def create_file_action(filepath, lang_server_info, lsp_server, **kwargs):
 class FileAction:
     def __init__(self, filepath, lang_server_info, lsp_server, external_file_link=None):
         # Init.
-        self.create_file_action = create_file_action
-        
         self.filepath = filepath
         self.lang_server_info = lang_server_info
         self.lsp_server: LspServer = lsp_server
