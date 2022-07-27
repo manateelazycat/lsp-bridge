@@ -137,6 +137,7 @@ You need to install the LSP server corresponding to each programming language, t
 | 29 | [fortls](https://github.com/gnikit/fortls) | Fortran | |
 | 30 | [ccls](https://github.com/MaskRay/ccls) | c, c++, object-c | `lsp-bridge-c-lsp-server` set to` ccls` |
 | 31 | [jedi](https://github.com/pappasam/jedi-language-server) | python | `lsp-bridge-python-lsp-server` set to `jedi` |
+| 32 | [emmet-ls](https://github.com/aca/emmet-ls) | html, js, css, sass, scss, less | |
 
 
 ### Features that won't be supported
