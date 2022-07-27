@@ -55,6 +55,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-signature-help-fetch`: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
 * `lsp-bridge-insert-common-prefix`: insert common prefix of candidates
 * `lsp-bridge-restart-process`: restart lsp-bridge process (only used for development)
+* `lsp-bridge-popup-complete`: Manually popup the completion menu, you only need this command when turn on option `lsp-bride-complete-manually` 
 * `acm-doc-scroll-up`: API document window scroll up
 * `acm-doc-scroll-down`: API document window scroll down
 
@@ -76,6 +77,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-signature-function`: The function used for displaying signature info
 * `lsp-bridge-c-lsp-server`: C language server, you can choose `clangd` or` ccls`
 * `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright` or` jedi`
+* `lsp-bridge-complete-manually`: Only popup completion menu when user call `lsp-bridge-popup-complete` command, default is nil
 * `acm-backend-lsp-enable-auto-import`: automatic insert import code, enable by default
 * `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
 * `acm-enable-doc`: Whether the complete menu display the help document

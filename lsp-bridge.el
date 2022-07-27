@@ -114,6 +114,7 @@
                                                     lsp-bridge-not-follow-complete
                                                     lsp-bridge-is-evil-state
                                                     lsp-bridge-multiple-cursors-disable
+                                                    lsp-bridge-not-complete-manually
                                                     )
   "A list of predicate functions with no argument to enable popup completion in callback."
   :type 'list
@@ -309,6 +310,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defcustom lsp-bridge-python-lsp-server "pyright"
   "Default LSP server for Python language, you can choose `pyright' or `jedi'."
   :type 'string)
+
+(defcustom lsp-bridge-complete-manually nil
+  "Only popup completion menu when user call `lsp-bridge-popup-complete' command.")
 
 (defcustom lsp-bridge-lang-server-mode-list
   '(
@@ -708,6 +712,10 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
         (acm-update)
       (acm-hide))))
 
+(defun lsp-bridge-popup-complete ()
+  (interactive)
+  (acm-update))
+
 (defun lsp-bridge-not-match-stop-commands ()
   "Hide completion if `lsp-bridge-last-change-command' match commands in `lsp-bridge-completion-stop-commands'."
   (not (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands)))
@@ -780,6 +788,10 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
   "If `multiple-cursors' mode is enable, hide completion menu."
   (not (and (ignore-errors (require 'multiple-cursors))
             multiple-cursors-mode)))
+
+(defun lsp-bridge-not-complete-manually ()
+  "If `lsp-bridge-complete-manually' is non-nil, hide completion menu."
+  (not lsp-bridge-complete-manually))
 
 (defun lsp-bridge--point-position (pos)
   "Get position of POS."

@@ -55,6 +55,7 @@ lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.
 * `lsp-bridge-signature-help-fetch`: 在minibuffer显示参数信息
 * `lsp-bridge-insert-common-prefix`: 插入补全后选词的公共前缀
 * `lsp-bridge-restart-process`: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)
+* `lsp-bridge-popup-complete`: 手动弹出补全菜单， 只有当打开 `lsp-bridge-complete-manually` 选项才需要使用这个命令
 * `acm-doc-scroll-up`: API文档窗口向上滚动
 * `acm-doc-scroll-down`: API文档窗口向下滚动
 
@@ -76,6 +77,7 @@ lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.
 * `lsp-bridge-signature-function`: 用于显示签名信息的函数
 * `lsp-bridge-c-lsp-server`: C语言的服务器，可以选择`clangd`或者`ccls`
 * `lsp-bridge-python-lsp-server`: Python语言的服务器，可以选择`pyright`或者`jedi`
+* `lsp-bridge-complete-manually`: 只有当用户手动调用 `lsp-bridge-popup-complete` 命令的时候才弹出补全菜单， 默认关闭
 * `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
 * `acm-candidate-match-function`: 补全菜单匹配算法， orderless-* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
 * `acm-enable-doc`: 补全菜单是否显示帮助文档
