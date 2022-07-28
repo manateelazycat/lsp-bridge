@@ -207,9 +207,19 @@ If optional MARKER, return a marker instead"
       (if marker (copy-marker (point-marker)) (point)))))
 
 (defun acm-backend-lsp-apply-text-edits (edits)
-  (dolist (edit edits)
+  (dolist (edit (acm-backend-lsp-sort-edits edits))
     (let* ((range (plist-get edit :range)))
       (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get edit :newText)))))
+
+(defun acm-backend-lsp-sort-edits (edits)
+  (sort edits #'(lambda (edit-a edit-b)
+                  (let* ((range-a (plist-get edit-a :range))
+                         (range-b (plist-get edit-b :range))
+                         (start-a (plist-get range-a :start))
+                         (start-b (plist-get range-b :start))
+                         (point-a (acm-backend-lsp-position-to-point start-a))
+                         (point-b (acm-backend-lsp-position-to-point start-b)))
+                    (> point-a point-b)))))
 
 (defun acm-backend-lsp-snippet-expansion-fn ()
   "Compute a function to expand snippets.

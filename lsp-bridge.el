@@ -949,9 +949,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
   (find-file-noselect filepath)
   (save-excursion
     (find-file filepath)
-    (dolist (edit (reverse edits))
-      (let* ((range (plist-get edit :range)))
-        (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get edit :newText)))))
+    (acm-backend-lsp-apply-text-edits edits))
 
   (setq lsp-bridge-prohibit-completion t))
 
