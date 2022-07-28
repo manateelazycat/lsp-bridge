@@ -213,13 +213,8 @@ If optional MARKER, return a marker instead"
 
 (defun acm-backend-lsp-sort-edits (edits)
   (sort edits #'(lambda (edit-a edit-b)
-                  (let* ((range-a (plist-get edit-a :range))
-                         (range-b (plist-get edit-b :range))
-                         (start-a (plist-get range-a :start))
-                         (start-b (plist-get range-b :start))
-                         (point-a (acm-backend-lsp-position-to-point start-a))
-                         (point-b (acm-backend-lsp-position-to-point start-b)))
-                    (> point-a point-b)))))
+                  (> (acm-backend-lsp-position-to-point (plist-get (plist-get edit-a :range) :start))
+                     (acm-backend-lsp-position-to-point (plist-get (plist-get edit-b :range) :start))))))
 
 (defun acm-backend-lsp-snippet-expansion-fn ()
   "Compute a function to expand snippets.
