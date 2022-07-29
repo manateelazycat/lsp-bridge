@@ -22,6 +22,7 @@ import os
 import queue
 import shutil
 import threading
+import traceback
 from pathlib import Path
 from typing import Dict
 
@@ -95,28 +96,34 @@ class LspBridge:
         self.event_loop.join()
 
     def event_dispatcher(self):
-        while True:
-            message = self.event_queue.get(True)
-
-            if message["name"] == "open_file":
-                self._open_file(message["content"])
-            elif message["name"] == "close_file":
-                self._close_file(message["content"])
-            elif message["name"] == "action_func":
-                (func_name, func_args) = message["content"]
-                getattr(self, func_name)(*func_args)
-
-            self.event_queue.task_done()
+        try:
+            while True:
+                message = self.event_queue.get(True)
+            
+                if message["name"] == "open_file":
+                    self._open_file(message["content"])
+                elif message["name"] == "close_file":
+                    self._close_file(message["content"])
+                elif message["name"] == "action_func":
+                    (func_name, func_args) = message["content"]
+                    getattr(self, func_name)(*func_args)
+            
+                self.event_queue.task_done()
+        except:
+            logger.error(traceback.format_exc())
 
     def message_dispatcher(self):
-        while True:
-            message = self.message_queue.get(True)
-            if message["name"] == "server_process_exit":
-                self.handle_server_process_exit(message["content"])
-            else:
-                logger.error("Unhandled lsp-bridge message: %s" % message)
-
-            self.message_queue.task_done()
+        try:
+            while True:
+                message = self.message_queue.get(True)
+                if message["name"] == "server_process_exit":
+                    self.handle_server_process_exit(message["content"])
+                else:
+                    logger.error("Unhandled lsp-bridge message: %s" % message)
+            
+                self.message_queue.task_done()
+        except:
+            logger.error(traceback.format_exc())
 
     def rename_file(self, old_filepath, new_filepath):
         if is_in_path_dict(FILE_ACTION_DICT, old_filepath):
