@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 def create_file_action(filepath, lang_server_info, lsp_server, **kwargs):
     if is_in_path_dict(FILE_ACTION_DICT, filepath):
-        if get_from_path_dict(FILE_ACTION_DICT, filepath).lsp_server != lsp_server:
+        if get_from_path_dict(FILE_ACTION_DICT, filepath).single_lsp_server != lsp_server:
             logger.warn("File {} is opened by different lsp server.".format(filepath))
         return
     action = FileAction(filepath, lang_server_info, lsp_server, None, None, **kwargs)
@@ -41,15 +41,18 @@ def create_file_action(filepath, lang_server_info, lsp_server, **kwargs):
     return action
 
 class FileAction:
-    def __init__(self, filepath, lang_server_info, lsp_server, multi_servers_info=None, multi_servers=None, external_file_link=None):
+    def __init__(self, filepath, 
+                 single_lang_server_info, single_lsp_server, 
+                 multi_servers_info=None, multi_servers=None, 
+                 external_file_link=None):
         # Init.
         self.filepath = filepath
-        self.lang_server_info = lang_server_info
-        self.lsp_server: LspServer = lsp_server
+        self.single_lang_server_info = single_lang_server_info
+        self.single_lsp_server: LspServer = single_lsp_server
         self.multi_servers_info = multi_servers_info
         self.multi_servers = multi_servers
         self.external_file_link = external_file_link
-
+        
         self.request_dict = {}
         self.last_change_file_time = -1.0
         self.last_change_cursor_time = -1.0
@@ -84,7 +87,7 @@ class FileAction:
             for handler_cls in Handler.__subclasses__():
                 method_handlers_dict[handler_cls.name] = handler_cls(self)
                 
-            self.method_handlers[self.lsp_server.server_info["name"]] = method_handlers_dict
+            self.method_handlers[self.single_lsp_server.server_info["name"]] = method_handlers_dict
 
         (self.enable_auto_import, self.completion_items_limit, self.insert_spaces) = get_emacs_vars([
             "acm-backend-lsp-enable-auto-import",
@@ -96,7 +99,7 @@ class FileAction:
             for server in self.multi_servers.values():
                 server.attach(self)
         else:
-            self.lsp_server.attach(self)
+            self.single_lsp_server.attach(self)
 
     @property
     def last_change(self) -> Tuple[float, float]:
@@ -108,8 +111,8 @@ class FileAction:
         if method in self.handlers:
             handler = self.handlers[method]
             if hasattr(handler, "provider"):
-                if self.lsp_server:
-                    if getattr(self.lsp_server, getattr(handler, "provider")):
+                if self.single_lsp_server:
+                    if getattr(self.single_lsp_server, getattr(handler, "provider")):
                        return self.send_request(method, *args, **kwargs) 
                     elif hasattr(handler, "provider_message"):
                         message_emacs(getattr(handler, "provider_message"))
@@ -140,7 +143,7 @@ class FileAction:
             for lsp_server in self.multi_servers.values():
                 lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
         else:
-            self.lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
+            self.single_lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
 
         self.version += 1
 
@@ -169,18 +172,18 @@ class FileAction:
                     if lsp_server.server_info["name"] in self.multi_servers_info["completion"]:
                         self.send_server_request(lsp_server, "completion", lsp_server, position, before_char)
         else:
-            if ((before_char in self.lsp_server.completion_trigger_characters) or
+            if ((before_char in self.single_lsp_server.completion_trigger_characters) or
                 (not completion_visible) or
-                len(self.last_completion_candidates.get(self.lsp_server.server_info["name"], [])) == 0):
-                self.send_request("completion", self.lsp_server, position, before_char)
+                len(self.last_completion_candidates.get(self.single_lsp_server.server_info["name"], [])) == 0):
+                self.send_request("completion", self.single_lsp_server, position, before_char)
                 
     def change_cursor(self, position):
         # Record change cursor time.
         self.last_change_cursor_time = time.time()
         
     def ignore_diagnostic(self):
-        if "ignore-diagnostic" in self.lsp_server.server_info:
-            eval_in_emacs("lsp-bridge-insert-ignore-diagnostic-comment", self.lsp_server.server_info["ignore-diagnostic"])
+        if "ignore-diagnostic" in self.single_lsp_server.server_info:
+            eval_in_emacs("lsp-bridge-insert-ignore-diagnostic-comment", self.single_lsp_server.server_info["ignore-diagnostic"])
         else:
             message_emacs("Not found 'ignore_diagnostic' field in LSP server configure file.")
             
@@ -195,7 +198,7 @@ class FileAction:
             for lsp_server in self.multi_servers.values():
                 lsp_server.send_did_save_notification(self.filepath)
         else:
-            self.lsp_server.send_did_save_notification(self.filepath)
+            self.single_lsp_server.send_did_save_notification(self.filepath)
             
     def completion_item_resolve(self, item_key, server_name):
         if server_name in self.completion_items:
@@ -215,7 +218,7 @@ class FileAction:
                             item["documentation"] if "documentation" in item else "",
                             item["additionalTextEdits"] if "additionalTextEdits" in item else "")
                 else:
-                    if self.lsp_server.completion_resolve_provider:
+                    if self.single_lsp_server.completion_resolve_provider:
                         self.send_request("completion_item_resolve", item_key, server_name, self.completion_items[server_name][item_key])
                     else:
                         item = self.completion_items[server_name][item_key]
@@ -248,23 +251,23 @@ class FileAction:
         if self.multi_servers:
             list(self.multi_servers)[0].send_did_rename_files_notification(old_filepath, new_filepath)
         else:
-            self.lsp_server.send_did_rename_files_notification(old_filepath, new_filepath)
+            self.single_lsp_server.send_did_rename_files_notification(old_filepath, new_filepath)
 
     def send_request(self, handler_name, *args, **kwargs):
-        handler: Handler = self.method_handlers[self.lsp_server.server_info["name"]][handler_name]
+        handler: Handler = self.method_handlers[self.single_lsp_server.server_info["name"]][handler_name]
         
         handler.latest_request_id = request_id = generate_request_id()
         handler.last_change = self.last_change
 
-        self.lsp_server.record_request_id(request_id, handler)
+        self.single_lsp_server.record_request_id(request_id, handler)
         
         params = handler.process_request(*args, **kwargs)
         if handler.send_document_uri:
             params["textDocument"] = {
-                "uri": self.lsp_server.parse_document_uri(self.filepath, self.external_file_link)
+                "uri": self.single_lsp_server.parse_document_uri(self.filepath, self.external_file_link)
             }
 
-        self.lsp_server.sender.send_request(
+        self.single_lsp_server.sender.send_request(
             method=handler.method,
             params=params,
             request_id=request_id,
@@ -297,7 +300,7 @@ class FileAction:
                     lsp_server = LSP_SERVER_DICT[lsp_server_name]
                     lsp_server.close_file(self.filepath)
         else:
-            lsp_server_name = self.lsp_server.server_name
+            lsp_server_name = self.single_lsp_server.server_name
             if lsp_server_name in LSP_SERVER_DICT:
                 lsp_server = LSP_SERVER_DICT[lsp_server_name]
                 lsp_server.close_file(self.filepath)
@@ -306,13 +309,13 @@ class FileAction:
         remove_from_path_dict(FILE_ACTION_DICT, self.filepath)
         
     def get_lsp_server_project_path(self):
-        return self.lsp_server.project_path.encode('utf-8')
+        return self.single_lsp_server.project_path.encode('utf-8')
     
     def create_external_file_action(self, external_file, external_file_link=None):
         create_file_action(
             filepath=external_file,
-            lang_server_info=self.lang_server_info,
-            lsp_server=self.lsp_server,
+            lang_server_info=self.single_lang_server_info,
+            lsp_server=self.single_lsp_server,
             external_file_link=external_file_link,
         )
         
