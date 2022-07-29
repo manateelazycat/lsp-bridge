@@ -99,7 +99,7 @@
 (defvar-local acm-backend-lsp-completion-trigger-characters nil)
 (defvar-local acm-backend-lsp-completion-position nil)
 (defvar-local acm-backend-lsp-filepath "")
-(defvar-local acm-backend-lsp-items nil)
+(defvar-local acm-backend-lsp-items (make-hash-table :test 'equal))
 
 (defvar acm-backend-lsp-fetch-completion-item-func nil)
 
@@ -108,16 +108,18 @@
     (when (and acm-backend-lsp-items
                (hash-table-p acm-backend-lsp-items))
       (maphash
-       (lambda (k v)
-         (let ((candidate-label (plist-get v :label)))
-           (when (or (string-equal keyword "")
-                     (acm-candidate-fuzzy-search keyword candidate-label))
-             (if (> (length candidate-label) acm-backend-lsp-candidate-max-length)
-                 (plist-put v :display-label (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-max-length)))
-               (plist-put v :display-label candidate-label))
+       (lambda (server-name server-items)
+         (maphash (lambda (k v)
+                    (let ((candidate-label (plist-get v :label)))
+                      (when (or (string-equal keyword "")
+                                (acm-candidate-fuzzy-search keyword candidate-label))
+                        (if (> (length candidate-label) acm-backend-lsp-candidate-max-length)
+                            (plist-put v :display-label (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-max-length)))
+                          (plist-put v :display-label candidate-label))
 
-             (plist-put v :backend "lsp")
-             (add-to-list 'candidates v t))))
+                        (plist-put v :backend "lsp")
+                        (add-to-list 'candidates v t))))
+                  server-items))
        acm-backend-lsp-items))
 
     (acm-candidate-sort-by-prefix keyword candidates)))

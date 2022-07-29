@@ -90,14 +90,14 @@ It should be noted that there are three scan modes of lsp-bridge:
 The default configuration of for each language server is stored at [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
 
 Anyway you can customize server configuration with the following priority:
-1. ```lsp-bridge-get-lang-server-by-project```: The user custom function, the input parameter is `project-path` and `file-path`, return the corresponding LSP server string, you can query all LSP servers in the list of `lsp-bridge-lang-server-mode-list` option, this function return nil default
-2. ```lsp-bridge-lang-server-extension-list```: load server configuration based on file extension, such as, we launch ```volar``` server instead ```javascript``` server when open *.vue file
-3. ```lsp-bridge-lang-server-mode-list```: load server configuration based on major-mode
+1. ```lsp-bridge-get-single-lang-server-by-project```: The user custom function, the input parameter is `project-path` and `file-path`, return the corresponding LSP server string, you can query all LSP servers in the list of `lsp-bridge-single-lang-server-mode-list` option, this function return nil default
+2. ```lsp-bridge-single-lang-server-extension-list```: load server configuration based on file extension, such as, we launch ```volar``` server instead ```javascript``` server when open *.vue file
+3. ```lsp-bridge-single-lang-server-mode-list```: load server configuration based on major-mode
 
 ## Add support for new language?
 
 1. Create configuration file under lsp-bridge/langserver, such as `pyright.json` for pyright (windows user please uses `pyright_windows.json`, macOS user please uses `pyright_darwin.json`).
-2. Add `(mode . server_name)` to `lsp-bridge-lang-server-mode-list` in `lsp-bridge.el`, such as `(python-mode . "pyright")`.
+2. Add `(mode . server_name)` to `lsp-bridge-single-lang-server-mode-list` in `lsp-bridge.el`, such as `(python-mode . "pyright")`.
 3. Add new mode-hook to `lsp-bridge-default-mode-hooks` in `lsp-bridge.el`.
 4. Add new mode indent to `lsp-bridge-formatting-indent-alist` in `lsp-bridge.el`.
 

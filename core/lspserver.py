@@ -430,9 +430,9 @@ class LspServer:
                 # server response
                 if message["id"] in self.request_dict:
                     method = self.request_dict[message["id"]].method
-                    logger.info("\n--- Recv response ({}): {}".format(message["id"], method))
+                    logger.info("\n--- Recv response {} ({}): {}".format(self.server_info["name"], message["id"], method))
                 else:
-                    logger.info("\n--- Recv response ({})".format(message["id"]))
+                    logger.info("\n--- Recv response {} ({})".format(self.server_info["name"], message["id"]))
         else:
             if "method" in message:
                 # server notification

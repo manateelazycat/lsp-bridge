@@ -36,16 +36,18 @@ def create_file_action(filepath, lang_server_info, lsp_server, **kwargs):
         if get_from_path_dict(FILE_ACTION_DICT, filepath).lsp_server != lsp_server:
             logger.warn("File {} is opened by different lsp server.".format(filepath))
         return
-    action = FileAction(filepath, lang_server_info, lsp_server, **kwargs)
+    action = FileAction(filepath, lang_server_info, lsp_server, None, None, **kwargs)
     add_to_path_dict(FILE_ACTION_DICT, filepath, action)
     return action
 
 class FileAction:
-    def __init__(self, filepath, lang_server_info, lsp_server, external_file_link=None):
+    def __init__(self, filepath, lang_server_info, lsp_server, multi_servers_info=None, multi_servers=None, external_file_link=None):
         # Init.
         self.filepath = filepath
         self.lang_server_info = lang_server_info
         self.lsp_server: LspServer = lsp_server
+        self.multi_servers_info = multi_servers_info
+        self.multi_servers = multi_servers
         self.external_file_link = external_file_link
 
         self.request_dict = {}
@@ -53,7 +55,7 @@ class FileAction:
         self.last_change_cursor_time = -1.0
         self.version = 1
 
-        self.last_completion_candidates = []
+        self.last_completion_candidates = {}
 
         self.completion_items = {}
 
@@ -75,7 +77,11 @@ class FileAction:
             "indent-tabs-mode"])
         self.insert_spaces = not self.insert_spaces
 
-        self.lsp_server.attach(self)
+        if self.multi_servers:
+            for server in self.multi_servers.values():
+                server.attach(self)
+        else:
+            self.lsp_server.attach(self)
 
     @property
     def last_change(self) -> Tuple[float, float]:
@@ -87,10 +93,27 @@ class FileAction:
         if method in self.handlers:
             handler = self.handlers[method]
             if hasattr(handler, "provider"):
-                if getattr(self.lsp_server, getattr(handler, "provider")):
-                   return self.send_request(method, *args, **kwargs) 
-                elif hasattr(handler, "provider_message"):
-                    message_emacs(getattr(handler, "provider_message"))
+                if self.lsp_server:
+                    if getattr(self.lsp_server, getattr(handler, "provider")):
+                       return self.send_request(method, *args, **kwargs) 
+                    elif hasattr(handler, "provider_message"):
+                        message_emacs(getattr(handler, "provider_message"))
+                else:
+                    if method in ["completion", "completion_item_resolve", "diagnostics", "code_action", "execute_command"]:
+                        method_server_names = self.multi_servers_info[method]
+                        for method_server_name in method_server_names:
+                            method_server = self.multi_servers[method_server_name]
+                            if getattr(method_server, getattr(handler, "provider")):
+                               return self.send_server_request(method_server, method, *args, **kwargs) 
+                            elif hasattr(handler, "provider_message"):
+                                 message_emacs(getattr(handler, "provider_message"))
+                    else:
+                        method_server_name = self.multi_servers_info[method]
+                        method_server = self.multi_servers[method_server_name]
+                        if getattr(method_server, getattr(handler, "provider")):
+                            return self.send_server_request(method_server, method, *args, **kwargs) 
+                        elif hasattr(handler, "provider_message"):
+                            message_emacs(getattr(handler, "provider_message"))
             else:
                 return self.send_request(method, *args, **kwargs)
         elif hasattr(self, method):
@@ -98,7 +121,11 @@ class FileAction:
 
     def change_file(self, start, end, range_length, change_text, position, before_char, completion_visible):
         # Send didChange request to LSP server.
-        self.lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
+        if self.multi_servers:
+            for lsp_server in self.multi_servers.values():
+                lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
+        else:
+            self.lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
 
         self.version += 1
 
@@ -118,10 +145,19 @@ class FileAction:
         # 1. Character before cursor is match completion trigger characters.
         # 2. Completion UI is invisible.
         # 3. Last completion candidates is empty.
-        if ((before_char in self.lsp_server.completion_trigger_characters) or
-            (not completion_visible) or
-            len(self.last_completion_candidates) == 0):
-            self.send_request("completion", position, before_char)
+        if self.multi_servers:
+            for lsp_server in self.multi_servers.values():
+                if ((before_char in lsp_server.completion_trigger_characters) or
+                    (not completion_visible) or
+                    len(self.last_completion_candidates.get(lsp_server.server_info["name"], [])) == 0):
+                    
+                    if lsp_server.server_info["name"] in self.multi_servers_info["completion"]:
+                        self.send_server_request(lsp_server, "completion", lsp_server, position, before_char)
+        else:
+            if ((before_char in self.lsp_server.completion_trigger_characters) or
+                (not completion_visible) or
+                len(self.last_completion_candidates.get(self.lsp_server.server_info["name"], [])) == 0):
+                self.send_request("completion", position, before_char)
 
     def change_cursor(self, position):
         # Record change cursor time.
@@ -140,26 +176,45 @@ class FileAction:
             eval_in_emacs("lsp-bridge-list-diagnostics-popup", self.diagnostics)
             
     def save_file(self):
-        self.lsp_server.send_did_save_notification(self.filepath)
+        if self.multi_servers:
+            for lsp_server in self.multi_servers.values():
+                lsp_server.send_did_save_notification(self.filepath)
+        else:
+            self.lsp_server.send_did_save_notification(self.filepath)
         
     def handle_server_response_message(self, request_id, request_type, response):
         self.handlers[request_type].handle_response(request_id, response)
 
-    def completion_item_resolve(self, item_key):
-        if item_key in self.completion_items:
-            self.completion_item_resolve_key = item_key
-            
-            if self.lsp_server.completion_resolve_provider:
-                self.send_request("completion_item_resolve", item_key, self.completion_items[item_key])
-            else:
-                item = self.completion_items[item_key]
+    def completion_item_resolve(self, item_key, server_name):
+        if server_name in self.completion_items:
+            if item_key in self.completion_items[server_name]:
+                self.completion_item_resolve_key = item_key
                 
-                self.completion_item_update(
-                    item_key, 
-                    item["documentation"] if "documentation" in item else "",
-                    item["additionalTextEdits"] if "additionalTextEdits" in item else "")
+                if self.multi_servers:
+                    method_server = self.multi_servers[server_name]
+                    if method_server.completion_resolve_provider:
+                        self.send_server_request(method_server, "completion_item_resolve", item_key, server_name, self.completion_items[server_name][item_key])
+                    else:
+                        item = self.completion_items[server_name][item_key]
+                        
+                        self.completion_item_update(
+                            item_key, 
+                            server_name,
+                            item["documentation"] if "documentation" in item else "",
+                            item["additionalTextEdits"] if "additionalTextEdits" in item else "")
+                else:
+                    if self.lsp_server.completion_resolve_provider:
+                        self.send_request("completion_item_resolve", item_key, server_name, self.completion_items[server_name][item_key])
+                    else:
+                        item = self.completion_items[server_name][item_key]
+                        
+                        self.completion_item_update(
+                            item_key, 
+                            server_name,
+                            item["documentation"] if "documentation" in item else "",
+                            item["additionalTextEdits"] if "additionalTextEdits" in item else "")
                     
-    def completion_item_update(self, item_key, documentation, additional_text_edits):
+    def completion_item_update(self, item_key, server_name, documentation, additional_text_edits):
         if self.completion_item_resolve_key == item_key:
             if documentation != "" or additional_text_edits != "":
                 if type(documentation) == dict:
@@ -171,6 +226,7 @@ class FileAction:
                               {
                                   "filepath": self.filepath,
                                   "key": item_key,
+                                  "server": server_name,
                                   "additionalTextEdits": additional_text_edits,
                                   "documentation": documentation
                               })
@@ -199,8 +255,25 @@ class FileAction:
             request_id=request_id,
         )
         
-    def completion_trigger_characters(self):
-        return self.lsp_server.completion_trigger_characters
+    def send_server_request(self, lsp_server, handler_name, *args, **kwargs):
+        handler: Handler = self.handlers[handler_name]
+        
+        handler.latest_request_id = request_id = generate_request_id()
+        handler.last_change = self.last_change
+
+        lsp_server.record_request_id(request_id, handler)
+        
+        params = handler.process_request(*args, **kwargs)
+        if handler.send_document_uri:
+            params["textDocument"] = {
+                "uri": lsp_server.parse_document_uri(self.filepath, self.external_file_link)
+            }
+
+        lsp_server.sender.send_request(
+            method=handler.method,
+            params=params,
+            request_id=request_id,
+        )
         
     def exit(self):
         lsp_server_name = self.lsp_server.server_name
