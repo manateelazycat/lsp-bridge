@@ -90,7 +90,7 @@ lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.
 lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
 
 你可以根据以下优先级顺序来自定义服务器配置：
-1. ```lsp-bridge-get-lang-server-by-project```: 用户自定义函数， 输入参数是 `project-path` 和 `file-path`, 返回对应的LSP服务器字符串， 可以在 `lsp-bridge-lang-server-mode-list` 列表中查询所有LSP服务器的名称， 默认这个函数返回 nil 
+1. ```lsp-bridge-get-lang-server-by-project```: 用户自定义函数， 输入参数是 `project-path` 和 `file-path`, 返回对应的LSP服务器字符串， 可以在 `lsp-bridge-lang-server-mode-list` 列表中查询所有LSP服务器的名称， 默认这个函数返回 nil
 2. ```lsp-bridge-lang-server-extension-list```: 根据文件的扩展名来返回服务器，比如打开*.vue文件时，我们会使用 ```volar``` 服务器替代 javascript-mode 匹配的 ```javascript``` 服务器
 3. ```lsp-bridge-lang-server-mode-list```: 根据Emacs的major-mode来返回对应的服务器
 
@@ -141,6 +141,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 30 | [ccls](https://github.com/MaskRay/ccls) | c, c++, object-c | `lsp-bridge-c-lsp-server` 设置成 `ccls` |
 | 31 | [jedi](https://github.com/pappasam/jedi-language-server) | python | `lsp-bridge-python-lsp-server` 设置成 `jedi` |
 | 32 | [emmet-ls](https://github.com/aca/emmet-ls) | html, js, css, sass, scss, less | |
+| 33 | [rnix-lsp](https://github.com/nix-community/rnix-lsp) | nix | |
 
 ### 不会支持的特性：
 lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是实现LSP协议最全的LSP客户端。

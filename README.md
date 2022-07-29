@@ -55,7 +55,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-signature-help-fetch`: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
 * `lsp-bridge-insert-common-prefix`: insert common prefix of candidates
 * `lsp-bridge-restart-process`: restart lsp-bridge process (only used for development)
-* `lsp-bridge-popup-complete`: Manually popup the completion menu, you only need this command when turn on option `lsp-bride-complete-manually` 
+* `lsp-bridge-popup-complete`: Manually popup the completion menu, you only need this command when turn on option `lsp-bride-complete-manually`
 * `acm-doc-scroll-up`: API document window scroll up
 * `acm-doc-scroll-down`: API document window scroll down
 
@@ -141,6 +141,7 @@ You need to install the LSP server corresponding to each programming language, t
 | 30 | [ccls](https://github.com/MaskRay/ccls) | c, c++, object-c | `lsp-bridge-c-lsp-server` set to` ccls` |
 | 31 | [jedi](https://github.com/pappasam/jedi-language-server) | python | `lsp-bridge-python-lsp-server` set to `jedi` |
 | 32 | [emmet-ls](https://github.com/aca/emmet-ls) | html, js, css, sass, scss, less | |
+| 33 | [rnix-lsp](https://github.com/nix-community/rnix-lsp) | nix | |
 
 
 ### Features that won't be supported
@@ -175,8 +176,8 @@ The following is the directory structure of the lsp-bridge project:
 | langserver              | The configurations of the LSP servers, each server corresponding to a JSON file that defines the name of the server, language ID, starting command, options, etc.                        |
 
 Please read below articles first:
-* [LSP Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/) 
-* [The Design of lsp-bridge](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html) 
+* [LSP Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
+* [The Design of lsp-bridge](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html)
 * [Why lsp-bridge not use capf](https://manateelazycat.github.io/emacs/2022/06/26/why-lsp-bridge-not-use-capf.html)
 
 Then turn on develop option ```lsp-bridge-enable-log``` and happy hacking! ;)
