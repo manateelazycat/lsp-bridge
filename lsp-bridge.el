@@ -98,10 +98,11 @@
 (defun lsp-bridge-fetch-completion-item-info (candidate)
   (let* ((label (plist-get candidate :label))
          (kind (plist-get candidate :icon))
+         (server-name (plist-get candidate :server))
          (key (plist-get candidate :key)))
     ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
     (unless (equal lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath label kind))
-      (lsp-bridge-call-async "fetch_completion_item_info" acm-backend-lsp-filepath key)
+      (lsp-bridge-call-async "fetch_completion_item_info" acm-backend-lsp-filepath key server-name)
       (setq lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath label kind)))))
 
 (defalias 'lsp-bridge-insert-common-prefix #'acm-insert-common)
@@ -246,7 +247,8 @@ Start discarding off end if gets this big."
                (lsp-bridge-epc-define-method mngr 'get-emacs-var 'lsp-bridge--get-emacs-var-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-vars 'lsp-bridge--get-emacs-vars-func)
                (lsp-bridge-epc-define-method mngr 'get-project-path 'lsp-bridge--get-project-path-func)
-               (lsp-bridge-epc-define-method mngr 'get-lang-server 'lsp-bridge--get-lang-server-func)
+               (lsp-bridge-epc-define-method mngr 'get-multi-lang-server 'lsp-bridge--get-multi-lang-server-func)
+               (lsp-bridge-epc-define-method mngr 'get-single-lang-server 'lsp-bridge--get-single-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-version 'emacs-version)
                (lsp-bridge-epc-define-method mngr 'is-snippet-support 'acm-backend-lsp-snippet-expansion-fn)
                ))))
@@ -294,9 +296,14 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Enable this option to print log message in `*lsp-bridge*' buffer, default only print message header."
   :type 'boolean)
 
-(defcustom lsp-bridge-lang-server-extension-list
+(defcustom lsp-bridge-multi-lang-server-extension-list
   '(
-    (("vue") . "volar")
+    (("vue") . "volar_emmet"))
+  "The multi lang server rule for file extension."
+  :type 'cons)
+
+(defcustom lsp-bridge-single-lang-server-extension-list
+  '(
     (("wxml") . "wxml-language-server")
     (("html") . "vscode-html-language-server")
     )
@@ -314,7 +321,12 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defcustom lsp-bridge-complete-manually nil
   "Only popup completion menu when user call `lsp-bridge-popup-complete' command.")
 
-(defcustom lsp-bridge-lang-server-mode-list
+(defcustom lsp-bridge-multi-lang-server-mode-list
+  '()
+  "The multi lang server rule for file mode."
+  :type 'cons)
+
+(defcustom lsp-bridge-single-lang-server-mode-list
   '(
     ((c-mode c++-mode objc-mode) . lsp-bridge-c-lsp-server)
     (java-mode . "jdtls")
@@ -399,7 +411,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "The default mode hook to enable lsp-bridge."
   :type 'list)
 
-(defcustom lsp-bridge-get-lang-server-by-project nil
+(defcustom lsp-bridge-get-single-lang-server-by-project nil
+  "Get lang server with project path and file path.")
+
+(defcustom lsp-bridge-get-multi-lang-server-by-project nil
   "Get lang server with project path and file path.")
 
 (defcustom lsp-bridge-get-project-path-by-filepath nil
@@ -471,25 +486,43 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
   (when lsp-bridge-get-project-path-by-filepath
     (funcall lsp-bridge-get-project-path-by-filepath filepath)))
 
-(defun lsp-bridge--get-lang-server-func (project-path filepath)
+(defun lsp-bridge--get-multi-lang-server-func (project-path filepath)
   "Get lang server with project path, file path or file extension."
   (let (lang-server-by-project
         lang-server-by-extension)
-    ;; Step 1: Search lang server base on project rule provide by `lsp-bridge-get-lang-server-by-project'.
-    (when lsp-bridge-get-lang-server-by-project
-      (setq lang-server-by-project (funcall lsp-bridge-get-lang-server-by-project project-path filepath)))
+    ;; Step 1: Search lang server base on project rule provide by `lsp-bridge-get-multi-lang-server-by-project'.
+    (when lsp-bridge-get-multi-lang-server-by-project
+      (setq lang-server-by-project (funcall lsp-bridge-get-multi-lang-server-by-project project-path filepath)))
 
     (if lang-server-by-project
         lang-server-by-project
-      ;; Step 2: search lang server base on extension rule provide by `lsp-bridge-lang-server-extension-list'.
-      (setq lang-server-by-extension (lsp-bridge-get-lang-server-by-extension filepath))
+      ;; Step 2: search lang server base on extension rule provide by `lsp-bridge-multi-lang-server-extension-list'.
+      (setq lang-server-by-extension (lsp-bridge-get-multi-lang-server-by-extension filepath))
       (if lang-server-by-extension
           lang-server-by-extension
-        ;; Step 3: search lang server base on mode rule provide by `lsp-bridge-lang-server-extension-list'.
+        ;; Step 3: search lang server base on mode rule provide by `lsp-bridge-multi-lang-server-extension-list'.
         (lsp-bridge--with-file-buffer filepath
-          (lsp-bridge-get-lang-server-by-mode))))))
+          (lsp-bridge-get-multi-lang-server-by-mode))))))
 
-(defun lsp-bridge-get-lang-server-by-extension (filepath)
+(defun lsp-bridge--get-single-lang-server-func (project-path filepath)
+  "Get lang server with project path, file path or file extension."
+  (let (lang-server-by-project
+        lang-server-by-extension)
+    ;; Step 1: Search lang server base on project rule provide by `lsp-bridge-get-single-lang-server-by-project'.
+    (when lsp-bridge-get-single-lang-server-by-project
+      (setq lang-server-by-project (funcall lsp-bridge-get-single-lang-server-by-project project-path filepath)))
+
+    (if lang-server-by-project
+        lang-server-by-project
+      ;; Step 2: search lang server base on extension rule provide by `lsp-bridge-single-lang-server-extension-list'.
+      (setq lang-server-by-extension (lsp-bridge-get-single-lang-server-by-extension filepath))
+      (if lang-server-by-extension
+          lang-server-by-extension
+        ;; Step 3: search lang server base on mode rule provide by `lsp-bridge-single-lang-server-extension-list'.
+        (lsp-bridge--with-file-buffer filepath
+          (lsp-bridge-get-single-lang-server-by-mode))))))
+
+(defun lsp-bridge-get-multi-lang-server-by-extension (filepath)
   "Get lang server for file extension."
   (let* ((file-extension (file-name-extension filepath))
          (langserver-info (cl-find-if
@@ -498,12 +531,26 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
                                (if (eq (type-of extension) 'string)
                                    (string-equal file-extension extension)
                                  (member file-extension extension))))
-                           lsp-bridge-lang-server-extension-list)))
+                           lsp-bridge-multi-lang-server-extension-list)))
     (if langserver-info
         (cdr langserver-info)
       nil)))
 
-(defun lsp-bridge-get-lang-server-by-mode ()
+(defun lsp-bridge-get-single-lang-server-by-extension (filepath)
+  "Get lang server for file extension."
+  (let* ((file-extension (file-name-extension filepath))
+         (langserver-info (cl-find-if
+                           (lambda (pair)
+                             (let ((extension (car pair)))
+                               (if (eq (type-of extension) 'string)
+                                   (string-equal file-extension extension)
+                                 (member file-extension extension))))
+                           lsp-bridge-single-lang-server-extension-list)))
+    (if langserver-info
+        (cdr langserver-info)
+      nil)))
+
+(defun lsp-bridge-get-multi-lang-server-by-mode ()
   "Get lang server for file mode."
   (let ((langserver-info (cl-find-if
                           (lambda (pair)
@@ -511,7 +558,24 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
                               (if (symbolp mode)
                                   (eq major-mode mode)
                                 (member major-mode mode))))
-                          lsp-bridge-lang-server-mode-list)))
+                          lsp-bridge-multi-lang-server-mode-list)))
+    (if langserver-info
+        (let ((info (cdr langserver-info)))
+          (pcase (format "%s" (type-of info))
+            ("string" info)
+            ("symbol" (symbol-value info))
+            ))
+      nil)))
+
+(defun lsp-bridge-get-single-lang-server-by-mode ()
+  "Get lang server for file mode."
+  (let ((langserver-info (cl-find-if
+                          (lambda (pair)
+                            (let ((mode (car pair)))
+                              (if (symbolp mode)
+                                  (eq major-mode mode)
+                                (member major-mode mode))))
+                          lsp-bridge-single-lang-server-mode-list)))
     (if langserver-info
         (let ((info (cdr langserver-info)))
           (pcase (format "%s" (type-of info))
@@ -521,14 +585,18 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
       nil)))
 
 (defun lsp-bridge-has-lsp-server-p ()
-  (let ((filepath (ignore-errors (file-truename buffer-file-name)))
-        lang-server-by-extension)
+  (let* ((filepath (ignore-errors (file-truename buffer-file-name))))
     (when filepath
-      (setq lang-server-by-extension (lsp-bridge-get-lang-server-by-extension filepath))
-      (if lang-server-by-extension
-          lang-server-by-extension
-        (lsp-bridge--with-file-buffer filepath
-          (lsp-bridge-get-lang-server-by-mode))))))
+      (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension filepath)
+                                                 (lsp-bridge--with-file-buffer filepath
+                                                   (lsp-bridge-get-multi-lang-server-by-mode))))
+             (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension filepath)
+                                           (lsp-bridge--with-file-buffer filepath
+                                             (lsp-bridge-get-single-lang-server-by-mode)))))
+        (if multi-lang-server-by-extension
+            multi-lang-server-by-extension
+          lang-server-by-extension)
+        ))))
 
 (defun lsp-bridge-call-async (method &rest args)
   "Call Python EPC function METHOD and ARGS asynchronously."
@@ -685,7 +753,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
     (lsp-bridge-call-async "search_words_close_file" buffer-file-name)
     ))
 
-(defun lsp-bridge-record-completion-items (filepath candidates position completion-trigger-characters)
+(defun lsp-bridge-record-completion-items (filepath candidates position server-name completion-trigger-characters)
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
     (setq-local acm-backend-lsp-completion-position position)
@@ -695,7 +763,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
       (dolist (item candidates)
         (plist-put item :annotation (capitalize (plist-get item :icon)))
         (puthash (plist-get item :key) item completion-table))
-      (setq-local acm-backend-lsp-items completion-table))
+      (puthash server-name completion-table acm-backend-lsp-items))
 
     (lsp-bridge-try-completion)
     ))
@@ -1453,18 +1521,19 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 (defun lsp-bridge-update-completion-item-info (info)
   (let* ((filepath (plist-get info :filepath))
          (key (plist-get info :key))
+         (server-name (plist-get info :server))
          (additional-text-edits (plist-get info :additionalTextEdits))
          (documentation (plist-get info :documentation)))
     (lsp-bridge--with-file-buffer filepath
       ;; Update `documentation' and `additionalTextEdits'
-      (when-let (item (gethash key acm-backend-lsp-items))
+      (when-let (item (gethash key (gethash server-name acm-backend-lsp-items)))
         (when additional-text-edits
           (plist-put item :additionalTextEdits additional-text-edits))
 
         (unless (string-equal documentation "")
           (plist-put item :documentation documentation))
 
-        (puthash key item acm-backend-lsp-items))
+        (puthash key item (gethash server-name acm-backend-lsp-items)))
 
       ;; Popup documentation window if same documentation window not exist.
       (acm-doc-show)

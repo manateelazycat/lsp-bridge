@@ -23,6 +23,7 @@ import queue
 import shutil
 import threading
 import traceback
+import json
 from pathlib import Path
 from typing import Dict
 
@@ -131,34 +132,77 @@ class LspBridge:
         
     def completion_hide(self, filepath):
         if is_in_path_dict(FILE_ACTION_DICT, filepath):
-            get_from_path_dict(FILE_ACTION_DICT, filepath).last_completion_candidates = []
+            get_from_path_dict(FILE_ACTION_DICT, filepath).last_completion_candidates = {}
             
     def pull_diagnostics(self, filepath):
         if is_in_path_dict(FILE_ACTION_DICT, filepath):
             eval_in_emacs("lsp-bridge-diagnostics-render", filepath, get_from_path_dict(FILE_ACTION_DICT, filepath).diagnostics)
             
-    def fetch_completion_item_info(self, filepath, item_key):
+    def fetch_completion_item_info(self, filepath, item_key, server_name):
         if is_in_path_dict(FILE_ACTION_DICT, filepath):
-            get_from_path_dict(FILE_ACTION_DICT, filepath).completion_item_resolve(item_key)
+            get_from_path_dict(FILE_ACTION_DICT, filepath).completion_item_resolve(item_key, server_name)
     
     def _open_file(self, filepath):
         project_path = get_project_path(filepath)
-        lang_server = get_emacs_func_result("get-lang-server", project_path, filepath)
-
-        if (lang_server == "clojure-lsp") and (not os.path.isdir(project_path)):
-            message_emacs("ERROR: can't determine the project root for {}, initialize a Git repository for the project before you open this file.".format(filepath))
-            eval_in_emacs("lsp-bridge-turn-off", filepath)
-
-            return False
-
-        if not lang_server:
-            message_emacs("ERROR: can't find the corresponding server for {}, disable lsp-bridge-mode.".format(filepath))
-            eval_in_emacs("lsp-bridge-turn-off", filepath)
-
-            return False
-
-        lang_server_info = load_lang_server_info(lang_server)
+        multi_lang_server = get_emacs_func_result("get-multi-lang-server", project_path, filepath)
         
+        if multi_lang_server:
+            multi_lang_server_dir = Path(__file__).resolve().parent / "multiserver"
+            multi_lang_server_path = multi_lang_server_dir / "{}.json".format(multi_lang_server)
+            
+            with open(multi_lang_server_path, encoding="utf-8") as f:
+                multi_lang_server_info = json.load(f)
+                
+                servers = []
+                for info in multi_lang_server_info:
+                    info_value = multi_lang_server_info[info]
+                    if type(info_value) == str:
+                        servers.append(info_value)
+                    else:
+                        servers += info_value
+                
+                servers = list(dict.fromkeys(servers))
+                multi_servers = {}
+                
+                for server_name in servers:
+                    server_path = get_lang_server_path(server_name)
+                    
+                    with open(server_path, encoding="utf-8") as server_path_file:
+                        lang_server_info = json.load(server_path_file)
+                        lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info)
+                        if lsp_server:
+                            multi_servers[lang_server_info["name"]] = lsp_server
+                        else:
+                            return False
+                        
+                action = FileAction(filepath, None, None, multi_lang_server_info, multi_servers)
+                add_to_path_dict(FILE_ACTION_DICT, filepath, action)
+        else:
+            single_lang_server = get_emacs_func_result("get-single-lang-server", project_path, filepath)
+            
+            if (single_lang_server == "clojure-lsp") and (not os.path.isdir(project_path)):
+                message_emacs("ERROR: can't determine the project root for {}, initialize a Git repository for the project before you open this file.".format(filepath))
+                eval_in_emacs("lsp-bridge-turn-off", filepath)
+            
+                return False
+            
+            if not single_lang_server:
+                message_emacs("ERROR: can't find the corresponding server for {}, disable lsp-bridge-mode.".format(filepath))
+                eval_in_emacs("lsp-bridge-turn-off", filepath)
+            
+                return False
+            
+            lang_server_info = load_single_lang_server_info(single_lang_server)
+            lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info)
+            
+            if lsp_server:
+                create_file_action(filepath, lang_server_info, lsp_server)
+            else:
+                return False
+        
+        return True
+    
+    def create_lsp_server(self, filepath, project_path, lang_server_info):
         if len(lang_server_info["command"]) > 0:
             server_command = lang_server_info["command"][0]
             server_command_path = shutil.which(server_command)
@@ -168,29 +212,24 @@ class LspBridge:
             else:
                 message_emacs("Error: can't find LSP server '{}' for {}, disable lsp-bridge-mode.".format(server_command, filepath))
                 eval_in_emacs("lsp-bridge-turn-off", filepath)
-
+        
                 return False
         else:
             message_emacs("Error: {}'s command argument is empty, disable lsp-bridge-mode.".format(filepath))
             eval_in_emacs("lsp-bridge-turn-off", filepath)
-
+        
             return False
         
         lsp_server_name = "{}#{}".format(path_as_key(project_path), lang_server_info["name"])
-
+                                
         if lsp_server_name not in LSP_SERVER_DICT:
             LSP_SERVER_DICT[lsp_server_name] = LspServer(
                 message_queue=self.message_queue,
                 project_path=project_path,
                 server_info=lang_server_info,
-                server_name=lsp_server_name
-            )
-
-        lsp_server = LSP_SERVER_DICT[lsp_server_name]
-
-        create_file_action(filepath, lang_server_info, lsp_server)
-        
-        return True
+                server_name=lsp_server_name)
+            
+        return LSP_SERVER_DICT[lsp_server_name]
 
     def _close_file(self, filepath):
         if is_in_path_dict(FILE_ACTION_DICT, filepath):
@@ -252,22 +291,24 @@ class LspBridge:
         start_test(self)
 
 
-def load_lang_server_info(lang_server):
+def load_single_lang_server_info(lang_server):
     lang_server_info_path = ""
     if os.path.exists(lang_server) and os.path.dirname(lang_server) != "":
         # If lang_server is real file path, we load the LSP server configuration from the user specified file.
         lang_server_info_path = lang_server
     else:
         # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
-        lang_server_dir = Path(__file__).resolve().parent / "langserver"
-        lang_server_file_path_current = lang_server_dir / "{}_{}.json".format(lang_server, get_os_name())
-        lang_server_file_path_default = lang_server_dir / "{}.json".format(lang_server)
-
-        lang_server_info_path = lang_server_file_path_current if lang_server_file_path_current.exists() else lang_server_file_path_default
+        lang_server_info_path = get_lang_server_path(lang_server)
 
     with open(lang_server_info_path, encoding="utf-8") as f:
-        import json
         return json.load(f)
+    
+def get_lang_server_path(server_name):
+    server_dir = Path(__file__).resolve().parent / "langserver"
+    server_path_current = server_dir / "{}_{}.json".format(server_name, get_os_name())
+    server_path_default = server_dir / "{}.json".format(server_name)
+    
+    return server_path_current if server_path_current.exists() else server_path_default
     
 if __name__ == "__main__":
     LspBridge(sys.argv[1:])

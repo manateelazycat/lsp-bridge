@@ -1,0 +1,15 @@
+{
+  "completion": ["volar", "emmet-ls"],
+  "completion_item_resolve": ["volar", "emmet-ls"],
+  "diagnostics": ["volar", "emmet-ls"],
+  "code_action": ["volar", "emmet-ls"],
+  "execute_command": ["volar", "emmet-ls"],
+  "find_define": "volar",
+  "find_implementation": "volar",
+  "find_references": "volar",
+  "formatting": "volar",
+  "hover": "volar",
+  "signature_help": "volar",
+  "prepare_rename": "volar",
+  "rename": "volar"
+}
