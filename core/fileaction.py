@@ -245,7 +245,10 @@ class FileAction:
 
 
     def rename_file(self, old_filepath, new_filepath):
-        self.lsp_server.send_did_rename_files_notification(old_filepath, new_filepath)
+        if self.multi_servers:
+            list(self.multi_servers)[0].send_did_rename_files_notification(old_filepath, new_filepath)
+        else:
+            self.lsp_server.send_did_rename_files_notification(old_filepath, new_filepath)
 
     def send_request(self, handler_name, *args, **kwargs):
         handler: Handler = self.method_handlers[self.lsp_server.server_info["name"]][handler_name]
