@@ -46,27 +46,23 @@ class FileAction:
                  multi_servers_info=None, multi_servers=None, 
                  external_file_link=None):
         # Init.
-        self.filepath = filepath
         self.single_lang_server_info = single_lang_server_info
         self.single_lsp_server: LspServer = single_lsp_server
-        self.multi_servers_info = multi_servers_info
         self.multi_servers = multi_servers
-        self.external_file_link = external_file_link
+        self.multi_servers_info = multi_servers_info
         
-        self.request_dict = {}
-        self.last_change_file_time = -1.0
-        self.last_change_cursor_time = -1.0
-        self.version = 1
-
-        self.last_completion_candidates = {}
-
-        self.completion_items = {}
-
-        self.try_completion_timer = None
-        self.completion_item_resolve_key = None
         self.code_action_response = None
-
+        self.completion_item_resolve_key = None
+        self.completion_items = {}
         self.diagnostics = []
+        self.external_file_link = external_file_link
+        self.filepath = filepath
+        self.last_change_cursor_time = -1.0
+        self.last_change_file_time = -1.0
+        self.last_completion_candidates = {}
+        self.request_dict = {}
+        self.try_completion_timer = None
+        self.version = 1
 
         # Initialize handlers.
         self.handlers: Dict[str, Handler] = dict()
@@ -147,14 +143,14 @@ class FileAction:
         # 3. Last completion candidates is empty.
         if self.multi_servers:
             for lsp_server in self.multi_servers.values():
-                if self.lsp_server_can_completion(lsp_server, before_char, completion_visible):
+                if self.completion_is_available(lsp_server, before_char, completion_visible):
                     if lsp_server.server_info["name"] in self.multi_servers_info["completion"]:
                         self.send_server_request(lsp_server, "completion", lsp_server, position, before_char)
         else:
-            if self.lsp_server_can_completion(self.single_lsp_server, before_char, completion_visible):
+            if self.completion_is_available(self.single_lsp_server, before_char, completion_visible):
                 self.send_server_request(self.single_lsp_server, "completion", self.single_lsp_server, position, before_char)
                 
-    def lsp_server_can_completion(self, lsp_server, before_char, completion_visible):
+    def completion_is_available(self, lsp_server, before_char, completion_visible):
         return ((before_char in lsp_server.completion_trigger_characters) or
                 (not completion_visible) or
                 len(self.last_completion_candidates.get(lsp_server.server_info["name"], [])) == 0)
@@ -219,9 +215,7 @@ class FileAction:
 
 
     def rename_file(self, old_filepath, new_filepath):
-        lsp_server = self.get_lsp_servers()[0]
-            
-        lsp_server.send_did_rename_files_notification(old_filepath, new_filepath)
+        self.get_lsp_servers()[0].send_did_rename_files_notification(old_filepath, new_filepath)
 
     def send_server_request(self, lsp_server, handler_name, *args, **kwargs):
         handler: Handler = self.method_handlers[lsp_server.server_info["name"]][handler_name]
@@ -233,19 +227,18 @@ class FileAction:
         
         params = handler.process_request(*args, **kwargs)
         if handler.send_document_uri:
-            params["textDocument"] = {
-                "uri": lsp_server.parse_document_uri(self.filepath, self.external_file_link)
-            }
+            params["textDocument"] = {"uri": lsp_server.parse_document_uri(self.filepath, self.external_file_link)}
 
         lsp_server.sender.send_request(
             method=handler.method,
             params=params,
-            request_id=request_id,
-        )
+            request_id=request_id)
         
     def exit(self):
         for lsp_server in self.get_lsp_servers():
-            self.exit_lsp_server(lsp_server.server_name)
+            if lsp_server.server_name in LSP_SERVER_DICT:
+                lsp_server = LSP_SERVER_DICT[lsp_server.server_name]
+                lsp_server.close_file(self.filepath)
             
         # Clean FILE_ACTION_DICT after close file.
         remove_from_path_dict(FILE_ACTION_DICT, self.filepath)
@@ -253,11 +246,6 @@ class FileAction:
     def get_lsp_servers(self):
         return self.multi_servers.values() if self.multi_servers else [self.single_lsp_server]
     
-    def exit_lsp_server(self, lsp_server_name):
-        if lsp_server_name in LSP_SERVER_DICT:
-            lsp_server = LSP_SERVER_DICT[lsp_server_name]
-            lsp_server.close_file(self.filepath)
-        
     def get_lsp_server_project_path(self):
         return self.single_lsp_server.project_path.encode('utf-8')
     
