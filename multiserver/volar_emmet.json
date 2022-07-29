@@ -7,7 +7,7 @@
   "find_define": "volar",
   "find_implementation": "volar",
   "find_references": "volar",
-  "formatting": "emmet-ls",
+  "formatting": "volar",
   "hover": "volar",
   "signature_help": "volar",
   "prepare_rename": "volar",
