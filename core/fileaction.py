@@ -113,7 +113,7 @@ class FileAction:
             if hasattr(handler, "provider"):
                 if self.single_lsp_server:
                     if getattr(self.single_lsp_server, getattr(handler, "provider")):
-                       return self.send_request(method, *args, **kwargs) 
+                       return self.send_server_request(self.single_lsp_server, method, *args, **kwargs) 
                     elif hasattr(handler, "provider_message"):
                         message_emacs(getattr(handler, "provider_message"))
                 else:
@@ -133,7 +133,7 @@ class FileAction:
                         elif hasattr(handler, "provider_message"):
                             message_emacs(getattr(handler, "provider_message"))
             else:
-                return self.send_request(method, *args, **kwargs)
+                return self.send_server_request(self.single_lsp_server, method, *args, **kwargs)
         elif hasattr(self, method):
             getattr(self, method)(*args, **kwargs)
 
@@ -165,17 +165,17 @@ class FileAction:
         # 3. Last completion candidates is empty.
         if self.multi_servers:
             for lsp_server in self.multi_servers.values():
-                if ((before_char in lsp_server.completion_trigger_characters) or
-                    (not completion_visible) or
-                    len(self.last_completion_candidates.get(lsp_server.server_info["name"], [])) == 0):
-                    
+                if self.lsp_server_can_completion(lsp_server, before_char, completion_visible):
                     if lsp_server.server_info["name"] in self.multi_servers_info["completion"]:
                         self.send_server_request(lsp_server, "completion", lsp_server, position, before_char)
         else:
-            if ((before_char in self.single_lsp_server.completion_trigger_characters) or
+            if self.lsp_server_can_completion(self.single_lsp_server, before_char, completion_visible):
+                self.send_server_request(self.single_lsp_server, "completion", self.single_lsp_server, position, before_char)
+                
+    def lsp_server_can_completion(self, lsp_server, before_char, completion_visible):
+        return ((before_char in lsp_server.completion_trigger_characters) or
                 (not completion_visible) or
-                len(self.last_completion_candidates.get(self.single_lsp_server.server_info["name"], [])) == 0):
-                self.send_request("completion", self.single_lsp_server, position, before_char)
+                len(self.last_completion_candidates.get(lsp_server.server_info["name"], [])) == 0)
                 
     def change_cursor(self, position):
         # Record change cursor time.
@@ -219,7 +219,7 @@ class FileAction:
                             item["additionalTextEdits"] if "additionalTextEdits" in item else "")
                 else:
                     if self.single_lsp_server.completion_resolve_provider:
-                        self.send_request("completion_item_resolve", item_key, server_name, self.completion_items[server_name][item_key])
+                        self.send_server_request(self.single_lsp_server, "completion_item_resolve", item_key, server_name, self.completion_items[server_name][item_key])
                     else:
                         item = self.completion_items[server_name][item_key]
                         
@@ -249,30 +249,12 @@ class FileAction:
 
     def rename_file(self, old_filepath, new_filepath):
         if self.multi_servers:
-            list(self.multi_servers)[0].send_did_rename_files_notification(old_filepath, new_filepath)
+            lsp_server = list(self.multi_servers)[0]
         else:
-            self.single_lsp_server.send_did_rename_files_notification(old_filepath, new_filepath)
+            lsp_server = self.single_lsp_server
+            
+        lsp_server.send_did_rename_files_notification(old_filepath, new_filepath)
 
-    def send_request(self, handler_name, *args, **kwargs):
-        handler: Handler = self.method_handlers[self.single_lsp_server.server_info["name"]][handler_name]
-        
-        handler.latest_request_id = request_id = generate_request_id()
-        handler.last_change = self.last_change
-
-        self.single_lsp_server.record_request_id(request_id, handler)
-        
-        params = handler.process_request(*args, **kwargs)
-        if handler.send_document_uri:
-            params["textDocument"] = {
-                "uri": self.single_lsp_server.parse_document_uri(self.filepath, self.external_file_link)
-            }
-
-        self.single_lsp_server.sender.send_request(
-            method=handler.method,
-            params=params,
-            request_id=request_id,
-        )
-        
     def send_server_request(self, lsp_server, handler_name, *args, **kwargs):
         handler: Handler = self.method_handlers[lsp_server.server_info["name"]][handler_name]
         
@@ -296,17 +278,17 @@ class FileAction:
     def exit(self):
         if self.multi_servers:
             for lsp_server_name in self.multi_servers.keys():
-                if lsp_server_name in LSP_SERVER_DICT:
-                    lsp_server = LSP_SERVER_DICT[lsp_server_name]
-                    lsp_server.close_file(self.filepath)
+                self.exit_lsp_server(lsp_server_name)
         else:
-            lsp_server_name = self.single_lsp_server.server_name
-            if lsp_server_name in LSP_SERVER_DICT:
-                lsp_server = LSP_SERVER_DICT[lsp_server_name]
-                lsp_server.close_file(self.filepath)
+            self.exit_lsp_server(self.single_lsp_server.server_name)
             
         # Clean FILE_ACTION_DICT after close file.
         remove_from_path_dict(FILE_ACTION_DICT, self.filepath)
+        
+    def exit_lsp_server(self, lsp_server_name):
+        if lsp_server_name in LSP_SERVER_DICT:
+            lsp_server = LSP_SERVER_DICT[lsp_server_name]
+            lsp_server.close_file(self.filepath)
         
     def get_lsp_server_project_path(self):
         return self.single_lsp_server.project_path.encode('utf-8')
