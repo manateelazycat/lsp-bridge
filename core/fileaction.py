@@ -74,76 +74,58 @@ class FileAction:
         for handler_cls in Handler.__subclasses__():
             self.handlers[handler_cls.name] = handler_cls(self)
             
-        self.method_handlers = {}
-        if self.multi_servers:
-            for server_name in self.multi_servers.keys():
-                method_handlers_dict = {}
-                for handler_cls in Handler.__subclasses__():
-                    method_handlers_dict[handler_cls.name] = handler_cls(self)
-                    
-                self.method_handlers[server_name] = method_handlers_dict
-        else:
-            method_handlers_dict = {}
-            for handler_cls in Handler.__subclasses__():
-                method_handlers_dict[handler_cls.name] = handler_cls(self)
-                
-            self.method_handlers[self.single_lsp_server.server_info["name"]] = method_handlers_dict
-
         (self.enable_auto_import, self.completion_items_limit, self.insert_spaces) = get_emacs_vars([
             "acm-backend-lsp-enable-auto-import",
             "acm-backend-lsp-candidates-max-number",
             "indent-tabs-mode"])
         self.insert_spaces = not self.insert_spaces
 
-        if self.multi_servers:
-            for server in self.multi_servers.values():
-                server.attach(self)
-        else:
-            self.single_lsp_server.attach(self)
+        self.method_handlers = {}
+        for lsp_server in self.get_lsp_servers():
+            method_handlers_dict = {}
+            for handler_cls in Handler.__subclasses__():
+                method_handlers_dict[handler_cls.name] = handler_cls(self)
+                    
+            self.method_handlers[lsp_server.server_info["name"]] = method_handlers_dict
+            
+            lsp_server.attach(self)
 
     @property
     def last_change(self) -> Tuple[float, float]:
         """Return the last change information as a tuple."""
         return self.last_change_file_time, self.last_change_cursor_time
-
+    
     def call(self, method, *args, **kwargs):
         """Call any handler or method of file action."""
         if method in self.handlers:
             handler = self.handlers[method]
             if hasattr(handler, "provider"):
                 if self.single_lsp_server:
-                    if getattr(self.single_lsp_server, getattr(handler, "provider")):
-                       return self.send_server_request(self.single_lsp_server, method, *args, **kwargs) 
-                    elif hasattr(handler, "provider_message"):
-                        message_emacs(getattr(handler, "provider_message"))
+                    self.send_request(self.single_lsp_server, method, handler, *args, **kwargs)
                 else:
                     if method in ["completion", "completion_item_resolve", "diagnostics", "code_action", "execute_command"]:
                         method_server_names = self.multi_servers_info[method]
-                        for method_server_name in method_server_names:
-                            method_server = self.multi_servers[method_server_name]
-                            if getattr(method_server, getattr(handler, "provider")):
-                               return self.send_server_request(method_server, method, *args, **kwargs) 
-                            elif hasattr(handler, "provider_message"):
-                                 message_emacs(getattr(handler, "provider_message"))
                     else:
-                        method_server_name = self.multi_servers_info[method]
+                        method_server_names = [self.multi_servers_info[method]]
+                        
+                    for method_server_name in method_server_names:
                         method_server = self.multi_servers[method_server_name]
-                        if getattr(method_server, getattr(handler, "provider")):
-                            return self.send_server_request(method_server, method, *args, **kwargs) 
-                        elif hasattr(handler, "provider_message"):
-                            message_emacs(getattr(handler, "provider_message"))
+                        self.send_request(method_server, method, handler, *args, **kwargs)
             else:
                 return self.send_server_request(self.single_lsp_server, method, *args, **kwargs)
         elif hasattr(self, method):
             getattr(self, method)(*args, **kwargs)
-
+            
+    def send_request(self, method_server, method, handler, *args, **kwargs):
+        if getattr(method_server, getattr(handler, "provider")):
+            return self.send_server_request(method_server, method, *args, **kwargs) 
+        elif hasattr(handler, "provider_message"):
+            message_emacs(getattr(handler, "provider_message"))
+            
     def change_file(self, start, end, range_length, change_text, position, before_char, completion_visible):
         # Send didChange request to LSP server.
-        if self.multi_servers:
-            for lsp_server in self.multi_servers.values():
-                lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
-        else:
-            self.single_lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
+        for lsp_server in self.get_lsp_servers():
+            lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
 
         self.version += 1
 
@@ -194,11 +176,8 @@ class FileAction:
             eval_in_emacs("lsp-bridge-list-diagnostics-popup", self.diagnostics)
             
     def save_file(self):
-        if self.multi_servers:
-            for lsp_server in self.multi_servers.values():
-                lsp_server.send_did_save_notification(self.filepath)
-        else:
-            self.single_lsp_server.send_did_save_notification(self.filepath)
+        for lsp_server in self.get_lsp_servers():
+            lsp_server.send_did_save_notification(self.filepath)
             
     def completion_item_resolve(self, item_key, server_name):
         if server_name in self.completion_items:
@@ -207,27 +186,19 @@ class FileAction:
                 
                 if self.multi_servers:
                     method_server = self.multi_servers[server_name]
-                    if method_server.completion_resolve_provider:
-                        self.send_server_request(method_server, "completion_item_resolve", item_key, server_name, self.completion_items[server_name][item_key])
-                    else:
-                        item = self.completion_items[server_name][item_key]
-                        
-                        self.completion_item_update(
-                            item_key, 
-                            server_name,
-                            item["documentation"] if "documentation" in item else "",
-                            item["additionalTextEdits"] if "additionalTextEdits" in item else "")
                 else:
-                    if self.single_lsp_server.completion_resolve_provider:
-                        self.send_server_request(self.single_lsp_server, "completion_item_resolve", item_key, server_name, self.completion_items[server_name][item_key])
-                    else:
-                        item = self.completion_items[server_name][item_key]
-                        
-                        self.completion_item_update(
-                            item_key, 
-                            server_name,
-                            item["documentation"] if "documentation" in item else "",
-                            item["additionalTextEdits"] if "additionalTextEdits" in item else "")
+                    method_server = self.single_lsp_server
+                    
+                if method_server.completion_resolve_provider:
+                    self.send_server_request(method_server, "completion_item_resolve", item_key, server_name, self.completion_items[server_name][item_key])
+                else:
+                    item = self.completion_items[server_name][item_key]
+                    
+                    self.completion_item_update(
+                        item_key, 
+                        server_name,
+                        item["documentation"] if "documentation" in item else "",
+                        item["additionalTextEdits"] if "additionalTextEdits" in item else "")
                     
     def completion_item_update(self, item_key, server_name, documentation, additional_text_edits):
         if self.completion_item_resolve_key == item_key:
@@ -248,10 +219,7 @@ class FileAction:
 
 
     def rename_file(self, old_filepath, new_filepath):
-        if self.multi_servers:
-            lsp_server = list(self.multi_servers)[0]
-        else:
-            lsp_server = self.single_lsp_server
+        lsp_server = self.get_lsp_servers()[0]
             
         lsp_server.send_did_rename_files_notification(old_filepath, new_filepath)
 
@@ -276,15 +244,15 @@ class FileAction:
         )
         
     def exit(self):
-        if self.multi_servers:
-            for lsp_server_name in self.multi_servers.keys():
-                self.exit_lsp_server(lsp_server_name)
-        else:
-            self.exit_lsp_server(self.single_lsp_server.server_name)
+        for lsp_server in self.get_lsp_servers():
+            self.exit_lsp_server(lsp_server.server_name)
             
         # Clean FILE_ACTION_DICT after close file.
         remove_from_path_dict(FILE_ACTION_DICT, self.filepath)
         
+    def get_lsp_servers(self):
+        return self.multi_servers.values() if self.multi_servers else [self.single_lsp_server]
+    
     def exit_lsp_server(self, lsp_server_name):
         if lsp_server_name in LSP_SERVER_DICT:
             lsp_server = LSP_SERVER_DICT[lsp_server_name]
@@ -298,8 +266,7 @@ class FileAction:
             filepath=external_file,
             lang_server_info=self.single_lang_server_info,
             lsp_server=self.single_lsp_server,
-            external_file_link=external_file_link,
-        )
+            external_file_link=external_file_link)
         
 FILE_ACTION_DICT: Dict[str, FileAction] = {}  # use for contain file action
 LSP_SERVER_DICT: Dict[str, LspServer] = {}  # use for contain lsp server
