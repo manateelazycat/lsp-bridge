@@ -89,10 +89,15 @@ lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.
 ## 自定义语言服务器配置
 lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
 
-你可以根据以下优先级顺序来自定义服务器配置：
+大多数情况， 你可以根据以下优先级顺序来自定义服务器配置：
 1. ```lsp-bridge-get-single-lang-server-by-project```: 用户自定义函数， 输入参数是 `project-path` 和 `file-path`, 返回对应的LSP服务器字符串， 可以在 `lsp-bridge-single-lang-server-mode-list` 列表中查询所有LSP服务器的名称， 默认这个函数返回 nil 
-2. ```lsp-bridge-single-lang-server-extension-list```: 根据文件的扩展名来返回服务器，比如打开*.vue文件时，我们会使用 ```volar``` 服务器替代 javascript-mode 匹配的 ```javascript``` 服务器
+2. ```lsp-bridge-single-lang-server-extension-list```: 根据文件的扩展名来返回服务器，比如打开*.wxml文件时，我们会使用 ```wxml``` LSP服务器提供补全
 3. ```lsp-bridge-single-lang-server-mode-list```: 根据Emacs的major-mode来返回对应的服务器
+
+如果你在编写JavaScript代码， 你可能需要自定义多服务器配置：
+1. ```lsp-bridge-get-multi-lang-server-by-project```: 用户自定义函数， 输入参数是 `project-path` 和 `file-path`, 返回多服务器配置名， 可以在子目录 [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) 中查找
+2. ```lsp-bridge-multi-lang-server-extension-list```: 根据文件的扩展名来返回多服务器配置名， 比如打开*.vue文件时，我们会使用 ```volar_emmet``` 来同时利用 `volar` 和 `emmet-ls` 两种LSP服务器提供补全
+3. ```lsp-bridge-multi-lang-server-mode-list```: 根据Emacs的major-mode来返回对应的多服务器配置名
 
 ## 添加新的编程语言支持?
 

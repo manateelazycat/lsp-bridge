@@ -89,10 +89,16 @@ It should be noted that there are three scan modes of lsp-bridge:
 
 The default configuration of for each language server is stored at [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
 
-Anyway you can customize server configuration with the following priority:
+In most cases, you can customize server configuration with the following priority:
 1. ```lsp-bridge-get-single-lang-server-by-project```: The user custom function, the input parameter is `project-path` and `file-path`, return the corresponding LSP server string, you can query all LSP servers in the list of `lsp-bridge-single-lang-server-mode-list` option, this function return nil default
-2. ```lsp-bridge-single-lang-server-extension-list```: load server configuration based on file extension, such as, we launch ```volar``` server instead ```javascript``` server when open *.vue file
+2. ```lsp-bridge-single-lang-server-extension-list```: load server configuration based on file extension, such as, we launch ```wxml``` server when open *.wxml file
 3. ```lsp-bridge-single-lang-server-mode-list```: load server configuration based on major-mode
+
+If you are writing JavaScript code, you may need to customize multi-server configuration:
+1. ```lsp-bridge-get-multi-lang-server-by-project```: The user custom function, the input parameter is `project-path` and `file-path`, return the multi-server configuration name, you can find configuration name in the subdirectory 
+[lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver)
+2. ```lsp-bridge-multi-lang-server-extension-list```: Return multi-server configuration name according to the expansion of the file, for example, when opening the *.vue file, we will use the `volar` and `emmet-ls` to provide completion service
+3. ```lsp-bridge-multi-lang-server-mode-list```: Return the corresponding multi-server configuration name according to Emacs's major-mode
 
 ## Add support for new language?
 
