@@ -161,52 +161,19 @@ class LspBridge:
                     else:
                         servers += info_value
                 
-                servers = list(dict.fromkeys(servers)) # got this issue
-                for server_name in servers:
-                    server_dir = Path(__file__).resolve().parent / "langserver"
-                    server_path_current = server_dir / "{}_{}.json".format(server_name, get_os_name())
-                    server_path_default = server_dir / "{}.json".format(server_name)
-                    
-                    server_path = server_path_current if server_path_current.exists() else server_path_default
-                    
-                    with open(server_path, encoding="utf-8") as server_path_file:
-                        server_info = json.load(server_path_file)
-                        
-                        if len(server_info["command"]) > 0:
-                            server_command = server_info["command"][0]
-                            server_command_path = shutil.which(server_command)
-                            if not server_command_path:
-                                message_emacs("Error: can't find LSP server '{}' for {}, disable lsp-bridge-mode.".format(server_command, filepath))
-                                eval_in_emacs("lsp-bridge-turn-off", filepath)
-                            
-                                return False
-                        else:
-                            message_emacs("Error: {}'s command argument is empty, disable lsp-bridge-mode.".format(filepath))
-                            eval_in_emacs("lsp-bridge-turn-off", filepath)
-                            
-                            return False
-                        
+                servers = list(dict.fromkeys(servers))
                 multi_servers = {}
+                
                 for server_name in servers:
-                    server_dir = Path(__file__).resolve().parent / "langserver"
-                    server_path_current = server_dir / "{}_{}.json".format(server_name, get_os_name())
-                    server_path_default = server_dir / "{}.json".format(server_name)
-                    
-                    server_path = server_path_current if server_path_current.exists() else server_path_default
+                    server_path = get_lang_server_path(server_name)
                     
                     with open(server_path, encoding="utf-8") as server_path_file:
                         lang_server_info = json.load(server_path_file)
-                        lsp_server_name = "{}#{}".format(path_as_key(project_path), lang_server_info["name"])
-
-                        if lsp_server_name not in LSP_SERVER_DICT:
-                            LSP_SERVER_DICT[lsp_server_name] = LspServer(
-                                message_queue=self.message_queue,
-                                project_path=project_path,
-                                server_info=lang_server_info,
-                                server_name=lsp_server_name
-                            )
-                            
-                        multi_servers[lang_server_info["name"]] = LSP_SERVER_DICT[lsp_server_name]
+                        lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info)
+                        if lsp_server:
+                            multi_servers[lang_server_info["name"]] = lsp_server
+                        else:
+                            return False
                         
                 action = FileAction(filepath, None, None, multi_lang_server_info, multi_servers)
                 add_to_path_dict(FILE_ACTION_DICT, filepath, action)
@@ -226,39 +193,43 @@ class LspBridge:
                 return False
             
             lang_server_info = load_single_lang_server_info(single_lang_server)
+            lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info)
             
-            if len(lang_server_info["command"]) > 0:
-                server_command = lang_server_info["command"][0]
-                server_command_path = shutil.which(server_command)
-                if server_command_path:
-                    # We always replace LSP server command with absolute path of 'which' command.
-                    lang_server_info["command"][0] = server_command_path
-                else:
-                    message_emacs("Error: can't find LSP server '{}' for {}, disable lsp-bridge-mode.".format(server_command, filepath))
-                    eval_in_emacs("lsp-bridge-turn-off", filepath)
-            
-                    return False
+            if lsp_server:
+                create_file_action(filepath, lang_server_info, lsp_server)
             else:
-                message_emacs("Error: {}'s command argument is empty, disable lsp-bridge-mode.".format(filepath))
-                eval_in_emacs("lsp-bridge-turn-off", filepath)
-            
                 return False
-            
-            lsp_server_name = "{}#{}".format(path_as_key(project_path), lang_server_info["name"])
-            
-            if lsp_server_name not in LSP_SERVER_DICT:
-                LSP_SERVER_DICT[lsp_server_name] = LspServer(
-                    message_queue=self.message_queue,
-                    project_path=project_path,
-                    server_info=lang_server_info,
-                    server_name=lsp_server_name
-                )
-            
-            lsp_server = LSP_SERVER_DICT[lsp_server_name]
-            
-            create_file_action(filepath, lang_server_info, lsp_server)
         
         return True
+    
+    def create_lsp_server(self, filepath, project_path, lang_server_info):
+        if len(lang_server_info["command"]) > 0:
+            server_command = lang_server_info["command"][0]
+            server_command_path = shutil.which(server_command)
+            if server_command_path:
+                # We always replace LSP server command with absolute path of 'which' command.
+                lang_server_info["command"][0] = server_command_path
+            else:
+                message_emacs("Error: can't find LSP server '{}' for {}, disable lsp-bridge-mode.".format(server_command, filepath))
+                eval_in_emacs("lsp-bridge-turn-off", filepath)
+        
+                return False
+        else:
+            message_emacs("Error: {}'s command argument is empty, disable lsp-bridge-mode.".format(filepath))
+            eval_in_emacs("lsp-bridge-turn-off", filepath)
+        
+            return False
+        
+        lsp_server_name = "{}#{}".format(path_as_key(project_path), lang_server_info["name"])
+                                
+        if lsp_server_name not in LSP_SERVER_DICT:
+            LSP_SERVER_DICT[lsp_server_name] = LspServer(
+                message_queue=self.message_queue,
+                project_path=project_path,
+                server_info=lang_server_info,
+                server_name=lsp_server_name)
+            
+        return LSP_SERVER_DICT[lsp_server_name]
 
     def _close_file(self, filepath):
         if is_in_path_dict(FILE_ACTION_DICT, filepath):
@@ -327,14 +298,17 @@ def load_single_lang_server_info(lang_server):
         lang_server_info_path = lang_server
     else:
         # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
-        lang_server_dir = Path(__file__).resolve().parent / "langserver"
-        lang_server_file_path_current = lang_server_dir / "{}_{}.json".format(lang_server, get_os_name())
-        lang_server_file_path_default = lang_server_dir / "{}.json".format(lang_server)
-
-        lang_server_info_path = lang_server_file_path_current if lang_server_file_path_current.exists() else lang_server_file_path_default
+        lang_server_info_path = get_lang_server_path(lang_server)
 
     with open(lang_server_info_path, encoding="utf-8") as f:
         return json.load(f)
+    
+def get_lang_server_path(server_name):
+    server_dir = Path(__file__).resolve().parent / "langserver"
+    server_path_current = server_dir / "{}_{}.json".format(server_name, get_os_name())
+    server_path_default = server_dir / "{}.json".format(server_name)
+    
+    return server_path_current if server_path_current.exists() else server_path_default
     
 if __name__ == "__main__":
     LspBridge(sys.argv[1:])
