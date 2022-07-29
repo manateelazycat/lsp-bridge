@@ -70,6 +70,21 @@ class FileAction:
         logger.debug("Handlers: " + pprint.pformat(Handler.__subclasses__()))
         for handler_cls in Handler.__subclasses__():
             self.handlers[handler_cls.name] = handler_cls(self)
+            
+        self.method_handlers = {}
+        if self.multi_servers:
+            for server_name in self.multi_servers.keys():
+                method_handlers_dict = {}
+                for handler_cls in Handler.__subclasses__():
+                    method_handlers_dict[handler_cls.name] = handler_cls(self)
+                    
+                self.method_handlers[server_name] = method_handlers_dict
+        else:
+            method_handlers_dict = {}
+            for handler_cls in Handler.__subclasses__():
+                method_handlers_dict[handler_cls.name] = handler_cls(self)
+                
+            self.method_handlers[self.lsp_server.server_info["name"]] = method_handlers_dict
 
         (self.enable_auto_import, self.completion_items_limit, self.insert_spaces) = get_emacs_vars([
             "acm-backend-lsp-enable-auto-import",
@@ -157,8 +172,8 @@ class FileAction:
             if ((before_char in self.lsp_server.completion_trigger_characters) or
                 (not completion_visible) or
                 len(self.last_completion_candidates.get(self.lsp_server.server_info["name"], [])) == 0):
-                self.send_request("completion", position, before_char)
-
+                self.send_request("completion", self.lsp_server, position, before_char)
+                
     def change_cursor(self, position):
         # Record change cursor time.
         self.last_change_cursor_time = time.time()
@@ -181,10 +196,7 @@ class FileAction:
                 lsp_server.send_did_save_notification(self.filepath)
         else:
             self.lsp_server.send_did_save_notification(self.filepath)
-        
-    def handle_server_response_message(self, request_id, request_type, response):
-        self.handlers[request_type].handle_response(request_id, response)
-
+            
     def completion_item_resolve(self, item_key, server_name):
         if server_name in self.completion_items:
             if item_key in self.completion_items[server_name]:
@@ -236,7 +248,7 @@ class FileAction:
         self.lsp_server.send_did_rename_files_notification(old_filepath, new_filepath)
 
     def send_request(self, handler_name, *args, **kwargs):
-        handler: Handler = self.handlers[handler_name]
+        handler: Handler = self.method_handlers[self.lsp_server.server_info["name"]][handler_name]
         
         handler.latest_request_id = request_id = generate_request_id()
         handler.last_change = self.last_change
@@ -256,7 +268,7 @@ class FileAction:
         )
         
     def send_server_request(self, lsp_server, handler_name, *args, **kwargs):
-        handler: Handler = self.handlers[handler_name]
+        handler: Handler = self.method_handlers[lsp_server.server_info["name"]][handler_name]
         
         handler.latest_request_id = request_id = generate_request_id()
         handler.last_change = self.last_change
