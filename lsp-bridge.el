@@ -791,7 +791,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 
 (defun lsp-bridge-not-complete-manually ()
   "If `lsp-bridge-complete-manually' is non-nil, hide completion menu."
-  (or 
+  (or
    ;; Always update candidate if completion menu is visible now.
    (acm-frame-visible-p acm-frame)
    ;; Don't update candidate if `lsp-bridge-complete-manually' is non-nil.
@@ -1395,14 +1395,14 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
   (lsp-bridge--point-position
    (or (if (region-active-p)
            (region-beginning)
-         (car (bounds-of-thing-at-point 'sexp)))
+         (point))
        (point))))
 
 (defun lsp-bridge-get-range-end ()
   (lsp-bridge--point-position
    (or (if (region-active-p)
            (region-end)
-         (cdr (bounds-of-thing-at-point 'sexp)))
+         (point))
        (point))))
 
 (defun lsp-bridge-insert-ignore-diagnostic-comment (comment-string)
