@@ -288,13 +288,22 @@ class FileAction:
         )
         
     def exit(self):
-        lsp_server_name = self.lsp_server.server_name
-        if lsp_server_name in LSP_SERVER_DICT:
-            lsp_server = LSP_SERVER_DICT[lsp_server_name]
-            lsp_server.close_file(self.filepath)
-
-        # Clean FILE_ACTION_DICT after close file.
-        remove_from_path_dict(FILE_ACTION_DICT, self.filepath)
+        if self.multi_servers:
+            for lsp_server_name in self.multi_servers.keys():
+                if lsp_server_name in LSP_SERVER_DICT:
+                    lsp_server = LSP_SERVER_DICT[lsp_server_name]
+                    lsp_server.close_file(self.filepath)
+                
+                # Clean FILE_ACTION_DICT after close file.
+                remove_from_path_dict(FILE_ACTION_DICT, self.filepath)
+        else:
+            lsp_server_name = self.lsp_server.server_name
+            if lsp_server_name in LSP_SERVER_DICT:
+                lsp_server = LSP_SERVER_DICT[lsp_server_name]
+                lsp_server.close_file(self.filepath)
+            
+            # Clean FILE_ACTION_DICT after close file.
+            remove_from_path_dict(FILE_ACTION_DICT, self.filepath)
         
     def get_lsp_server_project_path(self):
         return self.lsp_server.project_path.encode('utf-8')
