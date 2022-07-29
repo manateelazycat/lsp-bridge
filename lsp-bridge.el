@@ -657,7 +657,8 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 
   (when  (lsp-bridge-has-lsp-server-p)
     (unless (equal (point) lsp-bridge-last-position)
-      (lsp-bridge-call-file-api "change_cursor" (lsp-bridge--position))
+      (unless (eq last-command 'mwheel-scroll)
+        (lsp-bridge-call-file-api "change_cursor" (lsp-bridge--position)))
       (setq-local lsp-bridge-last-position (point)))
 
     ;; Hide hover tooltip.
@@ -859,7 +860,8 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 (defun lsp-bridge-search-words-rebuild-cache ()
   "Rebuild words cache when idle."
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (lsp-bridge-call-async "search_words_rebuild_cache")))
+    (unless (eq last-command 'mwheel-scroll)
+      (lsp-bridge-call-async "search_words_rebuild_cache"))))
 
 (defun lsp-bridge-completion-ui-visible-p ()
   (and (frame-live-p acm-frame)
@@ -947,7 +949,8 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
   (interactive)
   (if lsp-bridge-code-action-notify
       (setq-local lsp-bridge-code-action-notify nil)
-    (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position))))
+    (unless (eq last-command 'mwheel-scroll)
+      (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))))
 
 (defun lsp-bridge-file-apply-edits (filepath edits)
   (find-file-noselect filepath)
@@ -1171,7 +1174,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
     (when lsp-bridge-enable-search-words
       (acm-run-idle-func lsp-bridge-search-words-timer lsp-bridge-search-words-rebuild-cache-idle 'lsp-bridge-search-words-rebuild-cache))
     (when lsp-bridge-enable-auto-format-code
-      (acm-run-idle-func lsp-bridge-auto-format-code-timer lsp-bridge-auto-format-code-idle 'lsp-bridge-code-format)))
+      (acm-run-idle-func lsp-bridge-auto-format-code-timer lsp-bridge-auto-format-code-idle 'lsp-bridge-auto-format-code)))
 
   (dolist (hook lsp-bridge--internal-hooks)
     (add-hook (car hook) (cdr hook) nil t))
@@ -1203,7 +1206,8 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
              (not (lsp-bridge-completion-ui-visible-p))
              (buffer-file-name)
              (string-equal (file-truename (buffer-file-name)) acm-backend-lsp-filepath))
-    (lsp-bridge-call-file-api "pull_diagnostics")))
+    (unless (eq last-command 'mwheel-scroll)
+      (lsp-bridge-call-file-api "pull_diagnostics"))))
 
 (defun lsp-bridge-diagnostics-render (filepath diagnostics)
   (lsp-bridge--with-file-buffer filepath
@@ -1312,6 +1316,10 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
     (setq-local lsp-bridge-code-action-notify t)))
 
 (defvar-local lsp-bridge-code-action-notify nil)
+
+(defun lsp-bridge-auto-format-code ()
+  (unless (eq last-command 'mwheel-scroll)
+    (lsp-bridge-code-format)))
 
 (defun lsp-bridge-code-format ()
   (interactive)
