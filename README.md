@@ -96,7 +96,7 @@ In most cases, you can customize server configuration with the following priorit
 3. ```lsp-bridge-single-lang-server-mode-list```: load server configuration based on major-mode
 
 If you are writing JavaScript code, you may need to customize multi-server configuration:
-1. ```lsp-bridge-get-multi-lang-server-by-project```: The user custom function, the input parameter is `project-path` and `file-path`, return the multi-server configuration name, you can find configuration name in the subdirectory 
+1. ```lsp-bridge-get-multi-lang-server-by-project```: The user custom function, the input parameter is `project-path` and `file-path`, return the multi-server configuration name, you can find configuration name in the subdirectory
 [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver)
 2. ```lsp-bridge-multi-lang-server-extension-list```: Return multi-server configuration name according to the expansion of the file, for example, when opening the *.vue file, we will use the `volar` and `emmet-ls` to provide completion service
 3. ```lsp-bridge-multi-lang-server-mode-list```: Return the corresponding multi-server configuration name according to Emacs's major-mode
@@ -149,6 +149,7 @@ You need to install the LSP server corresponding to each programming language, t
 | 31 | [jedi](https://github.com/pappasam/jedi-language-server) | python | `lsp-bridge-python-lsp-server` set to `jedi` |
 | 32 | [emmet-ls](https://github.com/aca/emmet-ls) | html, js, css, sass, scss, less | |
 | 33 | [rnix-lsp](https://github.com/nix-community/rnix-lsp) | nix | |
+| 34 | [digestif](https://github.com/astoff/digestif) | latex | |
 
 
 ### Features that won't be supported

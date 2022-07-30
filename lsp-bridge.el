@@ -318,6 +318,11 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Default LSP server for Python language, you can choose `pyright' or `jedi'."
   :type 'string)
 
+(defcustom lsp-bridge-tex-lsp-server "texlab"
+  "Default LSP server for (la)tex, you can choose `taxlab' or `digestif'."
+  :type 'string)
+
+
 (defcustom lsp-bridge-complete-manually nil
   "Only popup completion menu when user call `lsp-bridge-popup-complete' command.")
 
@@ -345,7 +350,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ((typescript-mode) . "typescript")
     (tuareg-mode . "ocamllsp")
     (erlang-mode . "erlang-ls")
-    ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . "texlab")
+    ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . lsp-bridge-tex-lsp-server)
     ((clojure-mode clojurec-mode clojurescript-mode clojurex-mode) . "clojure-lsp")
     ((sh-mode) . "bash-language-server")
     ((css-mode) . "vscode-css-language-server")
