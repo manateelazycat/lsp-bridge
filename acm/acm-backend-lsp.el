@@ -96,11 +96,6 @@
   "Whether to enable auto-import."
   :type 'boolean)
 
-(defvar-local acm-backend-lsp-completion-trigger-characters nil)
-(defvar-local acm-backend-lsp-completion-position nil)
-(defvar-local acm-backend-lsp-filepath "")
-(defvar-local acm-backend-lsp-items (make-hash-table :test 'equal))
-
 (defvar acm-backend-lsp-fetch-completion-item-func nil)
 
 (defun acm-backend-lsp-candidates (keyword)

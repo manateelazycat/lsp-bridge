@@ -103,7 +103,7 @@
     ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
     (unless (equal lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath label kind))
       (lsp-bridge-call-async "fetch_completion_item_info" acm-backend-lsp-filepath key server-name)
-      (setq lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath label kind)))))
+      (setq-local lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath label kind)))))
 
 (defalias 'lsp-bridge-insert-common-prefix #'acm-insert-common)
 
@@ -759,14 +759,15 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
     (setq-local acm-backend-lsp-completion-position position)
     (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
 
-    (let* ((completion-table (make-hash-table :test 'equal)))
+    (let* ((lsp-items acm-backend-lsp-items)
+           (completion-table (make-hash-table :test 'equal)))
       (dolist (item candidates)
         (plist-put item :annotation (capitalize (plist-get item :icon)))
         (puthash (plist-get item :key) item completion-table))
-      (puthash server-name completion-table acm-backend-lsp-items))
+      (puthash server-name completion-table lsp-items)
+      (setq-local acm-backend-lsp-items lsp-items))
 
-    (lsp-bridge-try-completion)
-    ))
+    (lsp-bridge-try-completion)))
 
 (defun lsp-bridge-record-search-words-items (candidates)
   (setq-local acm-backend-search-words-items candidates)
@@ -774,7 +775,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 
 (defun lsp-bridge-try-completion ()
   (if lsp-bridge-prohibit-completion
-      (setq lsp-bridge-prohibit-completion nil)
+      (setq-local lsp-bridge-prohibit-completion nil)
 
     ;; Try popup completion frame.
     (if (cl-every (lambda (pred)
@@ -890,8 +891,8 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 
 (defun lsp-bridge-monitor-before-change (begin end)
   (when (lsp-bridge-has-lsp-server-p)
-    (setq lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
-    (setq lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))))
+    (setq-local lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
+    (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))))
 
 (defun lsp-bridge-monitor-after-change (begin end length)
   ;; Record last command to `lsp-bridge-last-change-command'.
@@ -1028,7 +1029,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
     (find-file filepath)
     (acm-backend-lsp-apply-text-edits edits))
 
-  (setq lsp-bridge-prohibit-completion t))
+  (setq-local lsp-bridge-prohibit-completion t))
 
 (defun lsp-bridge--jump-to-def (filepath position)
   ;; Record postion.
@@ -1235,7 +1236,10 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
     (unless (file-exists-p (buffer-file-name))
       (save-buffer))
 
-    (setq acm-backend-lsp-filepath (file-truename buffer-file-name))
+    (setq-local acm-backend-lsp-completion-trigger-characters nil)
+    (setq-local acm-backend-lsp-completion-position nil)
+    (setq-local acm-backend-lsp-filepath (file-truename buffer-file-name))
+    (setq-local acm-backend-lsp-items (make-hash-table :test 'equal))
 
     (when lsp-bridge-enable-diagnostics
       (acm-run-idle-func lsp-bridge-diagnostics-timer lsp-bridge-diagnostics-fetch-idle 'lsp-bridge-diagnostics-fetch))
@@ -1273,6 +1277,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 
 (defun lsp-bridge-diagnostics-fetch ()
   (when (and lsp-bridge-enable-diagnostics
+             (lsp-bridge-has-lsp-server-p)
              (not (lsp-bridge-completion-ui-visible-p))
              (buffer-file-name)
              (string-equal (file-truename (buffer-file-name)) acm-backend-lsp-filepath))
@@ -1285,7 +1290,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
       (dolist (diagnostic-overlay lsp-bridge-diagnostic-overlays)
         (delete-overlay diagnostic-overlay)))
 
-    (setq lsp-bridge-diagnostic-overlays nil)
+    (setq-local lsp-bridge-diagnostic-overlays nil)
 
     (let ((diagnostic-index 0)
           (diagnostic-number (length diagnostics)))
@@ -1312,7 +1317,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
           (push  overlay lsp-bridge-diagnostic-overlays))
 
         (setq diagnostic-index (1+ diagnostic-index))))
-    (setq lsp-bridge-diagnostic-overlays (reverse lsp-bridge-diagnostic-overlays))))
+    (setq-local lsp-bridge-diagnostic-overlays (reverse lsp-bridge-diagnostic-overlays))))
 
 (defvar lsp-bridge-diagnostic-frame nil)
 
@@ -1530,6 +1535,8 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
         (when additional-text-edits
           (plist-put item :additionalTextEdits additional-text-edits))
 
+        (when (string-equal (format "%s" (type-of documentation)) "cons")
+          (setq documentation (plist-get documentation :value)))
         (unless (string-equal documentation "")
           (plist-put item :documentation documentation))
 
@@ -1589,7 +1596,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
       (lsp-bridge-call-file-api "rename_file" new-name)
       (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath)
       (set-visited-file-name new-name t t)
-      (setq acm-backend-lsp-filepath new-name)))
+      (setq-local acm-backend-lsp-filepath new-name)))
   (apply orig-fun arg args))
 (advice-add #'rename-file :around #'lsp-bridge--rename-file-advisor)
 
