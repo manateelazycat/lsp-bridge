@@ -680,7 +680,8 @@ influence of C1 on the result."
         (setq candidate-line
               (concat
                icon-text
-               (if (and quick-access-key acm-enable-quick-access) (concat quick-access-key ". ") "   ")
+               (when acm-enable-quick-access
+                 (if quick-access-key (concat quick-access-key ". ") "   "))
                candidate
                ;; Fill in the blank according to the maximum width, make sure marks align right of menu.
                (propertize " "
