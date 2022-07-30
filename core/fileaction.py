@@ -198,20 +198,18 @@ class FileAction:
                     
     def completion_item_update(self, item_key, server_name, documentation, additional_text_edits):
         if self.completion_item_resolve_key == item_key:
-            if documentation != "" or additional_text_edits != "":
-                if type(documentation) == dict:
-                    if "kind" in documentation:
-                        if documentation["kind"] == "markdown":
-                            documentation = documentation["value"]
-                            
-                eval_in_emacs("lsp-bridge-update-completion-item-info",
-                              {
-                                  "filepath": self.filepath,
-                                  "key": item_key,
-                                  "server": server_name,
-                                  "additionalTextEdits": additional_text_edits,
-                                  "documentation": documentation
-                              })
+           if type(documentation) == dict:
+               if "kind" in documentation:
+                   documentation = documentation["value"]
+                       
+           eval_in_emacs("lsp-bridge-update-completion-item-info",
+                         {
+                             "filepath": self.filepath,
+                             "key": item_key,
+                             "server": server_name,
+                             "additionalTextEdits": additional_text_edits,
+                             "documentation": documentation
+                         })
 
 
     def rename_file(self, old_filepath, new_filepath):

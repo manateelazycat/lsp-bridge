@@ -1539,15 +1539,16 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
         (when additional-text-edits
           (plist-put item :additionalTextEdits additional-text-edits))
 
-        (when (string-equal (format "%s" (type-of documentation)) "cons")
-          (setq documentation (plist-get documentation :value)))
-        (unless (string-equal documentation "")
+        (when (and documentation
+                   (not (string-equal documentation "")))
           (plist-put item :documentation documentation))
 
         (puthash key item (gethash server-name acm-backend-lsp-items)))
 
-      ;; Popup documentation window if same documentation window not exist.
-      (acm-doc-show)
+      ;; Show or hid doc frame.
+      (if (string-equal documentation "")
+          (acm-doc-hide)
+        (acm-doc-show))
       )))
 
 (defun lsp-bridge-render-markdown-content ()
