@@ -428,9 +428,10 @@ influence of C1 on the result."
                                (acm-backend-search-words-candidates keyword)))
 
         ;; Don't search snippet if char before keyword is not in `acm-backend-lsp-completion-trigger-characters'.
-        (unless (member char-before-keyword acm-backend-lsp-completion-trigger-characters)
-          (setq yas-candidates (acm-backend-yas-candidates keyword))
-          (setq tempel-candidates (acm-backend-tempel-candidates keyword)))
+        (when (and (boundp 'acm-backend-lsp-completion-trigger-characters))
+          (unless (member char-before-keyword acm-backend-lsp-completion-trigger-characters)
+            (setq yas-candidates (acm-backend-yas-candidates keyword))
+            (setq tempel-candidates (acm-backend-tempel-candidates keyword))))
 
         ;; Insert snippet candidates in first page of menu.
         (setq candidates

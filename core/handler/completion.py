@@ -75,11 +75,12 @@ class Completion(Handler):
         self.file_action.last_completion_candidates[self.method_server_name] = completion_candidates
         
         logger.info("\n--- Completion items number: {}".format(len(completion_candidates)))
-
+        
         if len(completion_candidates) > 0:
             eval_in_emacs("lsp-bridge-record-completion-items",
                           self.file_action.filepath,
                           completion_candidates,
                           self.position,
                           self.method_server_name,
-                          self.method_server.completion_trigger_characters)
+                          self.method_server.completion_trigger_characters,
+                          self.file_action.get_lsp_server_names())

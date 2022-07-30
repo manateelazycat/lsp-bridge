@@ -100,8 +100,10 @@
 
 (defun acm-backend-lsp-candidates (keyword)
   (let* ((candidates (list)))
-    (when (and acm-backend-lsp-items
-               (hash-table-p acm-backend-lsp-items))
+    (when (and
+           (boundp 'acm-backend-lsp-items)
+           acm-backend-lsp-items
+           (hash-table-p acm-backend-lsp-items))
       (maphash
        (lambda (server-name server-items)
          (maphash (lambda (k v)

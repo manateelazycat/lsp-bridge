@@ -246,6 +246,9 @@ class FileAction:
     def get_lsp_servers(self):
         return self.multi_servers.values() if self.multi_servers else [self.single_lsp_server]
     
+    def get_lsp_server_names(self):
+        return list(map(lambda lsp_server: lsp_server.server_info["name"], self.get_lsp_servers()))
+    
     def get_lsp_server_project_path(self):
         return self.single_lsp_server.project_path.encode('utf-8')
     

@@ -609,7 +609,8 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
   (when (and lsp-bridge-mode
              (lsp-bridge-has-lsp-server-p)
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
-    (if (file-exists-p acm-backend-lsp-filepath)
+    (if (and (boundp 'acm-backend-lsp-filepath)
+             (file-exists-p acm-backend-lsp-filepath))
         (if lsp-bridge-buffer-file-deleted
             ;; If buffer's file create again (such as switch branch back), we need save buffer first,
             ;; send the LSP request after the file is changed next time.
@@ -753,7 +754,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
     (lsp-bridge-call-async "search_words_close_file" buffer-file-name)
     ))
 
-(defun lsp-bridge-record-completion-items (filepath candidates position server-name completion-trigger-characters)
+(defun lsp-bridge-record-completion-items (filepath candidates position server-name completion-trigger-characters server-names)
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
     (setq-local acm-backend-lsp-completion-position position)
@@ -798,7 +799,8 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
    ;; Allow english completion in string area
    acm-enable-english-helper
    ;; Allow volar popup completion menu in string.
-   (and acm-backend-lsp-filepath
+   (and (boundp 'acm-backend-lsp-filepath)
+        acm-backend-lsp-filepath
         (string-suffix-p ".vue" acm-backend-lsp-filepath))
    ;; Other language not allowed popup completion in string, it's annoy
    (not (lsp-bridge-in-string-p))))
