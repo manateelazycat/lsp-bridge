@@ -97,6 +97,7 @@
 (require 'acm-backend-path)
 (require 'acm-backend-search-words)
 (require 'acm-backend-tempel)
+(require 'acm-quick-access)
 
 ;;; Code:
 
@@ -117,6 +118,10 @@
 
 (defcustom acm-enable-icon t
   "Show icon in completion menu."
+  :type 'boolean)
+
+(defcustom acm-enable-quick-access nil
+  "Show quick-access in completion menu."
   :type 'boolean)
 
 (defcustom acm-snippet-insert-index 8
@@ -160,6 +165,7 @@
     (define-key map "\M-k" #'acm-doc-scroll-down)
     (define-key map "\M-l" #'acm-hide)
     (define-key map "\C-g" #'acm-hide)
+    (acm-keymap--bind-quick-access map)
     map)
   "Keymap used when popup is shown.")
 
@@ -663,6 +669,7 @@ influence of C1 on the result."
              (annotation-text (if annotation annotation ""))
              (item-length (funcall acm-string-width-function annotation-text))
              (icon-text (if icon (acm-icon-build (nth 0 icon) (nth 1 icon) (nth 2 icon)) ""))
+             (quick-access-key (nth item-index acm-quick-access-keys))
              candidate-line)
 
         ;; Render deprecated candidate.
@@ -673,6 +680,7 @@ influence of C1 on the result."
         (setq candidate-line
               (concat
                icon-text
+               (if (and quick-access-key acm-enable-quick-access) (concat quick-access-key ". ") "   ")
                candidate
                ;; Fill in the blank according to the maximum width, make sure marks align right of menu.
                (propertize " "
