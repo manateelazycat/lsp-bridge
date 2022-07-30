@@ -668,6 +668,7 @@ influence of C1 on the result."
              (annotation-text (if annotation annotation ""))
              (item-length (funcall acm-string-width-function annotation-text))
              (icon-text (if icon (acm-icon-build (nth 0 icon) (nth 1 icon) (nth 2 icon)) ""))
+             (quick-access-key (nth item-index acm-quick-access-keys))
              candidate-line)
 
         ;; Render deprecated candidate.
@@ -677,8 +678,8 @@ influence of C1 on the result."
         ;; Build candidate line.
         (setq candidate-line
               (concat
-               (when acm-enable-quick-access (nth item-index acm-quick-access-keys))
                icon-text
+               (if (and quick-access-key acm-enable-quick-access) (concat quick-access-key ". ") "   ")
                candidate
                ;; Fill in the blank according to the maximum width, make sure marks align right of menu.
                (propertize " "
