@@ -759,6 +759,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
     ;; Save completion items.
     (setq-local acm-backend-lsp-completion-position position)
     (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
+    (setq-local acm-backend-lsp-server-names server-names)
 
     (let* ((lsp-items acm-backend-lsp-items)
            (completion-table (make-hash-table :test 'equal)))
@@ -1242,6 +1243,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
     (setq-local acm-backend-lsp-completion-position nil)
     (setq-local acm-backend-lsp-filepath (file-truename buffer-file-name))
     (setq-local acm-backend-lsp-items (make-hash-table :test 'equal))
+    (setq-local acm-backend-lsp-server-names nil)
 
     (when lsp-bridge-enable-diagnostics
       (acm-run-idle-func lsp-bridge-diagnostics-timer lsp-bridge-diagnostics-fetch-idle 'lsp-bridge-diagnostics-fetch))

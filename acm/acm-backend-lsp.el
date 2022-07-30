@@ -103,21 +103,23 @@
     (when (and
            (boundp 'acm-backend-lsp-items)
            acm-backend-lsp-items
+           (boundp 'acm-backend-lsp-server-names)
+           acm-backend-lsp-server-names
            (hash-table-p acm-backend-lsp-items))
-      (maphash
-       (lambda (server-name server-items)
-         (maphash (lambda (k v)
-                    (let ((candidate-label (plist-get v :label)))
-                      (when (or (string-equal keyword "")
-                                (acm-candidate-fuzzy-search keyword candidate-label))
-                        (if (> (length candidate-label) acm-backend-lsp-candidate-max-length)
-                            (plist-put v :display-label (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-max-length)))
-                          (plist-put v :display-label candidate-label))
+      ;; Sort multi-server items by 
+      (dolist (server-name acm-backend-lsp-server-names)
+        (when-let* ((server-items (gethash server-name acm-backend-lsp-items)))
+          (maphash (lambda (k v)
+                     (let ((candidate-label (plist-get v :label)))
+                       (when (or (string-equal keyword "")
+                                 (acm-candidate-fuzzy-search keyword candidate-label))
+                         (if (> (length candidate-label) acm-backend-lsp-candidate-max-length)
+                             (plist-put v :display-label (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-max-length)))
+                           (plist-put v :display-label candidate-label))
 
-                        (plist-put v :backend "lsp")
-                        (add-to-list 'candidates v t))))
-                  server-items))
-       acm-backend-lsp-items))
+                         (plist-put v :backend "lsp")
+                         (add-to-list 'candidates v t))))
+                   server-items))))
 
     (acm-candidate-sort-by-prefix keyword candidates)))
 
