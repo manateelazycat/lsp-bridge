@@ -1,6 +1,6 @@
 ;;; acm-quick-access.el -*- lexical-binding: t; -*-
 
-(defcustom acm-quick-access-keys '("0" "1" "2" "3" "4" "5" "6" "7" "8" "9")
+(defcustom acm-quick-access-keys '("1" "2" "3" "4" "5" "6" "7" "8" "9" "0")
   "Character strings used as a part of quick-access key sequences."
   :type 'listp)
 
@@ -24,12 +24,13 @@
     "M"))
 
 (defun acm-keymap--bind-quick-access (keymap)
-  (let ((modifier (acm-keymap--quick-access-modifier)))
-    (dolist (key acm-quick-access-keys)
-      (let ((key-seq (acm-keymap--kbd-quick-access modifier key)))
-        (if (lookup-key keymap key-seq)
-            (warn "Key sequence %s already bound" (key-description key-seq))
-          (define-key keymap key-seq #'acm-complete-quick-access))))))
+  (if acm-enable-quick-access
+      (let ((modifier (acm-keymap--quick-access-modifier)))
+        (dolist (key acm-quick-access-keys)
+          (let ((key-seq (acm-keymap--kbd-quick-access modifier key)))
+            (if (lookup-key keymap key-seq)
+                (warn "Key sequence %s already bound" (key-description key-seq))
+              (define-key keymap key-seq #'acm-complete-quick-access)))))))
 
 (defun acm-keymap--kbd-quick-access (modifier key)
   (kbd (format "%s-%s" modifier key)))
