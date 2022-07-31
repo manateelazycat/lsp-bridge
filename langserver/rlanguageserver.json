@@ -1,0 +1,11 @@
+{
+  "name": "rlanguageserver",
+  "languageId": "r",
+  "command": [
+      "R",
+      "--slave",
+      "-e",
+      "languageserver::run()"
+  ],
+  "settings": {}
+}
