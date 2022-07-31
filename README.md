@@ -151,7 +151,7 @@ You need to install the LSP server corresponding to each programming language, t
 | 32 | [emmet-ls](https://github.com/aca/emmet-ls) | html, js, css, sass, scss, less | |
 | 33 | [rnix-lsp](https://github.com/nix-community/rnix-lsp) | nix | |
 | 34 | [digestif](https://github.com/astoff/digestif) | latex | `lsp-bridge-tex-lsp-server` set to `digestif` |
-
+| 35 | [rlanguageserver](https://github.com/REditorSupport/languageserver)       | R   | |
 
 ### Features that won't be supported
 
@@ -174,7 +174,7 @@ The following is the directory structure of the lsp-bridge project:
 | lsp-bridge.el           | Elisp main logic part that provides custom options and elisp functions for python sub-process calls like code jumping, renaming, etc.                          |
 | lsp-bridge-epc.el       | Communicating with lsp-bridge python sub-process, which mainly implements elisp IPC to connect to python EPC for data serialization, sending, receiving, and deserialization |
 | lsp-bridge-ref.el       | Framework of code referencing, providing references viewing, batch renames, regex filtering of reference results, etc. The core code is forked from color-rg.el                                    |
- | lsp-bridge-jdtls.el      | Provide java language third-party library jumping function                                                           |
+| lsp-bridge-jdtls.el      | Provide java language third-party library jumping function                                                           |
 | lsp-bridge.py           | Python main logic part that provides event loop, message scheduling and status management                                                                                     |
 | acm/acm.el      | Asynchronous completion menu, specially designed for lsp-bridge backend, supports LSP, elisp, words and other backend                                                                                           |
 | core/fileaction.py      | Tracking the status of each file, processing LSP response messages, calling Emacs elisp function                                                                                           |
