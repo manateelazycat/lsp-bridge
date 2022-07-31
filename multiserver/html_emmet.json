@@ -1,0 +1,15 @@
+{
+  "completion": ["vscode-html-language-server", "emmet-ls"],
+  "completion_item_resolve": ["vscode-html-language-server", "emmet-ls"],
+  "diagnostics": ["vscode-html-language-server", "emmet-ls"],
+  "code_action": ["vscode-html-language-server", "emmet-ls"],
+  "execute_command": ["vscode-html-language-server", "emmet-ls"],
+  "find_define": "vscode-html-language-server",
+  "find_implementation": "vscode-html-language-server",
+  "find_references": "vscode-html-language-server",
+  "formatting": "vscode-html-language-server",
+  "hover": "vscode-html-language-server",
+  "signature_help": "vscode-html-language-server",
+  "prepare_rename": "vscode-html-language-server",
+  "rename": "vscode-html-language-server"
+}
