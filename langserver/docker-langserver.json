@@ -1,6 +1,9 @@
 {
   "name": "docker-langserver",
   "languageId": "Dockerfiles",
-  "command": ["docker-langserver", "--stdio"],
+  "command": [
+    "docker-langserver", 
+    "--stdio"
+  ],
   "settings": {}
 }
