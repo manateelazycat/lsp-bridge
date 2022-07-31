@@ -37,8 +37,8 @@ class JDTUriResolver(Handler):
 
             try:
                 # Value for -data: An absolute path to your data directory. eclipse.jdt.ls stores workspace specific information in it. This should be unique per workspace/project.
-                index = self.file_action.lang_server_info['command'].index('-data')
-                data_dir = pathlib.Path(self.file_action.lang_server_info['command'][index + 1])
+                index = self.file_action.single_lang_server_info['command'].index('-data')
+                data_dir = pathlib.Path(self.file_action.single_lang_server_info['command'][index + 1])
             except ValueError as e:
                 md5 = hashlib.md5()
                 md5.update(self.file_action.get_lsp_server_project_path())
