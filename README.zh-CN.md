@@ -149,7 +149,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 31 | [jedi](https://github.com/pappasam/jedi-language-server) | python | `lsp-bridge-python-lsp-server` 设置成 `jedi` |
 | 32 | [emmet-ls](https://github.com/aca/emmet-ls) | html, js, css, sass, scss, less | |
 | 33 | [rnix-lsp](https://github.com/nix-community/rnix-lsp) | nix | |
-| 34 | [digestif](https://github.com/astoff/digestif) | `lsp-bridge-tex-lsp-server` 设置成 `digestif` | |
+| 34 | [digestif](https://github.com/astoff/digestif) | latex | `lsp-bridge-tex-lsp-server` 设置成 `digestif` |
 
 ### 不会支持的特性：
 lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是实现LSP协议最全的LSP客户端。

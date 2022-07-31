@@ -150,7 +150,7 @@ You need to install the LSP server corresponding to each programming language, t
 | 31 | [jedi](https://github.com/pappasam/jedi-language-server) | python | `lsp-bridge-python-lsp-server` set to `jedi` |
 | 32 | [emmet-ls](https://github.com/aca/emmet-ls) | html, js, css, sass, scss, less | |
 | 33 | [rnix-lsp](https://github.com/nix-community/rnix-lsp) | nix | |
-| 34 | [digestif](https://github.com/astoff/digestif) | `lsp-bridge-tex-lsp-server` set to `digestif` | |
+| 34 | [digestif](https://github.com/astoff/digestif) | latex | `lsp-bridge-tex-lsp-server` set to `digestif` |
 
 
 ### Features that won't be supported
