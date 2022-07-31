@@ -1,6 +1,6 @@
 {
   "name": "vscode-html-language-server",
-  "languageId": "vscode-html-language-server",
+  "languageId": "html",
   "command": [
     "vscode-html-language-server",
     "--stdio"

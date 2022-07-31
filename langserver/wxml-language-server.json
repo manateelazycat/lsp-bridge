@@ -1,6 +1,6 @@
 {
   "name": "wxml-language-server",
-  "languageId": "wxml-language-server",
+  "languageId": "wxml",
   "command": [
     "wxml-langserver",
     "--stdio"

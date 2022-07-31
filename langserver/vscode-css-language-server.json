@@ -1,6 +1,6 @@
 {
   "name": "vscode-css-language-server",
-  "languageId": "vscode-css-language-server",
+  "languageId": "css",
   "command": [
     "vscode-css-language-server",
     "--stdio"
