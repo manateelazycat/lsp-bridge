@@ -128,7 +128,11 @@
            (documentation-property symbol 'variable-documentation)))))  
 
 (defun acm-backend-elisp-symbol-type (symbol)
-  (cond ((functionp symbol)
+  (cond ((featurep symbol)
+         "feature")
+        ((special-form-p symbol)
+         "special form")
+        ((functionp symbol)
          "function")
         ((macrop symbol)
          "macro")
@@ -136,6 +140,8 @@
          "face")
         ((custom-variable-p symbol)
          "custom")
+        ((get symbol 'risky-local-variable)
+         "constant")
         (t
          "variable")))
 
