@@ -77,6 +77,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-signature-function`: The function used for displaying signature info
 * `lsp-bridge-c-lsp-server`: C language server, you can choose `clangd` or` ccls`
 * `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright` or` jedi`
+* `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `taxlab` or` digestif`
 * `lsp-bridge-complete-manually`: Only popup completion menu when user call `lsp-bridge-popup-complete` command, default is nil
 * `acm-backend-lsp-enable-auto-import`: automatic insert import code, enable by default
 * `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
@@ -149,7 +150,7 @@ You need to install the LSP server corresponding to each programming language, t
 | 31 | [jedi](https://github.com/pappasam/jedi-language-server) | python | `lsp-bridge-python-lsp-server` set to `jedi` |
 | 32 | [emmet-ls](https://github.com/aca/emmet-ls) | html, js, css, sass, scss, less | |
 | 33 | [rnix-lsp](https://github.com/nix-community/rnix-lsp) | nix | |
-| 34 | [digestif](https://github.com/astoff/digestif) | latex | |
+| 34 | [digestif](https://github.com/astoff/digestif) | `lsp-bridge-tex-lsp-server` set to `digestif` | |
 
 
 ### Features that won't be supported
