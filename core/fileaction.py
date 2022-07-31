@@ -250,6 +250,16 @@ class FileAction:
     def get_lsp_server_project_path(self):
         return self.single_lsp_server.project_path.encode('utf-8')
     
+    def get_match_lsp_servers(self, method):
+        if self.multi_servers:
+            server_names = self.multi_servers_info[method]    # type: ignore
+            if type(server_names) == str:
+                server_names = [server_names]
+                
+            return list(map(lambda server_name: self.multi_servers[server_name], server_names))    # type: ignore
+        else:
+            return [self.single_lsp_server]
+    
     def create_external_file_action(self, external_file, external_file_link=None):
         create_file_action(
             filepath=external_file,
