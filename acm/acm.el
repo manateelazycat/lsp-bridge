@@ -915,7 +915,7 @@ influence of C1 on the result."
 (defun acm-doc-toggle ()
   "Toggle documentation preview for selected candidate."
   (interactive)
-  (if (frame-visible-p acm-doc-frame)
+  (if (acm-frame-visible-p acm-doc-frame)
       (acm-doc-hide)
     (let ((acm-enable-doc t))
       (acm-doc-show))))
