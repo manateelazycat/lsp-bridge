@@ -65,7 +65,6 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-completion-hide-characters`: completion menu will not popup when cursor after those characters
 * `lsp-bridge-diagnostics-fetch-idle`: diagnostic delay, start pulling diagnostic information 1 second after stopping typing
 * `lsp-bridge-enable-diagnostics`: code diagnostic, enable by default
-* `lsp-bridge-enable-candidate-doc-preview`: preview of the candidate document, enable by default
 * `lsp-bridge-enable-signature-help`: show function parameter in minibufer, enable by default
 * `lsp-bridge-enable-search-words`: index the word of the file, enable by default
 * `lsp-bridge-enable-auto-format-code`: automatic format code, disable by default
