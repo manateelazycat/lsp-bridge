@@ -920,6 +920,12 @@ influence of C1 on the result."
     (let ((acm-enable-doc t))
       (acm-doc-show))))
 
+;; Emacs 28: Do not show Acm commands with M-X
+(dolist (sym '(acm-hide acm-complete acm-select-first acm-select-last acm-select-next
+               acm-select-prev acm-insert-common acm-doc-scroll-up acm-doc-scroll-down
+               acm-complete-quick-access acm-doc-toggle))
+  (put sym 'completion-predicate #'ignore))
+
 (provide 'acm)
 
 ;;; acm.el ends here
