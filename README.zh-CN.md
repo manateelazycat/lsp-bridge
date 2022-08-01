@@ -66,7 +66,7 @@ lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.
 * `lsp-bridge-diagnostics-fetch-idle`： 诊断延迟，默认是停止敲键盘后1秒开始拉取诊断信息
 * `lsp-bridge-enable-diagnostics`: 代码诊断， 默认打开
 * `lsp-bridge-enable-candidate-doc-preview`: 支持后选词文档预览， 默认打开
-* `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认关闭
+* `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认打开
 * `lsp-bridge-enable-search-words`: 索引打开文件的单词， 默认打开
 * `lsp-bridge-enable-auto-format-code`: 自动格式化代码, 默认关闭
 * `lsp-bridge-org-babel-lang-list`: 支持org-mode代码块补全的语言列表
