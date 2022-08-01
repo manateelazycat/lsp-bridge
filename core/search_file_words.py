@@ -111,7 +111,7 @@ class SearchFileWords:
                     for search_file in self.search_files:
                         try:
                             words = set(re.findall("[\w|-]+", open(search_file).read()))
-                        except UnicodeDecodeError:
+                        except (FileNotFoundError, UnicodeDecodeError):
                             continue
                         filter_words = set(map(lambda word: re.sub('[^A-Za-z0-9-_]+', '', word),
                                                set(filter(self.filter_word, words))))
