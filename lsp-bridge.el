@@ -170,11 +170,6 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'integer
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-enable-candidate-doc-preview t
-  "Whether to enable candidate documentation."
-  :type 'boolean
-  :group 'lsp-bridge)
-
 (defcustom lsp-bridge-disable-backup t
   "Default disable backup feature, include `make-backup-files' `auto-save-default' and `create-lockfiles'."
   :type 'boolean

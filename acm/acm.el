@@ -113,7 +113,7 @@
   :type '(repeat (choice regexp symbol)))
 
 (defcustom acm-enable-doc t
-  "Popup documentation when this option is turn on."
+  "Popup documentation automatically when this option is turn on."
   :type 'boolean)
 
 (defcustom acm-enable-icon t
@@ -161,6 +161,7 @@
     (define-key map "\n" #'acm-complete)
     (define-key map "\M-h" #'acm-complete)
     (define-key map "\M-H" #'acm-insert-common)
+    (define-key map "\M-d" #'acm-doc-toggle)
     (define-key map "\M-j" #'acm-doc-scroll-up)
     (define-key map "\M-k" #'acm-doc-scroll-down)
     (define-key map "\M-l" #'acm-hide)
@@ -910,6 +911,20 @@ influence of C1 on the result."
     (when (framep acm-frame)
       (with-selected-frame acm-doc-frame
         (scroll-down-command)))))
+
+(defun acm-doc-toggle ()
+  "Toggle documentation preview for selected candidate."
+  (interactive)
+  (if (frame-visible-p acm-doc-frame)
+      (acm-doc-hide)
+    (let ((acm-enable-doc t))
+      (acm-doc-show))))
+
+;; Emacs 28: Do not show Acm commands with M-X
+(dolist (sym '(acm-hide acm-complete acm-select-first acm-select-last acm-select-next
+               acm-select-prev acm-insert-common acm-doc-scroll-up acm-doc-scroll-down
+               acm-complete-quick-access acm-doc-toggle))
+  (put sym 'completion-predicate #'ignore))
 
 (provide 'acm)
 
