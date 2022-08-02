@@ -1286,6 +1286,10 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
              (lsp-bridge-has-lsp-server-p)
              (not (lsp-bridge-completion-ui-visible-p))
              (buffer-file-name)
+             ;; make sure this local variable is set before we run the function.
+             ;; When lsp-bridge-mode is not enabled it's still possible
+             ;; that `lsp-bridge-diagnostics-fetch' runs
+             (boundp 'acm-backend-lsp-filepath)
              (string-equal (file-truename (buffer-file-name)) acm-backend-lsp-filepath))
     (unless (eq last-command 'mwheel-scroll)
       (lsp-bridge-call-file-api "pull_diagnostics"))))
