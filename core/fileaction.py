@@ -108,7 +108,17 @@ class FileAction:
                         method_server = self.multi_servers[method_server_name]
                         self.send_request(method_server, method, handler, *args, **kwargs)
             else:
-                return self.send_server_request(self.single_lsp_server, method, *args, **kwargs)
+                if self.single_lsp_server:
+                    self.send_server_request(self.single_lsp_server, method, *args, **kwargs)
+                else:
+                    if method in ["completion", "completion_item_resolve", "diagnostics", "code_action", "execute_command"]:
+                        method_server_names = self.multi_servers_info[method]
+                    else:
+                        method_server_names = [self.multi_servers_info[method]]
+                        
+                    for method_server_name in method_server_names:
+                        method_server = self.multi_servers[method_server_name]
+                        self.send_server_request(method_server, method, *args, **kwargs)
         elif hasattr(self, method):
             getattr(self, method)(*args, **kwargs)
             
@@ -262,11 +272,15 @@ class FileAction:
             return [self.single_lsp_server]
     
     def create_external_file_action(self, external_file, external_file_link=None):
-        create_file_action(
-            filepath=external_file,
-            lang_server_info=self.single_lang_server_info,
-            lsp_server=self.single_lsp_server,
-            external_file_link=external_file_link)
+        if self.multi_servers:
+            action = FileAction(external_file, None, None, self.multi_servers_info, self.multi_servers, external_file_link)
+            add_to_path_dict(FILE_ACTION_DICT, external_file, action)
+        else:
+            create_file_action(
+                filepath=external_file,
+                lang_server_info=self.single_lang_server_info,
+                lsp_server=self.single_lsp_server,
+                external_file_link=external_file_link)
         
 FILE_ACTION_DICT: Dict[str, FileAction] = {}  # use for contain file action
 LSP_SERVER_DICT: Dict[str, LspServer] = {}  # use for contain lsp server
