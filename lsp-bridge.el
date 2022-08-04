@@ -747,14 +747,14 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
     (lsp-bridge-hide-signature-tooltip)))
 
 (defun lsp-bridge-close-buffer-file ()
-  (when (lsp-bridge-has-lsp-server-p)
-    (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-      (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath)))
+  (when (and (lsp-bridge-has-lsp-server-p)
+             (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+             (boundp 'acm-backend-lsp-filepath))
+    (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath))
 
   (when (and buffer-file-name
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
-    (lsp-bridge-call-async "search_words_close_file" buffer-file-name)
-    ))
+    (lsp-bridge-call-async "search_words_close_file" buffer-file-name)))
 
 (defun lsp-bridge-record-completion-items (filepath candidates position server-name completion-trigger-characters server-names)
   (lsp-bridge--with-file-buffer filepath
