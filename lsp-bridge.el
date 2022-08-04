@@ -1602,7 +1602,8 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
   (evil-add-command-properties #'lsp-bridge-find-impl :jump t))
 
 (defun lsp-bridge--rename-file-advisor (orig-fun &optional arg &rest args)
-  (when lsp-bridge-mode
+  (when (and lsp-bridge-mode
+             (boundp 'acm-backend-lsp-filepath))
     (let ((new-name (expand-file-name (nth 0 args))))
       (lsp-bridge-call-file-api "rename_file" new-name)
       (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath)
