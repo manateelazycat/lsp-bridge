@@ -11,12 +11,13 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 ## 安装
 
 1. 安装Python依赖: [python-epc](https://github.com/tkf/python-epc)
-2. 安装Elisp依赖:
+2. 安装[orjson](https://github.com/ijl/orjson)(可选， 依赖Rust)， JSON解析性能会提升150%~200%
+3. 安装Elisp依赖:
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
 + [yasnippet](https://github.com/joaotavora/yasnippet)
-3. 用 `git clone` 下载此仓库，并替换下面配置中的 load-path 路径
-4. 把下面代码加入到你的配置文件 ~/.emacs 中：
+4. 用 `git clone` 下载此仓库，并替换下面配置中的 load-path 路径
+5. 把下面代码加入到你的配置文件 ~/.emacs 中：
 
 ```elisp
 (add-to-list 'load-path "<path-to-lsp-bridge>")
@@ -27,8 +28,6 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (require 'lsp-bridge)
 (global-lsp-bridge-mode)
 ```
-
-可选： 安装[orjson](https://github.com/ijl/orjson)后， JSON解析性能会提升150%~200%
 
 ## 使用
 lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.com/manateelazycat/lsp-bridge/blob/master/README.zh-CN.md#%E5%B7%B2%E7%BB%8F%E6%94%AF%E6%8C%81%E7%9A%84%E8%AF%AD%E8%A8%80%E6%9C%8D%E5%8A%A1%E5%99%A8)和模式插件以后， 直接写代码即可， 不需要额外的设置。
