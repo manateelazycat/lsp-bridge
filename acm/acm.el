@@ -98,6 +98,7 @@
 (require 'acm-backend-search-words)
 (require 'acm-backend-tempel)
 (require 'acm-quick-access)
+(require 'acm-backend-tabnine)
 
 ;;; Code:
 
@@ -412,9 +413,11 @@ influence of C1 on the result."
          (candidates (list))
          path-candidates
          yas-candidates
+         tabnine-candidates
          tempel-candidates
          mode-candidates)
 
+    (setq tabnine-candidates (acm-backend-tabnine-candidates keyword))
     (if acm-enable-english-helper
         ;; Completion english if option `acm-enable-english-helper' is enable.
         (progn
@@ -445,6 +448,7 @@ influence of C1 on the result."
               (if (> (length mode-candidates) acm-snippet-insert-index)
                   (append (cl-subseq mode-candidates 0 acm-snippet-insert-index)
                           yas-candidates
+                          tabnine-candidates
                           tempel-candidates
                           (cl-subseq mode-candidates acm-snippet-insert-index))
                 (append mode-candidates yas-candidates tempel-candidates)
@@ -622,6 +626,7 @@ influence of C1 on the result."
         ("search-words" (acm-backend-search-words-candidate-expand candidate-info bound-start))
         ("tempel" (acm-backend-tempel-candidate-expand candidate-info bound-start))
         ("english" (acm-backend-english-candidate-expand candidate-info bound-start))
+        ("tabnine" (acm-backend-tabnine-candidate-expand candidate-info bound-start))
         (_
          (delete-region bound-start (point))
          (insert (plist-get candidate-info :label)))

@@ -112,6 +112,7 @@
       (acm-candidate-sort-by-prefix keyword candidates))))
 
 (defun acm-backend-yas-candidate-expand (candidate-info bound-start)
+  (debug)
   (delete-region bound-start (point))
   (yas-expand-snippet (acm-backend-yas-get-snippet candidate-info)))
 
