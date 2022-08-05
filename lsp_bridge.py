@@ -155,16 +155,8 @@ class LspBridge:
             
             with open(multi_lang_server_path, encoding="utf-8") as f:
                 multi_lang_server_info = json.load(f)
+                servers = self.pick_multi_server_names(multi_lang_server_info)
                 
-                servers = []
-                for info in multi_lang_server_info:
-                    info_value = multi_lang_server_info[info]
-                    if type(info_value) == str:
-                        servers.append(info_value)
-                    else:
-                        servers += info_value
-                
-                servers = list(dict.fromkeys(servers))
                 multi_servers = {}
                 
                 for server_name in servers:
@@ -232,6 +224,17 @@ class LspBridge:
                 server_name=lsp_server_name)
             
         return LSP_SERVER_DICT[lsp_server_name]
+    
+    def pick_multi_server_names(self, multi_lang_server_info):
+        servers = []
+        for info in multi_lang_server_info:
+            info_value = multi_lang_server_info[info]
+            if type(info_value) == str:
+                servers.append(info_value)
+            else:
+                servers += info_value
+        
+        return list(dict.fromkeys(servers))
 
     def _close_file(self, filepath):
         if is_in_path_dict(FILE_ACTION_DICT, filepath):
