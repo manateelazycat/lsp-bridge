@@ -95,38 +95,28 @@ class FileAction:
         """Call any handler or method of file action."""
         if method in self.handlers:
             handler = self.handlers[method]
-            if hasattr(handler, "provider"):
-                if self.single_lsp_server:
-                    self.send_request(self.single_lsp_server, method, handler, *args, **kwargs)
-                else:
-                    if method in ["completion", "completion_item_resolve", "diagnostics", "code_action", "execute_command"]:
-                        method_server_names = self.multi_servers_info[method]
-                    else:
-                        method_server_names = [self.multi_servers_info[method]]
-                        
-                    for method_server_name in method_server_names:
-                        method_server = self.multi_servers[method_server_name]
-                        self.send_request(method_server, method, handler, *args, **kwargs)
+            if self.single_lsp_server:
+                self.send_request(self.single_lsp_server, method, handler, *args, **kwargs)
             else:
-                if self.single_lsp_server:
-                    self.send_server_request(self.single_lsp_server, method, *args, **kwargs)
+                if method in ["completion", "completion_item_resolve", "diagnostics", "code_action", "execute_command"]:
+                    method_server_names = self.multi_servers_info[method]
                 else:
-                    if method in ["completion", "completion_item_resolve", "diagnostics", "code_action", "execute_command"]:
-                        method_server_names = self.multi_servers_info[method]
-                    else:
-                        method_server_names = [self.multi_servers_info[method]]
-                        
-                    for method_server_name in method_server_names:
-                        method_server = self.multi_servers[method_server_name]
-                        self.send_server_request(method_server, method, *args, **kwargs)
+                    method_server_names = [self.multi_servers_info[method]]
+                    
+                for method_server_name in method_server_names:
+                    method_server = self.multi_servers[method_server_name]
+                    self.send_request(method_server, method, handler, *args, **kwargs)
         elif hasattr(self, method):
             getattr(self, method)(*args, **kwargs)
             
     def send_request(self, method_server, method, handler, *args, **kwargs):
-        if getattr(method_server, getattr(handler, "provider")):
-            return self.send_server_request(method_server, method, *args, **kwargs) 
-        elif hasattr(handler, "provider_message"):
-            message_emacs(getattr(handler, "provider_message"))
+        if hasattr(handler, "provider"):
+            if getattr(method_server, getattr(handler, "provider")):
+                self.send_server_request(method_server, method, *args, **kwargs) 
+            elif hasattr(handler, "provider_message"):
+                message_emacs(getattr(handler, "provider_message"))
+        else:
+            self.send_server_request(method_server, method, *args, **kwargs) 
             
     def change_file(self, start, end, range_length, change_text, position, before_char, completion_visible):
         # Send didChange request to LSP server.
