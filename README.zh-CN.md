@@ -28,6 +28,8 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 (global-lsp-bridge-mode)
 ```
 
+可选： 安装[orjson](https://github.com/ijl/orjson)后， JSON解析性能会提升150%~200%
+
 ## 使用
 lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.com/manateelazycat/lsp-bridge/blob/master/README.zh-CN.md#%E5%B7%B2%E7%BB%8F%E6%94%AF%E6%8C%81%E7%9A%84%E8%AF%AD%E8%A8%80%E6%9C%8D%E5%8A%A1%E5%99%A8)和模式插件以后， 直接写代码即可， 不需要额外的设置。
 

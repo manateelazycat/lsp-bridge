@@ -28,6 +28,8 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 (global-lsp-bridge-mode)
 ```
 
+Optional: after installing [orjson](https://github.com/ijl/orjson), JSON's analysis performance will increase 150% ~ 200%
+
 ## Usage
 lsp-bridge is design for out the box. After installing the [LSP server](https://github.com/manateelazycat/lsp-bridge#supported-language-servers) and mode plugin corresponding to the open file, you can write the code directly without additional settings.
 
