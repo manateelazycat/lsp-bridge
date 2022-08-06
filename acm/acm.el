@@ -97,6 +97,7 @@
 (require 'acm-backend-path)
 (require 'acm-backend-search-words)
 (require 'acm-backend-tempel)
+(require 'acm-backend-telega)
 (require 'acm-quick-access)
 
 ;;; Code:
@@ -432,7 +433,8 @@ influence of C1 on the result."
         (setq mode-candidates (append
                                (acm-backend-elisp-candidates keyword)
                                (acm-backend-lsp-candidates keyword)
-                               (acm-backend-search-words-candidates keyword)))
+                               (acm-backend-search-words-candidates keyword)
+			       (acm-backend-telega-candidates keyword)))
 
         ;; Don't search snippet if char before keyword is not in `acm-backend-lsp-completion-trigger-characters'.
         (when (and (boundp 'acm-backend-lsp-completion-trigger-characters))
