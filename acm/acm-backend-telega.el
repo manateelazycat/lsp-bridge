@@ -17,7 +17,7 @@
               (when (save-excursion (search-backward "@" (line-beginning-position) t))
                 (let ((at (char-to-string (char-before))))
                   ;; Get data only when you enter @, otherwise return the acquired data directly
-                  (when (string= at "@")
+                  (if (string= at "@")
                     (mapcar (lambda (user)
                               (let ((username (plist-get user :username))
                                     (firstname (plist-get user :first_name)))
@@ -27,7 +27,8 @@
                                       :display-label username
                                       :annotation firstname
                                       :backend "telega")))
-                            (acm-backend-telega-fetch-members)))))))
+                            (acm-backend-telega-fetch-members))
+		    acm-backend-telega-items)))))
 
 (defun acm-backend-telega-candidates (keyword)
   (when (and acm-enable-telega (eq major-mode 'telega-chat-mode))
