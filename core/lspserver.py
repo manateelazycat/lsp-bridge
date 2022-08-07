@@ -125,7 +125,7 @@ class LspServerReceiver(Thread):
             # Send message.
             self.queue.put({
                 "name": "lsp_recv_message",
-                "content": json.loads(line)
+                "content": parse_json_content(line)
             })
         except:
             logger.error(traceback.format_exc())

@@ -29,7 +29,10 @@ from typing import Dict
 
 from epc.server import ThreadingEPCServer
 
-from core.fileaction import FileAction, create_file_action, FILE_ACTION_DICT, LSP_SERVER_DICT
+from core.fileaction import (FileAction, 
+                             create_file_action_with_single_server, 
+                             create_file_action_with_multi_servers,
+                             FILE_ACTION_DICT, LSP_SERVER_DICT)
 from core.lspserver import LspServer
 from core.search_file_words import SearchFileWords
 from core.utils import *
@@ -152,16 +155,8 @@ class LspBridge:
             
             with open(multi_lang_server_path, encoding="utf-8") as f:
                 multi_lang_server_info = json.load(f)
+                servers = self.pick_multi_server_names(multi_lang_server_info)
                 
-                servers = []
-                for info in multi_lang_server_info:
-                    info_value = multi_lang_server_info[info]
-                    if type(info_value) == str:
-                        servers.append(info_value)
-                    else:
-                        servers += info_value
-                
-                servers = list(dict.fromkeys(servers))
                 multi_servers = {}
                 
                 for server_name in servers:
@@ -175,8 +170,7 @@ class LspBridge:
                         else:
                             return False
                         
-                action = FileAction(filepath, None, None, multi_lang_server_info, multi_servers)
-                add_to_path_dict(FILE_ACTION_DICT, filepath, action)
+                create_file_action_with_multi_servers(filepath, multi_lang_server_info, multi_servers)
         else:
             single_lang_server = get_emacs_func_result("get-single-lang-server", project_path, filepath)
             
@@ -192,11 +186,11 @@ class LspBridge:
             
                 return False
             
-            lang_server_info = load_single_lang_server_info(single_lang_server)
+            lang_server_info = load_single_server_info(single_lang_server)
             lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info)
             
             if lsp_server:
-                create_file_action(filepath, lang_server_info, lsp_server)
+                create_file_action_with_single_server(filepath, lang_server_info, lsp_server)
             else:
                 return False
         
@@ -230,6 +224,17 @@ class LspBridge:
                 server_name=lsp_server_name)
             
         return LSP_SERVER_DICT[lsp_server_name]
+    
+    def pick_multi_server_names(self, multi_lang_server_info):
+        servers = []
+        for info in multi_lang_server_info:
+            info_value = multi_lang_server_info[info]
+            if type(info_value) == str:
+                servers.append(info_value)
+            else:
+                servers += info_value
+        
+        return list(dict.fromkeys(servers))
 
     def _close_file(self, filepath):
         if is_in_path_dict(FILE_ACTION_DICT, filepath):
@@ -291,7 +296,7 @@ class LspBridge:
         start_test(self)
 
 
-def load_single_lang_server_info(lang_server):
+def load_single_server_info(lang_server):
     lang_server_info_path = ""
     if os.path.exists(lang_server) and os.path.dirname(lang_server) != "":
         # If lang_server is real file path, we load the LSP server configuration from the user specified file.

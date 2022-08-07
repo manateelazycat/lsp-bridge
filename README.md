@@ -11,12 +11,13 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 ## Installation
 
 1. Install Python dependencies: [python-epc](https://github.com/tkf/python-epc)
-2. Install Elisp dependencies:
+2. Installing [orjson](https://github.com/ijl/orjson) (optional, dependent Rust), JSON's analysis performance will increase 150% ~ 200%
+3. Install Elisp dependencies:
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
 + [yasnippet](https://github.com/joaotavora/yasnippet)
-3. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
-4. Add following code in your ~/.emacs:
+4. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
+5. Add following code in your ~/.emacs:
 
 ```elisp
 (add-to-list 'load-path "<path-to-lsp-bridge>")
