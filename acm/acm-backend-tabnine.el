@@ -1,22 +1,32 @@
 ;;; acm-backend-tabnine.el --- Insert description here -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;; Code:
-(defcustom acm-backend-tabnine-min-length 2
+
+(require 'tabnine-capf)
+
+(defcustom acm-backend-tabnine-min-length 1
   "Minimum length of tabnine word."
   :type 'integer)
-
+q
 (defun acm-backend-tabnine-candidates (keyword)
   (let* ((candidates (list))
-         (test-completes '("test1" "test2" "test3")))
+         (test-completes '("test1" "test2" "test3"))
+         (bounds (bounds-of-thing-at-point 'symbol))
+         (thing (thing-at-point 'symbol))
+         (tabcandidates (tabnine-capf--candidates thing)))
+    ;; (debug)
          (when (>= (length keyword) acm-backend-tabnine-min-length)
-           (dolist (candidate test-completes)
-           (add-to-list 'candidates (list :key candidate
+           (dolist (candidate tabcandidates)
+             (let* ((com (concat "  "(get-text-property 0 'annotation candidate))))
+               (debug)
+               (add-to-list 'candidates (list :key com
                                          :icon "tabnine"
-                                         :label candidate
-                                         :display-label candidate
-                                         :annotation candidate
+                                         :label com
+                                         :display-label com
+                                         :annotation com
                                          :backend "tabnine")
-                       )))
+                       ))
+           ))
     candidates))
 
 (defun test-tabnine ()
