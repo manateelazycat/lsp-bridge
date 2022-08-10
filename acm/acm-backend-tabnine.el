@@ -7,7 +7,7 @@
 (defcustom acm-backend-tabnine-min-length 1
   "Minimum length of tabnine word."
   :type 'integer)
-q
+
 (defun acm-backend-tabnine-candidates (keyword)
   (let* ((candidates (list))
          (test-completes '("test1" "test2" "test3"))
@@ -17,12 +17,13 @@ q
     ;; (debug)
          (when (>= (length keyword) acm-backend-tabnine-min-length)
            (dolist (candidate tabcandidates)
-             (let* ((com (concat "  "(get-text-property 0 'annotation candidate))))
-               (debug)
-               (add-to-list 'candidates (list :key com
+             (let* ((com (concat "  "(get-text-property 0 'annotation candidate)))
+                    (detail (concat "  "(get-text-property 0 'detail candidate))))
+               ;; (debug)
+               (add-to-list 'candidates (list :key candidate
                                          :icon "tabnine"
-                                         :label com
-                                         :display-label com
+                                         :label candidate
+                                         :display-label candidate
                                          :annotation com
                                          :backend "tabnine")
                        ))

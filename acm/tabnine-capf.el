@@ -710,8 +710,6 @@ Return completion candidates.  Must be called after `tabnine-capf-query'."
 ;; Hooks
 ;;
 
-(defun)
-
 (provide 'tabnine-capf)
 
 ;;; tabnine-capf.el ends here
