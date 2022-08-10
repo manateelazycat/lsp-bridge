@@ -150,12 +150,12 @@
     ;; 4. `insertText' is not start with `char-before-input'
     (unless text-edit
       (let* ((char-before-input (save-excursion
-                                  (goto-char (1+ delete-start-pos))
+                                  (goto-char delete-start-pos)
                                   (acm-char-before))))
         (when (and (member char-before-input acm-backend-lsp-completion-trigger-characters)
                    (string-prefix-p char-before-input label)
                    (not (string-prefix-p char-before-input insert-text)))
-          (setq delete-start-pos (1+ delete-start-pos)))))
+          (setq delete-start-pos delete-start-pos))))
 
     ;; Delete region.
     (delete-region delete-start-pos delete-end-pos)
