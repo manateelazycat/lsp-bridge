@@ -147,13 +147,14 @@
     ;; 1. `textEdit' is not exist
     ;; 2. `char-before-input' is `acm-backend-lsp-completion-trigger-characters'
     ;; 3. `label' start with `char-before-input'
-    ;; 4. `insertText' is not start with `char-before-input'
+    ;; 4. `insertText' is not start with `char-before-input' and `insertText' is not `nil'
     (unless text-edit
       (let* ((char-before-input (save-excursion
                                   (goto-char (1+ delete-start-pos))
                                   (acm-char-before))))
         (when (and (member char-before-input acm-backend-lsp-completion-trigger-characters)
                    (string-prefix-p char-before-input label)
+                   (not (null insert-text)) ; fix clojure issue that insert :: before keyword #305
                    (not (string-prefix-p char-before-input insert-text)))
           (setq delete-start-pos (1+ delete-start-pos)))))
 
