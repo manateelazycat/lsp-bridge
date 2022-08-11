@@ -138,6 +138,12 @@ class FileAction:
         # Send textDocument/completion 100ms later.
         self.try_completion_timer = threading.Timer(0.1, lambda : self.try_completion(position, before_char, completion_visible))
         self.try_completion_timer.start()
+        
+    def update_file(self):
+        for lsp_server in self.get_lsp_servers():
+            lsp_server.send_whole_change_notification(self.filepath, self.version)
+            
+        self.version += 1
 
     def try_completion(self, position, before_char, completion_visible):
         # Only send textDocument/completion request when match one of following rules:

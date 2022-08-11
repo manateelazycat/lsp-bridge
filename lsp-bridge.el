@@ -1028,11 +1028,11 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
     (unless (eq last-command 'mwheel-scroll)
       (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))))
 
-(defun lsp-bridge-file-apply-edits (filepath edits)
+(defun lsp-bridge-file-apply-edits (filepath edits &optional just-reverse)
   (find-file-noselect filepath)
   (save-excursion
     (find-file filepath)
-    (acm-backend-lsp-apply-text-edits edits))
+    (acm-backend-lsp-apply-text-edits edits just-reverse))
 
   (setq-local lsp-bridge-prohibit-completion t))
 
@@ -1422,8 +1422,17 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
     (lsp-bridge-call-file-api "formatting" (symbol-value (lsp-bridge--get-indent-width major-mode)))))
 
 (defun lsp-bridge-code-format-fix (filepath edits)
-  (lsp-bridge-file-apply-edits filepath edits)
-  (message "[LSP-BRIDGE] Complete code formatting."))
+  ;; We need set `inhibit-modification-hooks' to t to avoid GC freeze Emacs.
+  (let ((inhibit-modification-hooks t))
+    ;; Apply code format edits, not sort, just reverse order.
+    (lsp-bridge-file-apply-edits filepath edits t)
+    ;; Save buffer to disk.
+    (basic-save-buffer)
+    ;; Make LSP server update file content form disk.
+    (lsp-bridge-call-file-api "update_file")
+    ;; Notify format complete.
+    (message "[LSP-BRIDGE] Complete code formatting.")
+    ))
 
 (defvar lsp-bridge-english-helper-dict nil)
 

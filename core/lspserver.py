@@ -371,6 +371,20 @@ class LspServer:
                 }
             ]
         })
+        
+    def send_whole_change_notification(self, filepath, version):
+        with open(filepath, encoding="utf-8") as f:
+            self.sender.send_notification("textDocument/didChange", {
+                "textDocument": {
+                    "uri": path_to_uri(filepath),
+                    "version": version
+                }, 
+                "contentChanges": [
+                    {
+                        "text": f.read()
+                    }
+                ]
+            })
 
     def record_request_id(self, request_id: int, handler: Handler):
         self.request_dict[request_id] = handler

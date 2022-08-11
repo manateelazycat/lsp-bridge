@@ -106,7 +106,7 @@
            (boundp 'acm-backend-lsp-server-names)
            acm-backend-lsp-server-names
            (hash-table-p acm-backend-lsp-items))
-      ;; Sort multi-server items by 
+      ;; Sort multi-server items by
       (dolist (server-name acm-backend-lsp-server-names)
         (when-let* ((server-items (gethash server-name acm-backend-lsp-items)))
           (maphash (lambda (k v)
@@ -207,8 +207,8 @@ If optional MARKER, return a marker instead"
                           (line-end-position)))))
       (if marker (copy-marker (point-marker)) (point)))))
 
-(defun acm-backend-lsp-apply-text-edits (edits)
-  (dolist (edit (acm-backend-lsp-sort-edits edits))
+(defun acm-backend-lsp-apply-text-edits (edits just-reverse)
+  (dolist (edit (if just-reverse (reverse edits) (acm-backend-lsp-sort-edits edits)))
     (let* ((range (plist-get edit :range)))
       (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get edit :newText)))))
 
