@@ -10,8 +10,10 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 
 ## 安装
 
-1. 安装Python依赖: [python-epc](https://github.com/tkf/python-epc)
-2. 安装[orjson](https://github.com/ijl/orjson) (可选， 依赖Rust)， JSON解析性能会提升150%~200%
+1. 安装Emacs 28及以上版本
+2. 安装Python依赖: 
++ [python-epc](https://github.com/tkf/python-epc)
++ [orjson](https://github.com/ijl/orjson)
 3. 安装Elisp依赖:
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
