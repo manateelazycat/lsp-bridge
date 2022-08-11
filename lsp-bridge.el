@@ -723,28 +723,28 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 (defvar-local lsp-bridge-diagnostic-overlays '())
 
 (defun lsp-bridge-monitor-post-command ()
-  (when lsp-bridge-mode
-    (when (or (eq this-command 'self-insert-command)
-              (eq this-command 'org-self-insert-command))
-      (lsp-bridge-try-completion)))
+  (let ((this-command-string (format "%s" this-command)))
+    (when lsp-bridge-mode
+      (when (member this-command-string '("self-insert-command" "org-self-insert-command"))
+        (lsp-bridge-try-completion)))
 
-  (when  (lsp-bridge-has-lsp-server-p)
-    (unless (equal (point) lsp-bridge-last-position)
-      (unless (eq last-command 'mwheel-scroll)
-        (lsp-bridge-call-file-api "change_cursor" (lsp-bridge--position)))
-      (setq-local lsp-bridge-last-position (point)))
+    (when  (lsp-bridge-has-lsp-server-p)
+      (unless (equal (point) lsp-bridge-last-position)
+        (unless (eq last-command 'mwheel-scroll)
+          (lsp-bridge-call-file-api "change_cursor" (lsp-bridge--position)))
+        (setq-local lsp-bridge-last-position (point)))
 
-    ;; Hide hover tooltip.
-    (if (not (string-prefix-p "lsp-bridge-popup-documentation-scroll" (format "%s" this-command)))
-        (lsp-bridge-hide-doc-tooltip))
+      ;; Hide hover tooltip.
+      (if (not (string-prefix-p "lsp-bridge-popup-documentation-scroll" this-command-string))
+          (lsp-bridge-hide-doc-tooltip))
 
-    ;; Hide diagnostic tooltip.
-    (unless (member (format "%s" this-command) '("lsp-bridge-jump-to-next-diagnostic"
-                                                 "lsp-bridge-jump-to-prev-diagnostic"))
-      (lsp-bridge-hide-diagnostic-tooltip))
+      ;; Hide diagnostic tooltip.
+      (unless (member this-command-string '("lsp-bridge-jump-to-next-diagnostic"
+                                            "lsp-bridge-jump-to-prev-diagnostic"))
+        (lsp-bridge-hide-diagnostic-tooltip))
 
-    ;; Hide signature tooltip.
-    (lsp-bridge-hide-signature-tooltip)))
+      ;; Hide signature tooltip.
+      (lsp-bridge-hide-signature-tooltip))))
 
 (defun lsp-bridge-close-buffer-file ()
   (when (and (lsp-bridge-has-lsp-server-p)
