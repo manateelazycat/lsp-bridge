@@ -129,19 +129,24 @@
          (insert-text-format (plist-get candidate-info :insertTextFormat))
          (text-edit (plist-get candidate-info :textEdit))
          (new-text (plist-get text-edit :newText))
-         (additionalTextEdits (plist-get candidate-info :additionalTextEdits))
-         (kind (plist-get candidate-info :icon))
-         (snippet-fn (and (or (eql insert-text-format 2) (string= kind "snippet")) (acm-backend-lsp-snippet-expansion-fn)))
-         (completion-start-pos (acm-backend-lsp-position-to-point acm-backend-lsp-completion-position))
-         (delete-start-pos (if text-edit
-                               ;; Use smaller one between `bound-start' and `range-start' used as the starting point of delete.
-                               (min (acm-backend-lsp-position-to-point (plist-get (plist-get text-edit :range) :start)) bound-start)
-                             bound-start))
-         (range-end-pos (if text-edit
-                            (acm-backend-lsp-position-to-point (plist-get (plist-get text-edit :range) :end))
-                          completion-start-pos))
-         (delete-end-pos (+ (point) (- range-end-pos completion-start-pos)))
-         (insert-candidate (or new-text insert-text label)))
+         (additional-text-edits (plist-get candidate-info :additionalTextEdits))
+         (snippet-fn (and (or (eql insert-text-format 2)
+                              (string= (plist-get candidate-info :icon) "snippet"))
+                          (acm-backend-lsp-snippet-expansion-fn)))
+         ;; Default, delete-bound is from menu popup postion to cursor postion.
+         (delete-start-pos bound-start)
+         (delete-end-pos (point)))
+
+    ;; Try to adjust delete-bound if `text-edit' is not nil.
+    (when text-edit
+      ;; Use smaller one between `bound-start' and `range-start' used as the starting point of delete.
+      (setq delete-start-pos (min (acm-backend-lsp-position-to-point (plist-get (plist-get text-edit :range) :start)) bound-start))
+
+      ;; Use bigger one between `point' and `range-end' used as the end point of delete.
+      (let* ((range-end (acm-backend-lsp-position-to-point (plist-get (plist-get text-edit :range) :end)))
+             (completion-start-pos (acm-backend-lsp-position-to-point acm-backend-lsp-completion-position)))
+        (when (> range-end completion-start-pos)
+          (setq delete-end-pos (+ (point) (- range-end completion-start-pos))))))
 
     ;; Move bound start position forward one character, if the following situation is satisfied:
     ;; 1. `textEdit' is not exist
@@ -162,12 +167,13 @@
     (delete-region delete-start-pos delete-end-pos)
 
     ;; Insert candidate or expand snippet.
-    (funcall (or snippet-fn #'insert) insert-candidate)
+    (funcall (or snippet-fn #'insert)
+             (or new-text insert-text label))
 
-    ;; Do `additionalTextEdits' if return auto-imprt information.
+    ;; Do `additional-text-edits' if return auto-imprt information.
     (when (and acm-backend-lsp-enable-auto-import
-               (cl-plusp (length additionalTextEdits)))
-      (acm-backend-lsp-apply-text-edits additionalTextEdits))))
+               (cl-plusp (length additional-text-edits)))
+      (acm-backend-lsp-apply-text-edits additional-text-edits))))
 
 (defun acm-backend-lsp-candidate-fetch-doc (candidate)
   (let* ((key (plist-get candidate :key))
