@@ -9,13 +9,18 @@
   :type 'integer)
 
 (defun acm-backend-tabnine-candidates (keyword)
+  (unless (or (and tabnine-capf-no-continue
+                   tabnine-capf--calling-continue)
+              tabnine-capf--disabled)
+    (tabnine-capf-query))
   (let* ((candidates (list))
          (test-completes '("test1" "test2" "test3"))
          (bounds (bounds-of-thing-at-point 'symbol))
          (thing (thing-at-point 'symbol))
          (tabcandidates (tabnine-capf--candidates thing)))
     ;; (debug)
-         (when (>= (length keyword) acm-backend-tabnine-min-length)
+    (setq-local tabnine-capf--begin-pos (or (car bounds) (point)))
+    (when (>= (length keyword) acm-backend-tabnine-min-length)
            (dolist (candidate tabcandidates)
              (let* ((com (concat "  "(get-text-property 0 'annotation candidate)))
                     (detail (concat "  "(get-text-property 0 'detail candidate))))
@@ -24,11 +29,27 @@
                                          :icon "tabnine"
                                          :label candidate
                                          :display-label candidate
-                                         :annotation com
+                                         :annotation "Tabnine"
                                          :backend "tabnine")
                        ))
            ))
     candidates))
+       ;; (let ((item (cl-find candidate (funcall get-candidates) :test #'string=)))
+       ;;   (tabnine-capf--post-completion item)
+;;   )
+;; (defun tabnine-capf--post-completion (candidate)
+;;   "Replace old suffix with new suffix for CANDIDATE."
+;;   )
+
+  ;; (if (acm-backend-search-words-is-elisp-mode)
+  ;;     (delete-region (car (bounds-of-thing-at-point 'symbol)) (point))
+  ;;   (delete-region
+  ;;    (save-excursion
+  ;;      (skip-syntax-backward "^ " (line-beginning-position))
+  ;;      (point))
+  ;;    (point)))
+  ;; (insert (plist-get candidate-info :label)))
+
 
 (defun test-tabnine ()
   (interactive)
@@ -36,27 +57,15 @@
   (message (format "%s" (acm-backend-tabnine-candidates "test"))))
 
 (defun acm-backend-tabnine-candidate-expand (candidate-info bound-start)
-  (let* ((keyword (acm-get-input-prefix))
-         (label (plist-get candidate-info :label)))
-    (delete-region bound-start (point))
-    (insert (acm-backend-tabnine-convert-candidate keyword label))
-    ))
-
-(defun acm-backend-tabnine-convert-candidate (input candidate)
-  (cond ((acm-backend-tabnine-upcase-string-p input)
-         (upcase candidate))
-        ((acm-backend-tabnine-capitalize-string-p input)
-         (capitalize candidate))
-        (t candidate)))
-
-(defun acm-backend-tabnine-upcase-string-p (str)
-  (let ((case-fold-search nil))
-    (and (> (length str) 1)
-         (string-match-p "\\`[A-Z]*\\'" str))))
-
-(defun acm-backend-tabnine-capitalize-string-p (str)
-  (let ((case-fold-search nil))
-    (string-match-p "\\`[A-Z][a-z]*\\'" str)))
-
+  (when tabnine-capf-auto-balance
+    (let ((old_suffix (get-text-property 0 'old_suffix candidate-info))
+          (new_suffix (get-text-property 0 'new_suffix candidate-info)))
+      (debug)
+      (delete-region (point)
+                     (min (+ (point) (length old_suffix))
+                          (point-max)))
+      (insert (plist-get candidate-info :label))))
+)
 (provide 'acm-backend-tabnine)
 ;;; acm-backend-tabnine.el ends here
+
