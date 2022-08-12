@@ -1029,6 +1029,8 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
       (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))))
 
 (defun lsp-bridge-file-apply-edits (filepath edits &optional just-reverse)
+  (if (string-match "^/[A-Za-z]:" filepath)
+      (setq filepath (substring filepath 1)))
   (find-file-noselect filepath)
   (save-excursion
     (find-file filepath)
