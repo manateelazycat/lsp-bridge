@@ -310,7 +310,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   :type 'string)
 
 (defcustom lsp-bridge-python-lsp-server "pyright"
-  "Default LSP server for Python language, you can choose `pyright' or `jedi'."
+  "Default LSP server for Python language, you can choose `pyright', `jedi', `python-ms'."
   :type 'string)
 
 (defcustom lsp-bridge-tex-lsp-server "texlab"
@@ -357,7 +357,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (d-mode . "serve-d")
     ((fortran-mode f90-mode) . "fortls")
     (nix-mode . "rnix-lsp")
-    (ess-r-mode . "rlanguageserver"))
+    (ess-r-mode . "rlanguageserver")
+    (graphql-mode . "graphql-lsp"))
   "The lang server rule for file mode."
   :type 'cons)
 

@@ -1,0 +1,6 @@
+{
+  "name": "graphql-lsp",
+  "languageId": "graphql",
+  "command": ["graphql-lsp", "server", "--method=stream"],
+  "settings": {}
+}

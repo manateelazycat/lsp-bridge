@@ -1,0 +1,6 @@
+{
+  "name": "python-ms",
+  "languageId": "python",
+  "command": ["Microsoft.Python.LanguageServer"],
+  "settings": {}
+}
