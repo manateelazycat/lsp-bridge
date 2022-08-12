@@ -167,6 +167,8 @@ class LspServerReceiver(Thread):
                         buffer = buffer[content_length:]
                         content_length = None
                         self.emit_message(msg.decode("utf-8"))
+                if self.process.stderr:
+                    logger.info(self.process.stderr.read())
             logger.info("\n--- Lsp server exited, exit code: {}".format(self.process.returncode))
             logger.info(self.process.stdout.read())    # type: ignore
             if self.process.stderr:
