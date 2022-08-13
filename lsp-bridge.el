@@ -246,6 +246,7 @@ Start discarding off end if gets this big."
                (lsp-bridge-epc-define-method mngr 'get-single-lang-server 'lsp-bridge--get-single-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-version 'emacs-version)
                (lsp-bridge-epc-define-method mngr 'is-snippet-support 'acm-backend-lsp-snippet-expansion-fn)
+               (lsp-bridge-epc-define-method mngr 'get-buffer-content 'lsp-bridge--get-buffer-content-func)
                ))))
     (if lsp-bridge-server
         (setq lsp-bridge-server-port (process-contact lsp-bridge-server :service))
@@ -524,6 +525,14 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
         ;; Step 3: search lang server base on mode rule provide by `lsp-bridge-single-lang-server-extension-list'.
         (lsp-bridge--with-file-buffer filepath
           (lsp-bridge-get-single-lang-server-by-mode))))))
+
+
+(defun lsp-bridge--get-buffer-content-func (buffer-name)
+  "Get buffer content for lsp. BUFFER-NAME is name eval from (buffer-name)."
+  (let* ((buf (get-buffer buffer-name)))
+    (if buf
+      (with-current-buffer buf
+        (buffer-substring-no-properties (point-min) (point-max))))))
 
 (defun lsp-bridge-get-multi-lang-server-by-extension (filepath)
   "Get lang server for file extension."
@@ -912,6 +921,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
                             (lsp-bridge--position)
                             (acm-char-before)
                             (lsp-bridge-completion-ui-visible-p)
+                            (buffer-name)
                             )
 
   ;; Send change file to search-words backend.

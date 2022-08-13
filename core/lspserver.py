@@ -201,6 +201,7 @@ class LspServer:
             "refactor.rewrite",
             "source",
             "source.organizeImports"]
+        self.text_document_sync = 2 # refer TextDocumentSyncKind. Can be None = 0, Full = 1 or Incremental = 2
 
         # Start LSP server.
         self.lsp_subprocess = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
@@ -373,20 +374,22 @@ class LspServer:
                 }
             ]
         })
-        
-    def send_whole_change_notification(self, filepath, version):
-        with open(filepath, encoding="utf-8") as f:
-            self.sender.send_notification("textDocument/didChange", {
-                "textDocument": {
-                    "uri": path_to_uri(filepath),
-                    "version": version
-                }, 
-                "contentChanges": [
-                    {
-                        "text": f.read()
-                    }
-                ]
-            })
+
+    def send_whole_change_notification(self, filepath, version, file_content=None):
+        if not file_content:
+            with open(filepath, encoding="utf-8") as f:
+                file_content = f.read()
+        self.sender.send_notification("textDocument/didChange", {
+            "textDocument": {
+                "uri": path_to_uri(filepath),
+                "version": version
+            },
+            "contentChanges": [
+                {
+                    "text": file_content
+                }
+            ]
+        })
 
     def record_request_id(self, request_id: int, handler: Handler):
         self.request_dict[request_id] = handler
@@ -501,7 +504,16 @@ class LspServer:
                     self.signature_help_provider = message["result"]["capabilities"]["signatureHelpProvider"]
                 except Exception:
                     pass
-                
+
+                try:
+                    text_document_sync = message["result"]["capabilities"]["textDocumentSync"]
+                    if type(text_document_sync) is int:
+                        self.text_document_sync = text_document_sync
+                    elif type(text_document_sync) is dict:
+                        self.text_document_sync = text_document_sync["change"]
+                except Exception:
+                    pass
+
                 self.sender.send_notification("initialized", {}, init=True)
 
                 # STEP 3: Configure LSP server parameters.
