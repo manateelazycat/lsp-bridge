@@ -121,10 +121,18 @@ class FileAction:
         else:
             self.send_server_request(method_server, method, *args, **kwargs) 
             
-    def change_file(self, start, end, range_length, change_text, position, before_char, completion_visible):
+    def change_file(self, start, end, range_length, change_text, position, before_char, completion_visible, buffer_name):
+        buffer_content = ''
         # Send didChange request to LSP server.
         for lsp_server in self.get_lsp_servers():
-            lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
+            if lsp_server.text_document_sync == 0:
+                continue
+            elif lsp_server.text_document_sync == 1:
+                if not buffer_content:
+                    buffer_content = get_emacs_func_result('get-buffer-content', buffer_name)
+                lsp_server.send_whole_change_notification(self.filepath, self.version, buffer_content)
+            else:
+                lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
 
         self.version += 1
 
@@ -139,10 +147,12 @@ class FileAction:
         self.try_completion_timer = threading.Timer(0.1, lambda : self.try_completion(position, before_char, completion_visible))
         self.try_completion_timer.start()
         
-    def update_file(self):
+    def update_file(self, buffer_name=None):
+        if buffer_name:
+            buffer_content = get_emacs_func_result('get-buffer-content', buffer_name)
         for lsp_server in self.get_lsp_servers():
-            lsp_server.send_whole_change_notification(self.filepath, self.version)
-            
+            lsp_server.send_whole_change_notification(self.filepath, self.version, buffer_content)
+
         self.version += 1
 
     def try_completion(self, position, before_char, completion_visible):
