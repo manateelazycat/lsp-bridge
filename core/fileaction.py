@@ -122,13 +122,14 @@ class FileAction:
             self.send_server_request(method_server, method, *args, **kwargs) 
             
     def change_file(self, start, end, range_length, change_text, position, before_char, completion_visible, buffer_name):
-
+        buffer_content = ''
         # Send didChange request to LSP server.
         for lsp_server in self.get_lsp_servers():
             if lsp_server.text_document_sync == 0:
                 continue
             elif lsp_server.text_document_sync == 1:
-                buffer_content = get_emacs_func_result('get-buffer-content', buffer_name)
+                if not buffer_content:
+                    buffer_content = get_emacs_func_result('get-buffer-content', buffer_name)
                 lsp_server.send_whole_change_notification(self.filepath, self.version, buffer_content)
             else:
                 lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
