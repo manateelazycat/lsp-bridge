@@ -167,6 +167,8 @@ class LspServerReceiver(Thread):
                         buffer = buffer[content_length:]
                         content_length = None
                         self.emit_message(msg.decode("utf-8"))
+                if self.process.stderr:
+                    logger.info(self.process.stderr.read())
             logger.info("\n--- Lsp server exited, exit code: {}".format(self.process.returncode))
             logger.info(self.process.stdout.read())    # type: ignore
             if self.process.stderr:
@@ -397,11 +399,11 @@ class LspServer:
 
     def get_server_workspace_change_configuration(self):
         return {
-            "settings": self.server_info["settings"]
+            "settings": self.server_info.get("settings", {})
         }
 
     def handle_workspace_configuration_request(self, name, request_id, params):
-        settings = self.server_info.get("settings", {})            
+        settings = self.server_info.get("settings", {})
         
         # We send empty message back to server if nothing in 'settings' of server.json file.
         if len(settings) == 0:

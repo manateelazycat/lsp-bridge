@@ -153,6 +153,8 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 33 | [rnix-lsp](https://github.com/nix-community/rnix-lsp) | nix | |
 | 34 | [digestif](https://github.com/astoff/digestif) | latex | `lsp-bridge-tex-lsp-server` 设置成 `digestif` |
 | 35 | [rlanguageserver](https://github.com/REditorSupport/languageserver)       | R   | |
+| 36 | [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli) | GraphQL | |
+| 37 | [microsoft-python-language-server](https://github.com/microsoft/python-language-server) | Python | 支持Python2的lsp |
 
 ### 不会支持的特性：
 lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是实现LSP协议最全的LSP客户端。
