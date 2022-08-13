@@ -128,8 +128,8 @@ class FileAction:
             if lsp_server.text_document_sync == 0:
                 continue
             elif lsp_server.text_document_sync == 1:
-                file_content = get_emacs_func_result('get-buffer-content', buffer_name)
-                lsp_server.send_whole_change_notification(self.filepath, self.version, file_content)
+                buffer_content = get_emacs_func_result('get-buffer-content', buffer_name)
+                lsp_server.send_whole_change_notification(self.filepath, self.version, buffer_content)
             else:
                 lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
 
