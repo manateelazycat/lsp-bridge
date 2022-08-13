@@ -322,7 +322,7 @@ class LspServer:
         return uri
 
     def send_did_open_notification(self, filepath, external_file_link=None):
-        with open(filepath, encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8", errors="ignore") as f:
             self.sender.send_notification("textDocument/didOpen", {
                 "textDocument": {
                     "uri": self.parse_document_uri(filepath, external_file_link),
@@ -377,7 +377,7 @@ class LspServer:
 
     def send_whole_change_notification(self, filepath, version, file_content=None):
         if not file_content:
-            with open(filepath, encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8", errors="ignore") as f:
                 file_content = f.read()
         self.sender.send_notification("textDocument/didChange", {
             "textDocument": {

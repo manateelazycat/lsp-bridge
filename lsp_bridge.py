@@ -153,7 +153,7 @@ class LspBridge:
             multi_lang_server_dir = Path(__file__).resolve().parent / "multiserver"
             multi_lang_server_path = multi_lang_server_dir / "{}.json".format(multi_lang_server)
             
-            with open(multi_lang_server_path, encoding="utf-8") as f:
+            with open(multi_lang_server_path, encoding="utf-8", errors="ignore") as f:
                 multi_lang_server_info = json.load(f)
                 servers = self.pick_multi_server_names(multi_lang_server_info)
                 
@@ -162,7 +162,7 @@ class LspBridge:
                 for server_name in servers:
                     server_path = get_lang_server_path(server_name)
                     
-                    with open(server_path, encoding="utf-8") as server_path_file:
+                    with open(server_path, encoding="utf-8", errors="ignore") as server_path_file:
                         lang_server_info = json.load(server_path_file)
                         lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info)
                         if lsp_server:
@@ -305,7 +305,7 @@ def load_single_server_info(lang_server):
         # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
         lang_server_info_path = get_lang_server_path(lang_server)
 
-    with open(lang_server_info_path, encoding="utf-8") as f:
+    with open(lang_server_info_path, encoding="utf-8", errors="ignore") as f:
         return json.load(f)
     
 def get_lang_server_path(server_name):
