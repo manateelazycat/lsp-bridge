@@ -1440,7 +1440,7 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
     ;; Apply code format edits, not sort, just reverse order.
     (lsp-bridge-file-apply-edits filepath edits t)
     ;; Make LSP server update full content.
-    (lsp-bridge-call-file-api "update_file" (buffer-name)))
+    (lsp-bridge-call-file-api "update_file" (buffer-name))
     ;; Notify format complete.
     (message "[LSP-BRIDGE] Complete code formatting.")
     ))
