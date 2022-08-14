@@ -356,6 +356,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     lua-mode-hook
     rust-mode-hook
     rustic-mode-hook
+    erlang-mode-hook
     elixir-mode-hook
     go-mode-hook
     haskell-mode-hook
