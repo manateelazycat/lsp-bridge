@@ -11,8 +11,8 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 ## Installation
 
 1. Install Emacs 28 and above versions
-2. Install Python dependencies: 
-+ [python-epc](https://github.com/tkf/python-pc)
+2. Install Python dependencies:
++ [python-epc](https://github.com/tkf/python-epc)
 + [orjson](https://github.com/ijl/orjson)
 3. Install Elisp dependencies:
 + [posframe](https://github.com/tumashu/posframe)
