@@ -330,6 +330,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defcustom lsp-bridge-single-lang-server-mode-list
   '(
     ((c-mode c++-mode objc-mode) . lsp-bridge-c-lsp-server)
+    (cmake-mode . "cmake-language-server")
     (java-mode . "jdtls")
     (python-mode . lsp-bridge-python-lsp-server)
     (ruby-mode . "solargraph")
@@ -366,6 +367,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defcustom lsp-bridge-default-mode-hooks
   '(c-mode-hook
     c++-mode-hook
+    cmake-mode-hook
     java-mode-hook
     python-mode-hook
     ruby-mode-hook

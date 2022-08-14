@@ -1,0 +1,8 @@
+{
+  "name": "cmake-language-server",
+  "languageId": "cmake",
+  "command": [
+    "cmake-language-server"
+  ],
+  "settings": {}
+}
