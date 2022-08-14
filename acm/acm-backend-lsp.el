@@ -173,7 +173,7 @@
     ;; Do `additional-text-edits' if return auto-imprt information.
     (when (and acm-backend-lsp-enable-auto-import
                (cl-plusp (length additional-text-edits)))
-      (acm-backend-lsp-apply-text-edits additional-text-edits))))
+      (acm-backend-lsp-apply-text-edits additional-text-edits nil))))
 
 (defun acm-backend-lsp-candidate-fetch-doc (candidate)
   (let* ((key (plist-get candidate :key))
