@@ -155,6 +155,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 35 | [rlanguageserver](https://github.com/REditorSupport/languageserver)       | R   | |
 | 36 | [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli) | GraphQL | |
 | 37 | [microsoft-python-language-server](https://github.com/microsoft/python-language-server) | Python | 支持Python2的lsp |
+| 38 | [cmake-language-server](https://github.com/regen100/cmake-language-server) | cmake | `pip install cmake-language-server` |
 
 ### 不会支持的特性：
 lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是实现LSP协议最全的LSP客户端。
