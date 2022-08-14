@@ -156,6 +156,7 @@ You need to install the LSP server corresponding to each programming language, t
 | 35 | [rlanguageserver](https://github.com/REditorSupport/languageserver)       | R   | |
 | 36 | [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli) | GraphQL | |
 | 37 | [microsoft-python-language-server](https://github.com/microsoft/python-language-server) | Python | legacy language server for Python2 |
+| 38 | [cmake-language-server](https://github.com/regen100/cmake-language-server) | cmake | `pip install cmake-language-server` |
 
 ### Features that won't be supported
 
