@@ -128,7 +128,7 @@ You need to install the LSP server corresponding to each programming language, t
 | 7 | [hls](https://github.com/haskell/haskell-language-server) | haskell | |
 | 8 | [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) | dart | |
 | 9 | [metals](https://scalameta.org/metals/) | scala | |
-| 10 | [typescript](https://www.npmjs.com/package/typescript) | typescript, javascript | |
+| 10 | [typescript](https://github.com/typescript-language-server/typescript-language-server) | typescript, javascript | |
 | 11 | [ocamllsp](https://github.com/ocaml/ocaml-lsp) | ocaml | |
 | 12 | [erlang-ls](https://github.com/erlang-ls/erlang_ls) | erlang | |
 | 13 | [texlab](https://github.com/latex-lsp/texlab) | latex | |

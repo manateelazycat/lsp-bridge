@@ -11,7 +11,7 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 ## 安装
 
 1. 安装Emacs 28及以上版本
-2. 安装Python依赖: 
+2. 安装Python依赖:
 + [python-epc](https://github.com/tkf/python-epc)
 + [orjson](https://github.com/ijl/orjson)
 3. 安装Elisp依赖:
@@ -127,7 +127,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 7 | [hls](https://github.com/haskell/haskell-language-server) | haskell | |
 | 8 | [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) | dart | |
 | 9 | [metals](https://scalameta.org/metals/) | scala | |
-| 10 | [typescript](https://www.npmjs.com/package/typescript) | typescript, javascript | |
+| 10 | [typescript](https://github.com/typescript-language-server/typescript-language-server) | typescript, javascript | |
 | 11 | [ocamllsp](https://github.com/ocaml/ocaml-lsp) | ocaml | |
 | 12 | [erlang-ls](https://github.com/erlang-ls/erlang_ls) | erlang | |
 | 13 | [texlab](https://github.com/latex-lsp/texlab) | latex | |
