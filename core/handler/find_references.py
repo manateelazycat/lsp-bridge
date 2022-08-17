@@ -35,7 +35,7 @@ class FindReferences(Handler):
                 references_content += "\n" + REFERENCE_PATH + path + REFERENCE_ENDC + "\n"
 
                 for rg in ranges:
-                    with open(path, encoding="utf-8") as f:
+                    with open(path, encoding="utf-8", errors="ignore") as f:
                         line = rg["start"]["line"]
                         start_column = rg["start"]["character"]
                         end_column = rg["end"]["character"]

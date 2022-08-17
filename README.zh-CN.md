@@ -10,8 +10,10 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 
 ## 安装
 
-1. 安装Python依赖: [python-epc](https://github.com/tkf/python-epc)
-2. 安装[orjson](https://github.com/ijl/orjson) (可选， 依赖Rust)， JSON解析性能会提升150%~200%
+1. 安装Emacs 28及以上版本
+2. 安装Python依赖:
++ [python-epc](https://github.com/tkf/python-epc)
++ [orjson](https://github.com/ijl/orjson)
 3. 安装Elisp依赖:
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
@@ -125,12 +127,12 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 7 | [hls](https://github.com/haskell/haskell-language-server) | haskell | |
 | 8 | [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) | dart | |
 | 9 | [metals](https://scalameta.org/metals/) | scala | |
-| 10 | [typescript](https://www.npmjs.com/package/typescript) | typescript, javascript | |
+| 10 | [typescript](https://github.com/typescript-language-server/typescript-language-server) | typescript, javascript | |
 | 11 | [ocamllsp](https://github.com/ocaml/ocaml-lsp) | ocaml | |
 | 12 | [erlang-ls](https://github.com/erlang-ls/erlang_ls) | erlang | |
 | 13 | [texlab](https://github.com/latex-lsp/texlab) | latex | |
 | 14 | [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls) | java | 请确保导出 `org.eclipse.jdt.ls.product/target/repository/bin` 到你系统的PATH路径 |
-| 15 | [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp) | clojure | |
+| 15 | [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp) | clojure | 如果使用 `homebrew` 安装的，请确保安装的是 `clojure-lsp/brew/clojure-lsp-native` [clojure-lsp-native](https://clojure-lsp.io/installation/#homebrew-macos-and-linux) |
 | 16 | [bash-language-server](https://github.com/bash-lsp/bash-language-server) | bash | |
 | 17 | [volar](https://github.com/johnsoncodehk/volar) | vue | |
 | 18 | [sumneko](https://github.com/sumneko/lua-language-server) | lua | 请确保导出sumneko的 `bin` 目录到你系统的PATH路径 |
@@ -151,6 +153,9 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 33 | [rnix-lsp](https://github.com/nix-community/rnix-lsp) | nix | |
 | 34 | [digestif](https://github.com/astoff/digestif) | latex | `lsp-bridge-tex-lsp-server` 设置成 `digestif` |
 | 35 | [rlanguageserver](https://github.com/REditorSupport/languageserver)       | R   | |
+| 36 | [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli) | GraphQL | |
+| 37 | [microsoft-python-language-server](https://github.com/microsoft/python-language-server) | Python | 支持Python2的lsp |
+| 38 | [cmake-language-server](https://github.com/regen100/cmake-language-server) | cmake | `pip install cmake-language-server` |
 
 ### 不会支持的特性：
 lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是实现LSP协议最全的LSP客户端。

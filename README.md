@@ -10,8 +10,10 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 
 ## Installation
 
-1. Install Python dependencies: [python-epc](https://github.com/tkf/python-epc)
-2. Installing [orjson](https://github.com/ijl/orjson) (optional, dependent Rust), JSON's analysis performance will increase 150% ~ 200%
+1. Install Emacs 28 and above versions
+2. Install Python dependencies:
++ [python-epc](https://github.com/tkf/python-epc)
++ [orjson](https://github.com/ijl/orjson)
 3. Install Elisp dependencies:
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
@@ -126,12 +128,12 @@ You need to install the LSP server corresponding to each programming language, t
 | 7 | [hls](https://github.com/haskell/haskell-language-server) | haskell | |
 | 8 | [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) | dart | |
 | 9 | [metals](https://scalameta.org/metals/) | scala | |
-| 10 | [typescript](https://www.npmjs.com/package/typescript) | typescript, javascript | |
+| 10 | [typescript](https://github.com/typescript-language-server/typescript-language-server) | typescript, javascript | |
 | 11 | [ocamllsp](https://github.com/ocaml/ocaml-lsp) | ocaml | |
 | 12 | [erlang-ls](https://github.com/erlang-ls/erlang_ls) | erlang | |
 | 13 | [texlab](https://github.com/latex-lsp/texlab) | latex | |
 | 14 | [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls) | java | please ensure that `org.eclipse.jdt.ls.product/target/repository/bin` is in your system PATH at first |
-| 15 | [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp) | clojure | |
+| 15 | [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp) | clojure | if you use `homebrew` , please ensure install `clojure-lsp/brew/clojure-lsp-native` [clojure-lsp-native](https://clojure-lsp.io/installation/#homebrew-macos-and-linux) |
 | 16 | [bash-language-server](https://github.com/bash-lsp/bash-language-server) | bash | |
 | 17 | [volar](https://github.com/johnsoncodehk/volar) | vue | |
 | 18 | [sumneko](https://github.com/sumneko/lua-language-server) | lua | please ensure `bin` under sumneko installation is in your system PATH at first |
@@ -152,6 +154,9 @@ You need to install the LSP server corresponding to each programming language, t
 | 33 | [rnix-lsp](https://github.com/nix-community/rnix-lsp) | nix | |
 | 34 | [digestif](https://github.com/astoff/digestif) | latex | `lsp-bridge-tex-lsp-server` set to `digestif` |
 | 35 | [rlanguageserver](https://github.com/REditorSupport/languageserver)       | R   | |
+| 36 | [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli) | GraphQL | |
+| 37 | [microsoft-python-language-server](https://github.com/microsoft/python-language-server) | Python | legacy language server for Python2 |
+| 38 | [cmake-language-server](https://github.com/regen100/cmake-language-server) | cmake | `pip install cmake-language-server` |
 
 ### Features that won't be supported
 
