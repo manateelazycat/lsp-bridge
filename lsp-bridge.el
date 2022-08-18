@@ -130,7 +130,8 @@ Setting this to nil or 0 will turn off the indicator."
 
 (defcustom lsp-bridge-completion-stop-commands
   '("undo-tree-undo" "undo-tree-redo"
-    "kill-region" "delete-block-backward")
+    "kill-region" "delete-block-backward"
+    "python-black-buffer")
   "If last command is match this option, stop popup completion ui."
   :type 'cons
   :group 'lsp-bridge)
