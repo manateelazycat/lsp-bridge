@@ -1474,9 +1474,13 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
                                menu-items)))))
 
     (let* ((command (plist-get action :command))
-           (edit (plist-get action :edit)))
+           (edit (plist-get action :edit))
+           (arguments (plist-get action :arguments)))
       (cond (edit
              (lsp-bridge-workspace-apply-edit edit))
+            (arguments
+             (dolist (argument arguments)
+               (lsp-bridge-workspace-apply-edit argument)))
             (command
              (let (arguments)
                ;; Pick command and arguments.
