@@ -17,10 +17,12 @@ class SignatureHelp(Handler):
                 parameters = response["signatures"][response.get("activeSignature", 0)]["parameters"]
                 
                 arguments = []
-                for parameter in parameters:
+                active_argument_index = response.get("activeParameter", 0)
+                for index, parameter in enumerate(parameters):
                     label = parameter["label"]
                     if isinstance(label, str): # most lsp server return string
-                        arguments.append(label.split(":")[0])
+                        argument = label if index == active_argument_index else label.split(":")[0]
+                        arguments.append(argument)
                     elif isinstance(label, list) and len(label) == 2: # ccls return list
                         signatures_label = response["signatures"][0]["label"]
                         arguments.append(signatures_label[label[0]:label[1]])
