@@ -50,7 +50,6 @@
   ;;    (point)))
   ;; (insert (plist-get candidate-info :label)))
 
-
 (defun test-tabnine ()
   (interactive)
   (message "show tabnine")
@@ -58,14 +57,11 @@
 
 (defun acm-backend-tabnine-candidate-expand (candidate-info bound-start)
   (when tabnine-capf-auto-balance
-    (let ((old_suffix (get-text-property 0 'old_suffix candidate-info))
-          (new_suffix (get-text-property 0 'new_suffix candidate-info)))
-      (debug)
-      (delete-region (point)
-                     (min (+ (point) (length old_suffix))
-                          (point-max)))
-      (insert (plist-get candidate-info :label))))
+    (let ((label (plist-get candidate-info :label)))
+      (delete-region bound-start (point))
+      (insert label)))
 )
 (provide 'acm-backend-tabnine)
 ;;; acm-backend-tabnine.el ends here
+
 
