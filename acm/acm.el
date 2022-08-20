@@ -728,7 +728,7 @@ influence of C1 on the result."
          (offset-x (* (window-font-width) acm-icon-width))
          (offset-y (line-pixel-height))
          (acm-frame-x (if (> (+ cursor-x acm-frame-width) emacs-width)
-                          (- cursor-x acm-frame-width)
+                          (max  (- cursor-x acm-frame-width) offset-x)
                         (max (- cursor-x offset-x) 0)))
          (acm-frame-y (if (> (+ cursor-y acm-frame-height) emacs-height)
                           (- cursor-y acm-frame-height)
