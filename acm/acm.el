@@ -637,6 +637,14 @@ influence of C1 on the result."
   ;; Hide menu and doc frame after complete candidate.
   (acm-hide))
 
+(defun acm-complete-or-expand-yas-snippet ()
+  "Do complete or expand yasnippet, you need binding this funtion to `<tab>' in `yas-keymap'."
+  (interactive)
+  (if (and (boundp 'acm-frame)
+           (acm-frame-visible-p acm-frame))
+      (acm-complete)
+    (yas-next-field-or-maybe-expand)))
+
 (defun acm-insert-common ()
   "Insert common prefix of menu."
   (interactive)
