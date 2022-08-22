@@ -147,9 +147,8 @@ class FileAction:
         self.try_completion_timer = threading.Timer(0.1, lambda : self.try_completion(position, before_char, completion_visible))
         self.try_completion_timer.start()
         
-    def update_file(self, buffer_name=None):
-        if buffer_name:
-            buffer_content = get_emacs_func_result('get-buffer-content', buffer_name)
+    def update_file(self, buffer_name):
+        buffer_content = get_emacs_func_result('get-buffer-content', buffer_name)
         for lsp_server in self.get_lsp_servers():
             lsp_server.send_whole_change_notification(self.filepath, self.version, buffer_content)
 
