@@ -130,7 +130,8 @@ Setting this to nil or 0 will turn off the indicator."
 
 (defcustom lsp-bridge-completion-stop-commands
   '("undo-tree-undo" "undo-tree-redo"
-    "kill-region" "delete-block-backward")
+    "kill-region" "delete-block-backward"
+    "python-black-buffer" "acm-complete-or-expand-yas-snippet")
   "If last command is match this option, stop popup completion ui."
   :type 'cons
   :group 'lsp-bridge)
@@ -1474,9 +1475,13 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
                                menu-items)))))
 
     (let* ((command (plist-get action :command))
-           (edit (plist-get action :edit)))
+           (edit (plist-get action :edit))
+           (arguments (plist-get action :arguments)))
       (cond (edit
              (lsp-bridge-workspace-apply-edit edit))
+            (arguments
+             (dolist (argument arguments)
+               (lsp-bridge-workspace-apply-edit argument)))
             (command
              (let (arguments)
                ;; Pick command and arguments.

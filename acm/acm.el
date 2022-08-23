@@ -412,6 +412,7 @@ influence of C1 on the result."
                                 (backward-char (length keyword))
                                 (acm-char-before)))
          (candidates (list))
+         lsp-candidates
          path-candidates
          yas-candidates
          tabnine-candidates
@@ -433,17 +434,21 @@ influence of C1 on the result."
           (setq candidates path-candidates)
 
         ;; Fetch syntax completion candidates.
+        (setq lsp-candidates (acm-backend-lsp-candidates keyword))
         (setq mode-candidates (append
                                (acm-backend-elisp-candidates keyword)
-                               (acm-backend-lsp-candidates keyword)
+                               lsp-candidates
                                (acm-backend-search-words-candidates keyword)
-			       (acm-backend-telega-candidates keyword)))
+                               (acm-backend-telega-candidates keyword)))
 
-        ;; Don't search snippet if char before keyword is not in `acm-backend-lsp-completion-trigger-characters'.
-        (when (and (boundp 'acm-backend-lsp-completion-trigger-characters))
-          (unless (member char-before-keyword acm-backend-lsp-completion-trigger-characters)
-            (setq yas-candidates (acm-backend-yas-candidates keyword))
-            (setq tempel-candidates (acm-backend-tempel-candidates keyword))))
+        (when (or
+               ;; Show snippet candidates if lsp-candidates length is zero.
+               (zerop (length lsp-candidates))
+               ;; Don't search snippet if char before keyword is not in `acm-backend-lsp-completion-trigger-characters'.
+               (and (boundp 'acm-backend-lsp-completion-trigger-characters)
+                    (not (member char-before-keyword acm-backend-lsp-completion-trigger-characters))))
+          (setq yas-candidates (acm-backend-yas-candidates keyword))
+          (setq tempel-candidates (acm-backend-tempel-candidates keyword)))
 
         ;; Insert snippet candidates in first page of menu.
         (setq candidates
@@ -637,6 +642,14 @@ influence of C1 on the result."
   ;; Hide menu and doc frame after complete candidate.
   (acm-hide))
 
+(defun acm-complete-or-expand-yas-snippet ()
+  "Do complete or expand yasnippet, you need binding this funtion to `<tab>' in `yas-keymap'."
+  (interactive)
+  (if (and (boundp 'acm-frame)
+           (acm-frame-visible-p acm-frame))
+      (acm-complete)
+    (yas-next-field-or-maybe-expand)))
+
 (defun acm-insert-common ()
   "Insert common prefix of menu."
   (interactive)
@@ -733,7 +746,7 @@ influence of C1 on the result."
          (offset-x (* (window-font-width) acm-icon-width))
          (offset-y (line-pixel-height))
          (acm-frame-x (if (> (+ cursor-x acm-frame-width) emacs-width)
-                          (- cursor-x acm-frame-width)
+                          (max  (- cursor-x acm-frame-width) offset-x)
                         (max (- cursor-x offset-x) 0)))
          (acm-frame-y (if (> (+ cursor-y acm-frame-height) emacs-height)
                           (- cursor-y acm-frame-height)
@@ -929,8 +942,8 @@ influence of C1 on the result."
 
 ;; Emacs 28: Do not show Acm commands with M-X
 (dolist (sym '(acm-hide acm-complete acm-select-first acm-select-last acm-select-next
-               acm-select-prev acm-insert-common acm-doc-scroll-up acm-doc-scroll-down
-               acm-complete-quick-access acm-doc-toggle))
+                        acm-select-prev acm-insert-common acm-doc-scroll-up acm-doc-scroll-down
+                        acm-complete-quick-access acm-doc-toggle))
   (put sym 'completion-predicate #'ignore))
 
 (provide 'acm)

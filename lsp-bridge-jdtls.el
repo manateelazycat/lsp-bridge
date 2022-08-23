@@ -2,6 +2,8 @@
 ;;; Commentary:
 ;;; Code:
 
+(require 'json)
+
 (defconst lsp-bridge-jdtls-workspace-file-name "jdtls.json")
 
 (defcustom lsp-bridge-jdtls-worksapce

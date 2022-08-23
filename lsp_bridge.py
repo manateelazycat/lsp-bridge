@@ -174,19 +174,21 @@ class LspBridge:
         else:
             single_lang_server = get_emacs_func_result("get-single-lang-server", project_path, filepath)
             
-            if (single_lang_server == "clojure-lsp") and (not os.path.isdir(project_path)):
-                message_emacs("ERROR: can't determine the project root for {}, initialize a Git repository for the project before you open this file.".format(filepath))
-                eval_in_emacs("lsp-bridge-turn-off", filepath)
-            
-                return False
-            
             if not single_lang_server:
-                message_emacs("ERROR: can't find the corresponding server for {}, disable lsp-bridge-mode.".format(filepath))
-                eval_in_emacs("lsp-bridge-turn-off", filepath)
+                self.turn_off(filepath, "ERROR: can't find the corresponding server for {}, disable lsp-bridge-mode.".format(filepath))
             
                 return False
             
             lang_server_info = load_single_server_info(single_lang_server)
+            if ((not os.path.isdir(project_path)) and
+                "support-single-file" in lang_server_info and
+                lang_server_info["support-single-file"] == False):
+                self.turn_off(
+                    filepath,
+                    "ERROR: {} not support single-file, put this file in a git repository to enable lsp-bridge-mode.".format(single_lang_server))
+            
+                return False
+            
             lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info)
             
             if lsp_server:
@@ -196,6 +198,10 @@ class LspBridge:
         
         return True
     
+    def turn_off(self, filepath, message):
+        message_emacs(message)
+        eval_in_emacs("lsp-bridge-turn-off", filepath)
+    
     def create_lsp_server(self, filepath, project_path, lang_server_info):
         if len(lang_server_info["command"]) > 0:
             server_command = lang_server_info["command"][0]
@@ -204,13 +210,11 @@ class LspBridge:
                 # We always replace LSP server command with absolute path of 'which' command.
                 lang_server_info["command"][0] = server_command_path
             else:
-                message_emacs("Error: can't find LSP server '{}' for {}, disable lsp-bridge-mode.".format(server_command, filepath))
-                eval_in_emacs("lsp-bridge-turn-off", filepath)
+                self.turn_off(filepath, "Error: can't find LSP server '{}' for {}, disable lsp-bridge-mode.".format(server_command, filepath))
         
                 return False
         else:
-            message_emacs("Error: {}'s command argument is empty, disable lsp-bridge-mode.".format(filepath))
-            eval_in_emacs("lsp-bridge-turn-off", filepath)
+            self.turn_off(filepath, "Error: {}'s command argument is empty, disable lsp-bridge-mode.".format(filepath))
         
             return False
         
