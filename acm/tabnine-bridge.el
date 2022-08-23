@@ -62,34 +62,34 @@
 ;; Constants
 ;;
 
-(defconst tabnine-capf--process-name "tabnine-capf--process")
-(defconst tabnine-capf--buffer-name "*tabnine-capf-log*")
-(defconst tabnine-capf--hooks-alist nil)
-(defconst tabnine-capf--protocol-version "1.0.14")
+(defconst tabnine-bridge--process-name "tabnine-bridge--process")
+(defconst tabnine-bridge--buffer-name "*tabnine-bridge-log*")
+(defconst tabnine-bridge--hooks-alist nil)
+(defconst tabnine-bridge--protocol-version "1.0.14")
 
-;; tmp file put in tabnine-capf-binaries-folder directory
-(defconst tabnine-capf--version-tempfile "version")
+;; tmp file put in tabnine-bridge-binaries-folder directory
+(defconst tabnine-bridge--version-tempfile "version")
 
 ;; current don't know how to use Prefetch and GetIdentifierRegex
-(defconst tabnine-capf--method-autocomplete "Autocomplete")
-(defconst tabnine-capf--method-prefetch "Prefetch")
-(defconst tabnine-capf--method-getidentifierregex "GetIdentifierRegex")
+(defconst tabnine-bridge--method-autocomplete "Autocomplete")
+(defconst tabnine-bridge--method-prefetch "Prefetch")
+(defconst tabnine-bridge--method-getidentifierregex "GetIdentifierRegex")
 
 ;;
 ;; Macros
 ;;
 
-(defmacro tabnine-capf-with-disabled (&rest body)
-  "Run BODY with `tabnine-capf' temporarily disabled.
+(defmacro tabnine-bridge-with-disabled (&rest body)
+  "Run BODY with `tabnine-bridge' temporarily disabled.
 Useful when binding keys to temporarily query other completion backends."
-  `(let ((tabnine-capf--disabled t))
+  `(let ((tabnine-bridge--disabled t))
      ,@body))
 
-(defmacro tabnine-capf--with-destructured-candidate
+(defmacro tabnine-bridge--with-destructured-candidate
     (candidate &rest body)
   (declare (indent 1) (debug t))
   `(let-alist ,candidate
-     (setq type (tabnine-capf--kind-to-type .kind))
+     (setq type (tabnine-bridge--kind-to-type .kind))
      (propertize
       .new_prefix
       'old_suffix .old_suffix
@@ -101,11 +101,11 @@ Useful when binding keys to temporarily query other completion backends."
       (concat (or .detail "") " " (or type "")))
      ,@body))
 
-(defun tabnine-capf--filename-completer-p (extra-info)
+(defun tabnine-bridge--filename-completer-p (extra-info)
   "Check whether candidate's EXTRA-INFO indicates a filename completion."
   (-contains? '("[File]" "[Dir]" "[File&Dir]") extra-info))
 
-(defun tabnine-capf--identifier-completer-p (extra-info)
+(defun tabnine-bridge--identifier-completer-p (extra-info)
   "Check if candidate's EXTRA-INFO indicates a identifier completion."
   (s-equals? "[ID]" extra-info))
 
@@ -113,103 +113,103 @@ Useful when binding keys to temporarily query other completion backends."
 ;; Customization
 ;;
 
-(defgroup tabnine-capf nil
-  "Options for tabnine-capf."
+(defgroup tabnine-bridge nil
+  "Options for tabnine-bridge."
   :link '(url-link :tag "Github" "https://github.com/50ways2sayhard/tabnine-capf")
   :group 'company
-  :prefix "tabnine-capf-")
+  :prefix "tabnine-bridge-")
 
-(defcustom tabnine-capf-max-num-results 10
+(defcustom tabnine-bridge-max-num-results 10
   "Maximum number of results to show."
-  :group 'tabnine-capf
+  :group 'tabnine-bridge
   :type 'integer)
 
-(defcustom tabnine-capf-context-radius 3000
+(defcustom tabnine-bridge-context-radius 3000
   "The number of chars before point to send for completion.
 
 Note that setting this too small will cause TabNine to not be able to read the entire license activation key."
-  :group 'tabnine-capf
+  :group 'tabnine-bridge
   :type 'integer)
 
-(defcustom tabnine-capf-context-radius-after 1000
+(defcustom tabnine-bridge-context-radius-after 1000
   "The number of chars after point to send for completion."
-  :group 'tabnine-capf
+  :group 'tabnine-bridge
   :type 'integer)
 
-(defcustom tabnine-capf-max-restart-count 10
+(defcustom tabnine-bridge-max-restart-count 10
   "Maximum number of times TabNine can consecutively restart.
 This may be due to errors in or automatic server updates.
 Any successful completion will reset the consecutive count."
-  :group 'tabnine-capf
+  :group 'tabnine-bridge
   :type 'integer)
 
-(defcustom tabnine-capf-wait 0.25
+(defcustom tabnine-bridge-wait 0.25
   "Number of seconds to wait for TabNine to respond."
-  :group 'tabnine-capf
+  :group 'tabnine-bridge
   :type 'float)
 
-(defcustom tabnine-capf-always-trigger t
+(defcustom tabnine-bridge-always-trigger t
   "Whether to overload company's minimum prefix length.
 This allows completion to trigger on as much as possible.
 Default is t (strongly recommended)."
-  :group 'tabnine-capf
+  :group 'tabnine-bridge
   :type 'boolean)
 
-(defcustom tabnine-capf-no-continue nil
+(defcustom tabnine-bridge-no-continue nil
   "Whether to make company reset idle timer on all keystrokes.
 Only useful when `company-idle-delay' is not 0.
 Doing so improves performance by reducing number of calls to the completer,
 at the cost of less responsive completions."
-  :group 'tabnine-capf
+  :group 'tabnine-bridge
   :type 'boolean)
 
-(defcustom tabnine-capf-binaries-folder "~/.TabNine"
+(defcustom tabnine-bridge-binaries-folder "~/.TabNine"
   "Path to TabNine binaries folder.
-`tabnine-capf-install-binary' will use this directory."
-  :group 'tabnine-capf
+`tabnine-bridge-install-binary' will use this directory."
+  :group 'tabnine-bridge
   :type 'string)
 
-(defcustom tabnine-capf-install-static-binary (file-exists-p "/etc/nixos/hardware-configuration.nix")
+(defcustom tabnine-bridge-install-static-binary (file-exists-p "/etc/nixos/hardware-configuration.nix")
   "Whether to install the musl-linked static binary instead of
 the standard glibc-linked dynamic binary.
 Only useful on GNU/Linux.  Automatically set if NixOS is detected."
-  :group 'tabnine-capf
+  :group 'tabnine-bridge
   :type 'boolean)
 
-(defcustom tabnine-capf-log-file-path nil
+(defcustom tabnine-bridge-log-file-path nil
   "If non-nil, next TabNine restart will write debug log to this path."
-  :group 'tabnine-capf
+  :group 'tabnine-bridge
   :type 'string)
 
-(defcustom tabnine-capf-auto-balance t
+(defcustom tabnine-bridge-auto-balance t
   "Whether TabNine should insert balanced parentheses upon completion."
-  :group 'tabnine-capf
+  :group 'tabnine-bridge
   :type 'boolean)
 
-;; (defcustom tabnine-capf-async t
+;; (defcustom tabnine-bridge-async t
 ;;   "Whether or not to use async operations to fetch data."
-;;   :group 'tabnine-capf
+;;   :group 'tabnine-bridge
 ;;   :type 'boolean)
 
-(defcustom tabnine-capf-show-annotation t
+(defcustom tabnine-bridge-show-annotation t
   "Whether to show an annotation inline with the candidate."
-  :group 'tabnine-capf
+  :group 'tabnine-bridge
   :type 'boolean)
 
-(defcustom tabnine-capf-auto-fallback t
+(defcustom tabnine-bridge-auto-fallback t
   "Whether to automatically fallback to other backends when TabNine has no candidates."
-  :group 'tabnine-capf
+  :group 'tabnine-bridge
   :type 'boolean)
 
-(defcustom tabnine-capf-use-native-json t
+(defcustom tabnine-bridge-use-native-json t
   "Whether to use native JSON when possible."
-  :group 'tabnine-capf
+  :group 'tabnine-bridge
   :type 'boolean)
 
-(defcustom tabnine-capf-insert-arguments t
+(defcustom tabnine-bridge-insert-arguments t
   "When non-nil, insert function arguments as a template after completion.
-Only supported by modes in `tabnine-capf--extended-features-modes'"
-  :group 'tabnine-capf
+Only supported by modes in `tabnine-bridge--extended-features-modes'"
+  :group 'tabnine-bridge
   :type 'boolean)
 
 
@@ -221,26 +221,26 @@ Only supported by modes in `tabnine-capf--extended-features-modes'"
 ;; Variables
 ;;
 
-(defvar tabnine-capf-executable-args nil
+(defvar tabnine-bridge-executable-args nil
   "Arguments passed to TabNine.")
 
-(defvar tabnine-capf--process nil
+(defvar tabnine-bridge--process nil
   "TabNine server process.")
 
-(defvar tabnine-capf--restart-count 0
+(defvar tabnine-bridge--restart-count 0
   "Number of times TabNine server has restarted abnormally.
 Resets every time successful completion is returned.")
 
-(defvar tabnine-capf--response nil
+(defvar tabnine-bridge--response nil
   "Temporarily stored TabNine server responses.")
 
-(defvar tabnine-capf--disabled nil
-  "Variable to temporarily disable tabnine-capf and pass control to next backend.")
+(defvar tabnine-bridge--disabled nil
+  "Variable to temporarily disable tabnine-bridge and pass control to next backend.")
 
-(defvar tabnine-capf--calling-continue nil
+(defvar tabnine-bridge--calling-continue nil
   "Flag for when `company-continue' is being called.")
 
-(defvar tabnine-capf--response-chunks nil
+(defvar tabnine-bridge--response-chunks nil
   "The string to store response chunks from TabNine server.")
 
 ;;
@@ -251,16 +251,16 @@ Resets every time successful completion is returned.")
 ;; Global methods
 ;;
 
-(defun tabnine-capf--prefix-candidate-p (candidate prefix)
+(defun tabnine-bridge--prefix-candidate-p (candidate prefix)
   "Return t if CANDIDATE string begins with PREFIX."
   (let ((insertion-text (cdr (assq 'insertion_text candidate))))
     (s-starts-with? prefix insertion-text t)))
 
-(defun tabnine-capf--error-no-binaries ()
+(defun tabnine-bridge--error-no-binaries ()
   "Signal error for when TabNine binary is not found."
-  (error "No TabNine binaries found.  Run M-x tabnine-capf-install-binary to download binaries"))
+  (error "No TabNine binaries found.  Run M-x tabnine-bridge-install-binary to download binaries"))
 
-(defun tabnine-capf--get-target ()
+(defun tabnine-bridge--get-target ()
   "Return TabNine's system configuration.  Used for finding the correct binary."
   (let* ((system-architecture (car (s-split "-" system-configuration)))
          (tabnine-architecture
@@ -292,14 +292,14 @@ Resets every time successful completion is returned.")
             "pc-windows-gnu")
            ((or (eq system-type 'darwin))
             "apple-darwin")
-           (tabnine-capf-install-static-binary
+           (tabnine-bridge-install-static-binary
             "unknown-linux-musl")
            (t
             "unknown-linux-gnu"))))
 
     (concat tabnine-architecture "-" os)))
 
-(defun tabnine-capf--get-exe ()
+(defun tabnine-bridge--get-exe ()
   "Return TabNine's binary file name.  Used for finding the correct binary."
   (cond
    ((or (eq system-type 'ms-dos)
@@ -309,9 +309,9 @@ Resets every time successful completion is returned.")
    (t
     "TabNine")))
 
-(defun tabnine-capf--executable-path ()
+(defun tabnine-bridge--executable-path ()
   "Find and return the path of the latest TabNine binary for the current system."
-  (let ((parent tabnine-capf-binaries-folder))
+  (let ((parent tabnine-bridge-binaries-folder))
     (if (file-directory-p parent)
         (let* ((children (->> (directory-files parent)
                               (--remove (member it '("." "..")))
@@ -323,8 +323,8 @@ Resets every time successful completion is returned.")
                               (--filter (ignore-errors (version-to-list it)))
                               (-non-nil)))
                (sorted (nreverse (sort children #'version<)))
-               (target (tabnine-capf--get-target))
-               (filename (tabnine-capf--get-exe)))
+               (target (tabnine-bridge--get-target))
+               (filename (tabnine-bridge--get-exe)))
           (cl-loop
            for ver in sorted
            for fullpath = (expand-file-name (format "%s/%s/%s"
@@ -333,54 +333,54 @@ Resets every time successful completion is returned.")
            if (and (file-exists-p fullpath)
                    (file-regular-p fullpath))
            return fullpath
-           finally do (tabnine-capf--error-no-binaries)))
-      (tabnine-capf--error-no-binaries))))
+           finally do (tabnine-bridge--error-no-binaries)))
+      (tabnine-bridge--error-no-binaries))))
 
-(defun tabnine-capf-start-process ()
+(defun tabnine-bridge-start-process ()
   "Start TabNine process."
-  (tabnine-capf-kill-process)
+  (tabnine-bridge-kill-process)
   (let ((process-connection-type nil))
-    (setq tabnine-capf--process
+    (setq tabnine-bridge--process
           (make-process
-           :name tabnine-capf--process-name
+           :name tabnine-bridge--process-name
            :command (append
-                     (cons (tabnine-capf--executable-path)
-                           (when tabnine-capf-log-file-path
+                     (cons (tabnine-bridge--executable-path)
+                           (when tabnine-bridge-log-file-path
                              (list
                               "--log-file-path"
                               (expand-file-name
-                               tabnine-capf-log-file-path))))
+                               tabnine-bridge-log-file-path))))
                      (list "--client" "emacs")
-                     tabnine-capf-executable-args)
+                     tabnine-bridge-executable-args)
            :coding 'utf-8
            :connection-type 'pipe
-           :filter #'tabnine-capf--process-filter
-           :sentinel #'tabnine-capf--process-sentinel
+           :filter #'tabnine-bridge--process-filter
+           :sentinel #'tabnine-bridge--process-sentinel
            :noquery t)))
   ;; hook setup
   (message "TabNine server started.")
-  (dolist (hook tabnine-capf--hooks-alist)
+  (dolist (hook tabnine-bridge--hooks-alist)
     (add-hook (car hook) (cdr hook))))
 
-(defun tabnine-capf-kill-process ()
+(defun tabnine-bridge-kill-process ()
   "Kill TabNine process."
   (interactive)
-  (when tabnine-capf--process
-    (let ((process tabnine-capf--process))
-      (setq tabnine-capf--process nil) ; this happens first so sentinel don't catch the kill
+  (when tabnine-bridge--process
+    (let ((process tabnine-bridge--process))
+      (setq tabnine-bridge--process nil) ; this happens first so sentinel don't catch the kill
       (delete-process process)))
   ;; hook remove
-  (dolist (hook tabnine-capf--hooks-alist)
+  (dolist (hook tabnine-bridge--hooks-alist)
     (remove-hook (car hook) (cdr hook))))
 
-(defun tabnine-capf-send-request (request)
+(defun tabnine-bridge-send-request (request)
   "Send REQUEST to TabNine server.  REQUEST needs to be JSON-serializable object."
-  (when (null tabnine-capf--process)
-    (tabnine-capf-start-process))
-  (when tabnine-capf--process
+  (when (null tabnine-bridge--process)
+    (tabnine-bridge-start-process))
+  (when tabnine-bridge--process
     ;; TODO make sure utf-8 encoding works
     (let ((encoded (concat
-                    (if (and tabnine-capf-use-native-json
+                    (if (and tabnine-bridge-use-native-json
                              (fboundp 'json-serialize))
                         (json-serialize request
                                         :null-object nil
@@ -389,23 +389,23 @@ Resets every time successful completion is returned.")
                             (json-encoding-pretty-print nil))
                         (json-encode-list request)))
                     "\n")))
-      (setq tabnine-capf--response nil)
-      (process-send-string tabnine-capf--process encoded)
-      (accept-process-output tabnine-capf--process tabnine-capf-wait))))
+      (setq tabnine-bridge--response nil)
+      (process-send-string tabnine-bridge--process encoded)
+      (accept-process-output tabnine-bridge--process tabnine-bridge-wait))))
 
-(defun tabnine-capf--make-request (method)
+(defun tabnine-bridge--make-request (method)
   "Create request body for method METHOD and parameters PARAMS."
   (cond
    ((eq method 'autocomplete)
     (let* ((buffer-min 1)
            (buffer-max (1+ (buffer-size)))
            (before-point
-            (max (point-min) (- (point) tabnine-capf-context-radius)))
+            (max (point-min) (- (point) tabnine-bridge-context-radius)))
            (after-point
-            (min (point-max) (+ (point) tabnine-capf-context-radius-after))))
+            (min (point-max) (+ (point) tabnine-bridge-context-radius-after))))
 
       (list
-       :version tabnine-capf--protocol-version
+       :version tabnine-bridge--protocol-version
        :request
        (list :Autocomplete
              (list
@@ -416,11 +416,11 @@ Resets every time successful completion is returned.")
                                              t json-false)
               :region_includes_end (if (= after-point buffer-max)
                                        t json-false)
-              :max_num_results tabnine-capf-max-num-results)))))
+              :max_num_results tabnine-bridge-max-num-results)))))
 
    ((eq method 'prefetch)
     (list
-     :version tabnine-capf--protocol-version
+     :version tabnine-bridge--protocol-version
      :request
      (list :Prefetch
            (list
@@ -428,22 +428,22 @@ Resets every time successful completion is returned.")
             ))))
    ((eq method 'getidentifierregex)
     (list
-     :version tabnine-capf--protocol-version
+     :version tabnine-bridge--protocol-version
      :request
      (list :GetIdentifierRegex
            (list
             :filename (or (buffer-file-name) nil)
             ))))))
 
-(defun tabnine-capf-query ()
+(defun tabnine-bridge-query ()
   "Query TabNine server for auto-complete."
-  (let ((request (tabnine-capf--make-request 'autocomplete)))
-    (tabnine-capf-send-request request)
+  (let ((request (tabnine-bridge--make-request 'autocomplete)))
+    (tabnine-bridge-send-request request)
     ))
 
-(defun tabnine-capf--decode (msg)
+(defun tabnine-bridge--decode (msg)
   "Decode TabNine server response MSG, and return the decoded object."
-  (if (and tabnine-capf-use-native-json
+  (if (and tabnine-bridge-use-native-json
            (fboundp 'json-parse-string))
       (ignore-errors
         (json-parse-string msg :object-type 'alist))
@@ -451,62 +451,62 @@ Resets every time successful completion is returned.")
           (json-object-type 'alist))
       (json-read-from-string msg))))
 
-(defun tabnine-capf--process-sentinel (process event)
+(defun tabnine-bridge--process-sentinel (process event)
   "Sentinel for TabNine server process.
 PROCESS is the process under watch, EVENT is the event occurred."
-  (when (and tabnine-capf--process
+  (when (and tabnine-bridge--process
              (memq (process-status process) '(exit signal)))
 
     (message "TabNine process %s received event %s."
              (prin1-to-string process)
              (prin1-to-string event))
 
-    (if (>= tabnine-capf--restart-count
-            tabnine-capf-max-restart-count)
+    (if (>= tabnine-bridge--restart-count
+            tabnine-bridge-max-restart-count)
         (progn
           (message "TabNine process restart limit reached.")
-          (setq tabnine-capf--process nil))
+          (setq tabnine-bridge--process nil))
 
       (message "Restarting TabNine process.")
-      (tabnine-capf-start-process)
-      (setq tabnine-capf--restart-count
-            (1+ tabnine-capf--restart-count)))))
+      (tabnine-bridge-start-process)
+      (setq tabnine-bridge--restart-count
+            (1+ tabnine-bridge--restart-count)))))
 
-(defun tabnine-capf--process-filter (process output)
+(defun tabnine-bridge--process-filter (process output)
   "Filter for TabNine server process.
 PROCESS is the process under watch, OUTPUT is the output received."
-  (push output tabnine-capf--response-chunks)
+  (push output tabnine-bridge--response-chunks)
   (when (s-ends-with-p "\n" output)
     (let ((response
            (mapconcat #'identity
-                      (nreverse tabnine-capf--response-chunks)
+                      (nreverse tabnine-bridge--response-chunks)
                       nil)))
-      (setq tabnine-capf--response
-            (tabnine-capf--decode response)
-            tabnine-capf--response-chunks nil))))
+      (setq tabnine-bridge--response
+            (tabnine-bridge--decode response)
+            tabnine-bridge--response-chunks nil))))
 
-(defun tabnine-capf--prefix ()
+(defun tabnine-bridge--prefix ()
   "Prefix-command handler for the company backend."
-  (if (or (and tabnine-capf-no-continue
-               tabnine-capf--calling-continue)
-          tabnine-capf--disabled)
+  (if (or (and tabnine-bridge-no-continue
+               tabnine-bridge--calling-continue)
+          tabnine-bridge--disabled)
       nil
-    (tabnine-capf-query)
+    (tabnine-bridge-query)
     (let ((prefix
-           (and tabnine-capf--response
-                (> (length (alist-get 'results tabnine-capf--response)) 0)
-                (alist-get 'old_prefix tabnine-capf--response))))
+           (and tabnine-bridge--response
+                (> (length (alist-get 'results tabnine-bridge--response)) 0)
+                (alist-get 'old_prefix tabnine-bridge--response))))
       (unless (or prefix
-                  tabnine-capf-auto-fallback)
+                  tabnine-bridge-auto-fallback)
         (setq prefix 'stop))
       (if (and prefix
-               tabnine-capf-always-trigger)
+               tabnine-bridge-always-trigger)
           (cons prefix t)
         prefix))))
 
-(defun tabnine-capf--annotation(candidate)
+(defun tabnine-bridge--annotation(candidate)
   "Fetch the annotation text-property from a CANDIDATE string."
-  (when tabnine-capf-show-annotation
+  (when tabnine-bridge-show-annotation
     (-if-let (annotation (get-text-property 0 'annotation candidate))
         annotation
       (let ((kind (get-text-property 0 'kind candidate))
@@ -519,7 +519,7 @@ PROCESS is the process under watch, OUTPUT is the output received."
                   (when (s-present? kind)
                     (format " [%s]" kind))))))))
 
-(defun tabnine-capf--kind-to-type (kind)
+(defun tabnine-bridge--kind-to-type (kind)
   (pcase kind
     (1 "Text")
     (2 "Method")
@@ -547,45 +547,45 @@ PROCESS is the process under watch, OUTPUT is the output received."
     (24 "Operator")
     (25 "TypeParameter")))
 
-(defun tabnine-capf--construct-candidate-generic (candidate)
+(defun tabnine-bridge--construct-candidate-generic (candidate)
   "Generic function to construct completion string from a CANDIDATE."
-  (tabnine-capf--with-destructured-candidate candidate))
+  (tabnine-bridge--with-destructured-candidate candidate))
 
-(defun tabnine-capf--construct-candidates (results construct-candidate-fn)
+(defun tabnine-bridge--construct-candidates (results construct-candidate-fn)
   "Use CONSTRUCT-CANDIDATE-FN to construct a list of candidates from RESULTS."
   (let ((completions (mapcar construct-candidate-fn results)))
     (when completions
-      (setq tabnine-capf--restart-count 0))
+      (setq tabnine-bridge--restart-count 0))
     completions))
 
-(defun tabnine-capf--get-candidates (response)
+(defun tabnine-bridge--get-candidates (response)
   "Get candidates for RESPONSE."
-  (tabnine-capf--construct-candidates
+  (tabnine-bridge--construct-candidates
    (alist-get 'results response)
-   #'tabnine-capf--construct-candidate-generic))
+   #'tabnine-bridge--construct-candidate-generic))
 
-(defun tabnine-capf--candidates (prefix)
+(defun tabnine-bridge--candidates (prefix)
   "Candidates-command handler for the company backend for PREFIX.
 
-Return completion candidates.  Must be called after `tabnine-capf-query'."
-  (tabnine-capf--get-candidates tabnine-capf--response))
+Return completion candidates.  Must be called after `tabnine-bridge-query'."
+  (tabnine-bridge--get-candidates tabnine-bridge--response))
 
-(defun tabnine-capf--meta (candidate)
+(defun tabnine-bridge--meta (candidate)
   "Return meta information for CANDIDATE.  Currently used to display user messages."
-  (if (null tabnine-capf--response)
+  (if (null tabnine-bridge--response)
       nil
     (let ((meta (get-text-property 0 'meta candidate)))
       (if (stringp meta)
           (let ((meta-trimmed (s-trim meta)))
             meta-trimmed)
 
-        (let ((messages (alist-get 'user_message tabnine-capf--response)))
+        (let ((messages (alist-get 'user_message tabnine-bridge--response)))
           (when messages
             (s-join " " messages)))))))
 
-(defun tabnine-capf--post-completion (candidate)
+(defun tabnine-bridge--post-completion (candidate)
   "Replace old suffix with new suffix for CANDIDATE."
-  (when tabnine-capf-auto-balance
+  (when tabnine-bridge-auto-balance
     (let ((old_suffix (get-text-property 0 'old_suffix candidate))
           (new_suffix (get-text-property 0 'new_suffix candidate)))
       (delete-region (point)
@@ -599,21 +599,21 @@ Return completion candidates.  Must be called after `tabnine-capf-query'."
 ;; Interactive functions
 ;;
 
-(defun tabnine-capf-restart-server ()
+(defun tabnine-bridge-restart-server ()
   "Start/Restart TabNine server."
   (interactive)
-  (tabnine-capf-start-process))
+  (tabnine-bridge-start-process))
 
-(defun tabnine-capf-install-binary ()
-  "Install TabNine binary into `tabnine-capf-binaries-folder'."
+(defun tabnine-bridge-install-binary ()
+  "Install TabNine binary into `tabnine-bridge-binaries-folder'."
   (interactive)
   (let ((version-tempfile (concat
                            (file-name-as-directory
-                            tabnine-capf-binaries-folder)
-                           tabnine-capf--version-tempfile))
-        (target (tabnine-capf--get-target))
-        (exe (tabnine-capf--get-exe))
-        (binaries-dir tabnine-capf-binaries-folder))
+                            tabnine-bridge-binaries-folder)
+                           tabnine-bridge--version-tempfile))
+        (target (tabnine-bridge--get-target))
+        (exe (tabnine-bridge--get-exe))
+        (binaries-dir tabnine-bridge-binaries-folder))
     (message version-tempfile)
     (message "Getting current version...")
     (make-directory (file-name-directory version-tempfile) t)
@@ -654,20 +654,20 @@ Return completion candidates.  Must be called after `tabnine-capf-query'."
         (delete-file version-tempfile)
         (message "TabNine installation complete.")))))
 
-(defvar-local tabnine-capf--begin-pos nil)
+(defvar-local tabnine-bridge--begin-pos nil)
 
 ;;;###autoload
 (defun tabnine-completion-at-point ()
   "TabNine Completion at point function."
-  (unless (or (and tabnine-capf-no-continue
-                   tabnine-capf--calling-continue)
-              tabnine-capf--disabled)
-    (tabnine-capf-query))
+  (unless (or (and tabnine-bridge-no-continue
+                   tabnine-bridge--calling-continue)
+              tabnine-bridge--disabled)
+    (tabnine-bridge-query))
   (let* ((bounds (bounds-of-thing-at-point 'symbol))
          (thing (thing-at-point 'symbol))
-         (candidates (tabnine-capf--candidates thing))
+         (candidates (tabnine-bridge--candidates thing))
          (get-candidates (lambda () candidates)))
-    (setq-local tabnine-capf--begin-pos (or (car bounds) (point)))
+    (setq-local tabnine-bridge--begin-pos (or (car bounds) (point)))
     (list
      (or (car bounds) (point))
      (or (cdr bounds) (point))
@@ -682,7 +682,7 @@ Return completion candidates.  Must be called after `tabnine-capf-query'."
      (lambda (candidate status)
        "Post-completion function for tabnine."
        (let ((item (cl-find candidate (funcall get-candidates) :test #'string=)))
-         (tabnine-capf--post-completion item)
+         (tabnine-bridge--post-completion item)
          )
        )
      )))
@@ -690,15 +690,15 @@ Return completion candidates.  Must be called after `tabnine-capf-query'."
 (defun tabnine-test-at-point ()
   "TabNine Completion at point function."
   (interactive)
-  (unless (or (and tabnine-capf-no-continue
-                   tabnine-capf--calling-continue)
-              tabnine-capf--disabled)
-    (tabnine-capf-query))
+  (unless (or (and tabnine-bridge-no-continue
+                   tabnine-bridge--calling-continue)
+              tabnine-bridge--disabled)
+    (tabnine-bridge-query))
   (let* ((bounds (bounds-of-thing-at-point 'symbol))
          (thing (thing-at-point 'symbol))
-         (candidates (tabnine-capf--candidates thing))
+         (candidates (tabnine-bridge--candidates thing))
          (get-candidates (lambda () candidates)))
-    (setq-local tabnine-capf--begin-pos (or (car bounds) (point)))
+    (setq-local tabnine-bridge--begin-pos (or (car bounds) (point)))
     (debug)
     "haha"))
 ;;
@@ -710,6 +710,6 @@ Return completion candidates.  Must be called after `tabnine-capf-query'."
 ;; Hooks
 ;;
 
-(provide 'tabnine-capf)
+(provide 'tabnine-bridge)
 
-;;; tabnine-capf.el ends here
+;;; tabnine-bridge.el ends here

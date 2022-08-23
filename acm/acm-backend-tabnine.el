@@ -2,24 +2,24 @@
 ;;; Commentary:
 ;;; Code:
 
-(require 'tabnine-capf)
+(require 'tabnine-bridge)
 
 (defcustom acm-backend-tabnine-min-length 1
   "Minimum length of tabnine word."
   :type 'integer)
 
 (defun acm-backend-tabnine-candidates (keyword)
-  (unless (or (and tabnine-capf-no-continue
-                   tabnine-capf--calling-continue)
-              tabnine-capf--disabled)
-    (tabnine-capf-query))
+  (unless (or (and tabnine-bridge-no-continue
+                   tabnine-bridge--calling-continue)
+              tabnine-bridge--disabled)
+    (tabnine-bridge-query))
   (let* ((candidates (list))
          (test-completes '("test1" "test2" "test3"))
          (bounds (bounds-of-thing-at-point 'symbol))
          (thing (thing-at-point 'symbol))
-         (tabcandidates (tabnine-capf--candidates thing)))
+         (tabcandidates (tabnine-bridge--candidates thing)))
     ;; (debug)
-    (setq-local tabnine-capf--begin-pos (or (car bounds) (point)))
+    (setq-local tabnine-bridge--begin-pos (or (car bounds) (point)))
     (when (>= (length keyword) acm-backend-tabnine-min-length)
            (dolist (candidate tabcandidates)
              (let* ((com (concat "  "(get-text-property 0 'annotation candidate)))
@@ -35,9 +35,9 @@
            ))
     candidates))
        ;; (let ((item (cl-find candidate (funcall get-candidates) :test #'string=)))
-       ;;   (tabnine-capf--post-completion item)
+       ;;   (tabnine-bridge--post-completion item)
 ;;   )
-;; (defun tabnine-capf--post-completion (candidate)
+;; (defun tabnine-bridge--post-completion (candidate)
 ;;   "Replace old suffix with new suffix for CANDIDATE."
 ;;   )
 
@@ -56,7 +56,7 @@
   (message (format "%s" (acm-backend-tabnine-candidates "test"))))
 
 (defun acm-backend-tabnine-candidate-expand (candidate-info bound-start)
-  (when tabnine-capf-auto-balance
+  (when tabnine-bridge-auto-balance
     (let ((label (plist-get candidate-info :label)))
       (delete-region bound-start (point))
       (insert label)))
