@@ -99,7 +99,6 @@
 (require 'acm-backend-tempel)
 (require 'acm-backend-telega)
 (require 'acm-quick-access)
-(require 'acm-backend-tabnine)
 
 ;;; Code:
 
@@ -186,6 +185,7 @@
 (defvar-local acm-menu-offset 0)
 
 (defvar-local acm-enable-english-helper nil)
+(defvar-local acm-enable-tabnine-helper nil)
 
 (defvar acm-doc-frame nil)
 (defvar acm-doc-buffer " *acm-doc-buffer*")
@@ -419,7 +419,12 @@ influence of C1 on the result."
          tempel-candidates
          mode-candidates)
 
-    (setq tabnine-candidates (acm-backend-tabnine-candidates keyword))
+    (if acm-enable-tabnine-helper
+        (debug)
+        (progn
+          (require 'acm-backend-tabnine)
+          (setq tabnine-candidates (acm-backend-tabnine-candidates keyword))
+          ))
     (if acm-enable-english-helper
         ;; Completion english if option `acm-enable-english-helper' is enable.
         (progn
@@ -455,10 +460,10 @@ influence of C1 on the result."
               (if (> (length mode-candidates) acm-snippet-insert-index)
                   (append (cl-subseq mode-candidates 0 acm-snippet-insert-index)
                           yas-candidates
-                          tabnine-candidates
                           tempel-candidates
+                          tabnine-candidates
                           (cl-subseq mode-candidates acm-snippet-insert-index))
-                (append mode-candidates yas-candidates tempel-candidates)
+                (append mode-candidates yas-candidates tempel-candidates tabnine-candidates)
                 ))))
 
     candidates))

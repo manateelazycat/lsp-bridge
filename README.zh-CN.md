@@ -88,6 +88,7 @@ lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.
 * `acm-enable-quick-access`: 是否在图标后面显示索引， 可以通过 Alt + Number 来快速选择后选词， 默认关闭
 * `acm-snippet-insert-index`: 代码模板后选词在补全菜单中的显示位置
 * `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是20
+* `acm-enable-tabnine-helper`: 是否打开 tabnine 补全支持，默认关闭，打开后运行 `tabnine-bridge-install-binary` 安装 tabnine 后就可以使用了
 
 ## 自定义语言服务器配置
 lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).

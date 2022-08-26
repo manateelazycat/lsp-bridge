@@ -37,7 +37,7 @@
 ;;
 ;; 1. Add `tabnine-completion-at-point` to `completion-at-point-functions`
 ;;    (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point)
-;; 2. Run M-x tabnine-capf-install-binary to install the TabNine binary for your system.
+;; 2. Run M-x tabnine-bridge-install-binary to install the TabNine binary for your system.
 ;;
 ;; Usage:
 ;;
