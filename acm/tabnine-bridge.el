@@ -57,27 +57,15 @@
 ;;
 
 (defconst tabnine-bridge--process-name "tabnine-bridge--process")
-(defconst tabnine-bridge--buffer-name "*tabnine-bridge-log*")
 (defconst tabnine-bridge--hooks-alist nil)
 (defconst tabnine-bridge--protocol-version "1.0.14")
 
 ;; tmp file put in tabnine-bridge-binaries-folder directory
 (defconst tabnine-bridge--version-tempfile "version")
 
-;; current don't know how to use Prefetch and GetIdentifierRegex
-(defconst tabnine-bridge--method-autocomplete "Autocomplete")
-(defconst tabnine-bridge--method-prefetch "Prefetch")
-(defconst tabnine-bridge--method-getidentifierregex "GetIdentifierRegex")
-
 ;;
 ;; Macros
 ;;
-
-(defmacro tabnine-bridge-with-disabled (&rest body)
-  "Run BODY with `tabnine-bridge' temporarily disabled.
-Useful when binding keys to temporarily query other completion backends."
-  `(let ((tabnine-bridge--disabled t))
-     ,@body))
 
 (defmacro tabnine-bridge--with-destructured-candidate
     (candidate &rest body)
@@ -166,32 +154,10 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
   :group 'tabnine-bridge
   :type 'string)
 
-(defcustom tabnine-bridge-auto-balance t
-  "Whether TabNine should insert balanced parentheses upon completion."
-  :group 'tabnine-bridge
-  :type 'boolean)
-
-(defcustom tabnine-bridge-show-annotation t
-  "Whether to show an annotation inline with the candidate."
-  :group 'tabnine-bridge
-  :type 'boolean)
-
-(defcustom tabnine-bridge-auto-fallback t
-  "Whether to automatically fallback to other backends when TabNine has no candidates."
-  :group 'tabnine-bridge
-  :type 'boolean)
-
 (defcustom tabnine-bridge-use-native-json t
   "Whether to use native JSON when possible."
   :group 'tabnine-bridge
   :type 'boolean)
-
-(defcustom tabnine-bridge-insert-arguments t
-  "When non-nil, insert function arguments as a template after completion.
-Only supported by modes in `tabnine-bridge--extended-features-modes'"
-  :group 'tabnine-bridge
-  :type 'boolean)
-
 
 ;;
 ;; Faces
@@ -461,25 +427,6 @@ PROCESS is the process under watch, OUTPUT is the output received."
             (tabnine-bridge--decode response)
             tabnine-bridge--response-chunks nil))))
 
-(defun tabnine-bridge--prefix ()
-  "Prefix-command handler for the company backend."
-  (if (or (and tabnine-bridge-no-continue
-               tabnine-bridge--calling-continue)
-          tabnine-bridge--disabled)
-      nil
-    (tabnine-bridge-query)
-    (let ((prefix
-           (and tabnine-bridge--response
-                (> (length (alist-get 'results tabnine-bridge--response)) 0)
-                (alist-get 'old_prefix tabnine-bridge--response))))
-      (unless (or prefix
-                  tabnine-bridge-auto-fallback)
-        (setq prefix 'stop))
-      (if (and prefix
-               tabnine-bridge-always-trigger)
-          (cons prefix t)
-        prefix))))
-
 (defun tabnine-bridge--kind-to-type (kind)
   (pcase kind
     (1 "Text")
@@ -530,18 +477,6 @@ PROCESS is the process under watch, OUTPUT is the output received."
 
 Return completion candidates.  Must be called after `tabnine-bridge-query'."
   (tabnine-bridge--get-candidates tabnine-bridge--response))
-
-(defun tabnine-bridge--post-completion (candidate)
-  "Replace old suffix with new suffix for CANDIDATE."
-  (when tabnine-bridge-auto-balance
-    (let ((old_suffix (get-text-property 0 'old_suffix candidate))
-          (new_suffix (get-text-property 0 'new_suffix candidate)))
-      (delete-region (point)
-                     (min (+ (point) (length old_suffix))
-                          (point-max)))
-      (when (stringp new_suffix)
-        (save-excursion
-          (insert new_suffix))))))
 
 ;;
 ;; Interactive functions
