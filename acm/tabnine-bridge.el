@@ -53,7 +53,6 @@
 
 (require 'cl-lib)
 (require 'json)
-(require 's)
 
 ;;
 ;; Constants
@@ -104,7 +103,7 @@ Useful when binding keys to temporarily query other completion backends."
 
 (defun tabnine-bridge--identifier-completer-p (extra-info)
   "Check if candidate's EXTRA-INFO indicates a identifier completion."
-  (s-equals? "[ID]" extra-info))
+  (string-equal "[ID]" extra-info))
 
 ;;
 ;; Customization
@@ -251,7 +250,7 @@ Resets every time successful completion is returned.")
 (defun tabnine-bridge--prefix-candidate-p (candidate prefix)
   "Return t if CANDIDATE string begins with PREFIX."
   (let ((insertion-text (cdr (assq 'insertion_text candidate))))
-    (s-starts-with? prefix insertion-text t)))
+    (string-prefix-p prefix insertion-text t)))
 
 (defun tabnine-bridge--error-no-binaries ()
   "Signal error for when TabNine binary is not found."
@@ -259,7 +258,7 @@ Resets every time successful completion is returned.")
 
 (defun tabnine-bridge--get-target ()
   "Return TabNine's system configuration.  Used for finding the correct binary."
-  (let* ((system-architecture (car (s-split "-" system-configuration)))
+  (let* ((system-architecture (car (split-string system-configuration "-")))
          (tabnine-architecture
           (cond
            ((or (string= system-architecture "aarch64")
@@ -474,7 +473,7 @@ PROCESS is the process under watch, EVENT is the event occurred."
   "Filter for TabNine server process.
 PROCESS is the process under watch, OUTPUT is the output received."
   (push output tabnine-bridge--response-chunks)
-  (when (s-ends-with-p "\n" output)
+  (when (string-suffix-p "\n" output)
     (let ((response
            (mapconcat #'identity
                       (nreverse tabnine-bridge--response-chunks)
@@ -512,9 +511,7 @@ PROCESS is the process under watch, OUTPUT is the output received."
             (params (get-text-property 0 'params candidate)))
         (when kind
           (concat params
-                  ;; (when (s-present? return-type)
-                  ;;   (s-prepend " -> " return-type))
-                  (when (s-present? kind)
+                  (when (string-empty-p kind)
                     (format " [%s]" kind))))))))
 
 (defun tabnine-bridge--kind-to-type (kind)
@@ -574,12 +571,12 @@ Return completion candidates.  Must be called after `tabnine-bridge-query'."
       nil
     (let ((meta (get-text-property 0 'meta candidate)))
       (if (stringp meta)
-          (let ((meta-trimmed (s-trim meta)))
+          (let ((meta-trimmed (string-trim meta)))
             meta-trimmed)
 
         (let ((messages (alist-get 'user_message tabnine-bridge--response)))
           (when messages
-            (s-join " " messages)))))))
+            (string-join messages " ")))))))
 
 (defun tabnine-bridge--post-completion (candidate)
   "Replace old suffix with new suffix for CANDIDATE."
@@ -616,7 +613,7 @@ Return completion candidates.  Must be called after `tabnine-bridge-query'."
     (message "Getting current version...")
     (make-directory (file-name-directory version-tempfile) t)
     (url-copy-file "https://update.tabnine.com/bundles/version" version-tempfile t)
-    (let ((version (s-trim (with-temp-buffer (insert-file-contents version-tempfile) (buffer-string)))))
+    (let ((version (string-trim (with-temp-buffer (insert-file-contents version-tempfile) (buffer-string)))))
       (when (= (length version) 0)
         (error "TabNine installation failed.  Please try again"))
       (message "Current version is %s" version)
