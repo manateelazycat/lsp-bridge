@@ -30,9 +30,8 @@
     candidates))
 
 (defun acm-backend-tabnine-candidate-expand (candidate-info bound-start)
-  (let ((label (plist-get candidate-info :label)))
-    (delete-region bound-start (point))
-    (insert label))
+  (delete-region bound-start (point))
+  (insert (plist-get candidate-info :label))
   )
 
 (defun acm-backend-tabnine-start-server ()
