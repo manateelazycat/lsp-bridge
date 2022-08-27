@@ -25,14 +25,12 @@
                                          :label candidate
                                          :display-label candidate
                                          :annotation "Tabnine"
-                                         :backend "tabnine")
-                       )))
+                                         :backend "tabnine"))))
     candidates))
 
 (defun acm-backend-tabnine-candidate-expand (candidate-info bound-start)
   (delete-region bound-start (point))
-  (insert (plist-get candidate-info :label))
-  )
+  (insert (plist-get candidate-info :label)))
 
 (defun acm-backend-tabnine-start-server ()
    (when (null tabnine-bridge--process)

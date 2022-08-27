@@ -421,12 +421,9 @@ influence of C1 on the result."
          tabnine-candidates
          tempel-candidates
          mode-candidates)
-    (if acm-enable-tabnine-helper
-        (progn
-          (require 'acm-backend-tabnine)
-          (setq tabnine-candidates (acm-backend-tabnine-candidates keyword))
-          )
-      )
+    (when acm-enable-tabnine-helper
+      (require 'acm-backend-tabnine)
+      (setq tabnine-candidates (acm-backend-tabnine-candidates keyword)))
     (if acm-enable-english-helper
         ;; Completion english if option `acm-enable-english-helper' is enable.
         (progn
