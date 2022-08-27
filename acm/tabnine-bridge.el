@@ -1,4 +1,4 @@
-;; tabnine-capf.el --- A company-mode backend for TabNine ;; -*- lexical-binding: t -*-
+;; tabnine-capf.el --- A lsp-bridge backend for TabNine ;; -*- lexical-binding: t -*-
 ;;
 ;; Copyright (c) 2022 Tommy Xiang, John Gong
 ;;
@@ -6,8 +6,8 @@
 ;;         John Gong <gjtzone@hotmail.com>
 ;; Keywords: convenience
 ;; Version: 0.0.1
-;; URL: https://github.com/50ways2sayhard/tabnine-capf/
-;; Package-Requires: ((emacs "25") (cl-lib "0.5") (dash "2.16.0") (s "1.12.0") (unicode-escape "1.1"))
+;; URL: Code is copy from https://github.com/50ways2sayhard/tabnine-capf/
+;; Package-Requires: ((emacs "25"))
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
 ;; of this software and associated documentation files (the "Software"), to deal
@@ -31,17 +31,15 @@
 ;;
 ;; Description:
 ;;
-;; A capf verison of `company-tabnine`.
+;; A lsp-bridge verison of `company-tabnine`.
 ;;
 ;; Installation:
 ;;
-;; 1. Add `tabnine-completion-at-point` to `completion-at-point-functions`
-;;    (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point)
-;; 2. Run M-x tabnine-bridge-install-binary to install the TabNine binary for your system.
+;; 1. Run M-x tabnine-bridge-install-binary to install the TabNine binary for your system.
 ;;
 ;; Usage:
 ;;
-;; See M-x customize-group RET tabnine-capf RET for customizations.
+;; See M-x customize-group RET tabnine-bridge RET for customizations.
 ;;
 ;;
 
@@ -97,21 +95,12 @@ Useful when binding keys to temporarily query other completion backends."
       (concat (or .detail "") " " (or type "")))
      ,@body))
 
-(defun tabnine-bridge--filename-completer-p (extra-info)
-  "Check whether candidate's EXTRA-INFO indicates a filename completion."
-  (-contains? '("[File]" "[Dir]" "[File&Dir]") extra-info))
-
-(defun tabnine-bridge--identifier-completer-p (extra-info)
-  "Check if candidate's EXTRA-INFO indicates a identifier completion."
-  (string-equal "[ID]" extra-info))
-
 ;;
 ;; Customization
 ;;
 
 (defgroup tabnine-bridge nil
   "Options for tabnine-bridge. This Code is copy from tabnine-capf"
-  ;; :link '(url-link :tag "Github" "https://github.com/50ways2sayhard/tabnine-capf")
   :group 'lsp-bridge
   :prefix "tabnine-bridge-")
 
@@ -182,11 +171,6 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
   :group 'tabnine-bridge
   :type 'boolean)
 
-;; (defcustom tabnine-bridge-async t
-;;   "Whether or not to use async operations to fetch data."
-;;   :group 'tabnine-bridge
-;;   :type 'boolean)
-
 (defcustom tabnine-bridge-show-annotation t
   "Whether to show an annotation inline with the candidate."
   :group 'tabnine-bridge
@@ -246,11 +230,6 @@ Resets every time successful completion is returned.")
 ;;
 ;; Global methods
 ;;
-
-(defun tabnine-bridge--prefix-candidate-p (candidate prefix)
-  "Return t if CANDIDATE string begins with PREFIX."
-  (let ((insertion-text (cdr (assq 'insertion_text candidate))))
-    (string-prefix-p prefix insertion-text t)))
 
 (defun tabnine-bridge--error-no-binaries ()
   "Signal error for when TabNine binary is not found."
@@ -501,19 +480,6 @@ PROCESS is the process under watch, OUTPUT is the output received."
           (cons prefix t)
         prefix))))
 
-(defun tabnine-bridge--annotation(candidate)
-  "Fetch the annotation text-property from a CANDIDATE string."
-  (when tabnine-bridge-show-annotation
-    (-if-let (annotation (get-text-property 0 'annotation candidate))
-        annotation
-      (let ((kind (get-text-property 0 'kind candidate))
-            ;; (return-type (get-text-property 0 'return_type candidate))
-            (params (get-text-property 0 'params candidate)))
-        (when kind
-          (concat params
-                  (when (string-empty-p kind)
-                    (format " [%s]" kind))))))))
-
 (defun tabnine-bridge--kind-to-type (kind)
   (pcase kind
     (1 "Text")
@@ -564,19 +530,6 @@ PROCESS is the process under watch, OUTPUT is the output received."
 
 Return completion candidates.  Must be called after `tabnine-bridge-query'."
   (tabnine-bridge--get-candidates tabnine-bridge--response))
-
-(defun tabnine-bridge--meta (candidate)
-  "Return meta information for CANDIDATE.  Currently used to display user messages."
-  (if (null tabnine-bridge--response)
-      nil
-    (let ((meta (get-text-property 0 'meta candidate)))
-      (if (stringp meta)
-          (let ((meta-trimmed (string-trim meta)))
-            meta-trimmed)
-
-        (let ((messages (alist-get 'user_message tabnine-bridge--response)))
-          (when messages
-            (string-join messages " ")))))))
 
 (defun tabnine-bridge--post-completion (candidate)
   "Replace old suffix with new suffix for CANDIDATE."
@@ -650,44 +603,6 @@ Return completion candidates.  Must be called after `tabnine-bridge-query'."
         (message "TabNine installation complete.")))))
 
 (defvar-local tabnine-bridge--begin-pos nil)
-
-;;;###autoload
-(defun tabnine-completion-at-point ()
-  "TabNine Completion at point function."
-  (unless (or (and tabnine-bridge-no-continue
-                   tabnine-bridge--calling-continue)
-              tabnine-bridge--disabled)
-    (tabnine-bridge-query))
-  (let* ((bounds (bounds-of-thing-at-point 'symbol))
-         (thing (thing-at-point 'symbol))
-         (candidates (tabnine-bridge--candidates thing))
-         (get-candidates (lambda () candidates)))
-    (setq-local tabnine-bridge--begin-pos (or (car bounds) (point)))
-    (list
-     (or (car bounds) (point))
-     (or (cdr bounds) (point))
-     candidates
-     :exclusive 'no
-     :company-kind (lambda (_) (intern "tabnine"))
-     :annotation-function
-     (lambda (candidate)
-       "Extract integer from company-tabnine's CANDIDATE."
-       (concat "  "(get-text-property 0 'annotation candidate)))
-     :exit-function
-     (lambda (candidate status)
-       "Post-completion function for tabnine."
-       (let ((item (cl-find candidate (funcall get-candidates) :test #'string=)))
-         (tabnine-bridge--post-completion item)
-         )
-       )
-     )))
-
-;; Advices
-;;
-
-;;
-;; Hooks
-;;
 
 (provide 'tabnine-bridge)
 
