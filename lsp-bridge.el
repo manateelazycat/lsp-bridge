@@ -663,6 +663,9 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
   (unless (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     ;; start epc server and set `lsp-bridge-server-port'
     (lsp-bridge--start-epc-server)
+    (when acm-enable-tabnine-helper
+      (require 'acm-backend-tabnine)
+      (acm-backend-tabnine-start-server))
     (let* ((lsp-bridge-args (append
                              (list lsp-bridge-python-file)
                              (list (number-to-string lsp-bridge-server-port))
