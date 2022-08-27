@@ -414,6 +414,7 @@ Resets every time successful completion is returned.")
               :filename (or (buffer-file-name) nil)
               :region_includes_beginning (if (= before-point buffer-min)
                                              t json-false)
+
               :region_includes_end (if (= after-point buffer-max)
                                        t json-false)
               :max_num_results tabnine-bridge-max-num-results)))))

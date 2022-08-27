@@ -20,17 +20,13 @@
     (setq-local tabnine-bridge--begin-pos (or (car bounds) (point)))
     (when (>= (length keyword) acm-backend-tabnine-min-length)
            (dolist (candidate tabcandidates)
-             (let* ((com (concat "  "(get-text-property 0 'annotation candidate)))
-                    (detail (concat "  "(get-text-property 0 'detail candidate))))
-               ;; (debug)
                (add-to-list 'candidates (list :key candidate
                                          :icon "tabnine"
                                          :label candidate
                                          :display-label candidate
                                          :annotation "Tabnine"
                                          :backend "tabnine")
-                       ))
-           ))
+                       )))
     candidates))
 
 (defun acm-backend-tabnine-candidate-expand (candidate-info bound-start)
