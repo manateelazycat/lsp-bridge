@@ -30,10 +30,9 @@
     candidates))
 
 (defun acm-backend-tabnine-candidate-expand (candidate-info bound-start)
-  (when tabnine-bridge-auto-balance
-    (let ((label (plist-get candidate-info :label)))
-      (delete-region bound-start (point))
-      (insert label)))
+  (let ((label (plist-get candidate-info :label)))
+    (delete-region bound-start (point))
+    (insert label))
   )
 
 (provide 'acm-backend-tabnine)

@@ -52,11 +52,8 @@
 ;;
 
 (require 'cl-lib)
-(require 'dash)
 (require 'json)
 (require 's)
-(require 'unicode-escape)
-(require 'url)
 
 ;;
 ;; Constants
@@ -114,9 +111,9 @@ Useful when binding keys to temporarily query other completion backends."
 ;;
 
 (defgroup tabnine-bridge nil
-  "Options for tabnine-bridge."
+  "Options for tabnine-bridge. This Code is copy from tabnine-capf"
   :link '(url-link :tag "Github" "https://github.com/50ways2sayhard/tabnine-capf")
-  :group 'company
+  :group 'lsp-bridge
   :prefix "tabnine-bridge-")
 
 (defcustom tabnine-bridge-max-num-results 10
