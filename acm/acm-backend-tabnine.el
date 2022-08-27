@@ -35,7 +35,7 @@
     (insert label))
   )
 
-(defun acm-backend-tabine-start-server ()
+(defun acm-backend-tabnine-start-server ()
    (when (null tabnine-bridge--process)
     (tabnine-bridge-start-process)))
 
