@@ -142,6 +142,10 @@
   "Max line lines of doc frame."
   :type 'integer)
 
+(defcustom acm-enable-tabnine-helper nil
+  "Enable tabnine support"
+  :type 'boolean)
+
 (cl-defmacro acm-run-idle-func (timer idle func)
   `(unless ,timer
      (setq ,timer
@@ -185,7 +189,6 @@
 (defvar-local acm-menu-offset 0)
 
 (defvar-local acm-enable-english-helper nil)
-(defvar-local acm-enable-tabnine-helper nil)
 
 (defvar acm-doc-frame nil)
 (defvar acm-doc-buffer " *acm-doc-buffer*")
@@ -418,13 +421,12 @@ influence of C1 on the result."
          tabnine-candidates
          tempel-candidates
          mode-candidates)
-
     (if acm-enable-tabnine-helper
-        (debug)
         (progn
           (require 'acm-backend-tabnine)
           (setq tabnine-candidates (acm-backend-tabnine-candidates keyword))
-          ))
+          )
+      )
     (if acm-enable-english-helper
         ;; Completion english if option `acm-enable-english-helper' is enable.
         (progn

@@ -35,6 +35,10 @@
     (insert label))
   )
 
+(defun acm-backend-tabine-start-server ()
+   (when (null tabnine-bridge--process)
+    (tabnine-bridge-start-process)))
+
 (provide 'acm-backend-tabnine)
 ;;; acm-backend-tabnine.el ends here
 
