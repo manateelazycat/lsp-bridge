@@ -687,24 +687,8 @@ Return completion candidates.  Must be called after `tabnine-bridge-query'."
        )
      )))
 
-(defun tabnine-test-at-point ()
-  "TabNine Completion at point function."
-  (interactive)
-  (unless (or (and tabnine-bridge-no-continue
-                   tabnine-bridge--calling-continue)
-              tabnine-bridge--disabled)
-    (tabnine-bridge-query))
-  (let* ((bounds (bounds-of-thing-at-point 'symbol))
-         (thing (thing-at-point 'symbol))
-         (candidates (tabnine-bridge--candidates thing))
-         (get-candidates (lambda () candidates)))
-    (setq-local tabnine-bridge--begin-pos (or (car bounds) (point)))
-    (debug)
-    "haha"))
-;;
 ;; Advices
 ;;
-
 
 ;;
 ;; Hooks

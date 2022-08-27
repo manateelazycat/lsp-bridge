@@ -461,8 +461,8 @@ influence of C1 on the result."
                   (append (cl-subseq mode-candidates 0 acm-snippet-insert-index)
                           yas-candidates
                           tempel-candidates
-                          tabnine-candidates
-                          (cl-subseq mode-candidates acm-snippet-insert-index))
+                          (cl-subseq mode-candidates acm-snippet-insert-index)
+                          tabnine-candidates)
                 (append mode-candidates yas-candidates tempel-candidates tabnine-candidates)
                 ))))
 
