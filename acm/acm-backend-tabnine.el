@@ -29,7 +29,10 @@
                                   :backend "tabnine"
                                   :new_suffix (get-text-property 0 'new_suffix candidate)
                                   :old_suffix (get-text-property 0 'old_suffix candidate)))))
-    candidates))
+    (sort candidates #'(lambda (c-a c-b)
+                         (string> (plist-get c-a :annotation)
+                                  (plist-get c-b :annotation)
+                                  )))))
 
 (defun acm-backend-tabnine-candidate-expand (candidate-info bound-start)
   ;; Insert TabNine suggestion.
