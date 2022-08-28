@@ -534,8 +534,8 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
   "Get buffer content for lsp. BUFFER-NAME is name eval from (buffer-name)."
   (let* ((buf (get-buffer buffer-name)))
     (if buf
-      (with-current-buffer buf
-        (buffer-substring-no-properties (point-min) (point-max))))))
+        (with-current-buffer buf
+          (buffer-substring-no-properties (point-min) (point-max))))))
 
 (defun lsp-bridge-get-multi-lang-server-by-extension (filepath)
   "Get lang server for file extension."
@@ -663,9 +663,6 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
   (unless (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     ;; start epc server and set `lsp-bridge-server-port'
     (lsp-bridge--start-epc-server)
-    (when acm-enable-tabnine-helper
-      (require 'acm-backend-tabnine)
-      (acm-backend-tabnine-start-server))
     (let* ((lsp-bridge-args (append
                              (list lsp-bridge-python-file)
                              (list (number-to-string lsp-bridge-server-port))
@@ -1630,6 +1627,11 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
   (evil-add-command-properties #'lsp-bridge-find-def :jump t)
   (evil-add-command-properties #'lsp-bridge-find-references :jump t)
   (evil-add-command-properties #'lsp-bridge-find-impl :jump t))
+
+(with-eval-after-load 'lsp-bridge
+  (when acm-enable-tabnine-helper
+    (require 'acm-backend-tabnine)
+    (acm-backend-tabnine-start-server)))
 
 (defun lsp-bridge--rename-file-advisor (orig-fun &optional arg &rest args)
   (when (and lsp-bridge-mode
