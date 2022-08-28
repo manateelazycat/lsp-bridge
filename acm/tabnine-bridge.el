@@ -79,8 +79,7 @@
       'kind .kind
       'type type
       'detail .detail
-      'annotation
-      (concat (or .detail "") " " (or type "")))
+      'annotation (concat (or .detail "") " " (or type "")))
      ,@body))
 
 ;;

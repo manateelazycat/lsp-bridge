@@ -25,13 +25,26 @@
                                   :icon "tabnine"
                                   :label candidate
                                   :display-label candidate
-                                  :annotation "Tabnine"
-                                  :backend "tabnine"))))
+                                  :annotation (get-text-property 0 'annotation candidate)
+                                  :backend "tabnine"
+                                  :new_suffix (get-text-property 0 'new_suffix candidate)
+                                  :old_suffix (get-text-property 0 'old_suffix candidate)))))
     candidates))
 
 (defun acm-backend-tabnine-candidate-expand (candidate-info bound-start)
+  ;; Insert TabNine suggestion.
   (delete-region bound-start (point))
-  (insert (plist-get candidate-info :label)))
+  (insert (plist-get candidate-info :label))
+
+  ;; Replace old suffix with new suffix for candidate to auto balance brackets.
+  (let ((old_suffix (plist-get candidate-info :old_suffix))
+        (new_suffix (plist-get candidate-info :new_suffix)))
+    (delete-region (point)
+                   (min (+ (point) (length old_suffix))
+                        (point-max)))
+    (when (stringp new_suffix)
+      (save-excursion
+        (insert new_suffix)))))
 
 (defun acm-backend-tabnine-start-server ()
   (when (null tabnine-bridge--process)
