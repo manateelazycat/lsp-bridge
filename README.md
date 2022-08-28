@@ -182,7 +182,7 @@ The following is the directory structure of the lsp-bridge project:
 | lsp-bridge-ref.el       | Framework of code referencing, providing references viewing, batch renames, regex filtering of reference results, etc. The core code is forked from color-rg.el                                    |
 | lsp-bridge-jdtls.el      | Provide java language third-party library jumping function                                                           |
 | lsp-bridge.py           | Python main logic part that provides event loop, message scheduling and status management                                                                                     |
-| acm/acm.el      | Asynchronous completion menu, specially designed for lsp-bridge backend, supports LSP, elisp, words and other backend                                                                                           |
+| acm/acm.el      | Asynchronous completion menu, specially designed for lsp-bridge backend, supports LSP, elisp, words, TabNine and other backend                                                                                           |
 | core/fileaction.py      | Tracking the status of each file, processing LSP response messages, calling Emacs elisp function                                                                                           |
 | core/lspserver.py       | LSP message processing module, mainly to analyze, send and receive LSP messages, and ensure that the sequence of LSP requests conforms with the LSP protocol specification                 |
 | core/utils.py           | Utility functions of convenience for each module call                                                                                                                                 |
