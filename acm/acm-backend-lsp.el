@@ -116,9 +116,9 @@
                          (if (> (length candidate-label) acm-backend-lsp-candidate-max-length)
                              (plist-put v :display-label (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-max-length)))
                            (plist-put v :display-label candidate-label))
-
-                         (plist-put v :backend "lsp")
-                         (add-to-list 'candidates v t))))
+                         (progn 
+                           (plist-put v :backend "lsp")
+                           (add-to-list 'candidates v t)))))
                    server-items))))
 
     (acm-candidate-sort-by-prefix keyword candidates)))
