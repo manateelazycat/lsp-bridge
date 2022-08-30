@@ -116,6 +116,8 @@
                          (if (> (length candidate-label) acm-backend-lsp-candidate-max-length)
                              (plist-put v :display-label (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-max-length)))
                            (plist-put v :display-label candidate-label))
+                         ;; FIXME: This progn here is to workaround invalid-function error for macros that have function bindings
+                         ;; References: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=46958
                          (progn 
                            (plist-put v :backend "lsp")
                            (add-to-list 'candidates v t)))))
