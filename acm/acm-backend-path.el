@@ -90,8 +90,8 @@
 
 (defun acm-backend-path-candidates (keyword)
   (when acm-enable-path
-    (let ((candidates (list))
-          (parent-dir (ignore-errors (expand-file-name (file-name-directory keyword)))))
+    (let* ((candidates (list))
+          (parent-dir (ignore-errors (expand-file-name (file-name-directory (thing-at-point 'filename))))))
       (when (and parent-dir
                  (file-exists-p parent-dir))
         (let ((current-file (file-name-base keyword))
@@ -108,7 +108,6 @@
                                                :annotation (capitalize file-type)
                                                :backend "path")
                              t))))))
-
       (acm-candidate-sort-by-prefix keyword candidates))))
 
 (defun acm-backend-path-candidate-expand (candidate-info bound-start)

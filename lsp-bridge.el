@@ -820,7 +820,10 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
         acm-backend-lsp-filepath
         (string-suffix-p ".vue" acm-backend-lsp-filepath))
    ;; Other language not allowed popup completion in string, it's annoy
-   (not (lsp-bridge-in-string-p))))
+   (not (lsp-bridge-in-string-p))
+   ;; Allow file path completion in string area
+   (and (thing-at-point 'filename)
+        (file-exists-p (file-name-directory (thing-at-point 'filename))))))
 
 (defun lsp-bridge-not-in-comment ()
   "Hide completion if cursor in comment area."
