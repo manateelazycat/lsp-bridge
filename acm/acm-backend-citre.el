@@ -77,7 +77,7 @@
 
 ;;; Code:
 
-(defcustom acm-enable-citre t
+(defcustom acm-enable-citre nil
   "Popup citre completions when this option is turn on."
   :type 'boolean)
 
@@ -107,15 +107,11 @@
            (collection (delete-dups (citre-capf--get-collection keyword)))
            annotation
            icon)
-      (message "keyword : %s" keyword)
-      ;; (message "collection : %s" collection)
       (when collection
         (dolist (candidate collection)
-          ;; (message "candidate : %S" candidate)
           (when (acm-candidate-fuzzy-search keyword candidate)
             (setq annotation (replace-regexp-in-string "[() ]" "" (replace-regexp-in-string ")?@.*" "" (citre-get-property 'annotation candidate))))
             (setq icon (conver-icon-for-hdl-language annotation))
-            ;; (message "icon : %s" icon)
             (add-to-list 'candidates (list :key candidate
                                            :icon icon
                                            :label candidate
