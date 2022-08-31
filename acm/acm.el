@@ -427,9 +427,6 @@ influence of C1 on the result."
       (require 'acm-backend-tabnine)
       (setq tabnine-candidates (acm-backend-tabnine-candidates keyword)))
 
-    (when acm-enable-citre
-      (setq citre-candidates (acm-backend-citre-candidates keyword)))
-
     (if acm-enable-english-helper
         ;; Completion english if option `acm-enable-english-helper' is enable.
         (progn
@@ -443,14 +440,16 @@ influence of C1 on the result."
           ;; Only show path candidates if prefix is valid path.
           (setq candidates path-candidates)
 
+        (when acm-enable-citre
+          (setq citre-candidates (acm-backend-citre-candidates keyword)))
         ;; Fetch syntax completion candidates.
         (setq lsp-candidates (acm-backend-lsp-candidates keyword))
         (setq mode-candidates (append
                                (acm-backend-elisp-candidates keyword)
                                lsp-candidates
+                               citre-candidates
                                (acm-backend-search-words-candidates keyword)
-                               (acm-backend-telega-candidates keyword)
-                               citre-candidates))
+                               (acm-backend-telega-candidates keyword)))
 
         (when (or
                ;; Show snippet candidates if lsp-candidates length is zero.

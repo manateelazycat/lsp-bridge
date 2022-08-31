@@ -1,16 +1,9 @@
-;;; acm-backend-citre.el --- Path backend for acm
+;;; acm-backend-citre.el --- Citre backend for acm
 
 ;; Filename: acm-backend-citre.el
-;; Description: Path backend for acm
-;; Author: Andy Stewart <lazycat.manatee@gmail.com>
-;; Maintainer: Andy Stewart <lazycat.manatee@gmail.com>
-;; Copyright (C) 2022, Andy Stewart, all rights reserved.
-;; Created: 2022-06-07 08:58:47
-;; Version: 0.1
-;; Last-Updated: 2022-06-07 08:58:47
-;;           By: Andy Stewart
-;; URL: https://www.github.org/manateelazycat/acm-backend-path
-;; Keywords:
+;; Description: Citre backend for acm
+;; Author: skfwe <wcq-062821@163.com>
+;; Copyright (C) 2022, skfwe, all rights reserved.
 ;; Compatibility: GNU Emacs 28.1
 ;;
 ;; Features that might be required by this library:
@@ -39,7 +32,7 @@
 
 ;;; Commentary:
 ;;
-;; Path backend for acm
+;; Citre backend for acm
 ;;
 
 ;;; Installation:
@@ -51,7 +44,7 @@
 ;;
 ;; And the following to your ~/.emacs startup file.
 ;;
-;; (require 'acm-backend-path)
+;; (require 'acm-backend-citre)
 ;;
 ;; No need more.
 
@@ -60,7 +53,7 @@
 ;;
 ;;
 ;; All of the above can customize by:
-;;      M-x customize-group RET acm-backend-path RET
+;;      M-x customize-group RET acm-backend-citre RET
 ;;
 
 ;;; Change log:
@@ -88,37 +81,49 @@
   "Popup citre completions when this option is turn on."
   :type 'boolean)
 
+(defun conver-icon-for-hdl-language (icon)
+  (let* ((downcase-icon (downcase icon)) (new-icon nil))
+    (cond ((string= downcase-icon "port")
+           (setq new-icon "type-parameter"))
+          ((string= downcase-icon "net")
+           (setq new-icon "custom"))
+          ((string= downcase-icon "register")
+           (setq new-icon "mod"))
+          ((string= downcase-icon "prototype")
+           (setq new-icon "at"))
+          ((string= downcase-icon "instance")
+           (setq new-icon "method"))
+          ((string= downcase-icon "block")
+           (setq new-icon "struct"))
+          ((string= downcase-icon "task")
+           (setq new-icon "text"))
+          (t
+           (setq new-icon downcase-icon)))
+    new-icon))
+
 (defun acm-backend-citre-candidates (keyword)
   (when acm-enable-citre
     (let* ((candidates (list))
-           (symbol (citre-get-symbol))
-           (bounds (citre-get-property 'bounds symbol))
-           (start (car bounds))
-           (end (cdr bounds))
-           (collection (delete-dups (citre-capf--get-collection symbol))))
+           (collection (delete-dups (citre-capf--get-collection keyword)))
+           annotation
+           icon)
       (message "keyword : %s" keyword)
-      (message "symbol : %s" symbol)
       ;; (message "collection : %s" collection)
-
       (when collection
         (dolist (candidate collection)
-          (message "candidate : %S" candidate)
+          ;; (message "candidate : %S" candidate)
           (when (acm-candidate-fuzzy-search keyword candidate)
+            (setq annotation (replace-regexp-in-string "[() ]" "" (replace-regexp-in-string ")?@.*" "" (citre-get-property 'annotation candidate))))
+            (setq icon (conver-icon-for-hdl-language annotation))
+            ;; (message "icon : %s" icon)
             (add-to-list 'candidates (list :key candidate
-                                           :icon "file"
+                                           :icon icon
                                            :label candidate
                                            :display-label candidate
-                                           :annotation (get-text-property 0 'annotation candidate)
+                                           :annotation annotation 
                                            :backend "citre")
                          t)))
         (acm-candidate-sort-by-prefix keyword candidates)))))
-
-(defun acm-backend-citre-candidate-expand (candidate-info bound-start)
-  (let* ((keyword (acm-get-input-prefix))
-         (file-name (plist-get candidate-info :label))
-         (parent-dir (file-name-directory keyword)))
-    (delete-region bound-start (point))
-    (insert (concat parent-dir file-name))))
 
 (provide 'acm-backend-citre)
 
