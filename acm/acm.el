@@ -98,6 +98,7 @@
 (require 'acm-backend-search-words)
 (require 'acm-backend-tempel)
 (require 'acm-backend-telega)
+(require 'acm-backend-citre)
 (require 'acm-quick-access)
 
 ;;; Code:
@@ -420,10 +421,15 @@ influence of C1 on the result."
          yas-candidates
          tabnine-candidates
          tempel-candidates
-         mode-candidates)
+         mode-candidates
+         citre-candidates)
     (when acm-enable-tabnine-helper
       (require 'acm-backend-tabnine)
       (setq tabnine-candidates (acm-backend-tabnine-candidates keyword)))
+
+    (when acm-enable-citre
+      (setq citre-candidates (acm-backend-citre-candidates keyword)))
+
     (if acm-enable-english-helper
         ;; Completion english if option `acm-enable-english-helper' is enable.
         (progn
@@ -443,7 +449,8 @@ influence of C1 on the result."
                                (acm-backend-elisp-candidates keyword)
                                lsp-candidates
                                (acm-backend-search-words-candidates keyword)
-                               (acm-backend-telega-candidates keyword)))
+                               (acm-backend-telega-candidates keyword)
+                               citre-candidates))
 
         (when (or
                ;; Show snippet candidates if lsp-candidates length is zero.
