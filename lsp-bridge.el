@@ -415,7 +415,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     f90-mode-hook
     fortran-mode-hook
     nix-mode-hook
-    ess-r-mode-hook)
+    ess-r-mode-hook
+    verilog-mode-hook)
   "The default mode hook to enable lsp-bridge."
   :type 'list)
 
