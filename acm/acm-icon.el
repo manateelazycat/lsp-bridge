@@ -144,6 +144,13 @@
     ("feature" . ("material" "sim-outline" "#00c4cc"))
     ("at" . ("material" "at" "#0085c3"))
     ("tabnine" . ("material" "alpha-t-box-outline" "#954a97"))
+    ("port" . ("material" "blinds-open" "#39a6dd"))
+    ("net" . ("material" "chart-timeline-variant" "#ed6856"))
+    ("register" . ("material" "cellphone-key" "#ff6908"))
+    ("block" . ("material" "contain" "#96cbb3"))
+    ("prototype" . ("material" "currency-sign" "#0085c3"))
+    ("instance" . ("material" "city-variant-outline" "#da1884"))
+    ("task" . ("material" "text-recognition" "#98c807"))
     (t . ("material" "file-find-outline" "#90cef1"))))
 
 (defvar acm-icon-cache (make-hash-table :test 'equal))

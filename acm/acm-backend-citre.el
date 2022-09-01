@@ -81,44 +81,21 @@
   "Popup citre completions when this option is turn on."
   :type 'boolean)
 
-(defun conver-icon-for-hdl-language (icon)
-  (let* ((downcase-icon (downcase icon)) (new-icon nil))
-    (cond ((string= downcase-icon "port")
-           (setq new-icon "type-parameter"))
-          ((string= downcase-icon "net")
-           (setq new-icon "custom"))
-          ((string= downcase-icon "register")
-           (setq new-icon "mod"))
-          ((string= downcase-icon "prototype")
-           (setq new-icon "at"))
-          ((string= downcase-icon "instance")
-           (setq new-icon "method"))
-          ((string= downcase-icon "block")
-           (setq new-icon "struct"))
-          ((string= downcase-icon "task")
-           (setq new-icon "text"))
-          (t
-           (setq new-icon downcase-icon)))
-    new-icon))
-
 (defun acm-backend-citre-candidates (keyword)
   (when acm-enable-citre
     (let* ((candidates (list))
-           (collection (delete-dups (citre-capf--get-collection keyword)))
-           annotation
-           icon)
+           (collection (delete-dups (citre-capf--get-collection keyword))))
       (when collection
         (dolist (candidate collection)
           (when (acm-candidate-fuzzy-search keyword candidate)
-            (setq annotation (replace-regexp-in-string "[() ]" "" (replace-regexp-in-string ")?@.*" "" (citre-get-property 'annotation candidate))))
-            (setq icon (conver-icon-for-hdl-language annotation))
-            (add-to-list 'candidates (list :key candidate
-                                           :icon icon
-                                           :label candidate
-                                           :display-label candidate
-                                           :annotation annotation 
-                                           :backend "citre")
-                         t)))
+            (let* ((annotation (replace-regexp-in-string "[() ]" "" (replace-regexp-in-string ")?@.*" "" (citre-get-property 'annotation candidate)))))
+              (add-to-list 'candidates (list :key candidate
+                                             :icon (downcase annotation)
+                                             :label candidate
+                                             :display-label candidate
+                                             :annotation annotation 
+                                             :backend "citre")
+                           t))))
         (acm-candidate-sort-by-prefix keyword candidates)))))
 
 (provide 'acm-backend-citre)
