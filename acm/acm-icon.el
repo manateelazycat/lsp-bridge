@@ -150,7 +150,8 @@
     ("block" . ("material" "contain" "#96cbb3"))
     ("prototype" . ("material" "currency-sign" "#0085c3"))
     ("instance" . ("material" "city-variant-outline" "#da1884"))
-    ("task" . ("material" "text-recognition" "#98c807"))
+    ("task" . ("material" "text-recognition" "#e22272"))
+    ("typedef" . ("material" "label-outline" "#bf11b6"))
     (t . ("material" "file-find-outline" "#90cef1"))))
 
 (defvar acm-icon-cache (make-hash-table :test 'equal))
