@@ -5,7 +5,7 @@
   "settings": {},
   "initializationOptions": {
     "typescript": {
-      "serverPath": "C:/Users/Joxos/AppData/Local/pnpm/global/5/.pnpm/typescript@4.7.4/node_modules/typescript/lib/tsserverlibrary.js"
+      "serverPath": "C:/path/to/tsserverlibrary.js"
     },
     "languageFeatures": {
       "references": true,
