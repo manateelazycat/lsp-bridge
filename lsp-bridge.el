@@ -112,7 +112,7 @@
                                                     lsp-bridge-not-match-stop-commands
                                                     lsp-bridge-not-in-string
                                                     lsp-bridge-not-in-comment
-                                                    lsp-bridge-not-follow-complete
+                                                    ;; lsp-bridge-not-follow-complete
                                                     lsp-bridge-is-evil-state
                                                     lsp-bridge-multiple-cursors-disable
                                                     lsp-bridge-not-complete-manually
@@ -785,21 +785,20 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
         (puthash (plist-get item :key) item completion-table))
       (puthash server-name completion-table lsp-items)
       (setq-local acm-backend-lsp-items lsp-items))
-
-    (lsp-bridge-try-completion)))
+    (lsp-bridge-try-completion t)))
 
 (defun lsp-bridge-record-search-words-items (candidates)
   (setq-local acm-backend-search-words-items candidates)
-  (lsp-bridge-try-completion))
+  (lsp-bridge-try-completion t))
 
-(defun lsp-bridge-try-completion ()
+(defun lsp-bridge-try-completion (&optional check-follow-complete)
   (if lsp-bridge-prohibit-completion
       (setq-local lsp-bridge-prohibit-completion nil)
-
     ;; Try popup completion frame.
-    (if (cl-every (lambda (pred)
+    (if (and (cl-every (lambda (pred)
                     (if (functionp pred) (funcall pred) t))
                   lsp-bridge-completion-popup-predicates)
+             (if check-follow-complete (lsp-bridge-not-follow-complete) t))
         (acm-update)
       (acm-hide))))
 
@@ -823,8 +822,9 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
    ;; Other language not allowed popup completion in string, it's annoy
    (not (lsp-bridge-in-string-p))
    ;; Allow file path completion in string area
-   (and (thing-at-point 'filename)
-        (file-exists-p (file-name-directory (thing-at-point 'filename))))))
+   (ignore-errors 
+     (and (thing-at-point 'filename)
+          (file-exists-p (file-name-directory (thing-at-point 'filename)))))))
 
 (defun lsp-bridge-not-in-comment ()
   "Hide completion if cursor in comment area."
