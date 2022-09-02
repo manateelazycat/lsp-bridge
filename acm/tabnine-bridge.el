@@ -51,6 +51,7 @@
 
 (require 'cl-lib)
 (require 'json)
+(require 'dash)
 
 ;;
 ;; Constants
