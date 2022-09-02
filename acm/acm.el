@@ -612,7 +612,6 @@ influence of C1 on the result."
 
   ;; Clean `acm-menu-max-length-cache'.
   (setq acm-menu-max-length-cache 0)
-  (acm-citre-clear-prefix-keyword)
 
   ;; Remove hook of `acm--pre-command'.
   (remove-hook 'pre-command-hook #'acm--pre-command 'local))
