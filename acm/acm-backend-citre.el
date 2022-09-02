@@ -102,6 +102,9 @@
                           (if (string= (char-to-string (following-char)) ".")
                               (thing-at-point 'symbol)
                             "")))
+            ;; When there is nothing in front of the . , it will get nil
+            (unless acm-citre-prefix-keyword
+              (setq-local acm-citre-prefix-keyword ""))
             (setq-local acm-citre-search-keyword acm-citre-prefix-keyword))
         (if (string-suffix-p (substring keyword 0 (1- (length keyword))) acm-citre-search-keyword)
             (setq-local acm-citre-search-keyword (concat acm-citre-search-keyword (substring (string-reverse keyword) 0 1)))

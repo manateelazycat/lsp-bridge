@@ -785,7 +785,6 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
         (puthash (plist-get item :key) item completion-table))
       (puthash server-name completion-table lsp-items)
       (setq-local acm-backend-lsp-items lsp-items))
-
     (lsp-bridge-try-completion)))
 
 (defun lsp-bridge-record-search-words-items (candidates)
@@ -795,7 +794,6 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 (defun lsp-bridge-try-completion ()
   (if lsp-bridge-prohibit-completion
       (setq-local lsp-bridge-prohibit-completion nil)
-
     ;; Try popup completion frame.
     (if (cl-every (lambda (pred)
                     (if (functionp pred) (funcall pred) t))
@@ -823,8 +821,9 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
    ;; Other language not allowed popup completion in string, it's annoy
    (not (lsp-bridge-in-string-p))
    ;; Allow file path completion in string area
-   (and (thing-at-point 'filename)
-        (file-exists-p (file-name-directory (thing-at-point 'filename))))))
+   (ignore-errors
+     (and (thing-at-point 'filename)
+          (file-exists-p (file-name-directory (thing-at-point 'filename)))))))
 
 (defun lsp-bridge-not-in-comment ()
   "Hide completion if cursor in comment area."
@@ -836,7 +835,8 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 
 (defun lsp-bridge-not-follow-complete ()
   "Hide completion if last command is `acm-complete'."
-  (not (eq last-command 'acm-complete)))
+  (or (not (eq last-command 'acm-complete))
+      (member (format "%s" this-command) '("self-insert-command" "org-self-insert-command"))))
 
 (defun lsp-bridge-in-comment-p (&optional state)
   (ignore-errors
