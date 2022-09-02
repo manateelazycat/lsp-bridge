@@ -644,6 +644,7 @@ influence of C1 on the result."
         ("tempel" (acm-backend-tempel-candidate-expand candidate-info bound-start))
         ("english" (acm-backend-english-candidate-expand candidate-info bound-start))
         ("tabnine" (acm-backend-tabnine-candidate-expand candidate-info bound-start))
+        ("citre" (acm-backend-citre-candidate-expand candidate-info bound-start))
         (_
          (delete-region bound-start (point))
          (insert (plist-get candidate-info :label)))
