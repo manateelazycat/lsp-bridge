@@ -98,6 +98,7 @@
 (require 'acm-backend-search-words)
 (require 'acm-backend-tempel)
 (require 'acm-backend-telega)
+(require 'acm-backend-tabnine)
 (require 'acm-backend-citre)
 (require 'acm-quick-access)
 
