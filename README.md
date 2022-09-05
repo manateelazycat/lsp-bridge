@@ -83,6 +83,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-complete-manually`: Only popup completion menu when user call `lsp-bridge-popup-complete` command, default is nil
 * `acm-backend-lsp-enable-auto-import`: automatic insert import code, enable by default
 * `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
+* `acm-enable-search-words`: Whether the complete menu display the word of the file, enable by default
 * `acm-enable-doc`: Whether the complete menu display the help document
 * `acm-enable-icon`: Whether the complete menu shows the icon, macOS users need to add option `--with-rsvg` to the brew command to install emacs to display SVG icon
 * `acm-enable-quick-access`: Whether the index is displayed behind the icon, you can quickly select the candidate through Alt + Number, disable by default
