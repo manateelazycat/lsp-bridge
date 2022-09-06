@@ -81,6 +81,7 @@ lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.
 * `lsp-bridge-python-lsp-server`: Python语言的服务器，可以选择`pyright`或者`jedi`
 * `lsp-bridge-tex-lsp-server`: LaTeX语言的服务器，可以选择`texlab`或者`digestif`
 * `lsp-bridge-complete-manually`: 只有当用户手动调用 `lsp-bridge-popup-complete` 命令的时候才弹出补全菜单， 默认关闭
+* `lsp-bridge-get-workspace-folder`: 在Java中需要把多个项目放到一个Workspace目录下， 才能正常进行定义跳转， 可以自定义这个函数， 函数输入是项目路径， 返回对应的Workspace目录
 * `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
 * `acm-candidate-match-function`: 补全菜单匹配算法， orderless-* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
 * `acm-enable-search-words`: 补全菜单是否显示打开文件的单词， 默认打开
