@@ -250,6 +250,14 @@ class LspServer:
     def send_initialize_request(self):
         logger.info("\n--- Send initialize for {} ({})".format(self.project_path, self.server_info["name"]))
         
+        initialize_options = self.server_info.get("initializationOptions", {})
+        if 'typescript' in initialize_options.keys():
+            if "%USERPROFILE%" in initialize_options['typescript']['serverPath']:
+                res = subprocess.run("set", shell=True, capture_output=True, text=True)
+                ib = res.stdout.find("USERPROFILE") + len("USERPROFILE=")
+                ie = res.stdout.find("\n", ib)
+                user_profile = res.stdout[ib:ie]
+                initialize_options['typescript']['serverPath'] = initialize_options['typescript']['serverPath'].replace("%USERPROFILE%", user_profile)
         self.sender.send_request("initialize", {
             "processId": os.getpid(),
             "rootPath": self.root_path,
@@ -259,7 +267,7 @@ class LspServer:
             },
             "rootUri": path_to_uri(self.project_path),
             "capabilities": self.get_capabilities(),
-            "initializationOptions": self.server_info.get("initializationOptions", {})
+            "initializationOptions": initialize_options
         }, self.initialize_id, init=True)
 
     def get_capabilities(self):
