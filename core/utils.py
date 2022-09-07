@@ -27,6 +27,7 @@ import logging
 import pathlib
 import platform
 import sys
+import subprocess
 from epc.client import EPCClient
 
 try:
@@ -233,3 +234,12 @@ def get_os_name():
 
 def parse_json_content(content):
     return json_parser.loads(content)
+
+def windows_get_env_value(var_name: str) -> str:
+    """
+    Read a Windows environment variable by command "SET" and return its value.
+    """
+    res = subprocess.run("set", shell=True, capture_output=True, text=True)
+    ib = res.stdout.find(var_name) + len(var_name) + 1
+    ie = res.stdout.find("\n", ib)
+    return res.stdout[ib:ie]
