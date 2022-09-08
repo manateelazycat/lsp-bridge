@@ -27,11 +27,7 @@ import logging
 import pathlib
 import platform
 import sys
-<<<<<<< HEAD
 import os
-=======
-import subprocess
->>>>>>> 4c65cde (extract windows_get_env_value)
 from epc.client import EPCClient
 
 try:
