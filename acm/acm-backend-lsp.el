@@ -172,7 +172,7 @@
     (funcall (or snippet-fn #'insert)
              (or new-text insert-text label))
 
-    ;; Do `additional-text-edits' if return auto-imprt information.
+    ;; Do `additional-text-edits' if return auto-import information.
     (when (and acm-backend-lsp-enable-auto-import
                (cl-plusp (length additional-text-edits)))
       (acm-backend-lsp-apply-text-edits additional-text-edits nil))))
@@ -217,9 +217,12 @@ If optional MARKER, return a marker instead"
       (if marker (copy-marker (point-marker)) (point)))))
 
 (defun acm-backend-lsp-apply-text-edits (edits just-reverse)
-  (dolist (edit (if just-reverse (reverse edits) (acm-backend-lsp-sort-edits edits)))
-    (let* ((range (plist-get edit :range)))
-      (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get edit :newText)))))
+  (atomic-change-group
+    (let ((change-group (prepare-change-group)))
+      (dolist (edit (if just-reverse (reverse edits) (acm-backend-lsp-sort-edits edits)))
+        (let* ((range (plist-get edit :range)))
+          (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get edit :newText))))
+      (undo-amalgamate-change-group change-group))))
 
 (defun acm-backend-lsp-sort-edits (edits)
   (sort edits #'(lambda (edit-a edit-b)
@@ -236,10 +239,16 @@ Doubles as an indicator of snippet support."
 (defun acm-backend-lsp-insert-new-text (start-pos end-pos new-text)
   (let* ((start-point (acm-backend-lsp-position-to-point start-pos))
          (end-point (acm-backend-lsp-position-to-point end-pos)))
-    (save-excursion
-      (delete-region start-point end-point)
-      (goto-char start-point)
-      (insert new-text))))
+    ;; from eglot
+    (let ((source (current-buffer)))
+      (with-temp-buffer
+        (insert new-text)
+        (let ((temp (current-buffer)))
+          (with-current-buffer source
+            (save-excursion
+              (save-restriction
+                (narrow-to-region start-point end-point)
+                (replace-buffer-contents temp)))))))))
 
 (provide 'acm-backend-lsp)
 
