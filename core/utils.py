@@ -239,7 +239,8 @@ def windows_get_env_value(var_name: str) -> str:
     """
     Read a Windows environment variable by os.environ and return its value.
     """
-    return os.environ()[var_name]
+    if var_name in os.environ.keys():
+        return os.environ[var_name]
 
 def windows_parse_path(path: str) -> str:
     return path.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
