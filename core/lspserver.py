@@ -251,8 +251,13 @@ class LspServer:
     def send_initialize_request(self):
         logger.info("\n--- Send initialize for {} ({})".format(self.project_path, self.server_info["name"]))
         
+        initialize_options = self.server_info.get("initializationOptions", {})
+        if 'typescript' in initialize_options.keys():
+            if 'serverPath' in initialize_options['typescript'].keys():
+                initialize_options['typescript']['serverPath'] = windows_parse_path(initialize_options['typescript']['serverPath'])
+
         self.worksplace_folder = get_emacs_func_result("get-workspace-folder", self.project_path)
-        
+
         self.sender.send_request("initialize", {
             "processId": os.getpid(),
             "rootPath": self.root_path,
@@ -262,7 +267,7 @@ class LspServer:
             },
             "rootUri": path_to_uri(self.project_path),
             "capabilities": self.get_capabilities(),
-            "initializationOptions": self.get_initialization_options()
+            "initializationOptions": initialize_options
         }, self.initialize_id, init=True)
 
     def get_capabilities(self):
@@ -305,7 +310,7 @@ class LspServer:
                 }
             }
         })
-        
+
         if type(self.worksplace_folder) == str:
             merge_capabilites = merge(merge_capabilites, {
                 "workspace": {
@@ -314,17 +319,17 @@ class LspServer:
             })
 
         return merge_capabilites
-    
+
     def get_initialization_options(self):
         initialization_options = self.server_info.get("initializationOptions", {})
-        
+
         if type(self.worksplace_folder) == str:
             initialization_options = merge(initialization_options, {
                 "workspaceFolders": [
                     self.worksplace_folder
                 ]
             })
-        
+
         return initialization_options
 
     def parse_document_uri(self, filepath, external_file_link):

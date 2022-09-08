@@ -137,7 +137,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 14 | [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls) | java | 请确保导出 `org.eclipse.jdt.ls.product/target/repository/bin` 到你系统的PATH路径 |
 | 15 | [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp) | clojure | 如果使用 `homebrew` 安装的，请确保安装的是 `clojure-lsp/brew/clojure-lsp-native` [clojure-lsp-native](https://clojure-lsp.io/installation/#homebrew-macos-and-linux) |
 | 16 | [bash-language-server](https://github.com/bash-lsp/bash-language-server) | bash | |
-| 17 | [volar](https://github.com/johnsoncodehk/volar) | vue | |
+| 17 | [volar](https://github.com/johnsoncodehk/volar) | vue | npm install typescript volar -g |
 | 18 | [sumneko](https://github.com/sumneko/lua-language-server) | lua | 请确保导出sumneko的 `bin` 目录到你系统的PATH路径 |
 | 19 | [wxml-language-server](https://github.com/chemzqm/wxml-languageserver) | wxml | |
 | 20 | [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | html | |
