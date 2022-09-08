@@ -241,18 +241,9 @@ def parse_json_content(content):
 
 def windows_get_env_value(var_name: str) -> str:
     """
-<<<<<<< HEAD
     Read a Windows environment variable by os.environ and return its value.
     """
     return os.environ()[var_name]
 
 def windows_parse_path(path: str) -> str:
     return path.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
-=======
-    Read a Windows environment variable by command "SET" and return its value.
-    """
-    res = subprocess.run("set", shell=True, capture_output=True, text=True)
-    ib = res.stdout.find(var_name) + len(var_name) + 1
-    ie = res.stdout.find("\n", ib)
-    return res.stdout[ib:ie]
->>>>>>> 4c65cde (extract windows_get_env_value)
