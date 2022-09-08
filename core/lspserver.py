@@ -252,8 +252,8 @@ class LspServer:
         
         initialize_options = self.server_info.get("initializationOptions", {})
         if 'typescript' in initialize_options.keys():
-            if "%USERPROFILE%" in initialize_options['typescript']['serverPath']:
-                initialize_options['typescript']['serverPath'] = initialize_options['typescript']['serverPath'].replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
+            if 'serverPath' in initialize_options['typescript'].keys():
+                initialize_options['typescript']['serverPath'] = windows_parse_path(initialize_options['typescript']['serverPath'])
         self.sender.send_request("initialize", {
             "processId": os.getpid(),
             "rootPath": self.root_path,
