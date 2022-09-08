@@ -243,6 +243,7 @@ Start discarding off end if gets this big."
                (lsp-bridge-epc-define-method mngr 'get-emacs-var 'lsp-bridge--get-emacs-var-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-vars 'lsp-bridge--get-emacs-vars-func)
                (lsp-bridge-epc-define-method mngr 'get-project-path 'lsp-bridge--get-project-path-func)
+               (lsp-bridge-epc-define-method mngr 'get-workspace-folder 'lsp-bridge--get-workspace-folder-func)
                (lsp-bridge-epc-define-method mngr 'get-multi-lang-server 'lsp-bridge--get-multi-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-single-lang-server 'lsp-bridge--get-single-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-version 'emacs-version)
@@ -430,6 +431,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Default use command 'git rev-parse --show-toplevel' get project path,
 you can customize `lsp-bridge-get-project-path-by-filepath' to return project path by give file path.")
 
+(defcustom lsp-bridge-get-workspace-folder nil
+  "In Java, sometimes, we need return same workspace folder for multiple projects,
+you can customize `lsp-bridge-get-workspace-folder' to return workspace folder path by give project path.")
+
 (defvar lsp-bridge-formatting-indent-alist
   '((c-mode                     . c-basic-offset) ; C
     (c++-mode                   . c-basic-offset) ; C++
@@ -494,6 +499,10 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 (defun lsp-bridge--get-project-path-func (filepath)
   (when lsp-bridge-get-project-path-by-filepath
     (funcall lsp-bridge-get-project-path-by-filepath filepath)))
+
+(defun lsp-bridge--get-workspace-folder-func (project-path)
+  (when lsp-bridge-get-workspace-folder
+    (funcall lsp-bridge-get-workspace-folder project-path)))
 
 (defun lsp-bridge--get-multi-lang-server-func (project-path filepath)
   "Get lang server with project path, file path or file extension."

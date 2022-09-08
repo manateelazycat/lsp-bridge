@@ -81,14 +81,16 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright` or` jedi`
 * `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `taxlab` or` digestif`
 * `lsp-bridge-complete-manually`: Only popup completion menu when user call `lsp-bridge-popup-complete` command, default is nil
+* `lsp-bridge-get-workspace-folder`: You need to put multiple project in a `workspace` directory in Java before you can jump function defintion normally. This function can be customized, the function input is the project path and returns the `workspace` directory corresponding
 * `acm-backend-lsp-enable-auto-import`: automatic insert import code, enable by default
 * `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
+* `acm-enable-search-words`: Whether the complete menu display the word of the file, enable by default
 * `acm-enable-doc`: Whether the complete menu display the help document
 * `acm-enable-icon`: Whether the complete menu shows the icon, macOS users need to add option `--with-rsvg` to the brew command to install emacs to display SVG icon
 * `acm-enable-quick-access`: Whether the index is displayed behind the icon, you can quickly select the candidate through Alt + Number, disable by default
 * `acm-snippet-insert-index`: The display position of snippet candidate in the complementary menu
 * `acm-doc-frame-max-lines`: Max line number of help documentation, default is 20
-* `acm-enable-tabnine-helper`: Enable tabnine support，disable by default，when enable call `tabnine-bridge-install-binary` command, and it can be used
+* `acm-enable-tabnine-helper`: Enable tabnine support，disable by default，when enable call `tabnine-bridge-install-binary` command, and it can be used. TabNine will consume huge CPUs, causing your entire computer to be slow. If the computer performance is not good, it is not recommended to enable this option
 
 ## Customize language server configuration
 
