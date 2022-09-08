@@ -310,7 +310,7 @@ class LspServer:
                 }
             }
         })
-        
+
         if type(self.worksplace_folder) == str:
             merge_capabilites = merge(merge_capabilites, {
                 "workspace": {
@@ -319,17 +319,17 @@ class LspServer:
             })
 
         return merge_capabilites
-    
+
     def get_initialization_options(self):
         initialization_options = self.server_info.get("initializationOptions", {})
-        
+
         if type(self.worksplace_folder) == str:
             initialization_options = merge(initialization_options, {
                 "workspaceFolders": [
                     self.worksplace_folder
                 ]
             })
-        
+
         return initialization_options
 
     def parse_document_uri(self, filepath, external_file_link):
