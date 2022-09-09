@@ -81,16 +81,16 @@
   "Popup citre completions when this option is turn on."
   :type 'boolean)
 
-(defcustom acm-enable-keyword-complete t
+(defcustom acm-backend-citre-keyword-complete t
   "push mode keyword to candidate"
   :type 'boolean)
 
-(defvar-local acm-citre-search-keyword "")
+(defvar-local acm-backend-citre-search-keyword "")
 
-(defvar-local acm-citre-prefix-keyword ""
+(defvar-local acm-backend-citre-prefix-keyword ""
   "when type . keyword is \"\" so we use symbol befoe . as keyword prefix")
 
-(defvar acm-keywords-alist
+(defvar acm-backend-citre-keywords-alist
   `((verilog-mode
      ;; compiler directives, from IEEE 1800-2012 section 22.1
      "`__FILE__" "`__LINE" "`begin_keywords" "`celldefine" "`default_nettype"
@@ -146,13 +146,13 @@
      )
     ))
 
-(defun acm-citre-clear-prefix-keyword ()
-  (setq-local acm-citre-prefix-keyword ""))
+(defun acm-backend-citre-clear-prefix-keyword ()
+  (setq-local acm-backend-citre-prefix-keyword ""))
 
 (defun acm-backend-citre-get-mode-keyword ()
   (let* ((mode-keyword (list)))
     (catch 'break
-      (dolist (item acm-keywords-alist)
+      (dolist (item acm-backend-citre-keywords-alist)
         (when (eq major-mode (car item))
           (setq mode-keyword (seq-subseq item 1))
           (throw 'break t))))
@@ -166,28 +166,28 @@
     (let* ((candidates (list)))
       (if (string-empty-p keyword)
           (progn
-            (setq-local acm-citre-prefix-keyword 
+            (setq-local acm-backend-citre-prefix-keyword 
                         (save-excursion
                           (backward-char)
                           (if (string= (char-to-string (following-char)) ".")
                               (thing-at-point 'symbol)
                             "")))
             ;; When there is nothing in front of the . , it will get nil
-            (unless acm-citre-prefix-keyword
-              (setq-local acm-citre-prefix-keyword ""))
-            (setq-local acm-citre-search-keyword acm-citre-prefix-keyword))
-        (if (string-suffix-p (substring keyword 0 (1- (length keyword))) acm-citre-search-keyword)
-            (setq-local acm-citre-search-keyword (concat acm-citre-search-keyword (substring (string-reverse keyword) 0 1)))
-          (setq-local acm-citre-search-keyword keyword)))
-      (let* ((collection (unless (string-empty-p acm-citre-search-keyword)
-                           (delete-dups (citre-capf--get-collection acm-citre-search-keyword)))))
-        (when acm-enable-keyword-complete
+            (unless acm-backend-citre-prefix-keyword
+              (setq-local acm-backend-citre-prefix-keyword ""))
+            (setq-local acm-backend-citre-search-keyword acm-backend-citre-prefix-keyword))
+        (if (string-suffix-p (substring keyword 0 (1- (length keyword))) acm-backend-citre-search-keyword)
+            (setq-local acm-backend-citre-search-keyword (concat acm-backend-citre-search-keyword (substring (string-reverse keyword) 0 1)))
+          (setq-local acm-backend-citre-search-keyword keyword)))
+      (let* ((collection (unless (string-empty-p acm-backend-citre-search-keyword)
+                           (delete-dups (citre-capf--get-collection acm-backend-citre-search-keyword)))))
+        (when acm-backend-citre-keyword-complete
           (setq collection (append (acm-backend-citre-get-mode-keyword) collection)))
         (when collection
           (dolist (candidate collection)
-            (when (acm-candidate-fuzzy-search acm-citre-search-keyword candidate)
+            (when (acm-candidate-fuzzy-search acm-backend-citre-search-keyword candidate)
               (let* ((annotation (replace-regexp-in-string "[() ]" "" (replace-regexp-in-string ")?@.*" "" (citre-get-property 'annotation candidate))))
-                     (candidate-fix (replace-regexp-in-string (concat "^" acm-citre-prefix-keyword "\\.?") "" candidate)))
+                     (candidate-fix (replace-regexp-in-string (concat "^" acm-backend-citre-prefix-keyword "\\.?") "" candidate)))
                 (add-to-list 'candidates (list :key candidate-fix
                                                :icon (downcase annotation)
                                                :label candidate-fix
@@ -195,14 +195,14 @@
                                                :annotation annotation 
                                                :backend "citre")
                              t))))
-          (acm-candidate-sort-by-prefix acm-citre-search-keyword candidates))))))
+          (acm-candidate-sort-by-prefix acm-backend-citre-search-keyword candidates))))))
 
 (defun acm-backend-citre-candidate-expand (candidate-info bound-start)
   (delete-region bound-start (point))
   (insert (plist-get candidate-info :label)))
 
 ;; The expand function is not called when clearing the input to the initial state
-(advice-add #'acm-hide :after #'acm-citre-clear-prefix-keyword)
+(advice-add #'acm-hide :after #'acm-backend-citre-clear-prefix-keyword)
 
 (provide 'acm-backend-citre)
 

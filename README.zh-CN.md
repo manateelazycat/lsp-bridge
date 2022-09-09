@@ -94,7 +94,7 @@ lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.
 * `acm-enable-yas`: yasnippet 补全，默认打开
 * `acm-backend-yas-candidates-number`: yasnippet 显示个数，默认2个 
 * `acm-enable-citre`: citre 补全，默认关闭
-* `acm-enable-keyword-complete`: 根据`acm-keywords-alist`定义的各个模式的关键字进行补全，需要使能citre 后才生效
+* `acm-backend-citre-keyword-complete`: 根据`acm-backend-citre-keywords-alist`定义的各个模式的关键字进行补全，需要使能citre 后才生效
 
 
 ## 自定义语言服务器配置

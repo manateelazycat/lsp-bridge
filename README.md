@@ -94,7 +94,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `acm-enable-yas`: yasnippet completion, enable by default
 * `acm-backend-yas-candidates-number`: yasnippet display number，2 by default
 * `acm-enable-citre`: citre completion, disable by default
-* `acm-enable-keyword-complete`: Completion is performed according to the keywords of each mode defined by `acm-keywords-alist`, which takes effect only after citre is enabled.
+* `acm-backend-citre-keyword-complete`: Completion is performed according to the keywords of each mode defined by `acm-backend-citre-keywords-alist`, which takes effect only after citre is enabled.
 
 ## Customize language server configuration
 
