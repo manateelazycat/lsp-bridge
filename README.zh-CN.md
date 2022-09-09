@@ -81,14 +81,16 @@ lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.
 * `lsp-bridge-python-lsp-server`: Python语言的服务器，可以选择`pyright`或者`jedi`
 * `lsp-bridge-tex-lsp-server`: LaTeX语言的服务器，可以选择`texlab`或者`digestif`
 * `lsp-bridge-complete-manually`: 只有当用户手动调用 `lsp-bridge-popup-complete` 命令的时候才弹出补全菜单， 默认关闭
+* `lsp-bridge-get-workspace-folder`: 在Java中需要把多个项目放到一个Workspace目录下， 才能正常进行定义跳转， 可以自定义这个函数， 函数输入是项目路径， 返回对应的Workspace目录
 * `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
 * `acm-candidate-match-function`: 补全菜单匹配算法， orderless-* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
+* `acm-enable-search-words`: 补全菜单是否显示打开文件的单词， 默认打开
 * `acm-enable-doc`: 补全菜单是否显示帮助文档
 * `acm-enable-icon`: 补全菜单是否显示图标, macOS用户需要给 brew 命令增加选项 `--with-rsvg` 来安装Emacs才能显示SVG图片
 * `acm-enable-quick-access`: 是否在图标后面显示索引， 可以通过 Alt + Number 来快速选择后选词， 默认关闭
-* `acm-snippet-insert-index`: 代码模板后选词在补全菜单中的显示位置
+* `acm-snippet-insert-index`: 代码模板候选词在补全菜单中的显示位置
 * `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是20
-* `acm-enable-tabnine-helper`: 是否打开 tabnine 补全支持，默认关闭，打开后运行 `tabnine-bridge-install-binary` 安装 tabnine 后就可以使用了
+* `acm-enable-tabnine-helper`: 是否打开 tabnine 补全支持，默认关闭，打开后运行 `tabnine-bridge-install-binary` 安装 tabnine 后就可以使用了。 TabNine会消耗巨大的CPU， 导致你整个电脑都卡顿， 如果电脑性能不好， 不建议开启此选项
 
 ## 自定义语言服务器配置
 lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
@@ -135,7 +137,7 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 14 | [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls) | java | 请确保导出 `org.eclipse.jdt.ls.product/target/repository/bin` 到你系统的PATH路径 |
 | 15 | [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp) | clojure | 如果使用 `homebrew` 安装的，请确保安装的是 `clojure-lsp/brew/clojure-lsp-native` [clojure-lsp-native](https://clojure-lsp.io/installation/#homebrew-macos-and-linux) |
 | 16 | [bash-language-server](https://github.com/bash-lsp/bash-language-server) | bash | |
-| 17 | [volar](https://github.com/johnsoncodehk/volar) | vue | |
+| 17 | [volar](https://github.com/johnsoncodehk/volar) | vue | npm install typescript volar -g |
 | 18 | [sumneko](https://github.com/sumneko/lua-language-server) | lua | 请确保导出sumneko的 `bin` 目录到你系统的PATH路径 |
 | 19 | [wxml-language-server](https://github.com/chemzqm/wxml-languageserver) | wxml | |
 | 20 | [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | html | |

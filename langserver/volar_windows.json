@@ -1,0 +1,44 @@
+{
+  "name": "volar",
+  "languageId": "vue",
+  "command": ["vue-language-server.cmd", "--stdio"],
+  "settings": {},
+  "initializationOptions": {
+    "typescript": {
+      "serverPath": "%USERPROFILE%\\AppData\\Roaming\\npm\\node_modules\\typescript\\lib\\tsserverlibrary.js"
+    },
+    "languageFeatures": {
+      "references": true,
+      "implementation": true,
+      "definition": true,
+      "typeDefinition": true,
+      "callHierarchy": true,
+      "hover": true,
+      "rename": true,
+      "renameFileRefactoring": true,
+      "signatureHelp": true,
+      "codeAction": true,
+      "workspaceSymbol": true,
+      "completion": {
+        "defaultTagNameCase": "",
+        "defaultAttrNameCase": "",
+        "getDocumentNameCasesRequest": false,
+        "getDocumentSelectionRequest": false
+      },
+      "schemaRequestService": {
+        "getDocumentContentRequest": false
+      }
+    },
+    "documentFeatures": {
+      "selectionRange": true,
+      "foldingRange": true,
+      "linkedEditingRange": true,
+      "documentSymbol": true,
+      "documentColor": true,
+      "documentFormatting": {
+        "defaultPrintWidth": 100,
+        "getDocumentPrintWidthRequest": false
+      }
+    }
+  }
+}

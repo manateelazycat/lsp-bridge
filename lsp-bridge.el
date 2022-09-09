@@ -243,6 +243,7 @@ Start discarding off end if gets this big."
                (lsp-bridge-epc-define-method mngr 'get-emacs-var 'lsp-bridge--get-emacs-var-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-vars 'lsp-bridge--get-emacs-vars-func)
                (lsp-bridge-epc-define-method mngr 'get-project-path 'lsp-bridge--get-project-path-func)
+               (lsp-bridge-epc-define-method mngr 'get-workspace-folder 'lsp-bridge--get-workspace-folder-func)
                (lsp-bridge-epc-define-method mngr 'get-multi-lang-server 'lsp-bridge--get-multi-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-single-lang-server 'lsp-bridge--get-single-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-version 'emacs-version)
@@ -430,6 +431,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Default use command 'git rev-parse --show-toplevel' get project path,
 you can customize `lsp-bridge-get-project-path-by-filepath' to return project path by give file path.")
 
+(defcustom lsp-bridge-get-workspace-folder nil
+  "In Java, sometimes, we need return same workspace folder for multiple projects,
+you can customize `lsp-bridge-get-workspace-folder' to return workspace folder path by give project path.")
+
 (defvar lsp-bridge-formatting-indent-alist
   '((c-mode                     . c-basic-offset) ; C
     (c++-mode                   . c-basic-offset) ; C++
@@ -482,6 +487,19 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
        (with-current-buffer buffer
          ,@body))))
 
+(cl-defmacro lsp-bridge-save-position (&rest body)
+  "`save-excursion' not enough for LSP code format.
+So we build this macro to restore postion after code format."
+  `(let* ((current-line (line-number-at-pos))
+          (current-column (lsp-bridge--calculate-column))
+          (indent-column (save-excursion
+                           (back-to-indentation)
+                           (lsp-bridge--calculate-column))))
+     ,@body
+     (goto-line current-line)
+     (back-to-indentation)
+     (forward-char (max (- current-column indent-column) 0))))
+
 (defun lsp-bridge-get-match-buffer (filepath)
   (catch 'find-match
     (dolist (buffer (buffer-list))
@@ -494,6 +512,10 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 (defun lsp-bridge--get-project-path-func (filepath)
   (when lsp-bridge-get-project-path-by-filepath
     (funcall lsp-bridge-get-project-path-by-filepath filepath)))
+
+(defun lsp-bridge--get-workspace-folder-func (project-path)
+  (when lsp-bridge-get-workspace-folder
+    (funcall lsp-bridge-get-workspace-folder project-path)))
 
 (defun lsp-bridge--get-multi-lang-server-func (project-path filepath)
   "Get lang server with project path, file path or file extension."
@@ -1444,14 +1466,15 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
 
 (defun lsp-bridge-code-format-fix (filepath edits)
   ;; We need set `inhibit-modification-hooks' to t to avoid GC freeze Emacs.
-  (let ((inhibit-modification-hooks t))
-    ;; Apply code format edits, not sort, just reverse order.
-    (lsp-bridge-file-apply-edits filepath edits t)
-    ;; Make LSP server update full content.
-    (lsp-bridge-call-file-api "update_file" (buffer-name))
-    ;; Notify format complete.
-    (message "[LSP-BRIDGE] Complete code formatting.")
-    ))
+  (lsp-bridge-save-position
+   (let ((inhibit-modification-hooks t))
+     ;; Apply code format edits, not sort, just reverse order.
+     (lsp-bridge-file-apply-edits filepath edits t)
+     ;; Make LSP server update full content.
+     (lsp-bridge-call-file-api "update_file" (buffer-name))
+     ;; Notify format complete.
+     (message "[LSP-BRIDGE] Complete code formatting.")
+     )))
 
 (defvar lsp-bridge-english-helper-dict nil)
 
