@@ -92,7 +92,7 @@
   "Maximal number of yas candidate of menu."
   :type 'integer)
 
-(defcustom acm-display-yas-trigger-keyword t
+(defcustom acm-backend-yas-show-trigger-keyword t
   "Display yasnippet trigger keyword after snippet file name"
   :type 'boolean)
 
@@ -108,7 +108,7 @@
         (add-to-list 'candidates (list :key snippet
                                        :icon "snippet"
                                        :label snippet
-                                       :display-label (if acm-display-yas-trigger-keyword
+                                       :display-label (if acm-backend-yas-show-trigger-keyword
                                                           (concat snippet " (" (acm-backend-yas-get-trigger-kw snippet) ")")
                                                         snippet)
                                        :annotation "Yas-Snippet"
