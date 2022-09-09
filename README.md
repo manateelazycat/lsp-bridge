@@ -91,6 +91,10 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `acm-snippet-insert-index`: The display position of snippet candidate in the complementary menu
 * `acm-doc-frame-max-lines`: Max line number of help documentation, default is 20
 * `acm-enable-tabnine-helper`: Enable tabnine support，disable by default，when enable call `tabnine-bridge-install-binary` command, and it can be used. TabNine will consume huge CPUs, causing your entire computer to be slow. If the computer performance is not good, it is not recommended to enable this option
+* `acm-enable-yas`: yasnippet completion, enable by default
+* `acm-backend-yas-candidates-number`: yasnippet display number，2 by default
+* `acm-enable-citre`: citre completion, disable by default
+* `acm-enable-keyword-complete`: Completion is performed according to the keywords of each mode defined by `acm-keywords-alist`, which takes effect only after citre is enabled.
 
 ## Customize language server configuration
 

@@ -91,6 +91,11 @@ lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.
 * `acm-snippet-insert-index`: 代码模板候选词在补全菜单中的显示位置
 * `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是20
 * `acm-enable-tabnine-helper`: 是否打开 tabnine 补全支持，默认关闭，打开后运行 `tabnine-bridge-install-binary` 安装 tabnine 后就可以使用了。 TabNine会消耗巨大的CPU， 导致你整个电脑都卡顿， 如果电脑性能不好， 不建议开启此选项
+* `acm-enable-yas`: yasnippet 补全，默认打开
+* `acm-backend-yas-candidates-number`: yasnippet 显示个数，默认2个 
+* `acm-enable-citre`: citre 补全，默认关闭
+* `acm-enable-keyword-complete`: 根据`acm-keywords-alist`定义的各个模式的关键字进行补全，需要使能citre 后才生效
+
 
 ## 自定义语言服务器配置
 lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
