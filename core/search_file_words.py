@@ -67,7 +67,6 @@ class SearchFileWords:
                 
             search_candidates = self.search_word(prefix, all_words)
             candidates = []
-            
             if len(search_candidates) > 0:
                 candidates = search_candidates
             elif ("-" in prefix) and (not prefix.endswith("-")):
@@ -81,8 +80,8 @@ class SearchFileWords:
                 
                 candidates = list(map(lambda word: prefix[:-len(search_prefix)] + word, candidates))
                 
-            if len(candidates) > 0:
-                eval_in_emacs("lsp-bridge-record-search-words-items", candidates[:min(3, len(candidates))])
+
+            eval_in_emacs("lsp-bridge-record-search-words-items", candidates[:min(3, len(candidates))])
         except:
             logger.error(traceback.format_exc())
             
