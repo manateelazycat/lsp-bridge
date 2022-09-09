@@ -92,6 +92,10 @@
   "Maximal number of yas candidate of menu."
   :type 'integer)
 
+(defcustom acm-display-yas-trigger-keyword t
+  "Display yasnippet trigger keyword after snippet file name"
+  :type 'boolean)
+
 (defun acm-backend-yas-candidates (keyword)
   (when acm-enable-yas
     (let* ((candidates (list))
@@ -104,11 +108,12 @@
         (add-to-list 'candidates (list :key snippet
                                        :icon "snippet"
                                        :label snippet
-                                       :display-label snippet
+                                       :display-label (if acm-display-yas-trigger-keyword
+                                                          (concat snippet " (" (acm-backend-yas-get-trigger-kw snippet) ")")
+                                                        snippet)
                                        :annotation "Yas-Snippet"
                                        :backend "yas")
                      t))
-      
       (acm-candidate-sort-by-prefix keyword candidates))))
 
 (defun acm-backend-yas-candidate-expand (candidate-info bound-start)
@@ -127,8 +132,14 @@
     (with-temp-buffer
       (insert-file-contents snippet-file)
       (search-forward "# --\n" nil t)
-      (buffer-substring-no-properties (point) (point-max)))
-    ))
+      (buffer-substring-no-properties (point) (point-max)))))
+
+(defun acm-backend-yas-get-trigger-kw (snippet)
+  (let ((snippet-file (expand-file-name snippet (expand-file-name (prin1-to-string major-mode) (car yas/root-directory)))))
+    (with-temp-buffer
+      (insert-file-contents snippet-file)
+      (re-search-forward "# key:\\s-*\\(.*\\)\\s-*\n" nil t)
+      (match-string 1))))
 
 (provide 'acm-backend-yas)
 
