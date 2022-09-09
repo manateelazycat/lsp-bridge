@@ -487,6 +487,19 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
        (with-current-buffer buffer
          ,@body))))
 
+(cl-defmacro lsp-bridge-save-position (&rest body)
+  "`save-excursion' not enough for LSP code format.
+So we build this macro to restore postion after code format."
+  `(let* ((current-line (line-number-at-pos))
+          (current-column (lsp-bridge--calculate-column))
+          (indent-column (save-excursion
+                           (back-to-indentation)
+                           (lsp-bridge--calculate-column))))
+     ,@body
+     (goto-line current-line)
+     (back-to-indentation)
+     (forward-char (max (- current-column indent-column) 0))))
+
 (defun lsp-bridge-get-match-buffer (filepath)
   (catch 'find-match
     (dolist (buffer (buffer-list))
@@ -1453,14 +1466,15 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
 
 (defun lsp-bridge-code-format-fix (filepath edits)
   ;; We need set `inhibit-modification-hooks' to t to avoid GC freeze Emacs.
-  (let ((inhibit-modification-hooks t))
-    ;; Apply code format edits, not sort, just reverse order.
-    (lsp-bridge-file-apply-edits filepath edits t)
-    ;; Make LSP server update full content.
-    (lsp-bridge-call-file-api "update_file" (buffer-name))
-    ;; Notify format complete.
-    (message "[LSP-BRIDGE] Complete code formatting.")
-    ))
+  (lsp-bridge-save-position
+   (let ((inhibit-modification-hooks t))
+     ;; Apply code format edits, not sort, just reverse order.
+     (lsp-bridge-file-apply-edits filepath edits t)
+     ;; Make LSP server update full content.
+     (lsp-bridge-call-file-api "update_file" (buffer-name))
+     ;; Notify format complete.
+     (message "[LSP-BRIDGE] Complete code formatting.")
+     )))
 
 (defvar lsp-bridge-english-helper-dict nil)
 
