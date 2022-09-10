@@ -346,9 +346,17 @@
                             (eq sym x)
                           (string-match-p x (symbol-name sym))))))
 
+
+(defun acm-get-input-prefix-bound ()
+  (let ((bound (bounds-of-thing-at-point 'symbol)))
+    (when bound
+      (let* ((keyword (buffer-substring-no-properties (car bound) (cdr bound)))
+             (offset (string-match "[[:ascii:]]+" keyword)))
+        (cons (+ (car bound) offset) (cdr bound))))))
+
 (defun acm-get-input-prefix ()
   "Get user input prefix."
-  (let ((bound (bounds-of-thing-at-point 'symbol)))
+  (let ((bound (acm-get-input-prefix-bound)))
     (if bound
         (buffer-substring-no-properties (car bound) (cdr bound))
       "")))
@@ -480,8 +488,7 @@ influence of C1 on the result."
   (let* ((gc-cons-threshold most-positive-fixnum)
          (keyword (acm-get-input-prefix))
          (candidates (acm-update-candidates))
-         (bounds (bounds-of-thing-at-point 'symbol)))
-
+         (bounds (acm-get-input-prefix-bound)))
     (cond
      ;; Hide completion menu if user type first candidate completely.
      ((and (equal (length candidates) 1)
