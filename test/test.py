@@ -48,6 +48,7 @@ def test_entrypoint():
         (package-install 'markdown-mode)
         (package-install 'yasnippet)
         (package-install 'tempel)
+        (package-install 'dash)
         ;; (all-the-icons-install-fonts 't)
         
         ;; for Windows
