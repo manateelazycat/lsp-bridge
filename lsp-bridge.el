@@ -357,6 +357,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (php-mode . "intelephense")
     (yaml-mode . "yaml-language-server")
     (zig-mode . "zls")
+    (org-mode . "wen")
     (dockerfile-mode . "docker-langserver")
     (d-mode . "serve-d")
     ((fortran-mode f90-mode) . "fortls")
@@ -799,7 +800,6 @@ So we build this macro to restore postion after code format."
     (setq-local acm-backend-lsp-completion-position position)
     (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
     (setq-local acm-backend-lsp-server-names server-names)
-
     (let* ((lsp-items acm-backend-lsp-items)
            (completion-table (make-hash-table :test 'equal)))
       (dolist (item candidates)
