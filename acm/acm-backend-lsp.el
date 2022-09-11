@@ -113,15 +113,19 @@
                      (let ((candidate-label (plist-get v :label)))
                        (when (or (string-equal keyword "")
                                  (acm-candidate-fuzzy-search keyword candidate-label))
-                         (if (> (length candidate-label) acm-backend-lsp-candidate-max-length)
-                             (plist-put v :display-label (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-max-length)))
-                           (if (equal server-name "文")
-                               (plist-put v :display-label
-                                          (plist-get (plist-get v :textEdit) :newText))
-                             (plist-put v :display-label candidate-label)))
+
+                         ;; Adjust display label.
+                         (plist-put v :display-label
+                                    (cond ((equal server-name "文")
+                                           (plist-get (plist-get v :textEdit) :newText))
+                                          ((> (length candidate-label) acm-backend-lsp-candidate-max-length)
+                                           (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-max-length)))
+                                          (t
+                                           candidate-label)))
+
                          ;; FIXME: This progn here is to workaround invalid-function error for macros that have function bindings
                          ;; References: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=46958
-                         (progn 
+                         (progn
                            (plist-put v :backend "lsp")
                            (add-to-list 'candidates v t)))))
                    server-items))))
