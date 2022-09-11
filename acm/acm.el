@@ -351,8 +351,9 @@
   (let ((bound (bounds-of-thing-at-point 'symbol)))
     (when bound
       (let* ((keyword (buffer-substring-no-properties (car bound) (cdr bound)))
-             (offset (string-match "[[:ascii:]]+" keyword)))
-        (cons (+ (car bound) offset) (cdr bound))))))
+             (offset (or (string-match "[[:nonascii:]]+" (reverse keyword))
+                         (length keyword))))
+        (cons (- (cdr bound) offset) (cdr bound))))))
 
 (defun acm-get-input-prefix ()
   "Get user input prefix."
