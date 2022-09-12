@@ -713,7 +713,8 @@ influence of C1 on the result."
                      acm-menu-candidates)))
 
 (defun acm-menu-render-items (items menu-index)
-  (let ((item-index 0))
+  (let* ((item-index 0)
+         (annotation-not-exits (cl-every (lambda (item) (string-empty-p (plist-get item :annotation))) items)))
     (dolist (v items)
       (let* ((icon (cdr (assoc (downcase (plist-get v :icon)) acm-icon-alist)))
              (icon-default (cdr (assoc t acm-icon-alist)))
@@ -738,15 +739,18 @@ influence of C1 on the result."
                  (if quick-access-key (concat quick-access-key ". ") "   "))
                candidate
                ;; Fill in the blank according to the maximum width, make sure marks align right of menu.
-               (propertize " "
-                           'display
-                           (acm-indent-pixel
-                            (if (equal acm-string-width-function 'string-pixel-width)
-                                (- (+ acm-menu-max-length-cache (* 20 (string-pixel-width " "))) item-length)
-                              (ceiling (* (window-font-width) (- (+ acm-menu-max-length-cache 20) item-length))))))
+               (unless annotation-not-exits
+                 (propertize " "
+                             'display
+                             (acm-indent-pixel
+                              (if (equal acm-string-width-function 'string-pixel-width)
+                                  (- (+ acm-menu-max-length-cache (* 20 (string-pixel-width " "))) item-length)
+                                (ceiling (* (window-font-width) (- (+ acm-menu-max-length-cache 20) item-length)))))))
+               ;; Render annotation color.
                (propertize (format "%s \n" (capitalize annotation-text))
                            'face
-                           (if (equal item-index menu-index) 'acm-select-face 'font-lock-doc-face))))
+                           (if (equal item-index menu-index) 'acm-select-face 'font-lock-doc-face))
+               ))
 
         ;; Render current candidate.
         (when (equal item-index menu-index)
