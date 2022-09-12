@@ -164,6 +164,7 @@ You need to install the LSP server corresponding to each programming language, t
 | 36 | [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli) | GraphQL | |
 | 37 | [microsoft-python-language-server](https://github.com/microsoft/python-language-server) | Python | legacy language server for Python2 |
 | 38 | [cmake-language-server](https://github.com/regen100/cmake-language-server) | cmake | `pip install cmake-language-server` |
+| 39 | [Wen](https://github.com/metaescape/Wen) | org-mode | `pip install pygls pypinyin` |
 
 ### Features that won't be supported
 
