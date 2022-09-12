@@ -248,6 +248,9 @@ Doubles as an indicator of snippet support."
       (goto-char start-point)
       (insert new-text))))
 
+(defun acm-backend-lsp-clean ()
+  (setq-local acm-backend-lsp-items (make-hash-table :test 'equal)))
+
 (provide 'acm-backend-lsp)
 
 ;;; acm-backend-lsp.el ends here

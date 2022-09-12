@@ -35,4 +35,7 @@
     (acm-backend-telega-update-items)
     (acm-candidate-sort-by-prefix keyword acm-backend-telega-items)))
 
+(defun acm-backend-telega-clean ()
+  (setq-local acm-backend-telega-items nil))
+
 (provide 'acm-backend-telega)

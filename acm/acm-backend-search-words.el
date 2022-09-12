@@ -132,6 +132,9 @@
       (derived-mode-p 'inferior-emacs-lisp-mode)
       (derived-mode-p 'lisp-interaction-mode)))
 
+(defun acm-backend-search-words-clean ()
+  (setq-local acm-backend-search-words-items nil))
+
 (provide 'acm-backend-search-words)
 
 ;;; acm-backend-search-words.el ends here

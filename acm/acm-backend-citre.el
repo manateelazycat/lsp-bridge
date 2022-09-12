@@ -146,7 +146,7 @@
      )
     ))
 
-(defun acm-backend-citre-clear-prefix-keyword ()
+(defun acm-backend-citre-clean ()
   (setq-local acm-backend-citre-prefix-keyword ""))
 
 (defun acm-backend-citre-get-mode-keyword ()
@@ -200,9 +200,6 @@
 (defun acm-backend-citre-candidate-expand (candidate-info bound-start)
   (delete-region bound-start (point))
   (insert (plist-get candidate-info :label)))
-
-;; The expand function is not called when clearing the input to the initial state
-(advice-add #'acm-hide :after #'acm-backend-citre-clear-prefix-keyword)
 
 (provide 'acm-backend-citre)
 

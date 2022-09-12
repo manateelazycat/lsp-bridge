@@ -609,21 +609,32 @@ influence of C1 on the result."
 
 (defun acm-hide ()
   (interactive)
-  ;; Turn off `acm-mode'.
-  (acm-mode -1)
+  (let* ((candidate-info (acm-menu-current-candidate))
+         (backend (plist-get candidate-info :backend)))
+    ;; Turn off `acm-mode'.
+    (acm-mode -1)
 
-  ;; Hide menu frame.
-  (when (frame-live-p acm-frame)
-    (make-frame-invisible acm-frame))
+    ;; Hide menu frame.
+    (when (frame-live-p acm-frame)
+      (make-frame-invisible acm-frame))
 
-  ;; Hide doc frame.
-  (acm-doc-hide)
+    ;; Hide doc frame.
+    (acm-doc-hide)
 
-  ;; Clean `acm-menu-max-length-cache'.
-  (setq acm-menu-max-length-cache 0)
+    ;; Clean `acm-menu-max-length-cache'.
+    (setq acm-menu-max-length-cache 0)
 
-  ;; Remove hook of `acm--pre-command'.
-  (remove-hook 'pre-command-hook #'acm--pre-command 'local))
+    ;; Remove hook of `acm--pre-command'.
+    (remove-hook 'pre-command-hook #'acm--pre-command 'local)
+
+    ;; Clean backend cache.
+    (pcase backend
+      ("lsp" (acm-backend-lsp-clean))
+      ("search-words" (acm-backend-search-words-clean))
+      ("tabnine" (acm-backend-tabnine-clean))
+      ("telega" (acm-backend-telega-clean))
+      ("citre" (acm-backend-citre-clean))
+      )))
 
 (defun acm-cancel-timer (timer)
   `(when ,timer

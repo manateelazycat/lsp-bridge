@@ -539,6 +539,9 @@ Return completion candidates.  Must be called after `tabnine-bridge-query'."
 
 (defvar-local tabnine-bridge--begin-pos nil)
 
+(defun acm-backend-tabnine-clean ()
+  (setq-local tabnine-bridge--begin-pos nil))
+
 (provide 'tabnine-bridge)
 
 ;;; tabnine-bridge.el ends here
