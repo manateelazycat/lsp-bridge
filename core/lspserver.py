@@ -252,9 +252,10 @@ class LspServer:
         logger.info("\n--- Send initialize for {} ({})".format(self.project_path, self.server_info["name"]))
         
         initialize_options = self.server_info.get("initializationOptions", {})
-        if 'typescript' in initialize_options.keys():
-            if 'serverPath' in initialize_options['typescript'].keys():
-                initialize_options['typescript']['serverPath'] = windows_parse_path(initialize_options['typescript']['serverPath'])
+        if os.name == 'nt':
+            if 'typescript' in initialize_options.keys():
+                if 'serverPath' in initialize_options['typescript'].keys():
+                    initialize_options['typescript']['serverPath'] = windows_parse_path(initialize_options['typescript']['serverPath'])
 
         self.worksplace_folder = get_emacs_func_result("get-workspace-folder", self.project_path)
 
