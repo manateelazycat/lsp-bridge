@@ -114,6 +114,7 @@
                                                     lsp-bridge-not-in-comment
                                                     lsp-bridge-not-follow-complete
                                                     lsp-bridge-is-evil-state
+						    lsp-bridge-is-meow-state
                                                     lsp-bridge-multiple-cursors-disable
                                                     lsp-bridge-not-complete-manually
                                                     )
@@ -900,6 +901,11 @@ So we build this macro to restore postion after code format."
   (or (not (featurep 'evil))
       (evil-insert-state-p)
       (evil-emacs-state-p)))
+
+(defun lsp-bridge-is-meow-state ()
+  "If `meow' mode is enable, only show completion when meow is in insert mode."
+  (or (not (featurep 'meow))
+      meow-insert-mode))
 
 (defun lsp-bridge-multiple-cursors-disable ()
   "If `multiple-cursors' mode is enable, hide completion menu."
