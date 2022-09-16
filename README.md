@@ -82,6 +82,9 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `taxlab` or` digestif`
 * `lsp-bridge-complete-manually`: Only popup completion menu when user call `lsp-bridge-popup-complete` command, default is nil
 * `lsp-bridge-get-workspace-folder`: You need to put multiple project in a `workspace` directory in Java before you can jump function defintion normally. This function can be customized, the function input is the project path and returns the `workspace` directory corresponding
+* `acm-backend-general-group`: grouping acm-backends, for details, check the docsting of `acm-backend-general-group`
+* `acm-backend-snippet-group`: grouping acm snipptet backends, and display after `acm-snippet-insert-index` in completion menu
+* `acm-backend-*-predicate`: predicate function for `acm-backend-*`, takes one argument `keyword`, to decide whether to enable `acm-backend-*`, useful for advanced users to customize completion contextually.
 * `acm-backend-lsp-enable-auto-import`: automatic insert import code, enable by default
 * `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
 * `acm-enable-search-words`: Whether the complete menu display the word of the file, enable by default
