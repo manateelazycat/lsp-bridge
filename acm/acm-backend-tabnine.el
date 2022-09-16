@@ -2,11 +2,37 @@
 ;;; Commentary:
 ;;; Code:
 
+(require 'acm)
 (require 'tabnine-bridge)
+
+(defgroup acm-backend-tabnine nil
+  "ACM tabnine support."
+  :group 'acm)
+
+(defcustom acm-enable-tabnine-helper nil
+  "Enable tabnine support"
+  :type 'boolean
+  :group 'acm-backend-tabnine)
 
 (defcustom acm-backend-tabnine-min-length 1
   "Minimum length of tabnine word."
-  :type 'integer)
+  :type 'integer
+  :group 'acm-backend-tabnine)
+
+(defcustom acm-backend-tabnine-predicate
+  #'acm-backend-tabnine-predicate
+  "Predicate of `acm-backend-tabnine'."
+  :type 'symbol
+  :local t
+  :group 'acm-backend-tabnine)
+(put 'acm-backend-tabnine-predicate 'safe-local-variable 'symbolp)
+
+(with-eval-after-load 'lsp-bridge
+  (when acm-enable-tabnine-helper
+    (acm-backend-tabnine-start-server)))
+
+(defun acm-bakcend-tabnine-predicate (_)
+  acm-enable-tabnine-helper)
 
 (defun acm-backend-tabnine-candidates (keyword)
   (unless (or (and tabnine-bridge-no-continue

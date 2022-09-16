@@ -80,25 +80,45 @@
 ;;
 
 ;;; Require
+(require 'acm)
+(require 'acm-backend-english-data)
 
 ;;; Code:
 
+(defgroup acm-backend-english nil
+  "English backend for acm."
+  :group 'acm)
+
 (defcustom acm-backend-english-min-length 3
   "Minimum length of english word."
-  :type 'integer)
+  :type 'integer
+  :group 'acm-backend-english)
+
+(defcustom acm-backend-english-predicate
+  #'acm-backend-english-predicate
+  "Predicate of `acm-backend-english'."
+  :type 'symbol
+  :local t
+  :group 'acm-backend-english)
+(put 'acm-backend-english-predicate 'safe-local-variable 'symbolp)
+
+(defvar-local acm-enable-english-helper nil)
+
+(defun acm-backend-english-predicate (keyword)
+  (and acm-enable-english-helper
+       (>= (length keyword) acm-backend-english-min-length)))
 
 (defun acm-backend-english-candidates (keyword)
-  (let* ((candidates (list)))
-    (when (>= (length keyword) acm-backend-english-min-length)
-      (dolist (candidate acm-backend-english-completions)
-        (when (string-prefix-p (downcase keyword) candidate)
-          (add-to-list 'candidates (list :key candidate
-                                         :icon "translate"
-                                         :label candidate
-                                         :display-label candidate
-                                         :annotation (get-text-property 0 :initials candidate)
-                                         :backend "english")
-                       t))))
+  (let ((candidates (list)))
+    (dolist (candidate acm-backend-english-completions)
+      (when (string-prefix-p (downcase keyword) candidate)
+        (add-to-list 'candidates (list :key candidate
+                                       :icon "translate"
+                                       :label candidate
+                                       :display-label candidate
+                                       :annotation (get-text-property 0 :initials candidate)
+                                       :backend "english")
+                     t)))
 
     candidates))
 
@@ -124,6 +144,47 @@
 (defun acm-backend-english-capitalize-string-p (str)
   (let ((case-fold-search nil))
     (string-match-p "\\`[A-Z][a-z]*\\'" str)))
+
+(defun acm-backend-english--predicate-enable-everywhere (keyword)
+  (and acm-enable-english-helper
+       (>= (length keyword) acm-backend-english-min-length)))
+
+
+;; TODO
+(defvar acm-backend-english-helper-dict nil)
+
+(defvar-local acm-backend-english--original-backend nil)
+
+(defun acm-toggle-english-helper ()
+  "Toggle english helper.
+Enable acm english backend only and disable other backends, or
+restore original backend-group."
+  (interactive)
+  (unless acm-backend-english-helper-dict
+    (setq acm-backend-english-helper-dict (make-hash-table :test 'equal))
+    (acm--register-backend-or-subgroup 'acm-backend-english))
+
+
+  (if acm-enable-english-helper
+      (progn
+        ;; Disable `lsp-bridge-mode' if it is enable temporality.
+        (when (gethash (buffer-name) acm-backend-english-helper-dict)
+          (lsp-bridge-mode -1)
+          (remhash (buffer-name) acm-backend-english-helper-dict))
+        (when acm-backend-english--original-backend
+          (setq-local acm-general-backend-group (car acm-backend-english--original-backend))
+          (setq-local acm-snippet-backend-group (cdr acm-backend-english--original-backend))
+          (setq-local acm-backend-english--original-backend nil))
+        (message "Turn off english helper."))
+    ;; We enable `lsp-bridge-mode' temporality if current-mode not enable `lsp-bridge-mode' yet.
+    (unless lsp-bridge-mode
+      (puthash (buffer-name) t acm-backend-english-helper-dict)
+      (lsp-bridge-mode 1))
+    (setq-local acm-backend-english--original-backend (cons acm-general-backend-group acm-snippet-backend-group))
+    (setq-local acm-general-backend-group '(acm-backend-english))
+    (setq-local acm-snippet-backend-group nil)
+    (message "Turn on english helper."))
+  (setq-local acm-enable-english-helper (not acm-enable-english-helper)))
 
 (provide 'acm-backend-english)
 

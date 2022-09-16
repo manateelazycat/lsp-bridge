@@ -73,17 +73,30 @@
 ;;
 
 ;;; Require
-
+(require 'acm)
 
 ;;; Code:
+(defgroup acm-backend-citre nil
+  "Citre backend for acm."
+  :group 'acm)
 
 (defcustom acm-enable-citre nil
   "Popup citre completions when this option is turn on."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm)
 
 (defcustom acm-backend-citre-keyword-complete t
   "push mode keyword to candidate"
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm)
+
+(defcustom acm-backend-citre-predicate
+  #'acm-backend-citre-predicate
+  "Predicate of `acm-backend-citre'."
+  :type 'symbol
+  :local t
+  :group 'acm-backend-citre)
+(put 'acm-backend-citre-predicate 'safe-local-variable 'symbolp)
 
 (defvar-local acm-backend-citre-search-keyword "")
 
@@ -160,6 +173,10 @@
         (dolist (mk mode-keyword)
           (setq mk (citre-put-property mk 'annotation "keyword"))))
       mode-keyword))
+
+(defun acm-backend-citre-predicate (_)
+  (and acm-enable-citre
+       (acm--not-in-string-or-comment)))
 
 (defun acm-backend-citre-candidates (keyword)
   (when acm-enable-citre

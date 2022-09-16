@@ -110,8 +110,6 @@
 (defcustom lsp-bridge-completion-popup-predicates '(lsp-bridge-not-only-blank-before-cursor
                                                     lsp-bridge-not-match-hide-characters
                                                     lsp-bridge-not-match-stop-commands
-                                                    lsp-bridge-not-in-string
-                                                    lsp-bridge-not-in-comment
                                                     lsp-bridge-not-follow-complete
                                                     lsp-bridge-is-evil-state
                                                     lsp-bridge-multiple-cursors-disable
@@ -1265,7 +1263,9 @@ So we build this macro to restore postion after code format."
   :lighter " 橋"
   :init-value nil
   (if lsp-bridge-mode
-      (lsp-bridge--enable)
+      (progn
+        (lsp-bridge--enable)
+        (acm-init-backend-group))
     (lsp-bridge--disable)))
 
 (defun lsp-bridge--enable ()
@@ -1476,8 +1476,6 @@ So we build this macro to restore postion after code format."
      (message "[LSP-BRIDGE] Complete code formatting.")
      )))
 
-(defvar lsp-bridge-english-helper-dict nil)
-
 (defun lsp-bridge-code-action-fix (actions action-kind)
   (let* ((menu-items
           (or
@@ -1623,24 +1621,8 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-toggle-english-helper ()
   "Toggle english helper."
   (interactive)
-  (unless lsp-bridge-english-helper-dict
-    (setq lsp-bridge-english-helper-dict (make-hash-table :test 'equal)))
-
-  (if acm-enable-english-helper
-      (progn
-        ;; Disable `lsp-bridge-mode' if it is enable temporality.
-        (when (gethash (buffer-name) lsp-bridge-english-helper-dict)
-          (lsp-bridge-mode -1)
-          (remhash (buffer-name) lsp-bridge-english-helper-dict))
-
-        (message "Turn off english helper."))
-    ;; We enable `lsp-bridge-mode' temporality if current-mode not enable `lsp-bridge-mode' yet.
-    (unless lsp-bridge-mode
-      (puthash (buffer-name) t lsp-bridge-english-helper-dict)
-      (lsp-bridge-mode 1))
-
-    (message "Turn on english helper."))
-  (setq-local acm-enable-english-helper (not acm-enable-english-helper)))
+  (require 'acm-backend-english)
+  (acm-toggle-english-helper))
 
 ;;;###autoload
 (defun global-lsp-bridge-mode ()
@@ -1655,11 +1637,6 @@ So we build this macro to restore postion after code format."
   (evil-add-command-properties #'lsp-bridge-find-def :jump t)
   (evil-add-command-properties #'lsp-bridge-find-references :jump t)
   (evil-add-command-properties #'lsp-bridge-find-impl :jump t))
-
-(with-eval-after-load 'lsp-bridge
-  (when acm-enable-tabnine-helper
-    (require 'acm-backend-tabnine)
-    (acm-backend-tabnine-start-server)))
 
 (defun lsp-bridge--rename-file-advisor (orig-fun &optional arg &rest args)
   (when (and lsp-bridge-mode

@@ -91,45 +91,47 @@
 (require 'cl-macs)
 
 (require 'acm-icon)
-(require 'acm-backend-yas)
-(require 'acm-backend-elisp)
-(require 'acm-backend-lsp)
-(require 'acm-backend-path)
-(require 'acm-backend-search-words)
-(require 'acm-backend-tempel)
-(require 'acm-backend-telega)
-(require 'acm-backend-tabnine)
-(require 'acm-backend-citre)
 (require 'acm-quick-access)
 
 ;;; Code:
 
+(defgroup acm nil
+  "Asynchronous Completion Menu."
+  :prefix "acm-"
+  :group 'lsp-bridge)
+
 (defcustom acm-menu-length 10
   "Maximal number of candidates to show."
-  :type 'integer)
+  :type 'integer
+  :group 'acm)
 
 (defcustom acm-continue-commands
   ;; nil is undefined command
   '(nil ignore universal-argument universal-argument-more digit-argument self-insert-command org-self-insert-command
         "\\`acm-" "\\`scroll-other-window")
   "Continue ACM completion after executing these commands."
-  :type '(repeat (choice regexp symbol)))
+  :type '(repeat (choice regexp symbol))
+  :group 'acm)
 
 (defcustom acm-enable-doc t
   "Popup documentation automatically when this option is turn on."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm)
 
 (defcustom acm-enable-icon t
   "Show icon in completion menu."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm)
 
 (defcustom acm-enable-quick-access nil
   "Show quick-access in completion menu."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm)
 
 (defcustom acm-snippet-insert-index 8
   "Insert index of snippet candidate of menu."
-  :type 'integer)
+  :type 'integer
+  :group 'acm)
 
 (defcustom acm-candidate-match-function 'regexp-quote
   "acm candidate match function."
@@ -138,15 +140,49 @@
                  (const orderless-prefixes)
                  (const orderless-flex)
                  (const orderless-regexp)
-                 (const orderless-initialism)))
+                 (const orderless-initialism))
+  :group 'acm)
 
 (defcustom acm-doc-frame-max-lines 20
   "Max line lines of doc frame."
-  :type 'integer)
+  :type 'integer
+  :group 'acm)
 
-(defcustom acm-enable-tabnine-helper nil
-  "Enable tabnine support"
-  :type 'boolean)
+(defcustom acm-general-backend-group '((acm-backend-path acm-backend-lsp acm-backend-elisp)
+                                 acm-backend-citre acm-backend-search-words)
+  "ACM completion general backend group.
+
+This backend group is a list of backend subgroup. Backend
+subgroup could be either an acm-backend symbol or a list of
+acm-backend symbol.
+
+Every acm-backend has a predicate, which takes one argument,
+keyword. acm-backend will be enabled only when non-nil value
+returned by its predicate.
+
+When subgroup is an acm-backend symbol, it will add its
+candidates result to acm-backend group. When subgroup is a list,
+only first non nil acm-backend candidates result will be added to
+acm-backend group.
+
+acm-backend group will display results of diffrent subgroup in
+order, which means you could use different combination of group
+of subgroup in different buffer.
+"
+  :type 'list
+  :local t
+  :group 'acm)
+(put 'acm-general-backend-group 'safe-local-variable 'listp)
+
+(defcustom acm-snippet-backend-group '(acm-backend-yas acm-backend-tempel)
+  "ACM snippet backend group, display in first page of menu.
+
+Like `acm-general-backend-group', its results will be displayed
+after `acm-snippet-insert-index' in the first page of completion menu."
+  :type 'list
+  :local t
+  :group 'acm)
+
 
 (cl-defmacro acm-run-idle-func (timer idle func)
   `(unless ,timer
@@ -185,12 +221,17 @@
 (defvar acm-menu-number-cache 0)
 (defvar acm-menu-max-length-cache 0)
 
+(defvar acm-registerd-backends nil)
+
+
 (defvar-local acm-candidates nil)
 (defvar-local acm-menu-candidates nil)
 (defvar-local acm-menu-index -1)
 (defvar-local acm-menu-offset 0)
 
 (defvar-local acm-enable-english-helper nil)
+
+(defvar-local acm--has-lsp-candidate-p nil)
 
 (defvar acm-doc-frame nil)
 (defvar acm-doc-buffer " *acm-doc-buffer*")
@@ -420,68 +461,110 @@ influence of C1 on the result."
       ;; Don't sort candidates is keyword is empty string.
       candidates)))
 
+;; backends grouping
+
+(defun acm--register-backend-or-subgroup (backend)
+  (cond ((consp backend)
+         (mapc #'acm--register-backend-or-subgroup backend))
+        ((eq t (get backend 'acm-backend-register)))
+        ((symbolp backend)
+         (condition-case err
+             (progn
+               (require backend)
+               (acm-call-backend-predicate backend "")
+               (put backend 'acm-backend-register t)
+               (cl-pushnew backend acm-registerd-backends))
+           (error
+            (message "ACM backend %s couldn't be registerd." backend)
+            )))))
+
+(defun acm-init-backend-group ()
+  (mapc #'acm--register-backend-or-subgroup acm-general-backend-group)
+  (mapc #'acm--register-backend-or-subgroup acm-snippet-backend-group))
+
+
+(defun acm-call-backend-predicate (backend keyword)
+  "Call predicate of BACKEND with KEYWORD  in `acm-registerd-backends'."
+  (when (memq backend acm-registerd-backends)
+    (funcall (symbol-value
+              (intern (concat (symbol-name backend) "-predicate")))
+             keyword)))
+
+(defun acm-call-backend-candidates (backend keyword)
+  "Call acm BACKEND candidates symbol with KEYWORD."
+  (funcall (intern (concat (symbol-name backend) "-candidates"))
+           keyword))
+
+(defun acm--in-comment-p ()
+  (ignore-errors
+    (save-excursion
+      (or
+       (nth 4 (lsp-bridge-current-parse-state))
+       (eq (get-text-property (point) 'face) 'font-lock-comment-face))
+      )))
+
+(defun acm--in-string-p ()
+  (ignore-errors
+    (save-excursion
+      (and
+       (nth 3 (lsp-bridge-current-parse-state))
+       (not (equal (point) (line-end-position))))
+      )))
+
+(defun acm--not-in-string-or-comment ()
+  (not
+   (or (acm--in-comment-p)
+       (acm--in-string-p))))
+
+(defun acm--get-group-candidates (backend-group keyword)
+  "Return BACKEND-GROUP candidates of KEYWORDD "
+  (cl-loop for backend in backend-group
+           for candidate = (acm-get-backend-subgroup-candidate backend keyword)
+           with candidates
+           if candidate
+           do (setq candidates (append candidates candidate))
+           finally return candidates))
+
+
+(defun acm-get-backend-subgroup-candidate (backend-subgroup keyword)
+  "Return BACKEND-SUBGROUP candidate of KEYWORD.
+BACKEND is a acm backend-subgroup group."
+  (cond ((consp backend-subgroup)
+         (cl-some (lambda (x)
+                         (acm-get-backend-subgroup-candidate x keyword))
+                  backend-subgroup))
+        ((acm-call-backend-predicate backend-subgroup keyword)
+         (let ((candidates
+                (acm-call-backend-candidates backend-subgroup keyword)))
+           (when (and (eq backend-subgroup 'acm-backend-lsp)
+                      (> (length candidates) 0))
+             (setq acm--has-lsp-candidate-p t))
+           candidates))))
+
 (defun acm-update-candidates ()
-  (let* ((keyword (acm-get-input-prefix))
-         (char-before-keyword (save-excursion
-                                (backward-char (length keyword))
-                                (acm-char-before)))
-         (candidates (list))
-         lsp-candidates
-         path-candidates
-         yas-candidates
-         tabnine-candidates
-         tempel-candidates
-         mode-candidates
-         citre-candidates)
-    (when acm-enable-tabnine-helper
-      (require 'acm-backend-tabnine)
-      (setq tabnine-candidates (acm-backend-tabnine-candidates keyword)))
-
-    (if acm-enable-english-helper
-        ;; Completion english if option `acm-enable-english-helper' is enable.
-        (progn
-          (require 'acm-backend-english-data)
-          (require 'acm-backend-english)
-
-          (setq candidates (acm-backend-english-candidates keyword)))
-
-      (setq path-candidates (acm-backend-path-candidates keyword))
-      (if (> (length path-candidates) 0)
-          ;; Only show path candidates if prefix is valid path.
-          (setq candidates path-candidates)
-
-        (when acm-enable-citre
-          (setq citre-candidates (acm-backend-citre-candidates keyword)))
-        ;; Fetch syntax completion candidates.
-        (setq lsp-candidates (acm-backend-lsp-candidates keyword))
-        (setq mode-candidates (append
-                               (acm-backend-elisp-candidates keyword)
-                               lsp-candidates
-                               citre-candidates
-                               (acm-backend-search-words-candidates keyword)
-                               (acm-backend-telega-candidates keyword)))
-
-        (when (or
-               ;; Show snippet candidates if lsp-candidates length is zero.
-               (zerop (length lsp-candidates))
+  "Update candidate."
+  (let* (candidates
+        (keyword (acm-get-input-prefix))
+        (mode-candidates (acm--get-group-candidates acm-general-backend-group keyword))
+        snippet-candidates)
+    (when (or (not acm--has-lsp-candidate-p)
                ;; Don't search snippet if char before keyword is not in `acm-backend-lsp-completion-trigger-characters'.
-               (and (boundp 'acm-backend-lsp-completion-trigger-characters)
-                    (not (member char-before-keyword acm-backend-lsp-completion-trigger-characters))))
-          (setq yas-candidates (acm-backend-yas-candidates keyword))
-          (setq tempel-candidates (acm-backend-tempel-candidates keyword)))
-
-        ;; Insert snippet candidates in first page of menu.
-        (setq candidates
-              (if (> (length mode-candidates) acm-snippet-insert-index)
-                  (append (cl-subseq mode-candidates 0 acm-snippet-insert-index)
-                          yas-candidates
-                          tempel-candidates
-                          (cl-subseq mode-candidates acm-snippet-insert-index)
-                          tabnine-candidates)
-                (append mode-candidates yas-candidates tempel-candidates tabnine-candidates)
-                ))))
-
-    candidates))
+              (and (boundp 'acm-backend-lsp-completion-trigger-characters)
+                   (not (member
+                         ;; char before keyword
+                         (save-excursion
+                                (backward-char (length keyword))
+                                (acm-char-before))
+                         acm-backend-lsp-completion-trigger-characters))))
+      (setq snippet-candidates (acm--get-group-candidates acm-snippet-backend-group keyword)))
+    (setq acm--has-lsp-candidate-p nil)
+    (setq candidates
+          (if (and snippet-candidates
+                   (> (length mode-candidates) acm-snippet-insert-index))
+                (append (cl-subseq mode-candidates 0 acm-snippet-insert-index)
+                        snippet-candidates
+                        (cl-subseq mode-candidates acm-snippet-insert-index))
+            (append mode-candidates snippet-candidates)))))
 
 (defun acm-update ()
   ;; Adjust `gc-cons-threshold' to maximize temporary,
@@ -628,13 +711,8 @@ influence of C1 on the result."
     (remove-hook 'pre-command-hook #'acm--pre-command 'local)
 
     ;; Clean backend cache.
-    (pcase backend
-      ("lsp" (acm-backend-lsp-clean))
-      ("search-words" (acm-backend-search-words-clean))
-      ("tabnine" (acm-backend-tabnine-clean))
-      ("telega" (acm-backend-telega-clean))
-      ("citre" (acm-backend-citre-clean))
-      )))
+    (ignore-errors
+      (funcall (intern (format "acm-backend-%s-clean" backend))))))
 
 (defun acm-cancel-timer (timer)
   `(when ,timer
@@ -653,22 +731,14 @@ influence of C1 on the result."
 (defun acm-complete ()
   (interactive)
 
-  (let ((candidate-info (acm-menu-current-candidate))
-        (bound-start acm-frame-popup-point))
-    (let ((backend (plist-get candidate-info :backend)))
-      (pcase backend
-        ("lsp" (acm-backend-lsp-candidate-expand candidate-info bound-start))
-        ("yas" (acm-backend-yas-candidate-expand candidate-info bound-start))
-        ("path" (acm-backend-path-candidate-expand candidate-info bound-start))
-        ("search-words" (acm-backend-search-words-candidate-expand candidate-info bound-start))
-        ("tempel" (acm-backend-tempel-candidate-expand candidate-info bound-start))
-        ("english" (acm-backend-english-candidate-expand candidate-info bound-start))
-        ("tabnine" (acm-backend-tabnine-candidate-expand candidate-info bound-start))
-        ("citre" (acm-backend-citre-candidate-expand candidate-info bound-start))
-        (_
-         (delete-region bound-start (point))
-         (insert (plist-get candidate-info :label)))
-        )))
+  (let* ((candidate-info (acm-menu-current-candidate))
+         (bound-start acm-frame-popup-point)
+         (backend (plist-get candidate-info :backend))
+         (candidate-expand (intern (format "acm-backend-%s-candidate-expand" backend))))
+    (if (functionp candidate-expand)
+        (funcall candidate-expand candidate-info bound-start)
+      (delete-region bound-start (point))
+      (insert (plist-get candidate-info :label))))
 
   ;; Hide menu and doc frame after complete candidate.
   (acm-hide))

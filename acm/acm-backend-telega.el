@@ -1,6 +1,27 @@
+;;; acm-backend-telega.el --- telega backend for acm -*- lexical-binding: t -*-
+;;; Commentary:
+;;; Code:
+
+(require 'acm)
+
+
+(defgroup acm-backend-telega nil
+  "Telega backedn for ACM."
+  :group 'acm)
+
 (defcustom acm-enable-telega t
   "If non-nil enable telega username completion."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm-backend-telega)
+
+
+(defcustom acm-backend-telega-predicate
+  #'acm-backend-telega-predicate
+  "Predicate of `acm-backend-telega'."
+  :type 'symbol
+  :local t
+  :group 'acm-backend-telega)
+(put 'acm-backend-telega-predicate 'safe-local-variable 'symbolp)
 
 (defvar-local acm-backend-telega-items nil)
 
@@ -30,12 +51,15 @@
                             (acm-backend-telega-fetch-members))
 		    acm-backend-telega-items)))))
 
+(defun acm-backend-telega-predicate ()
+  (and acm-enable-telega (eq major-mode 'telega-chat-mode)))
+
 (defun acm-backend-telega-candidates (keyword)
-  (when (and acm-enable-telega (eq major-mode 'telega-chat-mode))
-    (acm-backend-telega-update-items)
-    (acm-candidate-sort-by-prefix keyword acm-backend-telega-items)))
+  (acm-backend-telega-update-items)
+  (acm-candidate-sort-by-prefix keyword acm-backend-telega-items))
 
 (defun acm-backend-telega-clean ()
   (setq-local acm-backend-telega-items nil))
 
 (provide 'acm-backend-telega)
+;;; acm-backend-telega.el ends here

@@ -80,55 +80,77 @@
 ;;
 
 ;;; Require
-
+(require 'acm)
 
 ;;; Code:
+(defgroup acm-backend-lsp nil
+  "LSP backend for acm."
+  :group 'acm)
 
 (defcustom acm-backend-lsp-candidate-max-length 30
   "Maximal length of candidate."
-  :type 'integer)
+  :type 'integer
+  :group 'acm-backend-lsp)
 
 (defcustom acm-backend-lsp-candidates-max-number 1000
   "Maximal number of candidate of menu."
-  :type 'integer)
+  :type 'integer
+  :group 'acm-backend-lsp)
 
 (defcustom acm-backend-lsp-enable-auto-import t
   "Whether to enable auto-import."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm-backend-lsp)
+
+(defcustom acm-backend-lsp-predicate
+  #'acm-backend-lsp-predicate
+  "Predicate of `acm-backend-lsp'."
+  :type 'symbol
+  :local t
+  :group 'acm-backend-lsp)
+(put 'acm-backend-lsp-predicate 'safe-local-variable 'symbolp)
 
 (defvar acm-backend-lsp-fetch-completion-item-func nil)
 
+
+(defun acm-backend-lsp-predicate (_)
+  (and
+   (bound-and-true-p acm-backend-lsp-items)
+   (bound-and-true-p acm-backend-lsp-server-names)
+   (hash-table-p acm-backend-lsp-items)
+   (or
+    ;; Allow volar popup completion menu in string.
+    (and (bound-and-true-p acm-backend-lsp-filepath)
+         (string-suffix-p ".vue" acm-backend-lsp-filepath))
+    (not (acm--in-string-p)))
+   (not (acm--in-comment-p))))
+
+
 (defun acm-backend-lsp-candidates (keyword)
-  (let* ((candidates (list)))
-    (when (and
-           (boundp 'acm-backend-lsp-items)
-           acm-backend-lsp-items
-           (boundp 'acm-backend-lsp-server-names)
-           acm-backend-lsp-server-names
-           (hash-table-p acm-backend-lsp-items))
-      ;; Sort multi-server items by
-      (dolist (server-name acm-backend-lsp-server-names)
-        (when-let* ((server-items (gethash server-name acm-backend-lsp-items)))
-          (maphash (lambda (k v)
-                     (let ((candidate-label (plist-get v :label)))
-                       (when (or (string-equal keyword "")
-                                 (acm-candidate-fuzzy-search keyword candidate-label))
+  (let ((candidates (list)))
+    ;; Sort multi-server items by
+    (dolist (server-name acm-backend-lsp-server-names)
+      (when-let* ((server-items (gethash server-name acm-backend-lsp-items)))
+        (maphash (lambda (k v)
+                   (let ((candidate-label (plist-get v :label)))
+                     (when (or (string-equal keyword "")
+                               (acm-candidate-fuzzy-search keyword candidate-label))
 
-                         ;; Adjust display label.
-                         (plist-put v :display-label
-                                    (cond ((equal server-name "文")
-                                           (plist-get (plist-get v :textEdit) :newText))
-                                          ((> (length candidate-label) acm-backend-lsp-candidate-max-length)
-                                           (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-max-length)))
-                                          (t
-                                           candidate-label)))
+                       ;; Adjust display label.
+                       (plist-put v :display-label
+                                  (cond ((equal server-name "文")
+                                         (plist-get (plist-get v :textEdit) :newText))
+                                        ((> (length candidate-label) acm-backend-lsp-candidate-max-length)
+                                         (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-max-length)))
+                                        (t
+                                         candidate-label)))
 
-                         ;; FIXME: This progn here is to workaround invalid-function error for macros that have function bindings
-                         ;; References: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=46958
-                         (progn
-                           (plist-put v :backend "lsp")
-                           (add-to-list 'candidates v t)))))
-                   server-items))))
+                       ;; FIXME: This progn here is to workaround invalid-function error for macros that have function bindings
+                       ;; References: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=46958
+                       (progn
+                         (plist-put v :backend "lsp")
+                         (add-to-list 'candidates v t)))))
+                 server-items)))
 
     (acm-candidate-sort-by-prefix keyword candidates)))
 

@@ -80,13 +80,55 @@
 ;;
 
 ;;; Require
-
+(require 'acm)
 
 ;;; Code:
 
+(defgroup acm-backend-elisp nil
+  "Elisp backend for acm."
+  :group 'acm)
+
 (defcustom acm-backend-elisp-min-length 2
   "Minimum length of elisp symbol."
-  :type 'integer)
+  :type 'integer
+  :group 'acm-backend-elisp)
+
+(defcustom acm-backend-elisp-predicate #'acm-backend-elisp-predicate
+  "Predicate of `acm-backend-elisp'."
+  :type 'symbol
+  :local t
+  :group 'acm-backend-elisp)
+(put 'acm-backend-elisp-predicate 'safe-local-variable 'symbolp)
+
+
+(defun acm-backend-elisp-predicate (keyword)
+  (and (or (derived-mode-p 'emacs-lisp-mode)
+           (derived-mode-p 'inferior-emacs-lisp-mode)
+           (derived-mode-p 'lisp-interaction-mode))
+       (>= (length keyword) acm-backend-elisp-min-length)
+       (with-syntax-table emacs-lisp-mode-syntax-table
+         (let* ((pos (point))
+                (beg (condition-case nil
+                         (save-excursion
+                           (backward-sexp 1)
+                           (skip-chars-forward "`',‘#")
+                           (point))
+                       (scan-error pos)))
+                (end
+                 (unless (or (eq beg (point-max))
+                             (member (char-syntax (char-after beg))
+                                     '(?\" ?\()))
+                   (condition-case nil
+                       (save-excursion
+                         (goto-char beg)
+                         (forward-sexp 1)
+                         (skip-chars-backward "'’")
+                         (when (>= (point) pos)
+                           (point)))
+                     (scan-error pos)))))
+           (and end (or (not (nth 8 (syntax-ppss)))
+                        (memq (char-before beg) '(?` ?‘))))))))
+
 
 (defun acm-backend-elisp-sort-predicate (x y)
   "Sorting predicate which compares X and Y."
@@ -95,23 +137,18 @@
            (string< x y))))
 
 (defun acm-backend-elisp-candidates (keyword)
-  (let* ((candidates (list)))
-    (when (and (or (derived-mode-p 'emacs-lisp-mode)
-                   (derived-mode-p 'inferior-emacs-lisp-mode)
-                   (derived-mode-p 'lisp-interaction-mode))
-               (>= (length keyword) acm-backend-elisp-min-length))
-      (let ((elisp-symbols (sort (all-completions keyword obarray) 
-                                 'acm-backend-elisp-sort-predicate)))
-        (dolist (elisp-symbol (cl-subseq elisp-symbols 0 (min (length elisp-symbols) 10)))
-          (let ((symbol-type (acm-backend-elisp-symbol-type (intern elisp-symbol))))
-            (add-to-list 'candidates (list :key elisp-symbol
-                                           :icon symbol-type
-                                           :label elisp-symbol
-                                           :display-label elisp-symbol
-                                           :annotation (capitalize symbol-type)
-                                           :backend "elisp")
-                         t)))))
-
+  (let ((candidates (list))
+        (elisp-symbols (sort (all-completions keyword obarray) 
+                             'acm-backend-elisp-sort-predicate)))
+    (dolist (elisp-symbol (cl-subseq elisp-symbols 0 (min (length elisp-symbols) 10)))
+      (let ((symbol-type (acm-backend-elisp-symbol-type (intern elisp-symbol))))
+        (add-to-list 'candidates (list :key elisp-symbol
+                                       :icon symbol-type
+                                       :label elisp-symbol
+                                       :display-label elisp-symbol
+                                       :annotation (capitalize symbol-type)
+                                       :backend "elisp")
+                     t)))
     candidates))
 
 (defun acm-backend-elisp-candidate-fetch-doc (candidate)

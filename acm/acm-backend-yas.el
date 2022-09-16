@@ -80,21 +80,40 @@
 ;;
 
 ;;; Require
-
+(require 'acm)
 
 ;;; Code:
+(defgroup acm-backend-yas nil
+  "Yasnippet backend for ACM."
+  :group 'acm)
 
 (defcustom acm-enable-yas t
   "Popup yasnippet completions when this option is turn on."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm-backend-yas)
 
 (defcustom acm-backend-yas-candidates-number 2
   "Maximal number of yas candidate of menu."
-  :type 'integer)
+  :type 'integer
+  :group 'acm-backend-yas)
 
 (defcustom acm-backend-yas-show-trigger-keyword t
   "Display yasnippet trigger keyword after snippet file name"
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm-backend-yas)
+
+(defcustom acm-backend-yas-predicate
+  #'acm-backend-yas-predicate
+  "Predicate of `acm-backend-yas'."
+  :type 'symbol
+  :local t
+  :group 'acm-backend-yas)
+(put 'acm-backend-yas-predicate 'safe-local-variable 'symbolp)
+
+
+(defun acm-backend-yas-predicate (_)
+  (and acm-enable-yas
+       (acm--not-in-string-or-comment)))
 
 (defun acm-backend-yas-candidates (keyword)
   (when acm-enable-yas

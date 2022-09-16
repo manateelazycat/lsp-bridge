@@ -1,13 +1,32 @@
 ;;; acm-backend-tempel.el -*- lexical-binding: t; -*-
+(require 'acm)
+
+(defgroup acm-backend-tempel nil
+  "Tempel backend for acm."
+  :group 'acm)
 
 (defcustom acm-enable-tempel t
   "Popup tempel completions when this option is turn on."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm-backend-tempel)
 
 (defcustom acm-backend-tempel-candidates-number 2
   "Maximal number of tempel candidate of menu."
-  :type 'integer)
-  
+  :type 'integer
+  :group 'acm-backend-tempel)
+
+(defcustom acm-backend-tempel-predicate
+  #'acm-backend-tempel-predicate
+  "Predicate of `acm-backend-tempel'."
+  :type 'symbol
+  :local t
+  :group 'acm-backend-tempel)
+(put 'acm-backend-tempel-predicate 'safe-local-variable 'symbolp)
+
+(defun acm-backend-tempel-predicate (_)
+  (and acm-enable-tempel
+       (acm--not-in-string-or-comment)))
+
 (defun acm-backend-tempel-candidates (keyword)
   (when (and acm-enable-tempel
              (ignore-errors (require 'tempel)))

@@ -80,35 +80,53 @@
 ;;
 
 ;;; Require
-
+(require 'acm)
 
 ;;; Code:
 
+(defgroup acm-backend-path nil
+  "Path backend for acm."
+  :group 'acm)
+
 (defcustom acm-enable-path t
   "Popup path completions when this option is turn on."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm-backend-path)
+
+(defcustom acm-backend-path-predicate
+  #'acm-backend-path-predicate
+  "Predicate of `acm-backend-path'."
+  :type 'symbol
+  :local t
+  :group 'acm-backend-elisp)
+(put 'acm-backend-path-predicate 'safe-local-variable 'symbolp)
+
+(defun acm-backend-path-predicate (keyword)
+  "Length of path candidates KEYWORD is positive."
+  (and acm-enable-path
+       (> (length (acm-backend-path-candidates keyword)))))
+
 
 (defun acm-backend-path-candidates (keyword)
-  (when acm-enable-path
-    (let* ((candidates (list))
-          (parent-dir (ignore-errors (expand-file-name (file-name-directory (thing-at-point 'filename))))))
-      (when (and parent-dir
-                 (file-exists-p parent-dir))
-        (let ((current-file (file-name-base keyword))
-              (files (cl-remove-if (lambda (subdir) (or (member subdir '("." ".."))))
-                                   (directory-files parent-dir))))
-          (dolist (file files)
-            (when (acm-candidate-fuzzy-search current-file file)
-              (let* ((file-path (expand-file-name file parent-dir))
-                     (file-type (if (file-directory-p file-path) "dir" "file")))
-                (add-to-list 'candidates (list :key file
-                                               :icon file-type
-                                               :label file
-                                               :display-label file
-                                               :annotation (capitalize file-type)
-                                               :backend "path")
-                             t))))))
-      (acm-candidate-sort-by-prefix keyword candidates))))
+  (let* ((candidates (list))
+         (parent-dir (ignore-errors (expand-file-name (file-name-directory (thing-at-point 'filename))))))
+    (when (and parent-dir
+               (file-exists-p parent-dir))
+      (let ((current-file (file-name-base keyword))
+            (files (cl-remove-if (lambda (subdir) (or (member subdir '("." ".."))))
+                                 (directory-files parent-dir))))
+        (dolist (file files)
+          (when (acm-candidate-fuzzy-search current-file file)
+            (let* ((file-path (expand-file-name file parent-dir))
+                   (file-type (if (file-directory-p file-path) "dir" "file")))
+              (add-to-list 'candidates (list :key file
+                                             :icon file-type
+                                             :label file
+                                             :display-label file
+                                             :annotation (capitalize file-type)
+                                             :backend "path")
+                           t))))))
+    (acm-candidate-sort-by-prefix keyword candidates)))
 
 (defun acm-backend-path-candidate-expand (candidate-info bound-start)
   (let* ((keyword (acm-get-input-prefix))
