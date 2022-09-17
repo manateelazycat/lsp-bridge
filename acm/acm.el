@@ -192,6 +192,8 @@
 
 (defvar-local acm-enable-english-helper nil)
 
+(defvar-local acm-input-bound-style nil)
+
 (defvar acm-doc-frame nil)
 (defvar acm-doc-buffer " *acm-doc-buffer*")
 (defvar acm--mouse-ignore-map
@@ -348,12 +350,14 @@
 
 
 (defun acm-get-input-prefix-bound ()
-  (let ((bound (bounds-of-thing-at-point 'symbol)))
-    (when bound
-      (let* ((keyword (buffer-substring-no-properties (car bound) (cdr bound)))
-             (offset (or (string-match "[[:nonascii:]]+" (reverse keyword))
-                         (length keyword))))
-        (cons (- (cdr bound) offset) (cdr bound))))))
+  (if (string-equal acm-input-bound-style "symbol")
+      (bounds-of-thing-at-point 'symbol)
+    (let ((bound (bounds-of-thing-at-point 'symbol)))
+      (when bound
+        (let* ((keyword (buffer-substring-no-properties (car bound) (cdr bound)))
+               (offset (or (string-match "[[:nonascii:]]+" (reverse keyword))
+                           (length keyword))))
+          (cons (- (cdr bound) offset) (cdr bound)))))))
 
 (defun acm-get-input-prefix ()
   "Get user input prefix."

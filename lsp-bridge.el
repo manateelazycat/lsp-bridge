@@ -114,7 +114,7 @@
                                                     lsp-bridge-not-in-comment
                                                     lsp-bridge-not-follow-complete
                                                     lsp-bridge-is-evil-state
-						    lsp-bridge-is-meow-state
+                                                    lsp-bridge-is-meow-state
                                                     lsp-bridge-multiple-cursors-disable
                                                     lsp-bridge-not-complete-manually
                                                     )
@@ -1284,7 +1284,11 @@ So we build this macro to restore postion after code format."
     (setq auto-save-default nil)
     (setq create-lockfiles nil))
 
-  (when (lsp-bridge-has-lsp-server-p)
+  (when-let* ((lsp-server-name (lsp-bridge-has-lsp-server-p)))
+    ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix, 
+    ;; other LSP server need use `bounds-of-thing-at-point' of symbol as keyword prefix.
+    (setq-local acm-input-bound-style (if (string-equal lsp-server-name "wen") "ascii" "symbol"))
+
     ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
     ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
     (unless (file-exists-p (buffer-file-name))
