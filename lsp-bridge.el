@@ -321,6 +321,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Default LSP server for (la)tex, you can choose `taxlab' or `digestif'."
   :type 'string)
 
+(defcustom lsp-bridge-use-wenls-in-org-mode nil
+  "Use `wen' lsp server in org-mode, default is disable.")
 
 (defcustom lsp-bridge-complete-manually nil
   "Only popup completion menu when user call `lsp-bridge-popup-complete' command.")
@@ -358,7 +360,6 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (php-mode . "intelephense")
     (yaml-mode . "yaml-language-server")
     (zig-mode . "zls")
-    (org-mode . "wen")
     (dockerfile-mode . "docker-langserver")
     (d-mode . "serve-d")
     ((fortran-mode f90-mode) . "fortls")
@@ -617,13 +618,16 @@ So we build this macro to restore postion after code format."
                                   (eq major-mode mode)
                                 (member major-mode mode))))
                           lsp-bridge-single-lang-server-mode-list)))
-    (if langserver-info
-        (let ((info (cdr langserver-info)))
-          (pcase (format "%s" (type-of info))
-            ("string" info)
-            ("symbol" (symbol-value info))
-            ))
-      nil)))
+    (cond (langserver-info
+           (let ((info (cdr langserver-info)))
+             (pcase (format "%s" (type-of info))
+               ("string" info)
+               ("symbol" (symbol-value info))
+               )))
+          ((and lsp-bridge-use-wenls-in-org-mode
+                (eq major-mode 'org-mode))
+           "wen")
+          )))
 
 (defun lsp-bridge-has-lsp-server-p ()
   (let* ((filepath (ignore-errors (file-truename buffer-file-name))))
@@ -1285,7 +1289,7 @@ So we build this macro to restore postion after code format."
     (setq create-lockfiles nil))
 
   (when-let* ((lsp-server-name (lsp-bridge-has-lsp-server-p)))
-    ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix, 
+    ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
     ;; other LSP server need use `bounds-of-thing-at-point' of symbol as keyword prefix.
     (setq-local acm-input-bound-style (if (string-equal lsp-server-name "wen") "ascii" "symbol"))
 
