@@ -51,7 +51,6 @@
 
 (require 'cl-lib)
 (require 'json)
-(require 'dash)
 
 ;;
 ;; Constants
@@ -250,19 +249,23 @@ Resets every time successful completion is returned.")
    (t
     "TabNine")))
 
+(defun tabnine-bridge--expand-file (file)
+  (expand-file-name file (file-name-as-directory tabnine-bridge-binaries-folder)))
+
 (defun tabnine-bridge--executable-path ()
   "Find and return the path of the latest TabNine binary for the current system."
   (let ((parent tabnine-bridge-binaries-folder))
     (if (file-directory-p parent)
-        (let* ((children (->> (directory-files parent)
-                              (--remove (member it '("." "..")))
-                              (--filter (file-directory-p
-                                         (expand-file-name
-                                          it
-                                          (file-name-as-directory
-                                           parent))))
-                              (--filter (ignore-errors (version-to-list it)))
-                              (-non-nil)))
+        (let* ((children
+                (cl-remove-if
+                 'null
+                 (cl-remove-if-not
+                  '(lambda (it) (ignore-errors (version-to-list it)))
+                  (cl-remove-if-not
+                   '(lambda (it) (file-directory-p (tabnine-bridge--expand-file it)))
+                   (cl-remove-if
+                    '(lambda (it) (member it '("." "..")))
+                    (directory-files parent))))))
                (sorted (nreverse (sort children #'version<)))
                (target (tabnine-bridge--get-target))
                (filename (tabnine-bridge--get-exe)))
@@ -532,7 +535,7 @@ Return completion candidates.  Must be called after `tabnine-bridge-query'."
                   (file-name-sans-extension (file-name-nondirectory bundle-path)))))
         (mapc (lambda (filename)
                 (set-file-modes (concat target-directory filename) (string-to-number "744" 8)))
-              (--remove (member it '("." "..")) (directory-files target-directory)))
+              (cl-remove-if '(lambda (it) (member it '("." "..")) (directory-files target-directory))))
         (delete-file bundle-path)
         (delete-file version-tempfile)
         (message "TabNine installation complete.")))))
