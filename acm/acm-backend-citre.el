@@ -76,14 +76,19 @@
 
 
 ;;; Code:
+(defgroup acm-backend-citre nil
+  "Citre backend for acm."
+  :group 'acm)
 
 (defcustom acm-enable-citre nil
   "Popup citre completions when this option is turn on."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm-backend-citre)
 
 (defcustom acm-backend-citre-keyword-complete t
   "push mode keyword to candidate"
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm-backend-citre)
 
 (defvar-local acm-backend-citre-search-keyword "")
 

@@ -84,9 +84,14 @@
 
 ;;; Code:
 
+(defgroup acm-backend-search-words nil
+  "Backend fo completion words in other buffer."
+  :group 'acm)
+
 (defcustom acm-enable-search-words t
   "Popup search words completions when this option is turn on."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm-backend-search-words)
 
 (defvar-local acm-backend-search-words-items nil)
 

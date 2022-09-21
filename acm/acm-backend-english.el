@@ -83,9 +83,14 @@
 
 ;;; Code:
 
+(defgroup acm-backend-english nil
+  "English backend for acm."
+  :group 'acm)
+
 (defcustom acm-backend-english-min-length 3
   "Minimum length of english word."
-  :type 'integer)
+  :type 'integer
+  :group 'acm-backend-english)
 
 (defun acm-backend-english-candidates (keyword)
   (let* ((candidates (list)))

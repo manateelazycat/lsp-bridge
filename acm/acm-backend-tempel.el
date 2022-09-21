@@ -1,12 +1,18 @@
 ;;; acm-backend-tempel.el -*- lexical-binding: t; -*-
 
+(defgroup acm-backend-tempel nil
+  "Tempel backend for acm."
+  :group 'acm)
+
 (defcustom acm-enable-tempel t
   "Popup tempel completions when this option is turn on."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm-backend-tempel)
 
 (defcustom acm-backend-tempel-candidates-number 2
   "Maximal number of tempel candidate of menu."
-  :type 'integer)
+  :type 'integer
+  :group 'acm-backend-tempel)
   
 (defun acm-backend-tempel-candidates (keyword)
   (when (and acm-enable-tempel

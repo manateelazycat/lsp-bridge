@@ -104,32 +104,43 @@
 
 ;;; Code:
 
+(defgroup acm nil
+  "Asynchronous Completion Menu."
+  :prefix "acm-"
+  :group 'lsp-bridge)
+
 (defcustom acm-menu-length 10
   "Maximal number of candidates to show."
-  :type 'integer)
+  :type 'integer
+  :group 'acm)
 
 (defcustom acm-continue-commands
   ;; nil is undefined command
   '(nil ignore universal-argument universal-argument-more digit-argument self-insert-command org-self-insert-command
         "\\`acm-" "\\`scroll-other-window")
   "Continue ACM completion after executing these commands."
-  :type '(repeat (choice regexp symbol)))
+  :type '(repeat (choice regexp symbol))
+  :group 'acm)
 
 (defcustom acm-enable-doc t
   "Popup documentation automatically when this option is turn on."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm)
 
 (defcustom acm-enable-icon t
   "Show icon in completion menu."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm)
 
 (defcustom acm-enable-quick-access nil
   "Show quick-access in completion menu."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm)
 
 (defcustom acm-snippet-insert-index 8
   "Insert index of snippet candidate of menu."
-  :type 'integer)
+  :type 'integer
+  :group 'acm)
 
 (defcustom acm-candidate-match-function 'regexp-quote
   "acm candidate match function."
@@ -138,15 +149,18 @@
                  (const orderless-prefixes)
                  (const orderless-flex)
                  (const orderless-regexp)
-                 (const orderless-initialism)))
+                 (const orderless-initialism))
+  :group 'acm)
 
 (defcustom acm-doc-frame-max-lines 20
   "Max line lines of doc frame."
-  :type 'integer)
+  :type 'integer
+  :group 'acm)
 
 (defcustom acm-enable-tabnine-helper nil
   "Enable tabnine support"
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm)
 
 (cl-defmacro acm-run-idle-func (timer idle func)
   `(unless ,timer
@@ -371,14 +385,11 @@
     ;; Don't fetch candidate documentation if last command is scroll operation.
     (unless (string-prefix-p "acm-doc-scroll-" (prin1-to-string last-command))
       (let* ((candidate (acm-menu-current-candidate))
-             (backend (plist-get candidate :backend)))
-        (pcase backend
-          ("lsp" (acm-backend-lsp-candidate-fetch-doc candidate))
-          ("elisp" (acm-backend-elisp-candidate-fetch-doc candidate))
-          ("yas" (acm-backend-yas-candidate-fetch-doc candidate))
-          ("tempel" (acm-backend-tempel-candidate-fetch-doc candidate))
-          ;; Hide doc frame for backend that not support fetch candidate documentation.
-          (_ (acm-doc-hide)))))))
+             (backend (plist-get candidate :backend))
+             (fetch-doc-func (intern-soft (format "acm-backend-%s-candidate-fetch-doc" backend))))
+        (if (fboundp fetch-doc-func)
+            (funcall fetch-doc-func candidate)
+          (acm-doc-hide))))))
 
 (defun acm-color-blend (c1 c2 alpha)
   "Blend two colors C1 and C2 with ALPHA.
@@ -632,13 +643,9 @@ influence of C1 on the result."
     (remove-hook 'pre-command-hook #'acm--pre-command 'local)
 
     ;; Clean backend cache.
-    (pcase backend
-      ("lsp" (acm-backend-lsp-clean))
-      ("search-words" (acm-backend-search-words-clean))
-      ("tabnine" (acm-backend-tabnine-clean))
-      ("telega" (acm-backend-telega-clean))
-      ("citre" (acm-backend-citre-clean))
-      )))
+    (when-let* ((backend-clean (intern-soft (format "acm-backend-%s-clean" backend)))
+                (fp (fboundp backend-clean)))
+      (funcall backend-clean))))
 
 (defun acm-cancel-timer (timer)
   `(when ,timer
@@ -656,23 +663,14 @@ influence of C1 on the result."
 
 (defun acm-complete ()
   (interactive)
-
-  (let ((candidate-info (acm-menu-current-candidate))
-        (bound-start acm-frame-popup-point))
-    (let ((backend (plist-get candidate-info :backend)))
-      (pcase backend
-        ("lsp" (acm-backend-lsp-candidate-expand candidate-info bound-start))
-        ("yas" (acm-backend-yas-candidate-expand candidate-info bound-start))
-        ("path" (acm-backend-path-candidate-expand candidate-info bound-start))
-        ("search-words" (acm-backend-search-words-candidate-expand candidate-info bound-start))
-        ("tempel" (acm-backend-tempel-candidate-expand candidate-info bound-start))
-        ("english" (acm-backend-english-candidate-expand candidate-info bound-start))
-        ("tabnine" (acm-backend-tabnine-candidate-expand candidate-info bound-start))
-        ("citre" (acm-backend-citre-candidate-expand candidate-info bound-start))
-        (_
-         (delete-region bound-start (point))
-         (insert (plist-get candidate-info :label)))
-        )))
+  (let* ((candidate-info (acm-menu-current-candidate))
+         (bound-start acm-frame-popup-point)
+         (backend (plist-get candidate-info :backend))
+         (candidate-expand (intern-soft (format "acm-backend-%s-candidate-expand" backend))))
+    (if (fboundp candidate-expand)
+        (funcall candidate-expand candidate-info bound-start)
+      (delete-region bound-start (point))
+      (insert (plist-get candidate-info :label))))
 
   ;; Hide menu and doc frame after complete candidate.
   (acm-hide))
@@ -762,7 +760,7 @@ influence of C1 on the result."
 
           ;; Hide doc frame if some backend not support fetch candidate documentation.
           (when (and
-                 (not (member (plist-get v :backend) '("lsp" "elisp" "yas")))
+                 (not (fboundp (intern-soft (format "acm-backend-%s-candidate-fetch-doc" (plist-get v :backend)))))
                  (acm-frame-visible-p acm-doc-frame))
             (acm-doc-hide)))
 
@@ -798,13 +796,10 @@ influence of C1 on the result."
   (when acm-enable-doc
     (let* ((candidate (acm-menu-current-candidate))
            (backend (plist-get candidate :backend))
+           (candidate-doc-func (intern-soft (format "acm-backend-%s-candidate-doc" backend)))
            (candidate-doc
-            (pcase backend
-              ("lsp" (acm-backend-lsp-candidate-doc candidate))
-              ("elisp" (acm-backend-elisp-candidate-doc candidate))
-              ("yas" (acm-backend-yas-candidate-doc candidate))
-              ("tempel" (acm-backend-tempel-candidate-doc candidate))
-              (_ ""))))
+            (when (fboundp candidate-doc-func)
+              (funcall candidate-doc-func candidate))))
       (when (and candidate-doc
                  (not (string-equal candidate-doc "")))
         ;; Create doc frame if it not exist.

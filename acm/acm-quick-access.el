@@ -1,15 +1,21 @@
 ;;; acm-quick-access.el -*- lexical-binding: t; -*-
 
+(defgroup acm-quick-access nil
+  "ACM quick access."
+  :group 'acm)
+
 (defcustom acm-quick-access-keys '("1" "2" "3" "4" "5" "6" "7" "8" "9" "0")
   "Character strings used as a part of quick-access key sequences."
-  :type 'listp)
+  :type 'listp
+  :group 'acm-quick-access)
 
 (defcustom acm-quick-access-modifier 'meta
   "Modifier key used for quick-access keys sequences."
   :type '(choice (const :tag "Meta key" meta)
                  (const :tag "Super key" super)
                  (const :tag "Hyper key" hyper)
-                 (const :tag "Control key" control)))
+                 (const :tag "Control key" control))
+  :group 'acm-quick-access)
 
 (defun acm-keymap--quick-access-modifier ()
   "Return string representation of the `acm-quick-access-modifier'."

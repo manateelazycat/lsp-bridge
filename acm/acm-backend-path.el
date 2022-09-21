@@ -84,9 +84,14 @@
 
 ;;; Code:
 
+(defgroup acm-backend-path nil
+  "Path backend for acm."
+  :group 'acm)
+
 (defcustom acm-enable-path t
   "Popup path completions when this option is turn on."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm-backend-path)
 
 (defun acm-backend-path-candidates (keyword)
   (when acm-enable-path
