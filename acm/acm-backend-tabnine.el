@@ -8,15 +8,18 @@
   "Minimum length of tabnine word."
   :type 'integer)
 
+(defvar-local tabnine-bridge--begin-pos nil)
+
+(defun acm-backend-tabnine-clean ()
+  (setq-local tabnine-bridge--begin-pos nil))
+
 (defun acm-backend-tabnine-candidates (keyword)
-  (unless (or (and tabnine-bridge-no-continue
-                   tabnine-bridge--calling-continue)
-              tabnine-bridge--disabled)
+  (unless tabnine-bridge--disabled
     (tabnine-bridge-query))
   (let* ((candidates (list))
          (bounds (bounds-of-thing-at-point 'symbol))
          (thing (thing-at-point 'symbol))
-         (tabcandidates (tabnine-bridge--candidates thing)))
+         (tabcandidates (tabnine-bridge--candidates)))
     (setq-local tabnine-bridge--begin-pos (or (car bounds) (point)))
     (when (>= (length keyword) acm-backend-tabnine-min-length)
       (dolist (candidate tabcandidates)
