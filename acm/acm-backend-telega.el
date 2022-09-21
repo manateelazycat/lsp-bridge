@@ -1,6 +1,15 @@
+;;; acm-backend-telega.el --- telega backend for acm -*- lexical-binding: t -*-
+;;; Commentary:
+;;; Code:
+
+(defgroup acm-backend-telega nil
+  "Telega backedn for ACM."
+  :group 'acm)
+
 (defcustom acm-enable-telega t
   "If non-nil enable telega username completion."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm-backend-telega)
 
 (defvar-local acm-backend-telega-items nil)
 
@@ -39,3 +48,5 @@
   (setq-local acm-backend-telega-items nil))
 
 (provide 'acm-backend-telega)
+(provide 'acm-backend-telega)
+;;; acm-backend-telega.el ends here

@@ -84,9 +84,14 @@
 
 ;;; Code:
 
+(defgroup acm-backend-elisp nil
+  "Elisp backend for acm."
+  :group 'acm)
+
 (defcustom acm-backend-elisp-min-length 2
   "Minimum length of elisp symbol."
-  :type 'integer)
+  :type 'integer
+  :group 'acm-backend-elisp)
 
 (defun acm-backend-elisp-sort-predicate (x y)
   "Sorting predicate which compares X and Y."

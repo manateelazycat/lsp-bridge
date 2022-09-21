@@ -84,17 +84,24 @@
 
 ;;; Code:
 
+(defgroup acm-backend-lsp nil
+  "LSP backend for acm."
+  :group 'acm)
+
 (defcustom acm-backend-lsp-candidate-max-length 30
   "Maximal length of candidate."
-  :type 'integer)
+  :type 'integer
+  :group 'acm-backend-lsp)
 
 (defcustom acm-backend-lsp-candidates-max-number 1000
   "Maximal number of candidate of menu."
-  :type 'integer)
+  :type 'integer
+  :group 'acm-backend-lsp)
 
 (defcustom acm-backend-lsp-enable-auto-import t
   "Whether to enable auto-import."
-  :type 'boolean)
+  :type 'boolean
+  :group 'acm-backend-lsp)
 
 (defvar acm-backend-lsp-fetch-completion-item-func nil)
 

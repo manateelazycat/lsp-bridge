@@ -4,9 +4,14 @@
 
 (require 'tabnine-bridge)
 
+(defgroup acm-backend-tabnine nil
+  "ACM tabnine support."
+  :group 'acm)
+
 (defcustom acm-backend-tabnine-min-length 1
   "Minimum length of tabnine word."
-  :type 'integer)
+  :type 'integer
+  :group 'acm-backend-tabnine)
 
 (defun acm-backend-tabnine-candidates (keyword)
   (unless (or (and tabnine-bridge-no-continue
