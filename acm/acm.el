@@ -157,11 +157,6 @@
   :type 'integer
   :group 'acm)
 
-(defcustom acm-enable-tabnine-helper nil
-  "Enable tabnine support"
-  :type 'boolean
-  :group 'acm)
-
 (cl-defmacro acm-run-idle-func (timer idle func)
   `(unless ,timer
      (setq ,timer
@@ -449,7 +444,6 @@ influence of C1 on the result."
          mode-candidates
          citre-candidates)
     (when acm-enable-tabnine-helper
-      (require 'acm-backend-tabnine)
       (setq tabnine-candidates (acm-backend-tabnine-candidates keyword)))
 
     (if acm-enable-english-helper

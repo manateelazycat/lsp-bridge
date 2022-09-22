@@ -964,6 +964,9 @@ So we build this macro to restore postion after code format."
                             (buffer-name)
                             )
 
+  (when acm-enable-tabnine-helper
+    (lsp-bridge-tabnine-complete))
+
   ;; Send change file to search-words backend.
   (when (and buffer-file-name
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
@@ -1670,11 +1673,6 @@ So we build this macro to restore postion after code format."
   (evil-add-command-properties #'lsp-bridge-find-references :jump t)
   (evil-add-command-properties #'lsp-bridge-find-impl :jump t))
 
-(with-eval-after-load 'lsp-bridge
-  (when acm-enable-tabnine-helper
-    (require 'acm-backend-tabnine)
-    (acm-backend-tabnine-start-server)))
-
 (defun lsp-bridge--rename-file-advisor (orig-fun &optional arg &rest args)
   (when (and lsp-bridge-mode
              (boundp 'acm-backend-lsp-filepath))
@@ -1693,6 +1691,26 @@ So we build this macro to restore postion after code format."
 
     ;; Clean LSP backend completion tick.
     (setq-local lsp-bridge-completion-item-fetch-tick nil)))
+
+(defun lsp-bridge-tabnine-complete ()
+  (interactive)
+  (let* ((buffer-min 1)
+         (buffer-max (1+ (buffer-size)))
+         (before-point
+          (max (point-min) (- (point) tabnine-bridge-context-radius)))
+         (after-point
+          (min (point-max) (+ (point) tabnine-bridge-context-radius-after))))
+    (lsp-bridge-call-async "tabnine_complete"
+                           (buffer-substring-no-properties before-point (point))
+                           (buffer-substring-no-properties (point) after-point)
+                           (or (buffer-file-name) nil)
+                           (= before-point buffer-min)
+                           (= after-point buffer-max)
+                           tabnine-bridge-max-num-results)))
+
+(defun lsp-bridge-tabnine-record-items (items)
+  (setq-local acm-backend-tabnine-items items)
+  (lsp-bridge-try-completion))
 
 ;; https://tecosaur.github.io/emacs-config/config.html#lsp-support-src
 (cl-defmacro lsp-org-babel-enable (lang)

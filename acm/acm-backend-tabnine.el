@@ -8,36 +8,16 @@
   "ACM tabnine support."
   :group 'acm)
 
-(defcustom acm-backend-tabnine-min-length 1
-  "Minimum length of tabnine word."
-  :type 'integer
+(defcustom acm-enable-tabnine-helper t
+  "Enable tabnine support"
+  :type 'boolean
   :group 'acm-backend-tabnine)
 
+(defvar-local acm-backend-tabnine-items nil)
+
 (defun acm-backend-tabnine-candidates (keyword)
-  (unless (or (and tabnine-bridge-no-continue
-                   tabnine-bridge--calling-continue)
-              tabnine-bridge--disabled)
-    (tabnine-bridge-query))
-  (let* ((candidates (list))
-         (bounds (bounds-of-thing-at-point 'symbol))
-         (thing (thing-at-point 'symbol))
-         (tabcandidates (tabnine-bridge--candidates thing)))
-    (setq-local tabnine-bridge--begin-pos (or (car bounds) (point)))
-    (when (>= (length keyword) acm-backend-tabnine-min-length)
-      (dolist (candidate tabcandidates)
-        (add-to-list 'candidates (list
-                                  :key candidate
-                                  :icon "tabnine"
-                                  :label candidate
-                                  :display-label candidate
-                                  :annotation (get-text-property 0 'annotation candidate)
-                                  :backend "tabnine"
-                                  :new_suffix (get-text-property 0 'new_suffix candidate)
-                                  :old_suffix (get-text-property 0 'old_suffix candidate)))))
-    (sort candidates #'(lambda (c-a c-b)
-                         (string> (plist-get c-a :annotation)
-                                  (plist-get c-b :annotation)
-                                  )))))
+  (when acm-backend-tabnine-items
+    acm-backend-tabnine-items))
 
 (defun acm-backend-tabnine-candidate-expand (candidate-info bound-start)
   ;; Insert TabNine suggestion.
@@ -54,9 +34,8 @@
       (save-excursion
         (insert new_suffix)))))
 
-(defun acm-backend-tabnine-start-server ()
-  (when (null tabnine-bridge--process)
-    (tabnine-bridge-start-process)))
+(defun acm-backend-tabnine-clean ()
+  (setq-local acm-backend-tabnine-items nil))
 
 (provide 'acm-backend-tabnine)
 ;;; acm-backend-tabnine.el ends here

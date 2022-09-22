@@ -35,6 +35,7 @@ from core.fileaction import (FileAction,
                              FILE_ACTION_DICT, LSP_SERVER_DICT)
 from core.lspserver import LspServer
 from core.search_file_words import SearchFileWords
+from core.tabnine import TabNine
 from core.utils import *
 from core.handler import *
 
@@ -43,6 +44,7 @@ class LspBridge:
 
         # Object cache to exchange information between Emacs and LSP server.
         self.search_file_words = SearchFileWords()
+        self.tabnine = TabNine()
 
         # Build EPC interfaces.
         for name in ["change_file", "update_file", "change_cursor", "save_file", "ignore_diagnostic", "list_diagnostics"]:
@@ -280,6 +282,9 @@ class LspBridge:
             })
             
         setattr(self, name, _do)
+        
+    def tabnine_complete(self, before, after, filename, region_includes_beginning, region_includes_end, max_num_results):
+        self.tabnine.complete(before, after, filename, region_includes_beginning, region_includes_end, max_num_results)
             
     def handle_server_process_exit(self, server_name):
         if server_name in LSP_SERVER_DICT:
