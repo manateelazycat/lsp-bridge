@@ -19,19 +19,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
 import os
 import queue
 import subprocess
 import threading
 import traceback
-import json
 
-from orjson import JSONDecodeError
-from core.utils import eval_in_emacs, logger, get_os_name
+from core.utils import eval_in_emacs, logger, get_os_name, parse_json_content
 from platform import version
-from threading import Thread
 from subprocess import PIPE
 from sys import stderr
+from threading import Thread
 
 TABNINE_PROTOCOL_VERSION = "1.0.14"
 TABNINE_BINARIES_FOLDER = os.path.expanduser("~/.TabNine/")
@@ -202,9 +201,9 @@ class TabNineReceiver(Thread):
             while self.process.poll() is None:
                 output = self.process.stdout.readline().decode("utf-8")    # type: ignore
                 try:
-                    data = json.loads(output)
+                    data = parse_json_content(output)
                     self.queue.put(data)
-                except json.JSONDecodeError:
+                except:
                     pass
         except:
             logger.error(traceback.format_exc())
