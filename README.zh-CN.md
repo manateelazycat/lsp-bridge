@@ -2,19 +2,19 @@
 
 # lsp-bridge
 
-lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端。
+lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端。
 
-lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速缓存，在提供行云流水的代码补全体验的前提下，保证永远不会卡住Emacs。
+lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建高速缓存，在提供行云流水的代码补全体验的前提下，保证永远不会卡住 Emacs。
 
 <img src="./screenshot.png">
 
 ## 安装
 
-1. 安装Emacs 28及以上版本
-2. 安装Python依赖:
+1. 安装 Emacs 28 及以上版本
+2. 安装 Python 依赖:
 + [python-epc](https://github.com/tkf/python-epc)
 + [orjson](https://github.com/ijl/orjson)
-3. 安装Elisp依赖:
+3. 安装 Elisp 依赖:
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
 + [yasnippet](https://github.com/joaotavora/yasnippet)
@@ -32,12 +32,12 @@ lsp-bridge使用Python多线程技术在Emacs和LSP服务器之间构建高速�
 ```
 
 ## 使用
-lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.com/manateelazycat/lsp-bridge/blob/master/README.zh-CN.md#%E5%B7%B2%E7%BB%8F%E6%94%AF%E6%8C%81%E7%9A%84%E8%AF%AD%E8%A8%80%E6%9C%8D%E5%8A%A1%E5%99%A8)和模式插件以后， 直接写代码即可， 不需要额外的设置。
+lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://github.com/manateelazycat/lsp-bridge/blob/master/README.zh-CN.md#%E5%B7%B2%E7%BB%8F%E6%94%AF%E6%8C%81%E7%9A%84%E8%AF%AD%E8%A8%80%E6%9C%8D%E5%8A%A1%E5%99%A8)和模式插件以后， 直接写代码即可， 不需要额外的设置。
 
 需要注意的是 lsp-bridge 有三种扫描模式：
-1. 检测到 `.git` 目录时(通过命令 `git rev-parse --is-inside-work-tree` 来判断)， lsp-bridge会扫描整个目录文件来提供补全
-2. 没有检测到 `.git` 目录时， lsp-bridge只会对打开的文件提供单文件补全
-3. 自定义 `lsp-bridge-get-project-path-by-filepath` 函数， 输入参数是打开文件的路径字符串， 输出参数是项目目录路径， lsp-bridge会根据输出目录路径来提供补全
+1. 检测到 `.git` 目录时(通过命令 `git rev-parse --is-inside-work-tree` 来判断)， lsp-bridge 会扫描整个目录文件来提供补全
+2. 没有检测到 `.git` 目录时， lsp-bridge 只会对打开的文件提供单文件补全
+3. 自定义 `lsp-bridge-get-project-path-by-filepath` 函数， 输入参数是打开文件的路径字符串， 输出参数是项目目录路径， lsp-bridge 会根据输出目录路径来提供补全
 
 ## 命令列表
 
@@ -55,61 +55,61 @@ lsp-bridge开箱即用， 安装好语言对应的[LSP服务器](https://github.
 * `lsp-bridge-jump-to-prev-diagnostic`: 跳转到上一个诊断位置
 * `lsp-bridge-list-diagnostics`: 列出所有诊断信息
 * `lsp-bridge-ignore-current-diagnostic`: 插入注视忽略当前诊断
-* `lsp-bridge-signature-help-fetch`: 在minibuffer显示参数信息
+* `lsp-bridge-signature-help-fetch`: 在 minibuffer 显示参数信息
 * `lsp-bridge-insert-common-prefix`: 插入补全后选词的公共前缀
-* `lsp-bridge-restart-process`: 重启lsp-bridge进程 (一般只有开发者才需要这个功能)
+* `lsp-bridge-restart-process`: 重启 lsp-bridge 进程 (一般只有开发者才需要这个功能)
 * `lsp-bridge-popup-complete`: 手动弹出补全菜单， 只有当打开 `lsp-bridge-complete-manually` 选项才需要使用这个命令
-* `acm-doc-scroll-up`: API文档窗口向上滚动
-* `acm-doc-scroll-down`: API文档窗口向下滚动
+* `acm-doc-scroll-up`: API 文档窗口向上滚动
+* `acm-doc-scroll-down`: API 文档窗口向下滚动
 
 ## 选项
 * `lsp-bridge-completion-popup-predicates`: 补全菜单显示的检查函数， 这个选项包括的所有函数都检查过以后， 补全菜单才能显示
 * `lsp-bridge-completion-stop-commands`: 这些命令执行以后，不再弹出补全菜单
 * `lsp-bridge-completion-hide-characters`: 这些字符的后面不再弹出补全菜单
-* `lsp-bridge-diagnostics-fetch-idle`： 诊断延迟，默认是停止敲键盘后1秒开始拉取诊断信息
+* `lsp-bridge-diagnostics-fetch-idle`： 诊断延迟，默认是停止敲键盘后 1 秒开始拉取诊断信息
 * `lsp-bridge-enable-diagnostics`: 代码诊断， 默认打开
 * `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认打开
 * `lsp-bridge-enable-search-words`: 索引打开文件的单词， 默认打开
 * `lsp-bridge-enable-auto-format-code`: 自动格式化代码, 默认关闭
-* `lsp-bridge-org-babel-lang-list`: 支持org-mode代码块补全的语言列表
-* `lsp-bridge-disable-backup`: 禁止emacs对文件做版本管理， 默认打开
-* `lsp-bridge-enable-log`: 启用LSP消息日志， 默认关闭
+* `lsp-bridge-org-babel-lang-list`: 支持 org-mode 代码块补全的语言列表
+* `lsp-bridge-disable-backup`: 禁止 emacs 对文件做版本管理， 默认打开
+* `lsp-bridge-enable-log`: 启用 LSP 消息日志， 默认关闭
 * `lsp-bridge-enable-debug`: 启用程序调试， 默认关闭
-* `lsp-bridge-python-command`: Python命令的路径, 如果你用 `conda`， 你也许会定制这个选项
+* `lsp-bridge-python-command`: Python 命令的路径, 如果你用 `conda`， 你也许会定制这个选项
 * `lsp-bridge-signature-function`: 用于显示签名信息的函数
-* `lsp-bridge-c-lsp-server`: C语言的服务器，可以选择`clangd`或者`ccls`
-* `lsp-bridge-python-lsp-server`: Python语言的服务器，可以选择`pyright`或者`jedi`
-* `lsp-bridge-tex-lsp-server`: LaTeX语言的服务器，可以选择`texlab`或者`digestif`
+* `lsp-bridge-c-lsp-server`: C 语言的服务器，可以选择`clangd`或者`ccls`
+* `lsp-bridge-python-lsp-server`: Python 语言的服务器，可以选择`pyright`或者`jedi`
+* `lsp-bridge-tex-lsp-server`: LaTeX 语言的服务器，可以选择`texlab`或者`digestif`
 * `lsp-bridge-complete-manually`: 只有当用户手动调用 `lsp-bridge-popup-complete` 命令的时候才弹出补全菜单， 默认关闭
-* `lsp-bridge-get-workspace-folder`: 在Java中需要把多个项目放到一个Workspace目录下， 才能正常进行定义跳转， 可以自定义这个函数， 函数输入是项目路径， 返回对应的Workspace目录
+* `lsp-bridge-get-workspace-folder`: 在 Java 中需要把多个项目放到一个 Workspace 目录下， 才能正常进行定义跳转， 可以自定义这个函数， 函数输入是项目路径， 返回对应的 Workspace 目录
 * `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
 * `acm-candidate-match-function`: 补全菜单匹配算法， orderless-* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
 * `acm-enable-search-words`: 补全菜单是否显示打开文件的单词， 默认打开
 * `acm-enable-doc`: 补全菜单是否显示帮助文档
-* `acm-enable-icon`: 补全菜单是否显示图标, macOS用户需要给 brew 命令增加选项 `--with-rsvg` 来安装Emacs才能显示SVG图片
+* `acm-enable-icon`: 补全菜单是否显示图标, macOS 用户需要给 brew 命令增加选项 `--with-rsvg` 来安装 Emacs 才能显示 SVG 图片
 * `acm-enable-quick-access`: 是否在图标后面显示索引， 可以通过 Alt + Number 来快速选择后选词， 默认关闭
 * `acm-snippet-insert-index`: 代码模板候选词在补全菜单中的显示位置
-* `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是20
-* `acm-enable-tabnine-helper`: 是否打开 tabnine 补全支持，默认关闭，打开后运行 `tabnine-bridge-install-binary` 安装 tabnine 后就可以使用了。 TabNine会消耗巨大的CPU， 导致你整个电脑都卡顿， 如果电脑性能不好， 不建议开启此选项
+* `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是 20
+* `acm-enable-tabnine-helper`: 是否打开 tabnine 补全支持，默认打开，打开后需要运行命令 `tabnine-bridge-install-binary` 来安装 tabnine 后就可以使用了。 TabNine 会消耗巨大的 CPU， 导致你整个电脑都卡顿， 如果电脑性能不好， 不建议开启此选项
 * `acm-enable-yas`: yasnippet 补全，默认打开
-* `acm-backend-yas-candidates-number`: yasnippet 显示个数，默认2个 
+* `acm-backend-yas-candidates-number`: yasnippet 显示个数，默认 2 个 
 * `acm-enable-citre`: citre 补全，默认关闭
-* `acm-backend-citre-keyword-complete`: 根据`acm-backend-citre-keywords-alist`定义的各个模式的关键字进行补全，需要使能citre 后才生效
+* `acm-backend-citre-keyword-complete`: 根据`acm-backend-citre-keywords-alist`定义的各个模式的关键字进行补全，需要使能 citre 后才生效
 
 
 ## 自定义语言服务器配置
-lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
+lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
 
 
 大多数情况， 你可以根据以下优先级顺序来自定义服务器配置：
-1. ```lsp-bridge-get-single-lang-server-by-project```: 用户自定义函数， 输入参数是 `project-path` 和 `file-path`, 返回对应的LSP服务器字符串， 可以在 `lsp-bridge-single-lang-server-mode-list` 列表中查询所有LSP服务器的名称， 默认这个函数返回 nil
-2. ```lsp-bridge-single-lang-server-extension-list```: 根据文件的扩展名来返回服务器，比如打开*.wxml文件时，我们会使用 ```wxml``` LSP服务器提供补全
-3. ```lsp-bridge-single-lang-server-mode-list```: 根据Emacs的major-mode来返回对应的服务器
+1. ```lsp-bridge-get-single-lang-server-by-project```: 用户自定义函数， 输入参数是 `project-path` 和 `file-path`, 返回对应的 LSP 服务器字符串， 可以在 `lsp-bridge-single-lang-server-mode-list` 列表中查询所有 LSP 服务器的名称， 默认这个函数返回 nil
+2. ```lsp-bridge-single-lang-server-extension-list```: 根据文件的扩展名来返回服务器，比如打开*.wxml 文件时，我们会使用 ```wxml``` LSP 服务器提供补全
+3. ```lsp-bridge-single-lang-server-mode-list```: 根据 Emacs 的 major-mode 来返回对应的服务器
 
-如果你在编写JavaScript代码， 你可能需要自定义多服务器配置：
+如果你在编写 JavaScript 代码， 你可能需要自定义多服务器配置：
 1. ```lsp-bridge-get-multi-lang-server-by-project```: 用户自定义函数， 输入参数是 `project-path` 和 `file-path`, 返回多服务器配置名， 可以在子目录 [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) 中查找
-2. ```lsp-bridge-multi-lang-server-extension-list```: 根据文件的扩展名来返回多服务器配置名， 比如打开*.vue文件时，我们会使用 ```volar_emmet``` 来同时利用 `volar` 和 `emmet-ls` 两种LSP服务器提供补全
-3. ```lsp-bridge-multi-lang-server-mode-list```: 根据Emacs的major-mode来返回对应的多服务器配置名
+2. ```lsp-bridge-multi-lang-server-extension-list```: 根据文件的扩展名来返回多服务器配置名， 比如打开*.vue 文件时，我们会使用 ```volar_emmet``` 来同时利用 `volar` 和 `emmet-ls` 两种 LSP 服务器提供补全
+3. ```lsp-bridge-multi-lang-server-mode-list```: 根据 Emacs 的 major-mode 来返回对应的多服务器配置名
 
 ## 添加新的编程语言支持?
 
@@ -118,19 +118,19 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 3. 添加新的 mode-hook 到 `lsp-bridge.el` 文件中的 `lsp-bridge-default-mode-hooks` 选项中。
 4. 添加新的缩进变量到 `lsp-bridge.el` 文件中的 `lsp-bridge-formatting-indent-alist` 选项中。
 
-欢迎发送补丁帮助我们支持更多的LSP服务器，感谢你的帮助！
+欢迎发送补丁帮助我们支持更多的 LSP 服务器，感谢你的帮助！
 
 ## 已经支持的语言服务器
 
-你需要安装每个编程语言对应的LSP服务器， lsp-bridge才能提供代码补全服务。
+你需要安装每个编程语言对应的 LSP 服务器， lsp-bridge 才能提供代码补全服务。
 
-| 序号 | LSP服务器              | 语言 | 备注                                                                                                                                                               |
+| 序号 | LSP 服务器              | 语言 | 备注                                                                                                                                                               |
 | :--- | :--- | :--- | :--- |
 | 1 | [clangd](https://github.com/clangd/clangd) | c, c++, object-c |  |
 | 2 | [pyright](https://github.com/microsoft/pyright) | python | `pip install pyright`|
 | 3 | [solargraph](https://github.com/castwide/solargraph) | ruby | |
 | 4 | [rust-analyzer](https://github.com/rust-lang/rust-analyzer) | rust | |
-| 5 | [elixirLS](https://github.com/elixir-lsp/elixir-ls) | elixir | 请确保导出 `elixir-ls` 目录到你系统的PATH路径 |
+| 5 | [elixirLS](https://github.com/elixir-lsp/elixir-ls) | elixir | 请确保导出 `elixir-ls` 目录到你系统的 PATH 路径 |
 | 6 | [gopls](https://github.com/golang/tools/tree/master/gopls) | go | 确保安装 [go-mode](https://github.com/dominikh/go-mode.el)， 同时确保 gopls 在 PATH 环境变量中, 执行命令 `ln -s ~/go/bin/gopls ~/.local/bin`, 还要在补全之前执行 `go mod init` 命令 |
 | 7 | [hls](https://github.com/haskell/haskell-language-server) | haskell | |
 | 8 | [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) | dart | |
@@ -139,11 +139,11 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 11 | [ocamllsp](https://github.com/ocaml/ocaml-lsp) | ocaml | |
 | 12 | [erlang-ls](https://github.com/erlang-ls/erlang_ls) | erlang | |
 | 13 | [texlab](https://github.com/latex-lsp/texlab) | latex | |
-| 14 | [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls) | java | 请确保导出 `org.eclipse.jdt.ls.product/target/repository/bin` 到你系统的PATH路径 |
+| 14 | [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls) | java | 请确保导出 `org.eclipse.jdt.ls.product/target/repository/bin` 到你系统的 PATH 路径 |
 | 15 | [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp) | clojure | 如果使用 `homebrew` 安装的，请确保安装的是 `clojure-lsp/brew/clojure-lsp-native` [clojure-lsp-native](https://clojure-lsp.io/installation/#homebrew-macos-and-linux) |
 | 16 | [bash-language-server](https://github.com/bash-lsp/bash-language-server) | bash | |
 | 17 | [volar](https://github.com/johnsoncodehk/volar) | vue | npm install typescript volar -g |
-| 18 | [sumneko](https://github.com/sumneko/lua-language-server) | lua | 请确保导出sumneko的 `bin` 目录到你系统的PATH路径 |
+| 18 | [sumneko](https://github.com/sumneko/lua-language-server) | lua | 请确保导出 sumneko 的 `bin` 目录到你系统的 PATH 路径 |
 | 19 | [wxml-language-server](https://github.com/chemzqm/wxml-languageserver) | wxml | |
 | 20 | [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | html | |
 | 21 | [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | css | |
@@ -162,20 +162,20 @@ lsp-bridge每种语言的服务器配置存储在[lsp-bridge/langserver](https:/
 | 34 | [digestif](https://github.com/astoff/digestif) | latex | `lsp-bridge-tex-lsp-server` 设置成 `digestif` |
 | 35 | [rlanguageserver](https://github.com/REditorSupport/languageserver)       | R   | |
 | 36 | [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli) | GraphQL | |
-| 37 | [microsoft-python-language-server](https://github.com/microsoft/python-language-server) | Python | 支持Python2的lsp |
+| 37 | [microsoft-python-language-server](https://github.com/microsoft/python-language-server) | Python | 支持 Python2 的 lsp |
 | 38 | [cmake-language-server](https://github.com/regen100/cmake-language-server) | cmake | `pip install cmake-language-server` |
 | 39 | [Wen](https://github.com/metaescape/Wen) | org-mode | `pip install pygls pypinyin` |
 
 ### 不会支持的特性：
-lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是实现LSP协议最全的LSP客户端。
+lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端, 但不是实现 LSP 协议最全的 LSP 客户端。
 
-下面的功能用Emacs现有生态做更好：
-1. 语法高亮: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) 是一个静态高性能的语法分析库，比LSP更适合完成语法高亮
-2. Xref: Xref的机制是同步等待， lsp-bridge是完全异步的， 两个机制无法融合， 建议自己编写包装函数来统一按键
+下面的功能用 Emacs 现有生态做更好：
+1. 语法高亮: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) 是一个静态高性能的语法分析库，比 LSP 更适合完成语法高亮
+2. Xref: Xref 的机制是同步等待， lsp-bridge 是完全异步的， 两个机制无法融合， 建议自己编写包装函数来统一按键
 
 ## 加入开发
 
-下图是lsp-bridge的架构设计:
+下图是 lsp-bridge 的架构设计:
 
 <img src="./framework.png">
 
@@ -183,37 +183,37 @@ lsp-bridge的目标是实现Emacs生态中性能最快的LSP客户端, 但不是
 
 | 文件名                  | 作用                                                                                                         |
 | :--------------------- | :-------------------                                                                                        |
-| lsp-bridge.el           | lsp-bridge的Elisp主逻辑部分，提供自定义选项和Elisp函数供python子进程调用，比如代码跳转、重命名等             |
-| lsp-bridge-epc.el       | 和lsp-bridge python子进程通讯的代码，主要实现Elisp IPC来对接Python EPC, 实现数据序列化、发送、接收和反序列化 |
-| lsp-bridge-ref.el       | 代码引用查看框架，提供引用查看、批量重命名、引用结果正则过滤等，核心代码 fork 自color-rg.el                  |
-| lsp-bridge-jdtls.el      | 提供Java语言第三方库跳转功能                                                           |
-| lsp-bridge.py           | lsp-bridge的Python主逻辑部分，提供事件循环、消息调度和状态管理                                               |
-| acm/acm.el      | 异步补全菜单， 专门为 lsp-bridge 后端而设计， 支持lsp, elisp, words, TabNine等后端                                                                                           |
-| core/fileaction.py      | 主要记录每个文件状态，处理LSP响应消息，调用Emacs Elisp函数                                                   |
-| core/lspserver.py       | LSP消息处理模块，主要是解析、发送和接受LSP消息，并保证LSP请求顺序符合LSP协议规范                             |
+| lsp-bridge.el           | lsp-bridge 的 Elisp 主逻辑部分，提供自定义选项和 Elisp 函数供 python 子进程调用，比如代码跳转、重命名等             |
+| lsp-bridge-epc.el       | 和 lsp-bridge python 子进程通讯的代码，主要实现 Elisp IPC 来对接 Python EPC, 实现数据序列化、发送、接收和反序列化 |
+| lsp-bridge-ref.el       | 代码引用查看框架，提供引用查看、批量重命名、引用结果正则过滤等，核心代码 fork 自 color-rg.el                  |
+| lsp-bridge-jdtls.el      | 提供 Java 语言第三方库跳转功能                                                           |
+| lsp-bridge.py           | lsp-bridge 的 Python 主逻辑部分，提供事件循环、消息调度和状态管理                                               |
+| acm/acm.el      | 异步补全菜单， 专门为 lsp-bridge 后端而设计， 支持 lsp, elisp, words, TabNine 等后端                                                                                           |
+| core/fileaction.py      | 主要记录每个文件状态，处理 LSP 响应消息，调用 Emacs Elisp 函数                                                   |
+| core/lspserver.py       | LSP 消息处理模块，主要是解析、发送和接受 LSP 消息，并保证 LSP 请求顺序符合 LSP 协议规范                             |
 | core/utils.py           | 一些全局工具函数，方便各模块调用                                                                             |
-| core/mergedeep.py           | JSON信息合并， 主要用于发送自定义选项给LSP服务器                                                                             |
-| core/hanlder/           | LSP消息发送和接受的实现，其中 __init__.py 是基类                                                             |
-| langserver              | 主要放置LSP服务器的配置，每一个服务器一个 json 文件，分别定义服务器的名称、语言ID、启动命令和设置选项等      |
+| core/mergedeep.py           | JSON 信息合并， 主要用于发送自定义选项给 LSP 服务器                                                                             |
+| core/hanlder/           | LSP 消息发送和接受的实现，其中 __init__.py 是基类                                                             |
+| langserver              | 主要放置 LSP 服务器的配置，每一个服务器一个 json 文件，分别定义服务器的名称、语言 ID、启动命令和设置选项等      |
 
 
 请先阅读下面的文章:
-* [LSP协议规范](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
-* [lsp-bridge架构设计](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html)
-* [为什么lsp-bridge不用capf](https://manateelazycat.github.io/emacs/2022/06/26/why-lsp-bridge-not-use-capf.html)
+* [LSP 协议规范](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
+* [lsp-bridge 架构设计](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html)
+* [为什么 lsp-bridge 不用 capf](https://manateelazycat.github.io/emacs/2022/06/26/why-lsp-bridge-not-use-capf.html)
 
 接着打开开发选项 ```lsp-bridge-enable-log``` ， happy hacking! ;)
 
 ## 反馈问题
 
-请用命令 `emacs -q` 并只添加lsp-bridge配置做一个对比测试，如果 `emacs -q` 可以正常工作，请检查你个人的配置文件。
+请用命令 `emacs -q` 并只添加 lsp-bridge 配置做一个对比测试，如果 `emacs -q` 可以正常工作，请检查你个人的配置文件。
 
-如果`emacs -q`环境下问题依旧，请到[这里](https://github.com/manateelazycat/lsp-bridge/issues/new)反馈, 并附带 `*lsp-bridge*` 窗口的内容给我们提交issue，那里面有很多线索可以帮助我们排查问题。。
+如果`emacs -q`环境下问题依旧，请到[这里](https://github.com/manateelazycat/lsp-bridge/issues/new)反馈, 并附带 `*lsp-bridge*` 窗口的内容给我们提交 issue，那里面有很多线索可以帮助我们排查问题。。
 
 如果你遇到崩溃的问题, 请用下面的方式来收集崩溃信息:
-1. 先安装gdb并打开选项 `(setq lsp-bridge-enable-debug t)`
-2. 使用命令 `lsp-bridge-stop-process` 停止LSP-BRIDGE进程
-3. 重新打开lsp-bridge, 并在下次崩溃时发送 `*lsp-bridge*` 的内容
+1. 先安装 gdb 并打开选项 `(setq lsp-bridge-enable-debug t)`
+2. 使用命令 `lsp-bridge-stop-process` 停止 LSP-BRIDGE 进程
+3. 重新打开 lsp-bridge, 并在下次崩溃时发送 `*lsp-bridge*` 的内容
 
 ## 贡献者
 
