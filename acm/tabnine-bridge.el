@@ -67,23 +67,6 @@
   :group 'lsp-bridge
   :prefix "tabnine-bridge-")
 
-(defcustom tabnine-bridge-max-num-results 10
-  "Maximum number of results to show."
-  :group 'tabnine-bridge
-  :type 'integer)
-
-(defcustom tabnine-bridge-context-radius 3000
-  "The number of chars before point to send for completion.
-
-Note that setting this too small will cause TabNine to not be able to read the entire license activation key."
-  :group 'tabnine-bridge
-  :type 'integer)
-
-(defcustom tabnine-bridge-context-radius-after 1000
-  "The number of chars after point to send for completion."
-  :group 'tabnine-bridge
-  :type 'integer)
-
 (defcustom tabnine-bridge-binaries-folder "~/.TabNine"
   "Path to TabNine binaries folder.
 `tabnine-bridge-install-binary' will use this directory."

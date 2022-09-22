@@ -1696,19 +1696,20 @@ So we build this macro to restore postion after code format."
   (interactive)
   (let* ((buffer-min 1)
          (buffer-max (1+ (buffer-size)))
-         (before-point
-          (max (point-min) (- (point) tabnine-bridge-context-radius)))
-         (after-point
-          (min (point-max) (+ (point) tabnine-bridge-context-radius-after))))
+         (chars-number-before-point 3000) ; the number of chars before point to send for completion.
+         (chars-number-after-point 1000) ; the number of chars after point to send for completion.
+         (max-num-results 10)     ; maximum number of results to show.
+         (before-point (max (point-min) (- (point) chars-number-before-point)))
+         (after-point (min (point-max) (+ (point) chars-number-after-point))))
     (lsp-bridge-call-async "tabnine_complete"
                            (buffer-substring-no-properties before-point (point))
                            (buffer-substring-no-properties (point) after-point)
                            (or (buffer-file-name) nil)
                            (= before-point buffer-min)
                            (= after-point buffer-max)
-                           tabnine-bridge-max-num-results)))
+                           max-num-results)))
 
-(defun lsp-bridge-tabnine-record-items (items)
+(defun lsp-bridge-tabnine-record-completion-items (items)
   (setq-local acm-backend-tabnine-items items)
   (lsp-bridge-try-completion))
 
