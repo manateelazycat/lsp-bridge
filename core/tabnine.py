@@ -26,11 +26,12 @@ import subprocess
 import threading
 import traceback
 
-from core.utils import eval_in_emacs, logger, get_os_name, parse_json_content
+from core.utils import MessageReceiver, MessageSender, eval_in_emacs, logger, get_os_name, parse_json_content
 from platform import version
 from subprocess import PIPE
 from sys import stderr
 from threading import Thread
+from distutils.version import StrictVersion
 
 TABNINE_PROTOCOL_VERSION = "1.0.14"
 TABNINE_BINARIES_FOLDER = os.path.expanduser("~/.TabNine/")
@@ -78,7 +79,8 @@ class TabNine:
         if os.path.exists(TABNINE_BINARIES_FOLDER):
             try:
                 versions = os.listdir(TABNINE_BINARIES_FOLDER)
-                versions.sort(key=self.parse_version, reverse=True)
+                versions = list(filter(lambda f: os.path.isdir(os.path.join(TABNINE_BINARIES_FOLDER, f)), versions))
+                versions.sort(key=StrictVersion, reverse=True)
                 for version in versions:
                     version_path = os.path.join(TABNINE_BINARIES_FOLDER, version)
                     if os.path.isdir(version_path):
@@ -148,26 +150,10 @@ class TabNine:
                 eval_in_emacs("lsp-bridge-tabnine-record-completion-items", completion_candidates)
         except:
             logger.error(traceback.format_exc())
-        
     
-    def parse_version(self, s:str):
-        try:
-            return [int(x) for x in s.split(".")]
-        except ValueError:
-            return []
-
-class TabNineSender(Thread):
+class TabNineSender(MessageSender):
     
-    def __init__(self, process: subprocess.Popen):
-        super().__init__()
-        
-        self.process = process
-        self.queue = queue.Queue()
-        
-    def send_request(self, message):
-        self.queue.put(message)
-        
-    def _send_message(self, message):
+    def send_message(self, message):
         data = json.dumps(message) + "\n"
         
         self.process.stdin.write(data.encode("utf-8"))    # type: ignore
@@ -181,20 +167,11 @@ class TabNineSender(Thread):
         try:
             while self.process.poll() is None:
                 message = self.queue.get()
-                self._send_message(message)
+                self.send_message(message)
         except:
             logger.error(traceback.format_exc())
     
-class TabNineReceiver(Thread):
-    
-    def __init__(self, process: subprocess.Popen):
-        super().__init__()
-        
-        self.process = process
-        self.queue = queue.Queue()
-        
-    def get_message(self):
-        return self.queue.get(block=True)
+class TabNineReceiver(MessageReceiver):
     
     def run(self):
         try:

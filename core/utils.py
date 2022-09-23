@@ -27,8 +27,13 @@ import logging
 import pathlib
 import platform
 import sys
+import subprocess
+import queue
+import traceback
 import os
+
 from epc.client import EPCClient
+from threading import Thread
 
 try:
     import orjson as json_parser
@@ -244,3 +249,25 @@ def windows_get_env_value(var_name: str) -> str:
 
 def windows_parse_path(path: str) -> str:
     return path.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
+
+class MessageSender(Thread):
+    
+    def __init__(self, process: subprocess.Popen):
+        super().__init__()
+        
+        self.process = process
+        self.queue = queue.Queue()
+        
+    def send_request(self, message):
+        self.queue.put(message)
+        
+class MessageReceiver(Thread):
+    
+    def __init__(self, process: subprocess.Popen):
+        super().__init__()
+        
+        self.process = process
+        self.queue = queue.Queue()
+        
+    def get_message(self):
+        return self.queue.get(block=True)

@@ -42,16 +42,14 @@ from core.utils import *
 
 DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
 
-class LspServerSender(Thread):
+class LspServerSender(MessageSender):
     def __init__(self, process: subprocess.Popen):
-        super().__init__()
+        super().__init__(process)
 
-        self.process = process
         self.init_queue = queue.Queue()
-        self.queue = queue.Queue()
         self.initialized = threading.Event()
 
-    def _enqueue_message(self, message: dict, *, init=False):
+    def enqueue_message(self, message: dict, *, init=False):
         message["jsonrpc"] = "2.0"
         if init:
             self.init_queue.put(message)
@@ -59,25 +57,25 @@ class LspServerSender(Thread):
             self.queue.put(message)
 
     def send_request(self, method, params, request_id, **kwargs):
-        self._enqueue_message(dict(
+        self.enqueue_message(dict(
             id=request_id,
             method=method,
             params=params
         ), **kwargs)
 
     def send_notification(self, method, params, **kwargs):
-        self._enqueue_message(dict(
+        self.enqueue_message(dict(
             method=method,
             params=params
         ), **kwargs)
 
     def send_response(self, request_id, result, **kwargs):
-        self._enqueue_message(dict(
+        self.enqueue_message(dict(
             id=request_id,
             result=result
         ), **kwargs)
 
-    def _send_message(self, message: dict):
+    def send_message(self, message: dict):
         json_content = json.dumps(message)
         
         message_str = "Content-Length: {}\r\n\r\n{}".format(len(json_content), json_content)
@@ -93,30 +91,21 @@ class LspServerSender(Thread):
     def run(self) -> None:
         try:
             # send "initialize" request
-            self._send_message(self.init_queue.get())
+            self.send_message(self.init_queue.get())
             # wait until initialized
             self.initialized.wait()
             # send other initialization-related messages
             while not self.init_queue.empty():
                 message = self.init_queue.get()
-                self._send_message(message)
+                self.send_message(message)
             # send all others
             while self.process.poll() is None:
                 message = self.queue.get()
-                self._send_message(message)
+                self.send_message(message)
         except:
             logger.error(traceback.format_exc())
             
-class LspServerReceiver(Thread):
-
-    def __init__(self, process: subprocess.Popen):
-        Thread.__init__(self)
-
-        self.process = process
-        self.queue = queue.Queue()
-
-    def get_message(self):
-        return self.queue.get(block=True)
+class LspServerReceiver(MessageReceiver):
 
     def emit_message(self, line):
         if not line:
