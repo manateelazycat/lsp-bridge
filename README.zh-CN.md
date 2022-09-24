@@ -92,7 +92,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是 20
 * `acm-enable-tabnine-helper`: 是否打开 tabnine 补全支持，默认打开，打开后需要运行命令 `tabnine-bridge-install-binary` 来安装 tabnine 后就可以使用了。 TabNine 会消耗巨大的 CPU， 导致你整个电脑都卡顿， 如果电脑性能不好， 不建议开启此选项
 * `acm-enable-yas`: yasnippet 补全，默认打开
-* `acm-backend-yas-candidates-number`: yasnippet 显示个数，默认 2 个 
+* `acm-backend-yas-candidates-number`: yasnippet 显示个数，默认 2 个
 * `acm-enable-citre`: citre 补全，默认关闭
 * `acm-backend-citre-keyword-complete`: 根据`acm-backend-citre-keywords-alist`定义的各个模式的关键字进行补全，需要使能 citre 后才生效
 
@@ -165,7 +165,7 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 | 37 | [microsoft-python-language-server](https://github.com/microsoft/python-language-server) | Python | 支持 Python2 的 lsp |
 | 38 | [cmake-language-server](https://github.com/regen100/cmake-language-server) | cmake | `pip install cmake-language-server` |
 | 39 | [Wen](https://github.com/metaescape/Wen) | org-mode | `pip install pygls pypinyin` |
-
+| 40 | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)|swift| Sourcekit-lsp 包含在swift toolchain中。|
 ### 不会支持的特性：
 lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端, 但不是实现 LSP 协议最全的 LSP 客户端。
 
