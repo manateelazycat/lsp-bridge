@@ -165,6 +165,7 @@ You need to install the LSP server corresponding to each programming language, t
 | 37 | [microsoft-python-language-server](https://github.com/microsoft/python-language-server) | Python | legacy language server for Python2 |
 | 38 | [cmake-language-server](https://github.com/regen100/cmake-language-server) | cmake | `pip install cmake-language-server` |
 | 39 | [Wen](https://github.com/metaescape/Wen) | org-mode | `pip install pygls pypinyin` |
+| 40 | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)|swift| The SourceKit-LSP server is included with the Swift toolchain. |
 
 ### Features that won't be supported
 

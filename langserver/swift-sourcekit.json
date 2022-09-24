@@ -1,0 +1,23 @@
+{
+  "name": "sourcekit-lsp",
+  "languageId": "swift",
+  "command": ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp"],
+  "settings": {
+    "sourcekit-lsp.inlayHints.enabled": true,
+    "swift.path": "$PATH",
+    "swift.excludePathsFromPackageDependencies": [
+      ".git",
+      ".github",
+      "test"
+    ],
+    "swift.problemMatchCompileErrors": false,
+    "swift.buildArguments": [
+      "rii"
+    ],
+    "swift.autoGenerateLaunchConfigurations": false,
+    "sourcekit-lsp.toolchainPath": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain",
+    "sourcekit-lsp.serverArguments": [
+      "['--log-level', 'debug']"
+    ]
+  }
+}

@@ -365,7 +365,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ((fortran-mode f90-mode) . "fortls")
     (nix-mode . "rnix-lsp")
     (ess-r-mode . "rlanguageserver")
-    (graphql-mode . "graphql-lsp"))
+    (graphql-mode . "graphql-lsp")
+    (swift-mode . "swift-sourcekit"))
   "The lang server rule for file mode."
   :type 'cons)
 
@@ -420,7 +421,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     fortran-mode-hook
     nix-mode-hook
     ess-r-mode-hook
-    verilog-mode-hook)
+    verilog-mode-hook
+    swift-mode-hook)
   "The default mode hook to enable lsp-bridge."
   :type 'list)
 
