@@ -77,7 +77,7 @@ class LspServerSender(MessageSender):
 
     def send_message(self, message: dict):
         json_content = json.dumps(message)
-        
+
         message_str = "Content-Length: {}\r\n\r\n{}".format(len(json_content), json_content)
 
         self.process.stdin.write(message_str.encode("utf-8"))    # type: ignore
@@ -104,7 +104,7 @@ class LspServerSender(MessageSender):
                 self.send_message(message)
         except:
             logger.error(traceback.format_exc())
-            
+
 class LspServerReceiver(MessageReceiver):
 
     def emit_message(self, line):
@@ -130,7 +130,7 @@ class LspServerReceiver(MessageReceiver):
                         end = match.end()
                         parts = match.group(0).decode("utf-8").strip().split(": ")
                         content_length = int(parts[1])
-            
+
                         buffer = buffer[end:]
                     else:
                         line = self.process.stdout.readline()    # type: ignore
@@ -170,6 +170,9 @@ class LspServer:
         self.message_queue = message_queue
         self.project_path = project_path
         self.server_info = server_info
+        if self.server_info["name"]=="omnisharp":
+            self.server_info["command"][1]=os.path.expandvars(self.server_info["command"][1])
+
         self.initialize_id = generate_request_id()
         self.server_name = server_name
         self.request_dict: Dict[int, Handler] = dict()
@@ -194,7 +197,11 @@ class LspServer:
         self.text_document_sync = 2 # refer TextDocumentSyncKind. Can be None = 0, Full = 1 or Incremental = 2
 
         # Start LSP server.
-        self.lsp_subprocess = subprocess.Popen(self.server_info["command"], bufsize=DEFAULT_BUFFER_SIZE, stdin=PIPE, stdout=PIPE, stderr=stderr)
+        self.lsp_subprocess = subprocess.Popen(self.server_info["command"],
+                                               bufsize=DEFAULT_BUFFER_SIZE,
+                                               stdin=PIPE,
+                                               stdout=PIPE,
+                                               stderr=stderr)
 
         # Notify user server is start.
         message_emacs("Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path))
@@ -239,7 +246,7 @@ class LspServer:
 
     def send_initialize_request(self):
         logger.info("\n--- Send initialize for {} ({})".format(self.project_path, self.server_info["name"]))
-        
+
         initialize_options = self.server_info.get("initializationOptions", {})
         if os.name == 'nt':
             if 'typescript' in initialize_options.keys():
@@ -355,7 +362,7 @@ class LspServer:
                 "uri": path_to_uri(filepath),
             }
         })
-        
+
     def send_did_rename_files_notification(self, old_filepath, new_filepath):
         self.sender.send_notification("workspace/renameFiles", {
             "files": [{
@@ -424,12 +431,12 @@ class LspServer:
 
     def handle_workspace_configuration_request(self, name, request_id, params):
         settings = self.server_info.get("settings", {})
-        
+
         # We send empty message back to server if nothing in 'settings' of server.json file.
         if len(settings) == 0:
             self.sender.send_response(request_id, [])
             return
-        
+
         # Otherwise, send back section value or default settings.
         items = []
         for p in params["items"]:
@@ -441,7 +448,7 @@ class LspServer:
         if "error" in message:
             logger.error("\n--- Recv message (error):")
             logger.error(json.dumps(message, indent=3))
-            
+
             error_message = message["error"]["message"]
             if error_message == "Unhandled method completionItem/resolve":
                 self.completion_resolve_provider = False
@@ -455,7 +462,7 @@ class LspServer:
                 self.signature_help_provider = False
             else:
                 message_emacs(error_message)
-            
+
             return
 
         if "id" in message:
@@ -482,7 +489,7 @@ class LspServer:
             if is_in_path_dict(self.files, filepath):
                 file_action = get_from_path_dict(self.files, filepath)
                 file_action.diagnostics = message["params"]["diagnostics"]
-        
+
         logger.debug(json.dumps(message, indent=3))
 
         if "id" in message:
@@ -516,7 +523,7 @@ class LspServer:
                     self.code_format_provider = message["result"]["capabilities"]["documentFormattingProvider"]
                 except Exception:
                     pass
-                
+
                 try:
                     self.signature_help_provider = message["result"]["capabilities"]["signatureHelpProvider"]
                 except Exception:

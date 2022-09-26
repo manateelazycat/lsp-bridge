@@ -366,7 +366,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (nix-mode . "rnix-lsp")
     (ess-r-mode . "rlanguageserver")
     (graphql-mode . "graphql-lsp")
-    (swift-mode . "swift-sourcekit"))
+    (swift-mode . "swift-sourcekit")
+    (csharp-mode . "omnisharp")
+    )
   "The lang server rule for file mode."
   :type 'cons)
 
@@ -422,7 +424,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     nix-mode-hook
     ess-r-mode-hook
     verilog-mode-hook
-    swift-mode-hook)
+    swift-mode-hook
+    csharp-mode-hook)
   "The default mode hook to enable lsp-bridge."
   :type 'list)
 
@@ -1770,6 +1773,22 @@ So we build this macro to restore postion after code format."
 
 (add-to-list 'mode-line-misc-info
              `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] ")))
+
+(defun install-omnisharp ()
+  (interactive)
+  (let ((url "https://github.com/OmniSharp/omnisharp-roslyn/releases/latest/download/omnisharp-mono.zip")
+        (down-des (if (eq system-type 'windows-nt)
+                      "%userprofile%\\AppData\\Local\\Temp\\omnisharp-mono.zip"
+                    "/tmp/omnisharp-mono.zip"))
+        (install-des (if (eq system-type 'windows-nt)
+                         (format "%s.cache\\omnisharp\\" user-emacs-directory)
+                       "~/.emacs.d/.cache/omnisharp/"
+                       (format "%s.cache/omnisharp/" user-emacs-directory))))
+    (url-copy-file url down-des 1)
+    (unless (file-directory-p install-des)
+      (make-directory install-des))
+    (call-process-shell-command (format "%s -xf %s -C %s" "tar" down-des install-des))
+    ))
 
 (provide 'lsp-bridge)
 
