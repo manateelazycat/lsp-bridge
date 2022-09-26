@@ -166,6 +166,8 @@ You need to install the LSP server corresponding to each programming language, t
 | 38 | [cmake-language-server](https://github.com/regen100/cmake-language-server) | cmake | `pip install cmake-language-server` |
 | 39 | [Wen](https://github.com/metaescape/Wen) | org-mode | `pip install pygls pypinyin` |
 | 40 | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)|swift| The SourceKit-LSP server is included with the Swift toolchain. |
+| 41 | [omnisharp](https://github.com/OmniSharp/omnisharp-roslyn)|c#| OmniSharp is a .NET development platform based on Roslyn workspaces. use `M-x install-omnisharp` to install it|
+
 
 ### Features that won't be supported
 
