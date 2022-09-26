@@ -1786,7 +1786,7 @@ So we build this macro to restore postion after code format."
                        (format "%s.cache/omnisharp/" user-emacs-directory))))
     (url-copy-file url down-des 1)
     (unless (file-directory-p install-des)
-      (make-directory install-des))
+      (make-directory install-des t))
     (call-process-shell-command (format "%s -xf %s -C %s" "tar" down-des install-des))
     ))
 
