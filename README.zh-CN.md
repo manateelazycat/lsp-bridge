@@ -90,7 +90,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `acm-enable-quick-access`: 是否在图标后面显示索引， 可以通过 Alt + Number 来快速选择后选词， 默认关闭
 * `acm-snippet-insert-index`: 代码模板候选词在补全菜单中的显示位置
 * `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是 20
-* `acm-enable-tabnine-helper`: 是否打开 tabnine 补全支持，默认打开，打开后需要运行命令 `tabnine-bridge-install-binary` 来安装 tabnine 后就可以使用了。 TabNine 会消耗巨大的 CPU， 导致你整个电脑都卡顿， 如果电脑性能不好， 不建议开启此选项
+* `acm-enable-tabnine-helper`: 是否打开 tabnine 补全支持，默认打开，打开后需要运行命令 `lsp-bridge-install-tabnine` 来安装 tabnine 后就可以使用了。 TabNine 会消耗巨大的 CPU， 导致你整个电脑都卡顿， 如果电脑性能不好， 不建议开启此选项
 * `acm-enable-yas`: yasnippet 补全，默认打开
 * `acm-backend-yas-candidates-number`: yasnippet 显示个数，默认 2 个
 * `acm-enable-citre`: citre 补全，默认关闭
@@ -165,8 +165,8 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 | 37 | [microsoft-python-language-server](https://github.com/microsoft/python-language-server) | Python | 支持 Python2 的 lsp |
 | 38 | [cmake-language-server](https://github.com/regen100/cmake-language-server) | cmake | `pip install cmake-language-server` |
 | 39 | [Wen](https://github.com/metaescape/Wen) | org-mode | `pip install pygls pypinyin` |
-| 40 | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)|swift| Sourcekit-lsp 包含在swift toolchain中。|
-| 41 | [omnisharp](https://github.com/OmniSharp/omnisharp-roslyn)|c#| OmniSharp dotnet平台的lsp. 使用 `M-x install-omnisharp` 安装|
+| 40 | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)|swift| Sourcekit-lsp 包含在 swift toolchain 中。|
+| 41 | [omnisharp](https://github.com/OmniSharp/omnisharp-roslyn)|c#| OmniSharp dotnet 平台的 lsp. 使用 `M-x lsp-bridge-install-omnisharp` 安装|
 ### 不会支持的特性：
 lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端, 但不是实现 LSP 协议最全的 LSP 客户端。
 

@@ -1,88 +1,117 @@
-;; tabnine-capf.el --- A lsp-bridge backend for TabNine ;; -*- lexical-binding: t -*-
+;;; lsp-bridge-lsp-installer.el --- LSP server installer 
+
+;; Filename: lsp-bridge-lsp-installer.el
+;; Description: LSP server installer 
+;; Author: Andy Stewart <lazycat.manatee@gmail.com>
+;; Maintainer: Andy Stewart <lazycat.manatee@gmail.com>
+;; Copyright (C) 2022, Andy Stewart, all rights reserved.
+;; Created: 2022-09-27 09:28:09
+;; Version: 0.1
+;; Last-Updated: 2022-09-27 09:28:09
+;;           By: Andy Stewart
+;; URL: https://www.github.org/manateelazycat/lsp-bridge-lsp-installer
+;; Keywords: 
+;; Compatibility: GNU Emacs 28.1
 ;;
-;; Copyright (c) 2022 Tommy Xiang, John Gong
+;; Features that might be required by this library:
 ;;
-;; Author: Tommy Xiang <tommyx058@gmail.com>
-;;         John Gong <gjtzone@hotmail.com>
-;; Keywords: convenience
-;; Version: 0.0.1
-;; URL: Code is copy from https://github.com/50ways2sayhard/tabnine-capf/
-;; Package-Requires: ((emacs "25"))
+;; 
 ;;
-;; Permission is hereby granted, free of charge, to any person obtaining a copy
-;; of this software and associated documentation files (the "Software"), to deal
-;; in the Software without restriction, including without limitation the rights
-;; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-;; copies of the Software, and to permit persons to whom the Software is
-;; furnished to do so, subject to the following conditions:
+
+;;; This file is NOT part of GNU Emacs
+
+;;; License
 ;;
-;; The above copyright notice and this permission notice shall be included in all
-;; copies or substantial portions of the Software.
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program; see the file COPYING.  If not, write to
+;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+;; Floor, Boston, MA 02110-1301, USA.
+
+;;; Commentary:
 ;;
-;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-;; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-;; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-;; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-;; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-;; SOFTWARE.
+;; LSP server installer 
+;; 
+
+;;; Installation:
 ;;
-;; Commentary:
+;; Put lsp-bridge-lsp-installer.el to your load-path.
+;; The load-path is usually ~/elisp/.
+;; It's set in your ~/.emacs like this:
+;; (add-to-list 'load-path (expand-file-name "~/elisp"))
 ;;
-;; Description:
+;; And the following to your ~/.emacs startup file.
 ;;
-;; A lsp-bridge verison of `company-tabnine`.
+;; (require 'lsp-bridge-lsp-installer)
 ;;
-;; Installation:
+;; No need more.
+
+;;; Customize:
 ;;
-;; 1. Run M-x tabnine-bridge-install-binary to install the TabNine binary for your system.
+;; 
 ;;
-;; Usage:
+;; All of the above can customize by:
+;;      M-x customize-group RET lsp-bridge-lsp-installer RET
 ;;
-;; See M-x customize-group RET tabnine-bridge RET for customizations.
+
+;;; Change log:
 ;;
+;; 2022/09/27
+;;      * First released.
 ;;
+
+;;; Acknowledgements:
+;;
+;; 
+;;
+
+;;; TODO
+;;
+;; 
+;;
+
+;;; Require
+(require 'cl-lib)
 
 ;;; Code:
 
-;;
-;; Dependencies
-;;
+(defun lsp-bridge-install-omnisharp ()
+  (interactive)
+  (let ((url "https://github.com/OmniSharp/omnisharp-roslyn/releases/latest/download/omnisharp-mono.zip")
+        (down-des (if (eq system-type 'windows-nt)
+                      "%userprofile%\\AppData\\Local\\Temp\\omnisharp-mono.zip"
+                    "/tmp/omnisharp-mono.zip"))
+        (install-des (if (eq system-type 'windows-nt)
+                         (format "%s.cache\\omnisharp\\" user-emacs-directory)
+                       "~/.emacs.d/.cache/omnisharp/"
+                       (format "%s.cache/omnisharp/" user-emacs-directory))))
+    (url-copy-file url down-des 1)
+    (unless (file-directory-p install-des)
+      (make-directory install-des t))
+    (call-process-shell-command (format "%s -xf %s -C %s" "tar" down-des install-des))
+    ))
 
-(require 'cl-lib)
-
-;;
-;; Constants
-;;
-
-;; tmp file put in tabnine-bridge-binaries-folder directory
 (defconst tabnine-bridge--version-tempfile "version")
-
-;;
-;; Customization
-;;
-
-(defgroup tabnine-bridge nil
-  "Options for tabnine-bridge. This Code is copy from tabnine-capf"
-  :group 'lsp-bridge
-  :prefix "tabnine-bridge-")
 
 (defcustom tabnine-bridge-binaries-folder "~/.TabNine"
   "Path to TabNine binaries folder.
-`tabnine-bridge-install-binary' will use this directory."
-  :group 'tabnine-bridge
+`lsp-bridge-install-tabnine' will use this directory."
   :type 'string)
 
 (defcustom tabnine-bridge-install-static-binary (file-exists-p "/etc/nixos/hardware-configuration.nix")
   "Whether to install the musl-linked static binary instead of
 the standard glibc-linked dynamic binary.
 Only useful on GNU/Linux.  Automatically set if NixOS is detected."
-  :group 'tabnine-bridge
   :type 'boolean)
-
-;;
-;; Global methods
-;;
 
 (defun tabnine-bridge--get-target ()
   "Return TabNine's system configuration.  Used for finding the correct binary."
@@ -133,11 +162,7 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
    (t
     "TabNine")))
 
-;;
-;; Interactive functions
-;;
-
-(defun tabnine-bridge-install-binary ()
+(defun lsp-bridge-install-tabnine ()
   "Install TabNine binary into `tabnine-bridge-binaries-folder'."
   (interactive)
   (let ((version-tempfile (concat
@@ -187,6 +212,6 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
         (delete-file version-tempfile)
         (message "TabNine installation complete.")))))
 
-(provide 'tabnine-bridge)
+(provide 'lsp-bridge-lsp-installer)
 
-;;; tabnine-bridge.el ends here
+;;; lsp-bridge-lsp-installer.el ends here

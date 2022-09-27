@@ -2,8 +2,6 @@
 ;;; Commentary:
 ;;; Code:
 
-(require 'tabnine-bridge)
-
 (defgroup acm-backend-tabnine nil
   "ACM tabnine support."
   :group 'acm)

@@ -90,7 +90,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `acm-enable-quick-access`: Whether the index is displayed behind the icon, you can quickly select the candidate through Alt + Number, disable by default
 * `acm-snippet-insert-index`: The display position of snippet candidate in the complementary menu
 * `acm-doc-frame-max-lines`: Max line number of help documentation, default is 20
-* `acm-enable-tabnine-helper`: Enable tabnine support， enable by default，when enable need execute  `tabnine-bridge-install-binary` command to install TabNine, and it can be used. TabNine will consume huge CPUs, causing your entire computer to be slow. If the computer performance is not good, it is not recommended to enable this option
+* `acm-enable-tabnine-helper`: Enable tabnine support， enable by default，when enable need execute  `lsp-bridge-install-tabnine` command to install TabNine, and it can be used. TabNine will consume huge CPUs, causing your entire computer to be slow. If the computer performance is not good, it is not recommended to enable this option
 * `acm-enable-yas`: yasnippet completion, enable by default
 * `acm-backend-yas-candidates-number`: yasnippet display number，2 by default
 * `acm-enable-citre`: citre completion, disable by default
@@ -166,7 +166,7 @@ You need to install the LSP server corresponding to each programming language, t
 | 38 | [cmake-language-server](https://github.com/regen100/cmake-language-server) | cmake | `pip install cmake-language-server` |
 | 39 | [Wen](https://github.com/metaescape/Wen) | org-mode | `pip install pygls pypinyin` |
 | 40 | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)|swift| The SourceKit-LSP server is included with the Swift toolchain. |
-| 41 | [omnisharp](https://github.com/OmniSharp/omnisharp-roslyn)|c#| OmniSharp is a .NET development platform based on Roslyn workspaces. use `M-x install-omnisharp` to install it|
+| 41 | [omnisharp](https://github.com/OmniSharp/omnisharp-roslyn)|c#| OmniSharp is a .NET development platform based on Roslyn workspaces. use `M-x lsp-bridge-install-omnisharp` to install it|
 
 
 ### Features that won't be supported
