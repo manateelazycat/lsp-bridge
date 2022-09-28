@@ -971,9 +971,7 @@ So we build this macro to restore postion after code format."
                             (buffer-name)
                             )
 
-  (when (and acm-enable-tabnine-helper
-             (lsp-bridge-has-lsp-server-p)
-             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
+  (when acm-enable-tabnine-helper
     (lsp-bridge-tabnine-complete))
 
   ;; Send change file to search-words backend.
@@ -1703,20 +1701,22 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-tabnine-complete ()
   (interactive)
-  (let* ((buffer-min 1)
-         (buffer-max (1+ (buffer-size)))
-         (chars-number-before-point 3000) ; the number of chars before point to send for completion.
-         (chars-number-after-point 1000) ; the number of chars after point to send for completion.
-         (max-num-results 10)     ; maximum number of results to show.
-         (before-point (max (point-min) (- (point) chars-number-before-point)))
-         (after-point (min (point-max) (+ (point) chars-number-after-point))))
-    (lsp-bridge-call-async "tabnine_complete"
-                           (buffer-substring-no-properties before-point (point))
-                           (buffer-substring-no-properties (point) after-point)
-                           (or (buffer-file-name) nil)
-                           (= before-point buffer-min)
-                           (= after-point buffer-max)
-                           max-num-results)))
+  (when (and (lsp-bridge-has-lsp-server-p)
+             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
+    (let* ((buffer-min 1)
+           (buffer-max (1+ (buffer-size)))
+           (chars-number-before-point 3000) ; the number of chars before point to send for completion.
+           (chars-number-after-point 1000) ; the number of chars after point to send for completion.
+           (max-num-results 10)   ; maximum number of results to show.
+           (before-point (max (point-min) (- (point) chars-number-before-point)))
+           (after-point (min (point-max) (+ (point) chars-number-after-point))))
+      (lsp-bridge-call-async "tabnine_complete"
+                             (buffer-substring-no-properties before-point (point))
+                             (buffer-substring-no-properties (point) after-point)
+                             (or (buffer-file-name) nil)
+                             (= before-point buffer-min)
+                             (= after-point buffer-max)
+                             max-num-results))))
 
 (defun lsp-bridge-tabnine-record-completion-items (items)
   (setq-local acm-backend-tabnine-items items)
