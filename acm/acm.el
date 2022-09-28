@@ -8,8 +8,8 @@
 ;; Copyright (C) 2022, Andy Stewart, all rights reserved.
 ;; Created: 2022-05-31 16:29:33
 ;; Version: 0.1
-;; Last-Updated: 2022-05-31 16:29:33
-;;           By: Andy Stewart
+;; Last-Updated: 2022-09-28 21:44:15 +0800
+;;           By: Gong Qijian
 ;; URL: https://www.github.org/manateelazycat/acm
 ;; Keywords:
 ;; Compatibility: GNU Emacs 28.1
@@ -377,14 +377,12 @@
 
 (defun acm-fetch-candidate-doc ()
   (when (acm-frame-visible-p acm-frame)
-    ;; Don't fetch candidate documentation if last command is scroll operation.
-    (unless (string-prefix-p "acm-doc-scroll-" (prin1-to-string last-command))
-      (let* ((candidate (acm-menu-current-candidate))
-             (backend (plist-get candidate :backend))
-             (fetch-doc-func (intern-soft (format "acm-backend-%s-candidate-fetch-doc" backend))))
-        (if (fboundp fetch-doc-func)
-            (funcall fetch-doc-func candidate)
-          (acm-doc-hide))))))
+    (let* ((candidate (acm-menu-current-candidate))
+           (backend (plist-get candidate :backend))
+           (fetch-doc-func (intern-soft (format "acm-backend-%s-candidate-fetch-doc" backend))))
+      (if (fboundp fetch-doc-func)
+          (funcall fetch-doc-func candidate)
+        (acm-doc-hide)))))
 
 (defun acm-color-blend (c1 c2 alpha)
   "Blend two colors C1 and C2 with ALPHA.
