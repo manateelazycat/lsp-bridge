@@ -971,7 +971,9 @@ So we build this macro to restore postion after code format."
                             (buffer-name)
                             )
 
-  (when acm-enable-tabnine-helper
+  (when (and acm-enable-tabnine-helper
+             (lsp-bridge-has-lsp-server-p)
+             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
     (lsp-bridge-tabnine-complete))
 
   ;; Send change file to search-words backend.
