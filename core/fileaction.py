@@ -183,9 +183,9 @@ class FileAction:
         else:
             eval_in_emacs("lsp-bridge-list-diagnostics-popup", self.diagnostics)
             
-    def save_file(self):
+    def save_file(self, buffer_name):
         for lsp_server in self.get_lsp_servers():
-            lsp_server.send_did_save_notification(self.filepath)
+            lsp_server.send_did_save_notification(self.filepath, buffer_name)
             
     def completion_item_resolve(self, item_key, server_name):
         if server_name in self.completion_items:

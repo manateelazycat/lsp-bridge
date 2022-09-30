@@ -198,6 +198,7 @@ class LspServer:
             "source",
             "source.organizeImports"]
         self.text_document_sync = 2 # refer TextDocumentSyncKind. Can be None = 0, Full = 1 or Incremental = 2
+        self.save_include_text = False
 
         # Start LSP server.
         self.lsp_subprocess = subprocess.Popen(self.server_info["command"],
@@ -377,12 +378,22 @@ class LspServer:
             }]
         })
 
-    def send_did_save_notification(self, filepath):
-        self.sender.send_notification("textDocument/didSave", {
+    def send_did_save_notification(self, filepath, buffer_name):
+        args = {
             "textDocument": {
                 "uri": path_to_uri(filepath)
             }
-        })
+        }
+        
+        # Fetch buffer whole content to LSP server if server capability 'includeText' is True.
+        if self.save_include_text:
+            args = merge(args, {
+                "textDocument": {
+                    "text": get_emacs_func_result('get-buffer-content', buffer_name)
+                }
+            })
+        
+        self.sender.send_notification("textDocument/didSave", args)
 
     def send_did_change_notification(self, filepath, version, start, end, range_length, text):
         # STEP 5: Tell LSP server file content is changed.
@@ -548,6 +559,11 @@ class LspServer:
                         self.text_document_sync = text_document_sync
                     elif type(text_document_sync) is dict:
                         self.text_document_sync = text_document_sync["change"]
+                except Exception:
+                    pass
+                
+                try:
+                    self.save_include_text = message["result"]["capabilities"]["textDocumentSync"]["save"]["includeText"]
                 except Exception:
                     pass
 

@@ -1007,7 +1007,7 @@ So we build this macro to restore postion after code format."
        (frame-visible-p acm-frame)))
 
 (defun lsp-bridge-monitor-after-save ()
-  (lsp-bridge-call-file-api "save_file"))
+  (lsp-bridge-call-file-api "save_file" (buffer-name)))
 
 (defalias 'lsp-bridge-find-define #'lsp-bridge-find-def)
 
