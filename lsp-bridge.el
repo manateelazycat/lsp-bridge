@@ -1573,18 +1573,18 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-workspace-apply-edit (info)
   (lsp-bridge-save-position
-   (cond ((plist-get info :changes)
+   (cond ((plist-get info :documentChanges)
+          (dolist (change (plist-get info :documentChanges))
+            (lsp-bridge-file-apply-edits
+             (string-remove-prefix "file://" (plist-get (plist-get change :textDocument) :uri))
+             (plist-get change :edits))))
+         ((plist-get info :changes)
           (let* ((changes (plist-get info :changes))
                  (changes-number (/ (length changes) 2)))
             (dotimes (changes-index changes-number)
               (lsp-bridge-file-apply-edits
                (string-remove-prefix ":file://" (format "%s" (nth (* changes-index 2) changes)))
-               (nth (+ (* changes-index 2) 1) changes)))))
-         ((plist-get info :documentChanges)
-          (dolist (change (plist-get info :documentChanges))
-            (lsp-bridge-file-apply-edits
-             (string-remove-prefix "file://" (plist-get (plist-get change :textDocument) :uri))
-             (plist-get change :edits))))))
+               (nth (+ (* changes-index 2) 1) changes)))))))
 
   (setq-local lsp-bridge-prohibit-completion t))
 
