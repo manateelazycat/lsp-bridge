@@ -500,12 +500,14 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
 (cl-defmacro lsp-bridge-save-position (&rest body)
   "`save-excursion' not enough for LSP code format.
 So we build this macro to restore postion after code format."
-  `(let* ((current-line (line-number-at-pos))
+  `(let* ((current-buf (current-buffer))
+          (current-line (line-number-at-pos))
           (current-column (lsp-bridge--calculate-column))
           (indent-column (save-excursion
                            (back-to-indentation)
                            (lsp-bridge--calculate-column))))
      ,@body
+     (switch-to-buffer current-buf)
      (goto-line current-line)
      (back-to-indentation)
      (forward-char (max (- current-column indent-column) 0))))
@@ -1569,17 +1571,22 @@ So we build this macro to restore postion after code format."
                  (lsp-bridge-call-file-api "execute_command" command)))))
       (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
 
-(defun lsp-bridge-workspace-apply-edit (edit)
-  (let (changes filepath edits)
-    (cond ((plist-get edit :changes)
-           (setq changes (plist-get edit :changes))
-           (setq filepath (string-remove-prefix ":file://" (format "%s" (nth 0 changes))))
-           (setq edits (nth 1 changes)))
-          ((plist-get edit :documentChanges)
-           (setq changes (plist-get edit :documentChanges))
-           (setq filepath (string-remove-prefix "file://" (plist-get (plist-get (nth 0 changes) :textDocument) :uri)))
-           (setq edits (plist-get (nth 0 changes) :edits))))
-    (lsp-bridge-file-apply-edits filepath edits)))
+(defun lsp-bridge-workspace-apply-edit (info)
+  (lsp-bridge-save-position
+   (cond ((plist-get info :changes)
+          (let* ((changes (plist-get info :changes))
+                 (changes-number (/ (length changes) 2)))
+            (dotimes (changes-index changes-number)
+              (lsp-bridge-file-apply-edits
+               (string-remove-prefix ":file://" (format "%s" (nth (* changes-index 2) changes)))
+               (nth (+ (* changes-index 2) 1) changes)))))
+         ((plist-get info :documentChanges)
+          (dolist (change (plist-get info :documentChanges))
+            (lsp-bridge-file-apply-edits
+             (string-remove-prefix "file://" (plist-get (plist-get change :textDocument) :uri))
+             (plist-get change :edits))))))
+
+  (setq-local lsp-bridge-prohibit-completion t))
 
 (defun lsp-bridge-get-range-start ()
   (lsp-bridge--point-position
