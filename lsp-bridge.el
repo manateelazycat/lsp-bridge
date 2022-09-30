@@ -1460,6 +1460,28 @@ So we build this macro to restore postion after code format."
   (interactive)
   (lsp-bridge-call-file-api "ignore_diagnostic"))
 
+(defun lsp-bridge-list-workspace-symbols ()
+  (interactive)
+  (lsp-bridge-call-file-api "workspace_symbol" ""))
+
+(defun lsp-bridge-show-workspace-symbols (info)
+  (if (zerop (length info))
+      (message "LSP server did not return any symbols.")
+    (let* ((symbols (mapcar (lambda (i) (plist-get i :name)) info))
+           match-symbol
+           match-info)
+      (setq match-symbol (completing-read "Workspace symbol: " symbols))
+      (setq match-info (seq-filter (lambda (i) (string-equal match-symbol (plist-get i :name))) info))
+      (when match-info
+        (let* ((file-info (plist-get (car match-info) :location))
+               (file-path (url-unhex-string (string-remove-prefix "file://" (format "%s" (plist-get file-info :uri)))))
+               (file-range (plist-get file-info :range))
+               (match-line (plist-get (plist-get file-range :start) :line))
+               (match-column (plist-get (plist-get file-range :start) :character)))
+          (find-file file-path)
+          (lsp-bridge-ref-move-to-point (+ match-line 1) match-column)
+          )))))
+
 (defun lsp-bridge-code-action (&optional action-kind)
   (interactive)
   (when (lsp-bridge-has-lsp-server-p)

@@ -56,3 +56,4 @@ from core.handler.jdt_uri_resolver import JDTUriResolver
 from core.handler.code_action import CodeAction
 from core.handler.formatting import Formatting
 from core.handler.execute_command import ExecuteCommand
+from core.handler.workspace_symbol import WorkspaceSymbol

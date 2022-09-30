@@ -181,11 +181,14 @@ class LspServer:
 
         # LSP server information.
         self.completion_trigger_characters = list()
+        
         self.completion_resolve_provider = False
         self.rename_prepare_provider = False
         self.code_action_provider = False
         self.code_format_provider = False
         self.signature_help_provider = False
+        self.workspace_symbol_provider = False
+        
         self.code_action_kinds = [
             "quickfix",
             "refactor",
@@ -274,7 +277,10 @@ class LspServer:
 
         merge_capabilites = merge(server_capabilities, {
             "workspace": {
-                "configuration": True
+                "configuration": True,
+                "symbol": {
+                    "resolveSupport": True
+                }
             },
             "textDocument": {
                 "completion": {
@@ -460,6 +466,8 @@ class LspServer:
                 self.code_format_provider = False
             elif error_message == "Unhandled method textDocument/signatureHelp":
                 self.signature_help_provider = False
+            elif error_message == "Unhandled method workspace/symbol":
+                self.workspace_symbol_provider = False
             else:
                 message_emacs(error_message)
 
@@ -526,6 +534,11 @@ class LspServer:
 
                 try:
                     self.signature_help_provider = message["result"]["capabilities"]["signatureHelpProvider"]
+                except Exception:
+                    pass
+                
+                try:
+                    self.workspace_symbol_provider = message["result"]["capabilities"]["workspaceSymbolProvider"]
                 except Exception:
                     pass
 
