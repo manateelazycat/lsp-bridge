@@ -73,6 +73,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-popup-documentation-scroll-up`: scroll up popup document.
 * `lsp-bridge-popup-documentation-scroll-down`: scroll down popup document.
 * `lsp-bridge-rename`: rename symbol under the cursor
+* `lsp-bridge-list-workspace-symbols`: List all symbols in workspace and jump to the symbol definition
 * `lsp-bridge-jump-to-next-diagnostic`: Jump to the next diagnostic position
 * `lsp-bridge-jump-to-prev-diagnostic`: Jump to the previous diagnostic position
 * `lsp-bridge-list-diagnostics`: List all diagnostic information

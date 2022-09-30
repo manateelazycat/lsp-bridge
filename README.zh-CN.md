@@ -72,6 +72,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-popup-documentation-scroll-up`: 文档窗口向上滚动
 * `lsp-bridge-popup-documentation-scroll-down`: 文档窗口向下滚动
 * `lsp-bridge-rename`: 重命名
+* `lsp-bridge-list-workspace-symbols`: 列出工作区所有符号，并跳转到符号定义 qq
 * `lsp-bridge-jump-to-next-diagnostic`: 跳转到下一个诊断位置
 * `lsp-bridge-jump-to-prev-diagnostic`: 跳转到上一个诊断位置
 * `lsp-bridge-list-diagnostics`: 列出所有诊断信息
