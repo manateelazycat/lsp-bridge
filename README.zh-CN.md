@@ -194,7 +194,7 @@ lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端, 但�
 
 下面的功能用 Emacs 现有生态做更好：
 1. 语法高亮: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) 是一个静态高性能的语法分析库，比 LSP 更适合完成语法高亮
-2. Xref: Xref 的机制是同步等待， lsp-bridge 是完全异步的， 两个机制无法融合， 建议自己编写包装函数来统一按键
+2. Xref: Xref 的机制是同步等待， lsp-bridge 是完全异步的， 两个机制无法融合， 请使用 `lsp-bridge-find-references` 来查看代码引用。
 
 ## 加入开发
 
