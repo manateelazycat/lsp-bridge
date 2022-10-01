@@ -813,7 +813,7 @@ user more freedom to use rg with special arguments."
          (match-column (lsp-bridge-ref-get-match-column))
          (match-buffer (lsp-bridge-ref-get-match-buffer match-file))
          in-org-link-content-p
-         color-buffer-window)
+         ref-buffer-window)
     (save-excursion
       (let ((inhibit-message t))
         ;; Try fill variables when in org file.
@@ -832,23 +832,21 @@ user more freedom to use rg with special arguments."
         ;; We use `ignore-errors' to make sure cursor will back to lsp-bridge-ref buffer
         ;; even target line is not exists in search file (such as delete by user).
         (ignore-errors
-          (cond ((lsp-bridge-ref-is-org-file match-file)
-                 ;; Jump to match position.
-                 (lsp-bridge-ref-move-to-point match-line match-column)
-                 ;; Expand org block if current file is *.org file.
-                 (org-reveal)
-                 ;; Jump to link beginning if keyword in content area.
-                 (when in-org-link-content-p
-                   (search-backward-regexp "\\[\\[" (line-beginning-position) t)))
-                (t
-                 (lsp-bridge-ref-move-to-point match-line match-column)))))
+          (lsp-bridge-ref-move-to-point match-line match-column)
+          (when (lsp-bridge-ref-is-org-file match-file)
+            ;; Expand org block if current file is *.org file.
+            (org-reveal)
+            ;; Jump to link beginning if keyword in content area.
+            (when in-org-link-content-p
+              (search-backward-regexp "\\[\\[" (line-beginning-position) t))
+            )))
       ;; Flash match line.
       (lsp-bridge-ref-flash-line))
     (unless stay
       ;; Keep cursor in search buffer's window.
-      (setq color-buffer-window (get-buffer-window lsp-bridge-ref-buffer))
-      (if color-buffer-window
-          (select-window color-buffer-window)
+      (setq ref-buffer-window (get-buffer-window lsp-bridge-ref-buffer))
+      (if ref-buffer-window
+          (select-window ref-buffer-window)
         ;; Split window and select if color-buffer is not exist in windows.
         (delete-other-windows)
         (split-window)
