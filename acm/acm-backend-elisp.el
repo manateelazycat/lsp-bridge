@@ -7,8 +7,8 @@
 ;; Copyright (C) 2022, Andy Stewart, all rights reserved.
 ;; Created: 2022-06-07 08:55:28
 ;; Version: 0.1
-;; Last-Updated: 2022-06-07 08:55:28
-;;           By: Andy Stewart
+;; Last-Updated: 2022-10-02 13:24:43 +0800
+;;           By: Gong Qijian
 ;; URL: https://www.github.org/manateelazycat/acm-backend-elisp
 ;; Keywords:
 ;; Compatibility: GNU Emacs 28.1
@@ -123,14 +123,15 @@
   (acm-doc-show))
 
 (defun acm-backend-elisp-candidate-doc (candidate)
-  (let* ((symbol (intern (plist-get candidate :label)))
-         (doc (ignore-errors (documentation symbol))))
-    (cond (doc
-           doc)
-          ((facep symbol)
-           (documentation-property symbol 'face-documentation))
-          (t
-           (documentation-property symbol 'variable-documentation)))))  
+  (let ((symbol (intern (plist-get candidate :label))))
+    (or (cond ((fboundp symbol)
+               (or (documentation symbol)
+                   (format "%s: %s" symbol (elisp-get-fnsym-args-string symbol))))
+              ((facep symbol)
+               (documentation-property symbol 'face-documentation))
+              (t
+               (documentation-property symbol 'variable-documentation)))
+        "Not documented")))
 
 (defun acm-backend-elisp-symbol-type (symbol)
   (cond ((featurep symbol)
