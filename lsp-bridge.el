@@ -1655,10 +1655,7 @@ So we build this macro to restore postion after code format."
 
         (puthash key item (gethash server-name acm-backend-lsp-items)))
 
-      ;; Show or hid doc frame.
-      (if (string-equal documentation "")
-          (acm-doc-hide)
-        (acm-doc-show))
+      (acm-doc-try-show)
       )))
 
 (defun lsp-bridge-render-markdown-content ()

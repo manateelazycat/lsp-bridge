@@ -35,9 +35,6 @@
   (delete-region bound-start (point))
   (tempel-insert (intern-soft (plist-get candidate-info :label))))
 
-(defun acm-backend-tempel-candidate-fetch-doc (candidate)
-  (acm-doc-show))
-
 (defun acm-backend-tempel-candidate-doc (candidate)
   (let ((snippet
          (alist-get (intern-soft (plist-get candidate :label)) 

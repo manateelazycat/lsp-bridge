@@ -126,9 +126,6 @@
   (delete-region bound-start (point))
   (yas-expand-snippet (acm-backend-yas-get-snippet candidate-info)))
 
-(defun acm-backend-yas-candidate-fetch-doc (candidate)
-  (acm-doc-show))
-
 (defun acm-backend-yas-candidate-doc (candidate)
   (acm-backend-yas-get-snippet candidate))
 

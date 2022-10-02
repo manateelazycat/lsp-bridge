@@ -191,20 +191,13 @@
                (cl-plusp (length additional-text-edits)))
       (acm-backend-lsp-apply-text-edits additional-text-edits nil))))
 
-(defun acm-backend-lsp-candidate-fetch-doc (candidate)
-  (let* ((key (plist-get candidate :key))
-         (documentation (plist-get candidate :documentation)))
-
-    ;; Popup candidate documentation directly if `documentation' is exist in candidate.
-    (when documentation
-      (acm-doc-show))
-
+(defun acm-backend-lsp-candidate-doc (candidate)
+  (let* ((documentation (plist-get candidate :documentation)))
     ;; Call fetch documentation function.
     (when acm-backend-lsp-fetch-completion-item-func
-      (funcall acm-backend-lsp-fetch-completion-item-func candidate))))
+      (funcall acm-backend-lsp-fetch-completion-item-func candidate))
 
-(defun acm-backend-lsp-candidate-doc (candidate)
-  (plist-get candidate :documentation))
+    documentation))
 
 (defun acm-backend-lsp-position-to-point (pos-plist &optional marker)
   "Convert LSP position POS-PLIST to Emacs point.

@@ -375,15 +375,6 @@
         (buffer-substring-no-properties (car bound) (cdr bound))
       "")))
 
-(defun acm-fetch-candidate-doc ()
-  (when (acm-frame-visible-p acm-frame)
-    (let* ((candidate (acm-menu-current-candidate))
-           (backend (plist-get candidate :backend))
-           (fetch-doc-func (intern-soft (format "acm-backend-%s-candidate-fetch-doc" backend))))
-      (if (fboundp fetch-doc-func)
-          (funcall fetch-doc-func candidate)
-        (acm-doc-hide)))))
-
 (defun acm-color-blend (c1 c2 alpha)
   "Blend two colors C1 and C2 with ALPHA.
 C1 and C2 are hexidecimal strings.
@@ -752,7 +743,7 @@ influence of C1 on the result."
 
           ;; Hide doc frame if some backend not support fetch candidate documentation.
           (when (and
-                 (not (fboundp (intern-soft (format "acm-backend-%s-candidate-fetch-doc" (plist-get v :backend)))))
+                 (not (fboundp (intern-soft (format "acm-backend-%s-candidate-doc" (plist-get v :backend)))))
                  (acm-frame-visible-p acm-doc-frame))
             (acm-doc-hide)))
 
@@ -784,7 +775,7 @@ influence of C1 on the result."
                         (+ cursor-y offset-y))))
     (acm-set-frame-position acm-frame acm-frame-x acm-frame-y)))
 
-(defun acm-doc-show ()
+(defun acm-doc-try-show ()
   (when acm-enable-doc
     (let* ((candidate (acm-menu-current-candidate))
            (backend (plist-get candidate :backend))
@@ -792,20 +783,22 @@ influence of C1 on the result."
            (candidate-doc
             (when (fboundp candidate-doc-func)
               (funcall candidate-doc-func candidate))))
-      (when (and candidate-doc
-                 (not (string-equal candidate-doc "")))
-        ;; Create doc frame if it not exist.
-        (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame")
+      (if (and candidate-doc
+               (not (string-equal candidate-doc "")))
+          (progn
+            ;; Create doc frame if it not exist.
+            (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame")
 
-        ;; Insert documentation and turn on wrap line.
-        (with-current-buffer (get-buffer-create acm-doc-buffer)
-          (erase-buffer)
-          (insert candidate-doc)
-          (visual-line-mode 1))
+            ;; Insert documentation and turn on wrap line.
+            (with-current-buffer (get-buffer-create acm-doc-buffer)
+              (erase-buffer)
+              (insert candidate-doc)
+              (visual-line-mode 1))
 
-        ;; Adjust doc frame position and size.
-        (acm-doc-frame-adjust)
-        ))))
+            ;; Adjust doc frame position and size.
+            (acm-doc-frame-adjust))
+        ;; Hide doc frame.
+        (acm-doc-hide)))))
 
 (defun acm-doc-frame-adjust ()
   (let* ((emacs-width (frame-pixel-width))
@@ -873,7 +866,7 @@ influence of C1 on the result."
     (acm-menu-adjust-pos)
 
     ;; Fetch `documentation' and `additionalTextEdits' information.
-    (acm-fetch-candidate-doc)
+    (acm-doc-try-show)
     ))
 
 (cl-defmacro acm-silent (&rest body)
@@ -966,7 +959,7 @@ influence of C1 on the result."
   (if (acm-frame-visible-p acm-doc-frame)
       (acm-doc-hide)
     (let ((acm-enable-doc t))
-      (acm-doc-show))))
+      (acm-doc-try-show))))
 
 ;; Emacs 28: Do not show Acm commands with M-X
 (dolist (sym '(acm-hide acm-complete acm-select-first acm-select-last acm-select-next

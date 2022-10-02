@@ -119,9 +119,6 @@
 
     candidates))
 
-(defun acm-backend-elisp-candidate-fetch-doc (candidate)
-  (acm-doc-show))
-
 (defun acm-backend-elisp-candidate-doc (candidate)
   (let* ((symbol (intern (plist-get candidate :label)))
          (doc (ignore-errors (documentation symbol))))
