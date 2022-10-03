@@ -46,4 +46,4 @@ class Hover(Handler):
         contents = response["contents"]
         render_string = self.parse_hover_contents(contents, [])
 
-        eval_in_emacs("lsp-bridge-popup-documentation", render_string)
+        eval_in_emacs("lsp-bridge-popup-documentation--show", render_string)

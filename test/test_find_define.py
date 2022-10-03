@@ -18,7 +18,7 @@ class SimpleFindDefinition(unittest.TestCase):
         def expectation(method: str, args: List[Any]) -> bool:
             if target_position is None:
                 return False
-            if method != "lsp-bridge--jump-to-def":
+            if method != "lsp-bridge-define--jump":
                 return False
             return args[1] == target_position
 
@@ -84,7 +84,7 @@ class JumpOtherFile(unittest.TestCase):
 
         def expectation(method: str, args: List[Any]) -> bool:
             nonlocal result
-            if method == "lsp-bridge--jump-to-def":
+            if method == "lsp-bridge-define--jump":
                 result = args[0]
                 return True
             return False

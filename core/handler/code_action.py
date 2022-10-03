@@ -34,7 +34,7 @@ class CodeAction(Handler):
     def process_response(self, response) -> None:
         if response != None and len(response) > 0:
             self.file_action.code_action_response = response    # type: ignore
-            eval_in_emacs("lsp-bridge-code-action-fix", response, self.action_kind)
+            eval_in_emacs("lsp-bridge-code-action--fix", response, self.action_kind)
         else:
             self.file_action.code_action_response = None
             message_emacs("No code action found.")

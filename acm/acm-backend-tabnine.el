@@ -6,7 +6,7 @@
   "ACM tabnine support."
   :group 'acm)
 
-(defcustom acm-enable-tabnine-helper t
+(defcustom acm-enable-tabnine t
   "Enable tabnine support"
   :type 'boolean
   :group 'acm-backend-tabnine)

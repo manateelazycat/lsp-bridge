@@ -77,7 +77,7 @@ class Completion(Handler):
         logger.info("\n--- Completion items number: {}".format(len(completion_candidates)))
         
         if len(completion_candidates) > 0:
-            eval_in_emacs("lsp-bridge-record-completion-items",
+            eval_in_emacs("lsp-bridge-completion--record-items",
                           self.file_action.filepath,
                           completion_candidates,
                           self.position,

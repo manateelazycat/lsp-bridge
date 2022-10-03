@@ -199,7 +199,7 @@ class LspBridge:
     
     def turn_off(self, filepath, message):
         message_emacs(message)
-        eval_in_emacs("lsp-bridge-turn-off", filepath)
+        eval_in_emacs("lsp-bridge--turn-off", filepath)
     
     def create_lsp_server(self, filepath, project_path, lang_server_info):
         if len(lang_server_info["command"]) > 0:

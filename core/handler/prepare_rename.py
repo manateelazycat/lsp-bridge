@@ -15,4 +15,4 @@ class PrepareRename(Handler):
         if "range" in response:
             response = response["range"]
 
-        eval_in_emacs("lsp-bridge-rename-highlight", self.file_action.filepath, response["start"], response["end"])
+        eval_in_emacs("lsp-bridge-rename--highlight", self.file_action.filepath, response["start"], response["end"])

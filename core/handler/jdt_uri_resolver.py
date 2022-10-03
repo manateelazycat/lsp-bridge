@@ -59,5 +59,5 @@ class JDTUriResolver(Handler):
 
             external_file = external_file.as_posix()
             self.file_action.create_external_file_action(external_file, self.external_file_link)
-            eval_in_emacs("lsp-bridge--jump-to-def", external_file, self.start_pos)
+            eval_in_emacs("lsp-bridge-define--jump", external_file, self.start_pos)
 

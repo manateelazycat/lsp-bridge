@@ -83,7 +83,7 @@ class FileAction:
             "acm-backend-lsp-candidates-max-number",
             "indent-tabs-mode",
             "lsp-bridge-enable-diagnostics",
-            "lsp-bridge-diagnostics-fetch-idle"
+            "lsp-bridge-diagnostic-fetch-idle"
         ])
         self.insert_spaces = not self.insert_spaces
 
@@ -181,7 +181,7 @@ class FileAction:
     def ignore_diagnostic(self):
         lsp_server = self.get_match_lsp_servers("completion")[0]
         if "ignore-diagnostic" in lsp_server.server_info:
-            eval_in_emacs("lsp-bridge-insert-ignore-diagnostic-comment", lsp_server.server_info["ignore-diagnostic"])
+            eval_in_emacs("lsp-bridge-diagnostic--ignore", lsp_server.server_info["ignore-diagnostic"])
         else:
             message_emacs("Not found 'ignore_diagnostic' field in LSP server configure file.")
             
@@ -189,7 +189,7 @@ class FileAction:
         if len(self.diagnostics) == 0:
             message_emacs("No diagnostics found.")
         else:
-            eval_in_emacs("lsp-bridge-list-diagnostics-popup", self.diagnostics)
+            eval_in_emacs("lsp-bridge-diagnostic--list", self.diagnostics)
             
     def record_diagnostics(self, diagnostics):
         # Record diagnostics data that push from LSP server.
@@ -206,7 +206,7 @@ class FileAction:
         # Only push diagnostics to Emacs when ticker is newest.
         # Drop all temporarily diagnostics when typing.
         if ticker == self.diagnostics_ticker:
-            eval_in_emacs("lsp-bridge-diagnostics-render", self.filepath, self.diagnostics)
+            eval_in_emacs("lsp-bridge-diagnostic--render", self.filepath, self.diagnostics)
             
     def save_file(self, buffer_name):
         for lsp_server in self.get_lsp_servers():
@@ -239,7 +239,7 @@ class FileAction:
                if "kind" in documentation:
                    documentation = documentation["value"]
                        
-           eval_in_emacs("lsp-bridge-update-completion-item-info",
+           eval_in_emacs("lsp-bridge-completion-item--update",
                          {
                              "filepath": self.filepath,
                              "key": item_key,

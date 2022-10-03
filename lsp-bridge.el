@@ -107,8 +107,6 @@
       (lsp-bridge-call-async "fetch_completion_item_info" acm-backend-lsp-filepath key server-name)
       (setq-local lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath label kind)))))
 
-(defalias 'lsp-bridge-insert-common-prefix #'acm-insert-common)
-
 (defcustom lsp-bridge-completion-popup-predicates '(lsp-bridge-not-only-blank-before-cursor
                                                     lsp-bridge-not-match-hide-characters
                                                     lsp-bridge-not-match-stop-commands
@@ -327,7 +325,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Use `wen' lsp server in org-mode, default is disable.")
 
 (defcustom lsp-bridge-complete-manually nil
-  "Only popup completion menu when user call `lsp-bridge-popup-complete' command.")
+  "Only popup completion menu when user call `lsp-bridge-popup-complete-menu' command.")
 
 (defcustom lsp-bridge-multi-lang-server-mode-list
   '()
@@ -791,8 +789,8 @@ So we build this macro to restore postion after code format."
           (lsp-bridge-hide-doc-tooltip))
 
       ;; Hide diagnostic tooltip.
-      (unless (member this-command-string '("lsp-bridge-jump-to-next-diagnostic"
-                                            "lsp-bridge-jump-to-prev-diagnostic"))
+      (unless (member this-command-string '("lsp-bridge-diagnostic-jump-next"
+                                            "lsp-bridge-diagnostic-jump-prev"))
         (lsp-bridge-hide-diagnostic-tooltip))
 
       ;; Hide signature tooltip.
@@ -808,7 +806,7 @@ So we build this macro to restore postion after code format."
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
     (lsp-bridge-call-async "search_words_close_file" buffer-file-name)))
 
-(defun lsp-bridge-record-completion-items (filepath candidates position server-name completion-trigger-characters server-names)
+(defun lsp-bridge-completion--record-items (filepath candidates position server-name completion-trigger-characters server-names)
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
     (setq-local acm-backend-lsp-completion-position position)
@@ -823,7 +821,7 @@ So we build this macro to restore postion after code format."
       (setq-local acm-backend-lsp-items lsp-items))
     (lsp-bridge-try-completion)))
 
-(defun lsp-bridge-record-search-words-items (candidates)
+(defun lsp-bridge-search-words--record-items (candidates)
   (setq-local acm-backend-search-words-items candidates)
   (lsp-bridge-try-completion))
 
@@ -837,7 +835,7 @@ So we build this macro to restore postion after code format."
         (acm-update)
       (acm-hide))))
 
-(defun lsp-bridge-popup-complete ()
+(defun lsp-bridge-popup-complete-menu ()
   (interactive)
   (acm-update))
 
@@ -973,7 +971,7 @@ So we build this macro to restore postion after code format."
                             (buffer-name)
                             )
 
-  (when acm-enable-tabnine-helper
+  (when acm-enable-tabnine
     (lsp-bridge-tabnine-complete))
 
   ;; Send change file to search-words backend.
@@ -1008,8 +1006,6 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-monitor-after-save ()
   (lsp-bridge-call-file-api "save_file" (buffer-name)))
-
-(defalias 'lsp-bridge-find-define #'lsp-bridge-find-def)
 
 (defvar-local lsp-bridge-jump-to-def-in-other-window nil)
 
@@ -1060,7 +1056,7 @@ So we build this macro to restore postion after code format."
   (interactive)
   (lsp-bridge-call-file-api "find_references" (lsp-bridge--position)))
 
-(defun lsp-bridge-popup-references (references-content references-counter)
+(defun lsp-bridge-references--popup (references-content references-counter)
   (lsp-bridge-ref-popup references-content references-counter)
   (message "[LSP-Bridge] Found %s references" references-counter))
 
@@ -1070,7 +1066,7 @@ So we build this macro to restore postion after code format."
   (let ((new-name (read-string "Rename to: " (thing-at-point 'symbol 'no-properties))))
     (lsp-bridge-call-file-api "rename" (lsp-bridge--position) new-name)))
 
-(defun lsp-bridge-rename-highlight (filepath bound-start bound-end)
+(defun lsp-bridge-rename--highlight (filepath bound-start bound-end)
   (lsp-bridge--with-file-buffer filepath
     (require 'pulse)
     (let ((pulse-iterations 1)
@@ -1080,7 +1076,7 @@ So we build this macro to restore postion after code format."
        (acm-backend-lsp-position-to-point bound-end)
        'lsp-bridge-font-lock-flash))))
 
-(defun lsp-bridge-lookup-documentation ()
+(defun lsp-bridge-popup-documentation ()
   (interactive)
   (lsp-bridge-call-file-api "hover" (lsp-bridge--position)))
 
@@ -1101,7 +1097,7 @@ So we build this macro to restore postion after code format."
 
   (setq-local lsp-bridge-prohibit-completion t))
 
-(defun lsp-bridge--jump-to-def (filepath position)
+(defun lsp-bridge-define--jump (filepath position)
   ;; Record postion.
   (set-marker (mark-marker) (point) (current-buffer))
   (add-to-history 'lsp-bridge-mark-ring (copy-marker (mark-marker)) lsp-bridge-mark-ring-max t)
@@ -1135,7 +1131,7 @@ So we build this macro to restore postion after code format."
   (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode))))
     (if (string-equal theme-mode "dark") "#191a1b" "#f0f0f0")))
 
-(defun lsp-bridge-popup-documentation (value)
+(defun lsp-bridge-popup-documentation--show (value)
   (with-current-buffer (get-buffer-create lsp-bridge-lookup-doc-tooltip)
     (erase-buffer)
     (text-scale-set lsp-bridge-lookup-doc-tooltip-text-scale)
@@ -1163,7 +1159,7 @@ So we build this macro to restore postion after code format."
         :max-height 12)
   "Params for signature and `posframe-show'.")
 
-(defcustom lsp-bridge-signature-function 'message
+(defcustom lsp-bridge-signature-show-function 'message
   "Function to render signature help. Set to `lsp-bridge-signature-posframe' to use the posframe."
   :type 'function
   :group 'lsp-bridge)
@@ -1191,7 +1187,7 @@ So we build this macro to restore postion after code format."
                     :background-color (lsp-bridge-frame-background-color))))
     (lsp-bridge-hide-signature-tooltip)))
 
-(defun lsp-bridge-signature-help-update (help-infos help-index)
+(defun lsp-bridge-signature-help--update (help-infos help-index)
   (let ((index 0)
         (help ""))
     (dolist (help-info help-infos)
@@ -1202,7 +1198,7 @@ So we build this macro to restore postion after code format."
 
     (unless (string-equal help "")
       (let ((message-log-max nil))
-        (funcall lsp-bridge-signature-function help)))))
+        (funcall lsp-bridge-signature-show-function help)))))
 
 (defvar lsp-bridge--last-buffer nil)
 
@@ -1237,7 +1233,7 @@ So we build this macro to restore postion after code format."
   :type 'list
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-diagnostics-fetch-idle 0.5
+(defcustom lsp-bridge-diagnostic-fetch-idle 0.5
   "The idle seconds to fetch diagnostics."
   :type 'float
   :group 'lsp-bridge)
@@ -1341,11 +1337,11 @@ So we build this macro to restore postion after code format."
 
   (advice-remove #'acm-hide #'lsp-bridge--completion-hide-advisor))
 
-(defun lsp-bridge-turn-off (filepath)
+(defun lsp-bridge--turn-off (filepath)
   (lsp-bridge--with-file-buffer filepath
     (lsp-bridge--disable)))
 
-(defun lsp-bridge-diagnostics-render (filepath diagnostics)
+(defun lsp-bridge-diagnostic--render (filepath diagnostics)
   (lsp-bridge--with-file-buffer filepath
     (when lsp-bridge-diagnostic-overlays
       (dolist (diagnostic-overlay lsp-bridge-diagnostic-overlays)
@@ -1410,7 +1406,7 @@ So we build this macro to restore postion after code format."
    (>= (point) (overlay-start overlay))
    (<= (point) (overlay-end overlay))))
 
-(defun lsp-bridge-jump-to-next-diagnostic ()
+(defun lsp-bridge-diagnostic-jump-next ()
   (interactive)
   (if (zerop (length lsp-bridge-diagnostic-overlays))
       (message "[LSP-Bridge] No diagnostics.")
@@ -1423,7 +1419,7 @@ So we build this macro to restore postion after code format."
         (lsp-bridge-show-diagnostic-tooltip diagnostic-overlay)
       (message "[LSP-Bridge] Reach last diagnostic."))))
 
-(defun lsp-bridge-jump-to-prev-diagnostic ()
+(defun lsp-bridge-diagnostic-jump-prev ()
   (interactive)
   (if (zerop (length lsp-bridge-diagnostic-overlays))
       (message "[LSP-Bridge] No diagnostics."))
@@ -1436,19 +1432,19 @@ So we build this macro to restore postion after code format."
       (lsp-bridge-show-diagnostic-tooltip diagnostic-overlay)
     (message "[LSP-Bridge] Reach first diagnostic.")))
 
-(defun lsp-bridge-list-diagnostics ()
+(defun lsp-bridge-diagnostic-list ()
   (interactive)
   (lsp-bridge-call-file-api "list_diagnostics"))
 
-(defun lsp-bridge-ignore-current-diagnostic()
+(defun lsp-bridge-diagnostic-ignore()
   (interactive)
   (lsp-bridge-call-file-api "ignore_diagnostic"))
 
-(defun lsp-bridge-list-workspace-symbols ()
+(defun lsp-bridge-workspace-list-symbols ()
   (interactive)
   (lsp-bridge-call-file-api "workspace_symbol" ""))
 
-(defun lsp-bridge-show-workspace-symbols (info)
+(defun lsp-bridge-workspace--list-symbols (info)
   (if (zerop (length info))
       (message "LSP server did not return any symbols.")
     (let* ((symbols (mapcar (lambda (i) (plist-get i :name)) info))
@@ -1490,7 +1486,7 @@ So we build this macro to restore postion after code format."
              (not tempel--active)))
     (lsp-bridge-call-file-api "formatting" (symbol-value (lsp-bridge--get-indent-width major-mode)))))
 
-(defun lsp-bridge-code-format-fix (filepath edits)
+(defun lsp-bridge-format--update (filepath edits)
   ;; We need set `inhibit-modification-hooks' to t to avoid GC freeze Emacs.
   (lsp-bridge-save-position
    (let ((inhibit-modification-hooks t))
@@ -1504,7 +1500,7 @@ So we build this macro to restore postion after code format."
 
 (defvar lsp-bridge-english-helper-dict nil)
 
-(defun lsp-bridge-code-action-fix (actions action-kind)
+(defun lsp-bridge-code-action--fix (actions action-kind)
   (let* ((menu-items
           (or
            (mapcar #'(lambda (action)
@@ -1584,11 +1580,11 @@ So we build this macro to restore postion after code format."
          (point))
        (point))))
 
-(defun lsp-bridge-insert-ignore-diagnostic-comment (comment-string)
+(defun lsp-bridge-diagnostic--ignore (comment-string)
   (move-end-of-line 1)
   (insert (format "    %s" comment-string)))
 
-(defun lsp-bridge-list-diagnostics-popup (diagnostics)
+(defun lsp-bridge-diagnostic--list (diagnostics)
   (let ((filepath acm-backend-lsp-filepath)
         (current-buffer (current-buffer))
         (diagnostic-counter 0))
@@ -1619,7 +1615,7 @@ So we build this macro to restore postion after code format."
           (setq diagnostic-counter (1+ diagnostic-counter))))
       (lsp-bridge-ref-popup (buffer-string) diagnostic-counter))))
 
-(defun lsp-bridge-update-completion-item-info (info)
+(defun lsp-bridge-completion-item--update (info)
   (let* ((filepath (plist-get info :filepath))
          (key (plist-get info :key))
          (server-name (plist-get info :server))
@@ -1722,7 +1718,7 @@ So we build this macro to restore postion after code format."
                              (= after-point buffer-max)
                              max-num-results))))
 
-(defun lsp-bridge-tabnine-record-completion-items (items)
+(defun lsp-bridge-tabnine--record-items (items)
   (setq-local acm-backend-tabnine-items items)
   (lsp-bridge-try-completion))
 
@@ -1781,6 +1777,16 @@ So we build this macro to restore postion after code format."
 
 (add-to-list 'mode-line-misc-info
              `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] ")))
+
+(defalias 'lsp-bridge-insert-common-prefix #'acm-insert-common "This function is obsolete, use `acm-insert-common' instead.")
+(defalias 'lsp-bridge-find-define #'lsp-bridge-find-def "This function is obsolete, use `lsp-bridge-find-define' instead.")
+(defalias 'lsp-bridge-lookup-documentation #'lsp-bridge-popup-documentation "This function is obsolete, use `lsp-bridge-lookup-documentation' instead.")
+(defalias 'lsp-bridge-list-workspace-symbols #'lsp-bridge-workspace-list-symbols "This function is obsolete, use `lsp-bridge-list-workspace-symbols' instead.")
+(defalias 'lsp-bridge-jump-to-next-diagnostic #'lsp-bridge-diagnostic-jump-next "This function is obsolete, use `lsp-bridge-jump-to-next-diagnostic' instead.")
+(defalias 'lsp-bridge-jump-to-prev-diagnostic #'lsp-bridge-diagnostic-jump-prev "This function is obsolete, use `lsp-bridge-jump-to-prev-diagnostic' instead.")
+(defalias 'lsp-bridge-list-diagnostics #'lsp-bridge-diagnostic-list "This function is obsolete, use `lsp-bridge-list-diagnostics' instead.")
+(defalias 'lsp-bridge-ignore-current-diagnostic #'lsp-bridge-diagnostic-ignore "This function is obsolete, use `lsp-bridge-ignore-current-diagnostic' instead.")
+(defalias 'lsp-bridge-popup-complete #'lsp-bridge-popup-complete-menu "This function is obsolete, use `lsp-bridge-popup-complete' instead.")
 
 (provide 'lsp-bridge)
 

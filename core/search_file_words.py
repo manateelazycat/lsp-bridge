@@ -81,7 +81,7 @@ class SearchFileWords:
                 candidates = list(map(lambda word: prefix[:-len(search_prefix)] + word, candidates))
                 
 
-            eval_in_emacs("lsp-bridge-record-search-words-items", candidates[:min(3, len(candidates))])
+            eval_in_emacs("lsp-bridge-search-words--record-items", candidates[:min(3, len(candidates))])
         except:
             logger.error(traceback.format_exc())
             

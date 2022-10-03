@@ -69,54 +69,54 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-find-impl-other-window`: jump to the implementation in other-window
 * `lsp-bridge-return-from-def`: return to the location before calling `lsp-bridge-find-def`
 * `lsp-bridge-find-references`: traverse across code references (forked from color-rg.el)
-* `lsp-bridge-lookup-documentation`: lookup documentation of symbol under the cursor
+* `lsp-bridge-popup-documentation`: lookup documentation of symbol under the cursor
 * `lsp-bridge-popup-documentation-scroll-up`: scroll up popup document.
 * `lsp-bridge-popup-documentation-scroll-down`: scroll down popup document.
 * `lsp-bridge-rename`: rename symbol under the cursor
-* `lsp-bridge-list-workspace-symbols`: List all symbols in workspace and jump to the symbol definition
-* `lsp-bridge-jump-to-next-diagnostic`: Jump to the next diagnostic position
-* `lsp-bridge-jump-to-prev-diagnostic`: Jump to the previous diagnostic position
-* `lsp-bridge-list-diagnostics`: List all diagnostic information
-* `lsp-bridge-ignore-current-diagnostic`: Insert comment to ignore the current diagnosis
+* `lsp-bridge-diagnostic-jump-next`: Jump to the next diagnostic position
+* `lsp-bridge-diagnostic-jump-prev`: Jump to the previous diagnostic position
+* `lsp-bridge-diagnostic-list`: List all diagnostic information
+* `lsp-bridge-diagnostic-ignore`: Insert comment to ignore the current diagnosis
+* `lsp-bridge-workspace-list-symbols`: List all symbols in workspace and jump to the symbol definition
 * `lsp-bridge-signature-help-fetch`: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
-* `lsp-bridge-insert-common-prefix`: insert common prefix of candidates
+* `lsp-bridge-popup-complete-menu`: Manually popup the completion menu, you only need this command when turn on option `lsp-bride-complete-manually`
 * `lsp-bridge-restart-process`: restart lsp-bridge process (only used for development)
-* `lsp-bridge-popup-complete`: Manually popup the completion menu, you only need this command when turn on option `lsp-bride-complete-manually`
+* `acm-insert-common`: insert common prefix of candidates
 * `acm-doc-scroll-up`: API document window scroll up
 * `acm-doc-scroll-down`: API document window scroll down
 
 ## Options
-* `lsp-bridge-completion-popup-predicates`: the predicate function for completion menu, completion menu popup after all the functions pass
-* `lsp-bridge-completion-stop-commands`: completion menu will not popup if these commands are executed
-* `lsp-bridge-completion-hide-characters`: completion menu will not popup when cursor after those characters
-* `lsp-bridge-diagnostics-fetch-idle`: diagnostic delay, start pulling diagnostic information 0.5 second after stopping typing
-* `lsp-bridge-enable-diagnostics`: code diagnostic, enable by default
-* `lsp-bridge-enable-signature-help`: show function parameter in minibufer, enable by default
-* `lsp-bridge-enable-search-words`: index the word of the file, enable by default
-* `lsp-bridge-enable-auto-format-code`: automatic format code, disable by default
-* `lsp-bridge-org-babel-lang-list`: list of language to support org-mode code block completion
-* `lsp-bridge-disable-backup`: forbidden version manage of emacs, enable by default
-* `lsp-bridge-enable-log`: enable the LSP message log, disable by default
-* `lsp-bridge-enable-debug`: enable program debugging, disable by default
 * `lsp-bridge-python-command`: The path of the python command, if you use `conda`, you may customize this option
-* `lsp-bridge-signature-function`: The function used for displaying signature info
+* `lsp-bridge-complete-manually`: Only popup completion menu when user call `lsp-bridge-popup-complete-menu` command, default is nil
+* `lsp-bridge-get-workspace-folder`: You need to put multiple project in a `workspace` directory in Java before you can jump function defintion normally. This function can be customized, the function input is the project path and returns the `workspace` directory corresponding
 * `lsp-bridge-c-lsp-server`: C language server, you can choose `clangd` or` ccls`
 * `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright` or` jedi`
 * `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `taxlab` or` digestif`
-* `lsp-bridge-complete-manually`: Only popup completion menu when user call `lsp-bridge-popup-complete` command, default is nil
-* `lsp-bridge-get-workspace-folder`: You need to put multiple project in a `workspace` directory in Java before you can jump function defintion normally. This function can be customized, the function input is the project path and returns the `workspace` directory corresponding
-* `acm-backend-lsp-enable-auto-import`: automatic insert import code, enable by default
-* `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
-* `acm-enable-search-words`: Whether the complete menu display the word of the file, enable by default
+* `lsp-bridge-org-babel-lang-list`: list of language to support org-mode code block completion
+* `lsp-bridge-enable-diagnostics`: code diagnostic, enable by default
+* `lsp-bridge-enable-search-words`: index the word of the file, enable by default
+* `lsp-bridge-enable-auto-format-code`: automatic format code, disable by default
+* `lsp-bridge-enable-signature-help`: show function parameter in minibufer, enable by default
+* `lsp-bridge-enable-log`: enable the LSP message log, disable by default
+* `lsp-bridge-enable-debug`: enable program debugging, disable by default
+* `lsp-bridge-disable-backup`: forbidden version manage of emacs, enable by default
+* `lsp-bridge-diagnostic-fetch-idle`: diagnostic delay, start pulling diagnostic information 0.5 second after stopping typing
+* `lsp-bridge-signature-show-function`: The function used for displaying signature info
+* `lsp-bridge-completion-popup-predicates`: the predicate function for completion menu, completion menu popup after all the functions pass
+* `lsp-bridge-completion-stop-commands`: completion menu will not popup if these commands are executed
+* `lsp-bridge-completion-hide-characters`: completion menu will not popup when cursor after those characters
 * `acm-enable-doc`: Whether the complete menu display the help document
 * `acm-enable-icon`: Whether the complete menu shows the icon, macOS users need to add option `--with-rsvg` to the brew command to install emacs to display SVG icon
+* `acm-enable-tabnine`: Enable tabnine support， enable by default，when enable need execute  `lsp-bridge-install-tabnine` command to install TabNine, and it can be used. TabNine will consume huge CPUs, causing your entire computer to be slow. If the computer performance is not good, it is not recommended to enable this option
+* `acm-enable-search-words`: Whether the complete menu display the word of the file, enable by default
 * `acm-enable-quick-access`: Whether the index is displayed behind the icon, you can quickly select the candidate through Alt + Number, disable by default
-* `acm-snippet-insert-index`: The display position of snippet candidate in the complementary menu
-* `acm-doc-frame-max-lines`: Max line number of help documentation, default is 20
-* `acm-enable-tabnine-helper`: Enable tabnine support， enable by default，when enable need execute  `lsp-bridge-install-tabnine` command to install TabNine, and it can be used. TabNine will consume huge CPUs, causing your entire computer to be slow. If the computer performance is not good, it is not recommended to enable this option
 * `acm-enable-yas`: yasnippet completion, enable by default
-* `acm-backend-yas-candidates-number`: yasnippet display number，2 by default
 * `acm-enable-citre`: citre completion, disable by default
+* `acm-doc-frame-max-lines`: Max line number of help documentation, default is 20
+* `acm-snippet-insert-index`: The display position of snippet candidate in the complementary menu
+* `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
+* `acm-backend-lsp-enable-auto-import`: automatic insert import code, enable by default
+* `acm-backend-yas-candidates-number`: yasnippet display number，2 by default
 * `acm-backend-citre-keyword-complete`: Completion is performed according to the keywords of each mode defined by `acm-backend-citre-keywords-alist`, which takes effect only after citre is enabled.
 
 ## Customize language server configuration

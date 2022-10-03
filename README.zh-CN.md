@@ -68,54 +68,54 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-find-impl-other-window`: 在其他窗口跳转到接口实现位置
 * `lsp-bridge-return-from-def`: 返回跳转之前的位置
 * `lsp-bridge-find-references`: 查看代码引用
-* `lsp-bridge-lookup-documentation`: 查看光标处的文档
+* `lsp-bridge-popup-documentation`: 查看光标处的文档
 * `lsp-bridge-popup-documentation-scroll-up`: 文档窗口向上滚动
 * `lsp-bridge-popup-documentation-scroll-down`: 文档窗口向下滚动
 * `lsp-bridge-rename`: 重命名
-* `lsp-bridge-list-workspace-symbols`: 列出工作区所有符号，并跳转到符号定义 qq
-* `lsp-bridge-jump-to-next-diagnostic`: 跳转到下一个诊断位置
-* `lsp-bridge-jump-to-prev-diagnostic`: 跳转到上一个诊断位置
-* `lsp-bridge-list-diagnostics`: 列出所有诊断信息
-* `lsp-bridge-ignore-current-diagnostic`: 插入注视忽略当前诊断
+* `lsp-bridge-diagnostic-jump-next`: 跳转到下一个诊断位置
+* `lsp-bridge-diagnostic-jump-prev`: 跳转到上一个诊断位置
+* `lsp-bridge-diagnostic-list`: 列出所有诊断信息
+* `lsp-bridge-diagnostic-ignore`: 插入注视忽略当前诊断
+* `lsp-bridge-workspace-list-symbols`: 列出工作区所有符号，并跳转到符号定义 qq
 * `lsp-bridge-signature-help-fetch`: 在 minibuffer 显示参数信息
-* `lsp-bridge-insert-common-prefix`: 插入补全后选词的公共前缀
+* `lsp-bridge-popup-complete-menu`: 手动弹出补全菜单， 只有当打开 `lsp-bridge-complete-manually` 选项才需要使用这个命令
 * `lsp-bridge-restart-process`: 重启 lsp-bridge 进程 (一般只有开发者才需要这个功能)
-* `lsp-bridge-popup-complete`: 手动弹出补全菜单， 只有当打开 `lsp-bridge-complete-manually` 选项才需要使用这个命令
+* `acm-insert-common`: 插入补全后选词的公共前缀
 * `acm-doc-scroll-up`: API 文档窗口向上滚动
 * `acm-doc-scroll-down`: API 文档窗口向下滚动
 
 ## 选项
-* `lsp-bridge-completion-popup-predicates`: 补全菜单显示的检查函数， 这个选项包括的所有函数都检查过以后， 补全菜单才能显示
-* `lsp-bridge-completion-stop-commands`: 这些命令执行以后，不再弹出补全菜单
-* `lsp-bridge-completion-hide-characters`: 这些字符的后面不再弹出补全菜单
-* `lsp-bridge-diagnostics-fetch-idle`： 诊断延迟，默认是停止敲键盘后 0.5 秒开始拉取诊断信息
-* `lsp-bridge-enable-diagnostics`: 代码诊断， 默认打开
-* `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认打开
-* `lsp-bridge-enable-search-words`: 索引打开文件的单词， 默认打开
-* `lsp-bridge-enable-auto-format-code`: 自动格式化代码, 默认关闭
-* `lsp-bridge-org-babel-lang-list`: 支持 org-mode 代码块补全的语言列表
-* `lsp-bridge-disable-backup`: 禁止 emacs 对文件做版本管理， 默认打开
-* `lsp-bridge-enable-log`: 启用 LSP 消息日志， 默认关闭
-* `lsp-bridge-enable-debug`: 启用程序调试， 默认关闭
 * `lsp-bridge-python-command`: Python 命令的路径, 如果你用 `conda`， 你也许会定制这个选项
-* `lsp-bridge-signature-function`: 用于显示签名信息的函数
+* `lsp-bridge-complete-manually`: 只有当用户手动调用 `lsp-bridge-popup-complete-menu` 命令的时候才弹出补全菜单， 默认关闭
+* `lsp-bridge-get-workspace-folder`: 在 Java 中需要把多个项目放到一个 Workspace 目录下， 才能正常进行定义跳转， 可以自定义这个函数， 函数输入是项目路径， 返回对应的 Workspace 目录
 * `lsp-bridge-c-lsp-server`: C 语言的服务器，可以选择`clangd`或者`ccls`
 * `lsp-bridge-python-lsp-server`: Python 语言的服务器，可以选择`pyright`或者`jedi`
 * `lsp-bridge-tex-lsp-server`: LaTeX 语言的服务器，可以选择`texlab`或者`digestif`
-* `lsp-bridge-complete-manually`: 只有当用户手动调用 `lsp-bridge-popup-complete` 命令的时候才弹出补全菜单， 默认关闭
-* `lsp-bridge-get-workspace-folder`: 在 Java 中需要把多个项目放到一个 Workspace 目录下， 才能正常进行定义跳转， 可以自定义这个函数， 函数输入是项目路径， 返回对应的 Workspace 目录
-* `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
-* `acm-candidate-match-function`: 补全菜单匹配算法， orderless-* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
-* `acm-enable-search-words`: 补全菜单是否显示打开文件的单词， 默认打开
+* `lsp-bridge-org-babel-lang-list`: 支持 org-mode 代码块补全的语言列表
+* `lsp-bridge-enable-diagnostics`: 代码诊断， 默认打开
+* `lsp-bridge-enable-search-words`: 索引打开文件的单词， 默认打开
+* `lsp-bridge-enable-auto-format-code`: 自动格式化代码, 默认关闭
+* `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认打开
+* `lsp-bridge-enable-log`: 启用 LSP 消息日志， 默认关闭
+* `lsp-bridge-enable-debug`: 启用程序调试， 默认关闭
+* `lsp-bridge-disable-backup`: 禁止 emacs 对文件做版本管理， 默认打开
+* `lsp-bridge-diagnostic-fetch-idle`： 诊断延迟，默认是停止敲键盘后 0.5 秒开始拉取诊断信息
+* `lsp-bridge-signature-show-function`: 用于显示签名信息的函数
+* `lsp-bridge-completion-popup-predicates`: 补全菜单显示的检查函数， 这个选项包括的所有函数都检查过以后， 补全菜单才能显示
+* `lsp-bridge-completion-stop-commands`: 这些命令执行以后，不再弹出补全菜单
+* `lsp-bridge-completion-hide-characters`: 这些字符的后面不再弹出补全菜单
 * `acm-enable-doc`: 补全菜单是否显示帮助文档
 * `acm-enable-icon`: 补全菜单是否显示图标, macOS 用户需要给 brew 命令增加选项 `--with-rsvg` 来安装 Emacs 才能显示 SVG 图片
+* `acm-enable-tabnine`: 是否打开 tabnine 补全支持，默认打开，打开后需要运行命令 `lsp-bridge-install-tabnine` 来安装 tabnine 后就可以使用了。 TabNine 会消耗巨大的 CPU， 导致你整个电脑都卡顿， 如果电脑性能不好， 不建议开启此选项
+* `acm-enable-search-words`: 补全菜单是否显示打开文件的单词， 默认打开
 * `acm-enable-quick-access`: 是否在图标后面显示索引， 可以通过 Alt + Number 来快速选择后选词， 默认关闭
-* `acm-snippet-insert-index`: 代码模板候选词在补全菜单中的显示位置
-* `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是 20
-* `acm-enable-tabnine-helper`: 是否打开 tabnine 补全支持，默认打开，打开后需要运行命令 `lsp-bridge-install-tabnine` 来安装 tabnine 后就可以使用了。 TabNine 会消耗巨大的 CPU， 导致你整个电脑都卡顿， 如果电脑性能不好， 不建议开启此选项
 * `acm-enable-yas`: yasnippet 补全，默认打开
-* `acm-backend-yas-candidates-number`: yasnippet 显示个数，默认 2 个
 * `acm-enable-citre`: citre 补全，默认关闭
+* `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是 20
+* `acm-snippet-insert-index`: 代码模板候选词在补全菜单中的显示位置
+* `acm-candidate-match-function`: 补全菜单匹配算法， orderless-* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
+* `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
+* `acm-backend-yas-candidates-number`: yasnippet 显示个数，默认 2 个
 * `acm-backend-citre-keyword-complete`: 根据`acm-backend-citre-keywords-alist`定义的各个模式的关键字进行补全，需要使能 citre 后才生效
 
 

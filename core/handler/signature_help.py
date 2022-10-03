@@ -27,4 +27,4 @@ class SignatureHelp(Handler):
                         signatures_label = response["signatures"][0]["label"]
                         arguments.append(signatures_label[label[0]:label[1]])
                         
-                eval_in_emacs("lsp-bridge-signature-help-update", arguments, response.get("activeParameter", 0))
+                eval_in_emacs("lsp-bridge-signature-help--update", arguments, response.get("activeParameter", 0))

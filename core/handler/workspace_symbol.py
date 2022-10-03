@@ -12,4 +12,4 @@ class WorkspaceSymbol(Handler):
 
     def process_response(self, response: dict) -> None:
         if response != None:
-            eval_in_emacs("lsp-bridge-show-workspace-symbols", response)
+            eval_in_emacs("lsp-bridge-workspace--list-symbols", response)

@@ -7,7 +7,7 @@ from test.common import *
 
 def try_complete(file: SingleFile, label: str):
     def must_include_completion(method: str, args: List[Any]):
-        if method == "lsp-bridge-record-completion-items":
+        if method == "lsp-bridge-completion--record-items":
             items = args[1]
             for item in items:
                 if item['label'] == label:
@@ -107,7 +107,7 @@ class AcceptCompletion(unittest.TestCase):
             cursor_offset = len(files[0].code)
 
         def has_completion(method: str, args: List[Any]):
-            return method == "lsp-bridge-record-completion-items"
+            return method == "lsp-bridge-completion--record-items"
 
         @with_multiple_files(files)
         def go(filenames: Dict[str, str]):

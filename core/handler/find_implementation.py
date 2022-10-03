@@ -21,4 +21,4 @@ class FindImplementation(Handler):
         filepath = uri_to_path(fileuri)
         range = file_info["range"] if "range" in file_info else file_info["targetRange"]
         startpos = range["start"]
-        eval_in_emacs("lsp-bridge--jump-to-def", filepath, startpos)
+        eval_in_emacs("lsp-bridge-define--jump", filepath, startpos)

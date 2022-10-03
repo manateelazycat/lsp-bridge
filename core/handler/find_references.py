@@ -51,4 +51,4 @@ class FindReferences(Handler):
 
             linecache.clearcache()  # clear line cache
 
-            eval_in_emacs("lsp-bridge-popup-references", references_content, references_counter)
+            eval_in_emacs("lsp-bridge-references--popup", references_content, references_counter)

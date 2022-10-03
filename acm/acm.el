@@ -432,7 +432,7 @@ influence of C1 on the result."
          tempel-candidates
          mode-candidates
          citre-candidates)
-    (when acm-enable-tabnine-helper
+    (when acm-enable-tabnine
       (setq tabnine-candidates (acm-backend-tabnine-candidates keyword)))
 
     (if acm-enable-english-helper
