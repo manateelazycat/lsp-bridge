@@ -40,25 +40,25 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 3. 自定义 `lsp-bridge-get-project-path-by-filepath` 函数， 输入参数是打开文件的路径字符串， 输出参数是项目目录路径， lsp-bridge 会根据输出目录路径来提供补全
 
 ## 按键
-| 按键 | 命令 | 备注 | 
-| :--- | :--- | :--- | 
-| Alt + n | acm-select-next | 选择下一个后选词 |
-| Down | acm-select-next | 选择下一个后选词 |
-| Alt + p | acm-select-prev | 选择上一个后选词 |
-| Up | acm-select-prev | 选择上一个后选词 |
-| Alt + . | acm-select-last | 选择最后一个后选词 |
-| Alt + , | acm-select-first | 选择第一个后选词 |
-| Ctrl + m | acm-complete | 完成补全 |
-| Return | acm-complete | 完成补全 |
-| Tab | acm-complete | 完成补全 |
-| Alt + h | acm-complete | 完成补全 |
-| Alt + H | acm-insert-common | 插入后选词共有部分 |
-| Alt + d | acm-doc-toggle | 开启或关闭后选词文档 |
-| Alt + j | acm-doc-scroll-up | 向下滚动后选词文档 |
-| Alt + k | acm-doc-scroll-down | 向上滚动后选词文档 |
-| Alt + l | acm-hide | 隐藏补全窗口 |
-| Ctrl + g | acm-hide | 隐藏补全窗口 |
-| 数字键 | acm-complete-quick-access | 快速选择后选词， 需要开启 `acm-enable-quick-access` 选项 |
+| 按键     | 命令                      | 备注                                                     |
+| :---     | :---                      | :---                                                     |
+| Alt + n  | acm-select-next           | 选择下一个后选词                                         |
+| Down     | acm-select-next           | 选择下一个后选词                                         |
+| Alt + p  | acm-select-prev           | 选择上一个后选词                                         |
+| Up       | acm-select-prev           | 选择上一个后选词                                         |
+| Alt + .  | acm-select-last           | 选择最后一个后选词                                       |
+| Alt + ,  | acm-select-first          | 选择第一个后选词                                         |
+| Ctrl + m | acm-complete              | 完成补全                                                 |
+| Return   | acm-complete              | 完成补全                                                 |
+| Tab      | acm-complete              | 完成补全                                                 |
+| Alt + h  | acm-complete              | 完成补全                                                 |
+| Alt + H  | acm-insert-common         | 插入后选词共有部分                                       |
+| Alt + d  | acm-doc-toggle            | 开启或关闭后选词文档                                     |
+| Alt + j  | acm-doc-scroll-up         | 向下滚动后选词文档                                       |
+| Alt + k  | acm-doc-scroll-down       | 向上滚动后选词文档                                       |
+| Alt + l  | acm-hide                  | 隐藏补全窗口                                             |
+| Ctrl + g | acm-hide                  | 隐藏补全窗口                                             |
+| 数字键   | acm-complete-quick-access | 快速选择后选词， 需要开启 `acm-enable-quick-access` 选项 |
 
 ## 命令列表
 
@@ -146,49 +146,49 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 
 你需要安装每个编程语言对应的 LSP 服务器， lsp-bridge 才能提供代码补全服务。
 
-| 序号 | LSP 服务器              | 语言 | 备注                                                                                                                                                               |
-| :--- | :--- | :--- | :--- |
-| 1 | [clangd](https://github.com/clangd/clangd) | c, c++, object-c |  |
-| 2 | [pyright](https://github.com/microsoft/pyright) | python | `pip install pyright`|
-| 3 | [solargraph](https://github.com/castwide/solargraph) | ruby | |
-| 4 | [rust-analyzer](https://github.com/rust-lang/rust-analyzer) | rust | |
-| 5 | [elixirLS](https://github.com/elixir-lsp/elixir-ls) | elixir | 请确保导出 `elixir-ls` 目录到你系统的 PATH 路径 |
-| 6 | [gopls](https://github.com/golang/tools/tree/master/gopls) | go | 确保安装 [go-mode](https://github.com/dominikh/go-mode.el)， 同时确保 gopls 在 PATH 环境变量中, 执行命令 `ln -s ~/go/bin/gopls ~/.local/bin`, 还要在补全之前执行 `go mod init` 命令 |
-| 7 | [hls](https://github.com/haskell/haskell-language-server) | haskell | |
-| 8 | [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) | dart | |
-| 9 | [metals](https://scalameta.org/metals/) | scala | |
-| 10 | [typescript](https://github.com/typescript-language-server/typescript-language-server) | typescript, javascript | |
-| 11 | [ocamllsp](https://github.com/ocaml/ocaml-lsp) | ocaml | |
-| 12 | [erlang-ls](https://github.com/erlang-ls/erlang_ls) | erlang | |
-| 13 | [texlab](https://github.com/latex-lsp/texlab) | latex | |
-| 14 | [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls) | java | 请确保导出 `org.eclipse.jdt.ls.product/target/repository/bin` 到你系统的 PATH 路径 |
-| 15 | [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp) | clojure | 如果使用 `homebrew` 安装的，请确保安装的是 `clojure-lsp/brew/clojure-lsp-native` [clojure-lsp-native](https://clojure-lsp.io/installation/#homebrew-macos-and-linux) |
-| 16 | [bash-language-server](https://github.com/bash-lsp/bash-language-server) | bash | |
-| 17 | [volar](https://github.com/johnsoncodehk/volar) | vue | npm install typescript volar -g |
-| 18 | [sumneko](https://github.com/sumneko/lua-language-server) | lua | 请确保导出 sumneko 的 `bin` 目录到你系统的 PATH 路径 |
-| 19 | [wxml-language-server](https://github.com/chemzqm/wxml-languageserver) | wxml | |
-| 20 | [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | html | |
-| 21 | [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | css | |
-| 22 | [elm-language-server](https://github.com/elm-tooling/elm-language-server) | elm | |
-| 23 | [intelephense](https://github.com/bmewburn/vscode-intelephense) | php | |
-| 24 | [yaml-language-server](https://github.com/redhat-developer/yaml-language-server) | yaml | `npm install -g yaml-language-server` |
-| 25 | [zls](https://github.com/zigtools/zls) | zig | 运行 `zls config` 来生成 zls 的配置。参考 [Configuration Options](https://github.com/zigtools/zls#configuration-options) |
-| 26 | [groovy-language-server](https://github.com/GroovyLanguageServer/groovy-language-server) | groovy | 在 PATH 中创建一个名为 "groovy-language-server" 的脚本, 内容为 `$JAVA_HOME/bin/java -jar <path>/groovy-language-server-all.jar` |
-| 27 | [docker-language-server](https://github.com/rcjsuen/dockerfile-language-server-nodejs) | Dockerfiles | |
-| 28 | [serve-d](https://github.com/Pure-D/serve-d) | d | serve-d 不支持单文件模式, 使用前请先在项目目录下初始 git 仓库或者自定义 `lsp-bridge-get-project-path-by-filepath` 返回项目目录 |
-| 29 | [fortls](https://github.com/gnikit/fortls) | Fortran | |
-| 30 | [ccls](https://github.com/MaskRay/ccls) | c, c++, object-c | `lsp-bridge-c-lsp-server` 设置成 `ccls` |
-| 31 | [jedi](https://github.com/pappasam/jedi-language-server) | python | `lsp-bridge-python-lsp-server` 设置成 `jedi` |
-| 32 | [emmet-ls](https://github.com/aca/emmet-ls) | html, js, css, sass, scss, less | |
-| 33 | [rnix-lsp](https://github.com/nix-community/rnix-lsp) | nix | |
-| 34 | [digestif](https://github.com/astoff/digestif) | latex | `lsp-bridge-tex-lsp-server` 设置成 `digestif` |
-| 35 | [rlanguageserver](https://github.com/REditorSupport/languageserver)       | R   | |
-| 36 | [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli) | GraphQL | |
-| 37 | [microsoft-python-language-server](https://github.com/microsoft/python-language-server) | Python | 支持 Python2 的 lsp |
-| 38 | [cmake-language-server](https://github.com/regen100/cmake-language-server) | cmake | `pip install cmake-language-server` |
-| 39 | [Wen](https://github.com/metaescape/Wen) | org-mode | `pip install pygls pypinyin` |
-| 40 | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)|swift| Sourcekit-lsp 包含在 swift toolchain 中。|
-| 41 | [omnisharp](https://github.com/OmniSharp/omnisharp-roslyn)|c#| OmniSharp dotnet 平台的 lsp. 使用 `M-x lsp-bridge-install-omnisharp` 安装|
+| 序号 | LSP 服务器                                                                                         | 语言                            | 备注                                                                                                                                                                                |
+| :--- | :---                                                                                               | :---                            | :---                                                                                                                                                                                |
+|    1 | [clangd](https://github.com/clangd/clangd)                                                         | c, c++, object-c                |                                                                                                                                                                                     |
+|    2 | [pyright](https://github.com/microsoft/pyright)                                                    | python                          | `pip install pyright`                                                                                                                                                               |
+|    3 | [solargraph](https://github.com/castwide/solargraph)                                               | ruby                            |                                                                                                                                                                                     |
+|    4 | [rust-analyzer](https://github.com/rust-lang/rust-analyzer)                                        | rust                            |                                                                                                                                                                                     |
+|    5 | [elixirLS](https://github.com/elixir-lsp/elixir-ls)                                                | elixir                          | 请确保导出 `elixir-ls` 目录到你系统的 PATH 路径                                                                                                                                     |
+|    6 | [gopls](https://github.com/golang/tools/tree/master/gopls)                                         | go                              | 确保安装 [go-mode](https://github.com/dominikh/go-mode.el)， 同时确保 gopls 在 PATH 环境变量中, 执行命令 `ln -s ~/go/bin/gopls ~/.local/bin`, 还要在补全之前执行 `go mod init` 命令 |
+|    7 | [hls](https://github.com/haskell/haskell-language-server)                                          | haskell                         |                                                                                                                                                                                     |
+|    8 | [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server)           | dart                            |                                                                                                                                                                                     |
+|    9 | [metals](https://scalameta.org/metals/)                                                            | scala                           |                                                                                                                                                                                     |
+|   10 | [typescript](https://github.com/typescript-language-server/typescript-language-server)             | typescript, javascript          |                                                                                                                                                                                     |
+|   11 | [ocamllsp](https://github.com/ocaml/ocaml-lsp)                                                     | ocaml                           |                                                                                                                                                                                     |
+|   12 | [erlang-ls](https://github.com/erlang-ls/erlang_ls)                                                | erlang                          |                                                                                                                                                                                     |
+|   13 | [texlab](https://github.com/latex-lsp/texlab)                                                      | latex                           |                                                                                                                                                                                     |
+|   14 | [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls)                             | java                            | 请确保导出 `org.eclipse.jdt.ls.product/target/repository/bin` 到你系统的 PATH 路径                                                                                                  |
+|   15 | [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp)                                          | clojure                         | 如果使用 `homebrew` 安装的，请确保安装的是 `clojure-lsp/brew/clojure-lsp-native` [clojure-lsp-native](https://clojure-lsp.io/installation/#homebrew-macos-and-linux)                |
+|   16 | [bash-language-server](https://github.com/bash-lsp/bash-language-server)                           | bash                            |                                                                                                                                                                                     |
+|   17 | [volar](https://github.com/johnsoncodehk/volar)                                                    | vue                             | npm install typescript volar -g                                                                                                                                                     |
+|   18 | [sumneko](https://github.com/sumneko/lua-language-server)                                          | lua                             | 请确保导出 sumneko 的 `bin` 目录到你系统的 PATH 路径                                                                                                                                |
+|   19 | [wxml-language-server](https://github.com/chemzqm/wxml-languageserver)                             | wxml                            |                                                                                                                                                                                     |
+|   20 | [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted)             | html                            |                                                                                                                                                                                     |
+|   21 | [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted)              | css                             |                                                                                                                                                                                     |
+|   22 | [elm-language-server](https://github.com/elm-tooling/elm-language-server)                          | elm                             |                                                                                                                                                                                     |
+|   23 | [intelephense](https://github.com/bmewburn/vscode-intelephense)                                    | php                             |                                                                                                                                                                                     |
+|   24 | [yaml-language-server](https://github.com/redhat-developer/yaml-language-server)                   | yaml                            | `npm install -g yaml-language-server`                                                                                                                                               |
+|   25 | [zls](https://github.com/zigtools/zls)                                                             | zig                             | 运行 `zls config` 来生成 zls 的配置。参考 [Configuration Options](https://github.com/zigtools/zls#configuration-options)                                                            |
+|   26 | [groovy-language-server](https://github.com/GroovyLanguageServer/groovy-language-server)           | groovy                          | 在 PATH 中创建一个名为 "groovy-language-server" 的脚本, 内容为 `$JAVA_HOME/bin/java -jar <path>/groovy-language-server-all.jar`                                                     |
+|   27 | [docker-language-server](https://github.com/rcjsuen/dockerfile-language-server-nodejs)             | Dockerfiles                     |                                                                                                                                                                                     |
+|   28 | [serve-d](https://github.com/Pure-D/serve-d)                                                       | d                               | serve-d 不支持单文件模式, 使用前请先在项目目录下初始 git 仓库或者自定义 `lsp-bridge-get-project-path-by-filepath` 返回项目目录                                                      |
+|   29 | [fortls](https://github.com/gnikit/fortls)                                                         | Fortran                         |                                                                                                                                                                                     |
+|   30 | [ccls](https://github.com/MaskRay/ccls)                                                            | c, c++, object-c                | `lsp-bridge-c-lsp-server` 设置成 `ccls`                                                                                                                                             |
+|   31 | [jedi](https://github.com/pappasam/jedi-language-server)                                           | python                          | `lsp-bridge-python-lsp-server` 设置成 `jedi`                                                                                                                                        |
+|   32 | [emmet-ls](https://github.com/aca/emmet-ls)                                                        | html, js, css, sass, scss, less |                                                                                                                                                                                     |
+|   33 | [rnix-lsp](https://github.com/nix-community/rnix-lsp)                                              | nix                             |                                                                                                                                                                                     |
+|   34 | [digestif](https://github.com/astoff/digestif)                                                     | latex                           | `lsp-bridge-tex-lsp-server` 设置成 `digestif`                                                                                                                                       |
+|   35 | [rlanguageserver](https://github.com/REditorSupport/languageserver)                                | R                               |                                                                                                                                                                                     |
+|   36 | [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli) | GraphQL                         |                                                                                                                                                                                     |
+|   37 | [microsoft-python-language-server](https://github.com/microsoft/python-language-server)            | Python                          | 支持 Python2 的 lsp                                                                                                                                                                 |
+|   38 | [cmake-language-server](https://github.com/regen100/cmake-language-server)                         | cmake                           | `pip install cmake-language-server`                                                                                                                                                 |
+|   39 | [Wen](https://github.com/metaescape/Wen)                                                           | org-mode                        | `pip install pygls pypinyin`                                                                                                                                                        |
+|   40 | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)                                            | swift                           | Sourcekit-lsp 包含在 swift toolchain 中。                                                                                                                                           |
+|   41 | [omnisharp](https://github.com/OmniSharp/omnisharp-roslyn)                                         | c#                              | OmniSharp dotnet 平台的 lsp. 使用 `M-x lsp-bridge-install-omnisharp` 安装                                                                                                           |
 ### 不会支持的特性：
 lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端, 但不是实现 LSP 协议最全的 LSP 客户端。
 
@@ -204,20 +204,21 @@ lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端, 但�
 
 下面是 lsp-bridge 项目的目录结构：
 
-| 文件名                  | 作用                                                                                                         |
-| :--------------------- | :-------------------                                                                                        |
-| lsp-bridge.el           | lsp-bridge 的 Elisp 主逻辑部分，提供自定义选项和 Elisp 函数供 python 子进程调用，比如代码跳转、重命名等             |
-| lsp-bridge-epc.el       | 和 lsp-bridge python 子进程通讯的代码，主要实现 Elisp IPC 来对接 Python EPC, 实现数据序列化、发送、接收和反序列化 |
-| lsp-bridge-ref.el       | 代码引用查看框架，提供引用查看、批量重命名、引用结果正则过滤等，核心代码 fork 自 color-rg.el                  |
-| lsp-bridge-jdtls.el      | 提供 Java 语言第三方库跳转功能                                                           |
-| lsp-bridge.py           | lsp-bridge 的 Python 主逻辑部分，提供事件循环、消息调度和状态管理                                               |
-| acm/acm.el      | 异步补全菜单， 专门为 lsp-bridge 后端而设计， 支持 lsp, elisp, words, TabNine 等后端                                                                                           |
-| core/fileaction.py      | 主要记录每个文件状态，处理 LSP 响应消息，调用 Emacs Elisp 函数                                                   |
-| core/lspserver.py       | LSP 消息处理模块，主要是解析、发送和接受 LSP 消息，并保证 LSP 请求顺序符合 LSP 协议规范                             |
-| core/utils.py           | 一些全局工具函数，方便各模块调用                                                                             |
-| core/mergedeep.py           | JSON 信息合并， 主要用于发送自定义选项给 LSP 服务器                                                                             |
-| core/hanlder/           | LSP 消息发送和接受的实现，其中 __init__.py 是基类                                                             |
-| langserver              | 主要放置 LSP 服务器的配置，每一个服务器一个 json 文件，分别定义服务器的名称、语言 ID、启动命令和设置选项等      |
+| 文件名                      | 作用                                                                                                              |
+| :---------------------      | :-------------------                                                                                              |
+| lsp-bridge.el               | lsp-bridge 的 Elisp 主逻辑部分，提供自定义选项和 Elisp 函数供 python 子进程调用，比如代码跳转、重命名等           |
+| lsp-bridge-epc.el           | 和 lsp-bridge python 子进程通讯的代码，主要实现 Elisp IPC 来对接 Python EPC, 实现数据序列化、发送、接收和反序列化 |
+| lsp-bridge-ref.el           | 代码引用查看框架，提供引用查看、批量重命名、引用结果正则过滤等，核心代码 fork 自 color-rg.el                      |
+| lsp-bridge-jdtls.el         | 提供 Java 语言第三方库跳转功能                                                                                    |
+| lsp-bridge-lsp-installer.el | 安装 TabNine 和 Omnisharp                                                                                         |
+| lsp-bridge.py               | lsp-bridge 的 Python 主逻辑部分，提供事件循环、消息调度和状态管理                                                 |
+| acm/acm.el                  | 异步补全菜单， 专门为 lsp-bridge 后端而设计， 支持 lsp, elisp, words, TabNine 等后端                              |
+| core/fileaction.py          | 主要记录每个文件状态，处理 LSP 响应消息，调用 Emacs Elisp 函数                                                    |
+| core/lspserver.py           | LSP 消息处理模块，主要是解析、发送和接受 LSP 消息，并保证 LSP 请求顺序符合 LSP 协议规范                           |
+| core/utils.py               | 一些全局工具函数，方便各模块调用                                                                                  |
+| core/mergedeep.py           | JSON 信息合并， 主要用于发送自定义选项给 LSP 服务器                                                               |
+| core/hanlder/               | LSP 消息发送和接受的实现，其中 __init__.py 是基类                                                                 |
+| langserver                  | 主要放置 LSP 服务器的配置，每一个服务器一个 json 文件，分别定义服务器的名称、语言 ID、启动命令和设置选项等        |
 
 
 请先阅读下面的文章:

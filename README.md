@@ -40,25 +40,25 @@ It should be noted that there are three scan modes of lsp-bridge:
 3. Custom `lsp-bridge-get-project-path-by-filepath` function, the input parameter is the path string of opened file, the output parameter is the project directory path, lsp-bridge will scan project directory path to provide provide completion
 
 ## Keymap
-| Key | Command | Description | 
-| :--- | :--- | :--- | 
-| Alt + n | acm-select-next | Select next candidate |
-| Down | acm-select-next | Select next candidate |
-| Alt + p | acm-select-prev | Select previous candidate |
-| Up | acm-select-prev | Select previous candidate |
-| Alt + . | acm-select-last | Select last candidate |
-| Alt + , | acm-select-first | Select first candidate |
-| Ctrl + m | acm-complete | Complete completion |
-| Return | acm-complete | Complete completion |
-| Tab | acm-complete | Complete completion |
-| Alt + h | acm-complete | Complete completion |
-| Alt + H | acm-insert-common | Insert common part of candidates |
-| Alt + d | acm-doc-toggle | Enable or disable candidate documentation |
-| Alt + j | acm-doc-scroll-up | Scroll up candidate documentation |
-| Alt + k | acm-doc-scroll-down | Scroll down candidate documentation |
-| Alt + l | acm-hide | Hide completion menu |
-| Ctrl + g | acm-hide | Hide completion menu |
-| Number | acm-complete-quick-access | Selecting candidate quickly, you need enable `acm-enable-quick-access` first |
+| Key      | Command                   | Description                                                                  |
+| :---     | :---                      | :---                                                                         |
+| Alt + n  | acm-select-next           | Select next candidate                                                        |
+| Down     | acm-select-next           | Select next candidate                                                        |
+| Alt + p  | acm-select-prev           | Select previous candidate                                                    |
+| Up       | acm-select-prev           | Select previous candidate                                                    |
+| Alt + .  | acm-select-last           | Select last candidate                                                        |
+| Alt + ,  | acm-select-first          | Select first candidate                                                       |
+| Ctrl + m | acm-complete              | Complete completion                                                          |
+| Return   | acm-complete              | Complete completion                                                          |
+| Tab      | acm-complete              | Complete completion                                                          |
+| Alt + h  | acm-complete              | Complete completion                                                          |
+| Alt + H  | acm-insert-common         | Insert common part of candidates                                             |
+| Alt + d  | acm-doc-toggle            | Enable or disable candidate documentation                                    |
+| Alt + j  | acm-doc-scroll-up         | Scroll up candidate documentation                                            |
+| Alt + k  | acm-doc-scroll-down       | Scroll down candidate documentation                                          |
+| Alt + l  | acm-hide                  | Hide completion menu                                                         |
+| Ctrl + g | acm-hide                  | Hide completion menu                                                         |
+| Number   | acm-complete-quick-access | Selecting candidate quickly, you need enable `acm-enable-quick-access` first |
 
 
 ## Commands
@@ -147,49 +147,49 @@ Welcome to send PR to help us improve support for LSP servers, thanks for your c
 
 You need to install the LSP server corresponding to each programming language, then lsp-bridge can provide code completion service.
 
-| Index | LSP Server              | Language | Note                                                                                                                                                               |
-| :--- | :--- | :--- | :--- |
-| 1 | [clangd](https://github.com/clangd/clangd) | c, c++, object-c |  |
-| 2 | [pyright](https://github.com/microsoft/pyright) | python | `pip install pyright`|
-| 3 | [solargraph](https://github.com/castwide/solargraph) | ruby | |
-| 4 | [rust-analyzer](https://github.com/rust-lang/rust-analyzer) | rust | |
-| 5 | [elixirLS](https://github.com/elixir-lsp/elixir-ls) | elixir | please ensure that the `elixir-ls` release directory is in your system PATH at first |
-| 6 | [gopls](https://github.com/golang/tools/tree/master/gopls) | go | make sure install [go-mode](https://github.com/dominikh/go-mode.el) and gopls in PATH, please do `ln -s ~/go/bin/gopls ~/.local/bin`, and do `go mod init` first |
-| 7 | [hls](https://github.com/haskell/haskell-language-server) | haskell | |
-| 8 | [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server) | dart | |
-| 9 | [metals](https://scalameta.org/metals/) | scala | |
-| 10 | [typescript](https://github.com/typescript-language-server/typescript-language-server) | typescript, javascript | |
-| 11 | [ocamllsp](https://github.com/ocaml/ocaml-lsp) | ocaml | |
-| 12 | [erlang-ls](https://github.com/erlang-ls/erlang_ls) | erlang | |
-| 13 | [texlab](https://github.com/latex-lsp/texlab) | latex | |
-| 14 | [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls) | java | please ensure that `org.eclipse.jdt.ls.product/target/repository/bin` is in your system PATH at first |
-| 15 | [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp) | clojure | if you use `homebrew` , please ensure install `clojure-lsp/brew/clojure-lsp-native` [clojure-lsp-native](https://clojure-lsp.io/installation/#homebrew-macos-and-linux) |
-| 16 | [bash-language-server](https://github.com/bash-lsp/bash-language-server) | bash | |
-| 17 | [volar](https://github.com/johnsoncodehk/volar) | vue | npm install typescript volar -g |
-| 18 | [sumneko](https://github.com/sumneko/lua-language-server) | lua | please ensure `bin` under sumneko installation is in your system PATH at first |
-| 19 | [wxml-language-server](https://github.com/chemzqm/wxml-languageserver) | wxml | |
-| 20 | [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | html | |
-| 21 | [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted) | css | |
-| 22 | [elm-language-server](https://github.com/elm-tooling/elm-language-server) | elm | |
-| 23 | [intelephense](https://github.com/bmewburn/vscode-intelephense) | php | |
-| 24 | [yaml-language-server](https://github.com/redhat-developer/yaml-language-server) | yaml | `npm install -g yaml-language-server` |
-| 25 | [zls](https://github.com/zigtools/zls) | zig | execute `zls config` to generate configuration for zls. see [Configuration Options](https://github.com/zigtools/zls#configuration-options) |
-| 26 | [groovy-language-server](https://github.com/GroovyLanguageServer/groovy-language-server) | groovy | Create a script "groovy-language-server" in PATH, with `$JAVA_HOME/bin/java -jar <path>/groovy-language-server-all.jar` |
-| 27 | [docker-language-server](https://github.com/rcjsuen/dockerfile-language-server-nodejs) | Dockerfiles | |
-| 28 | [serve-d](https://github.com/Pure-D/serve-d) | d | serve-d does not support single file mode, please init .git repository under project root at first or custom `lsp-bridge-get-project-path-by-filepath` function |
-| 29 | [fortls](https://github.com/gnikit/fortls) | Fortran | |
-| 30 | [ccls](https://github.com/MaskRay/ccls) | c, c++, object-c | `lsp-bridge-c-lsp-server` set to` ccls` |
-| 31 | [jedi](https://github.com/pappasam/jedi-language-server) | python | `lsp-bridge-python-lsp-server` set to `jedi` |
-| 32 | [emmet-ls](https://github.com/aca/emmet-ls) | html, js, css, sass, scss, less | |
-| 33 | [rnix-lsp](https://github.com/nix-community/rnix-lsp) | nix | |
-| 34 | [digestif](https://github.com/astoff/digestif) | latex | `lsp-bridge-tex-lsp-server` set to `digestif` |
-| 35 | [rlanguageserver](https://github.com/REditorSupport/languageserver)       | R   | |
-| 36 | [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli) | GraphQL | |
-| 37 | [microsoft-python-language-server](https://github.com/microsoft/python-language-server) | Python | legacy language server for Python2 |
-| 38 | [cmake-language-server](https://github.com/regen100/cmake-language-server) | cmake | `pip install cmake-language-server` |
-| 39 | [Wen](https://github.com/metaescape/Wen) | org-mode | `pip install pygls pypinyin` |
-| 40 | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)|swift| The SourceKit-LSP server is included with the Swift toolchain. |
-| 41 | [omnisharp](https://github.com/OmniSharp/omnisharp-roslyn)|c#| OmniSharp is a .NET development platform based on Roslyn workspaces. use `M-x lsp-bridge-install-omnisharp` to install it|
+| Index | LSP Server                                                                                         | Language                        | Note                                                                                                                                                                    |
+|  :--- | :---                                                                                               | :---                            | :---                                                                                                                                                                    |
+|     1 | [clangd](https://github.com/clangd/clangd)                                                         | c, c++, object-c                |                                                                                                                                                                         |
+|     2 | [pyright](https://github.com/microsoft/pyright)                                                    | python                          | `pip install pyright`                                                                                                                                                   |
+|     3 | [solargraph](https://github.com/castwide/solargraph)                                               | ruby                            |                                                                                                                                                                         |
+|     4 | [rust-analyzer](https://github.com/rust-lang/rust-analyzer)                                        | rust                            |                                                                                                                                                                         |
+|     5 | [elixirLS](https://github.com/elixir-lsp/elixir-ls)                                                | elixir                          | please ensure that the `elixir-ls` release directory is in your system PATH at first                                                                                    |
+|     6 | [gopls](https://github.com/golang/tools/tree/master/gopls)                                         | go                              | make sure install [go-mode](https://github.com/dominikh/go-mode.el) and gopls in PATH, please do `ln -s ~/go/bin/gopls ~/.local/bin`, and do `go mod init` first        |
+|     7 | [hls](https://github.com/haskell/haskell-language-server)                                          | haskell                         |                                                                                                                                                                         |
+|     8 | [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server)           | dart                            |                                                                                                                                                                         |
+|     9 | [metals](https://scalameta.org/metals/)                                                            | scala                           |                                                                                                                                                                         |
+|    10 | [typescript](https://github.com/typescript-language-server/typescript-language-server)             | typescript, javascript          |                                                                                                                                                                         |
+|    11 | [ocamllsp](https://github.com/ocaml/ocaml-lsp)                                                     | ocaml                           |                                                                                                                                                                         |
+|    12 | [erlang-ls](https://github.com/erlang-ls/erlang_ls)                                                | erlang                          |                                                                                                                                                                         |
+|    13 | [texlab](https://github.com/latex-lsp/texlab)                                                      | latex                           |                                                                                                                                                                         |
+|    14 | [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls)                             | java                            | please ensure that `org.eclipse.jdt.ls.product/target/repository/bin` is in your system PATH at first                                                                   |
+|    15 | [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp)                                          | clojure                         | if you use `homebrew` , please ensure install `clojure-lsp/brew/clojure-lsp-native` [clojure-lsp-native](https://clojure-lsp.io/installation/#homebrew-macos-and-linux) |
+|    16 | [bash-language-server](https://github.com/bash-lsp/bash-language-server)                           | bash                            |                                                                                                                                                                         |
+|    17 | [volar](https://github.com/johnsoncodehk/volar)                                                    | vue                             | npm install typescript volar -g                                                                                                                                         |
+|    18 | [sumneko](https://github.com/sumneko/lua-language-server)                                          | lua                             | please ensure `bin` under sumneko installation is in your system PATH at first                                                                                          |
+|    19 | [wxml-language-server](https://github.com/chemzqm/wxml-languageserver)                             | wxml                            |                                                                                                                                                                         |
+|    20 | [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted)             | html                            |                                                                                                                                                                         |
+|    21 | [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted)              | css                             |                                                                                                                                                                         |
+|    22 | [elm-language-server](https://github.com/elm-tooling/elm-language-server)                          | elm                             |                                                                                                                                                                         |
+|    23 | [intelephense](https://github.com/bmewburn/vscode-intelephense)                                    | php                             |                                                                                                                                                                         |
+|    24 | [yaml-language-server](https://github.com/redhat-developer/yaml-language-server)                   | yaml                            | `npm install -g yaml-language-server`                                                                                                                                   |
+|    25 | [zls](https://github.com/zigtools/zls)                                                             | zig                             | execute `zls config` to generate configuration for zls. see [Configuration Options](https://github.com/zigtools/zls#configuration-options)                              |
+|    26 | [groovy-language-server](https://github.com/GroovyLanguageServer/groovy-language-server)           | groovy                          | Create a script "groovy-language-server" in PATH, with `$JAVA_HOME/bin/java -jar <path>/groovy-language-server-all.jar`                                                 |
+|    27 | [docker-language-server](https://github.com/rcjsuen/dockerfile-language-server-nodejs)             | Dockerfiles                     |                                                                                                                                                                         |
+|    28 | [serve-d](https://github.com/Pure-D/serve-d)                                                       | d                               | serve-d does not support single file mode, please init .git repository under project root at first or custom `lsp-bridge-get-project-path-by-filepath` function         |
+|    29 | [fortls](https://github.com/gnikit/fortls)                                                         | Fortran                         |                                                                                                                                                                         |
+|    30 | [ccls](https://github.com/MaskRay/ccls)                                                            | c, c++, object-c                | `lsp-bridge-c-lsp-server` set to` ccls`                                                                                                                                 |
+|    31 | [jedi](https://github.com/pappasam/jedi-language-server)                                           | python                          | `lsp-bridge-python-lsp-server` set to `jedi`                                                                                                                            |
+|    32 | [emmet-ls](https://github.com/aca/emmet-ls)                                                        | html, js, css, sass, scss, less |                                                                                                                                                                         |
+|    33 | [rnix-lsp](https://github.com/nix-community/rnix-lsp)                                              | nix                             |                                                                                                                                                                         |
+|    34 | [digestif](https://github.com/astoff/digestif)                                                     | latex                           | `lsp-bridge-tex-lsp-server` set to `digestif`                                                                                                                           |
+|    35 | [rlanguageserver](https://github.com/REditorSupport/languageserver)                                | R                               |                                                                                                                                                                         |
+|    36 | [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli) | GraphQL                         |                                                                                                                                                                         |
+|    37 | [microsoft-python-language-server](https://github.com/microsoft/python-language-server)            | Python                          | legacy language server for Python2                                                                                                                                      |
+|    38 | [cmake-language-server](https://github.com/regen100/cmake-language-server)                         | cmake                           | `pip install cmake-language-server`                                                                                                                                     |
+|    39 | [Wen](https://github.com/metaescape/Wen)                                                           | org-mode                        | `pip install pygls pypinyin`                                                                                                                                            |
+|    40 | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)                                            | swift                           | The SourceKit-LSP server is included with the Swift toolchain.                                                                                                          |
+|    41 | [omnisharp](https://github.com/OmniSharp/omnisharp-roslyn)                                         | c#                              | OmniSharp is a .NET development platform based on Roslyn workspaces. use `M-x lsp-bridge-install-omnisharp` to install it                                               |
 
 
 ### Features that won't be supported
@@ -208,20 +208,21 @@ The following is the framework of lsp-bridge:
 
 The following is the directory structure of the lsp-bridge project:
 
-| File              | Explanation                                                                                                                                                               |
-| :----------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
-| lsp-bridge.el           | Elisp main logic part that provides custom options and elisp functions for python sub-process calls like code jumping, renaming, etc.                          |
-| lsp-bridge-epc.el       | Communicating with lsp-bridge python sub-process, which mainly implements elisp IPC to connect to python EPC for data serialization, sending, receiving, and deserialization |
-| lsp-bridge-ref.el       | Framework of code referencing, providing references viewing, batch renames, regex filtering of reference results, etc. The core code is forked from color-rg.el                                    |
-| lsp-bridge-jdtls.el      | Provide java language third-party library jumping function                                                           |
-| lsp-bridge.py           | Python main logic part that provides event loop, message scheduling and status management                                                                                     |
-| acm/acm.el      | Asynchronous completion menu, specially designed for lsp-bridge backend, supports LSP, elisp, words, TabNine and other backend                                                                                           |
-| core/fileaction.py      | Tracking the status of each file, processing LSP response messages, calling Emacs elisp function                                                                                           |
-| core/lspserver.py       | LSP message processing module, mainly to analyze, send and receive LSP messages, and ensure that the sequence of LSP requests conforms with the LSP protocol specification                 |
-| core/utils.py           | Utility functions of convenience for each module call                                                                                                                                 |
-| core/mergedeep.py           | JSON information merger is mainly used to send custom options to LSP server                                                                             |
-| core/hanlder/           | The implementation of sending and receiving LSP message, where __init__.py is a base class                                                                                             |
-| langserver              | The configurations of the LSP servers, each server corresponding to a JSON file that defines the name of the server, language ID, starting command, options, etc.                        |
+| File                        | Explanation                                                                                                                                                                  |
+| :-----------------------    | :--------------------------------------------------------------------------------------------------------------------------------------------------                          |
+| lsp-bridge.el               | Elisp main logic part that provides custom options and elisp functions for python sub-process calls like code jumping, renaming, etc.                                        |
+| lsp-bridge-epc.el           | Communicating with lsp-bridge python sub-process, which mainly implements elisp IPC to connect to python EPC for data serialization, sending, receiving, and deserialization |
+| lsp-bridge-ref.el           | Framework of code referencing, providing references viewing, batch renames, regex filtering of reference results, etc. The core code is forked from color-rg.el              |
+| lsp-bridge-jdtls.el         | Provide java language third-party library jumping function                                                                                                                   |
+| lsp-bridge-lsp-installer.el | Install TabNine and Omnisharp                                                                                                                                          |
+| lsp-bridge.py               | Python main logic part that provides event loop, message scheduling and status management                                                                                    |
+| acm/acm.el                  | Asynchronous completion menu, specially designed for lsp-bridge backend, supports LSP, elisp, words, TabNine and other backend                                               |
+| core/fileaction.py          | Tracking the status of each file, processing LSP response messages, calling Emacs elisp function                                                                             |
+| core/lspserver.py           | LSP message processing module, mainly to analyze, send and receive LSP messages, and ensure that the sequence of LSP requests conforms with the LSP protocol specification   |
+| core/utils.py               | Utility functions of convenience for each module call                                                                                                                        |
+| core/mergedeep.py           | JSON information merger is mainly used to send custom options to LSP server                                                                                                  |
+| core/hanlder/               | The implementation of sending and receiving LSP message, where __init__.py is a base class                                                                                   |
+| langserver                  | The configurations of the LSP servers, each server corresponding to a JSON file that defines the name of the server, language ID, starting command, options, etc.            |
 
 Please read below articles first:
 * [LSP Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
