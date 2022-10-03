@@ -1237,7 +1237,7 @@ So we build this macro to restore postion after code format."
   :type 'list
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-diagnostics-fetch-idle 1
+(defcustom lsp-bridge-diagnostics-fetch-idle 0.5
   "The idle seconds to fetch diagnostics."
   :type 'float
   :group 'lsp-bridge)
@@ -1271,8 +1271,6 @@ So we build this macro to restore postion after code format."
   "The border width of lsp-bridge diagnostic tooltip, in pixels."
   :type 'integer
   :group 'lsp-bridge)
-
-(defvar lsp-bridge-diagnostics-timer nil)
 
 (defvar lsp-bridge-signature-help-timer nil)
 
@@ -1316,8 +1314,6 @@ So we build this macro to restore postion after code format."
     (setq-local acm-backend-lsp-items (make-hash-table :test 'equal))
     (setq-local acm-backend-lsp-server-names nil)
 
-    (when lsp-bridge-enable-diagnostics
-      (acm-run-idle-func lsp-bridge-diagnostics-timer lsp-bridge-diagnostics-fetch-idle 'lsp-bridge-diagnostics-fetch))
     (when lsp-bridge-enable-signature-help
       (acm-run-idle-func lsp-bridge-signature-help-timer lsp-bridge-signature-help-fetch-idle 'lsp-bridge-signature-help-fetch))
     (when lsp-bridge-enable-search-words
@@ -1339,7 +1335,6 @@ So we build this macro to restore postion after code format."
   (dolist (hook lsp-bridge--internal-hooks)
     (remove-hook (car hook) (cdr hook) t))
 
-  (acm-cancel-timer lsp-bridge-diagnostics-timer)
   (acm-cancel-timer lsp-bridge-signature-help-timer)
   (acm-cancel-timer lsp-bridge-search-words-timer)
   (acm-cancel-timer lsp-bridge-auto-format-code-timer)
@@ -1349,19 +1344,6 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-turn-off (filepath)
   (lsp-bridge--with-file-buffer filepath
     (lsp-bridge--disable)))
-
-(defun lsp-bridge-diagnostics-fetch ()
-  (when (and lsp-bridge-enable-diagnostics
-             (lsp-bridge-has-lsp-server-p)
-             (not (lsp-bridge-completion-ui-visible-p))
-             (buffer-file-name)
-             ;; make sure this local variable is set before we run the function.
-             ;; When lsp-bridge-mode is not enabled it's still possible
-             ;; that `lsp-bridge-diagnostics-fetch' runs
-             (boundp 'acm-backend-lsp-filepath)
-             (string-equal (file-truename (buffer-file-name)) acm-backend-lsp-filepath))
-    (unless (eq last-command 'mwheel-scroll)
-      (lsp-bridge-call-file-api "pull_diagnostics"))))
 
 (defun lsp-bridge-diagnostics-render (filepath diagnostics)
   (lsp-bridge--with-file-buffer filepath

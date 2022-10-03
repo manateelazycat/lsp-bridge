@@ -140,10 +140,6 @@ class LspBridge:
         if is_in_path_dict(FILE_ACTION_DICT, filepath):
             get_from_path_dict(FILE_ACTION_DICT, filepath).last_completion_candidates = {}
             
-    def pull_diagnostics(self, filepath):
-        if is_in_path_dict(FILE_ACTION_DICT, filepath):
-            eval_in_emacs("lsp-bridge-diagnostics-render", filepath, get_from_path_dict(FILE_ACTION_DICT, filepath).diagnostics)
-            
     def fetch_completion_item_info(self, filepath, item_key, server_name):
         if is_in_path_dict(FILE_ACTION_DICT, filepath):
             get_from_path_dict(FILE_ACTION_DICT, filepath).completion_item_resolve(item_key, server_name)

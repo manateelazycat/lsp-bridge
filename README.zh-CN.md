@@ -88,7 +88,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-completion-popup-predicates`: 补全菜单显示的检查函数， 这个选项包括的所有函数都检查过以后， 补全菜单才能显示
 * `lsp-bridge-completion-stop-commands`: 这些命令执行以后，不再弹出补全菜单
 * `lsp-bridge-completion-hide-characters`: 这些字符的后面不再弹出补全菜单
-* `lsp-bridge-diagnostics-fetch-idle`： 诊断延迟，默认是停止敲键盘后 1 秒开始拉取诊断信息
+* `lsp-bridge-diagnostics-fetch-idle`： 诊断延迟，默认是停止敲键盘后 0.5 秒开始拉取诊断信息
 * `lsp-bridge-enable-diagnostics`: 代码诊断， 默认打开
 * `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认打开
 * `lsp-bridge-enable-search-words`: 索引打开文件的单词， 默认打开

@@ -506,8 +506,7 @@ class LspServer:
         if "method" in message and message["method"] == "textDocument/publishDiagnostics":
             filepath = uri_to_path(message["params"]["uri"])
             if is_in_path_dict(self.files, filepath):
-                file_action = get_from_path_dict(self.files, filepath)
-                file_action.diagnostics = message["params"]["diagnostics"]
+                get_from_path_dict(self.files, filepath).record_diagnostics(message["params"]["diagnostics"])
 
         logger.debug(json.dumps(message, indent=3))
 
