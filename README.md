@@ -65,9 +65,9 @@ It should be noted that there are three scan modes of lsp-bridge:
 
 * `lsp-bridge-find-def`: jump to the definition
 * `lsp-bridge-find-def-other-window`: jump to the definition in other-window
+* `lsp-bridge-find-def-return`: return to the location before calling `lsp-bridge-find-def`
 * `lsp-bridge-find-impl`: jump to the implementation
 * `lsp-bridge-find-impl-other-window`: jump to the implementation in other-window
-* `lsp-bridge-return-from-def`: return to the location before calling `lsp-bridge-find-def`
 * `lsp-bridge-find-references`: traverse across code references (forked from color-rg.el)
 * `lsp-bridge-popup-documentation`: lookup documentation of symbol under the cursor
 * `lsp-bridge-popup-documentation-scroll-up`: scroll up popup document.

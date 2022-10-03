@@ -64,9 +64,9 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 
 * `lsp-bridge-find-def`: 跳转到定义位置
 * `lsp-bridge-find-def-other-window`: 在其他窗口跳转到定义位置
+* `lsp-bridge-find-def-return`: 返回跳转之前的位置
 * `lsp-bridge-find-impl`: 跳转到接口实现位置
 * `lsp-bridge-find-impl-other-window`: 在其他窗口跳转到接口实现位置
-* `lsp-bridge-return-from-def`: 返回跳转之前的位置
 * `lsp-bridge-find-references`: 查看代码引用
 * `lsp-bridge-popup-documentation`: 查看光标处的文档
 * `lsp-bridge-popup-documentation-scroll-up`: 文档窗口向上滚动

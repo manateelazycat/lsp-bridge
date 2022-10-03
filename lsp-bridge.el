@@ -1019,7 +1019,7 @@ So we build this macro to restore postion after code format."
   (setq-local lsp-bridge-jump-to-def-in-other-window t)
   (lsp-bridge-call-file-api "find_define" (lsp-bridge--position)))
 
-(defun lsp-bridge-return-from-def ()
+(defun lsp-bridge-find-def-return ()
   "Pop off lsp-bridge-mark-ring and jump to the top location."
   (interactive)
   ;; Pop entries that refer to non-existent buffers.
@@ -1787,6 +1787,7 @@ So we build this macro to restore postion after code format."
 (defalias 'lsp-bridge-list-diagnostics #'lsp-bridge-diagnostic-list "This function is obsolete, use `lsp-bridge-list-diagnostics' instead.")
 (defalias 'lsp-bridge-ignore-current-diagnostic #'lsp-bridge-diagnostic-ignore "This function is obsolete, use `lsp-bridge-ignore-current-diagnostic' instead.")
 (defalias 'lsp-bridge-popup-complete #'lsp-bridge-popup-complete-menu "This function is obsolete, use `lsp-bridge-popup-complete' instead.")
+(defalias 'lsp-bridge-return-from-def #'lsp-bridge-find-def-return "This function is obsolete, use `lsp-bridge-find-def-return' instead.")
 
 (provide 'lsp-bridge)
 
