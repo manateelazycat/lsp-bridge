@@ -1,0 +1,13 @@
+{
+  "name": "deno",
+  "languageId": "typescript",
+  "command": [
+    "deno",
+    "lsp"
+  ],
+  "settings": {
+    "deno": {
+      "enable": true
+    }
+  }
+}

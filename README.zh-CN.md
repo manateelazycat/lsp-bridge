@@ -189,6 +189,8 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 |   39 | [Wen](https://github.com/metaescape/Wen)                                                           | org-mode                        | `pip install pygls pypinyin`                                                                                                                                                        |
 |   40 | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)                                            | swift                           | Sourcekit-lsp 包含在 swift toolchain 中。                                                                                                                                           |
 |   41 | [omnisharp](https://github.com/OmniSharp/omnisharp-roslyn)                                         | c#                              | OmniSharp dotnet 平台的 lsp. 使用 `M-x lsp-bridge-install-omnisharp` 安装                                                                                                           |
+|    42 | [deno](https://deno.land)                                         | Deno                              | Deno 使用 TypeScript 来编程， 你需要定制选 `lsp-bridge-get-single-lang-server-by-project` 当工程是 Deno 项目的路径时， 返回 "deno" 字符串             |
+
 ### 不会支持的特性：
 lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端, 但不是实现 LSP 协议最全的 LSP 客户端。
 
