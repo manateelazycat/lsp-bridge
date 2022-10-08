@@ -191,9 +191,27 @@ class FileAction:
         else:
             eval_in_emacs("lsp-bridge-diagnostic--list", self.diagnostics)
             
+    def sort_diagnostic(self, diagnostic_a, diagnostic_b):
+        score_a = [diagnostic_a["range"]["start"]["line"],
+                   diagnostic_a["range"]["start"]["character"],
+                   diagnostic_a["range"]["end"]["line"],
+                   diagnostic_a["range"]["end"]["character"]]
+        score_b = [diagnostic_b["range"]["start"]["line"],
+                   diagnostic_b["range"]["start"]["character"],
+                   diagnostic_b["range"]["end"]["line"],
+                   diagnostic_b["range"]["end"]["character"]]
+        
+        if score_a < score_b:
+            return -1
+        elif score_a > score_b:
+            return 1
+        else:
+            return 0
+        
     def record_diagnostics(self, diagnostics):
         # Record diagnostics data that push from LSP server.
-        self.diagnostics = diagnostics
+        import functools
+        self.diagnostics = sorted(diagnostics, key=functools.cmp_to_key(self.sort_diagnostic))
         self.diagnostics_ticker += 1 
         
         # Try to push diagnostics to Emacs.
