@@ -92,7 +92,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-c-lsp-server`: C language server, you can choose `clangd` or` ccls`
 * `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright` or` jedi`
 * `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `taxlab` or` digestif`
-* `lsp-bridge-org-babel-lang-list`: list of language to support org-mode code block completion
+* `lsp-bridge-org-babel-lang-list`: list of language to support org-mode code block completion, need move cursor to code block and execute command `org-edit-special`, then lsp-bridge can show completion menu in popup window
 * `lsp-bridge-enable-diagnostics`: code diagnostic, enable by default
 * `lsp-bridge-enable-search-words`: index the word of the file, enable by default
 * `lsp-bridge-enable-auto-format-code`: automatic format code, disable by default
