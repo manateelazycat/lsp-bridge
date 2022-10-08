@@ -101,7 +101,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-enable-debug`: enable program debugging, disable by default
 * `lsp-bridge-disable-backup`: forbidden version manage of emacs, enable by default
 * `lsp-bridge-diagnostic-fetch-idle`: diagnostic delay, start pulling diagnostic information 0.5 second after stopping typing
-* `lsp-bridge-signature-show-function`: The function used for displaying signature info
+* `lsp-bridge-signature-show-function`: The function used for displaying signature info, default show message in minibuffer, set `lsp-bridge-signature-posframe` to show signature info in frame
 * `lsp-bridge-completion-popup-predicates`: the predicate function for completion menu, completion menu popup after all the functions pass
 * `lsp-bridge-completion-stop-commands`: completion menu will not popup if these commands are executed
 * `lsp-bridge-completion-hide-characters`: completion menu will not popup when cursor after those characters
