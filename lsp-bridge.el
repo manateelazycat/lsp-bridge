@@ -1637,10 +1637,16 @@ So we build this macro to restore postion after code format."
       )))
 
 (defun lsp-bridge-render-markdown-content ()
-  (let ((inhibit-message t))
+  (let ((inhibit-message t)
+        (markdown-code-origin-face (when (facep 'markdown-code-face)
+                                     (face-background 'markdown-code-face))))
+    (when markdown-code-origin-face
+      (set-face-background 'markdown-code-face (lsp-bridge-frame-background-color)))
     (if (fboundp 'gfm-view-mode)
         (gfm-view-mode)
-      (gfm-mode)))
+      (gfm-mode))
+    (when markdown-code-origin-face
+      (set-face-background 'markdown-code-face markdown-code-origin-face)))
   (read-only-mode 0)
   (font-lock-ensure))
 
