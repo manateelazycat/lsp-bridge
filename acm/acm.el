@@ -481,15 +481,20 @@ influence of C1 on the result."
 
     candidates))
 
+(defun acm-menu-index-info (candidate)
+  "Pick label and backend information to record and restore menu select index.
+The key of candidate will change between two LSP results."
+  (format "%s###%s" (plist-get candidate :label) (plist-get candidate :backend)))
+
 (defun acm-update ()
   ;; Adjust `gc-cons-threshold' to maximize temporary,
   ;; make sure Emacs not do GC when filter/sort candidates.
   (let* ((gc-cons-threshold most-positive-fixnum)
          (keyword (acm-get-input-prefix))
-         (previous-select-candidate (acm-menu-current-candidate)) ;record select candidate before update candidates
+         (previous-select-candidate (acm-menu-index-info (acm-menu-current-candidate)))
          (candidates (acm-update-candidates))
          (menu-candidates (cl-subseq candidates 0 (min (length candidates) acm-menu-length)))
-         (menu-index (cl-position previous-select-candidate menu-candidates)) ;restore menu index with new position match old select candidate
+         (menu-index (cl-position previous-select-candidate (mapcar 'acm-menu-index-info menu-candidates) :test 'equal))
          (bounds (acm-get-input-prefix-bound)))
     (cond
      ;; Hide completion menu if user type first candidate completely.
