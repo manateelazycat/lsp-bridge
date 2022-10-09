@@ -486,7 +486,10 @@ influence of C1 on the result."
   ;; make sure Emacs not do GC when filter/sort candidates.
   (let* ((gc-cons-threshold most-positive-fixnum)
          (keyword (acm-get-input-prefix))
+         (previous-select-candidate (acm-menu-current-candidate)) ;record select candidate before update candidates
          (candidates (acm-update-candidates))
+         (menu-candidates (cl-subseq candidates 0 (min (length candidates) acm-menu-length)))
+         (menu-index (cl-position previous-select-candidate menu-candidates)) ;restore menu index with new position match old select candidate
          (bounds (acm-get-input-prefix-bound)))
     (cond
      ;; Hide completion menu if user type first candidate completely.
@@ -503,14 +506,26 @@ influence of C1 on the result."
         ;; Use `pre-command-hook' to hide completion menu when command match `acm-continue-commands'.
         (add-hook 'pre-command-hook #'acm--pre-command nil 'local)
 
-        ;; Init candidates, menu index and offset.
+        ;; Init candidates and offset.
         (setq-local acm-candidates candidates)
-        (setq-local acm-menu-candidates
-                    (cl-subseq acm-candidates
-                               0 (min (length acm-candidates)
-                                      acm-menu-length)))
-        (setq-local acm-menu-index (if (zerop (length acm-menu-candidates)) -1 0))
+        (setq-local acm-menu-candidates menu-candidates)
         (setq-local acm-menu-offset 0)
+
+        ;; Set menu index.
+        (setq-local acm-menu-index
+                    (cond
+                     ;; If `acm-menu-candidates' size is zero, menu index set to -1
+                     ((zerop (length acm-menu-candidates)) -1)
+                     ;; If `menu-index' is non-nil, restore menu index with new postion that match previous select candidate
+                     ;;
+                     ;; NOTE:
+                     ;; LSP server will return newest candidates to acm when user select non-first candidate,
+                     ;; `acm-complete' will expand wrong candidate content if we just make `acm-menu-index' equal 0.
+                     ;; So we need record previous select candidate before call `acm-update-candidates',
+                     ;; and try to restore new menu index that match previous select candidate.
+                     (menu-index menu-index)
+                     ;; Otherwise, menu index set to 0
+                     (t 0)))
 
         ;; Init colors.
         (acm-init-colors)
