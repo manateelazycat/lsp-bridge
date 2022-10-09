@@ -92,18 +92,26 @@
   :type 'integer
   :group 'acm-backend-english)
 
+(defcustom acm-backend-english-candidates-max-number 30
+  "Maximal number of candidate of menu."
+  :type 'integer
+  :group 'acm-backend-english)
+
 (defun acm-backend-english-candidates (keyword)
-  (let* ((candidates (list)))
+  (let* ((candidates (list))
+         (candidate-match-number 0))
     (when (>= (length keyword) acm-backend-english-min-length)
       (dolist (candidate acm-backend-english-completions)
-        (when (string-prefix-p (downcase keyword) candidate)
+        (when (and (string-prefix-p (downcase keyword) candidate)
+                   (< candidate-match-number acm-backend-english-candidates-max-number))
           (add-to-list 'candidates (list :key candidate
                                          :icon "translate"
                                          :label candidate
                                          :display-label candidate
                                          :annotation (get-text-property 0 :initials candidate)
                                          :backend "english")
-                       t))))
+                       t)
+          (setq candidate-match-number (+ candidate-match-number 1)))))
 
     candidates))
 
