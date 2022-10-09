@@ -105,7 +105,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-completion-popup-predicates`: the predicate function for completion menu, completion menu popup after all the functions pass
 * `lsp-bridge-completion-stop-commands`: completion menu will not popup if these commands are executed
 * `lsp-bridge-completion-hide-characters`: completion menu will not popup when cursor after those characters
-* `lsp-bridge-lookup-doc-tooltip-text-scale`: Font scaling value for function's document window, default is 0.5
+* `lsp-bridge-lookup-doc-tooltip-font-height`: The font height of function documentation, default is 130
 * `acm-enable-doc`: Whether the complete menu display the help document
 * `acm-enable-icon`: Whether the complete menu shows the icon, macOS users need to add option `--with-rsvg` to the brew command to install emacs to display SVG icon
 * `acm-enable-tabnine`: Enable tabnine support， enable by default，when enable need execute  `lsp-bridge-install-tabnine` command to install TabNine, and it can be used. TabNine will consume huge CPUs, causing your entire computer to be slow. If the computer performance is not good, it is not recommended to enable this option

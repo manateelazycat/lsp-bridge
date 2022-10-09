@@ -152,9 +152,9 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'string
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-lookup-doc-tooltip-text-scale 0.5
-  "The text scale for lsp-bridge hover tooltip."
-  :type 'float
+(defcustom lsp-bridge-lookup-doc-tooltip-font-height 130
+  "Font size for hover tooltip."
+  :type 'integer
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-lookup-doc-tooltip-border-width 20
@@ -1134,8 +1134,6 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-popup-documentation--show (value)
   (with-current-buffer (get-buffer-create lsp-bridge-lookup-doc-tooltip)
     (erase-buffer)
-    (text-scale-set lsp-bridge-lookup-doc-tooltip-text-scale)
-    (setq-local markdown-fontify-code-blocks-natively t)
     (insert value)
     (lsp-bridge-render-markdown-content))
   (when (posframe-workable-p)
@@ -1147,7 +1145,14 @@ So we build this macro to restore postion after code format."
                    :max-height lsp-bridge-lookup-doc-tooltip-max-height)))
 
 (defun lsp-bridge-hide-doc-tooltip ()
-  (posframe-hide lsp-bridge-lookup-doc-tooltip))
+  (posframe-hide lsp-bridge-lookup-doc-tooltip)
+
+  (when lsp-bridge-lookup-doc-tooltip-background
+    (set-face-background 'markdown-code-face lsp-bridge-lookup-doc-tooltip-background)
+    (setq lsp-bridge-lookup-doc-tooltip-background nil))
+
+  (when lsp-bridge-lookup-doc-tooltip-height
+    (set-face-attribute 'markdown-code-face nil :height lsp-bridge-lookup-doc-tooltip-height)))
 
 (defun lsp-bridge-hide-diagnostic-tooltip ()
   (posframe-hide lsp-bridge-diagnostic-tooltip))
@@ -1636,17 +1641,18 @@ So we build this macro to restore postion after code format."
       (acm-doc-try-show)
       )))
 
+(defvar lsp-bridge-lookup-doc-tooltip-background nil)
+(defvar lsp-bridge-lookup-doc-tooltip-height nil)
+
 (defun lsp-bridge-render-markdown-content ()
-  (let ((inhibit-message t)
-        (markdown-code-origin-face (when (facep 'markdown-code-face)
-                                     (face-background 'markdown-code-face))))
-    (when markdown-code-origin-face
-      (set-face-background 'markdown-code-face (lsp-bridge-frame-background-color)))
-    (if (fboundp 'gfm-view-mode)
-        (gfm-view-mode)
-      (gfm-mode))
-    (when markdown-code-origin-face
-      (set-face-background 'markdown-code-face markdown-code-origin-face)))
+  (when (fboundp 'gfm-view-mode)
+    (let ((inhibit-message t))
+      (setq-local markdown-fontify-code-blocks-natively t)
+      (setq lsp-bridge-lookup-doc-tooltip-background (face-background 'markdown-code-face))
+      (setq lsp-bridge-lookup-doc-tooltip-height (face-attribute 'markdown-code-face :height))
+      (set-face-background 'markdown-code-face (lsp-bridge-frame-background-color))
+      (set-face-attribute 'markdown-code-face nil :height lsp-bridge-lookup-doc-tooltip-font-height)
+      (gfm-view-mode)))
   (read-only-mode 0)
   (font-lock-ensure))
 
