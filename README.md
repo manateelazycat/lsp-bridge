@@ -86,7 +86,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `acm-doc-scroll-down`: API document window scroll down
 
 ## Options
-* `lsp-bridge-python-command`: The path of the python command, if you use `conda`, you may customize this option
+* `lsp-bridge-python-command`: The path of the python command, if you use `conda`, you may customize this option. Windows platform using `python.exe` rather than `python3`, if lsp-bridge can't work, try set to `python3`
 * `lsp-bridge-complete-manually`: Only popup completion menu when user call `lsp-bridge-popup-complete-menu` command, default is nil
 * `lsp-bridge-get-workspace-folder`: You need to put multiple project in a `workspace` directory in Java before you can jump function defintion normally. This function can be customized, the function input is the project path and returns the `workspace` directory corresponding
 * `lsp-bridge-c-lsp-server`: C language server, you can choose `clangd` or` ccls`

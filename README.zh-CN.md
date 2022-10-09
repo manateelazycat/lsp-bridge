@@ -85,7 +85,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `acm-doc-scroll-down`: API 文档窗口向下滚动
 
 ## 选项
-* `lsp-bridge-python-command`: Python 命令的路径, 如果你用 `conda`， 你也许会定制这个选项
+* `lsp-bridge-python-command`: Python 命令的路径, 如果你用 `conda`， 你也许会定制这个选项。 Windows 平台用的是 `python.exe` 而不是 `python3`, 如果 lsp-bridge 不能工作， 可以尝试改成 `python3`
 * `lsp-bridge-complete-manually`: 只有当用户手动调用 `lsp-bridge-popup-complete-menu` 命令的时候才弹出补全菜单， 默认关闭
 * `lsp-bridge-get-workspace-folder`: 在 Java 中需要把多个项目放到一个 Workspace 目录下， 才能正常进行定义跳转， 可以自定义这个函数， 函数输入是项目路径， 返回对应的 Workspace 目录
 * `lsp-bridge-c-lsp-server`: C 语言的服务器，可以选择`clangd`或者`ccls`
