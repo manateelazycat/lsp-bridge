@@ -8,7 +8,7 @@
 ;; Copyright (C) 2022, Andy Stewart, all rights reserved.
 ;; Created: 2022-05-31 16:29:33
 ;; Version: 0.1
-;; Last-Updated: 2022-09-28 21:44:15 +0800
+;; Last-Updated: 2022-10-09 14:56:54 +0800
 ;;           By: Gong Qijian
 ;; URL: https://www.github.org/manateelazycat/acm
 ;; Keywords:
@@ -603,7 +603,16 @@ The key of candidate will change between two LSP results."
   (when (acm-frame-visible-p acm-doc-frame)
     (acm-set-frame-colors acm-doc-frame)))
 
-(advice-add #'load-theme :after #'acm-reset-colors)
+(if (daemonp)
+    ;; The :background of 'default is unavailable until frame is created in
+    ;; daemon mode.
+    (add-hook 'server-after-make-frame-hook
+              (lambda ()
+                (advice-add #'load-theme :after #'acm-reset-colors)
+                ;; Compensation for missing the first `load-thme' in
+                ;; `after-init-hook'.
+                (acm-reset-colors)))
+  (advice-add #'load-theme :after #'acm-reset-colors))
 
 (defun acm-frame-get-popup-position ()
   (let* ((edges (window-pixel-edges))
