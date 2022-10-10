@@ -1437,6 +1437,15 @@ So we build this macro to restore postion after code format."
       (lsp-bridge-show-diagnostic-tooltip diagnostic-overlay)
     (message "[LSP-Bridge] Reach first diagnostic.")))
 
+(defun lsp-bridge-diagnostic-copy ()
+  (interactive)
+  (if (or (zerop (length lsp-bridge-diagnostic-overlays))
+          (not (frame-visible-p lsp-bridge-diagnostic-frame)))
+      (message "[LSP-Bridge] No diagnostics.")
+    (kill-new (with-current-buffer lsp-bridge-diagnostic-tooltip
+                (buffer-string)))
+    (message "Copy diagnostics content.")))
+
 (defun lsp-bridge-diagnostic-list ()
   (interactive)
   (lsp-bridge-call-file-api "list_diagnostics"))
