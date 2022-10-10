@@ -116,7 +116,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `acm-snippet-insert-index`: 代码模板候选词在补全菜单中的显示位置
 * `acm-candidate-match-function`: 补全菜单匹配算法， orderless-* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
 * `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
-* `acm-backend-lsp-candidate-max-length`: LSP 后选词最大长度， 一些语言参数较长， 可以适当增加这个选项的值以看清楚参数列表
+* `acm-backend-lsp-candidate-max-length`: LSP 候选词最大长度， 一些语言参数较长， 可以适当增加这个选项的值以看清楚参数列表
 * `acm-backend-yas-candidates-number`: yasnippet 显示个数，默认 2 个
 * `acm-backend-citre-keyword-complete`: 根据`acm-backend-citre-keywords-alist`定义的各个模式的关键字进行补全，需要使能 citre 后才生效
 
