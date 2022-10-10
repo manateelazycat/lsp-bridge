@@ -88,6 +88,11 @@
   "LSP backend for acm."
   :group 'acm)
 
+(defcustom acm-backend-lsp-candidate-min-length 0
+  "Maximal length of candidate."
+  :type 'integer
+  :group 'acm-backend-lsp)
+
 (defcustom acm-backend-lsp-candidate-max-length 30
   "Maximal length of candidate."
   :type 'integer
@@ -107,35 +112,36 @@
 
 (defun acm-backend-lsp-candidates (keyword)
   (let* ((candidates (list)))
-    (when (and
-           (boundp 'acm-backend-lsp-items)
-           acm-backend-lsp-items
-           (boundp 'acm-backend-lsp-server-names)
-           acm-backend-lsp-server-names
-           (hash-table-p acm-backend-lsp-items))
-      ;; Sort multi-server items by
-      (dolist (server-name acm-backend-lsp-server-names)
-        (when-let* ((server-items (gethash server-name acm-backend-lsp-items)))
-          (maphash (lambda (k v)
-                     (let ((candidate-label (plist-get v :label)))
-                       (when (or (string-equal keyword "")
-                                 (acm-candidate-fuzzy-search keyword candidate-label))
+    (when (>= (length keyword) acm-backend-lsp-candidate-min-length)
+      (when (and
+             (boundp 'acm-backend-lsp-items)
+             acm-backend-lsp-items
+             (boundp 'acm-backend-lsp-server-names)
+             acm-backend-lsp-server-names
+             (hash-table-p acm-backend-lsp-items))
+        ;; Sort multi-server items by
+        (dolist (server-name acm-backend-lsp-server-names)
+          (when-let* ((server-items (gethash server-name acm-backend-lsp-items)))
+            (maphash (lambda (k v)
+                       (let ((candidate-label (plist-get v :label)))
+                         (when (or (string-equal keyword "")
+                                   (acm-candidate-fuzzy-search keyword candidate-label))
 
-                         ;; Adjust display label.
-                         (plist-put v :display-label
-                                    (cond ((equal server-name "文")
-                                           (plist-get (plist-get v :textEdit) :newText))
-                                          ((> (length candidate-label) acm-backend-lsp-candidate-max-length)
-                                           (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-max-length)))
-                                          (t
-                                           candidate-label)))
+                           ;; Adjust display label.
+                           (plist-put v :display-label
+                                      (cond ((equal server-name "文")
+                                             (plist-get (plist-get v :textEdit) :newText))
+                                            ((> (length candidate-label) acm-backend-lsp-candidate-max-length)
+                                             (format "%s ..." (substring candidate-label 0 acm-backend-lsp-candidate-max-length)))
+                                            (t
+                                             candidate-label)))
 
-                         ;; FIXME: This progn here is to workaround invalid-function error for macros that have function bindings
-                         ;; References: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=46958
-                         (progn
-                           (plist-put v :backend "lsp")
-                           (add-to-list 'candidates v t)))))
-                   server-items))))
+                           ;; FIXME: This progn here is to workaround invalid-function error for macros that have function bindings
+                           ;; References: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=46958
+                           (progn
+                             (plist-put v :backend "lsp")
+                             (add-to-list 'candidates v t)))))
+                     server-items)))))
 
     (acm-candidate-sort-by-prefix keyword candidates)))
 
