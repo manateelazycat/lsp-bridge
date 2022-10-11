@@ -21,8 +21,9 @@
 
 import threading
 import os
+import traceback
 
-from core.utils import get_emacs_vars, message_emacs, eval_in_emacs
+from core.utils import get_emacs_vars, message_emacs, eval_in_emacs, logger
 
 
 class SearchSdcvWords:
@@ -77,6 +78,7 @@ class SearchSdcvWords:
                         
             self.pystardict_is_installed = True
         except:
+            logger.error(traceback.format_exc())
             self.pystardict_is_installed = False
             
     def adjust_word_case(self, prefix: str, candidate: str):
