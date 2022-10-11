@@ -117,6 +117,7 @@
                                                     lsp-bridge-is-meow-state
                                                     lsp-bridge-multiple-cursors-disable
                                                     lsp-bridge-not-complete-manually
+                                                    lsp-bridge-not-yank-command
                                                     )
   "A list of predicate functions with no argument to enable popup completion in callback."
   :type 'list
@@ -930,6 +931,10 @@ So we build this macro to restore postion after code format."
    (acm-frame-visible-p acm-frame)
    ;; Don't update candidate if `lsp-bridge-complete-manually' is non-nil.
    (not lsp-bridge-complete-manually)))
+
+(defun lsp-bridge-not-yank-command ()
+  "Hide completion if `this-command' is yank."
+  (string-equal "yank" (format "%s" this-command)))
 
 (defun lsp-bridge--point-position (pos)
   "Get position of POS."
