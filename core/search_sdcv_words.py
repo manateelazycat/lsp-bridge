@@ -24,13 +24,12 @@ import os
 import traceback
 
 from core.utils import get_emacs_vars, message_emacs, eval_in_emacs, logger
+from core.pystardict import Dictionary
 
 
 class SearchSdcvWords:
     
     def __init__(self) -> None:
-        self.pystardict_is_installed = True
-        
         [self.search_max_number, self.search_dictionary] = get_emacs_vars([
             "acm-backend-search-sdcv-words-candidates-max-number",
             "acm-backend-search-sdcv-words-dictionary"])
@@ -51,8 +50,6 @@ class SearchSdcvWords:
         
     def build_words(self):
         try:
-            from pystardict import Dictionary    # type: ignore
-            
             if len(self.words) == 0:
                 if self.search_dictionary == "kdic-ec-11w":
                     dictionary_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", self.search_dictionary)
@@ -75,11 +72,8 @@ class SearchSdcvWords:
                             self.words[candidate_word] = candidate_translation
                 else:
                     message_emacs("StarDic dictionary {}.ifo is not exists".format(dictionary_path))
-                        
-            self.pystardict_is_installed = True
         except:
             logger.error(traceback.format_exc())
-            self.pystardict_is_installed = False
             
     def adjust_word_case(self, prefix: str, candidate: str):
         if len(prefix) > 1 and prefix.isupper():
@@ -94,25 +88,21 @@ class SearchSdcvWords:
             return candidate
                     
     def search_words(self, prefix: str, ticker: int):
-        if self.pystardict_is_installed:
-            candidates = []
-            for word, translation in self.words.items():
-                if word.startswith(prefix.lower()):
-                    candidate = {
-                        "key": word,
-                        "icon": "translation",
-                        "label": word,
-                        "display-label": self.adjust_word_case(prefix, word),
-                        "annotation": translation,
-                        "backend": "search-sdcv-words"
-                    }
-                    candidates.append(candidate)
-                        
-                    if len(candidates) > self.search_max_number:
-                        break
+        candidates = []
+        for word, translation in self.words.items():
+            if word.startswith(prefix.lower()):
+                candidate = {
+                    "key": word,
+                    "icon": "translation",
+                    "label": word,
+                    "display-label": self.adjust_word_case(prefix, word),
+                    "annotation": translation,
+                    "backend": "search-sdcv-words"
+                }
+                candidates.append(candidate)
                     
-            if ticker == self.search_ticker:
-                eval_in_emacs("lsp-bridge-search-sdcv-words--record-items", candidates)
-        else:
-            message_emacs("You need install PyStarDict with command 'pip3 install PyStarDict' to use English Helper feature.")
-            self.build_words()
+                if len(candidates) > self.search_max_number:
+                    break
+                
+        if ticker == self.search_ticker:
+            eval_in_emacs("lsp-bridge-search-sdcv-words--record-items", candidates)
