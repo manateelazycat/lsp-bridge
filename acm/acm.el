@@ -116,7 +116,10 @@
 
 (defcustom acm-continue-commands
   ;; nil is undefined command
-  '(nil ignore universal-argument universal-argument-more digit-argument self-insert-command org-self-insert-command
+  '(nil ignore universal-argument universal-argument-more digit-argument
+        self-insert-command org-self-insert-command 
+        ;; Avoid flashing completion menu when backward delete char
+        grammatical-edit-backward-delete backward-delete-char-untabify python-indent-dedent-line-backspace
         "\\`acm-" "\\`scroll-other-window")
   "Continue ACM completion after executing these commands."
   :type '(repeat (choice regexp symbol))
