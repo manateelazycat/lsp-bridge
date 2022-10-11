@@ -110,7 +110,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `acm-enable-doc`: Whether the complete menu display the help document
 * `acm-enable-icon`: Whether the complete menu shows the icon, macOS users need to add option `--with-rsvg` to the brew command to install emacs to display SVG icon
 * `acm-enable-tabnine`: Enable tabnine support， enable by default，when enable need execute  `lsp-bridge-install-tabnine` command to install TabNine, and it can be used. TabNine will consume huge CPUs, causing your entire computer to be slow. If the computer performance is not good, it is not recommended to enable this option
-* `acm-enable-search-words`: Whether the complete menu display the word of the file, enable by default
+* `acm-enable-search-file-words`: Whether the complete menu display the word of the file, enable by default
 * `acm-enable-quick-access`: Whether the index is displayed behind the icon, you can quickly select the candidate through Alt + Number, disable by default
 * `acm-enable-yas`: yasnippet completion, enable by default
 * `acm-enable-citre`: citre completion, disable by default

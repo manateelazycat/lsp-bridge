@@ -805,7 +805,7 @@ So we build this macro to restore postion after code format."
 
   (when (and buffer-file-name
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
-    (lsp-bridge-call-async "search_words_close_file" buffer-file-name)))
+    (lsp-bridge-call-async "search_file_words_close_file" buffer-file-name)))
 
 (defun lsp-bridge-completion--record-items (filepath candidates position server-name completion-trigger-characters server-names)
   (lsp-bridge--with-file-buffer filepath
@@ -822,8 +822,12 @@ So we build this macro to restore postion after code format."
       (setq-local acm-backend-lsp-items lsp-items))
     (lsp-bridge-try-completion)))
 
-(defun lsp-bridge-search-words--record-items (candidates)
-  (setq-local acm-backend-search-words-items candidates)
+(defun lsp-bridge-search-file-words--record-items (candidates)
+  (setq-local acm-backend-search-file-words-items candidates)
+  (lsp-bridge-try-completion))
+
+(defun lsp-bridge-search-sdcv-words--record-items (candidates)
+  (setq-local acm-backend-search-sdcv-words-items candidates)
   (lsp-bridge-try-completion))
 
 (defun lsp-bridge-try-completion ()
@@ -976,31 +980,38 @@ So we build this macro to restore postion after code format."
   (when acm-enable-tabnine
     (lsp-bridge-tabnine-complete))
 
+  (when (and acm-enable-english-helper
+             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
+    (let ((current-word (thing-at-point 'word t)))
+      ;; Search words if current prefix is not empty.
+      (when (not (string-equal current-word ""))
+        (lsp-bridge-call-async "search_sdcv_words_search" current-word))))
+
   ;; Send change file to search-words backend.
   (when (and buffer-file-name
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
-    (let ((current-word (acm-backend-search-words-get-point-string)))
+    (let ((current-word (acm-backend-search-file-words-get-point-string)))
       ;; Search words if current prefix is not empty.
       (when (not (string-equal current-word ""))
-        (lsp-bridge-call-async "search_words_search" current-word)))
+        (lsp-bridge-call-async "search_file_words_search" current-word)))
 
-    (lsp-bridge-call-async "search_words_change_file" buffer-file-name)))
+    (lsp-bridge-call-async "search_file_words_change_file" buffer-file-name)))
 
 (defun lsp-bridge-search-words-open-file ()
   (when (and buffer-file-name
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
-    (lsp-bridge-call-async "search_words_change_file" buffer-file-name)))
+    (lsp-bridge-call-async "search_file_words_change_file" buffer-file-name)))
 
 (defun lsp-bridge-search-words-index-files ()
   "Index files when lsp-bridge python process finish."
   (let ((files (cl-remove-if 'null (mapcar #'buffer-file-name (buffer-list)))))
-    (lsp-bridge-call-async "search_words_index_files" files)))
+    (lsp-bridge-call-async "search_file_words_index_files" files)))
 
 (defun lsp-bridge-search-words-rebuild-cache ()
   "Rebuild words cache when idle."
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (unless (eq last-command 'mwheel-scroll)
-      (lsp-bridge-call-async "search_words_rebuild_cache"))))
+      (lsp-bridge-call-async "search_file_words_rebuild_cache"))))
 
 (defun lsp-bridge-completion-ui-visible-p ()
   (and (frame-live-p acm-frame)

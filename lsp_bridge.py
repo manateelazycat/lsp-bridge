@@ -35,6 +35,7 @@ from core.fileaction import (FileAction,
                              FILE_ACTION_DICT, LSP_SERVER_DICT)
 from core.lspserver import LspServer
 from core.search_file_words import SearchFileWords
+from core.search_sdcv_words import SearchSdcvWords
 from core.tabnine import TabNine
 from core.utils import *
 from core.handler import *
@@ -44,6 +45,7 @@ class LspBridge:
 
         # Object cache to exchange information between Emacs and LSP server.
         self.search_file_words = SearchFileWords()
+        self.search_sdcv_words = SearchSdcvWords()
         self.tabnine = TabNine()
 
         # Build EPC interfaces.
@@ -52,7 +54,10 @@ class LspBridge:
             self.build_file_action_function(name)
             
         for name in ["change_file", "close_file", "rebuild_cache", "search"]:
-            self.build_search_words_function(name)
+            self.build_search_file_words_function(name)
+            
+        for name in ["search"]:
+            self.build_search_sdcv_words_function(name)
             
         for name in ["open_file", "close_file"]:
             self.build_message_function(name)
@@ -265,12 +270,18 @@ class LspBridge:
 
         setattr(self, name, _do_wrap)
         
-    def build_search_words_function(self, name):
+    def build_search_file_words_function(self, name):
         def _do(*args, **kwargs):
             getattr(self.search_file_words, name)(*args, **kwargs)
 
-        setattr(self, "search_words_{}".format(name), _do)
+        setattr(self, "search_file_words_{}".format(name), _do)
 
+    def build_search_sdcv_words_function(self, name):
+        def _do(*args, **kwargs):
+            getattr(self.search_sdcv_words, name)(*args, **kwargs)
+
+        setattr(self, "search_sdcv_words_{}".format(name), _do)
+        
     def build_message_function(self, name):
         def _do(filepath):
             self.event_queue.put({
@@ -288,7 +299,7 @@ class LspBridge:
             logger.info("Exit server: {}".format(server_name))
             del LSP_SERVER_DICT[server_name]
             
-    def search_words_index_files(self, filepaths):
+    def search_file_words_index_files(self, filepaths):
         for filepath in filepaths:
             self.search_file_words.change_file(filepath)
         
