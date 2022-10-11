@@ -1071,8 +1071,11 @@ So we build this macro to restore postion after code format."
   (lsp-bridge-call-file-api "find_references" (lsp-bridge--position)))
 
 (defun lsp-bridge-references--popup (references-content references-counter)
-  (lsp-bridge-ref-popup references-content references-counter)
-  (message "[LSP-Bridge] Found %s references" references-counter))
+  (if (> references-counter 0)
+      (progn
+        (lsp-bridge-ref-popup references-content references-counter)
+        (message "[LSP-Bridge] Found %s references" references-counter))
+    (message "[LSP-Bridge] No references found.")))
 
 (defun lsp-bridge-rename ()
   (interactive)
