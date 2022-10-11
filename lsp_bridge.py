@@ -47,15 +47,14 @@ class LspBridge:
         self.tabnine = TabNine()
 
         # Build EPC interfaces.
-        for name in ["search"]:
-            self.build_search_sdcv_words_function(name)
+        handler_subclasses = list(map(lambda cls: cls.name, Handler.__subclasses__()))
+        for name in ["change_file", "update_file", "change_cursor", "save_file", 
+                     "ignore_diagnostic", "list_diagnostics", "workspace_symbol"] + handler_subclasses:
+            self.build_file_action_function(name)
             
         for name in ["open_file", "close_file"]:
             self.build_message_function(name)
             
-        for cls in Handler.__subclasses__():
-            self.build_file_action_function(cls.name)
-
         # Init EPC client port.
         init_epc_client(int(args[0]))
 
@@ -79,15 +78,14 @@ class LspBridge:
         
         # Init search file words.
         self.search_file_words = SearchFileWords()
-        for name in ["change_file", "update_file", "change_cursor", "save_file", 
-                     "ignore_diagnostic", "list_diagnostics", "workspace_symbol"]:
-            self.build_file_action_function(name)
+        for name in ["change_file", "close_file", "rebuild_cache", "search"]:
+            self.build_prefix_function("search_file_words", "search_file_words", name)
             
         # Init search sdcv words.
         self.search_sdcv_words = SearchSdcvWords()
-        for name in ["change_file", "close_file", "rebuild_cache", "search"]:
-            self.build_search_file_words_function(name)
-
+        for name in ["search"]:
+            self.build_prefix_function("search_sdcv_words", "search_sdcv_words", name)
+            
         # Init emacs option.
         enable_lsp_server_log = get_emacs_var("lsp-bridge-enable-log")
         if enable_lsp_server_log:
@@ -272,17 +270,11 @@ class LspBridge:
 
         setattr(self, name, _do_wrap)
         
-    def build_search_file_words_function(self, name):
+    def build_prefix_function(self, obj_name, prefix, name):
         def _do(*args, **kwargs):
-            getattr(self.search_file_words, name)(*args, **kwargs)
+            getattr(getattr(self, obj_name), name)(*args, **kwargs)
 
-        setattr(self, "search_file_words_{}".format(name), _do)
-
-    def build_search_sdcv_words_function(self, name):
-        def _do(*args, **kwargs):
-            getattr(self.search_sdcv_words, name)(*args, **kwargs)
-
-        setattr(self, "search_sdcv_words_{}".format(name), _do)
+        setattr(self, "{}_{}".format(prefix, name), _do)
         
     def build_message_function(self, name):
         def _do(filepath):
