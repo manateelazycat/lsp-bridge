@@ -933,8 +933,8 @@ So we build this macro to restore postion after code format."
    (not lsp-bridge-complete-manually)))
 
 (defun lsp-bridge-not-yank-command ()
-  "Hide completion if `this-command' is yank."
-  (string-equal "yank" (format "%s" this-command)))
+  "Hide completion if `last-command' is yank."
+  (not (string-equal "yank" (format "%s" last-command))))
 
 (defun lsp-bridge--point-position (pos)
   "Get position of POS."
