@@ -7,8 +7,8 @@
 ;; Copyright (C) 2018, Andy Stewart, all rights reserved.
 ;; Created: 2018-06-15 14:10:12
 ;; Version: 0.5
-;; Last-Updated: Wed May 11 02:44:16 2022 (-0400)
-;;           By: Mingde (Matthew) Zeng
+;; Last-Updated: 2022-10-10 15:23:53 +0800
+;;           By: Gong Qijian
 ;; URL: https://github.com/manateelazycat/lsp-bridge
 ;; Keywords:
 ;; Compatibility: emacs-version >= 28
@@ -98,14 +98,13 @@
 
 (defvar-local lsp-bridge-completion-item-fetch-tick nil)
 (defun lsp-bridge-fetch-completion-item-info (candidate)
-  (let* ((label (plist-get candidate :label))
-         (kind (plist-get candidate :icon))
-         (server-name (plist-get candidate :server))
-         (key (plist-get candidate :key)))
+  (let ((kind (plist-get candidate :icon))
+        (server-name (plist-get candidate :server))
+        (key (plist-get candidate :key)))
     ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
-    (unless (equal lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath label kind))
+    (unless (equal lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath key kind))
       (lsp-bridge-call-async "fetch_completion_item_info" acm-backend-lsp-filepath key server-name)
-      (setq-local lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath label kind)))))
+      (setq-local lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath key kind)))))
 
 (defcustom lsp-bridge-completion-popup-predicates '(lsp-bridge-not-only-blank-before-cursor
                                                     lsp-bridge-not-match-hide-characters
@@ -813,6 +812,7 @@ So we build this macro to restore postion after code format."
     (setq-local acm-backend-lsp-completion-position position)
     (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
     (setq-local acm-backend-lsp-server-names server-names)
+    (setq-local lsp-bridge-completion-item-fetch-tick nil)
     (let* ((lsp-items acm-backend-lsp-items)
            (completion-table (make-hash-table :test 'equal)))
       (dolist (item candidates)

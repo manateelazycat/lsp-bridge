@@ -7,8 +7,8 @@
 ;; Copyright (C) 2022, Andy Stewart, all rights reserved.
 ;; Created: 2022-06-07 08:56:16
 ;; Version: 0.1
-;; Last-Updated: 2022-06-07 08:56:16
-;;           By: Andy Stewart
+;; Last-Updated: 2022-10-10 14:09:54 +0800
+;;           By: Gong Qijian
 ;; URL: https://www.github.org/manateelazycat/acm-backend-lsp
 ;; Keywords:
 ;; Compatibility: GNU Emacs 28.1
@@ -200,7 +200,8 @@
 (defun acm-backend-lsp-candidate-doc (candidate)
   (let* ((documentation (plist-get candidate :documentation)))
     ;; Call fetch documentation function.
-    (when acm-backend-lsp-fetch-completion-item-func
+    (when (and acm-backend-lsp-fetch-completion-item-func
+               (not (and documentation (not (string-empty-p documentation)))))
       (funcall acm-backend-lsp-fetch-completion-item-func candidate))
 
     documentation))
