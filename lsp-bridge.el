@@ -984,7 +984,8 @@ So we build this macro to restore postion after code format."
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
     (let ((current-word (thing-at-point 'word t)))
       ;; Search words if current prefix is not empty.
-      (when (not (string-equal current-word ""))
+      (when (not (or (string-equal current-word "")
+                     (null current-word)))
         (lsp-bridge-call-async "search_sdcv_words_search" current-word))))
 
   ;; Send change file to search-words backend.

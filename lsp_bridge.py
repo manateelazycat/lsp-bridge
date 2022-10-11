@@ -44,18 +44,9 @@ class LspBridge:
     def __init__(self, args):
 
         # Object cache to exchange information between Emacs and LSP server.
-        self.search_file_words = SearchFileWords()
-        self.search_sdcv_words = SearchSdcvWords()
         self.tabnine = TabNine()
 
         # Build EPC interfaces.
-        for name in ["change_file", "update_file", "change_cursor", "save_file", 
-                     "ignore_diagnostic", "list_diagnostics", "workspace_symbol"]:
-            self.build_file_action_function(name)
-            
-        for name in ["change_file", "close_file", "rebuild_cache", "search"]:
-            self.build_search_file_words_function(name)
-            
         for name in ["search"]:
             self.build_search_sdcv_words_function(name)
             
@@ -85,6 +76,17 @@ class LspBridge:
         # Start EPC server with sub-thread, avoid block Qt main loop.
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.start()
+        
+        # Init search file words.
+        self.search_file_words = SearchFileWords()
+        for name in ["change_file", "update_file", "change_cursor", "save_file", 
+                     "ignore_diagnostic", "list_diagnostics", "workspace_symbol"]:
+            self.build_file_action_function(name)
+            
+        # Init search sdcv words.
+        self.search_sdcv_words = SearchSdcvWords()
+        for name in ["change_file", "close_file", "rebuild_cache", "search"]:
+            self.build_search_file_words_function(name)
 
         # Init emacs option.
         enable_lsp_server_log = get_emacs_var("lsp-bridge-enable-log")

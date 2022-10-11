@@ -22,7 +22,7 @@
 import threading
 import os
 
-from core.utils import message_emacs, eval_in_emacs
+from core.utils import get_emacs_var, message_emacs, eval_in_emacs
 
 
 class SearchSdcvWords:
@@ -30,6 +30,7 @@ class SearchSdcvWords:
     def __init__(self) -> None:
         self.pystardict_is_installed = True
         
+        self.search_max_number = get_emacs_var("acm-backend-search-sdcv-words-candidates-max-number")
         self.search_ticker = 0
         self.search_thread_queue = []
         self.words = {}
@@ -96,7 +97,7 @@ class SearchSdcvWords:
                     }
                     candidates.append(candidate)
                         
-                    if len(candidates) > 100:
+                    if len(candidates) > self.search_max_number:
                         break
                     
             if ticker == self.search_ticker:
