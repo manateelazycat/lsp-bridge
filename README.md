@@ -82,6 +82,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-signature-help-fetch`: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
 * `lsp-bridge-popup-complete-menu`: Manually popup the completion menu, you only need this command when turn on option `lsp-bride-complete-manually`
 * `lsp-bridge-restart-process`: restart lsp-bridge process (only used for development)
+* `lsp-bridge-toggle-sdcv-helper`: Switch dictionary completion assistant, need to install PyStarDict first: `pip3 install PyStarDict`
 * `acm-insert-common`: insert common prefix of candidates
 * `acm-doc-scroll-up`: API document window scroll up
 * `acm-doc-scroll-down`: API document window scroll down

@@ -852,8 +852,8 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-not-in-string ()
   "Hide completion if cursor in string area."
   (or
-   ;; Allow english completion in string area
-   acm-enable-english-helper
+   ;; Allow sdcv completion in string area
+   acm-enable-search-sdcv-words
    ;; Allow volar popup completion menu in string.
    (and (boundp 'acm-backend-lsp-filepath)
         acm-backend-lsp-filepath
@@ -868,8 +868,8 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-not-in-comment ()
   "Hide completion if cursor in comment area."
   (or
-   ;; Allow english completion in string area
-   acm-enable-english-helper
+   ;; Allow sdcv completion in string area
+   acm-enable-search-sdcv-words
    ;; Other language not allowed popup completion in comment.
    (not (lsp-bridge-in-comment-p))))
 
@@ -980,7 +980,7 @@ So we build this macro to restore postion after code format."
   (when acm-enable-tabnine
     (lsp-bridge-tabnine-complete))
 
-  (when (and acm-enable-english-helper
+  (when (and acm-enable-search-sdcv-words
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
     (let ((current-word (thing-at-point 'word t)))
       ;; Search words if current prefix is not empty.
@@ -1526,7 +1526,7 @@ So we build this macro to restore postion after code format."
      (message "[LSP-BRIDGE] Complete code formatting.")
      )))
 
-(defvar lsp-bridge-english-helper-dict nil)
+(defvar lsp-bridge-sdcv-helper-dict nil)
 
 (defun lsp-bridge-code-action--fix (actions action-kind)
   (let* ((menu-items
@@ -1679,27 +1679,27 @@ So we build this macro to restore postion after code format."
   (read-only-mode 0)
   (font-lock-ensure))
 
-(defun lsp-bridge-toggle-english-helper ()
-  "Toggle english helper."
+(defun lsp-bridge-toggle-sdcv-helper ()
+  "Toggle sdcv helper."
   (interactive)
-  (unless lsp-bridge-english-helper-dict
-    (setq lsp-bridge-english-helper-dict (make-hash-table :test 'equal)))
+  (unless lsp-bridge-sdcv-helper-dict
+    (setq lsp-bridge-sdcv-helper-dict (make-hash-table :test 'equal)))
 
-  (if acm-enable-english-helper
+  (if acm-enable-search-sdcv-words
       (progn
         ;; Disable `lsp-bridge-mode' if it is enable temporality.
-        (when (gethash (buffer-name) lsp-bridge-english-helper-dict)
+        (when (gethash (buffer-name) lsp-bridge-sdcv-helper-dict)
           (lsp-bridge-mode -1)
-          (remhash (buffer-name) lsp-bridge-english-helper-dict))
+          (remhash (buffer-name) lsp-bridge-sdcv-helper-dict))
 
-        (message "Turn off english helper."))
+        (message "Turn off SDCV helper."))
     ;; We enable `lsp-bridge-mode' temporality if current-mode not enable `lsp-bridge-mode' yet.
     (unless lsp-bridge-mode
-      (puthash (buffer-name) t lsp-bridge-english-helper-dict)
+      (puthash (buffer-name) t lsp-bridge-sdcv-helper-dict)
       (lsp-bridge-mode 1))
 
-    (message "Turn on english helper."))
-  (setq-local acm-enable-english-helper (not acm-enable-english-helper)))
+    (message "Turn on SDCV helper."))
+  (setq-local acm-enable-search-sdcv-words (not acm-enable-search-sdcv-words)))
 
 ;;;###autoload
 (defun global-lsp-bridge-mode ()
@@ -1823,6 +1823,7 @@ So we build this macro to restore postion after code format."
 (defalias 'lsp-bridge-ignore-current-diagnostic #'lsp-bridge-diagnostic-ignore "This function is obsolete, use `lsp-bridge-ignore-current-diagnostic' instead.")
 (defalias 'lsp-bridge-popup-complete #'lsp-bridge-popup-complete-menu "This function is obsolete, use `lsp-bridge-popup-complete' instead.")
 (defalias 'lsp-bridge-return-from-def #'lsp-bridge-find-def-return "This function is obsolete, use `lsp-bridge-find-def-return' instead.")
+(defalias 'lsp-bridge-toggle-english-helper #'lsp-bridge-toggle-sdcv-helper "This function is obsolete, use `lsp-bridge-toggle-sdcv-helper' instead.")
 
 (provide 'lsp-bridge)
 

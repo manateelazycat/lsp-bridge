@@ -81,6 +81,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-signature-help-fetch`: 在 minibuffer 显示参数信息
 * `lsp-bridge-popup-complete-menu`: 手动弹出补全菜单， 只有当打开 `lsp-bridge-complete-manually` 选项才需要使用这个命令
 * `lsp-bridge-restart-process`: 重启 lsp-bridge 进程 (一般只有开发者才需要这个功能)
+* `lsp-bridge-toggle-sdcv-helper`: 切换字典助手补全， 需要安装 PyStarDict: `pip3 install PyStarDict`
 * `acm-insert-common`: 插入补全后选词的公共前缀
 * `acm-doc-scroll-up`: API 文档窗口向上滚动
 * `acm-doc-scroll-down`: API 文档窗口向下滚动

@@ -85,7 +85,7 @@
 ;;; Code:
 
 (defgroup acm-backend-search-sdcv-words nil
-  "English backend for acm."
+  "SDCV backend for acm."
   :group 'acm)
 
 (defcustom acm-backend-search-sdcv-words-candidates-max-number 100
@@ -93,6 +93,7 @@
   :type 'integer
   :group 'acm-backend-search-sdcv-words)
 
+(defvar-local acm-enable-search-sdcv-words nil)
 (defvar-local acm-backend-search-sdcv-words-items nil)
 
 (defun acm-backend-search-sdcv-words-candidates (keyword)

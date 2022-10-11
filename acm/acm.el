@@ -203,8 +203,6 @@
 (defvar-local acm-menu-index -1)
 (defvar-local acm-menu-offset 0)
 
-(defvar-local acm-enable-english-helper nil)
-
 (defvar-local acm-input-bound-style nil)
 
 (defvar acm-doc-frame nil)
@@ -439,8 +437,8 @@ influence of C1 on the result."
     (when acm-enable-tabnine
       (setq tabnine-candidates (acm-backend-tabnine-candidates keyword)))
 
-    (if acm-enable-english-helper
-        ;; Completion english if option `acm-enable-english-helper' is enable.
+    (if acm-enable-search-sdcv-words
+        ;; Completion SDCV if option `acm-enable-search-sdcv-words' is enable.
         (setq candidates (acm-backend-search-sdcv-words-candidates keyword))
 
       (setq path-candidates (acm-backend-path-candidates keyword))
