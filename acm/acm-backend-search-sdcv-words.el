@@ -93,6 +93,15 @@
   :type 'integer
   :group 'acm-backend-search-sdcv-words)
 
+(defcustom acm-backend-search-sdcv-words-dictionary "kdic-ec-11w"
+  "SDCV dictionary for word completion.
+Default is `kdic-ec-11w', you can replace it with StarDict dictionary path
+
+Example, if you have dictionary `/usr/share/stardict/dic/stardict-oxford-gb-formated-2.4.2/oxford-gb-formated.ifo',
+you need set this value to `/usr/share/stardict/dic/stardict-oxford-gb-formated-2.4.2/oxford-gb-formated', not include `.ifo' extension."
+  :type 'string
+  :group 'acm-backend-search-sdcv-words)
+
 (defvar-local acm-enable-search-sdcv-words nil)
 (defvar-local acm-backend-search-sdcv-words-items nil)
 
@@ -100,7 +109,7 @@
   acm-backend-search-sdcv-words-items)
 
 (defun acm-backend-search-sdcv-words-candidate-expand (candidate-info bound-start)
-  (delete-region bound-start (point))
+  (delete-region (beginning-of-thing 'word) (end-of-thing 'word))
   (insert (plist-get candidate-info :display-label)))
 
 (defun acm-backend-search-sdcv-words-clean ()

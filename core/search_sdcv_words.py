@@ -22,7 +22,7 @@
 import threading
 import os
 
-from core.utils import get_emacs_var, message_emacs, eval_in_emacs
+from core.utils import get_emacs_vars, message_emacs, eval_in_emacs
 
 
 class SearchSdcvWords:
@@ -30,7 +30,9 @@ class SearchSdcvWords:
     def __init__(self) -> None:
         self.pystardict_is_installed = True
         
-        self.search_max_number = get_emacs_var("acm-backend-search-sdcv-words-candidates-max-number")
+        [self.search_max_number, self.search_dictionary] = get_emacs_vars([
+            "acm-backend-search-sdcv-words-candidates-max-number",
+            "acm-backend-search-sdcv-words-dictionary"])
         self.search_ticker = 0
         self.search_thread_queue = []
         self.words = {}
@@ -51,20 +53,27 @@ class SearchSdcvWords:
             from pystardict import Dictionary    # type: ignore
             
             if len(self.words) == 0:
-                dictionary_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", "kdic-ec-11w")
-                start_dictionary = Dictionary(dictionary_path)
-                
-                candidates = []
-                for word in start_dictionary.keys():
-                    is_english_word = all(ord(char) < 128 for char in word)
-                    if is_english_word:
-                        first_line_translation = start_dictionary.dict[word].split()[0]
-                        no_phonetic_translation = first_line_translation.split(">")[-1]
-                
-                        candidate_word  = word.lower().replace('\"', ' ')
-                        candidate_translation = no_phonetic_translation.strip().replace('\"', ' ')
-            
-                        self.words[candidate_word] = candidate_translation
+                if self.search_dictionary == "kdic-ec-11w":
+                    dictionary_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", self.search_dictionary)
+                else:
+                    dictionary_path = self.search_dictionary
+                    
+                if os.path.exists("{}.ifo".format(dictionary_path)):
+                    start_dictionary = Dictionary(dictionary_path)
+                    
+                    candidates = []
+                    for word in start_dictionary.keys():
+                        is_english_word = all(ord(char) < 128 for char in word)
+                        if is_english_word:
+                            first_line_translation = start_dictionary.dict[word].split()[0]
+                            no_phonetic_translation = first_line_translation.split(">")[-1]
+                    
+                            candidate_word  = word.lower().replace('\"', ' ')
+                            candidate_translation = no_phonetic_translation.strip().replace('\"', ' ')
+                    
+                            self.words[candidate_word] = candidate_translation
+                else:
+                    message_emacs("StarDic dictionary {}.ifo is not exists".format(dictionary_path))
                         
             self.pystardict_is_installed = True
         except:
