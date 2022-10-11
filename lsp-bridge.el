@@ -117,7 +117,6 @@
                                                     lsp-bridge-is-meow-state
                                                     lsp-bridge-multiple-cursors-disable
                                                     lsp-bridge-not-complete-manually
-                                                    lsp-bridge-not-yank-command
                                                     )
   "A list of predicate functions with no argument to enable popup completion in callback."
   :type 'list
@@ -133,7 +132,8 @@ Setting this to nil or 0 will turn off the indicator."
 (defcustom lsp-bridge-completion-stop-commands
   '("undo-tree-undo" "undo-tree-redo"
     "kill-region" "delete-block-backward"
-    "python-black-buffer" "acm-complete-or-expand-yas-snippet")
+    "python-black-buffer" "acm-complete-or-expand-yas-snippet"
+    "yank" "string-rectangle")
   "If last command is match this option, stop popup completion ui."
   :type 'cons
   :group 'lsp-bridge)
@@ -842,7 +842,8 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-not-match-stop-commands ()
   "Hide completion if `lsp-bridge-last-change-command' match commands in `lsp-bridge-completion-stop-commands'."
-  (not (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands)))
+  (not (or (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands)
+           (member (format "%s" last-command) lsp-bridge-completion-stop-commands))))
 
 (defun lsp-bridge-not-in-string ()
   "Hide completion if cursor in string area."
@@ -931,10 +932,6 @@ So we build this macro to restore postion after code format."
    (acm-frame-visible-p acm-frame)
    ;; Don't update candidate if `lsp-bridge-complete-manually' is non-nil.
    (not lsp-bridge-complete-manually)))
-
-(defun lsp-bridge-not-yank-command ()
-  "Hide completion if `last-command' is yank."
-  (not (string-equal "yank" (format "%s" last-command))))
 
 (defun lsp-bridge--point-position (pos)
   "Get position of POS."
