@@ -61,15 +61,13 @@ class SearchSdcvWords:
                     
                     candidates = []
                     for word in start_dictionary.keys():
-                        is_english_word = all(ord(char) < 128 for char in word)
-                        if is_english_word:
-                            first_line_translation = start_dictionary.dict[word].split()[0]
-                            no_phonetic_translation = first_line_translation.split(">")[-1]
+                        first_line_translation = start_dictionary.dict[word].split()[0]
+                        no_phonetic_translation = first_line_translation.split(">")[-1]
                     
-                            candidate_word  = word.lower().replace('\"', ' ')
-                            candidate_translation = no_phonetic_translation.strip().replace('\"', ' ')
+                        candidate_word  = word.lower().replace('\"', ' ')
+                        candidate_translation = no_phonetic_translation.strip().replace('\"', ' ')
                     
-                            self.words[candidate_word] = candidate_translation
+                        self.words[candidate_word] = candidate_translation
                 else:
                     message_emacs("StarDic dictionary {}.ifo is not exists".format(dictionary_path))
         except:
