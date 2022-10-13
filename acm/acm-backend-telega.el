@@ -48,5 +48,4 @@
   (setq-local acm-backend-telega-items nil))
 
 (provide 'acm-backend-telega)
-(provide 'acm-backend-telega)
 ;;; acm-backend-telega.el ends here
