@@ -1825,7 +1825,7 @@ So we build this macro to restore postion after code format."
 (defalias 'lsp-bridge-insert-common-prefix #'acm-insert-common "This function is obsolete, use `acm-insert-common' instead.")
 (defalias 'lsp-bridge-find-define #'lsp-bridge-find-def "This function is obsolete, use `lsp-bridge-find-define' instead.")
 (defalias 'lsp-bridge-lookup-documentation #'lsp-bridge-popup-documentation "This function is obsolete, use `lsp-bridge-lookup-documentation' instead.")
-(defalias 'lsp-bridge-list-workspace-symbols #'lsp-bridge-workspace-list-symbols "This function is obsolete, use `lsp-bridge-list-workspace-symbols' instead.")
+(defalias 'lsp-bridge-list-workspace-symbols #'lsp-bridge-workspace-list-symbols "This function is obsolete, use `lsp-bridge-workspace-list-symbols' instead.")
 (defalias 'lsp-bridge-jump-to-next-diagnostic #'lsp-bridge-diagnostic-jump-next "This function is obsolete, use `lsp-bridge-jump-to-next-diagnostic' instead.")
 (defalias 'lsp-bridge-jump-to-prev-diagnostic #'lsp-bridge-diagnostic-jump-prev "This function is obsolete, use `lsp-bridge-jump-to-prev-diagnostic' instead.")
 (defalias 'lsp-bridge-list-diagnostics #'lsp-bridge-diagnostic-list "This function is obsolete, use `lsp-bridge-list-diagnostics' instead.")
