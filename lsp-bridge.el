@@ -941,7 +941,8 @@ So we build this macro to restore postion after code format."
    (not lsp-bridge-complete-manually)))
 
 (defun lsp-bridge-not-in-org-table ()
-  (not (org-at-table-p)))
+  (not (and (boundp 'org-at-table-p)
+            (org-at-table-p))))
 
 (defun lsp-bridge--point-position (pos)
   "Get position of POS."
