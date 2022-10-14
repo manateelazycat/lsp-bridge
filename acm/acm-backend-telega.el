@@ -17,7 +17,7 @@
   "Fetch the current chat buffer members."
   (let ((members (telega--searchChatMembers (telega-chatbuf--chat (current-buffer)) nil nil :limit (* 20 10000))))
     (when members
-      (remove-if (lambda (user) (string-empty-p (plist-get user :username))) members))))
+      (cl-remove-if (lambda (user) (string-empty-p (plist-get user :username))) members))))
 
 (defun acm-backend-telega-update-items ()
   "Update the optional items."
