@@ -103,7 +103,8 @@
   :group 'acm-backend-yas)
 
 (defun acm-backend-yas-candidates (keyword)
-  (when acm-enable-yas
+  (when (and acm-enable-yas
+             (not (string-empty-p keyword)))
     (let* ((candidates (list))
            (snippets (ignore-errors
                        (cl-remove-if (lambda (subdir) (or (member subdir '("." ".."))
