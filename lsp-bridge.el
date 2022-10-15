@@ -983,9 +983,7 @@ So we build this macro to restore postion after code format."
                             (buffer-substring-no-properties begin end)
                             (lsp-bridge--position)
                             (acm-char-before)
-                            (lsp-bridge-completion-ui-visible-p)
-                            (buffer-name)
-                            )
+                            (buffer-name))
 
   (when acm-enable-tabnine
     (lsp-bridge-tabnine-complete))
@@ -1741,9 +1739,6 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge--completion-hide-advisor (&rest args)
   (when lsp-bridge-mode
-    ;; Hide completion ui.
-    (lsp-bridge-call-file-api "completion_hide")
-
     ;; Clean LSP backend completion tick.
     (setq-local lsp-bridge-completion-item-fetch-tick nil)))
 

@@ -141,10 +141,6 @@ class LspBridge:
         if is_in_path_dict(FILE_ACTION_DICT, old_filepath):
             get_from_path_dict(FILE_ACTION_DICT, old_filepath).rename_file(old_filepath, new_filepath)
         
-    def completion_hide(self, filepath):
-        if is_in_path_dict(FILE_ACTION_DICT, filepath):
-            get_from_path_dict(FILE_ACTION_DICT, filepath).last_completion_candidates = {}
-            
     def fetch_completion_item_info(self, filepath, item_key, server_name):
         if is_in_path_dict(FILE_ACTION_DICT, filepath):
             get_from_path_dict(FILE_ACTION_DICT, filepath).completion_item_resolve(item_key, server_name)

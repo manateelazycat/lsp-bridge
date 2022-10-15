@@ -62,7 +62,6 @@ class Completion(Handler):
                 
                 items[key] = item
                 
-                
                 item_index += 1
                 
             self.file_action.completion_items[self.method_server_name] = items
@@ -71,8 +70,6 @@ class Completion(Handler):
             
         # Avoid returning too many items to cause Emacs to do GC operation.
         completion_candidates = completion_candidates[:min(len(completion_candidates), self.file_action.completion_items_limit)]
-        
-        self.file_action.last_completion_candidates[self.method_server_name] = completion_candidates
         
         logger.info("\n--- Completion items number: {}".format(len(completion_candidates)))
         

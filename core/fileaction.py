@@ -63,7 +63,6 @@ class FileAction:
         self.filepath = filepath
         self.last_change_cursor_time = -1.0
         self.last_change_file_time = -1.0
-        self.last_completion_candidates = {}
         self.request_dict = {}
         self.try_completion_timer = None
         self.version = 1
@@ -129,7 +128,7 @@ class FileAction:
         else:
             self.send_server_request(method_server, method, *args, **kwargs) 
             
-    def change_file(self, start, end, range_length, change_text, position, before_char, completion_visible, buffer_name):
+    def change_file(self, start, end, range_length, change_text, position, before_char, buffer_name):
         buffer_content = ''
         # Send didChange request to LSP server.
         for lsp_server in self.get_lsp_servers():
@@ -152,7 +151,7 @@ class FileAction:
         self.last_change_file_time = time.time()
 
         # Send textDocument/completion 100ms later.
-        self.try_completion_timer = threading.Timer(0.1, lambda : self.try_completion(position, before_char, completion_visible))
+        self.try_completion_timer = threading.Timer(0.1, lambda : self.try_completion(position, before_char))
         self.try_completion_timer.start()
         
     def update_file(self, buffer_name):
@@ -162,7 +161,7 @@ class FileAction:
 
         self.version += 1
 
-    def try_completion(self, position, before_char, completion_visible):
+    def try_completion(self, position, before_char):
         # Only send textDocument/completion request when match one of following rules:
         # 1. Character before cursor is match completion trigger characters.
         # 2. Completion UI is invisible.

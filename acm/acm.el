@@ -675,7 +675,8 @@ The key of candidate will change between two LSP results."
     ;; Because `make-frame-invisible' is ver slow in pgtk branch.
     ;; We use `run-with-timer' to avoid call `make-frame-invisible' too frequently.
     (unless (acm-running-in-wayland-native)
-      (make-frame-invisible acm-doc-frame))
+      (when (acm-frame-visible-p acm-doc-frame)
+        (make-frame-invisible acm-doc-frame)))
     (setq acm-doc-frame-hide-p t)))
 
 (when (acm-running-in-wayland-native)
