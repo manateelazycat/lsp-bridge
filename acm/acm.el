@@ -673,6 +673,8 @@ The key of candidate will change between two LSP results."
         (run-with-timer 0 0.5
                         #'(lambda ()
                             (when (and acm-doc-frame-hide-p
+                                       acm-doc-frame
+                                       (frame-live-p acm-doc-frame)
                                        (frame-visible-p acm-doc-frame))
                               ;; NOTE:
                               ;; Because `make-frame-invisible' is ver slow in Emacs29,
