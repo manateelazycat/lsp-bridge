@@ -206,6 +206,8 @@
 (defvar-local acm-input-bound-style nil)
 
 (defvar acm-doc-frame nil)
+(defvar acm-doc-frame-hide-p nil)
+(defvar acm-doc-frame-hide-timer nil)
 (defvar acm-doc-buffer " *acm-doc-buffer*")
 (defvar acm--mouse-ignore-map
   (let ((map (make-sparse-keymap)))
@@ -663,8 +665,19 @@ The key of candidate will change between two LSP results."
      (setq ,timer nil)))
 
 (defun acm-doc-hide ()
-  (when (frame-live-p acm-doc-frame)
-    (make-frame-invisible acm-doc-frame)))
+  (unless acm-doc-frame-hide-p
+    (setq acm-doc-frame-hide-p t)))
+
+(unless acm-doc-frame-hide-timer
+  (setq acm-doc-frame-hide-timer
+        (run-with-timer 0 0.5
+                        #'(lambda ()
+                            (when (and acm-doc-frame-hide-p
+                                       (frame-visible-p acm-doc-frame))
+                              ;; NOTE:
+                              ;; Because `make-frame-invisible' is ver slow in Emacs29,
+                              ;; We use `run-with-timer' to avoid call `make-frame-invisible' too frequently.
+                              (make-frame-invisible acm-doc-frame))))))
 
 (defun acm--pre-command ()
   ;; Use `pre-command-hook' to hide completion menu when command match `acm-continue-commands'.
@@ -815,6 +828,7 @@ The key of candidate will change between two LSP results."
           (progn
             ;; Create doc frame if it not exist.
             (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame")
+            (setq acm-doc-frame-hide-p nil)
 
             ;; Insert documentation and turn on wrap line.
             (with-current-buffer (get-buffer-create acm-doc-buffer)
