@@ -666,20 +666,26 @@ The key of candidate will change between two LSP results."
 
 (defun acm-doc-hide ()
   (unless acm-doc-frame-hide-p
+    ;; FIXME:
+    ;; Because `make-frame-invisible' is ver slow in Emacs29,
+    ;; We use `run-with-timer' to avoid call `make-frame-invisible' too frequently.
+    (when (version< emacs-version "29.0")
+      (make-frame-invisible acm-doc-frame))
     (setq acm-doc-frame-hide-p t)))
 
-(unless acm-doc-frame-hide-timer
-  (setq acm-doc-frame-hide-timer
-        (run-with-timer 0 0.5
-                        #'(lambda ()
-                            (when (and acm-doc-frame-hide-p
-                                       acm-doc-frame
-                                       (frame-live-p acm-doc-frame)
-                                       (frame-visible-p acm-doc-frame))
-                              ;; NOTE:
-                              ;; Because `make-frame-invisible' is ver slow in Emacs29,
-                              ;; We use `run-with-timer' to avoid call `make-frame-invisible' too frequently.
-                              (make-frame-invisible acm-doc-frame))))))
+(unless (version< emacs-version "29.0")
+  (unless acm-doc-frame-hide-timer
+    (setq acm-doc-frame-hide-timer
+          (run-with-timer 0 0.5
+                          #'(lambda ()
+                              (when (and acm-doc-frame-hide-p
+                                         acm-doc-frame
+                                         (frame-live-p acm-doc-frame)
+                                         (frame-visible-p acm-doc-frame))
+                                ;; FIXME:
+                                ;; Because `make-frame-invisible' is ver slow in Emacs29,
+                                ;; We use `run-with-timer' to avoid call `make-frame-invisible' too frequently.
+                                (make-frame-invisible acm-doc-frame)))))))
 
 (defun acm--pre-command ()
   ;; Use `pre-command-hook' to hide completion menu when command match `acm-continue-commands'.
