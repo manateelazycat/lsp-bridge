@@ -491,10 +491,11 @@ The key of candidate will change between two LSP results."
   ;; make sure Emacs not do GC when filter/sort candidates.
   (let* ((gc-cons-threshold most-positive-fixnum)
          (keyword (acm-get-input-prefix))
+         (previous-select-candidate-index (+ acm-menu-offset acm-menu-index))
          (previous-select-candidate (acm-menu-index-info (acm-menu-current-candidate)))
          (candidates (acm-update-candidates))
          (menu-candidates (cl-subseq candidates 0 (min (length candidates) acm-menu-length)))
-         (menu-index (cl-position previous-select-candidate (mapcar 'acm-menu-index-info menu-candidates) :test 'equal))
+         (current-select-candidate-index (cl-position previous-select-candidate (mapcar 'acm-menu-index-info menu-candidates) :test 'equal))
          (bounds (acm-get-input-prefix-bound)))
     (cond
      ;; Hide completion menu if user type first candidate completely.
@@ -511,26 +512,36 @@ The key of candidate will change between two LSP results."
         ;; Use `pre-command-hook' to hide completion menu when command match `acm-continue-commands'.
         (add-hook 'pre-command-hook #'acm--pre-command nil 'local)
 
-        ;; Init candidates and offset.
+        ;; Adjust candidates.
+        (setq-local acm-menu-offset 0)  ;init offset to 0
+        (if (zerop (length acm-menu-candidates))
+            ;; Adjust `acm-menu-index' to -1 if no candidates found.
+            (setq-local acm-menu-index -1)
+          ;; First init `acm-menu-index' to 0.
+          (setq-local acm-menu-index 0)
+
+          ;; The following code is specifically to adjust the selection position of candidate when typing fast.
+          (when (and current-select-candidate-index
+                     (> (length candidates) 1))
+            (cond
+             ;; Swap the position of the first two candidates
+             ;; if previous candidate's position change from 1st to 2nd.
+             ((and (= previous-select-candidate-index 0) (= current-select-candidate-index 1))
+              (cl-rotatef (nth 0 candidates) (nth 1 candidates))
+              (cl-rotatef (nth 0 menu-candidates) (nth 1 menu-candidates)))
+             ;; Swap the position of the first two candidates and select 2nd postion
+             ;; if previous candidate's position change from 2nd to 1st.
+             ((and (= previous-select-candidate-index 1) (= current-select-candidate-index 0))
+              (cl-rotatef (nth 0 candidates) (nth 1 candidates))
+              (cl-rotatef (nth 0 menu-candidates) (nth 1 menu-candidates))
+              (setq-local acm-menu-index 1))
+             ;; Select 2nd position if previous candidate's position still is 2nd.
+             ((and (= previous-select-candidate-index 1) (= current-select-candidate-index 1))
+              (setq-local acm-menu-index 1)))))
+
+        ;; Set candidates and menu candidates.
         (setq-local acm-candidates candidates)
         (setq-local acm-menu-candidates menu-candidates)
-        (setq-local acm-menu-offset 0)
-
-        ;; Set menu index.
-        (setq-local acm-menu-index
-                    (cond
-                     ;; If `acm-menu-candidates' size is zero, menu index set to -1
-                     ((zerop (length acm-menu-candidates)) -1)
-                     ;; If `menu-index' is non-nil, restore menu index with new postion that match previous select candidate
-                     ;;
-                     ;; NOTE:
-                     ;; LSP server will return newest candidates to acm when user select non-first candidate,
-                     ;; `acm-complete' will expand wrong candidate content if we just make `acm-menu-index' equal 0.
-                     ;; So we need record previous select candidate before call `acm-update-candidates',
-                     ;; and try to restore new menu index that match previous select candidate.
-                     (menu-index menu-index)
-                     ;; Otherwise, menu index set to 0
-                     (t 0)))
 
         ;; Init colors.
         (acm-init-colors)
