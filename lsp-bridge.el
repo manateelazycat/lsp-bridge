@@ -769,7 +769,10 @@ So we build this macro to restore postion after code format."
   (lsp-bridge-epc-init-epc-layer lsp-bridge-epc-process)
   (setq lsp-bridge-is-starting nil)
 
-  (lsp-bridge-search-words-index-files))
+  (lsp-bridge-search-words-index-files)
+
+  (unless (version< emacs-version "29.0")
+    (message "[LSP-Bridge] Frame render performance is poor in Emacs29, recommand use Emacs 28 to get best performance.")))
 
 (defvar-local lsp-bridge-last-position 0)
 (defvar-local lsp-bridge-prohibit-completion nil)
