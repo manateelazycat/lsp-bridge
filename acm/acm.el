@@ -664,16 +664,21 @@ The key of candidate will change between two LSP results."
      (cancel-timer ,timer)
      (setq ,timer nil)))
 
+(defun acm-running-in-wayland-native ()
+  (and (eq window-system 'pgtk)
+       (fboundp 'pgtk-backend-display-class)
+       (string-equal (pgtk-backend-display-class) "GdkWaylandDisplay")))
+
 (defun acm-doc-hide ()
   (unless acm-doc-frame-hide-p
     ;; FIXME:
-    ;; Because `make-frame-invisible' is ver slow in Emacs29,
+    ;; Because `make-frame-invisible' is ver slow in pgtk branch.
     ;; We use `run-with-timer' to avoid call `make-frame-invisible' too frequently.
-    (when (version< emacs-version "29.0")
+    (unless (acm-running-in-wayland-native)
       (make-frame-invisible acm-doc-frame))
     (setq acm-doc-frame-hide-p t)))
 
-(unless (version< emacs-version "29.0")
+(when (acm-running-in-wayland-native)
   (unless acm-doc-frame-hide-timer
     (setq acm-doc-frame-hide-timer
           (run-with-timer 0 0.5
@@ -683,7 +688,7 @@ The key of candidate will change between two LSP results."
                                          (frame-live-p acm-doc-frame)
                                          (frame-visible-p acm-doc-frame))
                                 ;; FIXME:
-                                ;; Because `make-frame-invisible' is ver slow in Emacs29,
+                                ;; Because `make-frame-invisible' is ver slow in pgtk branch.
                                 ;; We use `run-with-timer' to avoid call `make-frame-invisible' too frequently.
                                 (make-frame-invisible acm-doc-frame)))))))
 

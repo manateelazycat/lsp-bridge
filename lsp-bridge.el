@@ -771,8 +771,8 @@ So we build this macro to restore postion after code format."
 
   (lsp-bridge-search-words-index-files)
 
-  (unless (version< emacs-version "29.0")
-    (message "[LSP-Bridge] Frame render performance is poor in Emacs29, recommand use Emacs 28 to get best performance.")))
+  (when (acm-running-in-wayland-native)
+    (message "[LSP-Bridge] Frame render performance is very poor in pgtk branch, recommand use x11 branch to get best render performance.")))
 
 (defvar-local lsp-bridge-last-position 0)
 (defvar-local lsp-bridge-prohibit-completion nil)
