@@ -4,7 +4,7 @@
   "Tempel backend for acm."
   :group 'acm)
 
-(defcustom acm-enable-tempel t
+(defcustom acm-enable-tempel nil
   "Popup tempel completions when this option is turn on."
   :type 'boolean
   :group 'acm-backend-tempel)
