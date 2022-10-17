@@ -81,6 +81,7 @@
 
 ;;; Require
 
+(require 'yasnippet)
 
 ;;; Code:
 (defgroup acm-backend-yas nil
@@ -97,53 +98,72 @@
   :type 'integer
   :group 'acm-backend-yas)
 
-(defcustom acm-backend-yas-show-trigger-keyword t
-  "Display yasnippet trigger keyword after snippet file name"
+(defcustom acm-backend-yas-show-trigger-keyword " (%s)"
+  "Format to display yasnippet trigger keyword after snippet file name."
+  :type '(choice (boolean :tag "Enable or not, t to use default value")
+                 (string :tag "Literal text with %s"))
+  :group 'acm-backend-yas)
+
+(defcustom acm-backend-yas-match-by-trigger-keyword nil
+  "Match yasnippet candidates by trigger keyword or not.
+Setting to nil means matching uses snippet file names by default."
   :type 'boolean
   :group 'acm-backend-yas)
+
+(defcustom acm-backend-yas-show-doc-expansion nil
+  "Whether show snippet document in expansion format."
+  :type 'boolean
+  :group 'acm-backend-yas)
+
+(defface acm-backend-yas-trigger-keyword-face
+  '((t (:inherit font-lock-keyword-face)))
+  "Face for yas trigger keyword."
+  :group 'acm-backend-yas)
+
+(defun acm-backend-yas-candidates-display (name trigger)
+  (let* ((default (car (get 'acm-backend-yas-show-trigger-keyword 'standard-value)))
+         (k acm-backend-yas-show-trigger-keyword)
+         (f (or (and (booleanp k) k default)
+                (and (booleanp k) (not k) "")
+                (and (stringp k) k))))
+    (format (concat "%s" f) name (propertize trigger 'face 'acm-backend-yas-trigger-keyword-face))))
 
 (defun acm-backend-yas-candidates (keyword)
   (when (and acm-enable-yas
              (not (string-empty-p keyword)))
     (let* ((candidates (list))
-           (snippets (ignore-errors
-                       (cl-remove-if (lambda (subdir) (or (member subdir '("." ".."))
-                                                      (string-prefix-p "." subdir)))
-                                     (directory-files (expand-file-name (prin1-to-string major-mode) (car yas/root-directory))))))
-           (match-snippets (seq-filter (lambda (s) (acm-candidate-fuzzy-search keyword s)) snippets)))
-      (dolist (snippet (cl-subseq match-snippets 0 (min (length match-snippets) acm-backend-yas-candidates-number)))
-        (add-to-list 'candidates (list :key snippet
+           (templates (yas--all-templates (yas--get-snippet-tables)))
+           (match-templates (seq-filter (lambda (s)
+                                          (if acm-backend-yas-match-by-trigger-keyword
+                                              (string-prefix-p keyword (yas--template-key s))
+                                            (acm-candidate-fuzzy-search keyword (yas--template-name s))))
+                                        templates)))
+      (dolist (template (cl-subseq match-templates 0 (min (length match-templates) acm-backend-yas-candidates-number)))
+        (let ((name (yas--template-name template))
+              (content (yas--template-content template))
+              (trigger (or (yas--template-key template)
+                           (and (functionp 'yas--template-regexp-key)
+                                (yas--template-regexp-key template)))))
+        (add-to-list 'candidates (list :key name
                                        :icon "snippet"
-                                       :label snippet
-                                       :display-label (if acm-backend-yas-show-trigger-keyword
-                                                          (concat snippet " (" (acm-backend-yas-get-trigger-kw snippet) ")")
-                                                        snippet)
+                                       :label name
+                                       :display-label (acm-backend-yas-candidates-display name trigger)
+                                       :content content
                                        :annotation "Yas-Snippet"
-                                       :backend "yas")
-                     t))
+                                       :backend "yas") t)))
       (acm-candidate-sort-by-prefix keyword candidates))))
 
-(defun acm-backend-yas-candidate-expand (candidate-info bound-start)
+(defun acm-backend-yas-candidate-expand (candidate bound-start)
   (delete-region bound-start (point))
-  (yas-expand-snippet (acm-backend-yas-get-snippet candidate-info)))
+  (yas-expand-snippet (plist-get candidate :content)))
 
 (defun acm-backend-yas-candidate-doc (candidate)
-  (acm-backend-yas-get-snippet candidate))
-
-(defun acm-backend-yas-get-snippet (candidate)
-  (let ((snippet-file (expand-file-name (plist-get candidate :label)
-                                        (expand-file-name (prin1-to-string major-mode) (car yas/root-directory)))))
-    (with-temp-buffer
-      (insert-file-contents snippet-file)
-      (search-forward "# --\n" nil t)
-      (buffer-substring-no-properties (point) (point-max)))))
-
-(defun acm-backend-yas-get-trigger-kw (snippet)
-  (let ((snippet-file (expand-file-name snippet (expand-file-name (prin1-to-string major-mode) (car yas/root-directory)))))
-    (with-temp-buffer
-      (insert-file-contents snippet-file)
-      (re-search-forward "# key:\\s-*\\(.*\\)\\s-*\n" nil t)
-      (match-string 1))))
+  (if acm-backend-yas-show-doc-expansion
+      (with-temp-buffer
+        (yas-minor-mode 1)
+        (yas-expand-snippet (plist-get candidate :content))
+        (buffer-string))
+    (plist-get candidate :content)))
 
 (provide 'acm-backend-yas)
 
