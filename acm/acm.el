@@ -863,8 +863,11 @@ The key of candidate will change between two LSP results."
 
             ;; Adjust doc frame position and size.
             (acm-doc-frame-adjust))
-        ;; Hide doc frame.
-        (acm-doc-hide)))))
+
+        ;; Hide doc frame immediately if backend is not LSP.
+        ;; If backend is LSP, doc frame hide is control by `lsp-bridge-completion-item--update'.
+        (unless (string-equal backend "lsp")
+          (acm-doc-hide))))))
 
 (defun acm-doc-frame-adjust ()
   (let* ((emacs-width (frame-pixel-width))

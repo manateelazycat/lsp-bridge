@@ -1659,21 +1659,25 @@ So we build this macro to restore postion after code format."
          (key (plist-get info :key))
          (server-name (plist-get info :server))
          (additional-text-edits (plist-get info :additionalTextEdits))
-         (documentation (plist-get info :documentation)))
+         (documentation (plist-get info :documentation))
+         (has-doc-p (and documentation
+                         (not (string-equal documentation "")))))
     (lsp-bridge--with-file-buffer filepath
       ;; Update `documentation' and `additionalTextEdits'
       (when-let (item (gethash key (gethash server-name acm-backend-lsp-items)))
         (when additional-text-edits
           (plist-put item :additionalTextEdits additional-text-edits))
 
-        (when (and documentation
-                   (not (string-equal documentation "")))
+        (when has-doc-p
           (plist-put item :documentation documentation))
 
         (puthash key item (gethash server-name acm-backend-lsp-items)))
 
-      (acm-doc-try-show)
-      )))
+      (if has-doc-p
+          ;; Show doc frame if `documentation' exist and not empty.
+          (acm-doc-try-show)
+        ;; Hide doc frame immediately.
+        (acm-doc-hide)))))
 
 (defvar lsp-bridge-lookup-doc-tooltip-background nil)
 (defvar lsp-bridge-lookup-doc-tooltip-height nil)
