@@ -102,7 +102,7 @@
 
 (defconst tabnine-bridge--version-tempfile "version")
 
-(defcustom tabnine-bridge-binaries-folder "~/.TabNine"
+(defcustom tabnine-bridge-binaries-folder (expand-file-name "~/.TabNine")
   "Path to TabNine binaries folder.
 `lsp-bridge-install-tabnine' will use this directory."
   :type 'string)

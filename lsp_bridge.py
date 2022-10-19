@@ -42,10 +42,6 @@ from core.handler import *
 
 class LspBridge:
     def __init__(self, args):
-
-        # Object cache to exchange information between Emacs and LSP server.
-        self.tabnine = TabNine()
-
         # Build EPC interfaces.
         handler_subclasses = list(map(lambda cls: cls.name, Handler.__subclasses__()))
         for name in ["change_file", "update_file", "change_cursor", "save_file", 
@@ -76,6 +72,9 @@ class LspBridge:
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.start()
         
+        # Init tabnine.
+        self.tabnine = TabNine()        
+
         # Init search file words.
         self.search_file_words = SearchFileWords()
         for name in ["change_file", "close_file", "rebuild_cache", "search"]:
