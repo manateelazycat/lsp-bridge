@@ -121,7 +121,7 @@
         self-insert-command org-self-insert-command
         ;; Avoid flashing completion menu when backward delete char
         grammatical-edit-backward-delete backward-delete-char-untabify python-indent-dedent-line-backspace delete-backward-char
-        "\\`acm-" "\\`scroll-other-window")
+        "\\`acm-" "\\`scroll-other-window" "\\`special-lispy-")
   "Continue ACM completion after executing these commands."
   :type '(repeat (choice regexp symbol))
   :group 'acm)
