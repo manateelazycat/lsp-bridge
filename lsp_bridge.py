@@ -215,7 +215,8 @@ class LspBridge:
                 # We always replace LSP server command with absolute path of 'which' command.
                 lang_server_info["command"][0] = server_command_path
             else:
-                self.turn_off(filepath, "Error: can't find LSP server '{}' for {}, disable lsp-bridge-mode.".format(server_command, filepath))
+                self.turn_off(filepath, "Error: can't find command '{}' to start LSP server {} ({}), disable lsp-bridge-mode.".format(
+                    server_command, lang_server_info["name"], filepath))
         
                 return False
         else:
