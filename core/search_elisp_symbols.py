@@ -32,7 +32,7 @@ class SearchElispSymbols:
     def __init__(self) -> None:
         self.search_ticker = 0
         self.search_thread_queue = []
-        self.search_max_number = 100
+        self.search_max_number = 300
         self.symbols = []
         
     def search(self, prefix: str, symbols):
@@ -46,10 +46,30 @@ class SearchElispSymbols:
         search_thread.start()
         self.search_thread_queue.append(search_thread)
         
+    def match_symbol(self, prefix, symbol):
+        if symbol.startswith(prefix):
+            return True
+        elif symbol.replace("-", "").startswith(prefix):
+            return True
+        else:
+            symbol_parts = symbol.split("-")
+            prefix_parts = prefix.split("-")
+            
+            for index, prefix_part in enumerate(prefix_parts):
+                if index > len(symbol_parts) - 1:
+                    return False
+                else:
+                    if not prefix_part in symbol_parts[index]:
+                        return False
+                    
+            return True
+        
+        return False
+        
     def search_symbols(self, prefix: str, ticker: int):
         candidates = []
         for symbol in self.symbols:
-            if symbol.startswith(prefix):
+            if self.match_symbol(prefix, symbol):
                 candidates.append(symbol)
                     
                 if len(candidates) > self.search_max_number:
