@@ -22,6 +22,7 @@
 import threading
 import os
 import traceback
+import re
 
 from core.utils import get_emacs_vars, message_emacs, eval_in_emacs, logger
 from core.pystardict import Dictionary
@@ -87,8 +88,10 @@ class SearchSdcvWords:
                     
     def search_words(self, prefix: str, ticker: int):
         candidates = []
+        
+        prefix_regexp = re.compile(".*".join(prefix))
         for word, translation in self.words.items():
-            if word.startswith(prefix.lower()):
+            if word.startswith(prefix.lower()) or prefix_regexp.match(word):
                 candidate = {
                     "key": word,
                     "icon": "translation",
