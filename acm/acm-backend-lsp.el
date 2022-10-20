@@ -88,7 +88,7 @@
   "LSP backend for acm."
   :group 'acm)
 
-(defcustom acm-backend-lsp-candidate-min-length 0
+(defcustom acm-backend-lsp-candidate-min-length 1
   "Maximal length of candidate."
   :type 'integer
   :group 'acm-backend-lsp)
@@ -112,7 +112,9 @@
 
 (defun acm-backend-lsp-candidates (keyword)
   (let* ((candidates (list)))
-    (when (>= (length keyword) acm-backend-lsp-candidate-min-length)
+    ;; NOTE:
+    ;; We need filter empty keyword for better performance even you set `acm-backend-lsp-candidate-min-length' to 0.
+    (when (>= (length keyword) (min acm-backend-lsp-candidate-min-length 1))
       (when (and
              (boundp 'acm-backend-lsp-items)
              acm-backend-lsp-items
