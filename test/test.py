@@ -48,7 +48,6 @@ def test_entrypoint():
         (package-install 'markdown-mode)
         (package-install 'yasnippet)
         (package-install 'tempel)
-        ;; (all-the-icons-install-fonts 't)
         
         ;; for Windows
         (prefer-coding-system 'utf-8-unix)
