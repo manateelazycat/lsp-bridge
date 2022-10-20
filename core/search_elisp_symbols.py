@@ -23,6 +23,7 @@ import threading
 import os
 import traceback
 import sexpdata
+import re
 
 from core.utils import get_emacs_vars, message_emacs, eval_in_emacs, logger
 
@@ -46,30 +47,14 @@ class SearchElispSymbols:
         search_thread.start()
         self.search_thread_queue.append(search_thread)
         
-    def match_symbol(self, prefix, symbol):
-        if symbol.startswith(prefix):
-            return True
-        elif symbol.replace("-", "").startswith(prefix):
-            return True
-        else:
-            symbol_parts = symbol.split("-")
-            prefix_parts = prefix.split("-")
-            
-            for index, prefix_part in enumerate(prefix_parts):
-                if index > len(symbol_parts) - 1:
-                    return False
-                else:
-                    if not prefix_part in symbol_parts[index]:
-                        return False
-                    
-            return True
-        
-        return False
+    def match_symbol(self, prefix, prefix_regexp, symbol):
+        return symbol.startswith(prefix) or symbol.replace("-", "").startswith(prefix) or prefix_regexp.match(symbol)
         
     def search_symbols(self, prefix: str, ticker: int):
         candidates = []
+        prefix_regexp = re.compile(".*".join(prefix))
         for symbol in self.symbols:
-            if self.match_symbol(prefix, symbol):
+            if self.match_symbol(prefix, prefix_regexp, symbol):
                 candidates.append(symbol)
                     
                 if len(candidates) > self.search_max_number:
