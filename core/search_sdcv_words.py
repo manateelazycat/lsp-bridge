@@ -57,7 +57,7 @@ class SearchSdcvWords:
                     dictionary_path = self.search_dictionary
                     
                 if os.path.exists("{}.ifo".format(dictionary_path)):
-                    start_dictionary = Dictionary(dictionary_path)
+                    start_dictionary = Dictionary(dictionary_path, in_memory=True)
                     
                     candidates = []
                     for word in start_dictionary.keys():
