@@ -88,34 +88,22 @@
   "Elisp backend for acm."
   :group 'acm)
 
-(defcustom acm-backend-elisp-min-length 2
-  "Minimum length of elisp symbol."
-  :type 'integer
-  :group 'acm-backend-elisp)
-
-(defun acm-backend-elisp-sort-predicate (x y)
-  "Sorting predicate which compares X and Y."
-  (or (< (length x) (length y))
-      (and (= (length x) (length y))
-           (string< x y))))
+(defvar-local acm-backend-elisp-items nil)
 
 (defun acm-backend-elisp-candidates (keyword)
   (let* ((candidates (list)))
     (when (and (or (derived-mode-p 'emacs-lisp-mode)
                    (derived-mode-p 'inferior-emacs-lisp-mode)
-                   (derived-mode-p 'lisp-interaction-mode))
-               (>= (length keyword) acm-backend-elisp-min-length))
-      (let ((elisp-symbols (sort (all-completions keyword obarray) 
-                                 'acm-backend-elisp-sort-predicate)))
-        (dolist (elisp-symbol (cl-subseq elisp-symbols 0 (min (length elisp-symbols) 10)))
-          (let ((symbol-type (acm-backend-elisp-symbol-type (intern elisp-symbol))))
-            (add-to-list 'candidates (list :key elisp-symbol
-                                           :icon symbol-type
-                                           :label elisp-symbol
-                                           :display-label elisp-symbol
-                                           :annotation (capitalize symbol-type)
-                                           :backend "elisp")
-                         t)))))
+                   (derived-mode-p 'lisp-interaction-mode)))
+      (dolist (elisp-symbol acm-backend-elisp-items)
+        (let ((symbol-type (acm-backend-elisp-symbol-type (intern elisp-symbol))))
+          (add-to-list 'candidates (list :key elisp-symbol
+                                         :icon symbol-type
+                                         :label elisp-symbol
+                                         :display-label elisp-symbol
+                                         :annotation (capitalize symbol-type)
+                                         :backend "elisp")
+                       t))))
 
     candidates))
 

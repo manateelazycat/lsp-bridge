@@ -836,6 +836,10 @@ So we build this macro to restore postion after code format."
   (setq-local acm-backend-search-sdcv-words-items candidates)
   (lsp-bridge-try-completion))
 
+(defun lsp-bridge-search-elisp-symbols--record-items (candidates)
+  (setq-local acm-backend-elisp-items candidates)
+  (lsp-bridge-try-completion))
+
 (defun lsp-bridge-try-completion ()
   (if lsp-bridge-prohibit-completion
       (setq-local lsp-bridge-prohibit-completion nil)
@@ -996,6 +1000,20 @@ So we build this macro to restore postion after code format."
                      (null current-word)))
         (lsp-bridge-call-async "search_sdcv_words_search" current-word))))
 
+  (when (and (or (derived-mode-p 'emacs-lisp-mode)
+                 (derived-mode-p 'inferior-emacs-lisp-mode)
+                 (derived-mode-p 'lisp-interaction-mode))
+             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
+    (let ((current-symbol (thing-at-point 'symbol t)))
+      ;; Search words if current prefix is not empty.
+      (when (not (or (string-equal current-symbol "")
+                     (null current-symbol)))
+        (lsp-bridge-call-async
+         "search_elisp_symbols_search" 
+         current-symbol 
+         (when (equal (length current-symbol) 1)
+           (all-completions current-symbol obarray))))))
+  
   ;; Send change file to search-words backend.
   (when (and buffer-file-name
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
