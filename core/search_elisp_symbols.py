@@ -37,7 +37,7 @@ class SearchElispSymbols:
         self.symbols = []
         
     def update(self, symbols):
-        self.symbols = symbols
+        self.symbols = sorted(symbols, key=len)
         
     def search(self, prefix: str):
         ticker = self.search_ticker + 1
@@ -61,4 +61,4 @@ class SearchElispSymbols:
                     break
                 
         if ticker == self.search_ticker:
-            eval_in_emacs("lsp-bridge-search-elisp-symbols--record-items", sorted(candidates, key=len))
+            eval_in_emacs("lsp-bridge-search-elisp-symbols--record-items", candidates)
