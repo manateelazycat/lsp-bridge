@@ -77,12 +77,14 @@ class FileAction:
          self.completion_items_limit, 
          self.insert_spaces,
          self.enable_push_diagnostics,
-         self.push_diagnostic_idle) = get_emacs_vars([
-            "acm-backend-lsp-enable-auto-import",
-            "acm-backend-lsp-candidates-max-number",
-            "indent-tabs-mode",
-            "lsp-bridge-enable-diagnostics",
-            "lsp-bridge-diagnostic-fetch-idle"
+         self.push_diagnostic_idle,
+         self.display_label_max_length) = get_emacs_vars([
+             "acm-backend-lsp-enable-auto-import",
+             "acm-backend-lsp-candidates-max-number",
+             "indent-tabs-mode",
+             "lsp-bridge-enable-diagnostics",
+             "lsp-bridge-diagnostic-fetch-idle",
+             "acm-backend-lsp-candidate-max-length"
         ])
         self.insert_spaces = not self.insert_spaces
 

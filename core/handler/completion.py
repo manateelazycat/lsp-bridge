@@ -59,16 +59,19 @@ class Completion(Handler):
                 label = item["label"]
                 annotation = kind if kind != "" else item.get("detail", "")
                 key = "{},{}".format(item_index, label)
+                display_label = label[:self.file_action.display_label_max_length] + " ..." if len(label) > self.file_action.display_label_max_length else label
 
                 candidate = {
                     "key": key,
                     "icon": annotation,
                     "label": label,
+                    "display-label": display_label,
                     "deprecated": 1 in item.get("tags", []),
                     "insertText": item.get('insertText', None),
                     "insertTextFormat": item.get("insertTextFormat", ''),
                     "textEdit": item.get("textEdit", None),
-                    "server": self.method_server_name
+                    "server": self.method_server_name,
+                    "backend": "lsp"
                 }
                 
                 self.sort_dict[key] = item.get("sortText", "")
