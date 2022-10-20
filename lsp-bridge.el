@@ -997,7 +997,8 @@ So we build this macro to restore postion after code format."
                             (buffer-substring-no-properties begin end)
                             (lsp-bridge--position)
                             (acm-char-before)
-                            (buffer-name))
+                            (buffer-name)
+                            (acm-get-input-prefix))
 
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (let* ((current-word (thing-at-point 'word t))

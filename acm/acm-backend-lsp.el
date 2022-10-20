@@ -143,7 +143,10 @@
                              (add-to-list 'candidates v t)))))
                      server-items)))))
 
-    (acm-candidate-sort-by-prefix keyword candidates)))
+    ;; NOTE: 
+    ;; lsp-bridge has sort candidate at Python side, 
+    ;; please do not do secondary sorting here, elisp is very slow.
+    candidates))
 
 (defun acm-backend-lsp-candidate-expand (candidate-info bound-start)
   (let* ((label (plist-get candidate-info :label))

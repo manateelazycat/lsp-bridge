@@ -1,5 +1,6 @@
 import os
 from enum import Enum
+from functools import cmp_to_key
 
 from core.handler import Handler
 from core.utils import *
@@ -15,7 +16,7 @@ class Completion(Handler):
     method = "textDocument/completion"
     cancel_on_change = True
 
-    def process_request(self, lsp_server, position, char) -> dict:
+    def process_request(self, lsp_server, position, char, prefix) -> dict:
         self.method_server = lsp_server
         self.method_server_name = self.method_server.server_info["name"]
         
@@ -25,12 +26,29 @@ class Completion(Handler):
         else:
             context = dict(triggerKind=CompletionTriggerKind.Invoked.value)
         self.position = position
+        self.prefix = prefix
         return dict(position=position, context=context)
-
+    
+    def compare_candidates(self, x, y):
+        prefix = self.prefix.lower()
+        x_label : str = x["label"].lower()
+        y_label : str = y["label"].lower()
+        x_include_prefix = x_label.startswith(prefix)
+        y_include_prefix = y_label.startswith(prefix)
+        
+        if x_include_prefix and not y_include_prefix:
+            return -1
+        elif y_include_prefix and not x_include_prefix:
+            return 1
+        elif len(x_label) == len(y_label):
+            return self.sort_dict[x["key"]] < self.sort_dict[y["key"]]
+        else:
+            return len(x_label) < len(y_label)
+    
     def process_response(self, response: dict) -> None:
         # Get completion items.
         completion_candidates = []
-        sort_dict = {}
+        self.sort_dict = {}
         items = {}
 
         if response is not None:
@@ -53,8 +71,8 @@ class Completion(Handler):
                     "server": self.method_server_name
                 }
                 
-                sort_dict[key] = item.get("sortText", "")
-
+                self.sort_dict[key] = item.get("sortText", "")
+                
                 if self.file_action.enable_auto_import:
                     candidate["additionalTextEdits"] = item.get("additionalTextEdits", [])
 
@@ -66,7 +84,7 @@ class Completion(Handler):
                 
             self.file_action.completion_items[self.method_server_name] = items
                 
-            completion_candidates = sorted(completion_candidates, key=lambda candidate: sort_dict[candidate["key"]])
+            completion_candidates = sorted(completion_candidates, key=cmp_to_key(self.compare_candidates))
             
         # Avoid returning too many items to cause Emacs to do GC operation.
         completion_candidates = completion_candidates[:min(len(completion_candidates), self.file_action.completion_items_limit)]
