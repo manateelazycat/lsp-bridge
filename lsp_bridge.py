@@ -88,7 +88,7 @@ class LspBridge:
             
         # Init search elisp symbols.
         self.search_elisp_symbols = SearchElispSymbols()
-        for name in ["search", "update_symbols"]:
+        for name in ["search", "update"]:
             self.build_prefix_function("search_elisp_symbols", "search_elisp_symbols", name)
             
         # Init emacs option.

@@ -213,6 +213,11 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'boolean
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-elisp-symbols-update-idle 3
+  "The idle seconds to update elisp symbols."
+  :type 'float
+  :group 'lsp-bridge)
+
 (defface lsp-bridge-font-lock-flash
   '((t (:inherit highlight)))
   "Face to flash the current line."
@@ -770,6 +775,8 @@ So we build this macro to restore postion after code format."
   (setq lsp-bridge-is-starting nil)
 
   (lsp-bridge-search-words-index-files)
+  
+  (lsp-bridge-elisp-symbols-update)
 
   (when (acm-running-in-wayland-native)
     (message "[LSP-Bridge] Frame render performance is very poor in pgtk branch, recommand use x11 branch to get best render performance.")))
@@ -1008,11 +1015,7 @@ So we build this macro to restore postion after code format."
       ;; Search words if current prefix is not empty.
       (when (not (or (string-equal current-symbol "")
                      (null current-symbol)))
-        (lsp-bridge-call-async
-         "search_elisp_symbols_search" 
-         current-symbol 
-         (when (equal (length current-symbol) 1)
-           (all-completions current-symbol obarray))))))
+        (lsp-bridge-call-async "search_elisp_symbols_search" current-symbol))))
   
   ;; Send change file to search-words backend.
   (when (and buffer-file-name
@@ -1023,6 +1026,17 @@ So we build this macro to restore postion after code format."
         (lsp-bridge-call-async "search_file_words_search" current-word)))
 
     (lsp-bridge-call-async "search_file_words_change_file" buffer-file-name)))
+
+(defvar lsp-bridge-elisp-symbols-timer nil)
+(defvar lsp-bridge-elisp-symbols-size 0)
+
+(defun lsp-bridge-elisp-symbols-update ()
+  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+    (let* ((symbols (all-completions "" obarray))
+          (symbols-size (length symbols)))
+     (unless (equal lsp-bridge-elisp-symbols-size symbols-size)
+       (lsp-bridge-call-async "search_elisp_symbols_update" symbols)
+       (setq lsp-bridge-elisp-symbols-size symbols-size)))))
 
 (defun lsp-bridge-search-words-open-file ()
   (when (and buffer-file-name
@@ -1363,7 +1377,9 @@ So we build this macro to restore postion after code format."
     (when lsp-bridge-enable-search-words
       (acm-run-idle-func lsp-bridge-search-words-timer lsp-bridge-search-words-rebuild-cache-idle 'lsp-bridge-search-words-rebuild-cache))
     (when lsp-bridge-enable-auto-format-code
-      (acm-run-idle-func lsp-bridge-auto-format-code-timer lsp-bridge-auto-format-code-idle 'lsp-bridge-auto-format-code)))
+      (acm-run-idle-func lsp-bridge-auto-format-code-timer lsp-bridge-auto-format-code-idle 'lsp-bridge-auto-format-code))
+    
+    (acm-run-idle-func lsp-bridge-elisp-symbols-timer lsp-bridge-elisp-symbols-update-idle 'lsp-bridge-elisp-symbols-update))
 
   (dolist (hook lsp-bridge--internal-hooks)
     (add-hook (car hook) (cdr hook) nil t))
@@ -1382,6 +1398,9 @@ So we build this macro to restore postion after code format."
   (acm-cancel-timer lsp-bridge-signature-help-timer)
   (acm-cancel-timer lsp-bridge-search-words-timer)
   (acm-cancel-timer lsp-bridge-auto-format-code-timer)
+  (acm-cancel-timer lsp-bridge-elisp-symbols-timer)
+  
+  (setq lsp-bridge-elisp-symbols-size 0)
 
   (advice-remove #'acm-hide #'lsp-bridge--completion-hide-advisor))
 

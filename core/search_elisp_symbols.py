@@ -36,10 +36,10 @@ class SearchElispSymbols:
         self.search_max_number = 300
         self.symbols = []
         
-    def search(self, prefix: str, symbols):
-        if len(symbols) > 0:
-            self.symbols = symbols
+    def update(self, symbols):
+        self.symbols = symbols
         
+    def search(self, prefix: str):
         ticker = self.search_ticker + 1
         self.search_ticker = ticker
         
