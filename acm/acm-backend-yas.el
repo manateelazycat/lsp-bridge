@@ -110,11 +110,6 @@ Setting to nil means matching uses snippet file names by default."
   :type 'boolean
   :group 'acm-backend-yas)
 
-(defcustom acm-backend-yas-show-doc-expansion nil
-  "Whether show snippet document in expansion format."
-  :type 'boolean
-  :group 'acm-backend-yas)
-
 (defface acm-backend-yas-trigger-keyword-face
   '((t (:inherit font-lock-keyword-face)))
   "Face for yas trigger keyword."
@@ -123,10 +118,9 @@ Setting to nil means matching uses snippet file names by default."
 (defun acm-backend-yas-candidates-display (name trigger)
   (let* ((default (car (get 'acm-backend-yas-show-trigger-keyword 'standard-value)))
          (k acm-backend-yas-show-trigger-keyword)
-         (f (or (and (booleanp k) k default)
-                (and (booleanp k) (not k) "")
-                (and (stringp k) k))))
-    (format (concat "%s" f) name (propertize trigger 'face 'acm-backend-yas-trigger-keyword-face))))
+         ;; WORKAROUND backward compatibility for boolean value
+         (form (or (and (booleanp k) k default) k)))
+    (format (concat "%s" form) name (propertize trigger 'face 'acm-backend-yas-trigger-keyword-face))))
 
 (defun acm-backend-yas-candidates (keyword)
   (when (and acm-enable-yas
@@ -158,12 +152,7 @@ Setting to nil means matching uses snippet file names by default."
   (yas-expand-snippet (plist-get candidate :content)))
 
 (defun acm-backend-yas-candidate-doc (candidate)
-  (if acm-backend-yas-show-doc-expansion
-      (with-temp-buffer
-        (yas-minor-mode 1)
-        (yas-expand-snippet (plist-get candidate :content))
-        (buffer-string))
-    (plist-get candidate :content)))
+  (ignore-errors (plist-get candidate :content)))
 
 (provide 'acm-backend-yas)
 
