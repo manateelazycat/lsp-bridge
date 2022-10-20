@@ -92,9 +92,7 @@
 
 (defun acm-backend-elisp-candidates (keyword)
   (let* ((candidates (list)))
-    (when (and (or (derived-mode-p 'emacs-lisp-mode)
-                   (derived-mode-p 'inferior-emacs-lisp-mode)
-                   (derived-mode-p 'lisp-interaction-mode)))
+    (when (and (acm-is-elisp-mode-p))
       (dolist (elisp-symbol acm-backend-elisp-items)
         (let ((symbol-type (acm-backend-elisp-symbol-type (intern elisp-symbol))))
           (add-to-list 'candidates (list :key elisp-symbol

@@ -110,7 +110,7 @@
       candidates)))
 
 (defun acm-backend-search-file-words-candidate-expand (candidate-info bound-start)
-  (if (acm-backend-search-file-words-is-elisp-mode)
+  (if (acm-is-elisp-mode-p)
       (delete-region (car (bounds-of-thing-at-point 'symbol)) (point))
     (delete-region
      (save-excursion
@@ -121,7 +121,7 @@
 
 (defun acm-backend-search-file-words-get-point-string ()
   "Get string around point."
-  (if (acm-backend-search-file-words-is-elisp-mode)
+  (if (acm-is-elisp-mode-p)
       (or (thing-at-point 'symbol t) "")
     (buffer-substring-no-properties
      (save-excursion
@@ -131,11 +131,6 @@
        (skip-syntax-forward "^ " (line-end-position))
        (point))
      )))
-
-(defun acm-backend-search-file-words-is-elisp-mode ()
-  (or (derived-mode-p 'emacs-lisp-mode)
-      (derived-mode-p 'inferior-emacs-lisp-mode)
-      (derived-mode-p 'lisp-interaction-mode)))
 
 (defun acm-backend-search-file-words-clean ()
   (setq-local acm-backend-search-file-words-items nil))

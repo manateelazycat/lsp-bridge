@@ -774,8 +774,10 @@ So we build this macro to restore postion after code format."
   (lsp-bridge-epc-init-epc-layer lsp-bridge-epc-process)
   (setq lsp-bridge-is-starting nil)
 
+  ;; Search words from opened files.
   (lsp-bridge-search-words-index-files)
-  
+
+  ;; Synchronize elisp symbol to Python side.
   (lsp-bridge-elisp-symbols-update)
 
   (when (acm-running-in-wayland-native)
@@ -987,6 +989,7 @@ So we build this macro to restore postion after code format."
   ;; Record last command to `lsp-bridge-last-change-command'.
   (setq lsp-bridge-last-change-command (format "%s" this-command))
 
+  ;; Send change_file request to trigger LSP completion.
   (lsp-bridge-call-file-api "change_file"
                             lsp-bridge--before-change-begin-pos
                             lsp-bridge--before-change-end-pos
@@ -996,47 +999,47 @@ So we build this macro to restore postion after code format."
                             (acm-char-before)
                             (buffer-name))
 
-  (when acm-enable-tabnine
-    (lsp-bridge-tabnine-complete))
+  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+    (let* ((current-word (thing-at-point 'word t))
+           (current-symbol (thing-at-point 'symbol t)))
+      ;; TabNine search.
+      (when acm-enable-tabnine
+        (lsp-bridge-tabnine-complete))
 
-  (when (and acm-enable-search-sdcv-words
-             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
-    (let ((current-word (thing-at-point 'word t)))
-      ;; Search words if current prefix is not empty.
-      (when (not (or (string-equal current-word "")
-                     (null current-word)))
-        (lsp-bridge-call-async "search_sdcv_words_search" current-word))))
+      ;; Search sdcv dictionary.
+      (when acm-enable-search-sdcv-words
+        ;; Search words if current prefix is not empty.
+        (unless (or (string-equal current-word "") (null current-word))
+          (lsp-bridge-call-async "search_sdcv_words_search" current-word)))
 
-  (when (and (or (derived-mode-p 'emacs-lisp-mode)
-                 (derived-mode-p 'inferior-emacs-lisp-mode)
-                 (derived-mode-p 'lisp-interaction-mode))
-             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
-    (let ((current-symbol (thing-at-point 'symbol t)))
-      ;; Search words if current prefix is not empty.
-      (when (not (or (string-equal current-symbol "")
-                     (null current-symbol)))
-        (lsp-bridge-call-async "search_elisp_symbols_search" current-symbol))))
-  
-  ;; Send change file to search-words backend.
-  (when (and buffer-file-name
-             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
-    (let ((current-word (acm-backend-search-file-words-get-point-string)))
-      ;; Search words if current prefix is not empty.
-      (when (not (string-equal current-word ""))
-        (lsp-bridge-call-async "search_file_words_search" current-word)))
+      ;; Search elisp symbol.
+      (when (acm-is-elisp-mode-p)
+        ;; Search words if current prefix is not empty.
+        (unless (or (string-equal current-symbol "") (null current-symbol))
+          (lsp-bridge-call-async "search_elisp_symbols_search" current-symbol)))
 
-    (lsp-bridge-call-async "search_file_words_change_file" buffer-file-name)))
+      ;; Send change file to search-words backend.
+      (when buffer-file-name
+        (let ((current-word (acm-backend-search-file-words-get-point-string)))
+          ;; Search words if current prefix is not empty.
+          (unless (or (string-equal current-word "") (null current-word))
+            (lsp-bridge-call-async "search_file_words_search" current-word)))
+
+        (lsp-bridge-call-async "search_file_words_change_file" buffer-file-name))
+      )))
 
 (defvar lsp-bridge-elisp-symbols-timer nil)
 (defvar lsp-bridge-elisp-symbols-size 0)
 
 (defun lsp-bridge-elisp-symbols-update ()
+  "We need synchronize elisp symbols to Python side when idle."
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     (let* ((symbols (all-completions "" obarray))
-          (symbols-size (length symbols)))
-     (unless (equal lsp-bridge-elisp-symbols-size symbols-size)
-       (lsp-bridge-call-async "search_elisp_symbols_update" symbols)
-       (setq lsp-bridge-elisp-symbols-size symbols-size)))))
+           (symbols-size (length symbols)))
+      ;; Only synchronize when new symbol created.
+      (unless (equal lsp-bridge-elisp-symbols-size symbols-size)
+        (lsp-bridge-call-async "search_elisp_symbols_update" symbols)
+        (setq lsp-bridge-elisp-symbols-size symbols-size)))))
 
 (defun lsp-bridge-search-words-open-file ()
   (when (and buffer-file-name
@@ -1378,7 +1381,7 @@ So we build this macro to restore postion after code format."
       (acm-run-idle-func lsp-bridge-search-words-timer lsp-bridge-search-words-rebuild-cache-idle 'lsp-bridge-search-words-rebuild-cache))
     (when lsp-bridge-enable-auto-format-code
       (acm-run-idle-func lsp-bridge-auto-format-code-timer lsp-bridge-auto-format-code-idle 'lsp-bridge-auto-format-code))
-    
+
     (acm-run-idle-func lsp-bridge-elisp-symbols-timer lsp-bridge-elisp-symbols-update-idle 'lsp-bridge-elisp-symbols-update))
 
   (dolist (hook lsp-bridge--internal-hooks)
@@ -1392,16 +1395,20 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge--disable ()
   "Disable LSP Bridge mode."
+  ;; Remove hooks.
   (dolist (hook lsp-bridge--internal-hooks)
     (remove-hook (car hook) (cdr hook) t))
 
+  ;; Cancel idle timer.
   (acm-cancel-timer lsp-bridge-signature-help-timer)
   (acm-cancel-timer lsp-bridge-search-words-timer)
   (acm-cancel-timer lsp-bridge-auto-format-code-timer)
   (acm-cancel-timer lsp-bridge-elisp-symbols-timer)
-  
+
+  ;; Reset `lsp-bridge-elisp-symbols-size' to zero.
   (setq lsp-bridge-elisp-symbols-size 0)
 
+  ;; Remove hide advice.
   (advice-remove #'acm-hide #'lsp-bridge--completion-hide-advisor))
 
 (defun lsp-bridge--turn-off (filepath)
@@ -1785,22 +1792,20 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-tabnine-complete ()
   (interactive)
-  (when (and (lsp-bridge-has-lsp-server-p)
-             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
-    (let* ((buffer-min 1)
-           (buffer-max (1+ (buffer-size)))
-           (chars-number-before-point 3000) ; the number of chars before point to send for completion.
-           (chars-number-after-point 1000) ; the number of chars after point to send for completion.
-           (max-num-results 10)   ; maximum number of results to show.
-           (before-point (max (point-min) (- (point) chars-number-before-point)))
-           (after-point (min (point-max) (+ (point) chars-number-after-point))))
-      (lsp-bridge-call-async "tabnine_complete"
-                             (buffer-substring-no-properties before-point (point))
-                             (buffer-substring-no-properties (point) after-point)
-                             (or (buffer-file-name) nil)
-                             (= before-point buffer-min)
-                             (= after-point buffer-max)
-                             max-num-results))))
+  (let* ((buffer-min 1)
+         (buffer-max (1+ (buffer-size)))
+         (chars-number-before-point 3000) ; the number of chars before point to send for completion.
+         (chars-number-after-point 1000) ; the number of chars after point to send for completion.
+         (max-num-results 10)     ; maximum number of results to show.
+         (before-point (max (point-min) (- (point) chars-number-before-point)))
+         (after-point (min (point-max) (+ (point) chars-number-after-point))))
+    (lsp-bridge-call-async "tabnine_complete"
+                           (buffer-substring-no-properties before-point (point))
+                           (buffer-substring-no-properties (point) after-point)
+                           (or (buffer-file-name) nil)
+                           (= before-point buffer-min)
+                           (= after-point buffer-max)
+                           max-num-results)))
 
 (defun lsp-bridge-tabnine--record-items (items)
   (setq-local acm-backend-tabnine-items items)

@@ -974,6 +974,11 @@ The key of candidate will change between two LSP results."
   (and (frame-live-p frame)
        (frame-visible-p frame)))
 
+(defun acm-is-elisp-mode-p ()
+  (or (derived-mode-p 'emacs-lisp-mode)
+      (derived-mode-p 'inferior-emacs-lisp-mode)
+      (derived-mode-p 'lisp-interaction-mode)))
+
 (defun acm-select-first ()
   "Select first candidate."
   (interactive)
