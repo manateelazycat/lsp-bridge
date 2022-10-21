@@ -52,7 +52,7 @@ class SearchElispSymbols:
         
     def search_symbols(self, prefix: str, ticker: int):
         candidates = []
-        prefix_regexp = re.compile(".*".join(prefix))
+        prefix_regexp = re.compile(re.sub(r'([a-zA-Z0-9-_])', r'\1.*', re.escape(prefix)))
         for symbol in self.symbols:
             if self.match_symbol(prefix, prefix_regexp, symbol):
                 candidates.append(symbol)
