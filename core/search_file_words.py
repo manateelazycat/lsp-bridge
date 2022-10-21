@@ -86,7 +86,7 @@ class SearchFileWords:
             logger.error(traceback.format_exc())
             
     def search_word(self, prefix, all_words):
-        match_words = list(filter(lambda word: word.startswith(prefix.lower()), all_words))
+        match_words = list(filter(lambda word: word.lower().startswith(prefix.lower()), all_words))
         candidates = []
         if prefix.isupper():
             candidates = list(map(lambda word: word.upper(), match_words))
