@@ -114,7 +114,7 @@
   (let* ((candidates (list)))
     ;; NOTE:
     ;; We need filter empty keyword for better performance even you set `acm-backend-lsp-candidate-min-length' to 0.
-    (when (>= (length keyword) (min acm-backend-lsp-candidate-min-length 1))
+    (when (>= (length keyword) (max acm-backend-lsp-candidate-min-length 1))
       (when (and
              (boundp 'acm-backend-lsp-items)
              acm-backend-lsp-items
