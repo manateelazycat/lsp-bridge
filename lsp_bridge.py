@@ -37,6 +37,7 @@ from core.lspserver import LspServer
 from core.search_file_words import SearchFileWords
 from core.search_sdcv_words import SearchSdcvWords
 from core.search_elisp_symbols import SearchElispSymbols
+from core.search_tailwindcss_keywords import SearchTailwindKeywords
 from core.tabnine import TabNine
 from core.utils import *
 from core.handler import *
@@ -90,6 +91,11 @@ class LspBridge:
         self.search_elisp_symbols = SearchElispSymbols()
         for name in ["search", "update"]:
             self.build_prefix_function("search_elisp_symbols", "search_elisp_symbols", name)
+
+        # Init search tailwind keywords
+        self.search_tailwind_keywords = SearchTailwindKeywords()
+        for name in ["search"]:
+            self.build_prefix_function("search_tailwind_keywords", "search_tailwind_keywords", name)
             
         # Init emacs option.
         enable_lsp_server_log = get_emacs_var("lsp-bridge-enable-log")

@@ -1027,6 +1027,14 @@ So we build this macro to restore postion after code format."
             (lsp-bridge-call-async "search_file_words_search" current-word)))
 
         (lsp-bridge-call-async "search_file_words_change_file" buffer-file-name))
+      
+      ;; Send tailwind keyword search request just when cursor in class area.
+      (when (and (derived-mode-p 'web-mode)
+                 (lsp-bridge-in-string-p)
+                 (save-excursion 
+                   (search-backward-regexp "class=" (point-at-bol) t)))
+        (unless (or (string-equal current-symbol "") (null current-symbol))
+         (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol)))
       )))
 
 (defvar lsp-bridge-elisp-symbols-timer nil)
@@ -1810,6 +1818,10 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-tabnine--record-items (items)
   (setq-local acm-backend-tabnine-items items)
+  (lsp-bridge-try-completion))
+
+(defun lsp-bridge-search-tailwind-keywords--record-items (items)
+  (setq-local acm-backend-tailwind-items items)
   (lsp-bridge-try-completion))
 
 ;; https://tecosaur.github.io/emacs-config/config.html#lsp-support-src

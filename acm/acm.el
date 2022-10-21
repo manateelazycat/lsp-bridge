@@ -100,6 +100,7 @@
 (require 'acm-backend-tempel)
 (require 'acm-backend-telega)
 (require 'acm-backend-tabnine)
+(require 'acm-backend-tailwind)
 (require 'acm-backend-citre)
 (require 'acm-quick-access)
 
@@ -454,6 +455,7 @@ influence of C1 on the result."
         ;; Fetch syntax completion candidates.
         (setq lsp-candidates (acm-backend-lsp-candidates keyword))
         (setq mode-candidates (append
+                               (acm-backend-tailwind-candidates keyword)
                                (acm-backend-elisp-candidates keyword)
                                lsp-candidates
                                citre-candidates

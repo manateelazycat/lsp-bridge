@@ -152,6 +152,7 @@
     ("instance" . ("material" "city-variant-outline" "#da1884"))
     ("task" . ("material" "text-recognition" "#e22272"))
     ("typedef" . ("material" "label-outline" "#bf11b6"))
+    ("tailwind" . ("material" "creation" "#39a6dd"))
     (t . ("material" "file-find-outline" "#90cef1"))))
 
 (defvar acm-icon-cache (make-hash-table :test 'equal))
