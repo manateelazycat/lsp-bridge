@@ -133,7 +133,7 @@ Setting this to nil or 0 will turn off the indicator."
   '("undo-tree-undo" "undo-tree-redo"
     "kill-region" "delete-block-backward"
     "python-black-buffer" "acm-complete-or-expand-yas-snippet"
-    "yank" "string-rectangle")
+    "yank" "string-rectangle" "query-replace")
   "If last command is match this option, stop popup completion ui."
   :type 'cons
   :group 'lsp-bridge)
@@ -1027,14 +1027,14 @@ So we build this macro to restore postion after code format."
             (lsp-bridge-call-async "search_file_words_search" current-word)))
 
         (lsp-bridge-call-async "search_file_words_change_file" buffer-file-name))
-      
+
       ;; Send tailwind keyword search request just when cursor in class area.
       (when (and (derived-mode-p 'web-mode)
                  (lsp-bridge-in-string-p)
-                 (save-excursion 
+                 (save-excursion
                    (search-backward-regexp "class=" (point-at-bol) t)))
         (unless (or (string-equal current-symbol "") (null current-symbol))
-         (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol)))
+          (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol)))
       )))
 
 (defvar lsp-bridge-elisp-symbols-timer nil)
