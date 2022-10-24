@@ -280,7 +280,9 @@ class LspServer:
             "workspace": {
                 "configuration": True,
                 "symbol": {
-                    "resolveSupport": True
+                    "resolveSupport": {
+                        "properties": []
+                    }
                 }
             },
             "textDocument": {
