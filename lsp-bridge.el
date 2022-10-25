@@ -1532,6 +1532,68 @@ So we build this macro to restore postion after code format."
   (interactive)
   (lsp-bridge-call-file-api "ignore_diagnostic"))
 
+(defcustom lsp-bridge-workspace-symbol-kind-to-face
+  [("    " . nil)                           ; Unknown - 0
+   ("File" . font-lock-builtin-face)        ; File - 1
+   ("Modu" . font-lock-keyword-face)        ; Module - 2
+   ("Nmsp" . font-lock-keyword-face)        ; Namespace - 3
+   ("Pack" . font-lock-keyword-face)        ; Package - 4
+   ("Clss" . font-lock-type-face)           ; Class - 5
+   ("Meth" . font-lock-function-name-face)  ; Method - 6
+   ("Prop" . font-lock-constant-face)       ; Property - 7
+   ("Fld " . font-lock-constant-face)       ; Field - 8
+   ("Cons" . font-lock-function-name-face)  ; Constructor - 9
+   ("Enum" . font-lock-type-face)           ; Enum - 10
+   ("Intf" . font-lock-type-face)           ; Interface - 11
+   ("Func" . font-lock-function-name-face)  ; Function - 12
+   ("Var " . font-lock-variable-name-face)  ; Variable - 13
+   ("Cnst" . font-lock-constant-face)       ; Constant - 14
+   ("Str " . font-lock-string-face)         ; String - 15
+   ("Num " . font-lock-builtin-face)        ; Number - 16
+   ("Bool " . font-lock-builtin-face)       ; Boolean - 17
+   ("Arr " . font-lock-builtin-face)        ; Array - 18
+   ("Obj " . font-lock-builtin-face)        ; Object - 19
+   ("Key " . font-lock-constant-face)       ; Key - 20
+   ("Null" . font-lock-builtin-face)        ; Null - 21
+   ("EmMm" . font-lock-constant-face)       ; EnumMember - 22
+   ("Srct" . font-lock-type-face)           ; Struct - 23
+   ("Evnt" . font-lock-builtin-face)        ; Event - 24
+   ("Op  " . font-lock-function-name-face)  ; Operator - 25
+   ("TPar" . font-lock-type-face)]          ; TypeParameter - 26
+  "Mapping between eacho of LSP's SymbolKind and a face.
+A vector of 26 cons cells, where the ith cons cell contains
+the string representation and face to use for the i+1th
+SymbolKind (defined in the LSP)."
+  :group 'lsp-bridge
+  :type '(vector
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)))
+
 (defun lsp-bridge-workspace-list-symbols (query)
   (interactive "sWorkspace symbol query: ")
   (lsp-bridge-call-file-api "workspace_symbol" query))
@@ -1539,9 +1601,9 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-workspace--list-symbols (info)
   (if (zerop (length info))
       (message "LSP server did not return any symbols.")
-    (let* ((symbols (mapcar (lambda (i) (plist-get i :name)) info))
+    (let* ((symbols (mapcar #'lsp-bridge-workspace-transform-info info))
            (match-symbol (completing-read "Workspace symbol: " symbols))
-           (match-info (seq-filter (lambda (i) (string-equal match-symbol (plist-get i :name))) info)))
+           (match-info (seq-filter (lambda (i) (string-equal match-symbol (lsp-bridge-workspace-transform-info i))) info)))
       (when match-info
         (let* ((symbol-info (plist-get (car match-info) :location))
                (symbol-file (url-unhex-string (string-remove-prefix "file://" (format "%s" (plist-get symbol-info :uri)))))
@@ -1549,6 +1611,18 @@ So we build this macro to restore postion after code format."
           (find-file symbol-file)
           (goto-char (acm-backend-lsp-position-to-point symbol-position))
           )))))
+
+(defun lsp-bridge-workspace-transform-info(info)
+  (let* ((name (plist-get info :name))
+         (uri (plist-get (plist-get info :location) :uri))
+         (kind (plist-get info :kind))
+         (sanitized-kind (if (< kind (length lsp-bridge-workspace-symbol-kind-to-face)) kind 0))
+         (type (elt lsp-bridge-workspace-symbol-kind-to-face sanitized-kind))
+         (typestr (propertize (format "[%s] " (car type)) 'face (cdr type)))
+         (project-root (locate-dominating-file default-directory ".git"))
+         (pathstr (propertize (format " · %s" (file-relative-name (substring uri 7 nil) project-root))
+                              'face font-lock-comment-face)))
+    (concat typestr name pathstr)))
 
 (defun lsp-bridge-code-action (&optional action-kind)
   (interactive)
