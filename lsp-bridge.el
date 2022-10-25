@@ -1532,9 +1532,9 @@ So we build this macro to restore postion after code format."
   (interactive)
   (lsp-bridge-call-file-api "ignore_diagnostic"))
 
-(defun lsp-bridge-workspace-list-symbols ()
-  (interactive)
-  (lsp-bridge-call-file-api "workspace_symbol" ""))
+(defun lsp-bridge-workspace-list-symbols (query)
+  (interactive "sWorkspace symbol query: ")
+  (lsp-bridge-call-file-api "workspace_symbol" query))
 
 (defun lsp-bridge-workspace--list-symbols (info)
   (if (zerop (length info))
