@@ -8,6 +8,7 @@ class WorkspaceSymbol(Handler):
     provider = "workspace_symbol_provider"
 
     def process_request(self, query) -> dict:
+        query = ''.join(query.split())
         return dict(query=query)
 
     def process_response(self, response: dict) -> None:
