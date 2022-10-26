@@ -583,8 +583,9 @@ The key of candidate will change between two LSP results."
 (defun acm-init-colors (&optional force)
   (let* ((is-dark-mode (string-equal (acm-get-theme-mode) "dark"))
          (blend-background (if is-dark-mode "#000000" "#AAAAAA"))
-         (default-background (or (face-attribute 'acm-default-face :background)
-                                 (face-attribute 'default :background))))
+         (default-background (if (equal (face-attribute 'acm-default-face :background) 'unspecified)
+                                 (face-attribute 'default :background)
+                               (face-attribute 'acm-default-face :background))))
     ;; Make sure font size of frame same as Emacs.
     (set-face-attribute 'acm-buffer-size-face nil :height (face-attribute 'default :height))
 
