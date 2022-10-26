@@ -1449,8 +1449,9 @@ So we build this macro to restore postion after code format."
                                (3 'lsp-bridge-diagnostics-info-face)
                                (4 'lsp-bridge-diagnostics-hint-face))))
           (overlay-put overlay 'face overlay-face)
+          (overlay-put overlay 'message message)
           (overlay-put overlay
-                       'help-echo
+                       'display-message
                        (if (> diagnostic-number 1)
                            (format "[%s:%s] %s" (1+ diagnostic-index) diagnostic-number message)
                          message))
@@ -1462,13 +1463,16 @@ So we build this macro to restore postion after code format."
 (defvar lsp-bridge-diagnostic-frame nil)
 
 (defun lsp-bridge-show-diagnostic-tooltip (diagnostic-overlay)
-  (let* ((diagnostic-info (overlay-get diagnostic-overlay 'help-echo))
+  (let* ((diagnostic-display-message (overlay-get diagnostic-overlay 'display-message))
+         (diagnostic-message (overlay-get diagnostic-overlay 'message))
          (foreground-color (plist-get (face-attribute (overlay-get diagnostic-overlay 'face) :underline) :color)))
     (goto-char (overlay-start diagnostic-overlay))
 
     (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-tooltip)
       (erase-buffer)
-      (insert diagnostic-info))
+      (insert diagnostic-display-message)
+      
+      (setq-local lsp-bridge-diagnostic-message diagnostic-message))
 
     (when (posframe-workable-p)
       ;; Perform redisplay make sure posframe can poup to
@@ -1520,9 +1524,11 @@ So we build this macro to restore postion after code format."
   (if (or (zerop (length lsp-bridge-diagnostic-overlays))
           (not (frame-visible-p lsp-bridge-diagnostic-frame)))
       (message "[LSP-Bridge] No diagnostics.")
-    (kill-new (with-current-buffer lsp-bridge-diagnostic-tooltip
-                (buffer-string)))
-    (message "Copy diagnostics content.")))
+    (let ((diagnostic-message (with-current-buffer lsp-bridge-diagnostic-tooltip
+                lsp-bridge-diagnostic-message)))
+      (kill-new diagnostic-message)
+      (message "Copy diagnostics: '%s'" diagnostic-message)
+      )))
 
 (defun lsp-bridge-diagnostic-list ()
   (interactive)
