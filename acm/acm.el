@@ -8,7 +8,7 @@
 ;; Copyright (C) 2022, Andy Stewart, all rights reserved.
 ;; Created: 2022-05-31 16:29:33
 ;; Version: 0.1
-;; Last-Updated: 2022-10-09 14:56:54 +0800
+;; Last-Updated: 2022-10-26 14:05:49 +0800
 ;;           By: Gong Qijian
 ;; URL: https://www.github.org/manateelazycat/acm
 ;; Keywords:
@@ -582,15 +582,17 @@ The key of candidate will change between two LSP results."
 
 (defun acm-init-colors (&optional force)
   (let* ((is-dark-mode (string-equal (acm-get-theme-mode) "dark"))
-         (blend-background (if is-dark-mode "#000000" "#AAAAAA")))
+         (blend-background (if is-dark-mode "#000000" "#AAAAAA"))
+         (default-background (or (face-attribute 'acm-default-face :background)
+                                 (face-attribute 'default :background))))
     ;; Make sure font size of frame same as Emacs.
     (set-face-attribute 'acm-buffer-size-face nil :height (face-attribute 'default :height))
 
     ;; Make sure menu follow the theme of Emacs.
     (when (or force (equal (face-attribute 'acm-default-face :background) 'unspecified))
-      (set-face-background 'acm-default-face (acm-color-blend (face-attribute 'default :background) blend-background (if is-dark-mode 0.8 0.9))))
+      (set-face-background 'acm-default-face (acm-color-blend default-background blend-background (if is-dark-mode 0.8 0.9))))
     (when (or force (equal (face-attribute 'acm-select-face :background) 'unspecified))
-      (set-face-background 'acm-select-face (acm-color-blend (face-attribute 'default :background) blend-background 0.6)))
+      (set-face-background 'acm-select-face (acm-color-blend default-background blend-background 0.6)))
     (when (or force (equal (face-attribute 'acm-select-face :foreground) 'unspecified))
       (set-face-foreground 'acm-select-face (face-attribute 'font-lock-function-name-face :foreground)))))
 
