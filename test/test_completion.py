@@ -33,14 +33,14 @@ class SimpleCompletion(unittest.TestCase):
     def test_python(self):
         try_complete(SingleFile(
             filename="test.py",
-            code="import os\n\nos.",
+            code="import os\n\nos.system",
             mode="python-mode",
         ), label="system")
 
     def test_python_with_utf8(self):
         try_complete(SingleFile(
             filename="test.py",
-            code="import os\n\ndef 测试():\n    os.",
+            code="import os\n\ndef 测试():\n    os.system",
             mode="python-mode",
         ), label="system")
 
