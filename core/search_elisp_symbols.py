@@ -53,7 +53,7 @@ class SearchElispSymbols:
         
     def sort_symbols(self, prefix, symbol_a, symbol_b):
         symbol_a_starts_with_prefix = symbol_a.startswith(prefix)
-        symbol_b_starts_with_prefix = symbol_a.startswith(prefix)
+        symbol_b_starts_with_prefix = symbol_b.startswith(prefix)
         
         if symbol_a_starts_with_prefix and symbol_b_starts_with_prefix:
             return len(symbol_a) < len(symbol_b)
