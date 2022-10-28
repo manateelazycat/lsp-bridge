@@ -986,56 +986,57 @@ So we build this macro to restore postion after code format."
     (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))))
 
 (defun lsp-bridge-monitor-after-change (begin end length)
-  ;; Record last command to `lsp-bridge-last-change-command'.
-  (setq lsp-bridge-last-change-command (format "%s" this-command))
+  (unless lsp-bridge-revert-buffer-flag
+    ;; Record last command to `lsp-bridge-last-change-command'.
+    (setq lsp-bridge-last-change-command (format "%s" this-command))
 
-  ;; Send change_file request to trigger LSP completion.
-  (lsp-bridge-call-file-api "change_file"
-                            lsp-bridge--before-change-begin-pos
-                            lsp-bridge--before-change-end-pos
-                            length
-                            (buffer-substring-no-properties begin end)
-                            (lsp-bridge--position)
-                            (acm-char-before)
-                            (buffer-name)
-                            (acm-get-input-prefix))
+    ;; Send change_file request to trigger LSP completion.
+    (lsp-bridge-call-file-api "change_file"
+                              lsp-bridge--before-change-begin-pos
+                              lsp-bridge--before-change-end-pos
+                              length
+                              (buffer-substring-no-properties begin end)
+                              (lsp-bridge--position)
+                              (acm-char-before)
+                              (buffer-name)
+                              (acm-get-input-prefix))
 
-  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (let* ((current-word (thing-at-point 'word t))
-           (current-symbol (thing-at-point 'symbol t)))
-      ;; TabNine search.
-      (when acm-enable-tabnine
-        (lsp-bridge-tabnine-complete))
+    (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+      (let* ((current-word (thing-at-point 'word t))
+             (current-symbol (thing-at-point 'symbol t)))
+        ;; TabNine search.
+        (when acm-enable-tabnine
+          (lsp-bridge-tabnine-complete))
 
-      ;; Search sdcv dictionary.
-      (when acm-enable-search-sdcv-words
-        ;; Search words if current prefix is not empty.
-        (unless (or (string-equal current-word "") (null current-word))
-          (lsp-bridge-call-async "search_sdcv_words_search" current-word)))
-
-      ;; Search elisp symbol.
-      (when (acm-is-elisp-mode-p)
-        ;; Search words if current prefix is not empty.
-        (unless (or (string-equal current-symbol "") (null current-symbol))
-          (lsp-bridge-call-async "search_elisp_symbols_search" current-symbol)))
-
-      ;; Send change file to search-words backend.
-      (when buffer-file-name
-        (let ((current-word (acm-backend-search-file-words-get-point-string)))
+        ;; Search sdcv dictionary.
+        (when acm-enable-search-sdcv-words
           ;; Search words if current prefix is not empty.
           (unless (or (string-equal current-word "") (null current-word))
-            (lsp-bridge-call-async "search_file_words_search" current-word)))
+            (lsp-bridge-call-async "search_sdcv_words_search" current-word)))
 
-        (lsp-bridge-call-async "search_file_words_change_file" buffer-file-name))
+        ;; Search elisp symbol.
+        (when (acm-is-elisp-mode-p)
+          ;; Search words if current prefix is not empty.
+          (unless (or (string-equal current-symbol "") (null current-symbol))
+            (lsp-bridge-call-async "search_elisp_symbols_search" current-symbol)))
 
-      ;; Send tailwind keyword search request just when cursor in class area.
-      (when (and (derived-mode-p 'web-mode)
-                 (lsp-bridge-in-string-p)
-                 (save-excursion
-                   (search-backward-regexp "class=" (point-at-bol) t)))
-        (unless (or (string-equal current-symbol "") (null current-symbol))
-          (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol)))
-      )))
+        ;; Send change file to search-words backend.
+        (when buffer-file-name
+          (let ((current-word (acm-backend-search-file-words-get-point-string)))
+            ;; Search words if current prefix is not empty.
+            (unless (or (string-equal current-word "") (null current-word))
+              (lsp-bridge-call-async "search_file_words_search" current-word)))
+
+          (lsp-bridge-call-async "search_file_words_change_file" buffer-file-name))
+
+        ;; Send tailwind keyword search request just when cursor in class area.
+        (when (and (derived-mode-p 'web-mode)
+                   (lsp-bridge-in-string-p)
+                   (save-excursion
+                     (search-backward-regexp "class=" (point-at-bol) t)))
+          (unless (or (string-equal current-symbol "") (null current-symbol))
+            (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol)))
+        ))))
 
 (defvar lsp-bridge-elisp-symbols-timer nil)
 (defvar lsp-bridge-elisp-symbols-size 0)
@@ -1367,6 +1368,8 @@ So we build this macro to restore postion after code format."
     (setq make-backup-files nil)
     (setq auto-save-default nil)
     (setq create-lockfiles nil))
+  
+  (setq-local lsp-bridge-revert-buffer-flag nil)    
 
   (when-let* ((lsp-server-name (lsp-bridge-has-lsp-server-p)))
     ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
@@ -1383,7 +1386,7 @@ So we build this macro to restore postion after code format."
     (setq-local acm-backend-lsp-filepath (file-truename buffer-file-name))
     (setq-local acm-backend-lsp-items (make-hash-table :test 'equal))
     (setq-local acm-backend-lsp-server-names nil)
-
+    
     (when lsp-bridge-enable-signature-help
       (acm-run-idle-func lsp-bridge-signature-help-timer lsp-bridge-signature-help-fetch-idle 'lsp-bridge-signature-help-fetch))
     (when lsp-bridge-enable-search-words
@@ -1471,7 +1474,7 @@ So we build this macro to restore postion after code format."
     (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-tooltip)
       (erase-buffer)
       (insert diagnostic-display-message)
-      
+
       (setq-local lsp-bridge-diagnostic-message diagnostic-message))
 
     (when (posframe-workable-p)
@@ -1525,7 +1528,7 @@ So we build this macro to restore postion after code format."
           (not (frame-visible-p lsp-bridge-diagnostic-frame)))
       (message "[LSP-Bridge] No diagnostics.")
     (let ((diagnostic-message (with-current-buffer lsp-bridge-diagnostic-tooltip
-                lsp-bridge-diagnostic-message)))
+                                lsp-bridge-diagnostic-message)))
       (kill-new diagnostic-message)
       (message "Copy diagnostics: '%s'" diagnostic-message)
       )))
@@ -1539,33 +1542,33 @@ So we build this macro to restore postion after code format."
   (lsp-bridge-call-file-api "ignore_diagnostic"))
 
 (defcustom lsp-bridge-workspace-symbol-kind-to-face
-  [("    " . nil)                           ; Unknown - 0
-   ("File" . font-lock-builtin-face)        ; File - 1
-   ("Modu" . font-lock-keyword-face)        ; Module - 2
-   ("Nmsp" . font-lock-keyword-face)        ; Namespace - 3
-   ("Pack" . font-lock-keyword-face)        ; Package - 4
-   ("Clss" . font-lock-type-face)           ; Class - 5
-   ("Meth" . font-lock-function-name-face)  ; Method - 6
-   ("Prop" . font-lock-constant-face)       ; Property - 7
-   ("Fld " . font-lock-constant-face)       ; Field - 8
-   ("Cons" . font-lock-function-name-face)  ; Constructor - 9
-   ("Enum" . font-lock-type-face)           ; Enum - 10
-   ("Intf" . font-lock-type-face)           ; Interface - 11
-   ("Func" . font-lock-function-name-face)  ; Function - 12
-   ("Var " . font-lock-variable-name-face)  ; Variable - 13
-   ("Cnst" . font-lock-constant-face)       ; Constant - 14
-   ("Str " . font-lock-string-face)         ; String - 15
-   ("Num " . font-lock-builtin-face)        ; Number - 16
-   ("Bool " . font-lock-builtin-face)       ; Boolean - 17
-   ("Arr " . font-lock-builtin-face)        ; Array - 18
-   ("Obj " . font-lock-builtin-face)        ; Object - 19
-   ("Key " . font-lock-constant-face)       ; Key - 20
-   ("Null" . font-lock-builtin-face)        ; Null - 21
-   ("EmMm" . font-lock-constant-face)       ; EnumMember - 22
-   ("Srct" . font-lock-type-face)           ; Struct - 23
-   ("Evnt" . font-lock-builtin-face)        ; Event - 24
-   ("Op  " . font-lock-function-name-face)  ; Operator - 25
-   ("TPar" . font-lock-type-face)]          ; TypeParameter - 26
+  [("    " . nil)                          ; Unknown - 0
+   ("File" . font-lock-builtin-face)       ; File - 1
+   ("Modu" . font-lock-keyword-face)       ; Module - 2
+   ("Nmsp" . font-lock-keyword-face)       ; Namespace - 3
+   ("Pack" . font-lock-keyword-face)       ; Package - 4
+   ("Clss" . font-lock-type-face)          ; Class - 5
+   ("Meth" . font-lock-function-name-face) ; Method - 6
+   ("Prop" . font-lock-constant-face)      ; Property - 7
+   ("Fld " . font-lock-constant-face)      ; Field - 8
+   ("Cons" . font-lock-function-name-face) ; Constructor - 9
+   ("Enum" . font-lock-type-face)          ; Enum - 10
+   ("Intf" . font-lock-type-face)          ; Interface - 11
+   ("Func" . font-lock-function-name-face) ; Function - 12
+   ("Var " . font-lock-variable-name-face) ; Variable - 13
+   ("Cnst" . font-lock-constant-face)      ; Constant - 14
+   ("Str " . font-lock-string-face)        ; String - 15
+   ("Num " . font-lock-builtin-face)       ; Number - 16
+   ("Bool " . font-lock-builtin-face)      ; Boolean - 17
+   ("Arr " . font-lock-builtin-face)       ; Array - 18
+   ("Obj " . font-lock-builtin-face)       ; Object - 19
+   ("Key " . font-lock-constant-face)      ; Key - 20
+   ("Null" . font-lock-builtin-face)       ; Null - 21
+   ("EmMm" . font-lock-constant-face)      ; EnumMember - 22
+   ("Srct" . font-lock-type-face)          ; Struct - 23
+   ("Evnt" . font-lock-builtin-face)       ; Event - 24
+   ("Op  " . font-lock-function-name-face) ; Operator - 25
+   ("TPar" . font-lock-type-face)]         ; TypeParameter - 26
   "Mapping between eacho of LSP's SymbolKind and a face.
 A vector of 26 cons cells, where the ith cons cell contains
 the string representation and face to use for the i+1th
@@ -1873,6 +1876,13 @@ SymbolKind (defined in the LSP)."
       (setq-local acm-backend-lsp-filepath new-name)))
   (apply orig-fun arg args))
 (advice-add #'rename-file :around #'lsp-bridge--rename-file-advisor)
+
+;; We use `lsp-bridge-revert-buffer-flag' var avoid lsp-bridge send change_file request while execute `revert-buffer' command.
+(defun lsp-bridge--revert-buffer-advisor (orig-fun &optional arg &rest args)
+  (setq-local lsp-bridge-revert-buffer-flag t)
+  (apply orig-fun arg args)
+  (setq-local lsp-bridge-revert-buffer-flag nil))
+(advice-add #'revert-buffer :around #'lsp-bridge--revert-buffer-advisor)
 
 (defun lsp-bridge--completion-hide-advisor (&rest args)
   (when lsp-bridge-mode
