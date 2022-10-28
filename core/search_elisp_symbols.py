@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import functools
 import threading
 import os
 import traceback
@@ -50,6 +51,19 @@ class SearchElispSymbols:
     def match_symbol(self, prefix, prefix_regexp, symbol):
         return symbol.startswith(prefix) or symbol.replace("-", "").startswith(prefix) or prefix_regexp.match(symbol)
         
+    def sort_symbols(self, prefix, symbol_a, symbol_b):
+        symbol_a_starts_with_prefix = symbol_a.startswith(prefix)
+        symbol_b_starts_with_prefix = symbol_a.startswith(prefix)
+        
+        if symbol_a_starts_with_prefix and symbol_b_starts_with_prefix:
+            return len(symbol_a) < len(symbol_b)
+        elif symbol_a_starts_with_prefix:
+            return -1
+        elif symbol_b_starts_with_prefix:
+            return 1
+        else: 
+            return len(symbol_a) < len(symbol_b)
+    
     def search_symbols(self, prefix: str, ticker: int):
         candidates = []
         prefix_regexp = re.compile(re.sub(r'([a-zA-Z0-9-_])', r'\1.*', re.escape(prefix)))
@@ -61,4 +75,5 @@ class SearchElispSymbols:
                     break
                 
         if ticker == self.search_ticker:
-            eval_in_emacs("lsp-bridge-search-elisp-symbols--record-items", candidates)
+            eval_in_emacs("lsp-bridge-search-elisp-symbols--record-items", 
+                          sorted(candidates, key=functools.cmp_to_key(lambda a, b: self.sort_symbols(prefix, a, b))))
