@@ -1,0 +1,9 @@
+{
+  "name": "phpactor",
+  "languageId": "php",
+  "command": [
+    "phpactor",
+    "--stdio"
+  ],
+  "settings": {}
+}
