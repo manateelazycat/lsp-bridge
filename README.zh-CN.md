@@ -84,13 +84,16 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `acm-doc-scroll-up`: API 文档窗口向上滚动
 * `acm-doc-scroll-down`: API 文档窗口向下滚动
 
+## LSP 服务器选项
+* `lsp-bridge-c-lsp-server`: C 语言的服务器，可以选择`clangd`或者`ccls`
+* `lsp-bridge-python-lsp-server`: Python 语言的服务器，可以选择`pyright`或者`jedi`
+* `lsp-bridge-php-lsp-server`: PHP 语言的服务器，可以选择`intelephense`或者`phpactor`
+* `lsp-bridge-tex-lsp-server`: LaTeX 语言的服务器，可以选择`texlab`或者`digestif`
+
 ## 选项
 * `lsp-bridge-python-command`: Python 命令的路径, 如果你用 `conda`， 你也许会定制这个选项。 Windows 平台用的是 `python.exe` 而不是 `python3`, 如果 lsp-bridge 不能工作， 可以尝试改成 `python3`
 * `lsp-bridge-complete-manually`: 只有当用户手动调用 `lsp-bridge-popup-complete-menu` 命令的时候才弹出补全菜单， 默认关闭
 * `lsp-bridge-get-workspace-folder`: 在 Java 中需要把多个项目放到一个 Workspace 目录下， 才能正常进行定义跳转， 可以自定义这个函数， 函数输入是项目路径， 返回对应的 Workspace 目录
-* `lsp-bridge-c-lsp-server`: C 语言的服务器，可以选择`clangd`或者`ccls`
-* `lsp-bridge-python-lsp-server`: Python 语言的服务器，可以选择`pyright`或者`jedi`
-* `lsp-bridge-tex-lsp-server`: LaTeX 语言的服务器，可以选择`texlab`或者`digestif`
 * `lsp-bridge-org-babel-lang-list`: 支持 org-mode 代码块补全的语言列表, 需要先在代码块调用命令 `org-edit-special`， 在弹出窗口 lsp-bridge 才能提供补全
 * `lsp-bridge-enable-diagnostics`: 代码诊断， 默认打开
 * `lsp-bridge-enable-search-words`: 索引打开文件的单词， 默认打开
@@ -194,6 +197,7 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 |   40 | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)                                            | swift                           | Sourcekit-lsp 包含在 swift toolchain 中。                                                                                                                                           |
 |   41 | [omnisharp](https://github.com/OmniSharp/omnisharp-roslyn)                                         | c#                              | OmniSharp dotnet 平台的 lsp. 使用 `M-x lsp-bridge-install-omnisharp` 安装                                                                                                           |
 |    42 | [deno](https://deno.land)                                         | Deno                              | Deno 使用 TypeScript 来编程， 你需要定制选项 `lsp-bridge-get-single-lang-server-by-project` 当工程是 Deno 项目的路径时， 返回 "deno" 字符串             |
+|    43 | [Phpactor](https://github.com/phpactor/phpactor)                                                   | php                             |lsp-brige-php-lsp-server 设置成 `phpactor`                                                                                                                                                                                                                      |
 
 ### 不会支持的特性：
 lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端, 但不是实现 LSP 协议最全的 LSP 客户端。

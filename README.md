@@ -85,13 +85,16 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `acm-doc-scroll-up`: API document window scroll up
 * `acm-doc-scroll-down`: API document window scroll down
 
+## LSP server options
+* `lsp-bridge-c-lsp-server`: C language server, you can choose `clangd` or` ccls`
+* `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright` or` jedi`
+* `lsp-bridge-php-lsp-server`: PHP language server, you can choose `intelephense` or `phpactor`
+* `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `taxlab` or` digestif`
+
 ## Options
 * `lsp-bridge-python-command`: The path of the python command, if you use `conda`, you may customize this option. Windows platform using `python.exe` rather than `python3`, if lsp-bridge can't work, try set to `python3`
 * `lsp-bridge-complete-manually`: Only popup completion menu when user call `lsp-bridge-popup-complete-menu` command, default is nil
 * `lsp-bridge-get-workspace-folder`: You need to put multiple project in a `workspace` directory in Java before you can jump function defintion normally. This function can be customized, the function input is the project path and returns the `workspace` directory corresponding
-* `lsp-bridge-c-lsp-server`: C language server, you can choose `clangd` or` ccls`
-* `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright` or` jedi`
-* `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `taxlab` or` digestif`
 * `lsp-bridge-org-babel-lang-list`: list of language to support org-mode code block completion, need move cursor to code block and execute command `org-edit-special`, then lsp-bridge can show completion menu in popup window
 * `lsp-bridge-enable-diagnostics`: code diagnostic, enable by default
 * `lsp-bridge-enable-search-words`: index the word of the file, enable by default
@@ -195,7 +198,7 @@ You need to install the LSP server corresponding to each programming language, t
 |    40 | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)                                            | swift                           | The SourceKit-LSP server is included with the Swift toolchain.                                                                                                          |
 |    41 | [omnisharp](https://github.com/OmniSharp/omnisharp-roslyn)                                         | c#                              | OmniSharp is a .NET development platform based on Roslyn workspaces. use `M-x lsp-bridge-install-omnisharp` to install it                                               |
 |    42 | [deno](https://deno.land)                                         | Deno                              | Deno runtime use TypeScript as source code, you need customize option `lsp-bridge-get-single-lang-server-by-project` that return result "deno" when `project-path` match Deno project.             |
-|    43 | [Phpactor](https://github.com/phpactor/phpactor)                                                   | php                             |                                                                                                                                                                         |
+|    43 | [Phpactor](https://github.com/phpactor/phpactor)                                                   | php                             | lsp-brige-php-lsp-server set to `phpactor`                                                                                                                                                                         |
 
 
 ### Features that won't be supported
