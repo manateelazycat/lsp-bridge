@@ -323,6 +323,11 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Default LSP server for C language, you can choose `clangd' or `ccls'."
   :type 'string)
 
+(defcustom lsp-bridge-php-lsp-server "intelephense"
+  "Default LSP server for PHP language, you can choose `intelephense' or `phpactor'."
+  :type 'string
+  :safe #'stringp)
+
 (defcustom lsp-bridge-python-lsp-server "pyright"
   "Default LSP server for Python language, you can choose `pyright', `jedi', `python-ms'."
   :type 'string)
@@ -367,7 +372,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ((sh-mode) . "bash-language-server")
     ((css-mode) . "vscode-css-language-server")
     (elm-mode . "elm-language-server")
-    (php-mode . "intelephense")
+    (php-mode . lsp-bridge-php-lsp-server)
     (yaml-mode . "yaml-language-server")
     (zig-mode . "zls")
     (dockerfile-mode . "docker-langserver")

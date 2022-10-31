@@ -195,6 +195,7 @@ You need to install the LSP server corresponding to each programming language, t
 |    40 | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)                                            | swift                           | The SourceKit-LSP server is included with the Swift toolchain.                                                                                                          |
 |    41 | [omnisharp](https://github.com/OmniSharp/omnisharp-roslyn)                                         | c#                              | OmniSharp is a .NET development platform based on Roslyn workspaces. use `M-x lsp-bridge-install-omnisharp` to install it                                               |
 |    42 | [deno](https://deno.land)                                         | Deno                              | Deno runtime use TypeScript as source code, you need customize option `lsp-bridge-get-single-lang-server-by-project` that return result "deno" when `project-path` match Deno project.             |
+|    43 | [Phpactor](https://github.com/phpactor/phpactor)                                                   | php                             |                                                                                                                                                                         |
 
 
 ### Features that won't be supported
