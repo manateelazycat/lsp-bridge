@@ -90,7 +90,9 @@
   "LSP-Bridge group."
   :group 'applications)
 
-(defvar acm-library-path (expand-file-name "acm" (file-name-directory load-file-name)))
+(defvar acm-library-path (expand-file-name "acm" (if load-file-name
+                                                     (file-name-directory load-file-name)
+                                                   default-directory)))
 (add-to-list 'load-path acm-library-path t)
 (require 'acm)
 
@@ -227,7 +229,9 @@ Setting this to nil or 0 will turn off the indicator."
 (defvar lsp-bridge-server nil
   "The LSP-Bridge Server.")
 
-(defvar lsp-bridge-python-file (expand-file-name "lsp_bridge.py" (file-name-directory load-file-name)))
+(defvar lsp-bridge-python-file (expand-file-name "lsp_bridge.py" (if load-file-name
+                                                                     (file-name-directory load-file-name)
+                                                                   default-directory)))
 
 (defvar lsp-bridge-mark-ring nil
   "The list of saved lsp-bridge marks, most recent first.")
