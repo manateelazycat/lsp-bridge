@@ -329,7 +329,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   :safe #'stringp)
 
 (defcustom lsp-bridge-python-lsp-server "pyright"
-  "Default LSP server for Python language, you can choose `pyright', `jedi', `python-ms'."
+  "Default LSP server for Python language, you can choose `pyright', `jedi', `python-ms', `pylsp'."
   :type 'string)
 
 (defcustom lsp-bridge-tex-lsp-server "texlab"
