@@ -135,7 +135,7 @@ Setting this to nil or 0 will turn off the indicator."
   '("undo-tree-undo" "undo-tree-redo"
     "kill-region" "delete-block-backward"
     "python-black-buffer" "acm-complete-or-expand-yas-snippet"
-    "yank" "string-rectangle" "query-replace")
+    "yank" "string-rectangle" "query-replace" "grammatical-edit-unwrap")
   "If last command is match this option, stop popup completion ui."
   :type 'cons
   :group 'lsp-bridge)
