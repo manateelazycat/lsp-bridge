@@ -86,7 +86,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 
 ## LSP 服务器选项
 * `lsp-bridge-c-lsp-server`: C 语言的服务器，可以选择`clangd`或者`ccls`
-* `lsp-bridge-python-lsp-server`: Python 语言的服务器，可以选择`pyright`或者`jedi`
+* `lsp-bridge-python-lsp-server`: Python 语言的服务器，可以选择 `pyright`, `jedi`, `python-ms`, `pylsp`
 * `lsp-bridge-php-lsp-server`: PHP 语言的服务器，可以选择`intelephense`或者`phpactor`
 * `lsp-bridge-tex-lsp-server`: LaTeX 语言的服务器，可以选择`texlab`或者`digestif`
 

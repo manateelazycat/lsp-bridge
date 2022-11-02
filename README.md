@@ -87,7 +87,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 
 ## LSP server options
 * `lsp-bridge-c-lsp-server`: C language server, you can choose `clangd` or` ccls`
-* `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright` or` jedi`
+* `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright`, `jedi`, `python-ms`, `pylsp`
 * `lsp-bridge-php-lsp-server`: PHP language server, you can choose `intelephense` or `phpactor`
 * `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `taxlab` or` digestif`
 
