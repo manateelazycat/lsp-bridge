@@ -8,7 +8,7 @@
   "settings": {},
   "initializationOptions": {
     "typescript": {
-      "serverPath": "/usr/local/lib/node_modules/typescript/lib/tsserverlibrary.js"
+      "tsdk": "/usr/local/lib/node_modules/typescript/lib"
     },
     "languageFeatures": {
       "references": true,

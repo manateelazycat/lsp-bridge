@@ -5,7 +5,7 @@
   "settings": {},
   "initializationOptions": {
     "typescript": {
-      "serverPath": "%USERPROFILE%\\AppData\\Roaming\\npm\\node_modules\\typescript\\lib\\tsserverlibrary.js"
+      "tsdk": "%USERPROFILE%\\AppData\\Roaming\\npm\\node_modules\\typescript\\lib"
     },
     "languageFeatures": {
       "references": true,
