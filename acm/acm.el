@@ -121,7 +121,7 @@
   '(nil ignore universal-argument universal-argument-more digit-argument
         self-insert-command org-self-insert-command
         ;; Avoid flashing completion menu when backward delete char
-        grammatical-edit-backward-delete backward-delete-char-untabify 
+        grammatical-edit-backward-delete backward-delete-char-untabify
         python-indent-dedent-line-backspace delete-backward-char hungry-delete-backward
         "\\`acm-" "\\`scroll-other-window" "\\`special-lispy-")
   "Continue ACM completion after executing these commands."
@@ -687,14 +687,15 @@ The key of candidate will change between two LSP results."
        (string-equal (pgtk-backend-display-class) "GdkWaylandDisplay")))
 
 (defun acm-doc-hide ()
-  (unless acm-doc-frame-hide-p
-    ;; FIXME:
-    ;; Because `make-frame-invisible' is ver slow in pgtk branch.
-    ;; We use `run-with-timer' to avoid call `make-frame-invisible' too frequently.
-    (unless (acm-running-in-wayland-native)
-      (when (acm-frame-visible-p acm-doc-frame)
-        (make-frame-invisible acm-doc-frame)))
-    (setq acm-doc-frame-hide-p t)))
+  (if (acm-running-in-wayland-native)
+      (unless acm-doc-frame-hide-p
+        ;; FIXME:
+        ;; Because `make-frame-invisible' is ver slow in pgtk branch.
+        ;; We use `run-with-timer' to avoid call `make-frame-invisible' too frequently.
+        (when (acm-frame-visible-p acm-doc-frame)
+          (make-frame-invisible acm-doc-frame))
+        (setq acm-doc-frame-hide-p t))
+    (make-frame-invisible acm-doc-frame)))
 
 (when (acm-running-in-wayland-native)
   (unless acm-doc-frame-hide-timer
@@ -703,8 +704,7 @@ The key of candidate will change between two LSP results."
                           #'(lambda ()
                               (when (and acm-doc-frame-hide-p
                                          acm-doc-frame
-                                         (frame-live-p acm-doc-frame)
-                                         (frame-visible-p acm-doc-frame))
+                                         (acm-frame-visible-p acm-doc-frame))
                                 ;; FIXME:
                                 ;; Because `make-frame-invisible' is ver slow in pgtk branch.
                                 ;; We use `run-with-timer' to avoid call `make-frame-invisible' too frequently.
