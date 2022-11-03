@@ -688,13 +688,16 @@ The key of candidate will change between two LSP results."
 
 (defun acm-doc-hide ()
   (if (acm-running-in-wayland-native)
+      ;; FIXME:
+      ;; Because `make-frame-invisible' is ver slow in pgtk branch.
+      ;; We use `run-with-timer' to avoid call `make-frame-invisible' too frequently.
       (unless acm-doc-frame-hide-p
-        ;; FIXME:
-        ;; Because `make-frame-invisible' is ver slow in pgtk branch.
-        ;; We use `run-with-timer' to avoid call `make-frame-invisible' too frequently.
-        (when (acm-frame-visible-p acm-doc-frame)
-          (make-frame-invisible acm-doc-frame))
+        (acm-doc--hide)
         (setq acm-doc-frame-hide-p t))
+    (acm-doc--hide)))
+
+(defun acm-doc--hide()
+  (when (acm-frame-visible-p acm-doc-frame)
     (make-frame-invisible acm-doc-frame)))
 
 (when (acm-running-in-wayland-native)
@@ -702,13 +705,11 @@ The key of candidate will change between two LSP results."
     (setq acm-doc-frame-hide-timer
           (run-with-timer 0 0.5
                           #'(lambda ()
-                              (when (and acm-doc-frame-hide-p
-                                         acm-doc-frame
-                                         (acm-frame-visible-p acm-doc-frame))
-                                ;; FIXME:
-                                ;; Because `make-frame-invisible' is ver slow in pgtk branch.
-                                ;; We use `run-with-timer' to avoid call `make-frame-invisible' too frequently.
-                                (make-frame-invisible acm-doc-frame)))))))
+                              ;; FIXME:
+                              ;; Because `make-frame-invisible' is ver slow in pgtk branch.
+                              ;; We use `run-with-timer' to avoid call `make-frame-invisible' too frequently.
+                              (when acm-doc-frame-hide-p
+                                (acm-doc--hide)))))))
 
 (defun acm--pre-command ()
   ;; Use `pre-command-hook' to hide completion menu when command match `acm-continue-commands'.
