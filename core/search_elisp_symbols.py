@@ -38,7 +38,7 @@ class SearchElispSymbols:
         self.symbols = []
         
     def update(self, symbols):
-        self.symbols = sorted(symbols, key=lambda symbol: len(str(symbol)))
+        self.symbols = sorted(list(map(str, symbols)), key=len)
         
     def search(self, prefix: str):
         ticker = self.search_ticker + 1
