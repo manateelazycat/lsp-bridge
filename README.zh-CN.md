@@ -140,6 +140,23 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 2. ```lsp-bridge-multi-lang-server-extension-list```: 根据文件的扩展名来返回多服务器配置名， 比如打开*.vue 文件时，我们会使用 ```volar_emmet``` 来同时利用 `volar` 和 `emmet-ls` 两种 LSP 服务器提供补全
 3. ```lsp-bridge-multi-lang-server-mode-list```: 根据 Emacs 的 major-mode 来返回对应的多服务器配置名
 
+举例, 我们可以通过如下配置， 对 Deno 脚本开启 Deno LSP 服务器：
+
+```elisp
+(setq lsp-bridge-get-single-lang-server-by-project
+      (lambda (project-path filepath)
+        ;; If typescript file include deno.land url, then use Deno LSP server.
+        (save-excursion
+          (when (string-equal (file-name-extension filepath) "ts")
+            (dolist (buf (buffer-list))
+              (when (string-equal (buffer-file-name buf) filepath)
+                (with-current-buffer buf
+                  (goto-char (point-min))
+                  (when (search-forward-regexp (regexp-quote "from \"https://deno.land") nil t)
+                    (return "deno")))))))))
+```
+
+
 ## 添加新的编程语言支持?
 
 1. 在 lsp-bridge/langserver 目录下创建配置文件， 比如`pyright.json`就是 pyright 服务器的配置文件 (windows 平台用`pyright_windows.json`, macOS 平台用`pyright_darwin.json`)。

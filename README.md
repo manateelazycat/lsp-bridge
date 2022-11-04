@@ -141,6 +141,22 @@ If you are writing JavaScript code, you may need to customize multi-server confi
 2. ```lsp-bridge-multi-lang-server-extension-list```: Return multi-server configuration name according to the expansion of the file, for example, when opening the *.vue file, we will use the `volar` and `emmet-ls` to provide completion service
 3. ```lsp-bridge-multi-lang-server-mode-list```: Return the corresponding multi-server configuration name according to Emacs's major-mode
 
+For example, we can enable the Deno LSP server for the Deno script with the following configuration:
+
+```elisp
+(setq lsp-bridge-get-single-lang-server-by-project
+      (lambda (project-path filepath)
+        ;; If typescript file include deno.land url, then use Deno LSP server.
+        (save-excursion
+          (when (string-equal (file-name-extension filepath) "ts")
+            (dolist (buf (buffer-list))
+              (when (string-equal (buffer-file-name buf) filepath)
+                (with-current-buffer buf
+                  (goto-char (point-min))
+                  (when (search-forward-regexp (regexp-quote "from \"https://deno.land") nil t)
+                    (return "deno")))))))))
+```
+
 ## Add support for new language?
 
 1. Create configuration file under lsp-bridge/langserver, such as `pyright.json` for pyright (windows user please uses `pyright_windows.json`, macOS user please uses `pyright_darwin.json`).
