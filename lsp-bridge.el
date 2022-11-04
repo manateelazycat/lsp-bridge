@@ -226,6 +226,7 @@ Setting this to nil or 0 will turn off the indicator."
   :group 'lsp-bridge)
 
 (defvar lsp-bridge-last-change-command nil)
+(defvar lsp-bridge-last-change-position nil)
 (defvar lsp-bridge-server nil
   "The LSP-Bridge Server.")
 
@@ -792,7 +793,7 @@ So we build this macro to restore postion after code format."
   (when (acm-running-in-wayland-native)
     (message "[LSP-Bridge] Frame render performance is very poor in pgtk branch, recommand use x11 branch to get best render performance.")))
 
-(defvar-local lsp-bridge-last-position 0)
+(defvar-local lsp-bridge-last-cursor-position 0)
 (defvar-local lsp-bridge-prohibit-completion nil)
 (defvar-local lsp-bridge-diagnostic-overlays '())
 
@@ -803,10 +804,11 @@ So we build this macro to restore postion after code format."
         (lsp-bridge-try-completion)))
 
     (when  (lsp-bridge-has-lsp-server-p)
-      (unless (equal (point) lsp-bridge-last-position)
+      ;; Only send `change_cursor' request when user change cursor, except cause by mouse wheel.
+      (unless (equal (point) lsp-bridge-last-cursor-position)
         (unless (eq last-command 'mwheel-scroll)
           (lsp-bridge-call-file-api "change_cursor" (lsp-bridge--position)))
-        (setq-local lsp-bridge-last-position (point)))
+        (setq-local lsp-bridge-last-cursor-position (point)))
 
       ;; Hide hover tooltip.
       (if (not (string-prefix-p "lsp-bridge-popup-documentation-scroll" this-command-string))
@@ -859,14 +861,18 @@ So we build this macro to restore postion after code format."
   (lsp-bridge-try-completion))
 
 (defun lsp-bridge-try-completion ()
-  (if lsp-bridge-prohibit-completion
-      (setq-local lsp-bridge-prohibit-completion nil)
-    ;; Try popup completion frame.
-    (if (cl-every (lambda (pred)
-                    (if (functionp pred) (funcall pred) t))
-                  lsp-bridge-completion-popup-predicates)
-        (acm-update)
-      (acm-hide))))
+  (cond (lsp-bridge-prohibit-completion
+         (setq-local lsp-bridge-prohibit-completion nil))
+        (t
+         ;; Don't popup completion menu when `lsp-bridge-last-change-position' (cursor before send completion request) is not equal current cursor position.
+         (if (equal lsp-bridge-last-change-position
+                    (list (current-buffer) (buffer-chars-modified-tick) (point)))
+             ;; Try popup completion frame.
+             (if (cl-every (lambda (pred)
+                             (if (functionp pred) (funcall pred) t))
+                           lsp-bridge-completion-popup-predicates)
+                 (acm-update)
+               (acm-hide))))))
 
 (defun lsp-bridge-popup-complete-menu ()
   (interactive)
@@ -998,6 +1004,9 @@ So we build this macro to restore postion after code format."
   (unless lsp-bridge-revert-buffer-flag
     ;; Record last command to `lsp-bridge-last-change-command'.
     (setq lsp-bridge-last-change-command (format "%s" this-command))
+
+    ;; Record last change position to avoid popup outdate completions.
+    (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
 
     ;; Send change_file request to trigger LSP completion.
     (lsp-bridge-call-file-api "change_file"
@@ -1377,8 +1386,8 @@ So we build this macro to restore postion after code format."
     (setq make-backup-files nil)
     (setq auto-save-default nil)
     (setq create-lockfiles nil))
-  
-  (setq-local lsp-bridge-revert-buffer-flag nil)    
+
+  (setq-local lsp-bridge-revert-buffer-flag nil)
 
   (when-let* ((lsp-server-name (lsp-bridge-has-lsp-server-p)))
     ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
@@ -1395,7 +1404,7 @@ So we build this macro to restore postion after code format."
     (setq-local acm-backend-lsp-filepath (file-truename buffer-file-name))
     (setq-local acm-backend-lsp-items (make-hash-table :test 'equal))
     (setq-local acm-backend-lsp-server-names nil)
-    
+
     (when lsp-bridge-enable-signature-help
       (acm-run-idle-func lsp-bridge-signature-help-timer lsp-bridge-signature-help-fetch-idle 'lsp-bridge-signature-help-fetch))
     (when lsp-bridge-enable-search-words
