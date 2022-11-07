@@ -53,10 +53,13 @@ class Completion(Handler):
 
         if response is not None:
             item_index = 0
+            filter = self.prefix if not response["isIncomplete"] else None
             
             for item in response["items"] if "items" in response else response:
                 kind = KIND_MAP[item.get("kind", 0)].lower()
                 label = item["label"]
+                if filter and not fuzzy_match(label.lower(), filter):
+                    continue
                 annotation = kind if kind != "" else item.get("detail", "")
                 key = "{},{}".format(item_index, label)
                 display_label = label[:self.file_action.display_label_max_length] + " ..." if len(label) > self.file_action.display_label_max_length else label
