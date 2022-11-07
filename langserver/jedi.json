@@ -2,5 +2,6 @@
   "name": "jedi",
   "languageId": "python",
   "command": ["jedi-language-server"],
+  "incomplete-fuzzy-match": true,
   "settings": {}
 }

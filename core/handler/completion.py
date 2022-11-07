@@ -53,12 +53,17 @@ class Completion(Handler):
 
         if response is not None:
             item_index = 0
-            filter = self.prefix if not response["isIncomplete"] else None
+            filter = self.prefix if not response.get("isIncomplete") else None
+            fuzzy = False
+            for server in self.file_action.get_match_lsp_servers("completion"):
+                if server.server_name.endswith("#" + self.method_server_name):
+                    fuzzy = server.server_info.get("incomplete-fuzzy-match")
+                    break
             
             for item in response["items"] if "items" in response else response:
                 kind = KIND_MAP[item.get("kind", 0)].lower()
                 label = item["label"]
-                if filter and not fuzzy_match(label.lower(), filter):
+                if filter and not string_match(label.lower(), filter.lower(), fuzzy=fuzzy):
                     continue
                 annotation = kind if kind != "" else item.get("detail", "")
                 key = "{},{}".format(item_index, label)
