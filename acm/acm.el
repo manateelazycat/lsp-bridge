@@ -174,6 +174,7 @@
     (define-key map [remap previous-line] #'acm-select-prev)
     (define-key map [down] #'acm-select-next)
     (define-key map [up] #'acm-select-prev)
+    (define-key map [tab]  #'acm-complete)
     (define-key map "\M-n" #'acm-select-next)
     (define-key map "\M-p" #'acm-select-prev)
     (define-key map "\M-," #'acm-select-last)
