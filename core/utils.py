@@ -166,6 +166,23 @@ def _make_uri_win32(path):
         # It's a path on a network drive => 'file://host/share/a/b'
         return 'file:' + urlquote_from_bytes(path.as_posix().encode('utf-8'))
 
+# From jedi/api/helpers.py
+def _fuzzy_match(string, like_name):
+    if len(like_name) <= 1:
+        return like_name in string
+    pos = string.find(like_name[0])
+    if pos >= 0:
+        return _fuzzy_match(string[pos + 1:], like_name[1:])
+    return False
+
+def _start_match(string, like_name):
+    return string.startswith(like_name)
+
+def string_match(string, like_name, fuzzy=False):
+    if fuzzy:
+        return _fuzzy_match(string, like_name)
+    else:
+        return _start_match(string, like_name)
 
 def path_to_uri(path):
     path = pathlib.Path(path)
