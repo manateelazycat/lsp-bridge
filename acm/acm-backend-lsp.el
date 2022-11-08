@@ -1,4 +1,4 @@
-;;; acm-backend-lsp.el --- LSP backend for acm
+;;; acm-backend-lsp.el --- LSP backend for acm -*- lexical-binding: t -*-
 
 ;; Filename: acm-backend-lsp.el
 ;; Description: LSP backend for acm
