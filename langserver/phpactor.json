@@ -3,7 +3,7 @@
   "languageId": "php",
   "command": [
     "phpactor",
-    "--stdio"
+    "language-server"
   ],
   "settings": {}
 }
