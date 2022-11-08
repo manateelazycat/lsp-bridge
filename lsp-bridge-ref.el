@@ -1,4 +1,4 @@
-;;; lsp-bridge-ref.el --- Show references for lsp-bridge
+;;; lsp-bridge-ref.el --- Show references for lsp-bridge  -*- lexical-binding: t; -*-
 
 ;; Filename: lsp-bridge-ref.el
 ;; Description: Search and refacotry code with rg

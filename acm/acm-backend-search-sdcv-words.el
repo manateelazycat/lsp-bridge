@@ -1,4 +1,4 @@
-;;; acm-backend-search-sdcv-words.el --- Path backend for acm
+;;; acm-backend-search-sdcv-words.el --- Path backend for acm  -*- lexical-binding: t; -*-
 
 ;; Filename: acm-backend-search-sdcv-words.el
 ;; Description: Path backend for acm

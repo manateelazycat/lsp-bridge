@@ -1,4 +1,4 @@
-;;; acm-icon.el --- Icon for acm
+;;; acm-icon.el --- Icon for acm  -*- lexical-binding: t; -*-
 
 ;; Filename: acm-icon.el
 ;; Description: Icon for acm
