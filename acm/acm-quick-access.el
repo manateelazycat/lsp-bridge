@@ -1,4 +1,4 @@
-;;; acm-quick-access.el -*- lexical-binding: t; -*-
+;;; acm-quick-access.el -*- lexical-binding: t -*-
 
 (defgroup acm-quick-access nil
   "ACM quick access."

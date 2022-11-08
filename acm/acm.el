@@ -1,4 +1,4 @@
-;; -*- lexical-binding: t; -*-
+;; -*- lexical-binding: t -*-
 ;;; acm.el --- Asynchronous Completion Menu
 
 ;; Filename: acm.el

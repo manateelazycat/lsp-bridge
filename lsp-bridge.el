@@ -1,4 +1,4 @@
-;;; lsp-bridge.el --- LSP bridge  -*- lexical-binding: t; -*-
+;;; lsp-bridge.el --- LSP bridge  -*- lexical-binding: t -*-
 
 ;; Filename: lsp-bridge.el
 ;; Description: LSP bridge

@@ -1,4 +1,4 @@
-;;; lsp-bridge-lsp-installer.el --- LSP server installer   -*- lexical-binding: t; -*-
+;;; lsp-bridge-lsp-installer.el --- LSP server installer   -*- lexical-binding: t -*-
 
 ;; Filename: lsp-bridge-lsp-installer.el
 ;; Description: LSP server installer 

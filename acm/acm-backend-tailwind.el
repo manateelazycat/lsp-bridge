@@ -1,4 +1,4 @@
-;;; acm-backend-tailwind.el --- Tailwind backend for acm  -*- lexical-binding: t; -*-
+;;; acm-backend-tailwind.el --- Tailwind backend for acm  -*- lexical-binding: t -*-
 
 ;; Filename: acm-backend-tailwind.el
 ;; Description: Tailwind backend for acm

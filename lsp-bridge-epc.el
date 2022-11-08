@@ -1,4 +1,4 @@
-;;; epcs.el --- EPC Server              -*- lexical-binding: t; -*-
+;;; epcs.el --- EPC Server              -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2011,2012,2013  Masashi Sakurai
 
