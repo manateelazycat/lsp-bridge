@@ -1836,6 +1836,15 @@ SymbolKind (defined in the LSP)."
 (defvar lsp-bridge-lookup-doc-tooltip-background nil)
 (defvar lsp-bridge-lookup-doc-tooltip-height nil)
 
+(defvar lsp-bridge-lookup-doc-tooltip-prettify-symbols-alist
+  (nconc
+   (cl-loop for i from 0 to 255
+            collect (cons (format "&#x%02X;" i) i))
+   '(("\\!" . ?!) ("\\#" . ?#) ("\\*" . ?*) ("\\+" . ?+) ("\\:" . ?:)
+     ("\\<" . ?<) ("\\>" . ?>) ("\\[" . ?\[) ("\\]" . ?\]) ("\\^" . ?^)
+     ("\\_" . ?_) ("\\`" . ?`) ("\\|" . ?|) ("\\~" . ?~) ("\\\\" . ?\\)
+     ("&lt;" . ?<) ("&gt;" . ?>) ("&amp;" . ?&))))
+
 (defun lsp-bridge-render-markdown-content ()
   (when (fboundp 'gfm-view-mode)
     (let ((inhibit-message t))
@@ -1846,6 +1855,9 @@ SymbolKind (defined in the LSP)."
       (set-face-attribute 'markdown-code-face nil :height lsp-bridge-lookup-doc-tooltip-font-height)
       (gfm-view-mode)))
   (read-only-mode 0)
+  (setq prettify-symbols-alist lsp-bridge-lookup-doc-tooltip-prettify-symbols-alist)
+  (setq prettify-symbols-compose-predicate (lambda (_start _end _match) t))
+  (prettify-symbols-mode 1)
   (font-lock-ensure))
 
 (defun lsp-bridge-toggle-sdcv-helper ()
