@@ -1858,6 +1858,7 @@ SymbolKind (defined in the LSP)."
   (setq prettify-symbols-alist lsp-bridge-lookup-doc-tooltip-prettify-symbols-alist)
   (setq prettify-symbols-compose-predicate (lambda (_start _end _match) t))
   (prettify-symbols-mode 1)
+  (display-line-numbers-mode -1)
   (font-lock-ensure))
 
 (defun lsp-bridge-toggle-sdcv-helper ()

@@ -868,7 +868,8 @@ The key of candidate will change between two LSP results."
               (erase-buffer)
               (insert candidate-doc)
               (lsp-bridge-render-markdown-content)
-              (visual-line-mode 1))
+              (visual-line-mode 1)
+              (text-scale-set 1.5))
 
             ;; Adjust doc frame position and size.
             (acm-doc-frame-adjust))
