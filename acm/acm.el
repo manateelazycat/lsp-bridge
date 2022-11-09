@@ -8,7 +8,7 @@
 ;; Copyright (C) 2022, Andy Stewart, all rights reserved.
 ;; Created: 2022-05-31 16:29:33
 ;; Version: 0.1
-;; Last-Updated: 2022-10-26 14:05:49 +0800
+;; Last-Updated: 2022-11-09 19:57:55 +0800
 ;;           By: Gong Qijian
 ;; URL: https://www.github.org/manateelazycat/acm
 ;; Keywords:
@@ -856,8 +856,9 @@ The key of candidate will change between two LSP results."
            (candidate-doc
             (when (fboundp candidate-doc-func)
               (funcall candidate-doc-func candidate))))
-      (if (and candidate-doc
-               (not (string-equal candidate-doc "")))
+      (if (or (consp candidate-doc)     ; If the type fo snippet is set to command,
+                                        ; then the "doc" will be a list.
+              (and (stringp candidate-doc) (not (string-empty-p candidate-doc))))
           (progn
             ;; Create doc frame if it not exist.
             (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame")
@@ -866,7 +867,9 @@ The key of candidate will change between two LSP results."
             ;; Insert documentation and turn on wrap line.
             (with-current-buffer (get-buffer-create acm-doc-buffer)
               (erase-buffer)
-              (insert candidate-doc)
+              (insert (if (stringp candidate-doc)
+                          candidate-doc
+                        (format "%S" candidate-doc)))
               (lsp-bridge-render-markdown-content)
               (visual-line-mode 1)
               (text-scale-set 1.5))
