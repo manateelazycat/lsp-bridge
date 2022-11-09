@@ -584,7 +584,7 @@ The key of candidate will change between two LSP results."
 (defun acm-init-colors (&optional force)
   (let* ((is-dark-mode (string-equal (acm-get-theme-mode) "dark"))
          (blend-background (if is-dark-mode "#000000" "#AAAAAA"))
-         (default-background (if (equal (face-attribute 'acm-default-face :background) 'unspecified)
+         (default-background (if (or force (equal (face-attribute 'acm-default-face :background) 'unspecified))
                                  (face-attribute 'default :background)
                                (face-attribute 'acm-default-face :background))))
     ;; Make sure font size of frame same as Emacs.
@@ -615,10 +615,12 @@ The key of candidate will change between two LSP results."
   (acm-init-colors t)
 
   ;; Reset frame colors.
-  (when (acm-frame-visible-p acm-frame)
+  (when (frame-live-p acm-frame)
     (acm-set-frame-colors acm-frame)
-    (acm-menu-render (cons acm-menu-max-length-cache acm-menu-number-cache)))
-  (when (acm-frame-visible-p acm-doc-frame)
+    (when (frame-visible-p acm-frame)
+      (acm-menu-render
+       (cons acm-menu-max-length-cache acm-menu-number-cache))))
+  (when (frame-live-p acm-doc-frame)
     (acm-set-frame-colors acm-doc-frame)))
 
 (if (daemonp)
