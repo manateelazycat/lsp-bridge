@@ -856,7 +856,7 @@ The key of candidate will change between two LSP results."
            (candidate-doc
             (when (fboundp candidate-doc-func)
               (funcall candidate-doc-func candidate))))
-      (if (or (consp candidate-doc)     ; If the type fo snippet is set to command,
+      (if (or (consp candidate-doc) ; If the type fo snippet is set to command,
                                         ; then the "doc" will be a list.
               (and (stringp candidate-doc) (not (string-empty-p candidate-doc))))
           (progn
@@ -872,7 +872,11 @@ The key of candidate will change between two LSP results."
                         (format "%S" candidate-doc)))
               (lsp-bridge-render-markdown-content)
               (visual-line-mode 1)
-              (text-scale-set 1.5))
+
+              ;; FIXME: `prettify-symbols-mode' make text become smaller in 4k screen.
+              ;; Only scale font for 4k screen here.
+              (when (> (frame-pixel-width) 3000)
+                (text-scale-set 1.5)))
 
             ;; Adjust doc frame position and size.
             (acm-doc-frame-adjust))
