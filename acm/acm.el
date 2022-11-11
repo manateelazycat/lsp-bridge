@@ -872,13 +872,7 @@ The key of candidate will change between two LSP results."
               (insert (if (stringp candidate-doc)
                           candidate-doc
                         (format "%S" candidate-doc)))
-              (lsp-bridge-render-markdown-content)
-              (visual-line-mode 1)
-
-              ;; FIXME: `prettify-symbols-mode' make text become smaller in 4k screen.
-              ;; Only scale font for 4k screen here.
-              (when (> (frame-pixel-width) 3000)
-                (text-scale-set 1.5)))
+              (visual-line-mode 1))
 
             ;; Adjust doc frame position and size.
             (acm-doc-frame-adjust))
