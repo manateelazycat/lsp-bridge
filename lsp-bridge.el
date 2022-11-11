@@ -2001,18 +2001,6 @@ SymbolKind (defined in the LSP)."
 (add-to-list 'mode-line-misc-info
              `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] ")))
 
-(defalias 'lsp-bridge-insert-common-prefix #'acm-insert-common "This function is obsolete, use `acm-insert-common' instead.")
-(defalias 'lsp-bridge-find-define #'lsp-bridge-find-def "This function is obsolete, use `lsp-bridge-find-define' instead.")
-(defalias 'lsp-bridge-lookup-documentation #'lsp-bridge-popup-documentation "This function is obsolete, use `lsp-bridge-lookup-documentation' instead.")
-(defalias 'lsp-bridge-list-workspace-symbols #'lsp-bridge-workspace-list-symbols "This function is obsolete, use `lsp-bridge-workspace-list-symbols' instead.")
-(defalias 'lsp-bridge-jump-to-next-diagnostic #'lsp-bridge-diagnostic-jump-next "This function is obsolete, use `lsp-bridge-jump-to-next-diagnostic' instead.")
-(defalias 'lsp-bridge-jump-to-prev-diagnostic #'lsp-bridge-diagnostic-jump-prev "This function is obsolete, use `lsp-bridge-jump-to-prev-diagnostic' instead.")
-(defalias 'lsp-bridge-list-diagnostics #'lsp-bridge-diagnostic-list "This function is obsolete, use `lsp-bridge-list-diagnostics' instead.")
-(defalias 'lsp-bridge-ignore-current-diagnostic #'lsp-bridge-diagnostic-ignore "This function is obsolete, use `lsp-bridge-ignore-current-diagnostic' instead.")
-(defalias 'lsp-bridge-popup-complete #'lsp-bridge-popup-complete-menu "This function is obsolete, use `lsp-bridge-popup-complete' instead.")
-(defalias 'lsp-bridge-return-from-def #'lsp-bridge-find-def-return "This function is obsolete, use `lsp-bridge-find-def-return' instead.")
-(defalias 'lsp-bridge-toggle-english-helper #'lsp-bridge-toggle-sdcv-helper "This function is obsolete, use `lsp-bridge-toggle-sdcv-helper' instead.")
-
 (provide 'lsp-bridge)
 
 ;;; lsp-bridge.el ends here
