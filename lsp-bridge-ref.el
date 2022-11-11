@@ -390,25 +390,23 @@ user more freedom to use rg with special arguments."
   (with-current-buffer lsp-bridge-ref-buffer
     (insert references-content)
 
-    ;; "^\033\\[95m\\(.*?\\)\033\\[0m$"
-
     ;; Highlight file path.
     (goto-char (point-min))
-    (while (re-search-forward "^\033\\[95m\\(.*?\\)\033\\[0m$" nil t)
+    (while (re-search-forward "^\033\\[95m\\([^\033]+\\)\033\\[0m$" nil t)
       (replace-match (concat (propertize (match-string 1)
                                          'face nil 'font-lock-face 'lsp-bridge-ref-font-lock-file))
                      t t))
 
     ;; Highlight references.
     (goto-char (point-min))
-    (while (re-search-forward "\033\\[94m\\(.*?\\)\033\\[0m" nil t)
+    (while (re-search-forward "\033\\[94m\\([^\033]+\\)\033\\[0m" nil t)
       (replace-match (concat (propertize (match-string 1)
                                          'face nil 'font-lock-face 'lsp-bridge-ref-font-lock-match))
                      t t))
 
     ;; Highlight diagnostics.
     (goto-char (point-min))
-    (while (re-search-forward "\\[93m\\(.*?\n?.*?\\)\\[0m" nil t)
+    (while (re-search-forward "\033\\[93m\\([^\033]+\\)\033\\[0m" nil t)
       (replace-match (concat (propertize (match-string 1)
                                          'face nil 'font-lock-face 'lsp-bridge-ref-font-lock-diagnostic))
                      t t))
