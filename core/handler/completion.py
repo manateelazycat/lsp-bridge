@@ -54,8 +54,12 @@ class Completion(Handler):
         if response is not None:
             item_index = 0
             
-            # If LSP Sever return `isIncomplete` is False, we need pick value of option `incomplete-fuzzy-match`.
-            filter = self.prefix if not response.get("isIncomplete") else None
+            try:
+                # If LSP Sever return `isIncomplete` is False, we need pick value of option `incomplete-fuzzy-match`.
+                filter = self.prefix if not response.get("isIncomplete") else None
+            except:
+                filter = None
+                
             fuzzy = False
             if filter:
                 for server in self.file_action.get_match_lsp_servers("completion"):
