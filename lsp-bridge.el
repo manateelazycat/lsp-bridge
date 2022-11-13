@@ -671,14 +671,7 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-call-async (method &rest args)
   "Call Python EPC function METHOD and ARGS asynchronously."
   (lsp-bridge-deferred-chain
-    (lsp-bridge-epc-call-deferred
-     lsp-bridge-epc-process
-     (read method)
-     (mapcar #'(lambda (arg)
-                 (if (stringp arg)
-                     (substring-no-properties arg)
-                   arg))
-             args))))
+    (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) args)))
 
 (defvar-local lsp-bridge-buffer-file-deleted nil)
 
@@ -1084,7 +1077,7 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-search-words-index-files ()
   "Index files when lsp-bridge python process finish."
   (let ((files (cl-remove-if 'null (mapcar #'buffer-file-name (buffer-list)))))
-    (lsp-bridge-call-async "search_file_words_index_files" (mapcar #'substring-no-properties files))))
+    (lsp-bridge-call-async "search_file_words_index_files" files)))
 
 (defun lsp-bridge-search-words-rebuild-cache ()
   "Rebuild words cache when idle."
