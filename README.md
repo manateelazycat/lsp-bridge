@@ -115,7 +115,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `acm-enable-search-file-words`: Whether the complete menu display the word of the file, enable by default
 * `acm-enable-quick-access`: Whether the index is displayed behind the icon, you can quickly select the candidate through Alt + Number, disable by default
 * `acm-enable-yas`: yasnippet completion, enable by default
-* `acm-enable-citre`: citre completion, disable by default
+* `acm-enable-citre`: Integration with [citre(ctags)](https://github.com/universal-ctags/citre). Enable this to add citre (ctags) backend (disabled by default). (NOTE: lsp-bridge currently only supports citre up to v0.2.1, the latest v0.3 is not supported yet.)
 * `acm-doc-frame-max-lines`: Max line number of help documentation, default is 20
 * `acm-snippet-insert-index`: The display position of snippet candidate in the complementary menu
 * `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
