@@ -7,7 +7,7 @@
 ;; Copyright (C) 2018, Andy Stewart, all rights reserved.
 ;; Created: 2018-06-15 14:10:12
 ;; Version: 0.5
-;; Last-Updated: 2022-11-11 20:04:14 +0800
+;; Last-Updated: 2022-10-10 15:23:53 +0800
 ;;           By: Gong Qijian
 ;; URL: https://github.com/manateelazycat/lsp-bridge
 ;; Keywords:
@@ -1240,7 +1240,14 @@ So we build this macro to restore postion after code format."
                    :max-height lsp-bridge-lookup-doc-tooltip-max-height)))
 
 (defun lsp-bridge-hide-doc-tooltip ()
-  (posframe-hide lsp-bridge-lookup-doc-tooltip))
+  (posframe-hide lsp-bridge-lookup-doc-tooltip)
+
+  (when lsp-bridge-lookup-doc-tooltip-background
+    (set-face-background 'markdown-code-face lsp-bridge-lookup-doc-tooltip-background)
+    (setq lsp-bridge-lookup-doc-tooltip-background nil))
+
+  (when lsp-bridge-lookup-doc-tooltip-height
+    (set-face-attribute 'markdown-code-face nil :height lsp-bridge-lookup-doc-tooltip-height)))
 
 (defun lsp-bridge-hide-diagnostic-tooltip ()
   (posframe-hide lsp-bridge-diagnostic-tooltip))
@@ -1833,9 +1840,8 @@ SymbolKind (defined in the LSP)."
         ;; Hide doc frame immediately.
         (acm-doc-hide)))))
 
-(defface lsp-bridge-lookup-doc-code-face
-  '((t :inherit markdown-code-face))
-  "Face for code of lookup doc.")
+(defvar lsp-bridge-lookup-doc-tooltip-background nil)
+(defvar lsp-bridge-lookup-doc-tooltip-height nil)
 
 (defvar lsp-bridge-lookup-doc-tooltip-prettify-symbols-alist
   (nconc
@@ -1850,8 +1856,10 @@ SymbolKind (defined in the LSP)."
   (when (fboundp 'gfm-view-mode)
     (let ((inhibit-message t))
       (setq-local markdown-fontify-code-blocks-natively t)
-      (set-face-background 'lsp-bridge-lookup-doc-code-face (lsp-bridge-frame-background-color))
-      (face-remap-add-relative 'markdown-code-face 'lsp-bridge-lookup-doc-code-face)
+      (setq lsp-bridge-lookup-doc-tooltip-background (face-background 'markdown-code-face))
+      (setq lsp-bridge-lookup-doc-tooltip-height (face-attribute 'markdown-code-face :height))
+      (set-face-background 'markdown-code-face (lsp-bridge-frame-background-color))
+      (set-face-attribute 'markdown-code-face nil :height lsp-bridge-lookup-doc-tooltip-font-height)
       (gfm-view-mode)))
   (read-only-mode 0)
   (setq prettify-symbols-alist lsp-bridge-lookup-doc-tooltip-prettify-symbols-alist)
