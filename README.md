@@ -100,7 +100,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-enable-search-words`: index the word of the file, enable by default
 * `lsp-bridge-enable-auto-format-code`: automatic format code, disable by default
 * `lsp-bridge-enable-signature-help`: show function parameter in minibufer, enable by default
-* `lsp-bridge-enable-log`: enable the LSP message log, disable by default
+* `lsp-bridge-enable-log`: enable LSP message log, disable by default, only enable this option for development purposes, usually do not turn on this option to avoid affecting performance
 * `lsp-bridge-enable-debug`: enable program debugging, disable by default
 * `lsp-bridge-disable-backup`: forbidden version manage of emacs, enable by default
 * `lsp-bridge-diagnostic-fetch-idle`: diagnostic delay, start pulling diagnostic information 0.5 second after stopping typing

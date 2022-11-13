@@ -99,7 +99,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-enable-search-words`: 索引打开文件的单词， 默认打开
 * `lsp-bridge-enable-auto-format-code`: 自动格式化代码, 默认关闭
 * `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认打开
-* `lsp-bridge-enable-log`: 启用 LSP 消息日志， 默认关闭
+* `lsp-bridge-enable-log`: 启用 LSP 消息日志， 默认关闭, 除非开发目的， 平常请勿打开此选项以避免影响性能
 * `lsp-bridge-enable-debug`: 启用程序调试， 默认关闭
 * `lsp-bridge-disable-backup`: 禁止 emacs 对文件做版本管理， 默认打开
 * `lsp-bridge-diagnostic-fetch-idle`： 诊断延迟，默认是停止敲键盘后 0.5 秒开始拉取诊断信息
