@@ -46,6 +46,13 @@ KIND_MAP = ["", "Text", "Method", "Function", "Constructor", "Field",
             "File", "Reference", "Folder", "EnumMember", "Constant",
             "Struct", "Event", "Operator", "TypeParameter"]
 
+SYMBOL_MAP = ["", "File", "Module", "Namespace", "Package",
+              "Class", "Method", "Property", "Field", "Constructor",
+              "Enum", "Interface", "Function", "Variable", "Constant",
+              "String", "Number", "Boolean", "Array", "Object",
+              "Key", "Null", "EnumMember", "Struct", "Event",
+              "Operator", "TypeParameter"]
+
 epc_client: Optional[EPCClient] = None
 
 # for test purpose
