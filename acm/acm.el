@@ -426,6 +426,24 @@ influence of C1 on the result."
       ;; Don't sort candidates is keyword is empty string.
       candidates)))
 
+(defvar-local acm-template-candidate-show-p nil)
+(defvar-local acm-template-candidate-ticker 0)
+(defvar-local acm-template-candidate-show-ticker 0)
+(defvar acm-template-candidate-timer nil)
+
+(defun acm-template-candidate-init ()
+  "Call this function in `lsp-bridge-try-completion', init template candidate variable.
+
+Only calculate template candidate when type last character."
+  (setq-local acm-template-candidate-show-p nil)
+  (setq-local acm-template-candidate-ticker (1+ acm-template-candidate-ticker)))
+
+(defun acm-template-candidate-update ()
+  "Set `acm-template-candidate-show-p' to t to calculate template candidates."
+  (setq-local acm-template-candidate-show-p t)
+  (when (acm-frame-visible-p acm-frame)
+    (acm-update)))
+
 (defun acm-update-candidates ()
   (let* ((keyword (acm-get-input-prefix))
          (char-before-keyword (save-excursion
@@ -469,8 +487,26 @@ influence of C1 on the result."
                ;; Don't search snippet if char before keyword is not in `acm-backend-lsp-completion-trigger-characters'.
                (and (boundp 'acm-backend-lsp-completion-trigger-characters)
                     (not (member char-before-keyword acm-backend-lsp-completion-trigger-characters))))
-          (setq yas-candidates (acm-backend-yas-candidates keyword))
-          (setq tempel-candidates (acm-backend-tempel-candidates keyword)))
+
+          ;; Only calculate template candidate when type last character.
+          (cond
+           ;; Show template candidates when flag `acm-template-candidate-show-p' is t.
+           (acm-template-candidate-show-p
+            (setq yas-candidates (acm-backend-yas-candidates keyword))
+            (setq tempel-candidates (acm-backend-tempel-candidates keyword))
+            (setq-local acm-template-candidate-show-p nil)
+            (setq-local acm-template-candidate-show-ticker acm-template-candidate-ticker))
+           ;; Don't hide template candidates if just shown in last time, avoid menu flick by template candiates.
+           ((= (- acm-template-candidate-ticker acm-template-candidate-show-ticker) 1)
+            (setq yas-candidates (acm-backend-yas-candidates keyword))
+            (setq tempel-candidates (acm-backend-tempel-candidates keyword)))
+           ;; Try show template candidates after 200ms later.
+           ;; Cancel timer if last timer haven't executed when user type new character.
+           (t
+            (when acm-template-candidate-timer
+              (cancel-timer acm-template-candidate-timer)
+              (setq acm-template-candidate-timer nil))
+            (setq acm-template-candidate-timer (run-with-timer 0.2 nil #'acm-template-candidate-update)))))
 
         ;; Insert snippet candidates in first page of menu.
         (setq candidates

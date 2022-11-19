@@ -871,7 +871,9 @@ So we build this macro to restore postion after code format."
              (if (cl-every (lambda (pred)
                              (if (functionp pred) (funcall pred) t))
                            lsp-bridge-completion-popup-predicates)
-                 (acm-update)
+                 (progn
+                   (acm-template-candidate-init)
+                   (acm-update))
                (acm-hide))))))
 
 (defun lsp-bridge-popup-complete-menu ()
