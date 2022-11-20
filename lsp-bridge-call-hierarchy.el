@@ -6,10 +6,15 @@
 (defvar lsp-bridge-call-hierarchy-path-width 60
   "Width of the path column in the call hierarchy buffer.")
 
+(defvar lsp-bridge-call-hierarchy-call-max-height 30
+  "Maximum height of the call hierarchy buffer.")
+
 (defvar lsp-bridge-call-hierarchy-preview-height 30
   "Height of the preview window. (set 0 to disable preview)")
 
 (defvar lsp-bridge-call-hierarchy--frame nil)
+
+(defvar lsp-bridge-call-hierarchy--emacs-frame nil)
 
 (defvar lsp-bridge-call-hierarchy--index 0)
 
@@ -17,19 +22,23 @@
 
 (defvar lsp-bridge-call-hierarchy--popup-response nil)
 
+(defvar lsp-bridge-call-hierarchy--temp-buffers nil)
+
 (defun lsp-bridge-incoming-call-hierarchy ()
   (interactive)
-  (lsp-bridge-call-file-api "call_hierarchy"
-                            (lsp-bridge--position) t))
+  (lsp-bridge-call-file-api "call_hierarchy_incoming"
+                            (lsp-bridge--position)))
 
 (defun lsp-bridge-outgoing-call-hierarchy ()
   (interactive)
-  (lsp-bridge-call-file-api "call_hierarchy"
-                            (lsp-bridge--position) nil))
+  (lsp-bridge-call-file-api "call_hierarchy_outgoing"
+                            (lsp-bridge--position)))
 
 (defun lsp-bridge-call-hierarchy-posframe-show (buffer)
   (let* ((posframe-height (+ lsp-bridge-call-hierarchy-preview-height
-                             (length lsp-bridge-call-hierarchy--popup-response)))
+                             (min
+                              (length lsp-bridge-call-hierarchy--popup-response)
+                              lsp-bridge-call-hierarchy-call-max-height)))
          (posframe-width (+ 6 ;; length of spaces and icon
                             lsp-bridge-call-hierarchy-name-width
                             lsp-bridge-call-hierarchy-path-width)))
@@ -72,9 +81,11 @@
 (defun lsp-bridge-call-hierarchy--popup (response)
   (interactive)
   (setq lsp-bridge-call-hierarchy--popup-response response)
+  (setq lsp-bridge-call-hierarchy--emacs-frame (selected-frame))
   (setq lsp-bridge-call-hierarchy--frame
         (lsp-bridge-call-hierarchy-posframe-show (get-buffer-create "*lsp-bridge-call-hierarchy*")))
   (select-frame-set-input-focus lsp-bridge-call-hierarchy--frame)
+
   (dolist (call lsp-bridge-call-hierarchy--popup-response)
     (insert (lsp-bridge-call-hierarchy-format-call call)))
   (delete-backward-char 1)
@@ -84,6 +95,8 @@
     (other-window 1)
     (set-window-text-height (selected-window)  (1- lsp-bridge-call-hierarchy-preview-height))
     (other-window -1))
+
+  (setq lsp-bridge-call-hierarchy--temp-buffers nil)
 
   (lsp-bridge-call-hierarchy-maybe-preview)
 
@@ -110,7 +123,11 @@
 
 (defun lsp-bridge-call-hierarchy-quit ()
   (interactive)
-  (posframe-delete "*lsp-bridge-call-hierarchy*"))
+  (posframe-delete "*lsp-bridge-call-hierarchy*")
+  (select-frame-set-input-focus lsp-bridge-call-hierarchy--emacs-frame)
+
+  (dolist (buffer lsp-bridge-call-hierarchy--temp-buffers)
+    (kill-buffer buffer)))
 
 (defun lsp-bridge-call-hierarchy-show ()
   (let* ((call  (nth lsp-bridge-call-hierarchy--index lsp-bridge-call-hierarchy--popup-response))
@@ -120,8 +137,15 @@
          (sline (plist-get range-start :line))
          (scharacter (plist-get range-start :character))
          (eline (plist-get range-end :line))
-         (echaracter (plist-get range-end :character)))
-    (find-file path)
+         (echaracter (plist-get range-end :character))
+         (found-buffer))
+
+    (if (dolist (buffer (buffer-list) found-buffer)
+          (when (string-equal (buffer-file-name buffer) path)
+            (setq found-buffer buffer)))
+        (find-file path)
+      (add-to-list 'lsp-bridge-call-hierarchy--temp-buffers (find-file path)))
+
     (goto-char (point-min))
     (forward-line sline)
     (goto-char (+ (point-at-bol) scharacter))
@@ -164,6 +188,7 @@
   (use-local-map lsp-bridge-call-hierarchy-mode-map)
   (when (featurep 'evil)
     (evil-set-initial-state 'lsp-bridge-call-hierarchy-mode 'emacs))
+  (setq-local truncate-lines t)
   (setq-local cursor-type nil)
   (read-only-mode 1)
 )
