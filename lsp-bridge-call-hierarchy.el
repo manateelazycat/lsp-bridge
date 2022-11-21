@@ -24,6 +24,8 @@
 
 (defvar lsp-bridge-call-hierarchy--temp-buffers nil)
 
+(defvar lsp-bridge-call-hierarchy--local-modelines nil)
+
 (defun lsp-bridge-incoming-call-hierarchy ()
   (interactive)
   (lsp-bridge-call-file-api "call_hierarchy_incoming"
@@ -76,6 +78,13 @@
     (other-window 1)
     (lsp-bridge-call-hierarchy-show)
     (recenter)
+
+    (if (and mode-line-format
+             (not (member (current-buffer) lsp-bridge-call-hierarchy--temp-buffers)))
+      (add-to-list 'lsp-bridge-call-hierarchy--local-modelines
+                   (list (current-buffer) mode-line-format)))
+
+    (setq-local mode-line-format nil)
     (other-window -1)))
 
 (defun lsp-bridge-call-hierarchy--popup (response)
@@ -97,6 +106,7 @@
     (other-window -1))
 
   (setq lsp-bridge-call-hierarchy--temp-buffers nil)
+  (setq lsp-bridge-call-hierarchy--index 0)
 
   (lsp-bridge-call-hierarchy-maybe-preview)
 
@@ -125,6 +135,10 @@
   (interactive)
   (posframe-delete "*lsp-bridge-call-hierarchy*")
   (select-frame-set-input-focus lsp-bridge-call-hierarchy--emacs-frame)
+
+  (dolist (buffer-modeline lsp-bridge-call-hierarchy--local-modelines)
+    (with-current-buffer (car buffer-modeline)
+      (setq-local mode-line-format (cdr buffer-modeline))))
 
   (dolist (buffer lsp-bridge-call-hierarchy--temp-buffers)
     (kill-buffer buffer)))
@@ -160,8 +174,8 @@
 
 (defun lsp-bridge-call-hierarchy-select ()
   (interactive)
-  (lsp-bridge-call-hierarchy-show)
-  (lsp-bridge-call-hierarchy-quit))
+  (lsp-bridge-call-hierarchy-quit)
+  (lsp-bridge-call-hierarchy-show))
 
 (defvar lsp-bridge-call-hierarchy-mode-map
   (let ((map (make-sparse-keymap)))
@@ -181,7 +195,7 @@
   (setq-local cursor-type nil)
   (goto-char (1+ (point-min)))
   (setq lsp-bridge-call-hierarchy--overlay (make-overlay (line-beginning-position)  (line-end-position)))
-  (overlay-put lsp-bridge-call-hierarchy--overlay 'face 'highlight)
+  (overlay-put lsp-bridge-call-hierarchy--overlay 'face 'lsp-bridge-font-lock-flash)
   (setq lsp-bridge-call-hierarchy--index 0)
 
   ;; Injection keymap.
