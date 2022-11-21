@@ -28,12 +28,12 @@
 
 (defun lsp-bridge-incoming-call-hierarchy ()
   (interactive)
-  (lsp-bridge-call-file-api "call_hierarchy_incoming"
+  (lsp-bridge-call-file-api "prepare_call_hierarchy_incoming"
                             (lsp-bridge--position)))
 
 (defun lsp-bridge-outgoing-call-hierarchy ()
   (interactive)
-  (lsp-bridge-call-file-api "call_hierarchy_outgoing"
+  (lsp-bridge-call-file-api "prepare_call_hierarchy_outgoing"
                             (lsp-bridge--position)))
 
 (defun lsp-bridge-call-hierarchy-posframe-show (buffer)
