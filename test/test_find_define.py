@@ -37,7 +37,7 @@ class SimpleFindDefinition(unittest.TestCase):
                 (setq-local major-mode '{file.mode})
                 (lsp-bridge-mode 1)
                 (goto-char (+ (point-min) {cursor_offset}))
-                (lsp-bridge-find-define)"""))
+                (lsp-bridge-find-def)"""))
 
         go()
         result_position = core.utils.epc_arg_transformer(
@@ -96,7 +96,7 @@ class JumpOtherFile(unittest.TestCase):
             (setq-local major-mode '{files[0].mode})
             (lsp-bridge-mode 1)
             (goto-char (+ (point-min) {cursor_offset}))
-            (lsp-bridge-find-define)
+            (lsp-bridge-find-def)
             """))
 
         go()
