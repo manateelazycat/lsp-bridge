@@ -27,6 +27,8 @@ class CallHierarchy(Handler):
 
     def process_request(self, item, prefix) -> dict:
         self.response_prefix = prefix
+        # add current object to call_contents
+        self.add_call_content(item, [])
         return dict(item=item)
 
     def add_call_content(self, item, from_ranges):
