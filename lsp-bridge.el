@@ -80,6 +80,7 @@
 (require 'lsp-bridge-epc)
 (require 'lsp-bridge-ref)
 (require 'lsp-bridge-jdtls)
+(require 'lsp-bridge-call-hierarchy)
 
 (require 'posframe)
 (require 'markdown-mode)
