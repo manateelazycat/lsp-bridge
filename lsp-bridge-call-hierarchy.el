@@ -180,10 +180,13 @@
 (defvar lsp-bridge-call-hierarchy-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "j") 'lsp-bridge-call-hierarchy-next)
+    (define-key map (kbd "C-n") 'lsp-bridge-call-hierarchy-next)
     (define-key map (kbd "k") 'lsp-bridge-call-hierarchy-prev)
+    (define-key map (kbd "C-p") 'lsp-bridge-call-hierarchy-prev)
     (define-key map (kbd "RET") 'lsp-bridge-call-hierarchy-select)
     (define-key map (kbd "ESC") 'lsp-bridge-call-hierarchy-quit)
     (define-key map (kbd "q") 'lsp-bridge-call-hierarchy-quit)
+    (define-key map (kbd "C-g") 'lsp-bridge-call-hierarchy-quit)
   map))
 
 (define-derived-mode lsp-bridge-call-hierarchy-mode text-mode "call hierarchy"
