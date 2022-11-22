@@ -1696,6 +1696,78 @@ SymbolKind (defined in the LSP)."
 
 (defvar lsp-bridge-sdcv-helper-dict nil)
 
+(defun lsp-bridge-code-action-popup-select ()
+  (interactive)
+  (lsp-bridge-code-action-popup-quit)
+  (lsp-bridge-code-action--fix-do
+   (cdr (nth lsp-bridge-call-hierarchy--index lsp-bridge-call-hierarchy--popup-response))))
+
+(defun lsp-bridge-code-action-popup-quit ()
+  (interactive)
+  (posframe-delete "*lsp-bridge-code-action-menu*")
+  (select-frame-set-input-focus lsp-bridge-call-hierarchy--emacs-frame)
+  (advice-remove 'lsp-bridge-call-hierarchy-select #'lsp-bridge-code-action-popup-select)
+  (advice-remove 'lsp-bridge-call-hierarchy-quit #'lsp-bridge-code-action-popup-quit))
+
+(defun lsp-bridge-popup-code-action--menu (menu-items default-action)
+  (let ((menu-lenght (length menu-items))
+        (menu-width 0))
+    (with-current-buffer (get-buffer-create "*lsp-bridge-code-action-menu*")
+      (cl-loop for i from 0 to (1- (length menu-items))
+               do (let* ((title (car (nth i menu-items)))
+                         (format-line (format "%d. %s\n" (1+ i) title))
+                         (line-width (length format-line)))
+                    (insert format-line)
+                    (setq menu-width (max line-width menu-width)))))
+    ;; reuse hierarchy popup keymap and mode here
+    (setq lsp-bridge-call-hierarchy--popup-response menu-items)
+    (setq lsp-bridge-call-hierarchy--emacs-frame (selected-frame))
+    (setq lsp-bridge-call-hierarchy--frame
+          (posframe-show "*lsp-bridge-code-action-menu*"
+                         :position (point)
+                         :border-width 2
+                         :border-color "gray"
+                         :accept-focus t
+                         :min-height (length menu-items)
+                         :max-height (length menu-items)
+                         :max-width menu-width
+                         :min-width menu-width))
+    (select-frame-set-input-focus lsp-bridge-call-hierarchy--frame)
+
+    (lsp-bridge-call-hierarchy-mode)
+    (setq-local lsp-bridge-call-hierarchy-preview-height 0) ;; disable preview
+    (advice-add 'lsp-bridge-call-hierarchy-select :override #'lsp-bridge-code-action-popup-select)
+    (advice-add 'lsp-bridge-call-hierarchy-quit :override #'lsp-bridge-code-action-popup-quit)
+    (goto-char (point-min))
+    ))
+
+
+(defun lsp-bridge-code-action--fix-do (action)
+  (let* ((command (plist-get action :command))
+         (edit (plist-get action :edit))
+         (arguments (plist-get action :arguments)))
+    (cond (edit
+           (lsp-bridge-workspace-apply-edit edit))
+          (arguments
+           (dolist (argument arguments)
+             (lsp-bridge-workspace-apply-edit argument)))
+          (command
+           (let (arguments)
+             ;; Pick command and arguments.
+             (cond ((consp command)
+                    (setq arguments (plist-get command :arguments))
+                    (setq command (plist-get command :command)))
+                   ((stringp command)
+                    (setq arguments (plist-get action :arguments))))
+
+             (if (member command lsp-bridge-apply-edit-commands)
+                 ;; Apply workspace edit if command match `lsp-bridge-apply-edit-commands'.
+                 (dolist (argument arguments)
+                   (lsp-bridge-workspace-apply-edit argument))
+               ;; Otherwise send `workspace/executeCommand' request to LSP server.
+               (lsp-bridge-call-file-api "execute_command" command)))))
+    (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title))))
+
 (defun lsp-bridge-code-action--fix (actions action-kind)
   (let* ((menu-items
           (or
@@ -1714,36 +1786,18 @@ SymbolKind (defined in the LSP)."
                             menu-items))
          (default-action (car (or preferred-action (car menu-items))))
          (action (if (and action-kind (null (cadr menu-items)))
-                     (cdr (car menu-items))
-                   (cdr (assoc (completing-read
-                                (format "[LSP-BRIDGE] Pick an action (default: %s): " default-action)
-                                menu-items nil t nil nil default-action)
-                               menu-items)))))
-
-    (let* ((command (plist-get action :command))
-           (edit (plist-get action :edit))
-           (arguments (plist-get action :arguments)))
-      (cond (edit
-             (lsp-bridge-workspace-apply-edit edit))
-            (arguments
-             (dolist (argument arguments)
-               (lsp-bridge-workspace-apply-edit argument)))
-            (command
-             (let (arguments)
-               ;; Pick command and arguments.
-               (cond ((consp command)
-                      (setq arguments (plist-get command :arguments))
-                      (setq command (plist-get command :command)))
-                     ((stringp command)
-                      (setq arguments (plist-get action :arguments))))
-
-               (if (member command lsp-bridge-apply-edit-commands)
-                   ;; Apply workspace edit if command match `lsp-bridge-apply-edit-commands'.
-                   (dolist (argument arguments)
-                     (lsp-bridge-workspace-apply-edit argument))
-                 ;; Otherwise send `workspace/executeCommand' request to LSP server.
-                 (lsp-bridge-call-file-api "execute_command" command)))))
-      (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
+                     (cdr (car menu-items)) nil)))
+    (cond
+     (action
+      (lsp-bridge-code-action--fix-do action))
+     ((posframe-workable-p) ;;posframe
+      (lsp-bridge-popup-code-action--menu menu-items default-action))
+     (t
+      (let ((select-name
+             (completing-read
+              (format "[LSP-BRIDGE] Pick an action (default: %s): " default-action)
+              menu-items nil t nil nil default-action)))
+        (lsp-bridge-code-action--fix-do (cdr (assoc select-name menu-items))))))))
 
 (defun lsp-bridge-workspace-apply-edit (info)
   (lsp-bridge-save-position
