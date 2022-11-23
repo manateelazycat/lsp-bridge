@@ -84,6 +84,7 @@
 (require 'yasnippet)
 
 ;;; Code:
+
 (defgroup acm-backend-yas nil
   "Yasnippet backend for ACM."
   :group 'acm)
@@ -99,53 +100,107 @@
   :group 'acm-backend-yas)
 
 (defcustom acm-backend-yas-show-trigger-keyword " (%s)"
-  "Format to display yasnippet trigger keyword after snippet file name."
+  "Format for displaying extra info about yas candidaets.
+If the value is nil, then format is \"filename\".
+If the value is t or string $str contains one %s, then format is
+\"filename trigger\" or \"trigger filename\" which is controlled by
+`acm-backend-yas-match-by-trigger-keyword'."
   :type '(choice (boolean :tag "Enable or not, t to use default value")
                  (string :tag "Literal text with %s"))
   :group 'acm-backend-yas)
 
 (defcustom acm-backend-yas-match-by-trigger-keyword nil
-  "Match yasnippet candidates by trigger keyword or not.
-Setting to nil means matching uses snippet file names by default."
+  "If non-nil, match yasnippet candidates by trigger keyword.
+Default matching use snippet filename."
   :type 'boolean
   :group 'acm-backend-yas)
 
-(defface acm-backend-yas-trigger-keyword-face
+(defface acm-backend-yas-extra-info-face
   '((t (:inherit font-lock-keyword-face)))
-  "Face for yas trigger keyword."
+  "Face for yas extra information."
   :group 'acm-backend-yas)
 
-(defun acm-backend-yas-candidates-display (name trigger)
-  (let* ((default (car (get 'acm-backend-yas-show-trigger-keyword 'standard-value)))
-         (k acm-backend-yas-show-trigger-keyword)
-         ;; WORKAROUND backward compatibility for boolean value
-         (form (or (and (booleanp k) k default) k)))
-    (format (concat "%s" form) name (propertize trigger 'face 'acm-backend-yas-trigger-keyword-face))))
+;;; Variables
+
+(defvar acm-backend-yas--cache nil)
+(defvar acm-backend-yas--cache-modes nil)
+(defvar acm-backend-yas--cache-expire-p nil)
+
+;;; Functions
+
+(defun acm-backend-yas--cache-expire (&rest _)
+  (when acm-enable-yas
+    (setq acm-backend-yas--cache-expire-p t)))
+
+(advice-add #'yas-load-directory :after #'acm-backend-yas--cache-expire)
+(advice-add #'yas-load-snippet-buffer :after #'acm-backend-yas--cache-expire)
+
+(defun acm-backend-yas--template-cons (template)
+  (let ((name (yas--template-name template))
+        (trigger (yas--template-key template)))
+    (if (and acm-backend-yas-show-trigger-keyword
+             acm-backend-yas-match-by-trigger-keyword)
+        (cons trigger name)
+      (cons name trigger))))
+
+(defun acm-backend-yas--template-sort (keyword templates)
+  (when templates
+    (if keyword
+        (cl-sort templates
+                 (lambda (a b)
+                   (let* ((a-label (car (acm-backend-yas--template-cons a)))
+                          (b-label (car (acm-backend-yas--template-cons b)))
+                          (a-include-prefix (string-prefix-p keyword a-label))
+                          (b-include-prefix (string-prefix-p keyword b-label)))
+                     (cond
+                      ((and b-include-prefix (not a-include-prefix))
+                       nil)
+                      ((and a-include-prefix (not b-include-prefix))
+                       t)
+                      ((and a-include-prefix b-include-prefix)
+                       (string-lessp a-label b-label))
+                      (t
+                       (< (length a-label) (length b-label)))))))
+      templates)))
 
 (defun acm-backend-yas-candidates (keyword)
   (when (and acm-enable-yas
              (not (string-empty-p keyword)))
+    (when (or acm-backend-yas--cache-expire-p
+              (null acm-backend-yas--cache)
+              (not (equal acm-backend-yas--cache-modes (yas--modes-to-activate))))
+      (setq acm-backend-yas--cache (yas--all-templates (yas--get-snippet-tables)))
+      (setq acm-backend-yas--cache-expire-p nil)
+      (setq acm-backend-yas--cache-modes (yas--modes-to-activate)))
     (let* ((candidates (list))
-           (templates (yas--all-templates (yas--get-snippet-tables)))
-           (match-templates (seq-filter (lambda (s)
-                                          (if acm-backend-yas-match-by-trigger-keyword
-                                              (string-prefix-p keyword (yas--template-key s))
-                                            (acm-candidate-fuzzy-search keyword (yas--template-name s))))
-                                        templates)))
-      (dolist (template (cl-subseq match-templates 0 (min (length match-templates) acm-backend-yas-candidates-number)))
-        (let ((name (yas--template-name template))
-              (content (yas--template-content template))
-              (trigger (or (yas--template-key template)
-                           (and (functionp 'yas--template-regexp-key)
-                                (yas--template-regexp-key template)))))
-        (add-to-list 'candidates (list :key name
-                                       :icon "snippet"
-                                       :label name
-                                       :display-label (acm-backend-yas-candidates-display name trigger)
-                                       :content content
-                                       :annotation "Yas-Snippet"
-                                       :backend "yas") t)))
-      (acm-candidate-sort-by-prefix keyword candidates))))
+           (show-key acm-backend-yas-show-trigger-keyword)
+           ;; WORKAROUND backward compatibility for boolean value
+           (form (concat "%s" (or (and (booleanp show-key) show-key " (%s)") show-key)))
+           (match-templates (acm-backend-yas--template-sort
+                             keyword
+                             (seq-filter (lambda (s)
+                                           (acm-candidate-fuzzy-search
+                                            keyword
+                                            (car (acm-backend-yas--template-cons s))))
+                                         acm-backend-yas--cache)))
+           (limit (min (length match-templates) acm-backend-yas-candidates-number)))
+      (dolist (template (cl-subseq match-templates 0 limit))
+        (let* ((pair (acm-backend-yas--template-cons template))
+               (match (car pair))
+               (display (format form
+                                match
+                                (propertize (cdr pair)
+                                            'face
+                                            'acm-backend-yas-extra-info-face)))
+               (content (yas--template-content template)))
+          (add-to-list 'candidates (list :key match
+                                         :icon "snippet"
+                                         :label match
+                                         :display-label display
+                                         :content content
+                                         :annotation "Yas-Snippet"
+                                         :backend "yas") t)))
+      candidates)))
 
 (defun acm-backend-yas-candidate-expand (candidate bound-start)
   (delete-region bound-start (point))
