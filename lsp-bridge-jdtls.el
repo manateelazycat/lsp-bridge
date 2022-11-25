@@ -6,7 +6,7 @@
 
 (defconst lsp-bridge-jdtls-workspace-file-name "jdtls.json")
 
-(defcustom lsp-bridge-jdtls-worksapce
+(defcustom lsp-bridge-jdtls-workspace
   (expand-file-name "~/.cache/lsp-bridge-jdtls")
   "LSP-Bridge jdtls workspace directory.")
 
@@ -61,13 +61,13 @@ E.g. Use `-javaagent:/home/user/.emacs.d/plugin/lombok.jar` to add lombok suppor
   (let ((project-name (file-name-nondirectory project-path))
         (project-hash (md5 project-path)))
     (expand-file-name (concat project-name "-" project-hash)
-                      lsp-bridge-jdtls-worksapce)))
+                      lsp-bridge-jdtls-workspace)))
 
 (defun lsp-bridge-jdtls-single-file-cache-dir (filepath)
   "Signle file cache directory"
   (let ((single-file-hash (md5 filepath)))
     (expand-file-name single-file-hash
-                      lsp-bridge-jdtls-worksapce)))
+                      lsp-bridge-jdtls-workspace)))
 
 (defun lsp-bridge-jdtls-config-file (project-path filepath)
   "JDTLS configuration file path of the project"
