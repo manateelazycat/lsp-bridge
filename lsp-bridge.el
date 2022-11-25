@@ -1709,18 +1709,20 @@ SymbolKind (defined in the LSP)."
 
 (defun lsp-bridge-code-action-popup-quit ()
   (interactive)
+  (if lsp-bridge-code-action-popup-maybe-preview-timer
+      (cancel-timer lsp-bridge-code-action-popup-maybe-preview-timer))
   (posframe-delete "*lsp-bridge-code-action-menu*")
   (posframe-delete "*lsp-bridge-code-action-preview*")
   (select-frame-set-input-focus lsp-bridge-call-hierarchy--emacs-frame)
   (advice-remove 'lsp-bridge-call-hierarchy-select #'lsp-bridge-code-action-popup-select)
   (advice-remove 'lsp-bridge-call-hierarchy-quit #'lsp-bridge-code-action-popup-quit)
-  (select-window (get-buffer-window lsp-bridge-code-action--current-buffer))
-  )
+  (select-window (get-buffer-window lsp-bridge-code-action--current-buffer)))
 
 
 (defun lsp-bridge-code-action-popup-maybe-preview-show ()
   (let ((pos (frame-position lsp-bridge-call-hierarchy--frame))
         (call-frame-height (frame-pixel-height lsp-bridge-call-hierarchy--frame))
+        (call-frame-width (frame-pixel-width lsp-bridge-call-hierarchy--frame))
         (width 0) (height 0))
     (with-current-buffer  "*lsp-bridge-code-action-preview*"
       (read-only-mode -1)
@@ -1744,20 +1746,27 @@ SymbolKind (defined in the LSP)."
       ;; truncate lines
       (setq-local truncate-lines t))
     (select-frame-set-input-focus lsp-bridge-call-hierarchy--emacs-frame)
-    (posframe-show  "*lsp-bridge-code-action-preview*"
-                   :position (cons (car pos)
-                                   (+ call-frame-height (cdr pos)))
-                   :border-width 2
-                   :border-color "gray"
-                   :min-width width
-                   :max-width width
-                   :max-height height
-                   :min-height height)
+    (let* ((preivew-frame (posframe-show  "*lsp-bridge-code-action-preview*"
+                                         :position (cons (car pos)
+                                                         (+ call-frame-height (cdr pos)))
+                                         :border-width 2
+                                         :border-color "gray"
+                                         :min-width width
+                                         :max-width width
+                                         :max-height height
+                                         :min-height height))
+          (preivew-frame-width (frame-pixel-width preivew-frame))
+          (max-frame-width (max call-frame-width preivew-frame-width)))
+      (set-frame-width preivew-frame max-frame-width  nil t)
+      (set-frame-width lsp-bridge-call-hierarchy--frame max-frame-width  nil t))
+
     (select-frame-set-input-focus lsp-bridge-call-hierarchy--frame)))
 
 (defun lsp-bridge-code-action-popup-maybe-preview-do ()
   (let* ((buffer (buffer-name lsp-bridge-code-action--current-buffer))
          (buffer-content (with-current-buffer buffer (buffer-string)))
+         (recentf-keep '(".*" . nil)) ;; not push temp file in recentf-list
+         (recentf-exclude '(".*"))
          (newf (make-temp-file buffer nil nil buffer-content))
          (action (cdr (nth lsp-bridge-call-hierarchy--index
                            lsp-bridge-call-hierarchy--popup-response))))
@@ -1788,8 +1797,10 @@ SymbolKind (defined in the LSP)."
   (setq lsp-bridge-code-action-popup-maybe-preview-timer
         (run-with-idle-timer 0.5 nil #'lsp-bridge-code-action-popup-maybe-preview-do)))
 
-(defun lsp-bridge-popup-code-action--menu (menu-items default-action)
-  (let ((menu-lenght (length menu-items))
+(defun lsp-bridge-popup-action-code-menu (menu-items default-action)
+  (let ((recentf-keep '(".*" . nil)) ;; not push temp file in recentf-list
+        (recentf-exclude '(".*"))
+        (menu-lenght (length menu-items))
         (menu-width 0))
     (with-current-buffer (get-buffer-create "*lsp-bridge-code-action-menu*")
       (cl-loop for i from 0 to (1- (length menu-items))
@@ -1882,7 +1893,7 @@ SymbolKind (defined in the LSP)."
      (action
       (lsp-bridge-code-action--fix-do action))
      ((posframe-workable-p) ;;posframe
-      (lsp-bridge-popup-code-action--menu menu-items default-action))
+      (lsp-bridge-code-action-popup-menu menu-items default-action))
      (t
       (let ((select-name
              (completing-read
