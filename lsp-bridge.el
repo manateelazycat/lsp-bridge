@@ -113,14 +113,15 @@
 (defcustom lsp-bridge-completion-popup-predicates '(lsp-bridge-not-only-blank-before-cursor
                                                     lsp-bridge-not-match-hide-characters
                                                     lsp-bridge-not-match-stop-commands
+                                                    lsp-bridge-not-complete-manually
+                                                    lsp-bridge-not-follow-complete
                                                     lsp-bridge-not-in-string
                                                     lsp-bridge-not-in-comment
-                                                    lsp-bridge-not-follow-complete
+                                                    lsp-bridge-not-in-org-table
+                                                    lsp-bridge-not-in-multiple-cursors
+                                                    lsp-bridge-not-in-mark-macro
                                                     lsp-bridge-is-evil-state
                                                     lsp-bridge-is-meow-state
-                                                    lsp-bridge-multiple-cursors-disable
-                                                    lsp-bridge-not-complete-manually
-                                                    lsp-bridge-not-in-org-table
                                                     )
   "A list of predicate functions with no argument to enable popup completion in callback."
   :type 'list
@@ -911,6 +912,11 @@ So we build this macro to restore postion after code format."
    ;; Other language not allowed popup completion in comment.
    (not (lsp-bridge-in-comment-p))))
 
+(defun lsp-bridge-not-in-mark-macro ()
+  "Hide completion markmacro enable."
+  (not (and (ignore-errors (require 'mark-macro))
+            markmacro-overlays)))
+
 (defun lsp-bridge-not-follow-complete ()
   "Hide completion if last command is `acm-complete'."
   (or (not (eq last-command 'acm-complete))
@@ -962,7 +968,7 @@ So we build this macro to restore postion after code format."
   (or (not (featurep 'meow))
       meow-insert-mode))
 
-(defun lsp-bridge-multiple-cursors-disable ()
+(defun lsp-bridge-not-in-multiple-cursors ()
   "If `multiple-cursors' mode is enable, hide completion menu."
   (not (and (ignore-errors (require 'multiple-cursors))
             multiple-cursors-mode)))
@@ -1732,8 +1738,8 @@ SymbolKind (defined in the LSP)."
       ;; delete finish
       (goto-char (point-min))
       (when (search-forward "Diff finished." nil t)
-          (beginning-of-line)
-          (kill-line 1))
+        (beginning-of-line)
+        (kill-line 1))
       ;; get width and height
       (goto-char (point-min))
       (while (not (eobp))
@@ -1747,16 +1753,16 @@ SymbolKind (defined in the LSP)."
       (setq-local truncate-lines t))
     (select-frame-set-input-focus lsp-bridge-call-hierarchy--emacs-frame)
     (let* ((preivew-frame (posframe-show  "*lsp-bridge-code-action-preview*"
-                                         :position (cons (car pos)
-                                                         (+ call-frame-height (cdr pos)))
-                                         :border-width 2
-                                         :border-color "gray"
-                                         :min-width width
-                                         :max-width width
-                                         :max-height height
-                                         :min-height height))
-          (preivew-frame-width (frame-pixel-width preivew-frame))
-          (max-frame-width (max call-frame-width preivew-frame-width)))
+                                          :position (cons (car pos)
+                                                          (+ call-frame-height (cdr pos)))
+                                          :border-width 2
+                                          :border-color "gray"
+                                          :min-width width
+                                          :max-width width
+                                          :max-height height
+                                          :min-height height))
+           (preivew-frame-width (frame-pixel-width preivew-frame))
+           (max-frame-width (max call-frame-width preivew-frame-width)))
       (set-frame-width preivew-frame max-frame-width  nil t)
       (set-frame-width lsp-bridge-call-hierarchy--frame max-frame-width  nil t))
 
@@ -1915,7 +1921,7 @@ SymbolKind (defined in the LSP)."
             (dotimes (changes-index changes-number)
               (lsp-bridge-file-apply-edits
                (or tempfile
-                (string-remove-prefix ":file://" (format "%s" (nth (* changes-index 2) changes))))
+                   (string-remove-prefix ":file://" (format "%s" (nth (* changes-index 2) changes))))
                (nth (+ (* changes-index 2) 1) changes)))))))
 
   (setq-local lsp-bridge-prohibit-completion t))
