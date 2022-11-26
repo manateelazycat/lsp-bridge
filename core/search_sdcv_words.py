@@ -23,6 +23,7 @@ import threading
 import os
 import traceback
 import re
+import json
 
 from core.utils import get_emacs_vars, message_emacs, eval_in_emacs, logger
 from core.pystardict import Dictionary
@@ -37,6 +38,7 @@ class SearchSdcvWords:
         self.search_ticker = 0
         self.search_thread_queue = []
         self.words = {}
+        self.pinyin= {}
         
         self.build_words_thread = threading.Thread(target=self.build_words)
         self.build_words_thread.start()
@@ -52,6 +54,12 @@ class SearchSdcvWords:
     def build_words(self):
         try:
             if len(self.words) == 0:
+                pinyin_dictionary_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", "pinyin")
+                if os.path.exists("{}.ifo".format(pinyin_dictionary_path)):
+                    pinyin_dictionary = Dictionary(pinyin_dictionary_path, in_memory=True)
+                    for key, value in pinyin_dictionary.items():
+                        self.pinyin[key] = json.loads(value)
+
                 if self.search_dictionary == "kdic-ec-11w":
                     dictionary_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", self.search_dictionary)
                 else:
@@ -90,6 +98,20 @@ class SearchSdcvWords:
         candidates = []
         
         prefix_regexp = re.compile(".*".join(prefix))
+        if len(prefix.lower()) > 3 and prefix.lower() in self.pinyin:
+            for word, translation in self.pinyin[prefix.lower()].items():
+                candidate = {
+                    "key": word,
+                    "icon": "translation",
+                    "label": word,
+                    "display-label": self.adjust_word_case(prefix, word),
+                    "annotation": translation,
+                    "backend": "search-sdcv-words"
+                }
+                candidates.append(candidate)
+                if len(candidates) > self.search_max_number:
+                    break
+
         for word, translation in self.words.items():
             if word.startswith(prefix.lower()) or prefix_regexp.match(word):
                 candidate = {
