@@ -914,7 +914,7 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-not-in-mark-macro ()
   "Hide completion markmacro enable."
-  (not (and (ignore-errors (require 'mark-macro))
+  (not (and (featurep 'markmacro)
             markmacro-overlays)))
 
 (defun lsp-bridge-not-follow-complete ()
@@ -970,7 +970,7 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-not-in-multiple-cursors ()
   "If `multiple-cursors' mode is enable, hide completion menu."
-  (not (and (ignore-errors (require 'multiple-cursors))
+  (not (and (featurep 'multiple-cursors)
             multiple-cursors-mode)))
 
 (defun lsp-bridge-not-complete-manually ()
