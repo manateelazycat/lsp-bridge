@@ -84,6 +84,7 @@
 
 (require 'posframe)
 (require 'markdown-mode)
+(require 'diff)
 
 (require 'lsp-bridge-lsp-installer)
 
@@ -1696,6 +1697,10 @@ SymbolKind (defined in the LSP)."
 
 (defvar lsp-bridge-sdcv-helper-dict nil)
 
+(defvar lsp-bridge-code-action--current-buffer nil)
+(defvar lsp-bridge-code-action-popup-maybe-preview-timer nil)
+(defvar lsp-bridge-code-action--oldfile nil)
+
 (defun lsp-bridge-code-action-popup-select ()
   (interactive)
   (lsp-bridge-code-action-popup-quit)
@@ -1704,13 +1709,98 @@ SymbolKind (defined in the LSP)."
 
 (defun lsp-bridge-code-action-popup-quit ()
   (interactive)
+  (if lsp-bridge-code-action-popup-maybe-preview-timer
+      (cancel-timer lsp-bridge-code-action-popup-maybe-preview-timer))
   (posframe-delete "*lsp-bridge-code-action-menu*")
+  (posframe-delete "*lsp-bridge-code-action-preview*")
   (select-frame-set-input-focus lsp-bridge-call-hierarchy--emacs-frame)
   (advice-remove 'lsp-bridge-call-hierarchy-select #'lsp-bridge-code-action-popup-select)
-  (advice-remove 'lsp-bridge-call-hierarchy-quit #'lsp-bridge-code-action-popup-quit))
+  (advice-remove 'lsp-bridge-call-hierarchy-quit #'lsp-bridge-code-action-popup-quit)
+  (select-window (get-buffer-window lsp-bridge-code-action--current-buffer)))
 
-(defun lsp-bridge-popup-code-action--menu (menu-items default-action)
-  (let ((menu-lenght (length menu-items))
+
+(defun lsp-bridge-code-action-popup-maybe-preview-show ()
+  (let ((pos (frame-position lsp-bridge-call-hierarchy--frame))
+        (call-frame-height (frame-pixel-height lsp-bridge-call-hierarchy--frame))
+        (call-frame-width (frame-pixel-width lsp-bridge-call-hierarchy--frame))
+        (width 0) (height 0))
+    (with-current-buffer  "*lsp-bridge-code-action-preview*"
+      (read-only-mode -1)
+      (goto-char (point-min))
+      ;; delete info lines
+      (kill-line 3)
+      ;; delete finish
+      (goto-char (point-min))
+      (when (search-forward "Diff finished." nil t)
+          (beginning-of-line)
+          (kill-line 1))
+      ;; get width and height
+      (goto-char (point-min))
+      (while (not (eobp))
+        (cl-incf height)
+        (setq width (max (- (line-end-position)
+                            (line-beginning-position))
+                         width))
+        (forward-line))
+      (setq width (min width 80))
+      ;; truncate lines
+      (setq-local truncate-lines t))
+    (select-frame-set-input-focus lsp-bridge-call-hierarchy--emacs-frame)
+    (let* ((preivew-frame (posframe-show  "*lsp-bridge-code-action-preview*"
+                                         :position (cons (car pos)
+                                                         (+ call-frame-height (cdr pos)))
+                                         :border-width 2
+                                         :border-color "gray"
+                                         :min-width width
+                                         :max-width width
+                                         :max-height height
+                                         :min-height height))
+          (preivew-frame-width (frame-pixel-width preivew-frame))
+          (max-frame-width (max call-frame-width preivew-frame-width)))
+      (set-frame-width preivew-frame max-frame-width  nil t)
+      (set-frame-width lsp-bridge-call-hierarchy--frame max-frame-width  nil t))
+
+    (select-frame-set-input-focus lsp-bridge-call-hierarchy--frame)))
+
+(defun lsp-bridge-code-action-popup-maybe-preview-do ()
+  (let* ((buffer (buffer-name lsp-bridge-code-action--current-buffer))
+         (buffer-content (with-current-buffer buffer (buffer-string)))
+         (recentf-keep '(".*" . nil)) ;; not push temp file in recentf-list
+         (recentf-exclude '(".*"))
+         (newf (make-temp-file buffer nil nil buffer-content))
+         (action (cdr (nth lsp-bridge-call-hierarchy--index
+                           lsp-bridge-call-hierarchy--popup-response))))
+
+    (with-current-buffer (find-file-noselect newf)
+      (lsp-bridge-code-action--fix-do action newf)
+      (write-region nil nil newf nil 0)
+      (set-buffer-modified-p nil)
+      (let (kill-buffer-hook kill-buffer-query-functions)
+        (kill-buffer)))
+
+    (diff-no-select lsp-bridge-code-action--oldfile newf
+                    nil nil "*lsp-bridge-code-action-preview*")
+
+    (if-let ((proc (get-buffer-process "*lsp-bridge-code-action-preview*")))
+        (set-process-sentinel
+         proc (lambda (proc _msg)
+                (with-current-buffer (process-buffer proc)
+                  (diff-sentinel (process-exit-status proc)
+                                 newf)
+                  (lsp-bridge-code-action-popup-maybe-preview-show))))
+      (lsp-bridge-code-action-popup-maybe-preview-show))))
+
+(defun lsp-bridge-code-action-popup-maybe-preview ()
+  (if lsp-bridge-code-action-popup-maybe-preview-timer
+      (cancel-timer lsp-bridge-code-action-popup-maybe-preview-timer))
+  (posframe-hide  "*lsp-bridge-code-action-preview*")
+  (setq lsp-bridge-code-action-popup-maybe-preview-timer
+        (run-with-idle-timer 0.5 nil #'lsp-bridge-code-action-popup-maybe-preview-do)))
+
+(defun lsp-bridge-popup-action-code-menu (menu-items default-action)
+  (let ((recentf-keep '(".*" . nil)) ;; not push temp file in recentf-list
+        (recentf-exclude '(".*"))
+        (menu-lenght (length menu-items))
         (menu-width 0))
     (with-current-buffer (get-buffer-create "*lsp-bridge-code-action-menu*")
       (cl-loop for i from 0 to (1- (length menu-items))
@@ -1719,6 +1809,14 @@ SymbolKind (defined in the LSP)."
                          (line-width (length format-line)))
                     (insert format-line)
                     (setq menu-width (max line-width menu-width)))))
+
+    (setq lsp-bridge-code-action--current-buffer (current-buffer))
+
+    ;; prepare for previewing
+    (get-buffer-create "*lsp-bridge-code-action-preview*")
+    (setq lsp-bridge-code-action--oldfile (make-temp-file
+                                           (buffer-name) nil nil (buffer-string)))
+
     ;; reuse hierarchy popup keymap and mode here
     (setq lsp-bridge-call-hierarchy--popup-response menu-items)
     (setq lsp-bridge-call-hierarchy--emacs-frame (selected-frame))
@@ -1736,21 +1834,24 @@ SymbolKind (defined in the LSP)."
 
     (lsp-bridge-call-hierarchy-mode)
     (setq-local lsp-bridge-call-hierarchy-preview-height 0) ;; disable preview
+    (advice-add 'lsp-bridge-call-hierarchy-maybe-preview :override #'lsp-bridge-code-action-popup-maybe-preview)
     (advice-add 'lsp-bridge-call-hierarchy-select :override #'lsp-bridge-code-action-popup-select)
     (advice-add 'lsp-bridge-call-hierarchy-quit :override #'lsp-bridge-code-action-popup-quit)
     (goto-char (point-min))
+
+    (lsp-bridge-code-action-popup-maybe-preview)
     ))
 
 
-(defun lsp-bridge-code-action--fix-do (action)
+(defun lsp-bridge-code-action--fix-do (action &optional tempfile)
   (let* ((command (plist-get action :command))
          (edit (plist-get action :edit))
          (arguments (plist-get action :arguments)))
     (cond (edit
-           (lsp-bridge-workspace-apply-edit edit))
+           (lsp-bridge-workspace-apply-edit edit tempfile))
           (arguments
            (dolist (argument arguments)
-             (lsp-bridge-workspace-apply-edit argument)))
+             (lsp-bridge-workspace-apply-edit argument tempfile)))
           (command
            (let (arguments)
              ;; Pick command and arguments.
@@ -1763,10 +1864,11 @@ SymbolKind (defined in the LSP)."
              (if (member command lsp-bridge-apply-edit-commands)
                  ;; Apply workspace edit if command match `lsp-bridge-apply-edit-commands'.
                  (dolist (argument arguments)
-                   (lsp-bridge-workspace-apply-edit argument))
+                   (lsp-bridge-workspace-apply-edit argument tempfile))
                ;; Otherwise send `workspace/executeCommand' request to LSP server.
                (lsp-bridge-call-file-api "execute_command" command)))))
-    (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title))))
+    (unless tempfile
+      (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
 
 (defun lsp-bridge-code-action--fix (actions action-kind)
   (let* ((menu-items
@@ -1791,7 +1893,7 @@ SymbolKind (defined in the LSP)."
      (action
       (lsp-bridge-code-action--fix-do action))
      ((posframe-workable-p) ;;posframe
-      (lsp-bridge-popup-code-action--menu menu-items default-action))
+      (lsp-bridge-code-action-popup-menu menu-items default-action))
      (t
       (let ((select-name
              (completing-read
@@ -1799,19 +1901,21 @@ SymbolKind (defined in the LSP)."
               menu-items nil t nil nil default-action)))
         (lsp-bridge-code-action--fix-do (cdr (assoc select-name menu-items))))))))
 
-(defun lsp-bridge-workspace-apply-edit (info)
+(defun lsp-bridge-workspace-apply-edit (info &optional tempfile)
   (lsp-bridge-save-position
    (cond ((plist-get info :documentChanges)
           (dolist (change (plist-get info :documentChanges))
             (lsp-bridge-file-apply-edits
-             (string-remove-prefix "file://" (plist-get (plist-get change :textDocument) :uri))
+             (or tempfile
+                 (string-remove-prefix "file://" (plist-get (plist-get change :textDocument) :uri)))
              (plist-get change :edits))))
          ((plist-get info :changes)
           (let* ((changes (plist-get info :changes))
                  (changes-number (/ (length changes) 2)))
             (dotimes (changes-index changes-number)
               (lsp-bridge-file-apply-edits
-               (string-remove-prefix ":file://" (format "%s" (nth (* changes-index 2) changes)))
+               (or tempfile
+                (string-remove-prefix ":file://" (format "%s" (nth (* changes-index 2) changes))))
                (nth (+ (* changes-index 2) 1) changes)))))))
 
   (setq-local lsp-bridge-prohibit-completion t))
