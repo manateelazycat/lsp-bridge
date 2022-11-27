@@ -134,6 +134,11 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'number
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-enable-mode-line t
+  "Whether display LSP-bridge's server info in mode-line ."
+  :type 'boolean
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-completion-stop-commands
   '("undo-tree-undo" "undo-tree-redo"
     "kill-region" "delete-block-backward"
@@ -2165,8 +2170,9 @@ SymbolKind (defined in the LSP)."
   (when lsp-bridge-server
     (propertize (format "lsp-bridge:%s" lsp-bridge-server-port) 'face mode-face)))
 
-(add-to-list 'mode-line-misc-info
-             `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] ")))
+(when lsp-bridge-enable-mode-line
+  (add-to-list 'mode-line-misc-info
+              `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] "))))
 
 (provide 'lsp-bridge)
 
