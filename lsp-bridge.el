@@ -796,10 +796,7 @@ So we build this macro to restore postion after code format."
   (lsp-bridge-search-words-index-files)
 
   ;; Synchronize elisp symbol to Python side.
-  (lsp-bridge-elisp-symbols-update)
-
-  (when (acm-running-in-wayland-native)
-    (message "[LSP-Bridge] Frame render performance is very poor in pgtk branch, recommand use x11 branch to get best render performance.")))
+  (lsp-bridge-elisp-symbols-update))
 
 (defvar-local lsp-bridge-last-cursor-position 0)
 (defvar-local lsp-bridge-prohibit-completion nil)
