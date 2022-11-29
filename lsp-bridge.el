@@ -1805,7 +1805,7 @@ SymbolKind (defined in the LSP)."
   (setq lsp-bridge-code-action-popup-maybe-preview-timer
         (run-with-idle-timer 0.5 nil #'lsp-bridge-code-action-popup-maybe-preview-do)))
 
-(defun lsp-bridge-popup-action-code-menu (menu-items default-action)
+(defun lsp-bridge-code-action-popup-menu (menu-items default-action)
   (let ((recentf-keep '(".*" . nil)) ;; not push temp file in recentf-list
         (recentf-exclude '(".*"))
         (menu-lenght (length menu-items))
