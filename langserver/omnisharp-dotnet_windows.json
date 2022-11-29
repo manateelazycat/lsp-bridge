@@ -1,5 +1,5 @@
 {
-    "name": "omnisharp-dotnot",
+    "name": "omnisharp-dotnet",
     "languageId": "c#",
     "command": ["C:\\Users\\Jordan\\.emacs.d\\.cache\\omnisharp\\OmniSharp.exe",
                 "-z",
