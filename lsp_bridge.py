@@ -329,6 +329,8 @@ def load_single_server_info(lang_server):
     
 def get_lang_server_path(server_name):
     server_dir = Path(__file__).resolve().parent / "langserver"
+    message_emacs("HEY! LISTEN!")
+    message_emacs(get_os_name())
     server_path_current = server_dir / "{}_{}.json".format(server_name, get_os_name())
     server_path_default = server_dir / "{}.json".format(server_name)
     

@@ -1,5 +1,5 @@
 {
-    "name": "omnisharp",
+    "name": "omnisharp-mono",
     "languageId": "c#",
     "command": ["mono",
                 "%USERPROFILE%\\AppData\\Roaming\\.emacs.d\\.cache\\omnisharp\\OmniSharp.exe",

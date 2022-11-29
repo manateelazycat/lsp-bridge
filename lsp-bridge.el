@@ -345,6 +345,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Default LSP server for (la)tex, you can choose `taxlab' or `digestif'."
   :type 'string)
 
+(defcustom lsp-bridge-csharp-lsp-server "omnisharp-mono"
+  "Default LSP server for C#, you can choose `omnisharp-mono' or `omnisharp-dotnet'."
+  :type 'string)
+
 (defcustom lsp-bridge-use-wenls-in-org-mode nil
   "Use `wen' lsp server in org-mode, default is disable.")
 
@@ -391,7 +395,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (ess-r-mode . "rlanguageserver")
     (graphql-mode . "graphql-lsp")
     (swift-mode . "swift-sourcekit")
-    (csharp-mode . "omnisharp")
+    (csharp-mode . lsp-bridge-csharp-lsp-server)
     )
   "The lang server rule for file mode."
   :type 'cons)

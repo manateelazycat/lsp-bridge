@@ -88,10 +88,10 @@
   (interactive)
   (let ((url "https://github.com/OmniSharp/omnisharp-roslyn/releases/latest/download/omnisharp-mono.zip")
         (down-des (if (eq system-type 'windows-nt)
-                      "%userprofile%\\AppData\\Local\\Temp\\omnisharp-mono.zip"
+                       (substitute-in-file-name "\\$USERPROFILE\\AppData\\Local\\Temp\\omnisharp-mono.zip")
                     "/tmp/omnisharp-mono.zip"))
         (install-des (if (eq system-type 'windows-nt)
-                         (format "%s.cache\\omnisharp\\" user-emacs-directory)
+                         (expand-file-name (format "%s.cache/omnisharp/" user-emacs-directory))
                        "~/.emacs.d/.cache/omnisharp/"
                        (format "%s.cache/omnisharp/" user-emacs-directory))))
     (url-copy-file url down-des 1)
