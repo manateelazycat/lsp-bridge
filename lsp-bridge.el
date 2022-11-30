@@ -1554,14 +1554,14 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-diagnostic-copy ()
   (interactive)
-  (if (or (zerop (length lsp-bridge-diagnostic-overlays))
-          (not (frame-visible-p lsp-bridge-diagnostic-frame)))
+  (if (zerop (length lsp-bridge-diagnostic-overlays))
       (message "[LSP-Bridge] No diagnostics.")
-    (let ((diagnostic-message (with-current-buffer lsp-bridge-diagnostic-tooltip
-                                lsp-bridge-diagnostic-message)))
-      (kill-new diagnostic-message)
-      (message "Copy diagnostics: '%s'" diagnostic-message)
-      )))
+    (dolist (overlay lsp-bridge-diagnostic-overlays)
+      (when (and (>= (point) (overlay-start overlay))
+                 (< (point) (overlay-end overlay)))
+        (let ((diagnostic-message (overlay-get overlay 'message)))
+          (kill-new diagnostic-message)
+          (message "Copy diagnostics: '%s'" diagnostic-message))))))
 
 (defun lsp-bridge-diagnostic-list ()
   (interactive)
@@ -2169,7 +2169,7 @@ SymbolKind (defined in the LSP)."
 
 (when lsp-bridge-enable-mode-line
   (add-to-list 'mode-line-misc-info
-              `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] "))))
+               `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] "))))
 
 (provide 'lsp-bridge)
 
