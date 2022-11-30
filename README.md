@@ -90,7 +90,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright`, `jedi`, `python-ms`, `pylsp`
 * `lsp-bridge-php-lsp-server`: PHP language server, you can choose `intelephense` or `phpactor`
 * `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `taxlab` or` digestif`
-* `lsp-bridge-csharp-lsp-server`: LaTeX language server, you can choose `omnisharp-mono` or` omnisharp-dotnet`
+* `lsp-bridge-csharp-lsp-server`: C# language server, you can choose `omnisharp-mono` or` omnisharp-dotnet`
 
 ## Options
 * `lsp-bridge-python-command`: The path of the python command, if you use `conda`, you may customize this option. Windows platform using `python.exe` rather than `python3`, if lsp-bridge can't work, try set to `python3`
