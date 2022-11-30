@@ -3,5 +3,6 @@
     "languageId": "c#",
     "command": [".cache\\omnisharp\\OmniSharp.exe",
                 "-lsp"],
-    "settings": {}
+    "settings": {},
+    "support-single-file": false
 }
