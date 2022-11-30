@@ -267,6 +267,7 @@ Start discarding off end if gets this big."
                (lsp-bridge-epc-define-method mngr 'get-multi-lang-server 'lsp-bridge--get-multi-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-single-lang-server 'lsp-bridge--get-single-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-version 'emacs-version)
+               (lsp-bridge-epc-define-method mngr 'get-user-emacs-directory 'lsp-bridge--user-emacs-directory)
                (lsp-bridge-epc-define-method mngr 'is-snippet-support 'acm-backend-lsp-snippet-expansion-fn)
                (lsp-bridge-epc-define-method mngr 'get-buffer-content 'lsp-bridge--get-buffer-content-func)
                ))))
@@ -593,6 +594,9 @@ So we build this macro to restore postion after code format."
         (lsp-bridge--with-file-buffer filepath
           (lsp-bridge-get-single-lang-server-by-mode))))))
 
+(defun lsp-bridge--user-emacs-directory ()
+  "Get lang server with project path, file path or file extension."
+  (expand-file-name user-emacs-directory))
 
 (defun lsp-bridge--get-buffer-content-func (buffer-name)
   "Get buffer content for lsp. BUFFER-NAME is name eval from (buffer-name)."

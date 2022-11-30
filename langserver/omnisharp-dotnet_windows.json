@@ -1,7 +1,7 @@
 {
     "name": "omnisharp-dotnet",
     "languageId": "c#",
-    "command": ["C:\\Users\\Jordan\\.emacs.d\\.cache\\omnisharp\\OmniSharp.exe",
+    "command": [".cache\\omnisharp\\OmniSharp.exe",
                 "-lsp"],
     "settings": {}
 }

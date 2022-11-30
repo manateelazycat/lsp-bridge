@@ -2,7 +2,7 @@
     "name": "omnisharp-mono",
     "languageId": "c#",
     "command": ["mono",
-                "%USERPROFILE%\\AppData\\Roaming\\.emacs.d\\.cache\\omnisharp\\OmniSharp.exe",
+                ".cache\\omnisharp\\OmniSharp.exe",
                 "-z",
                 "-lsp"],
     "settings": {}

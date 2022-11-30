@@ -191,6 +191,11 @@ class LspBridge:
                 return False
             
             lang_server_info = load_single_server_info(single_lang_server)
+            if "omnisharp" in single_lang_server and get_os_name() == "windows":
+                user_emacs_dir = get_emacs_func_result("get-user-emacs-directory")
+                full_path = str(pathlib.Path(user_emacs_dir, lang_server_info["command"][0]))
+                lang_server_info["command"][0] = full_path
+
             if ((not os.path.isdir(project_path)) and
                 "support-single-file" in lang_server_info and
                 lang_server_info["support-single-file"] == False):
@@ -331,7 +336,7 @@ def get_lang_server_path(server_name):
     server_dir = Path(__file__).resolve().parent / "langserver"
     server_path_current = server_dir / "{}_{}.json".format(server_name, get_os_name())
     server_path_default = server_dir / "{}.json".format(server_name)
-    
+
     return server_path_current if server_path_current.exists() else server_path_default
     
 if __name__ == "__main__":
