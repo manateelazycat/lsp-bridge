@@ -174,6 +174,7 @@ class LspServer:
         if self.server_info["name"]=="omnisharp":
             self.server_info["command"][1]=os.path.expandvars(self.server_info["command"][1])
         elif self.server_info["name"] == "pyright":
+            # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.
             args = ["{:02x}".format(b) for b in random.randbytes(21)]
             self.server_info["command"].append(f"--cancellationReceive=file:{''.join(args)}")
 
