@@ -908,11 +908,7 @@ The key of candidate will change between two LSP results."
               (insert (if (stringp candidate-doc)
                           candidate-doc
                         (format "%S" candidate-doc)))
-	      ;; (markdown-mode)
-	      ;; (message (eval markdown-hide-markup))
-              ;; (visual-line-mode 1)
-	      (acm-render-markdown-content)
-	      )
+	      (acm-render-markdown-content))
 
             ;; Adjust doc frame position and size.
             (acm-doc-frame-adjust))
