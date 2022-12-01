@@ -191,9 +191,11 @@ class LspBridge:
                 return False
             
             lang_server_info = load_single_server_info(single_lang_server)
-            if "omnisharp" in single_lang_server and get_os_name() == "windows":
-                user_emacs_dir = get_emacs_func_result("get-user-emacs-directory")
-                full_path = str(pathlib.Path(user_emacs_dir, lang_server_info["command"][0]))
+
+            windows_user_emacs_dir_keyword = "%USER_EMACS_DIRECTORY%"
+            if windows_user_emacs_dir_keyword in lang_server_info["command"][0]:
+                user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
+                full_path = lang_server_info["command"][0].replace(windows_user_emacs_dir_keyword, user_emacs_dir)
                 lang_server_info["command"][0] = full_path
 
             if ((not os.path.isdir(project_path)) and
