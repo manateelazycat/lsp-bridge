@@ -908,7 +908,11 @@ The key of candidate will change between two LSP results."
               (insert (if (stringp candidate-doc)
                           candidate-doc
                         (format "%S" candidate-doc)))
-              (visual-line-mode 1))
+	      ;; (markdown-mode)
+	      ;; (message (eval markdown-hide-markup))
+              ;; (visual-line-mode 1)
+	      (acm-render-markdown-content)
+	      )
 
             ;; Adjust doc frame position and size.
             (acm-doc-frame-adjust))
@@ -917,6 +921,25 @@ The key of candidate will change between two LSP results."
         ;; If backend is LSP, doc frame hide is control by `lsp-bridge-completion-item--update'.
         (unless (string-equal backend "lsp")
           (acm-doc-hide))))))
+
+(defun acm-render-markdown-content ()
+  (when (fboundp 'gfm-view-mode)
+    (let ((inhibit-message t))
+      (setq-local markdown-fontify-code-blocks-natively t)
+      ;; (setq lsp-bridge-lookup-doc-tooltip-background (face-background 'markdown-code-face))
+      ;; (setq lsp-bridge-lookup-doc-tooltip-height (face-attribute 'markdown-code-face :height))
+      ;; (set-face-background 'markdown-code-face (lsp-bridge-frame-background-color))
+      ;; (set-face-attribute 'markdown-code-face nil :height lsp-bridge-lookup-doc-tooltip-font-height)
+      (gfm-view-mode)))
+  (read-only-mode 0)
+  ;; (setq prettify-symbols-alist lsp-bridge-lookup-doc-tooltip-prettify-symbols-alist)
+  ;; (setq prettify-symbols-compose-predicate (lambda (_start _end _match) t))
+  (prettify-symbols-mode 1)
+  (display-line-numbers-mode -1)
+  (setq-local cursor-type nil)
+  (setq-local cursor-in-non-selected-windows nil)
+  (visual-line-mode 1)
+  (font-lock-ensure))
 
 (defun acm-doc-frame-adjust ()
   (let* ((emacs-width (frame-pixel-width))
