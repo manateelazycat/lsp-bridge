@@ -323,7 +323,7 @@ def load_single_server_info(lang_server):
     else:
         # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
         lang_server_info_path = get_lang_server_path(lang_server)
-
+        
     with open(lang_server_info_path, encoding="utf-8", errors="ignore") as f:
         return json.load(f)
     

@@ -163,6 +163,11 @@
   :type 'integer
   :group 'acm)
 
+(defcustom acm-markdown-render-font-height 130
+  "Font size for hover tooltip."
+  :type 'integer
+  :group 'acm)
+
 (cl-defmacro acm-run-idle-func (timer idle func)
   `(unless ,timer
      (setq ,timer
@@ -299,6 +304,7 @@
                    (visibility . nil)
                    (no-special-glyphs . t)
                    (desktop-dont-save . t)
+                   (mode-line-format . nil)
                    )))
 
     (acm-set-frame-colors frame)
@@ -735,7 +741,11 @@ The key of candidate will change between two LSP results."
 
 (defun acm-doc--hide()
   (when (acm-frame-visible-p acm-doc-frame)
-    (make-frame-invisible acm-doc-frame)))
+    (make-frame-invisible acm-doc-frame))
+
+  (when acm-markdown-render-timer
+    (cancel-timer acm-markdown-render-timer)
+    (setq acm-markdown-render-timer nil)))
 
 (defun acm--pre-command ()
   ;; Use `pre-command-hook' to hide completion menu when command match `acm-continue-commands'.
@@ -899,6 +909,13 @@ The key of candidate will change between two LSP results."
 
             ;; Adjust doc frame position and size.
             (acm-doc-frame-adjust))
+
+        ;; Only render markdown styling when idle 200ms, because markdown render is expensive.
+        (when (string-equal backend "lsp")
+          (when acm-markdown-render-timer
+            (cancel-timer acm-markdown-render-timer)
+            (setq acm-markdown-render-timer nil))
+          (setq acm-markdown-render-timer (run-with-idle-timer 0.2 nil #'acm-doc-markdown-render-content)))
 
         ;; Hide doc frame immediately if backend is not LSP.
         ;; If backend is LSP, doc frame hide is control by `lsp-bridge-completion-item--update'.
@@ -1070,6 +1087,50 @@ The key of candidate will change between two LSP results."
       (acm-doc-hide)
     (let ((acm-enable-doc t))
       (acm-doc-try-show))))
+
+(defvar acm-markdown-render-timer nil)
+(defvar acm-markdown-render-background nil)
+(defvar acm-markdown-render-height nil)
+
+(defvar acm-markdown-render-prettify-symbols-alist
+  (nconc
+   (cl-loop for i from 0 to 255
+            collect (cons (format "&#x%02X;" i) i))
+   '(("\\!" . ?!) ("\\#" . ?#) ("\\*" . ?*) ("\\+" . ?+) ("\\:" . ?:)
+     ("\\<" . ?<) ("\\>" . ?>) ("\\[" . ?\[) ("\\]" . ?\]) ("\\^" . ?^)
+     ("\\_" . ?_) ("\\`" . ?`) ("\\|" . ?|) ("\\~" . ?~) ("\\\\" . ?\\)
+     ("&lt;" . ?<) ("&gt;" . ?>) ("&amp;" . ?&))))
+
+(defun acm-frame-background-color ()
+  (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode))))
+    (if (string-equal theme-mode "dark") "#191a1b" "#f0f0f0")))
+
+(defun acm-markdown-render-content ()
+  (when (fboundp 'gfm-view-mode)
+    (let ((inhibit-message t))
+      (setq-local markdown-fontify-code-blocks-natively t)
+      (setq acm-markdown-render-background (face-background 'markdown-code-face))
+      (setq acm-markdown-render-height (face-attribute 'markdown-code-face :height))
+      (set-face-background 'markdown-code-face (acm-frame-background-color))
+      (set-face-attribute 'markdown-code-face nil :height acm-markdown-render-font-height)
+      (gfm-view-mode)))
+  (read-only-mode 0)
+  (setq prettify-symbols-alist acm-markdown-render-prettify-symbols-alist)
+  (setq prettify-symbols-compose-predicate (lambda (_start _end _match) t))
+  (prettify-symbols-mode 1)
+  (display-line-numbers-mode -1)
+  (font-lock-ensure)
+
+  ;; Only scale font for 4k screen.
+  (when (> (frame-pixel-width) 3000)
+    (text-scale-set 1.5))
+
+  (setq-local mode-line-format nil))
+
+(defun acm-doc-markdown-render-content ()
+  (when (acm-frame-visible-p acm-doc-frame)
+    (with-current-buffer (get-buffer-create acm-doc-buffer)
+      (acm-markdown-render-content))))
 
 ;; Emacs 28: Do not show Acm commands with M-X
 (dolist (sym '(acm-hide acm-complete acm-select-first acm-select-last acm-select-next

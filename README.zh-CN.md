@@ -107,7 +107,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-completion-popup-predicates`: 补全菜单显示的检查函数， 这个选项包括的所有函数都检查过以后， 补全菜单才能显示
 * `lsp-bridge-completion-stop-commands`: 这些命令执行以后，不再弹出补全菜单
 * `lsp-bridge-completion-hide-characters`: 这些字符的后面不再弹出补全菜单
-* `lsp-bridge-lookup-doc-tooltip-font-height`: 弹出文档的字体高度， 默认是 130
+* `acm-markdown-render-font-height`: 弹出文档的字体高度， 默认是 130
 * `acm-enable-doc`: 补全菜单是否显示帮助文档
 * `acm-enable-icon`: 补全菜单是否显示图标, macOS 用户需要给 brew 命令增加选项 `--with-rsvg` 来安装 Emacs 才能显示 SVG 图片
 * `acm-enable-tabnine`: 是否打开 tabnine 补全支持，默认打开，打开后需要运行命令 `lsp-bridge-install-tabnine` 来安装 tabnine 后就可以使用了。 TabNine 会消耗巨大的 CPU， 导致你整个电脑都卡顿， 如果电脑性能不好， 不建议开启此选项

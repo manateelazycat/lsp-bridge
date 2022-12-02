@@ -163,11 +163,6 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'string
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-lookup-doc-tooltip-font-height 130
-  "Font size for hover tooltip."
-  :type 'integer
-  :group 'lsp-bridge)
-
 (defcustom lsp-bridge-lookup-doc-tooltip-border-width 20
   "The border width of lsp-bridge hover tooltip, in pixels."
   :type 'integer
@@ -1227,32 +1222,28 @@ So we build this macro to restore postion after code format."
   (posframe-funcall lsp-bridge-lookup-doc-tooltip
                     #'scroll-down-command arg))
 
-(defun lsp-bridge-frame-background-color ()
-  (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode))))
-    (if (string-equal theme-mode "dark") "#191a1b" "#f0f0f0")))
-
 (defun lsp-bridge-popup-documentation--show (value)
   (with-current-buffer (get-buffer-create lsp-bridge-lookup-doc-tooltip)
     (erase-buffer)
     (insert value)
-    (lsp-bridge-render-markdown-content))
+    (acm-markdown-render-content))
   (when (posframe-workable-p)
     (posframe-show lsp-bridge-lookup-doc-tooltip
                    :position (point)
                    :internal-border-width lsp-bridge-lookup-doc-tooltip-border-width
-                   :background-color (lsp-bridge-frame-background-color)
+                   :background-color (acm-frame-background-color)
                    :max-width lsp-bridge-lookup-doc-tooltip-max-width
                    :max-height lsp-bridge-lookup-doc-tooltip-max-height)))
 
 (defun lsp-bridge-hide-doc-tooltip ()
   (posframe-hide lsp-bridge-lookup-doc-tooltip)
 
-  (when lsp-bridge-lookup-doc-tooltip-background
-    (set-face-background 'markdown-code-face lsp-bridge-lookup-doc-tooltip-background)
-    (setq lsp-bridge-lookup-doc-tooltip-background nil))
+  (when acm-markdown-render-background
+    (set-face-background 'markdown-code-face acm-markdown-render-background)
+    (setq acm-markdown-render-background nil))
 
-  (when lsp-bridge-lookup-doc-tooltip-height
-    (set-face-attribute 'markdown-code-face nil :height lsp-bridge-lookup-doc-tooltip-height)))
+  (when acm-markdown-render-height
+    (set-face-attribute 'markdown-code-face nil :height acm-markdown-render-height)))
 
 (defun lsp-bridge-hide-diagnostic-tooltip ()
   (posframe-hide lsp-bridge-diagnostic-tooltip))
@@ -1289,7 +1280,7 @@ So we build this macro to restore postion after code format."
              (append
               lsp-bridge-signature-posframe-params
               (list :position (point)
-                    :background-color (lsp-bridge-frame-background-color))))
+                    :background-color (acm-frame-background-color))))
     (lsp-bridge-hide-signature-tooltip)))
 
 (defun lsp-bridge-signature-help--update (help-infos help-index)
@@ -1515,7 +1506,7 @@ So we build this macro to restore postion after code format."
             (posframe-show lsp-bridge-diagnostic-tooltip
                            :position (point)
                            :internal-border-width lsp-bridge-diagnostic-tooltip-border-width
-                           :background-color (lsp-bridge-frame-background-color)
+                           :background-color (acm-frame-background-color)
                            :foreground-color foreground-color
                            )))))
 
@@ -2001,34 +1992,6 @@ SymbolKind (defined in the LSP)."
           (acm-doc-try-show)
         ;; Hide doc frame immediately.
         (acm-doc-hide)))))
-
-(defvar lsp-bridge-lookup-doc-tooltip-background nil)
-(defvar lsp-bridge-lookup-doc-tooltip-height nil)
-
-(defvar lsp-bridge-lookup-doc-tooltip-prettify-symbols-alist
-  (nconc
-   (cl-loop for i from 0 to 255
-            collect (cons (format "&#x%02X;" i) i))
-   '(("\\!" . ?!) ("\\#" . ?#) ("\\*" . ?*) ("\\+" . ?+) ("\\:" . ?:)
-     ("\\<" . ?<) ("\\>" . ?>) ("\\[" . ?\[) ("\\]" . ?\]) ("\\^" . ?^)
-     ("\\_" . ?_) ("\\`" . ?`) ("\\|" . ?|) ("\\~" . ?~) ("\\\\" . ?\\)
-     ("&lt;" . ?<) ("&gt;" . ?>) ("&amp;" . ?&))))
-
-(defun lsp-bridge-render-markdown-content ()
-  (when (fboundp 'gfm-view-mode)
-    (let ((inhibit-message t))
-      (setq-local markdown-fontify-code-blocks-natively t)
-      (setq lsp-bridge-lookup-doc-tooltip-background (face-background 'markdown-code-face))
-      (setq lsp-bridge-lookup-doc-tooltip-height (face-attribute 'markdown-code-face :height))
-      (set-face-background 'markdown-code-face (lsp-bridge-frame-background-color))
-      (set-face-attribute 'markdown-code-face nil :height lsp-bridge-lookup-doc-tooltip-font-height)
-      (gfm-view-mode)))
-  (read-only-mode 0)
-  (setq prettify-symbols-alist lsp-bridge-lookup-doc-tooltip-prettify-symbols-alist)
-  (setq prettify-symbols-compose-predicate (lambda (_start _end _match) t))
-  (prettify-symbols-mode 1)
-  (display-line-numbers-mode -1)
-  (font-lock-ensure))
 
 (defun lsp-bridge-toggle-sdcv-helper ()
   "Toggle sdcv helper."
