@@ -19,6 +19,8 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 4. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
 5. Add following code in your ~/.emacs:
 
+NOTE: When use lsp-bridge, please disable other completion plugin first, such as lsp-mode, eglot, company, corfu, etc. lsp-bridge provides a full set from completion backend, completion frontend to multi-backend integration solution.
+
 ```elisp
 (add-to-list 'load-path "<path-to-lsp-bridge>")
 
