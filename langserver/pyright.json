@@ -3,8 +3,7 @@
   "languageId": "python",
   "command": [
     "pyright-langserver",
-    "--stdio",
-    "--node-ipc"
+    "--stdio"
   ],
   "ignore-diagnostic": "# type: ignore",
   "settings": {
