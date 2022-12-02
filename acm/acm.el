@@ -508,9 +508,7 @@ Only calculate template candidate when type last character."
            ;; Try show template candidates after 200ms later.
            ;; Cancel timer if last timer haven't executed when user type new character.
            (t
-            (when acm-template-candidate-timer
-              (cancel-timer acm-template-candidate-timer)
-              (setq acm-template-candidate-timer nil))
+            (acm-cancel-timer acm-template-candidate-timer)
             (setq acm-template-candidate-timer (run-with-timer 0.2 nil #'acm-template-candidate-update)))))
 
         ;; Insert snippet candidates in first page of menu.
@@ -743,9 +741,9 @@ The key of candidate will change between two LSP results."
   (when (acm-frame-visible-p acm-doc-frame)
     (make-frame-invisible acm-doc-frame))
 
-  (when acm-markdown-render-timer
-    (cancel-timer acm-markdown-render-timer)
-    (setq acm-markdown-render-timer nil)))
+  (acm-cancel-timer acm-markdown-render-timer)
+
+  (setq acm-markdown-render-doc nil))
 
 (defun acm--pre-command ()
   ;; Use `pre-command-hook' to hide completion menu when command match `acm-continue-commands'.
@@ -894,7 +892,9 @@ The key of candidate will change between two LSP results."
       (if (or (consp candidate-doc) ; If the type fo snippet is set to command,
                                         ; then the "doc" will be a list.
               (and (stringp candidate-doc) (not (string-empty-p candidate-doc))))
-          (progn
+          (let ((doc (if (stringp candidate-doc)
+                         candidate-doc
+                       (format "%S" candidate-doc))))
             ;; Create doc frame if it not exist.
             (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame")
             (setq acm-doc-frame-hide-p nil)
@@ -902,20 +902,19 @@ The key of candidate will change between two LSP results."
             ;; Insert documentation and turn on wrap line.
             (with-current-buffer (get-buffer-create acm-doc-buffer)
               (erase-buffer)
-              (insert (if (stringp candidate-doc)
-                          candidate-doc
-                        (format "%S" candidate-doc)))
+              (insert doc)
               (visual-line-mode 1))
+
+            ;; Only render markdown styling when idle 200ms, because markdown render is expensive.
+            (when (string-equal backend "lsp")
+              (acm-cancel-timer acm-markdown-render-timer)
+              (setq acm-markdown-render-timer
+                    (run-with-idle-timer 0.2 nil
+                                         (lambda ()
+                                           (acm-doc-markdown-render-content doc)))))
 
             ;; Adjust doc frame position and size.
             (acm-doc-frame-adjust))
-
-        ;; Only render markdown styling when idle 200ms, because markdown render is expensive.
-        (when (string-equal backend "lsp")
-          (when acm-markdown-render-timer
-            (cancel-timer acm-markdown-render-timer)
-            (setq acm-markdown-render-timer nil))
-          (setq acm-markdown-render-timer (run-with-idle-timer 0.2 nil #'acm-doc-markdown-render-content)))
 
         ;; Hide doc frame immediately if backend is not LSP.
         ;; If backend is LSP, doc frame hide is control by `lsp-bridge-completion-item--update'.
@@ -1089,6 +1088,7 @@ The key of candidate will change between two LSP results."
       (acm-doc-try-show))))
 
 (defvar acm-markdown-render-timer nil)
+(defvar acm-markdown-render-doc nil)
 (defvar acm-markdown-render-background nil)
 (defvar acm-markdown-render-height nil)
 
@@ -1127,10 +1127,13 @@ The key of candidate will change between two LSP results."
 
   (setq-local mode-line-format nil))
 
-(defun acm-doc-markdown-render-content ()
-  (when (acm-frame-visible-p acm-doc-frame)
+(defun acm-doc-markdown-render-content (doc)
+  (when (and (acm-frame-visible-p acm-doc-frame)
+             (not (string-equal doc acm-markdown-render-doc)))
     (with-current-buffer (get-buffer-create acm-doc-buffer)
-      (acm-markdown-render-content))))
+      (acm-markdown-render-content))
+
+    (setq acm-markdown-render-doc doc)))
 
 ;; Emacs 28: Do not show Acm commands with M-X
 (dolist (sym '(acm-hide acm-complete acm-select-first acm-select-last acm-select-next

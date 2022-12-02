@@ -1708,8 +1708,7 @@ SymbolKind (defined in the LSP)."
 
 (defun lsp-bridge-code-action-popup-quit ()
   (interactive)
-  (if lsp-bridge-code-action-popup-maybe-preview-timer
-      (cancel-timer lsp-bridge-code-action-popup-maybe-preview-timer))
+  (acm-cancel-timer lsp-bridge-code-action-popup-maybe-preview-timer)
   (posframe-delete "*lsp-bridge-code-action-menu*")
   (posframe-delete "*lsp-bridge-code-action-preview*")
   (select-frame-set-input-focus lsp-bridge-call-hierarchy--emacs-frame)
@@ -1790,8 +1789,7 @@ SymbolKind (defined in the LSP)."
       (lsp-bridge-code-action-popup-maybe-preview-show))))
 
 (defun lsp-bridge-code-action-popup-maybe-preview ()
-  (if lsp-bridge-code-action-popup-maybe-preview-timer
-      (cancel-timer lsp-bridge-code-action-popup-maybe-preview-timer))
+  (acm-cancel-timer lsp-bridge-code-action-popup-maybe-preview-timer)
   (posframe-hide  "*lsp-bridge-code-action-preview*")
   (setq lsp-bridge-code-action-popup-maybe-preview-timer
         (run-with-idle-timer 0.5 nil #'lsp-bridge-code-action-popup-maybe-preview-do)))
