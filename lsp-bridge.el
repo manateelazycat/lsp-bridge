@@ -12,7 +12,7 @@
 ;; URL: https://github.com/manateelazycat/lsp-bridge
 ;; Keywords:
 ;; Compatibility: emacs-version >= 28
-;; Package-Requires: ((emacs "28") (posframe "1.1.7") (markdown-mode "2.6-dev"))
+;; Package-Requires: ((emacs "28") (posframe "1.1.7") (markdown-mode "2.6"))
 ;;
 ;; Features that might be required by this library:
 ;;
