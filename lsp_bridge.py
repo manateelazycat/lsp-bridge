@@ -24,6 +24,7 @@ import shutil
 import threading
 import traceback
 import json
+import random
 from pathlib import Path
 from typing import Dict
 
@@ -192,12 +193,6 @@ class LspBridge:
             
             lang_server_info = load_single_server_info(single_lang_server)
 
-            windows_user_emacs_dir_keyword = "%USER_EMACS_DIRECTORY%"
-            if windows_user_emacs_dir_keyword in lang_server_info["command"][0]:
-                user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
-                full_path = lang_server_info["command"][0].replace(windows_user_emacs_dir_keyword, user_emacs_dir)
-                lang_server_info["command"][0] = full_path
-
             if ((not os.path.isdir(project_path)) and
                 "support-single-file" in lang_server_info and
                 lang_server_info["support-single-file"] == False):
@@ -220,7 +215,26 @@ class LspBridge:
         message_emacs(message)
         eval_in_emacs("lsp-bridge--turn-off", filepath)
     
+    def server_info_replace_template(self, lang_server_info):
+        command_args = lang_server_info["command"]
+        
+        for i, arg in enumerate(command_args):
+            if arg.startswith("%USER_EMACS_DIRECTORY%"):
+                user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
+                command_args[i] = arg.replace("%USER_EMACS_DIRECTORY%", user_emacs_dir)
+            elif arg.startswith("$HOME"):
+                command_args[i] = os.path.expandvars(arg)
+            elif "%FILEHASH%" in arg:
+                # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.
+                command_args[i] = arg.replace("%FILEHASH%", ''.join(["{:02x}".format(b) for b in random.randbytes(21)]))
+                
+        lang_server_info["command"] = command_args
+
+        return lang_server_info
+        
     def create_lsp_server(self, filepath, project_path, lang_server_info):
+        lang_server_info = self.server_info_replace_template(lang_server_info)
+
         if len(lang_server_info["command"]) > 0:
             server_command = lang_server_info["command"][0]
             server_command_path = shutil.which(server_command)
