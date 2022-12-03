@@ -718,7 +718,7 @@ The key of candidate will change between two LSP results."
                 (fp (fboundp backend-clean)))
       (funcall backend-clean))))
 
-(defun acm-cancel-timer (timer)
+(cl-defmacro acm-cancel-timer (timer)
   `(when ,timer
      (cancel-timer ,timer)
      (setq ,timer nil)))
