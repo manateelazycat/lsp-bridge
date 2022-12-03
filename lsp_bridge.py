@@ -219,10 +219,10 @@ class LspBridge:
         command_args = lang_server_info["command"]
         
         for i, arg in enumerate(command_args):
-            if arg.startswith("%USER_EMACS_DIRECTORY%"):
+            if "%USER_EMACS_DIRECTORY%" in arg:
                 user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
                 command_args[i] = arg.replace("%USER_EMACS_DIRECTORY%", user_emacs_dir)
-            elif arg.startswith("$HOME"):
+            elif "$HOME" in arg:
                 command_args[i] = os.path.expandvars(arg)
             elif "%FILEHASH%" in arg:
                 # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.
@@ -234,14 +234,14 @@ class LspBridge:
         
     def create_lsp_server(self, filepath, project_path, lang_server_info):
         lang_server_info = self.server_info_replace_template(lang_server_info)
-
+        
         if len(lang_server_info["command"]) > 0:
             server_command = lang_server_info["command"][0]
             server_command_path = shutil.which(server_command)
             if server_command_path:
                 # We always replace LSP server command with absolute path of 'which' command.
                 lang_server_info["command"][0] = server_command_path
-            else:
+            elif not os.path.exists(server_command):
                 self.turn_off(filepath, "Error: can't find command '{}' to start LSP server {} ({}), disable lsp-bridge-mode.".format(
                     server_command, lang_server_info["name"], filepath))
         
