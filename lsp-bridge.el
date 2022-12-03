@@ -262,6 +262,7 @@ Start discarding off end if gets this big."
                (lsp-bridge-epc-define-method mngr 'get-multi-lang-server 'lsp-bridge--get-multi-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-single-lang-server 'lsp-bridge--get-single-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-version 'emacs-version)
+               (lsp-bridge-epc-define-method mngr 'get-user-emacs-directory 'lsp-bridge--user-emacs-directory)
                (lsp-bridge-epc-define-method mngr 'is-snippet-support 'acm-backend-lsp-snippet-expansion-fn)
                (lsp-bridge-epc-define-method mngr 'get-buffer-content 'lsp-bridge--get-buffer-content-func)
                ))))
@@ -340,6 +341,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Default LSP server for (la)tex, you can choose `taxlab' or `digestif'."
   :type 'string)
 
+(defcustom lsp-bridge-csharp-lsp-server "omnisharp-mono"
+  "Default LSP server for C#, you can choose `omnisharp-mono' or `omnisharp-dotnet'."
+  :type 'string)
+
 (defcustom lsp-bridge-use-wenls-in-org-mode nil
   "Use `wen' lsp server in org-mode, default is disable.")
 
@@ -386,7 +391,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (ess-r-mode . "rlanguageserver")
     (graphql-mode . "graphql-lsp")
     (swift-mode . "swift-sourcekit")
-    (csharp-mode . "omnisharp")
+    (csharp-mode . lsp-bridge-csharp-lsp-server)
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -584,6 +589,9 @@ So we build this macro to restore postion after code format."
         (lsp-bridge--with-file-buffer filepath
           (lsp-bridge-get-single-lang-server-by-mode))))))
 
+(defun lsp-bridge--user-emacs-directory ()
+  "Get lang server with project path, file path or file extension."
+  (expand-file-name user-emacs-directory))
 
 (defun lsp-bridge--get-buffer-content-func (buffer-name)
   "Get buffer content for lsp. BUFFER-NAME is name eval from (buffer-name)."

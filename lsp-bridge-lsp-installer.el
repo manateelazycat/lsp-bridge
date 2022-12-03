@@ -81,17 +81,21 @@
 
 ;;; Require
 (require 'cl-lib)
-
 ;;; Code:
 
 (defun lsp-bridge-install-omnisharp ()
   (interactive)
-  (let ((url "https://github.com/OmniSharp/omnisharp-roslyn/releases/latest/download/omnisharp-mono.zip")
+  (let* ((to-append (if (string= lsp-bridge-csharp-lsp-server "omnisharp-dotnet")
+			(if (eq system-type 'windows-nt)
+			    "omnisharp-win-x64-net6.0.zip"
+			  "omnisharp-linux-x64-net6.0.zip")
+		      "omnisharp-mono.zip"))
+	(url (concat "https://github.com/OmniSharp/omnisharp-roslyn/releases/latest/download/" to-append))
         (down-des (if (eq system-type 'windows-nt)
-                      "%userprofile%\\AppData\\Local\\Temp\\omnisharp-mono.zip"
+                       (substitute-in-file-name (concat "\\$USERPROFILE\\AppData\\Local\\Temp\\" to-append))
                     "/tmp/omnisharp-mono.zip"))
         (install-des (if (eq system-type 'windows-nt)
-                         (format "%s.cache\\omnisharp\\" user-emacs-directory)
+                         (expand-file-name (format "%s.cache/omnisharp/" user-emacs-directory))
                        "~/.emacs.d/.cache/omnisharp/"
                        (format "%s.cache/omnisharp/" user-emacs-directory))))
     (url-copy-file url down-des 1)

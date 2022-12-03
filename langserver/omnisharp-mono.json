@@ -1,0 +1,9 @@
+{
+    "name": "omnisharp-mono",
+    "languageId": "c#",
+    "command": ["mono",
+                "$HOME/.emacs.d/.cache/omnisharp/OmniSharp.exe",
+                "-z",
+                "-lsp"],
+    "settings": {}
+}

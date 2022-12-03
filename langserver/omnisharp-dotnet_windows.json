@@ -1,0 +1,8 @@
+{
+    "name": "omnisharp-dotnet",
+    "languageId": "c#",
+    "command": ["%USER_EMACS_DIRECTORY%\\.cache\\omnisharp\\OmniSharp.exe",
+                "-lsp"],
+    "settings": {},
+    "support-single-file": false
+}
