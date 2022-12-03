@@ -175,8 +175,10 @@ class LspServer:
             self.server_info["command"][1]=os.path.expandvars(self.server_info["command"][1])
         elif self.server_info["name"] == "pyright":
             # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.
-            args = ["{:02x}".format(b) for b in random.randbytes(21)]
-            self.server_info["command"].append(f"--cancellationReceive=file:{''.join(args)}")
+            # Don't append this option if code running in Github CI.
+            if not "LSP_BRIDGE_IN_TESTING" in globals():
+                args = ["{:02x}".format(b) for b in random.randbytes(21)]
+                self.server_info["command"].append(f"--cancellationReceive=file:{''.join(args)}")
 
         self.initialize_id = generate_request_id()
         self.server_name = server_name

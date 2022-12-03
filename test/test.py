@@ -11,8 +11,8 @@ from core.utils import logger
 from test import common
 from test.common import eval_sexp, eval_sexp_sync
 
+LSP_BRIDGE_IN_TESTING = true
 EMACS = 'emacs'
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
