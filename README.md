@@ -16,6 +16,7 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
 + [yasnippet](https://github.com/joaotavora/yasnippet)
++ [acm-terminal](https://github.com/twlz0ne/acm-terminal) (optional, only for terminal user)
 4. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
 5. Add following code in your ~/.emacs:
 
