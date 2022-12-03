@@ -1073,16 +1073,62 @@ So we build this macro to restore postion after code format."
 
 (defvar lsp-bridge-elisp-symbols-timer nil)
 (defvar lsp-bridge-elisp-symbols-size 0)
+(defvar lsp-bridge-elisp-parse-depth 100)
+(defvar lsp-bridge-elisp-parse-limit 30)
+(defvar lsp-bridge-elisp-var-binding-regexp
+  "\\_<\\(?:cl-\\)?\\(?:def\\(?:macro\\|subst\\|un\\)\\|l\\(?:ambda\\|e\\(?:\\(?:xical-le\\)?t\\)\\)\\)\\*?\\_>")
+(defvar lsp-bridge-elisp-var-binding-regexp-1
+  "\\_<\\(?:cl-\\)?\\(?:do\\(?:list\\|times\\)\\)\\*?\\_>")
+
+
+(defun lsp-bridge-elisp-symbols--global ()
+  (all-completions ""
+                   obarray
+                   (lambda (symbol)
+                     (or (fboundp symbol)
+                         (boundp symbol)
+                         (featurep symbol)
+                         (facep symbol)))))
+
+(defun lsp-bridge-elisp-symbols--local ()
+  (let ((regexp "[ \t\n]*\\(\\_<\\(?:\\sw\\|\\s_\\)*\\_>\\)")
+        (pos (point))
+        res)
+    (condition-case nil
+        (save-excursion
+          (dotimes (_ lsp-bridge-elisp-parse-depth)
+            (up-list -1)
+            (save-excursion
+              (when (eq (char-after) ?\()
+                (forward-char 1)
+                (when (ignore-errors
+                        (save-excursion (forward-list)
+                                        (<= (point) pos)))
+                  (skip-chars-forward " \t\n")
+                  (cond
+                   ((looking-at lsp-bridge-elisp-var-binding-regexp)
+                    (down-list 1)
+                    (condition-case nil
+                        (dotimes (_ lsp-bridge-elisp-parse-limit)
+                          (save-excursion
+                            (when (looking-at "[ \t\n]*(")
+                              (down-list 1))
+                            (when (looking-at regexp)
+                              (cl-pushnew (match-string-no-properties 1) res)))
+                          (forward-sexp))
+                      (scan-error nil)))
+                   ((looking-at lsp-bridge-elisp-var-binding-regexp-1)
+                    (down-list 1)
+                    (when (looking-at regexp)
+                      (cl-pushnew (match-string-no-properties 1) res)))))))))
+      (scan-error nil))
+    res))
 
 (defun lsp-bridge-elisp-symbols-update ()
   "We need synchronize elisp symbols to Python side when idle."
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (let* ((symbols (all-completions "" obarray
-                                     (lambda (symbol)
-                                       (or (fboundp symbol)
-                                           (boundp symbol)
-                                           (featurep symbol)
-                                           (facep symbol)))))
+    (let* ((symbols (append (lsp-bridge-elisp-symbols--local)
+                            (lsp-bridge-elisp-symbols--global)))
            (symbols-size (length symbols)))
       ;; Only synchronize when new symbol created.
       (unless (equal lsp-bridge-elisp-symbols-size symbols-size)
