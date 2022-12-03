@@ -24,7 +24,6 @@ import shutil
 import threading
 import traceback
 import json
-import random
 from pathlib import Path
 from typing import Dict
 
@@ -226,7 +225,7 @@ class LspBridge:
                 command_args[i] = os.path.expandvars(arg)
             elif "%FILEHASH%" in arg:
                 # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.
-                command_args[i] = arg.replace("%FILEHASH%", ''.join(["{:02x}".format(b) for b in random.randbytes(21)]))
+                command_args[i] = arg.replace("%FILEHASH%", os.urandom(21).hex())
                 
         lang_server_info["command"] = command_args
 
