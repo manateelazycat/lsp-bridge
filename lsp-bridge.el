@@ -1073,11 +1073,62 @@ So we build this macro to restore postion after code format."
 
 (defvar lsp-bridge-elisp-symbols-timer nil)
 (defvar lsp-bridge-elisp-symbols-size 0)
+(defvar lsp-bridge-elisp-parse-depth 100)
+(defvar lsp-bridge-elisp-parse-limit 30)
+(defvar lsp-bridge-elisp-var-binding-regexp
+  "\\_<\\(?:cl-\\)?\\(?:def\\(?:macro\\|subst\\|un\\)\\|l\\(?:ambda\\|e\\(?:\\(?:xical-le\\)?t\\)\\)\\)\\*?\\_>")
+(defvar lsp-bridge-elisp-var-binding-regexp-1
+  "\\_<\\(?:cl-\\)?\\(?:do\\(?:list\\|times\\)\\)\\*?\\_>")
+
+
+(defun lsp-bridge-elisp-symbols--global ()
+  (all-completions ""
+                   obarray
+                   (lambda (symbol)
+                     (or (fboundp symbol)
+                         (boundp symbol)
+                         (featurep symbol)
+                         (facep symbol)))))
+
+(defun lsp-bridge-elisp-symbols--local ()
+  (let ((regexp "[ \t\n]*\\(\\_<\\(?:\\sw\\|\\s_\\)*\\_>\\)")
+        (pos (point))
+        res)
+    (condition-case nil
+        (save-excursion
+          (dotimes (_ lsp-bridge-elisp-parse-depth)
+            (up-list -1)
+            (save-excursion
+              (when (eq (char-after) ?\()
+                (forward-char 1)
+                (when (ignore-errors
+                        (save-excursion (forward-list)
+                                        (<= (point) pos)))
+                  (skip-chars-forward " \t\n")
+                  (cond
+                   ((looking-at lsp-bridge-elisp-var-binding-regexp)
+                    (down-list 1)
+                    (condition-case nil
+                        (dotimes (_ lsp-bridge-elisp-parse-limit)
+                          (save-excursion
+                            (when (looking-at "[ \t\n]*(")
+                              (down-list 1))
+                            (when (looking-at regexp)
+                              (cl-pushnew (match-string-no-properties 1) res)))
+                          (forward-sexp))
+                      (scan-error nil)))
+                   ((looking-at lsp-bridge-elisp-var-binding-regexp-1)
+                    (down-list 1)
+                    (when (looking-at regexp)
+                      (cl-pushnew (match-string-no-properties 1) res)))))))))
+      (scan-error nil))
+    res))
 
 (defun lsp-bridge-elisp-symbols-update ()
   "We need synchronize elisp symbols to Python side when idle."
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (let* ((symbols (all-completions "" obarray))
+    (let* ((symbols (append (lsp-bridge-elisp-symbols--local)
+                            (lsp-bridge-elisp-symbols--global)))
            (symbols-size (length symbols)))
       ;; Only synchronize when new symbol created.
       (unless (equal lsp-bridge-elisp-symbols-size symbols-size)
@@ -1412,6 +1463,8 @@ Default is 0.5 second, preview window will stick if this value too small."
 
   (setq-local lsp-bridge-revert-buffer-flag nil)
 
+  (acm-run-idle-func lsp-bridge-elisp-symbols-timer lsp-bridge-elisp-symbols-update-idle 'lsp-bridge-elisp-symbols-update)
+
   (when-let* ((lsp-server-name (lsp-bridge-has-lsp-server-p)))
     ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
     ;; other LSP server need use `bounds-of-thing-at-point' of symbol as keyword prefix.
@@ -1433,9 +1486,7 @@ Default is 0.5 second, preview window will stick if this value too small."
     (when lsp-bridge-enable-search-words
       (acm-run-idle-func lsp-bridge-search-words-timer lsp-bridge-search-words-rebuild-cache-idle 'lsp-bridge-search-words-rebuild-cache))
     (when lsp-bridge-enable-auto-format-code
-      (acm-run-idle-func lsp-bridge-auto-format-code-timer lsp-bridge-auto-format-code-idle 'lsp-bridge-auto-format-code))
-
-    (acm-run-idle-func lsp-bridge-elisp-symbols-timer lsp-bridge-elisp-symbols-update-idle 'lsp-bridge-elisp-symbols-update))
+      (acm-run-idle-func lsp-bridge-auto-format-code-timer lsp-bridge-auto-format-code-idle 'lsp-bridge-auto-format-code)))
 
   (dolist (hook lsp-bridge--internal-hooks)
     (add-hook (car hook) (cdr hook) nil t))
@@ -1993,12 +2044,12 @@ SymbolKind (defined in the LSP)."
                                  (goto-line line)
                                  (buffer-substring-no-properties (line-beginning-position) (line-end-position))))))
           (insert (concat "\033[93m" (format "%s %s" (1+ diagnostic-counter) message) "\033[0m" "\n"))
-          
+
           ;; `start' point and `end' point will same if the diagnostic message is for a location rather than region.
           ;; Then we need adjust end-column to highlight diagnostic location.
           (when (equal start-column end-column)
             (setq end-column (1+ end-column)))
-          
+
           (insert (format "%s:%s:%s\n\n"
                           line
                           start-column
