@@ -1479,7 +1479,7 @@ So we build this macro to restore postion after code format."
                        (if (> diagnostic-number 1)
                            (format "[%s:%s] %s" (1+ diagnostic-index) diagnostic-number message)
                          message))
-          (push  overlay lsp-bridge-diagnostic-overlays))
+          (push overlay lsp-bridge-diagnostic-overlays))
 
         (setq diagnostic-index (1+ diagnostic-index))))
     (setq-local lsp-bridge-diagnostic-overlays (reverse lsp-bridge-diagnostic-overlays))))
@@ -1543,13 +1543,19 @@ So we build this macro to restore postion after code format."
       (lsp-bridge-show-diagnostic-tooltip diagnostic-overlay)
     (message "[LSP-Bridge] Reach first diagnostic.")))
 
+(defun lsp-bridge-diagnostic-overlay-at-point ()
+  (dolist (overlay lsp-bridge-diagnostic-overlays)
+    (when (and (>= (point) (overlay-start overlay))
+               (< (point) (overlay-end overlay)))
+      (cl-return overlay)
+      )))
+
 (defun lsp-bridge-diagnostic-copy ()
   (interactive)
   (if (zerop (length lsp-bridge-diagnostic-overlays))
       (message "[LSP-Bridge] No diagnostics.")
-    (dolist (overlay lsp-bridge-diagnostic-overlays)
-      (when (and (>= (point) (overlay-start overlay))
-                 (< (point) (overlay-end overlay)))
+    (let ((overlay (lsp-bridge-diagnostic-overlay-at-point)))
+      (when overlay
         (let ((diagnostic-message (overlay-get overlay 'message)))
           (kill-new diagnostic-message)
           (message "Copy diagnostics: '%s'" diagnostic-message))))))
@@ -1654,12 +1660,26 @@ SymbolKind (defined in the LSP)."
                               'face font-lock-comment-face)))
     (concat typestr name pathstr)))
 
+(defun lsp-bridge-code-action-get-range ()
+  (cond ((region-active-p)
+         (cons (region-beginning) (region-end)))
+        (t
+         (let ((overlay (lsp-bridge-diagnostic-overlay-at-point)))
+           (if overlay
+               (cons (overlay-start overlay) (overlay-end overlay))
+             (cons (point) (point)))))))
+
 (defun lsp-bridge-code-action (&optional action-kind)
   (interactive)
   (when (lsp-bridge-has-lsp-server-p)
-    (lsp-bridge-call-file-api "code_action" (lsp-bridge-get-range-start) (lsp-bridge-get-range-end) action-kind)
+    (let ((range (lsp-bridge-code-action-get-range)))
+      (lsp-bridge-call-file-api "code_action"
+                                (lsp-bridge--point-position (car range))
+                                (lsp-bridge--point-position (cdr range))
+                                action-kind)
 
-    (setq-local lsp-bridge-code-action-notify t)))
+      (setq-local lsp-bridge-code-action-notify t)
+      )))
 
 (defvar-local lsp-bridge-code-action-notify nil)
 
@@ -1918,20 +1938,6 @@ SymbolKind (defined in the LSP)."
                ))))))
 
   (setq-local lsp-bridge-prohibit-completion t))
-
-(defun lsp-bridge-get-range-start ()
-  (lsp-bridge--point-position
-   (or (if (region-active-p)
-           (region-beginning)
-         (point))
-       (point))))
-
-(defun lsp-bridge-get-range-end ()
-  (lsp-bridge--point-position
-   (or (if (region-active-p)
-           (region-end)
-         (point))
-       (point))))
 
 (defun lsp-bridge-diagnostic--ignore (comment-string)
   (move-end-of-line 1)
