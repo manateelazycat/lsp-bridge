@@ -341,7 +341,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Default LSP server for (la)tex, you can choose `taxlab' or `digestif'."
   :type 'string)
 
-(defcustom lsp-bridge-csharp-lsp-server "omnisharp-mono"
+(defcustom lsp-bridge-csharp-lsp-server "omnisharp-dotnet"
   "Default LSP server for C#, you can choose `omnisharp-mono' or `omnisharp-dotnet'."
   :type 'string)
 

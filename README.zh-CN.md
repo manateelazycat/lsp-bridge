@@ -91,6 +91,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-python-lsp-server`: Python 语言的服务器，可以选择 `pyright`, `jedi`, `python-ms`, `pylsp`
 * `lsp-bridge-php-lsp-server`: PHP 语言的服务器，可以选择`intelephense`或者`phpactor`
 * `lsp-bridge-tex-lsp-server`: LaTeX 语言的服务器，可以选择`texlab`或者`digestif`
+* `lsp-bridge-csharp-lsp-server`: C#语言的服务器， 可以选择`omnisharp-mono` 或者 ` omnisharp-dotnet`, 注意你需要给 OmniSharp 文件**执行权限**才能正常工作
 
 ## 选项
 * `lsp-bridge-python-command`: Python 命令的路径, 如果你用 `conda`， 你也许会定制这个选项。 Windows 平台用的是 `python.exe` 而不是 `python3`, 如果 lsp-bridge 不能工作， 可以尝试改成 `python3`
@@ -214,10 +215,11 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 | 38   | [cmake-language-server](https://github.com/regen100/cmake-language-server)                         | cmake                           | `pip install cmake-language-server`                                                                                                                                                 |
 | 39   | [Wen](https://github.com/metaescape/Wen)                                                           | org-mode                        | `pip install pygls pypinyin`                                                                                                                                                        |
 | 40   | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)                                            | swift                           | Sourcekit-lsp 包含在 swift toolchain 中。                                                                                                                                           |
-| 41   | [omnisharp](https://github.com/OmniSharp/omnisharp-roslyn)                                         | c#                              | OmniSharp dotnet 平台的 lsp. 使用 `M-x lsp-bridge-install-omnisharp` 安装                                                                                                           |
-| 42   | [deno](https://deno.land)                                                                          | Deno                            | Deno 使用 TypeScript 来编程， 你需要定制选项 `lsp-bridge-get-single-lang-server-by-project` 当工程是 Deno 项目的路径时， 返回 "deno" 字符串                                         |
-| 43   | [Phpactor](https://github.com/phpactor/phpactor)                                                   | php                             | lsp-brige-php-lsp-server 设置成 `phpactor`                                                                                                                                          |
-| 44   | [pylsp](https://github.com/python-lsp/python-lsp-server)                                           | python                          | lsp-bridge-python-lsp-server 设置成 `pylsp`                                                                                                                                         |
+| 41    | [omnisharp-mono](https://github.com/OmniSharp/omnisharp-roslyn)                                         | c#                              | OmniSharp 是 .NET 开发平台, 使用命令 `M-x lsp-bridge-install-omnisharp` 来安 OmniSharp, 默认是 `omnisharp-mono`. `lsp-bridge-csharp-lsp-server` 设置成 `omnisharp-mono`                                                              |
+| 42    | [omnisharp-dotnet](https://github.com/OmniSharp/omnisharp-roslyn)                                         | c#                              | OmniSharp 是 .NET 开发平台, 使用命令 `M-x lsp-bridge-install-omnisharp` 来安 OmniSharp, 默认是 `omnisharp-mono`. `lsp-bridge-csharp-lsp-server` 设置成 `omnisharp-dotnet`                                                              |
+| 43   | [deno](https://deno.land)                                                                          | Deno                            | Deno 使用 TypeScript 来编程， 你需要定制选项 `lsp-bridge-get-single-lang-server-by-project` 当工程是 Deno 项目的路径时， 返回 "deno" 字符串                                         |
+| 44   | [Phpactor](https://github.com/phpactor/phpactor)                                                   | php                             | lsp-brige-php-lsp-server 设置成 `phpactor`                                                                                                                                          |
+| 45   | [pylsp](https://github.com/python-lsp/python-lsp-server)                                           | python                          | lsp-bridge-python-lsp-server 设置成 `pylsp`                                                                                                                                         |
 
 ### 不会支持的特性：
 lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端, 但不是实现 LSP 协议最全的 LSP 客户端。
