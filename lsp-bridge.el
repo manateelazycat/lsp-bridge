@@ -1077,7 +1077,12 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-elisp-symbols-update ()
   "We need synchronize elisp symbols to Python side when idle."
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (let* ((symbols (all-completions "" obarray))
+    (let* ((symbols (all-completions "" obarray
+                                     (lambda (symbol)
+                                       (or (fboundp symbol)
+                                           (boundp symbol)
+                                           (featurep symbol)
+                                           (facep symbol)))))
            (symbols-size (length symbols)))
       ;; Only synchronize when new symbol created.
       (unless (equal lsp-bridge-elisp-symbols-size symbols-size)
@@ -1993,12 +1998,12 @@ SymbolKind (defined in the LSP)."
                                  (goto-line line)
                                  (buffer-substring-no-properties (line-beginning-position) (line-end-position))))))
           (insert (concat "\033[93m" (format "%s %s" (1+ diagnostic-counter) message) "\033[0m" "\n"))
-          
+
           ;; `start' point and `end' point will same if the diagnostic message is for a location rather than region.
           ;; Then we need adjust end-column to highlight diagnostic location.
           (when (equal start-column end-column)
             (setq end-column (1+ end-column)))
-          
+
           (insert (format "%s:%s:%s\n\n"
                           line
                           start-column
