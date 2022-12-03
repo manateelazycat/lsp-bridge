@@ -1417,6 +1417,8 @@ Default is 0.5 second, preview window will stick if this value too small."
 
   (setq-local lsp-bridge-revert-buffer-flag nil)
 
+  (acm-run-idle-func lsp-bridge-elisp-symbols-timer lsp-bridge-elisp-symbols-update-idle 'lsp-bridge-elisp-symbols-update)
+
   (when-let* ((lsp-server-name (lsp-bridge-has-lsp-server-p)))
     ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
     ;; other LSP server need use `bounds-of-thing-at-point' of symbol as keyword prefix.
@@ -1438,9 +1440,7 @@ Default is 0.5 second, preview window will stick if this value too small."
     (when lsp-bridge-enable-search-words
       (acm-run-idle-func lsp-bridge-search-words-timer lsp-bridge-search-words-rebuild-cache-idle 'lsp-bridge-search-words-rebuild-cache))
     (when lsp-bridge-enable-auto-format-code
-      (acm-run-idle-func lsp-bridge-auto-format-code-timer lsp-bridge-auto-format-code-idle 'lsp-bridge-auto-format-code))
-
-    (acm-run-idle-func lsp-bridge-elisp-symbols-timer lsp-bridge-elisp-symbols-update-idle 'lsp-bridge-elisp-symbols-update))
+      (acm-run-idle-func lsp-bridge-auto-format-code-timer lsp-bridge-auto-format-code-idle 'lsp-bridge-auto-format-code)))
 
   (dolist (hook lsp-bridge--internal-hooks)
     (add-hook (car hook) (cdr hook) nil t))
