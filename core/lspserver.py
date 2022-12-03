@@ -299,6 +299,10 @@ class LspServer:
                             "valueSet": [
                                 1
                             ]
+                        },
+                        "resolveSupport": {
+                            # rust-analyzer need add `additionalTextEdits` to enable auto-import.
+                            "properties": ["documentation", "detail", "additionalTextEdits"]
                         }
                     }
                 },

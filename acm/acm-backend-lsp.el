@@ -185,7 +185,7 @@
     ;; Do `additional-text-edits' if return auto-imprt information.
     (when (and acm-backend-lsp-enable-auto-import
                (cl-plusp (length additional-text-edits)))
-      (acm-backend-lsp-apply-text-edits additional-text-edits nil))))
+      (acm-backend-lsp-apply-text-edits additional-text-edits))))
 
 (defun acm-backend-lsp-candidate-doc (candidate)
   (let* ((documentation (plist-get candidate :documentation)))
@@ -220,15 +220,12 @@ If optional MARKER, return a marker instead"
                           (line-end-position)))))
       (if marker (copy-marker (point-marker)) (point)))))
 
-(defun acm-backend-lsp-apply-text-edits (edits just-reverse)
-  (dolist (edit (if just-reverse (reverse edits) (acm-backend-lsp-sort-edits edits)))
+(defun acm-backend-lsp-apply-text-edits (edits)
+  ;; NOTE:
+  ;; We need reverse edits before apply, otherwise the row inserted before will affect the position of the row inserted later.
+  (dolist (edit (reverse edits))
     (let* ((range (plist-get edit :range)))
       (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get edit :newText)))))
-
-(defun acm-backend-lsp-sort-edits (edits)
-  (sort edits #'(lambda (edit-a edit-b)
-                  (> (acm-backend-lsp-position-to-point (plist-get (plist-get edit-a :range) :start))
-                     (acm-backend-lsp-position-to-point (plist-get (plist-get edit-b :range) :start))))))
 
 (defun acm-backend-lsp-snippet-expansion-fn ()
   "Compute a function to expand snippets.

@@ -1182,13 +1182,13 @@ So we build this macro to restore postion after code format."
     (unless (eq last-command 'mwheel-scroll)
       (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))))
 
-(defun lsp-bridge-file-apply-edits (filepath edits &optional just-reverse)
+(defun lsp-bridge-file-apply-edits (filepath edits)
   (if (string-match "^/[A-Za-z]:" filepath)
       (setq filepath (substring filepath 1)))
   (find-file-noselect filepath)
   (save-excursion
     (find-file filepath)
-    (acm-backend-lsp-apply-text-edits edits just-reverse))
+    (acm-backend-lsp-apply-text-edits edits))
 
   (setq-local lsp-bridge-prohibit-completion t))
 
@@ -1687,7 +1687,7 @@ SymbolKind (defined in the LSP)."
   (lsp-bridge-save-position
    (let ((inhibit-modification-hooks t))
      ;; Apply code format edits, not sort, just reverse order.
-     (lsp-bridge-file-apply-edits filepath edits t)
+     (lsp-bridge-file-apply-edits filepath edits)
      ;; Make LSP server update full content.
      (lsp-bridge-call-file-api "update_file" (buffer-name))
      ;; Notify format complete.
@@ -1905,7 +1905,8 @@ SymbolKind (defined in the LSP)."
             (lsp-bridge-file-apply-edits
              (or tempfile
                  (string-remove-prefix "file://" (plist-get (plist-get change :textDocument) :uri)))
-             (plist-get change :edits))))
+             (plist-get change :edits)
+             )))
          ((plist-get info :changes)
           (let* ((changes (plist-get info :changes))
                  (changes-number (/ (length changes) 2)))
@@ -1913,7 +1914,8 @@ SymbolKind (defined in the LSP)."
               (lsp-bridge-file-apply-edits
                (or tempfile
                    (string-remove-prefix ":file://" (format "%s" (nth (* changes-index 2) changes))))
-               (nth (+ (* changes-index 2) 1) changes)))))))
+               (nth (+ (* changes-index 2) 1) changes)
+               ))))))
 
   (setq-local lsp-bridge-prohibit-completion t))
 
