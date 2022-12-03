@@ -1364,6 +1364,13 @@ So we build this macro to restore postion after code format."
   :type 'integer
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-code-action-preview-delay 0.5
+  "The delay to show code action diff preview.
+
+Default is 0.5 second, preview window will stick if this value too small."
+  :type 'float
+  :group 'lsp-bridge)
+
 (defvar lsp-bridge-signature-help-timer nil)
 
 (defvar lsp-bridge-search-words-timer nil)
@@ -1812,7 +1819,7 @@ SymbolKind (defined in the LSP)."
   (acm-cancel-timer lsp-bridge-code-action-popup-maybe-preview-timer)
   (posframe-hide  "*lsp-bridge-code-action-preview*")
   (setq lsp-bridge-code-action-popup-maybe-preview-timer
-        (run-with-idle-timer 0.5 nil #'lsp-bridge-code-action-popup-maybe-preview-do)))
+        (run-with-idle-timer lsp-bridge-code-action-preview-delay nil #'lsp-bridge-code-action-popup-maybe-preview-do)))
 
 (defun lsp-bridge-code-action-popup-menu (menu-items default-action)
   (let ((recentf-keep '(".*" . nil)) ;; not push temp file in recentf-list
