@@ -449,6 +449,11 @@ Only calculate template candidate when type last character."
   (when (acm-frame-visible-p acm-frame)
     (acm-update)))
 
+(cl-defmacro acm-cancel-timer (timer)
+  `(when ,timer
+     (cancel-timer ,timer)
+     (setq ,timer nil)))
+
 (defun acm-update-candidates ()
   (let* ((keyword (acm-get-input-prefix))
          (char-before-keyword (save-excursion
@@ -717,11 +722,6 @@ The key of candidate will change between two LSP results."
     (when-let* ((backend-clean (intern-soft (format "acm-backend-%s-clean" backend)))
                 (fp (fboundp backend-clean)))
       (funcall backend-clean))))
-
-(cl-defmacro acm-cancel-timer (timer)
-  `(when ,timer
-     (cancel-timer ,timer)
-     (setq ,timer nil)))
 
 (defun acm-running-in-wayland-native ()
   (and (eq window-system 'pgtk)
