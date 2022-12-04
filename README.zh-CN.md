@@ -118,7 +118,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `acm-enable-search-file-words`: 补全菜单是否显示打开文件的单词， 默认打开
 * `acm-enable-quick-access`: 是否在图标后面显示索引， 可以通过 Alt + Number 来快速选择后选词， 默认关闭
 * `acm-enable-yas`: yasnippet 补全，默认打开
-* `acm-enable-citre`: citre 补全，默认关闭
+* `acm-enable-citre`: [citre(ctags)](https://github.com/universal-ctags/citre) 补全，默认关闭, 注意， lsp-bridge 当前只支持 citre v0.2.1, 最新版 v0.3 还不支持
 * `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是 20
 * `acm-snippet-insert-index`: 代码模板候选词在补全菜单中的显示位置
 * `acm-candidate-match-function`: 补全菜单匹配算法， orderless-* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
