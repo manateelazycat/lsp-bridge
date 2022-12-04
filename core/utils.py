@@ -271,9 +271,6 @@ def windows_get_env_value(var_name: str) -> str:
     if var_name in os.environ.keys():
         return os.environ[var_name]
 
-def windows_parse_path(path: str) -> str:
-    return path.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
-
 class MessageSender(Thread):
     
     def __init__(self, process: subprocess.Popen):
