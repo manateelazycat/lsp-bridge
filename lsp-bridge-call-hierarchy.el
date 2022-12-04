@@ -117,7 +117,8 @@
              (< (+ lsp-bridge-call-hierarchy--index next)
                 (length lsp-bridge-call-hierarchy--popup-response)))
       (forward-line next)
-      (move-overlay lsp-bridge-call-hierarchy--overlay (line-beginning-position) (line-end-position))
+      (move-overlay lsp-bridge-call-hierarchy--overlay
+                    (line-beginning-position) (1+ (line-end-position)))
       (setq lsp-bridge-call-hierarchy--index
             (+ next lsp-bridge-call-hierarchy--index))
       (lsp-bridge-call-hierarchy-maybe-preview)
@@ -197,7 +198,10 @@
   (setq mode-name "call hierarchy")
   (setq-local cursor-type nil)
   (goto-char (1+ (point-min)))
-  (setq lsp-bridge-call-hierarchy--overlay (make-overlay (line-beginning-position)  (line-end-position)))
+  (setq lsp-bridge-call-hierarchy--overlay (make-overlay (line-beginning-position)
+                                                         (1+ (line-end-position))))
+  ;; :extend extend face after EOL
+  (set-face-attribute 'lsp-bridge-font-lock-flash (selected-frame) :extend t)
   (overlay-put lsp-bridge-call-hierarchy--overlay 'face 'lsp-bridge-font-lock-flash)
   (setq lsp-bridge-call-hierarchy--index 0)
 
