@@ -230,8 +230,7 @@ If optional MARKER, return a marker instead"
 (defun acm-backend-lsp-snippet-expansion-fn ()
   "Compute a function to expand snippets.
 Doubles as an indicator of snippet support."
-  (and (boundp 'yas-minor-mode)
-       (symbol-value 'yas-minor-mode)
+  (and (bound-and-true-p 'yas-minor-mode)
        'yas-expand-snippet))
 
 (defun acm-backend-lsp-insert-new-text (start-pos end-pos new-text)
