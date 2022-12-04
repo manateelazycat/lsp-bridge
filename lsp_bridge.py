@@ -234,7 +234,7 @@ class LspBridge:
             initialize_args_string = json.dumps(initialize_args)
             if "%USERPROFILE%" in initialize_args_string:
                 initialize_args_string.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
-                initialize_args = json.loads(initialize_args_string)
+                initialize_args = json.load(initialize_args_string)
                 lang_server_info["initializationOptions"] = initialize_args
 
         return lang_server_info
