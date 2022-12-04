@@ -116,7 +116,6 @@
                                                     lsp-bridge-not-complete-manually
                                                     lsp-bridge-not-follow-complete
                                                     lsp-bridge-not-in-string
-                                                    lsp-bridge-not-in-comment
                                                     lsp-bridge-not-in-org-table
                                                     lsp-bridge-not-in-multiple-cursors
                                                     lsp-bridge-not-in-mark-macro
@@ -903,19 +902,11 @@ So we build this macro to restore postion after code format."
         acm-backend-lsp-filepath
         (string-suffix-p ".vue" acm-backend-lsp-filepath))
    ;; Other language not allowed popup completion in string, it's annoy
-   (not (lsp-bridge-in-string-p))
+   (not (acm-in-string-p))
    ;; Allow file path completion in string area
    (ignore-errors
      (and (thing-at-point 'filename)
           (file-exists-p (file-name-directory (thing-at-point 'filename)))))))
-
-(defun lsp-bridge-not-in-comment ()
-  "Hide completion if cursor in comment area."
-  (or
-   ;; Allow sdcv completion in string area
-   acm-enable-search-sdcv-words
-   ;; Other language not allowed popup completion in comment.
-   (not (lsp-bridge-in-comment-p))))
 
 (defun lsp-bridge-not-in-mark-macro ()
   "Hide completion markmacro enable."
@@ -926,31 +917,6 @@ So we build this macro to restore postion after code format."
   "Hide completion if last command is `acm-complete'."
   (or (not (eq last-command 'acm-complete))
       (member (format "%s" this-command) '("self-insert-command" "org-self-insert-command"))))
-
-(defun lsp-bridge-in-comment-p (&optional state)
-  (ignore-errors
-    (unless (or (bobp) (eobp))
-      (save-excursion
-        (or
-         (nth 4 (or state (lsp-bridge-current-parse-state)))
-         (eq (get-text-property (point) 'face) 'font-lock-comment-face))
-        ))))
-
-(defun lsp-bridge-in-string-p (&optional state)
-  (ignore-errors
-    (unless (or (bobp) (eobp))
-      (save-excursion
-        (and
-         (nth 3 (or state (lsp-bridge-current-parse-state)))
-         (not (equal (point) (line-end-position))))
-        ))))
-
-(defun lsp-bridge-current-parse-state ()
-  (let ((point (point)))
-    (beginning-of-defun)
-    (when (equal point (point))
-      (beginning-of-line))
-    (parse-partial-sexp (point) point)))
 
 (defun lsp-bridge-not-only-blank-before-cursor ()
   "Hide completion if only blank before cursor."
@@ -1048,7 +1014,8 @@ So we build this macro to restore postion after code format."
             (lsp-bridge-call-async "search_sdcv_words_search" current-word)))
 
         ;; Search elisp symbol.
-        (when (acm-is-elisp-mode-p)
+        (when (and (acm-is-elisp-mode-p)
+                   (not (acm-in-comment-p)))
           ;; Search words if current prefix is not empty.
           (unless (or (string-equal current-symbol "") (null current-symbol))
             (lsp-bridge-call-async "search_elisp_symbols_search" current-symbol)))
@@ -1064,7 +1031,7 @@ So we build this macro to restore postion after code format."
 
         ;; Send tailwind keyword search request just when cursor in class area.
         (when (and (derived-mode-p 'web-mode)
-                   (lsp-bridge-in-string-p)
+                   (acm-in-string-p)
                    (save-excursion
                      (search-backward-regexp "class=" (point-at-bol) t)))
           (unless (or (string-equal current-symbol "") (null current-symbol))
@@ -1833,7 +1800,7 @@ SymbolKind (defined in the LSP)."
         (push (cons lsp-bridge-code-action--preview-index (buffer-string))
               lsp-bridge-code-action--preview-alist)))
 
-       ;; get width and height
+      ;; get width and height
       (goto-char (point-min))
       (while (not (eobp))
         (cl-incf height)

@@ -480,23 +480,24 @@ Only calculate template candidate when type last character."
           (setq candidates path-candidates)
 
         (when acm-enable-citre
-          (setq citre-candidates (acm-backend-citre-candidates keyword)))
+          (setq citre-candidates (when (not (acm-in-comment-p)) (acm-backend-citre-candidates keyword))))
         ;; Fetch syntax completion candidates.
-        (setq lsp-candidates (acm-backend-lsp-candidates keyword))
+        (setq lsp-candidates (when (not (acm-in-comment-p)) (acm-backend-lsp-candidates keyword)))
         (setq mode-candidates (append
-                               (acm-backend-tailwind-candidates keyword)
-                               (acm-backend-elisp-candidates keyword)
+                               (when (not (acm-in-comment-p)) (acm-backend-tailwind-candidates keyword))
+                               (when (not (acm-in-comment-p)) (acm-backend-elisp-candidates keyword))
                                lsp-candidates
                                citre-candidates
                                (acm-backend-search-file-words-candidates keyword)
                                (acm-backend-telega-candidates keyword)))
 
-        (when (or
-               ;; Show snippet candidates if lsp-candidates length is zero.
-               (zerop (length lsp-candidates))
-               ;; Don't search snippet if char before keyword is not in `acm-backend-lsp-completion-trigger-characters'.
-               (and (boundp 'acm-backend-lsp-completion-trigger-characters)
-                    (not (member char-before-keyword acm-backend-lsp-completion-trigger-characters))))
+        (when (and (or
+                    ;; Show snippet candidates if lsp-candidates length is zero.
+                    (zerop (length lsp-candidates))
+                    ;; Don't search snippet if char before keyword is not in `acm-backend-lsp-completion-trigger-characters'.
+                    (and (boundp 'acm-backend-lsp-completion-trigger-characters)
+                         (not (member char-before-keyword acm-backend-lsp-completion-trigger-characters))))
+                   (not (acm-in-comment-p)))
 
           ;; Only calculate template candidate when type last character.
           (cond
@@ -1134,6 +1135,31 @@ The key of candidate will change between two LSP results."
       (acm-markdown-render-content))
 
     (setq acm-markdown-render-doc doc)))
+
+(defun acm-in-comment-p (&optional state)
+  (ignore-errors
+    (unless (or (bobp) (eobp))
+      (save-excursion
+        (or
+         (nth 4 (or state (acm-current-parse-state)))
+         (eq (get-text-property (point) 'face) 'font-lock-comment-face))
+        ))))
+
+(defun acm-in-string-p (&optional state)
+  (ignore-errors
+    (unless (or (bobp) (eobp))
+      (save-excursion
+        (and
+         (nth 3 (or state (acm-current-parse-state)))
+         (not (equal (point) (line-end-position))))
+        ))))
+
+(defun acm-current-parse-state ()
+  (let ((point (point)))
+    (beginning-of-defun)
+    (when (equal point (point))
+      (beginning-of-line))
+    (parse-partial-sexp (point) point)))
 
 ;; Emacs 28: Do not show Acm commands with M-X
 (dolist (sym '(acm-hide acm-complete acm-select-first acm-select-last acm-select-next
