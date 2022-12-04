@@ -313,7 +313,7 @@
     (redirect-frame-focus frame parent)
     frame))
 
-(cl-defmacro acm-create-frame-if-not-exist (frame frame-buffer frame-name)
+(cl-defmacro acm-create-frame-if-not-exist (frame frame-buffer frame-name margin)
   `(unless (frame-live-p ,frame)
      (setq ,frame (acm-make-frame ,frame-name))
 
@@ -334,8 +334,8 @@
                       (display-line-numbers . nil)
                       (left-fringe-width . nil)
                       (right-fringe-width . nil)
-                      (left-margin-width . 0)
-                      (right-margin-width . 0)
+                      (left-margin-width . ,margin)
+                      (right-margin-width . ,margin)
                       (fringes-outside-margins . 0)))
          (set (make-local-variable (car var)) (cdr var)))
        (buffer-face-set 'acm-buffer-size-face))
@@ -608,7 +608,7 @@ The key of candidate will change between two LSP results."
             (acm-delete-frames))
 
           ;; Create menu frame if it not exists.
-          (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame")
+          (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame" 0)
 
           ;; Render menu.
           (acm-menu-render menu-old-cache))
@@ -896,7 +896,7 @@ The key of candidate will change between two LSP results."
                          candidate-doc
                        (format "%S" candidate-doc))))
             ;; Create doc frame if it not exist.
-            (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame")
+            (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame" 1)
             (setq acm-doc-frame-hide-p nil)
 
             ;; Insert documentation and turn on wrap line.
