@@ -1809,11 +1809,11 @@ SymbolKind (defined in the LSP)."
   (select-window (get-buffer-window lsp-bridge-code-action--current-buffer)))
 
 (defun lsp-bridge-code-action-popup-maybe-preview-show (&optional buffer-content)
-  (let* ((pos (frame-position lsp-bridge-call-hierarchy--frame))
-        (call-frame-height (frame-height lsp-bridge-call-hierarchy--frame))
-        (call-frame-width (frame-width lsp-bridge-call-hierarchy--frame))
-        (width 0)
-        (height 0))
+  (when-let* ((pos (frame-position lsp-bridge-call-hierarchy--frame))
+              (call-frame-height (frame-height lsp-bridge-call-hierarchy--frame))
+              (call-frame-width (frame-width lsp-bridge-call-hierarchy--frame))
+              (width 0) (height 0)
+              (live-p (frame-live-p lsp-bridge-call-hierarchy--frame)))
     (with-current-buffer  "*lsp-bridge-code-action-preview*"
       (read-only-mode -1)
 
@@ -1850,6 +1850,8 @@ SymbolKind (defined in the LSP)."
 
     (set-frame-width lsp-bridge-call-hierarchy--frame (max width call-frame-width))
     (set-frame-height lsp-bridge-call-hierarchy--frame (+ height (length lsp-bridge-call-hierarchy--popup-response)))
+
+    (lsp-bridge-call-hierarchy-adjust-frame-pos)
 
     (select-frame-set-input-focus lsp-bridge-call-hierarchy--frame)
     (let ((menu-window (get-buffer-window "*lsp-bridge-code-action-menu*"

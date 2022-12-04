@@ -36,6 +36,30 @@
   (lsp-bridge-call-file-api "prepare_call_hierarchy_outgoing"
                             (lsp-bridge--position)))
 
+(defun lsp-bridge-call-hierarchy-adjust-frame-pos ()
+  "Adjust position to avoid out of screen."
+  (let* ((frame-pos (frame-position lsp-bridge-call-hierarchy--frame))
+         (frame-m-x (+ (car frame-pos)
+                       (frame-pixel-width lsp-bridge-call-hierarchy--frame)))
+         (frame-m-y (+ (cdr frame-pos)
+                       (frame-pixel-height lsp-bridge-call-hierarchy--frame)))
+         (main-frame-pos (frame-position lsp-bridge-call-hierarchy--emacs-frame))
+         (main-frame-m-x (+ (car main-frame-pos)
+                            (frame-pixel-width lsp-bridge-call-hierarchy--emacs-frame)))
+         (main-frame-m-y (+ (cdr main-frame-pos)
+                            (frame-pixel-height lsp-bridge-call-hierarchy--emacs-frame)))
+         (margin 50)) ;; 50 pixel margin
+    (setq main-frame-m-x (- main-frame-m-x margin))
+    (setq main-frame-m-y (- main-frame-m-y margin))
+    (if (> frame-m-x main-frame-m-x)
+        (set-frame-position lsp-bridge-call-hierarchy--frame
+                            (- (car frame-pos) (- frame-m-x main-frame-m-x))
+                            (cdr frame-pos)))
+    (if (> frame-m-y main-frame-m-y)
+        (set-frame-position lsp-bridge-call-hierarchy--frame
+                            (car frame-pos)
+                            (- (cdr frame-pos) (- frame-m-y main-frame-m-y))))))
+
 (defun lsp-bridge-call-hierarchy-posframe-show (buffer)
   (let* ((posframe-height (+ lsp-bridge-call-hierarchy-preview-height
                              (min
@@ -117,7 +141,8 @@
              (< (+ lsp-bridge-call-hierarchy--index next)
                 (length lsp-bridge-call-hierarchy--popup-response)))
       (forward-line next)
-      (move-overlay lsp-bridge-call-hierarchy--overlay (line-beginning-position) (line-end-position))
+      (move-overlay lsp-bridge-call-hierarchy--overlay
+                    (line-beginning-position) (1+ (line-end-position)))
       (setq lsp-bridge-call-hierarchy--index
             (+ next lsp-bridge-call-hierarchy--index))
       (lsp-bridge-call-hierarchy-maybe-preview)
@@ -197,7 +222,10 @@
   (setq mode-name "call hierarchy")
   (setq-local cursor-type nil)
   (goto-char (1+ (point-min)))
-  (setq lsp-bridge-call-hierarchy--overlay (make-overlay (line-beginning-position)  (line-end-position)))
+  (setq lsp-bridge-call-hierarchy--overlay (make-overlay (line-beginning-position)
+                                                         (1+ (line-end-position))))
+  ;; :extend extend face after EOL
+  (set-face-attribute 'lsp-bridge-font-lock-flash (selected-frame) :extend t)
   (overlay-put lsp-bridge-call-hierarchy--overlay 'face 'lsp-bridge-font-lock-flash)
   (setq lsp-bridge-call-hierarchy--index 0)
 
