@@ -102,6 +102,7 @@
 (require 'acm-backend-tabnine)
 (require 'acm-backend-tailwind)
 (require 'acm-backend-citre)
+(require 'acm-backend-custom)
 (require 'acm-quick-access)
 
 ;;; Code:
@@ -489,7 +490,8 @@ Only calculate template candidate when type last character."
                                lsp-candidates
                                citre-candidates
                                (acm-backend-search-file-words-candidates keyword)
-                               (acm-backend-telega-candidates keyword)))
+                               (acm-backend-telega-candidates keyword)
+                               (acm-backend-custom-candidates keyword)))
 
         (when (and (or
                     ;; Show snippet candidates if lsp-candidates length is zero.
