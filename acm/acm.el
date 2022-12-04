@@ -133,6 +133,13 @@
   :type 'boolean
   :group 'acm)
 
+(defcustom acm-enable-doc-markdown-render 'async
+  "Popup documentation automatically when this option is turn on."
+  :type '(choice (const :tag "Asynchronous" async)
+                 (const :tag "Enabled" t)
+                 (const :tag "Disabled" nil))
+  :group 'acm)
+
 (defcustom acm-enable-icon t
   "Show icon in completion menu."
   :type 'boolean
@@ -909,10 +916,12 @@ The key of candidate will change between two LSP results."
             ;; Only render markdown styling when idle 200ms, because markdown render is expensive.
             (when (string-equal backend "lsp")
               (acm-cancel-timer acm-markdown-render-timer)
-              (setq acm-markdown-render-timer
-                    (run-with-idle-timer 0.2 nil
-                                         (lambda ()
-                                           (acm-doc-markdown-render-content doc)))))
+              (cl-case acm-enable-doc-markdown-render
+                (async (setq acm-markdown-render-timer
+                             (run-with-idle-timer 0.2 nil
+                                                  (lambda ()
+                                                    (acm-doc-markdown-render-content doc)))))
+                ((t) (acm-doc-markdown-render-content doc))))
 
             ;; Adjust doc frame position and size.
             (acm-doc-frame-adjust))
