@@ -487,12 +487,12 @@ Only calculate template candidate when type last character."
           (setq candidates path-candidates)
 
         (when acm-enable-citre
-          (setq citre-candidates (when (not (acm-in-comment-p)) (acm-backend-citre-candidates keyword))))
+          (setq citre-candidates (unless (acm-in-comment-p) (acm-backend-citre-candidates keyword))))
         ;; Fetch syntax completion candidates.
-        (setq lsp-candidates (when (not (acm-in-comment-p)) (acm-backend-lsp-candidates keyword)))
+        (setq lsp-candidates (unless (acm-in-comment-p) (acm-backend-lsp-candidates keyword)))
         (setq mode-candidates (append
-                               (when (not (acm-in-comment-p)) (acm-backend-tailwind-candidates keyword))
-                               (when (not (acm-in-comment-p)) (acm-backend-elisp-candidates keyword))
+                               (unless (acm-in-comment-p) (acm-backend-tailwind-candidates keyword))
+                               (unless (acm-in-comment-p) (acm-backend-elisp-candidates keyword))
                                lsp-candidates
                                citre-candidates
                                (acm-backend-search-file-words-candidates keyword)
