@@ -8,6 +8,11 @@ lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建�
 
 <img src="./screenshot.png">
 
+### 视频讲解 lsp-bridge 的原理
+| <a href="https://emacsconf.org/2022/talks/lspbridge/">EmacsConf 2022 演讲页面</a>                               |
+| :--------:                                       
+| [<img src="https://i.ytimg.com/vi/vLdqcYafY8w/hqdefault.jpg" width=600>](https://www.youtube.com/watch?v=vLdqcYafY8w) |
+
 ## 安装
 
 1. 安装 Emacs 28 及以上版本

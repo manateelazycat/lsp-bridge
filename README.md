@@ -8,6 +8,12 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 
 <img src="./screenshot.png">
 
+### The video explains the principle of lsp-bridge
+| <a href="https://emacsconf.org/2022/talks/lspbridge/">EmacsConf 2022 talk page</a>                               |
+| :--------:                                       
+| [<img src="https://i.ytimg.com/vi/vLdqcYafY8w/hqdefault.jpg" width=600>](https://www.youtube.com/watch?v=vLdqcYafY8w) |
+
+
 ## Installation
 
 1. Install Emacs 28 and above versions
