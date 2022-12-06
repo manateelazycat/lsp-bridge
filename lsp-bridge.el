@@ -1018,7 +1018,7 @@ So we build this macro to restore postion after code format."
                    (not (acm-in-comment-p)))
           ;; Search words if current prefix is not empty.
           (unless (or (string-equal current-symbol "") (null current-symbol))
-            (lsp-bridge-call-async "search_elisp_symbols_search" current-symbol)))
+            (lsp-bridge-call-async "search_list_search" "elisp" current-symbol)))
 
         ;; Send change file to search-words backend.
         (when buffer-file-name
@@ -1099,7 +1099,7 @@ So we build this macro to restore postion after code format."
            (symbols-size (length symbols)))
       ;; Only synchronize when new symbol created.
       (unless (equal lsp-bridge-elisp-symbols-size symbols-size)
-        (lsp-bridge-call-async "search_elisp_symbols_update" symbols)
+        (lsp-bridge-call-async "search_list_update" "elisp" symbols 300 "lsp-bridge-search-elisp-symbols--record-items")
         (setq lsp-bridge-elisp-symbols-size symbols-size)))))
 
 (defun lsp-bridge-search-words-open-file ()
