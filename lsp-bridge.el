@@ -863,10 +863,6 @@ So we build this macro to restore postion after code format."
   (setq-local acm-backend-search-sdcv-words-items candidates)
   (lsp-bridge-try-completion))
 
-(defun lsp-bridge-search-elisp-symbols--record-items (candidates)
-  (setq-local acm-backend-elisp-items candidates)
-  (lsp-bridge-try-completion))
-
 (defun lsp-bridge-try-completion ()
   (cond (lsp-bridge-prohibit-completion
          (setq-local lsp-bridge-prohibit-completion nil))
@@ -1014,11 +1010,7 @@ So we build this macro to restore postion after code format."
             (lsp-bridge-call-async "search_sdcv_words_search" current-word)))
 
         ;; Search elisp symbol.
-        (when (and (acm-is-elisp-mode-p)
-                   (not (acm-in-comment-p)))
-          ;; Search words if current prefix is not empty.
-          (unless (or (string-equal current-symbol "") (null current-symbol))
-            (lsp-bridge-call-async "search_list_search" "elisp" current-symbol)))
+        (lsp-bridge-elisp-symbols-search current-symbol)
 
         ;; Send change file to search-words backend.
         (when buffer-file-name
@@ -1038,69 +1030,30 @@ So we build this macro to restore postion after code format."
             (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol)))
         ))))
 
-(defvar lsp-bridge-elisp-symbols-timer nil)
-(defvar lsp-bridge-elisp-symbols-size 0)
-(defvar lsp-bridge-elisp-parse-depth 100)
-(defvar lsp-bridge-elisp-parse-limit 30)
-(defvar lsp-bridge-elisp-var-binding-regexp
-  "\\_<\\(?:cl-\\)?\\(?:def\\(?:macro\\|subst\\|un\\)\\|l\\(?:ambda\\|e\\(?:\\(?:xical-le\\)?t\\)\\)\\)\\*?\\_>")
-(defvar lsp-bridge-elisp-var-binding-regexp-1
-  "\\_<\\(?:cl-\\)?\\(?:do\\(?:list\\|times\\)\\)\\*?\\_>")
-
-
-(defun lsp-bridge-elisp-symbols--global ()
-  (all-completions ""
-                   obarray
-                   (lambda (symbol)
-                     (or (fboundp symbol)
-                         (boundp symbol)
-                         (featurep symbol)
-                         (facep symbol)))))
-
-(defun lsp-bridge-elisp-symbols--local ()
-  (let ((regexp "[ \t\n]*\\(\\_<\\(?:\\sw\\|\\s_\\)*\\_>\\)")
-        (pos (point))
-        res)
-    (condition-case nil
-        (save-excursion
-          (dotimes (_ lsp-bridge-elisp-parse-depth)
-            (up-list -1)
-            (save-excursion
-              (when (eq (char-after) ?\()
-                (forward-char 1)
-                (when (ignore-errors
-                        (save-excursion (forward-list)
-                                        (<= (point) pos)))
-                  (skip-chars-forward " \t\n")
-                  (cond
-                   ((looking-at lsp-bridge-elisp-var-binding-regexp)
-                    (down-list 1)
-                    (condition-case nil
-                        (dotimes (_ lsp-bridge-elisp-parse-limit)
-                          (save-excursion
-                            (when (looking-at "[ \t\n]*(")
-                              (down-list 1))
-                            (when (looking-at regexp)
-                              (cl-pushnew (match-string-no-properties 1) res)))
-                          (forward-sexp))
-                      (scan-error nil)))
-                   ((looking-at lsp-bridge-elisp-var-binding-regexp-1)
-                    (down-list 1)
-                    (when (looking-at regexp)
-                      (cl-pushnew (match-string-no-properties 1) res)))))))))
-      (scan-error nil))
-    res))
-
 (defun lsp-bridge-elisp-symbols-update ()
   "We need synchronize elisp symbols to Python side when idle."
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    (let* ((symbols (append (lsp-bridge-elisp-symbols--local)
-                            (lsp-bridge-elisp-symbols--global)))
+    (let* ((symbols (acm-backend-elisp-get-symbols))
            (symbols-size (length symbols)))
       ;; Only synchronize when new symbol created.
-      (unless (equal lsp-bridge-elisp-symbols-size symbols-size)
-        (lsp-bridge-call-async "search_list_update" "elisp" symbols 300 "lsp-bridge-search-elisp-symbols--record-items")
-        (setq lsp-bridge-elisp-symbols-size symbols-size)))))
+      (unless (equal acm-backend-elisp-symbols-update-size symbols-size)
+        (lsp-bridge-call-async "search_list_update"
+                               "elisp"
+                               symbols
+                               acm-backend-elisp-search-max-number
+                               "lsp-bridge-elisp-symbols-record")
+        (setq acm-backend-elisp-symbols-update-size symbols-size)))))
+
+(defun lsp-bridge-elisp-symbols-search (current-symbol)
+  (when (and (acm-is-elisp-mode-p)
+             (not (acm-in-comment-p)))
+    ;; Search words if current prefix is not empty.
+    (unless (or (string-equal current-symbol "") (null current-symbol))
+      (lsp-bridge-call-async "search_list_search" "elisp" current-symbol))))
+
+(defun lsp-bridge-elisp-symbols-record (candidates)
+  (setq-local acm-backend-elisp-items candidates)
+  (lsp-bridge-try-completion))
 
 (defun lsp-bridge-search-words-open-file ()
   (when (and buffer-file-name
@@ -1430,7 +1383,7 @@ Default is 0.5 second, preview window will stick if this value too small."
 
   (setq-local lsp-bridge-revert-buffer-flag nil)
 
-  (acm-run-idle-func lsp-bridge-elisp-symbols-timer lsp-bridge-elisp-symbols-update-idle 'lsp-bridge-elisp-symbols-update)
+  (acm-run-idle-func acm-backend-elisp-symbols-update-timer lsp-bridge-elisp-symbols-update-idle 'lsp-bridge-elisp-symbols-update)
 
   (when-let* ((lsp-server-name (lsp-bridge-has-lsp-server-p)))
     ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
@@ -1474,10 +1427,10 @@ Default is 0.5 second, preview window will stick if this value too small."
   (acm-cancel-timer lsp-bridge-signature-help-timer)
   (acm-cancel-timer lsp-bridge-search-words-timer)
   (acm-cancel-timer lsp-bridge-auto-format-code-timer)
-  (acm-cancel-timer lsp-bridge-elisp-symbols-timer)
+  (acm-cancel-timer acm-backend-elisp-symbols-update-timer)
 
-  ;; Reset `lsp-bridge-elisp-symbols-size' to zero.
-  (setq lsp-bridge-elisp-symbols-size 0)
+  ;; Reset `acm-backend-elisp-symbols-update-size' to zero.
+  (setq acm-backend-elisp-symbols-update-size 0)
 
   ;; Remove hide advice.
   (advice-remove #'acm-hide #'lsp-bridge--completion-hide-advisor))
