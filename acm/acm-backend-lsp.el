@@ -232,6 +232,7 @@ If optional MARKER, return a marker instead"
 Doubles as an indicator of snippet support."
   (and (boundp 'yas-minor-mode)
        (symbol-value 'yas-minor-mode)
+       ,yas-minor-mode
        'yas-expand-snippet))
 
 (defun acm-backend-lsp-insert-new-text (start-pos end-pos new-text)
