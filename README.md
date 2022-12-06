@@ -268,6 +268,34 @@ Please read below articles first:
 
 Then turn on develop option ```lsp-bridge-enable-log``` and happy hacking! ;)
 
+### Develop a multi-threaded asynchronous completion backend
+lsp-bridge builds the completion backend based on Python's multi-threading technology. With the support of multi-threading technology, no matter how much data you search, lsp-bridge will ensure that the completion experience smooth as butter. Please refer to the design of the existing backend (lsp-bridge/acm/acm-backend-*.el) for complicated backend.
+
+For some small scenarios, such as a language that needs to add additional keyword completion, lsp-bridge provides some scaffolding code to help you quickly build your own asynchronous completion backend:
+
+#### 1. Cache keyword list
+```elisp
+(lsp-bridge-call-async "search_list_update" "example" (list "keyword_a" "keyword_b" "keyword_c") 100 "lsp-bridge-example-record")
+```
+
+We can quickly cache the keyword list to the Python process of lsp-bridge through the interface function `search_list_update`, where `example` is the name of the completion backend, `(list "keyword_a" "keyword_b" "keyword_c")` is the keyword list, `100` is the maximum number of search candidates, `lsp-bridge-example-record` is the name of the callback function called after the search is completed.
+
+#### 2. Multi-threaded search and filter
+```elisp
+(lsp-bridge-call-async "search_list_search" "example" "current_symbol")
+```
+
+After completing the keyword cache, search through the interface function `search_list_search`, where `example` is the name of the completion backend, and `current_symbol` is the search keyword, which is generally the symbol at the cursor. When calling `search_list_search`, lsp-bridge will automatically use sub-threads to search and filter, and automatically detect whether the search results have expired? If the search result is not expired, call the callback function `lsp-bridge-example-record` to record the search result.
+
+#### 3. Asynchronous data pop-up completion
+```elisp
+(defun lsp-bridge-example-record (candidates)
+   (setq-local acm-backend-example-items candidates)
+   (lsp-bridge-try-completion))
+```
+
+Generally, `lsp-bridge-example-record` is defined in this way. After receiving `candidates` returned by the asynchronous backend, first save the search results in the buffer, here is `acm-backend-example-items` local variable (you need to define this variable yourself), and then call the function `lsp-bridge-try-completion`, try to popup the completion menu.
+
 ## Report bug
 
 Please use `emacs -q` and load a minimal setup with only lsp-bridge to verify that the bug is reproducible. If `emacs -q` works fine, probably something is wrong with your Emacs config.
