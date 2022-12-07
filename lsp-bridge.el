@@ -1163,12 +1163,23 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-file-apply-edits (filepath edits &optional temp-buffer)
   (if temp-buffer
-      ;; apply edits to temp buffer
+      ;; Apply edits to temp buffer.
       (with-current-buffer temp-buffer
         (acm-backend-lsp-apply-text-edits edits))
-    ;; apply edits to file
-    (if (string-match "^/[A-Za-z]:" filepath)
-        (setq filepath (substring filepath 1)))
+
+    ;; Apply edits to file.
+    (cond ((string-prefix-p "file://" filepath)
+           (setq filepath (string-remove-prefix "file://" filepath)))
+          ((string-prefix-p ":file://" filepath)
+           (setq filepath (string-remove-prefix ":file://" filepath))))
+
+    ;; Remove / before drive letter on Windows
+    ;; And convert `%3A' to `:'
+    (cond ((string-match "^/[A-Za-z]:" filepath)
+           (setq filepath (substring filepath 1)))
+          ((string-match "^/[A-Za-z]%3A" filepath)
+           (setq filepath (format "%s:%s" (substring filepath 1 2) (substring filepath 5)))))
+
     (find-file-noselect filepath)
     (save-excursion
       (find-file filepath)
@@ -1931,14 +1942,14 @@ SymbolKind (defined in the LSP)."
    (cond ((plist-get info :documentChanges)
           (dolist (change (plist-get info :documentChanges))
             (lsp-bridge-file-apply-edits
-             (string-remove-prefix "file://" (plist-get (plist-get change :textDocument) :uri))
+             (plist-get (plist-get change :textDocument) :uri)
              (plist-get change :edits)  temp-buffer)))
          ((plist-get info :changes)
           (let* ((changes (plist-get info :changes))
                  (changes-number (/ (length changes) 2)))
             (dotimes (changes-index changes-number)
               (lsp-bridge-file-apply-edits
-               (string-remove-prefix ":file://" (format "%s" (nth (* changes-index 2) changes)))
+               (format "%s" (nth (* changes-index 2) changes))
                (nth (+ (* changes-index 2) 1) changes) temp-buffer))))))
 
   (setq-local lsp-bridge-prohibit-completion t))
