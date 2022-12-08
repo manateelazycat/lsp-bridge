@@ -152,6 +152,11 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'cons
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-completion-obey-trigger-characters-p nil
+  "If non-nil makes trigger characters a higher priority than `lsp-bridge-completion-hide-characters'."
+  :type 'boolean
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-apply-edit-commands '("java.apply.workspaceEdit")
   "Apply workspace edit if command match `lsp-bridge-apply-edit-commands', otherwise send workspace/executeCommand to LSP server."
   :type 'cons
@@ -923,7 +928,9 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-not-match-hide-characters ()
   "Hide completion if char before cursor match `lsp-bridge-completion-hide-characters'."
   (let ((char (ignore-errors (char-to-string (char-before)))))
-    (or (member char (bound-and-true-p acm-backend-lsp-completion-trigger-characters))
+    (or (and lsp-bridge-completion-obey-trigger-characters-p
+             (member char (if (boundp 'acm-backend-lsp-completion-trigger-characters)
+                              (symbol-value 'acm-backend-lsp-completion-trigger-characters))))
         (not (member char lsp-bridge-completion-hide-characters)))))
 
 (defun lsp-bridge-is-evil-state ()
