@@ -977,6 +977,28 @@ So we build this macro to restore postion after code format."
     (setq-local lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
     (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))))
 
+(defun lsp-bridge-monitor-post-self-insert ()
+  ;; Make sure this function be called after `electric-pair-mode'
+  ;; `smartparens-mode' or something similar if they are enabled.
+  ;;
+  ;; Because pairing parethness or quotes will call `after-change-functions'
+  ;; multiple times. For example: (| represents the cursor)
+  ;;
+  ;;         dic|
+  ;;
+  ;; Press `[', then the following situation will be observed in
+  ;; `lsp-bridge-monitor-after-change':
+  ;;
+  ;;         dic[|
+  ;;         dic|
+  ;;         dic[|
+  ;;         dic[]|
+  ;;
+  ;; The last position of cursor is wrong, that makes a misjudgment in
+  ;; `lsp-bridge-try-completion'.
+  (setq lsp-bridge-last-change-position
+        (list (current-buffer) (buffer-chars-modified-tick) (point))))
+
 (defun lsp-bridge-monitor-after-change (begin end length)
   (unless lsp-bridge-revert-buffer-flag
     ;; Record last command to `lsp-bridge-last-change-command'.
@@ -1297,13 +1319,14 @@ So we build this macro to restore postion after code format."
 (add-hook 'post-command-hook 'lsp-bridge-monitor-window-buffer-change)
 
 (defconst lsp-bridge--internal-hooks
-  '((before-change-functions . lsp-bridge-monitor-before-change)
-    (after-change-functions . lsp-bridge-monitor-after-change)
-    (post-command-hook . lsp-bridge-monitor-post-command)
-    (after-save-hook . lsp-bridge-monitor-after-save)
-    (kill-buffer-hook . lsp-bridge-close-buffer-file)
-    (find-file-hook . lsp-bridge-search-words-open-file)
-    (before-revert-hook . lsp-bridge-close-buffer-file)
+  '((before-change-functions lsp-bridge-monitor-before-change nil t)
+    (after-change-functions lsp-bridge-monitor-after-change nil t)
+    (post-command-hook lsp-bridge-monitor-post-command nil t)
+    (after-save-hook lsp-bridge-monitor-after-save nil t)
+    (kill-buffer-hook lsp-bridge-close-buffer-file nil t)
+    (find-file-hook lsp-bridge-search-words-open-file nil t)
+    (before-revert-hook lsp-bridge-close-buffer-file nil t)
+    (post-self-insert-hook lsp-bridge-monitor-post-self-insert 90 t)
     ))
 
 (defvar lsp-bridge-mode-map (make-sparse-keymap))
@@ -1409,7 +1432,7 @@ Default is 0.5 second, preview window will stick if this value too small."
       (acm-run-idle-func lsp-bridge-auto-format-code-timer lsp-bridge-auto-format-code-idle 'lsp-bridge-auto-format-code)))
 
   (dolist (hook lsp-bridge--internal-hooks)
-    (add-hook (car hook) (cdr hook) nil t))
+    (apply #'add-hook hook))
 
   (advice-add #'acm-hide :after #'lsp-bridge--completion-hide-advisor)
 
@@ -1421,7 +1444,7 @@ Default is 0.5 second, preview window will stick if this value too small."
   "Disable LSP Bridge mode."
   ;; Remove hooks.
   (dolist (hook lsp-bridge--internal-hooks)
-    (remove-hook (car hook) (cdr hook) t))
+    (remove-hook (nth 0 hook) (nth 1 hook) (nth 3 hook)))
 
   ;; Cancel idle timer.
   (acm-cancel-timer lsp-bridge-signature-help-timer)
