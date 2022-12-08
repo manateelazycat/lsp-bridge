@@ -922,7 +922,9 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-not-match-hide-characters ()
   "Hide completion if char before cursor match `lsp-bridge-completion-hide-characters'."
-  (not (member (ignore-errors (char-to-string (char-before))) lsp-bridge-completion-hide-characters)))
+  (let ((char (ignore-errors (char-to-string (char-before)))))
+    (or (member char (bound-and-true-p acm-backend-lsp-completion-trigger-characters))
+        (not (member char lsp-bridge-completion-hide-characters)))))
 
 (defun lsp-bridge-is-evil-state ()
   "If `evil' mode is enable, only show completion when evil is in insert mode."
