@@ -220,7 +220,6 @@
   ;; Switch new mode.
   (setq major-mode 'lsp-bridge-call-hierarchy-mode)
   (setq mode-name "call hierarchy")
-  (setq-local cursor-type nil)
   (goto-char (1+ (point-min)))
   (setq lsp-bridge-call-hierarchy--overlay (make-overlay (line-beginning-position)
                                                          (1+ (line-end-position))))
