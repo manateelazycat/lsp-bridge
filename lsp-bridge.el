@@ -1192,24 +1192,30 @@ So we build this macro to restore postion after code format."
     (unless (eq last-command 'mwheel-scroll)
       (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))))
 
+(defun lsp-bridge-pick-file-path (filepath)
+  ;; Remove `file://' and `:file://' prefix.
+  (cond ((string-prefix-p "file://" filepath)
+         (setq filepath (string-remove-prefix "file://" filepath)))
+        ((string-prefix-p ":file://" filepath)
+         (setq filepath (string-remove-prefix ":file://" filepath))))
+
+  ;; Convert `%XX' sequences to `:'
+  (setq filepath (url-unhex-string filepath))
+
+  ;; Remove / before drive letter on Windows
+  (when (string-match "^/[A-Za-z]:" filepath)
+    (setq filepath (substring filepath 1)))
+
+  filepath)
+
 (defun lsp-bridge-file-apply-edits (filepath edits &optional temp-buffer)
   (if temp-buffer
       ;; Apply edits to temp buffer.
       (with-current-buffer temp-buffer
         (acm-backend-lsp-apply-text-edits edits))
 
-    ;; Apply edits to file.
-    (cond ((string-prefix-p "file://" filepath)
-           (setq filepath (string-remove-prefix "file://" filepath)))
-          ((string-prefix-p ":file://" filepath)
-           (setq filepath (string-remove-prefix ":file://" filepath))))
-
-    ;; Remove / before drive letter on Windows
-    ;; And convert `%3A' to `:'
-    (cond ((string-match "^/[A-Za-z]:" filepath)
-           (setq filepath (substring filepath 1)))
-          ((string-match "^/[A-Za-z]%3A" filepath)
-           (setq filepath (format "%s:%s" (substring filepath 1 2) (substring filepath 5)))))
+    ;; Pick filepath from LSP return file string.
+    (setq filepath (lsp-bridge-pick-file-path filepath))
 
     (find-file-noselect filepath)
     (save-excursion
@@ -1676,7 +1682,7 @@ SymbolKind (defined in the LSP)."
            (match-info (seq-filter (lambda (i) (string-equal match-symbol (lsp-bridge-workspace-transform-info i))) info)))
       (when match-info
         (let* ((symbol-info (plist-get (car match-info) :location))
-               (symbol-file (url-unhex-string (string-remove-prefix "file://" (format "%s" (plist-get symbol-info :uri)))))
+               (symbol-file (lsp-bridge-pick-file-path (format "%s" (plist-get symbol-info :uri))))
                (symbol-position (plist-get (plist-get symbol-info :range) :start)))
           (find-file symbol-file)
           (goto-char (acm-backend-lsp-position-to-point symbol-position))

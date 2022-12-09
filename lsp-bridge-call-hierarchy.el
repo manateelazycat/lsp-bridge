@@ -170,7 +170,7 @@
 
 (defun lsp-bridge-call-hierarchy-show ()
   (let* ((call  (nth lsp-bridge-call-hierarchy--index lsp-bridge-call-hierarchy--popup-response))
-         (path (plist-get call :path))
+         (path (lsp-bridge-pick-file-path (plist-get call :path)))
          (range-start (plist-get (plist-get call :range) :start))
          (range-end (plist-get (plist-get call :range) :end))
          (sline (plist-get range-start :line))
