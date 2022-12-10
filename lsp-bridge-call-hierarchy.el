@@ -1,4 +1,5 @@
 ;;; lsp-bridge-call-hierarchy.el --- LSP bridge  -*- lexical-binding: t -*-
+(require 'lsp-bridge-frame)
 
 (defvar lsp-bridge-call-hierarchy-name-width 40
   "Width of the call name column in the call hierarchy buffer.")
@@ -13,8 +14,6 @@
   "Height of the preview window. (set 0 to disable preview)")
 
 (defvar lsp-bridge-call-hierarchy--frame nil)
-
-(defvar lsp-bridge-call-hierarchy--emacs-frame nil)
 
 (defvar lsp-bridge-call-hierarchy--index 0)
 
@@ -36,50 +35,19 @@
   (lsp-bridge-call-file-api "prepare_call_hierarchy_outgoing"
                             (lsp-bridge--position)))
 
-(defun lsp-bridge-call-hierarchy-adjust-frame-pos ()
-  "Adjust position to avoid out of screen."
-  (let* ((frame-pos (frame-position lsp-bridge-call-hierarchy--frame))
-         (frame-m-x (+ (car frame-pos)
-                       (frame-pixel-width lsp-bridge-call-hierarchy--frame)))
-         (frame-m-y (+ (cdr frame-pos)
-                       (frame-pixel-height lsp-bridge-call-hierarchy--frame)))
-         (main-frame-pos (frame-position lsp-bridge-call-hierarchy--emacs-frame))
-         (main-frame-m-x (+ (car main-frame-pos)
-                            (frame-pixel-width lsp-bridge-call-hierarchy--emacs-frame)))
-         (main-frame-m-y (+ (cdr main-frame-pos)
-                            (frame-pixel-height lsp-bridge-call-hierarchy--emacs-frame)))
-         (margin 50)) ;; 50 pixel margin
-    (setq main-frame-m-x (- main-frame-m-x margin))
-    (setq main-frame-m-y (- main-frame-m-y margin))
-    (if (> frame-m-x main-frame-m-x)
-        (set-frame-position lsp-bridge-call-hierarchy--frame
-                            (- (car frame-pos) (- frame-m-x main-frame-m-x))
-                            (cdr frame-pos)))
-    (if (> frame-m-y main-frame-m-y)
-        (set-frame-position lsp-bridge-call-hierarchy--frame
-                            (car frame-pos)
-                            (- (cdr frame-pos) (- frame-m-y main-frame-m-y))))))
 
-(defun lsp-bridge-call-hierarchy-posframe-show (buffer)
-  (let* ((posframe-height (+ lsp-bridge-call-hierarchy-preview-height
-                             (min
-                              (length lsp-bridge-call-hierarchy--popup-response)
-                              lsp-bridge-call-hierarchy-call-max-height)))
-         (posframe-width (+ 6 ;; length of spaces and icon
-                            lsp-bridge-call-hierarchy-name-width
-                            lsp-bridge-call-hierarchy-path-width)))
-    (apply #'posframe-show
-           (get-buffer buffer)
-           :poshandler #'posframe-poshandler-frame-center
-           (list
-            :max-height posframe-height
-            :min-height posframe-height
-            :min-width  posframe-width
-            :max-width  posframe-width
-            :border-width 2
-            :border-color "gray"
-            :accept-focus t
-            ))))
+(defun lsp-bridge-call-hierarchy-make-frame (buffer)
+  (let* ((height (+ lsp-bridge-call-hierarchy-preview-height
+                    (min (length lsp-bridge-call-hierarchy--popup-response)
+                         lsp-bridge-call-hierarchy-call-max-height)))
+         (width (+ 6 ;; length of spaces and icon
+                   lsp-bridge-call-hierarchy-name-width
+                   lsp-bridge-call-hierarchy-path-width)))
+    (lsp-bridge-frame-create-frame-if-not-exist lsp-bridge-call-hierarchy--frame buffer
+                                                "call hierarchy" 0 nil)
+    (lsp-bridge-frame-set-frame-size lsp-bridge-call-hierarchy--frame width height)
+    (lsp-bridge-frame-set-frame-colors lsp-bridge-call-hierarchy--frame)
+    (lsp-bridge-frame-set-frame-pos-center lsp-bridge-call-hierarchy--frame)))
 
 (defun lsp-bridge-call-hierarchy-format-call-string (s l)
   (if (> (length s) l)
@@ -114,14 +82,12 @@
 (defun lsp-bridge-call-hierarchy--popup (response)
   (interactive)
   (setq lsp-bridge-call-hierarchy--popup-response response)
-  (setq lsp-bridge-call-hierarchy--emacs-frame (selected-frame))
-  (setq lsp-bridge-call-hierarchy--frame
-        (lsp-bridge-call-hierarchy-posframe-show (get-buffer-create "*lsp-bridge-call-hierarchy*")))
-  (select-frame-set-input-focus lsp-bridge-call-hierarchy--frame)
+  (lsp-bridge-call-hierarchy-make-frame (get-buffer-create "*lsp-bridge-call-hierarchy*"))
 
-  (dolist (call lsp-bridge-call-hierarchy--popup-response)
-    (insert (lsp-bridge-call-hierarchy-format-call call)))
-  (delete-backward-char 1)
+  (with-current-buffer "*lsp-bridge-call-hierarchy*"
+    (dolist (call lsp-bridge-call-hierarchy--popup-response)
+      (insert (lsp-bridge-call-hierarchy-format-call call)))
+    (delete-backward-char 1))
 
   (when (> lsp-bridge-call-hierarchy-preview-height 0)
     (split-window (selected-window) nil 'down)
@@ -134,7 +100,11 @@
 
   (lsp-bridge-call-hierarchy-maybe-preview)
 
-  (lsp-bridge-call-hierarchy-mode))
+  (lsp-bridge-call-hierarchy-mode)
+  (with-current-buffer "*lsp-bridge-call-hierarchy*"
+    (setq-local cursor-type nil)
+    (setq-local truncate-lines t)
+    (setq-local mode-line-format nil)))
 
 (defun lsp-bridge-call-hierarchy--move (next)
   (when (and (>= (+ lsp-bridge-call-hierarchy--index next) 0)
@@ -158,8 +128,9 @@
 
 (defun lsp-bridge-call-hierarchy-quit ()
   (interactive)
-  (posframe-delete "*lsp-bridge-call-hierarchy*")
-  (select-frame-set-input-focus lsp-bridge-call-hierarchy--emacs-frame)
+
+  (lsp-bridge-frame-delete-frame lsp-bridge-call-hierarchy--frame)
+  (kill-buffer "*lsp-bridge-call-hierarchy*")
 
   (dolist (buffer-modeline lsp-bridge-call-hierarchy--local-modelines)
     (with-current-buffer (car buffer-modeline)
@@ -232,10 +203,7 @@
   (use-local-map lsp-bridge-call-hierarchy-mode-map)
   (when (featurep 'evil)
     (evil-set-initial-state 'lsp-bridge-call-hierarchy-mode 'emacs))
-  (setq-local truncate-lines t)
-  (setq-local cursor-type nil)
-  (read-only-mode 1)
-)
+  (read-only-mode 1))
 
 (provide 'lsp-bridge-call-hierarchy)
 ;;; lsp-bridge-call-hierarchy.el ends here
