@@ -77,7 +77,11 @@
 (require 'seq)
 (require 'subr-x)
 
-(require 'lsp-bridge-frame)
+(defvar acm-library-path (expand-file-name "acm" (if load-file-name
+                                                     (file-name-directory load-file-name)
+                                                   default-directory)))
+(add-to-list 'load-path acm-library-path t)
+(require 'acm-frame)
 
 (require 'lsp-bridge-epc)
 (require 'lsp-bridge-ref)
@@ -94,10 +98,6 @@
   "LSP-Bridge group."
   :group 'applications)
 
-(defvar acm-library-path (expand-file-name "acm" (if load-file-name
-                                                     (file-name-directory load-file-name)
-                                                   default-directory)))
-(add-to-list 'load-path acm-library-path t)
 (require 'acm)
 
 (setq acm-backend-lsp-fetch-completion-item-func 'lsp-bridge-fetch-completion-item-info)
@@ -955,7 +955,7 @@ So we build this macro to restore postion after code format."
   "If `lsp-bridge-complete-manually' is non-nil, hide completion menu."
   (or
    ;; Always update candidate if completion menu is visible now.
-   (lsp-bridge-frame-visible-p acm-frame)
+   (acm-frame-visible-p acm-menu-frame)
    ;; Don't update candidate if `lsp-bridge-complete-manually' is non-nil.
    (not lsp-bridge-complete-manually)))
 
@@ -1105,8 +1105,7 @@ So we build this macro to restore postion after code format."
       (lsp-bridge-call-async "search_file_words_rebuild_cache"))))
 
 (defun lsp-bridge-completion-ui-visible-p ()
-  (and (frame-live-p acm-frame)
-       (frame-visible-p acm-frame)))
+  (acm-frame-visible-p acm-menu-frame))
 
 (defun lsp-bridge-monitor-after-save ()
   (lsp-bridge-call-file-api "save_file" (buffer-name)))
@@ -1774,7 +1773,7 @@ SymbolKind (defined in the LSP)."
   (interactive)
   (acm-cancel-timer lsp-bridge-code-action-popup-maybe-preview-timer)
 
-  (lsp-bridge-frame-delete-frame lsp-bridge-call-hierarchy--frame)
+  (acm-frame-delete-frame lsp-bridge-call-hierarchy--frame)
   (kill-buffer "*lsp-bridge-code-action-menu*")
 
   (advice-remove 'lsp-bridge-call-hierarchy-select #'lsp-bridge-code-action-popup-select)
@@ -1821,9 +1820,9 @@ SymbolKind (defined in the LSP)."
       (setq-local mode-line-format nil)
       (setq-local truncate-lines t))
 
-    (lsp-bridge-frame-set-frame-size lsp-bridge-call-hierarchy--frame (max width call-frame-width)
+    (acm-frame-set-frame-size lsp-bridge-call-hierarchy--frame (max width call-frame-width)
                                      (+ height (length lsp-bridge-call-hierarchy--popup-response)))
-    (lsp-bridge-frame-adjust-frame-pos lsp-bridge-call-hierarchy--frame)
+    (acm-frame-adjust-frame-pos lsp-bridge-call-hierarchy--frame)
     (select-frame-set-input-focus lsp-bridge-call-hierarchy--frame)
 
     (let ((menu-window (get-buffer-window "*lsp-bridge-code-action-menu*"
@@ -1879,7 +1878,7 @@ SymbolKind (defined in the LSP)."
         (menu-lenght (length menu-items))
         (menu-buffer (get-buffer-create "*lsp-bridge-code-action-menu*"))
         (menu-width 0)
-        (cursor (lsp-bridge-frame-get-popup-position (point))))
+        (cursor (acm-frame-get-popup-position (point))))
     ;; prepare for previewing
     (setq lsp-bridge-code-action--current-buffer (current-buffer))
 
@@ -1890,7 +1889,7 @@ SymbolKind (defined in the LSP)."
     ;; reuse hierarchy popup keymap and mode here
     (setq lsp-bridge-call-hierarchy--popup-response menu-items)
 
-    (lsp-bridge-frame-create-frame-if-not-exist lsp-bridge-call-hierarchy--frame
+    (acm-frame-create-frame-if-not-exist lsp-bridge-call-hierarchy--frame
                                                 menu-buffer "code action" 0 nil)
 
     (with-current-buffer menu-buffer
@@ -1906,8 +1905,8 @@ SymbolKind (defined in the LSP)."
       (setq-local truncate-lines t)
       (setq-local mode-line-format nil))
 
-    (lsp-bridge-frame-set-frame-position lsp-bridge-call-hierarchy--frame (car cursor) (cdr cursor))
-    (lsp-bridge-frame-set-frame-size lsp-bridge-call-hierarchy--frame menu-width menu-lenght)
+    (acm-frame-set-frame-position lsp-bridge-call-hierarchy--frame (car cursor) (cdr cursor))
+    (acm-frame-set-frame-size lsp-bridge-call-hierarchy--frame menu-width menu-lenght)
 
     (advice-add 'lsp-bridge-call-hierarchy-maybe-preview :override #'lsp-bridge-code-action-popup-maybe-preview)
     (advice-add 'lsp-bridge-call-hierarchy-select :override #'lsp-bridge-code-action-popup-select)

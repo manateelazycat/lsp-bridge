@@ -1,5 +1,5 @@
 ;;; lsp-bridge-call-hierarchy.el --- LSP bridge  -*- lexical-binding: t -*-
-(require 'lsp-bridge-frame)
+(require 'acm-frame)
 
 (defvar lsp-bridge-call-hierarchy-name-width 40
   "Width of the call name column in the call hierarchy buffer.")
@@ -43,11 +43,11 @@
          (width (+ 6 ;; length of spaces and icon
                    lsp-bridge-call-hierarchy-name-width
                    lsp-bridge-call-hierarchy-path-width)))
-    (lsp-bridge-frame-create-frame-if-not-exist lsp-bridge-call-hierarchy--frame buffer
+    (acm-frame-create-frame-if-not-exist lsp-bridge-call-hierarchy--frame buffer
                                                 "call hierarchy" 0 nil)
-    (lsp-bridge-frame-set-frame-size lsp-bridge-call-hierarchy--frame width height)
-    (lsp-bridge-frame-set-frame-colors lsp-bridge-call-hierarchy--frame)
-    (lsp-bridge-frame-set-frame-pos-center lsp-bridge-call-hierarchy--frame)))
+    (acm-frame-set-frame-size lsp-bridge-call-hierarchy--frame width height)
+    (acm-frame-set-frame-colors lsp-bridge-call-hierarchy--frame)
+    (acm-frame-set-frame-pos-center lsp-bridge-call-hierarchy--frame)))
 
 (defun lsp-bridge-call-hierarchy-format-call-string (s l)
   (if (> (length s) l)
@@ -129,7 +129,7 @@
 (defun lsp-bridge-call-hierarchy-quit ()
   (interactive)
 
-  (lsp-bridge-frame-delete-frame lsp-bridge-call-hierarchy--frame)
+  (acm-frame-delete-frame lsp-bridge-call-hierarchy--frame)
   (kill-buffer "*lsp-bridge-call-hierarchy*")
 
   (dolist (buffer-modeline lsp-bridge-call-hierarchy--local-modelines)

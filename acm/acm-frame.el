@@ -1,4 +1,4 @@
-;;; lsp-bridge-frame.el --- Description -*- lexical-binding: t; -*-
+;;; acm-frame.el --- Description -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2022 royokong
 ;;
@@ -8,7 +8,6 @@
 ;; Modified: December 10, 2022
 ;; Version: 0.0.1
 ;; Keywords: abbrev bib c calendar comm convenience data docs emulations extensions faces files frames games hardware help hypermedia i18n internal languages lisp local maint mail matching mouse multimedia news outlines processes terminals tex tools unix vc wp
-;; Homepage: https://github.com/royokong/lsp-bridge-frame
 ;; Package-Requires: ((emacs "24.3"))
 ;;
 ;; This file is not part of GNU Emacs.
@@ -19,26 +18,26 @@
 ;;
 ;;; Code:
 
-(defface lsp-bridge-frame-default-face
+(defface acm-frame-default-face
   '()
   "Default face, foreground and background colors used for the popup.")
 
-(defface lsp-bridge-frame-border-face
+(defface acm-frame-border-face
   '((((class color) (min-colors 88) (background dark)) :background "#323232")
     (((class color) (min-colors 88) (background light)) :background "#d7d7d7")
     (t :background "gray"))
   "The background color used for the thin border.")
 
-(defface lsp-bridge-frame-select-face
+(defface acm-frame-select-face
   '()
   "Face used to highlight the currently selected candidate.")
 
 
-(defface lsp-bridge-frame-buffer-size-face
+(defface acm-frame-buffer-size-face
   '()
   "Face for content area.")
 
-(defvar lsp-bridge-frame--mouse-ignore-map
+(defvar acm-frame--mouse-ignore-map
   (let ((map (make-sparse-keymap)))
     (dotimes (i 7)
       (dolist (k '(mouse down-mouse drag-mouse double-mouse triple-mouse))
@@ -46,29 +45,29 @@
     map)
   "Ignore all mouse clicks.")
 
-(defvar lsp-bridge-frame--emacs-frame nil
+(defvar acm-frame--emacs-frame nil
   "The emacs frame.")
 
-(defconst lsp-bridge-frame-fit-frame-to-buffer
+(defconst acm-frame-fit-frame-to-buffer
   (if (functionp 'fit-frame-to-buffer-1)
       'fit-frame-to-buffer-1
     'fit-frame-to-buffer)
   "Function used to fit frame to buffer.")
 
-(defun lsp-bridge-frame-set-frame-colors (frame)
+(defun acm-frame-set-frame-colors (frame)
   ;; Set frame border color.
   (let* ((face (if (facep 'child-frame-border) 'child-frame-border 'internal-border))
-         (new (face-attribute 'lsp-bridge-frame-border-face :background nil 'default)))
+         (new (face-attribute 'acm-frame-border-face :background nil 'default)))
     (unless (equal (face-attribute face :background frame 'default) new)
       (set-face-background face new frame)))
 
   ;; Set frame background color.
-  (let ((new (face-attribute 'lsp-bridge-frame-default-face :background nil 'default)))
+  (let ((new (face-attribute 'acm-frame-default-face :background nil 'default)))
     (unless (equal (frame-parameter frame 'background-color) new)
       (set-frame-parameter frame 'background-color new))))
 
 (defvar x-gtk-resize-child-frames) ;; not present on non-gtk builds
-(defun lsp-bridge-frame-make-frame (frame-name &optional no-accept-focus)
+(defun acm-frame-make-frame (frame-name &optional no-accept-focus)
   (let* ((after-make-frame-functions nil)
          (parent (selected-frame))
          (border-width (if no-accept-focus 0 1)) ;; no border if no-accept-focus
@@ -114,9 +113,9 @@
                    (mode-line-format . nil)
                    )))
 
-    (lsp-bridge-frame-set-frame-colors frame)
+    (acm-frame-set-frame-colors frame)
 
-    (setq lsp-bridge-frame--emacs-frame parent)
+    (setq acm-frame--emacs-frame parent)
 
     ;; Reset to the input focus to the parent frame.
     (if no-accept-focus
@@ -124,13 +123,13 @@
       (select-frame-set-input-focus frame))
     frame))
 
-(cl-defmacro lsp-bridge-frame-create-frame-if-not-exist (frame frame-buffer frame-name margin no-accept-focus)
+(cl-defmacro acm-frame-create-frame-if-not-exist (frame frame-buffer frame-name margin no-accept-focus)
   `(unless (frame-live-p ,frame)
-     (setq ,frame (lsp-bridge-frame-make-frame ,frame-name ,no-accept-focus))
+     (setq ,frame (acm-frame-make-frame ,frame-name ,no-accept-focus))
 
      (with-current-buffer (get-buffer-create ,frame-buffer)
        ;; Install mouse ignore map
-       (use-local-map lsp-bridge-frame--mouse-ignore-map)
+       (use-local-map acm-frame--mouse-ignore-map)
 
        ;; Set buffer arguments.
        (dolist (var '((mode-line-format . nil)
@@ -149,7 +148,7 @@
                       (right-margin-width . ,margin)
                       (fringes-outside-margins . 0)))
          (set (make-local-variable (car var)) (cdr var)))
-       (buffer-face-set 'lsp-bridge-frame-buffer-size-face))
+       (buffer-face-set 'acm-frame-buffer-size-face))
 
      ;; Set frame window and buffer.
      (let ((win (frame-root-window ,frame)))
@@ -158,16 +157,16 @@
        (set-window-dedicated-p win t))
      ))
 
-(defun lsp-bridge-frame-set-frame-max-size (frame &optional max-width max-height)
+(defun acm-frame-set-frame-max-size (frame &optional max-width max-height)
   ;; Set the smallest window size value to ensure that frame adjusts to the accurate size of its content.
   (let* ((window-min-height 0)
          (window-min-width 0))
-    (funcall lsp-bridge-frame-fit-frame-to-buffer frame max-height nil max-width nil)))
+    (funcall acm-frame-fit-frame-to-buffer frame max-height nil max-width nil)))
 
-(defun lsp-bridge-frame-set-frame-size (frame width height)
+(defun acm-frame-set-frame-size (frame width height)
   (set-frame-size frame width height))
 
-(defun lsp-bridge-frame-set-frame-position (frame x y)
+(defun acm-frame-set-frame-position (frame x y)
   ;; Make sure frame visible before set position.
   (unless (frame-visible-p frame)
     ;; Force redisplay, otherwise the popup sometimes does not display content.
@@ -176,16 +175,16 @@
 
   (set-frame-position frame x y))
 
-(defun lsp-bridge-frame-set-frame-pos-center (frame)
-  (let* ((parent-width (frame-pixel-width lsp-bridge-frame--emacs-frame))
-         (parent-height (frame-pixel-height lsp-bridge-frame--emacs-frame))
+(defun acm-frame-set-frame-pos-center (frame)
+  (let* ((parent-width (frame-pixel-width acm-frame--emacs-frame))
+         (parent-height (frame-pixel-height acm-frame--emacs-frame))
          (frame-width (frame-pixel-width frame))
          (frame-height (frame-pixel-height frame))
          (x (+ (frame-parameter frame 'left) (/ (- parent-width frame-width) 2)))
          (y (+ (frame-parameter frame 'top) (/ (- parent-height frame-height) 2))))
-    (lsp-bridge-frame-set-frame-position frame x y)))
+    (acm-frame-set-frame-position frame x y)))
 
-(defun lsp-bridge-frame-get-popup-position (frame-popup-point)
+(defun acm-frame-get-popup-position (frame-popup-point)
   (let* ((edges (window-pixel-edges))
          (window-left (+ (nth 0 edges)
                          ;; We need adjust left margin for buffer centering module.
@@ -205,19 +204,19 @@
     (cons (+ x window-left)
           (+ y window-top offset-y))))
 
-(cl-defmacro lsp-bridge-frame-delete-frame (frame)
+(cl-defmacro acm-frame-delete-frame (frame)
   `(when (frame-live-p ,frame)
      (if (and (not (frame-parameter ,frame 'no-accept-focus))
-              (frame-live-p lsp-bridge-frame--emacs-frame))
-           (select-frame-set-input-focus lsp-bridge-frame--emacs-frame))
+              (frame-live-p acm-frame--emacs-frame))
+           (select-frame-set-input-focus acm-frame--emacs-frame))
      (delete-frame ,frame)
      (setq ,frame nil)))
 
-(defun lsp-bridge-frame-get-theme-mode ()
+(defun acm-frame-get-theme-mode ()
   "Get theme mode, dark or light."
   (prin1-to-string (frame-parameter nil 'background-mode)))
 
-(defun lsp-bridge-frame-color-blend (c1 c2 alpha)
+(defun acm-frame-color-blend (c1 c2 alpha)
   "Blend two colors C1 and C2 with ALPHA.
 C1 and C2 are hexidecimal strings.
 ALPHA is a number between 0.0 and 1.0 which corresponds to the
@@ -232,39 +231,43 @@ influence of C1 on the result."
             (round (+ (* x alpha) (* y (- 1 alpha)))))
           (color-values c1) (color-values c2))))
 
-(defun lsp-bridge-frame-init-colors (&optional force)
-  (let* ((is-dark-mode (string-equal (lsp-bridge-frame-get-theme-mode) "dark"))
+(defun acm-frame-init-colors (&optional force)
+  (let* ((is-dark-mode (string-equal (acm-frame-get-theme-mode) "dark"))
          (blend-background (if is-dark-mode "#000000" "#AAAAAA"))
-         (default-background (if (or force (equal (face-attribute 'lsp-bridge-frame-default-face :background) 'unspecified))
+         (default-background (if (or force (equal (face-attribute 'acm-frame-default-face :background) 'unspecified))
                                  (face-attribute 'default :background)
-                               (face-attribute 'lsp-bridge-frame-default-face :background))))
+                               (face-attribute 'acm-frame-default-face :background))))
     ;; Make sure font size of frame same as Emacs.
-    (set-face-attribute 'lsp-bridge-frame-buffer-size-face nil :height (face-attribute 'default :height))
+    (set-face-attribute 'acm-frame-buffer-size-face nil :height (face-attribute 'default :height))
 
     ;; Make sure menu follow the theme of Emacs.
-    (when (or force (equal (face-attribute 'lsp-bridge-frame-default-face :background) 'unspecified))
-      (set-face-background 'lsp-bridge-frame-default-face (lsp-bridge-frame-color-blend default-background blend-background (if is-dark-mode 0.8 0.9))))
-    (when (or force (equal (face-attribute 'lsp-bridge-frame-select-face :background) 'unspecified))
-      (set-face-background 'lsp-bridge-frame-select-face (lsp-bridge-frame-color-blend default-background blend-background 0.6)))
-    (when (or force (equal (face-attribute 'lsp-bridge-frame-select-face :foreground) 'unspecified))
-      (set-face-foreground 'lsp-bridge-frame-select-face (face-attribute 'font-lock-function-name-face :foreground)))))
+    (when (or force (equal (face-attribute 'acm-frame-default-face :background) 'unspecified))
+      (set-face-background 'acm-frame-default-face (acm-frame-color-blend default-background blend-background (if is-dark-mode 0.8 0.9))))
+    (when (or force (equal (face-attribute 'acm-frame-select-face :background) 'unspecified))
+      (set-face-background 'acm-frame-select-face (acm-frame-color-blend default-background blend-background 0.6)))
+    (when (or force (equal (face-attribute 'acm-frame-select-face :foreground) 'unspecified))
+      (set-face-foreground 'acm-frame-select-face (face-attribute 'font-lock-function-name-face :foreground)))))
 
-(defun lsp-bridge-frame-visible-p (frame)
+(defun acm-frame-visible-p (frame)
   (and (frame-live-p frame)
        (frame-visible-p frame)))
 
-(defun lsp-bridge-frame-adjust-frame-pos (frame &optional margin)
+(defun acm-frame-hide-frame (frame)
+  (when (acm-frame-visible-p frame)
+    (make-frame-invisible frame)))
+
+(defun acm-frame-adjust-frame-pos (frame &optional margin)
   "Adjust position to avoid out of screen."
   (let* ((frame-pos (frame-position frame))
-         (main-frame-pos (frame-position lsp-bridge-frame--emacs-frame))
+         (main-frame-pos (frame-position acm-frame--emacs-frame))
          (frame-m-x (+ (car frame-pos)
                        (frame-pixel-width frame)))
          (frame-m-y (+ (cdr frame-pos)
                        (frame-pixel-height frame)))
          (main-frame-m-x (+ (car main-frame-pos)
-                            (frame-pixel-width lsp-bridge-frame--emacs-frame)))
+                            (frame-pixel-width acm-frame--emacs-frame)))
          (main-frame-m-y (+ (cdr main-frame-pos)
-                            (frame-pixel-height lsp-bridge-frame--emacs-frame)))
+                            (frame-pixel-height acm-frame--emacs-frame)))
          (margin (or margin 50)))
     (setq main-frame-m-x (- main-frame-m-x margin))
     (setq main-frame-m-y (- main-frame-m-y margin))
@@ -277,5 +280,5 @@ influence of C1 on the result."
                             (car frame-pos)
                             (- (cdr frame-pos) (- frame-m-y main-frame-m-y))))))
 
-(provide 'lsp-bridge-frame)
-;;; lsp-bridge-frame.el ends here
+(provide 'acm-frame)
+;;; acm-frame.el ends here

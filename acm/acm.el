@@ -91,6 +91,7 @@
 (require 'cl-macs)
 
 (require 'acm-icon)
+(require 'acm-frame)
 (require 'acm-backend-yas)
 (require 'acm-backend-elisp)
 (require 'acm-backend-lsp)
@@ -103,7 +104,6 @@
 (require 'acm-backend-tailwind)
 (require 'acm-backend-citre)
 (require 'acm-quick-access)
-(require 'lsp-bridge-frame)
 
 ;;; Code:
 
@@ -207,9 +207,9 @@
   "Keymap used when popup is shown.")
 
 (defvar acm-buffer " *acm-buffer*")
-(defvar acm-frame nil)
-(defvar acm-frame-popup-point nil)
-(defvar acm-frame-popup-position nil)
+(defvar acm-menu-frame nil)
+(defvar acm-menu-frame-popup-point nil)
+(defvar acm-menu-frame-popup-position nil)
 
 (defvar acm-menu-number-cache 0)
 (defvar acm-menu-max-length-cache 0)
@@ -237,8 +237,6 @@
   "LSP Bridge mode."
   :keymap acm-mode-map
   :init-value nil)
-
-(defvar x-gtk-resize-child-frames) ;; not present on non-gtk builds
 
 (defun acm-match-symbol-p (pattern sym)
   "Return non-nil if SYM is matching an element of the PATTERN list."
@@ -306,7 +304,7 @@ Only calculate template candidate when type last character."
 (defun acm-template-candidate-update ()
   "Set `acm-template-candidate-show-p' to t to calculate template candidates."
   (setq-local acm-template-candidate-show-p t)
-  (when (lsp-bridge-frame-visible-p acm-frame)
+  (when (acm-frame-visible-p acm-menu-frame)
     (acm-update)))
 
 (cl-defmacro acm-cancel-timer (timer)
@@ -453,24 +451,24 @@ The key of candidate will change between two LSP results."
         (setq-local acm-menu-candidates menu-candidates)
 
         ;; Init colors.
-        (lsp-bridge-frame-init-colors)
+        (acm-frame-init-colors)
 
         ;; Record menu popup position and buffer.
-        (setq acm-frame-popup-point (or (car bounds) (point)))
+        (setq acm-menu-frame-popup-point (or (car bounds) (point)))
 
         ;; `posn-at-point' will failed in CI, add checker make sure CI can pass.
         ;; CI don't need popup completion menu.
-        (when (posn-at-point acm-frame-popup-point)
-          (setq acm-frame-popup-position (lsp-bridge-frame-get-popup-position acm-frame-popup-point))
+        (when (posn-at-point acm-menu-frame-popup-point)
+          (setq acm-menu-frame-popup-position (acm-frame-get-popup-position acm-menu-frame-popup-point))
 
           ;; We need delete frame first when user switch to different frame.
-          (when (and (frame-live-p acm-frame)
-                     (not (eq (frame-parent acm-frame) (selected-frame))))
-            (lsp-bridge-frame-delete-frame acm-frame)
-            (lsp-bridge-frame-delete-frame acm-doc-frame))
+          (when (and (frame-live-p acm-menu-frame)
+                     (not (eq (frame-parent acm-menu-frame) (selected-frame))))
+            (acm-frame-delete-frame acm-menu-frame)
+            (acm-frame-delete-frame acm-doc-frame))
 
           ;; Create menu frame if it not exists.
-          (lsp-bridge-frame-create-frame-if-not-exist acm-frame acm-buffer "acm frame" 0 t)
+          (acm-frame-create-frame-if-not-exist acm-menu-frame acm-buffer "acm frame" 0 t)
 
           ;; Render menu.
           (acm-menu-render menu-old-cache))
@@ -480,27 +478,27 @@ The key of candidate will change between two LSP results."
 
 (defun acm-reset-colors (&rest args)
   ;; Reset colors.
-  (lsp-bridge-frame-init-colors t)
+  (acm-frame-init-colors t)
 
   ;; Reset frame colors.
-  (when (frame-live-p acm-frame)
-    (lsp-bridge-frame-set-frame-colors acm-frame)
-    (when (frame-visible-p acm-frame)
+  (when (frame-live-p acm-menu-frame)
+    (acm-frame-set-frame-colors acm-menu-frame)
+    (when (frame-visible-p acm-menu-frame)
       (acm-menu-render
        (cons acm-menu-max-length-cache acm-menu-number-cache))))
   (when (frame-live-p acm-doc-frame)
-    (lsp-bridge-frame-set-frame-colors acm-doc-frame)))
+    (acm-frame-set-frame-colors acm-doc-frame)))
 
 (if (daemonp)
     ;; The :background of 'default is unavailable until frame is created in
     ;; daemon mode.
     (add-hook 'server-after-make-frame-hook
               (lambda ()
-                (advice-add #'load-theme :after #'lsp-bridge-frame-reset-colors)
+                (advice-add #'load-theme :after #'acm-frame-reset-colors)
                 ;; Compensation for missing the first `load-thme' in
                 ;; `after-init-hook'.
-                (lsp-bridge-frame-reset-colors)))
-  (advice-add #'load-theme :after #'lsp-bridge-frame-reset-colors))
+                (acm-frame-reset-colors)))
+  (advice-add #'load-theme :after #'acm-frame-reset-colors))
 
 (defun acm-hide ()
   (interactive)
@@ -510,8 +508,7 @@ The key of candidate will change between two LSP results."
     (acm-mode -1)
 
     ;; Hide menu frame.
-    (when (frame-live-p acm-frame)
-      (make-frame-invisible acm-frame))
+    (acm-frame-hide-frame acm-menu-frame)
 
     ;; Hide doc frame.
     (acm-doc-hide)
@@ -542,8 +539,7 @@ The key of candidate will change between two LSP results."
   (acm-doc--hide))
 
 (defun acm-doc--hide()
-  (when (lsp-bridge-frame-visible-p acm-doc-frame)
-    (make-frame-invisible acm-doc-frame))
+  (acm-frame-hide-frame acm-doc-frame)
 
   (acm-cancel-timer acm-markdown-render-timer)
 
@@ -557,7 +553,7 @@ The key of candidate will change between two LSP results."
 (defun acm-complete ()
   (interactive)
   (let* ((candidate-info (acm-menu-current-candidate))
-         (bound-start acm-frame-popup-point)
+         (bound-start acm-menu-frame-popup-point)
          (backend (plist-get candidate-info :backend))
          (candidate-expand (intern-soft (format "acm-backend-%s-candidate-expand" backend))))
     (if (fboundp candidate-expand)
@@ -571,15 +567,14 @@ The key of candidate will change between two LSP results."
 (defun acm-complete-or-expand-yas-snippet ()
   "Do complete or expand yasnippet, you need binding this funtion to `<tab>' in `yas-keymap'."
   (interactive)
-  (if (and (boundp 'acm-frame)
-           (lsp-bridge-frame-visible-p acm-frame))
+  (if (acm-frame-visible-p acm-menu-frame)
       (acm-complete)
     (yas-next-field-or-maybe-expand)))
 
 (defun acm-insert-common ()
   "Insert common prefix of menu."
   (interactive)
-  (when (lsp-bridge-frame-visible-p acm-frame)
+  (when (acm-frame-visible-p acm-menu-frame)
     (let* ((common-string "")
            (items (mapcar (lambda (v) (plist-get v :label)) acm-menu-candidates))
            (item-min-length (cl-reduce #'min (mapcar #'string-width items)))
@@ -644,17 +639,17 @@ The key of candidate will change between two LSP results."
                ;; Render annotation color.
                (propertize (format "%s \n" (capitalize annotation-text))
                            'face
-                           (if (equal item-index menu-index) 'lsp-bridge-frame-select-face 'font-lock-doc-face))
+                           (if (equal item-index menu-index) 'acm-frame-select-face 'font-lock-doc-face))
                ))
 
         ;; Render current candidate.
         (when (equal item-index menu-index)
-          (add-face-text-property 0 (length candidate-line) 'lsp-bridge-frame-select-face 'append candidate-line)
+          (add-face-text-property 0 (length candidate-line) 'acm-frame-select-face 'append candidate-line)
 
           ;; Hide doc frame if some backend not support fetch candidate documentation.
           (when (and
                  (not (fboundp (intern-soft (format "acm-backend-%s-candidate-doc" (plist-get v :backend)))))
-                 (lsp-bridge-frame-visible-p acm-doc-frame))
+                 (acm-frame-visible-p acm-doc-frame))
             (acm-doc-hide)))
 
         ;; Insert candidate line.
@@ -671,10 +666,10 @@ The key of candidate will change between two LSP results."
   "Adjust menu frame position."
   (let* ((emacs-width (frame-pixel-width))
          (emacs-height (frame-pixel-height))
-         (acm-frame-width (frame-pixel-width acm-frame))
-         (acm-frame-height (frame-pixel-height acm-frame))
-         (cursor-x (car acm-frame-popup-position))
-         (cursor-y (cdr acm-frame-popup-position))
+         (acm-frame-width (frame-pixel-width acm-menu-frame))
+         (acm-frame-height (frame-pixel-height acm-menu-frame))
+         (cursor-x (car acm-menu-frame-popup-position))
+         (cursor-y (cdr acm-menu-frame-popup-position))
          (offset-x (* (window-font-width) acm-icon-width))
          (offset-y (line-pixel-height))
          (acm-frame-x (if (> (+ cursor-x acm-frame-width) emacs-width)
@@ -683,7 +678,7 @@ The key of candidate will change between two LSP results."
          (acm-frame-y (if (> (+ cursor-y acm-frame-height) emacs-height)
                           (- cursor-y acm-frame-height)
                         (+ cursor-y offset-y))))
-    (lsp-bridge-frame-set-frame-position acm-frame acm-frame-x acm-frame-y)))
+    (acm-frame-set-frame-position acm-menu-frame acm-frame-x acm-frame-y)))
 
 (defun acm-doc-try-show ()
   (when acm-enable-doc
@@ -700,7 +695,7 @@ The key of candidate will change between two LSP results."
                          candidate-doc
                        (format "%S" candidate-doc))))
             ;; Create doc frame if it not exist.
-            (lsp-bridge-frame-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame" 1 t)
+            (acm-frame-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame" 1 t)
             (setq acm-doc-frame-hide-p nil)
 
             ;; Insert documentation and turn on wrap line.
@@ -730,9 +725,9 @@ The key of candidate will change between two LSP results."
 (defun acm-doc-frame-adjust ()
   (let* ((emacs-width (frame-pixel-width))
          (emacs-height (frame-pixel-height))
-         (acm-frame-width (frame-pixel-width acm-frame))
-         (acm-frame-height (frame-pixel-height acm-frame))
-         (acm-frame-pos (frame-position acm-frame))
+         (acm-frame-width (frame-pixel-width acm-menu-frame))
+         (acm-frame-height (frame-pixel-height acm-menu-frame))
+         (acm-frame-pos (frame-position acm-menu-frame))
          (acm-frame-x (car acm-frame-pos))
          (acm-frame-y (cdr acm-frame-pos))
 
@@ -745,7 +740,7 @@ The key of candidate will change between two LSP results."
          (acm-doc-frame-max-height (max acm-frame-top-distance acm-frame-bottom-distance)))
 
     ;; Make sure doc frame size not out of Emacs area.
-    (lsp-bridge-frame-set-frame-max-size acm-doc-frame
+    (acm-frame-set-frame-max-size acm-doc-frame
                                          (ceiling (/ acm-doc-frame-max-width (frame-char-width)))
                                          (min (ceiling (/ acm-doc-frame-max-height (window-default-line-height)))
                                               acm-doc-frame-max-lines))
@@ -756,7 +751,7 @@ The key of candidate will change between two LSP results."
                                 (- acm-frame-x acm-doc-frame-width)
                               (+ acm-frame-x acm-frame-width)))
            (acm-doc-frame-y acm-frame-y))
-      (lsp-bridge-frame-set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y))))
+      (acm-frame-set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y))))
 
 (defun acm-menu-current-candidate ()
   "Get current candidate with menu index and offset."
@@ -783,10 +778,10 @@ The key of candidate will change between two LSP results."
     ;; or menu width not change when switch to next page.
     (when (or (not (equal menu-old-max-length menu-new-max-length))
               (not (equal menu-old-number menu-new-number)))
-      (lsp-bridge-frame-set-frame-max-size acm-frame)
+      (acm-frame-set-frame-max-size acm-menu-frame)
 
       ;; Adjust doc frame with menu frame position.
-      (when (lsp-bridge-frame-visible-p acm-doc-frame)
+      (when (acm-frame-visible-p acm-doc-frame)
         (acm-doc-frame-adjust)))
 
     ;; Adjust menu frame position.
@@ -870,21 +865,21 @@ The key of candidate will change between two LSP results."
 (defun acm-doc-scroll-up ()
   (interactive)
   (with-current-buffer acm-doc-buffer
-    (when (framep acm-frame)
+    (when (framep acm-menu-frame)
       (with-selected-frame acm-doc-frame
         (scroll-up-command)))))
 
 (defun acm-doc-scroll-down ()
   (interactive)
   (with-current-buffer acm-doc-buffer
-    (when (framep acm-frame)
+    (when (framep acm-menu-frame)
       (with-selected-frame acm-doc-frame
         (scroll-down-command)))))
 
 (defun acm-doc-toggle ()
   "Toggle documentation preview for selected candidate."
   (interactive)
-  (if (lsp-bridge-frame-visible-p acm-doc-frame)
+  (if (acm-frame-visible-p acm-doc-frame)
       (acm-doc-hide)
     (let ((acm-enable-doc t))
       (acm-doc-try-show))))
@@ -930,7 +925,7 @@ The key of candidate will change between two LSP results."
   (setq-local mode-line-format nil))
 
 (defun acm-doc-markdown-render-content (doc)
-  (when (and (lsp-bridge-frame-visible-p acm-doc-frame)
+  (when (and (acm-frame-visible-p acm-doc-frame)
              (not (string-equal doc acm-markdown-render-doc)))
     (with-current-buffer (get-buffer-create acm-doc-buffer)
       (acm-markdown-render-content))
