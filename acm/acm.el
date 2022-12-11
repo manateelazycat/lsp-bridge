@@ -91,6 +91,7 @@
 (require 'cl-macs)
 
 (require 'acm-icon)
+(require 'acm-frame)
 (require 'acm-backend-yas)
 (require 'acm-backend-elisp)
 (require 'acm-backend-lsp)
@@ -206,9 +207,9 @@
   "Keymap used when popup is shown.")
 
 (defvar acm-buffer " *acm-buffer*")
-(defvar acm-frame nil)
-(defvar acm-frame-popup-point nil)
-(defvar acm-frame-popup-position nil)
+(defvar acm-menu-frame nil)
+(defvar acm-menu-frame-popup-point nil)
+(defvar acm-menu-frame-popup-position nil)
 
 (defvar acm-menu-number-cache 0)
 (defvar acm-menu-max-length-cache 0)
@@ -223,41 +224,10 @@
 (defvar acm-doc-frame nil)
 (defvar acm-doc-frame-hide-p nil)
 (defvar acm-doc-buffer " *acm-doc-buffer*")
-(defvar acm--mouse-ignore-map
-  (let ((map (make-sparse-keymap)))
-    (dotimes (i 7)
-      (dolist (k '(mouse down-mouse drag-mouse double-mouse triple-mouse))
-        (define-key map (vector (intern (format "%s-%s" k (1+ i)))) #'ignore)))
-    map)
-  "Ignore all mouse clicks.")
-
-(defface acm-default-face
-  '()
-  "Default face, foreground and background colors used for the popup.")
-
-(defface acm-buffer-size-face
-  '()
-  "Face for content area.")
-
-(defface acm-select-face
-  '()
-  "Face used to highlight the currently selected candidate.")
-
-(defface acm-border-face
-  '((((class color) (min-colors 88) (background dark)) :background "#323232")
-    (((class color) (min-colors 88) (background light)) :background "#d7d7d7")
-    (t :background "gray"))
-  "The background color used for the thin border.")
 
 (defface acm-deprecated-face
   '((t :inherit shadow :strike-through t))
   "Face used for deprecated candidates.")
-
-(defconst acm-fit-frame-to-buffer
-  (if (functionp 'fit-frame-to-buffer-1)
-      'fit-frame-to-buffer-1
-    'fit-frame-to-buffer)
-  "Function used to fit frame to buffer.")
 
 (defsubst acm-indent-pixel (xpos)
   "Return a display property that aligns to XPOS."
@@ -267,106 +237,6 @@
   "LSP Bridge mode."
   :keymap acm-mode-map
   :init-value nil)
-
-(defvar x-gtk-resize-child-frames) ;; not present on non-gtk builds
-(defun acm-make-frame (frame-name)
-  (let* ((after-make-frame-functions nil)
-         (parent (selected-frame))
-         (x-gtk-resize-child-frames
-          (let ((case-fold-search t))
-            (and
-             ;; Fix resizing frame on gtk3/gnome.
-             (string-match-p "gtk3" system-configuration-features)
-             (string-match-p "gnome\\|cinnamon"
-                             (or (getenv "XDG_CURRENT_DESKTOP")
-                                 (getenv "DESKTOP_SESSION") ""))
-             'resize-mode)))
-         frame)
-    (setq frame (make-frame
-                 `((name . ,frame-name)
-                   (parent-frame . ,parent)
-                   (no-accept-focus . t)
-                   (no-focus-on-map . t)
-                   (minibuffer . nil)
-                   (min-width . t)
-                   (min-height . t)
-                   (width . 0)
-                   (height . 0)
-                   (border-width . 0)
-                   (internal-border-width . 1)
-                   (child-frame-border-width . 1)
-                   (left-fringe . 0)
-                   (right-fringe . 0)
-                   (vertical-scroll-bars . nil)
-                   (horizontal-scroll-bars . nil)
-                   (menu-bar-lines . 0)
-                   (tool-bar-lines . 0)
-                   (tab-bar-lines . 0)
-                   (no-other-frame . t)
-                   (no-other-window . t)
-                   (no-delete-other-windows . t)
-                   (unsplittable . t)
-                   (undecorated . t)
-                   (cursor-type . nil)
-                   (visibility . nil)
-                   (no-special-glyphs . t)
-                   (desktop-dont-save . t)
-                   (mode-line-format . nil)
-                   )))
-
-    (acm-set-frame-colors frame)
-
-    ;; Reset to the input focus to the parent frame.
-    (redirect-frame-focus frame parent)
-    frame))
-
-(cl-defmacro acm-create-frame-if-not-exist (frame frame-buffer frame-name margin)
-  `(unless (frame-live-p ,frame)
-     (setq ,frame (acm-make-frame ,frame-name))
-
-     (with-current-buffer (get-buffer-create ,frame-buffer)
-       ;; Install mouse ignore map
-       (use-local-map acm--mouse-ignore-map)
-
-       ;; Set buffer arguments.
-       (dolist (var '((mode-line-format . nil)
-                      (header-line-format . nil)
-                      (tab-line-format . nil)
-                      (tab-bar-format . nil)
-                      (frame-title-format . "")
-                      (truncate-lines . t)
-                      (cursor-in-non-selected-windows . nil)
-                      (cursor-type . nil)
-                      (show-trailing-whitespace . nil)
-                      (display-line-numbers . nil)
-                      (left-fringe-width . nil)
-                      (right-fringe-width . nil)
-                      (left-margin-width . ,margin)
-                      (right-margin-width . ,margin)
-                      (fringes-outside-margins . 0)))
-         (set (make-local-variable (car var)) (cdr var)))
-       (buffer-face-set 'acm-buffer-size-face))
-
-     ;; Set frame window and buffer.
-     (let ((win (frame-root-window ,frame)))
-       (set-window-buffer win ,frame-buffer)
-       ;; Mark window as dedicated to prevent frame reuse.
-       (set-window-dedicated-p win t))))
-
-(defun acm-set-frame-position (frame x y)
-  ;; Make sure frame visible before set position.
-  (unless (frame-visible-p frame)
-    ;; Force redisplay, otherwise the popup sometimes does not display content.
-    (redisplay 'force)
-    (make-frame-visible frame))
-
-  (set-frame-position frame x y))
-
-(defun acm-set-frame-size (frame &optional max-width max-height)
-  ;; Set the smallest window size value to ensure that frame adjusts to the accurate size of its content.
-  (let* ((window-min-height 0)
-         (window-min-width 0))
-    (funcall acm-fit-frame-to-buffer frame max-height nil max-width nil)))
 
 (defun acm-match-symbol-p (pattern sym)
   "Return non-nil if SYM is matching an element of the PATTERN list."
@@ -393,25 +263,6 @@
     (if bound
         (buffer-substring-no-properties (car bound) (cdr bound))
       "")))
-
-(defun acm-color-blend (c1 c2 alpha)
-  "Blend two colors C1 and C2 with ALPHA.
-C1 and C2 are hexidecimal strings.
-ALPHA is a number between 0.0 and 1.0 which corresponds to the
-influence of C1 on the result."
-  (apply (lambda (r g b)
-           (format "#%02x%02x%02x"
-                   (ash r -8)
-                   (ash g -8)
-                   (ash b -8)))
-         (cl-mapcar
-          (lambda (x y)
-            (round (+ (* x alpha) (* y (- 1 alpha)))))
-          (color-values c1) (color-values c2))))
-
-(defun acm-get-theme-mode ()
-  "Get theme mode, dark or light."
-  (prin1-to-string (frame-parameter nil 'background-mode)))
 
 (defun acm-candidate-fuzzy-search (keyword candidate)
   "Fuzzy search candidate."
@@ -453,7 +304,7 @@ Only calculate template candidate when type last character."
 (defun acm-template-candidate-update ()
   "Set `acm-template-candidate-show-p' to t to calculate template candidates."
   (setq-local acm-template-candidate-show-p t)
-  (when (acm-frame-visible-p acm-frame)
+  (when (acm-frame-visible-p acm-menu-frame)
     (acm-update)))
 
 (cl-defmacro acm-cancel-timer (timer)
@@ -600,23 +451,24 @@ The key of candidate will change between two LSP results."
         (setq-local acm-menu-candidates menu-candidates)
 
         ;; Init colors.
-        (acm-init-colors)
+        (acm-frame-init-colors)
 
         ;; Record menu popup position and buffer.
-        (setq acm-frame-popup-point (or (car bounds) (point)))
+        (setq acm-menu-frame-popup-point (or (car bounds) (point)))
 
         ;; `posn-at-point' will failed in CI, add checker make sure CI can pass.
         ;; CI don't need popup completion menu.
-        (when (posn-at-point acm-frame-popup-point)
-          (setq acm-frame-popup-position (acm-frame-get-popup-position))
+        (when (posn-at-point acm-menu-frame-popup-point)
+          (setq acm-menu-frame-popup-position (acm-frame-get-popup-position acm-menu-frame-popup-point))
 
           ;; We need delete frame first when user switch to different frame.
-          (when (and (frame-live-p acm-frame)
-                     (not (eq (frame-parent acm-frame) (selected-frame))))
-            (acm-delete-frames))
+          (when (and (frame-live-p acm-menu-frame)
+                     (not (eq (frame-parent acm-menu-frame) (selected-frame))))
+            (acm-frame-delete-frame acm-menu-frame)
+            (acm-frame-delete-frame acm-doc-frame))
 
           ;; Create menu frame if it not exists.
-          (acm-create-frame-if-not-exist acm-frame acm-buffer "acm frame" 0)
+          (acm-frame-create-frame-if-not-exist acm-menu-frame acm-buffer "acm frame" 0 t)
 
           ;; Render menu.
           (acm-menu-render menu-old-cache))
@@ -624,87 +476,29 @@ The key of candidate will change between two LSP results."
      (t
       (acm-hide)))))
 
-(defun acm-delete-frames ()
-  (when (frame-live-p acm-frame)
-    (delete-frame acm-frame)
-    (setq acm-frame nil))
-
-  (when (frame-live-p acm-doc-frame)
-    (delete-frame acm-doc-frame)
-    (setq acm-doc-frame nil)))
-
-(defun acm-init-colors (&optional force)
-  (let* ((is-dark-mode (string-equal (acm-get-theme-mode) "dark"))
-         (blend-background (if is-dark-mode "#000000" "#AAAAAA"))
-         (default-background (if (or force (equal (face-attribute 'acm-default-face :background) 'unspecified))
-                                 (face-attribute 'default :background)
-                               (face-attribute 'acm-default-face :background))))
-    ;; Make sure font size of frame same as Emacs.
-    (set-face-attribute 'acm-buffer-size-face nil :height (face-attribute 'default :height))
-
-    ;; Make sure menu follow the theme of Emacs.
-    (when (or force (equal (face-attribute 'acm-default-face :background) 'unspecified))
-      (set-face-background 'acm-default-face (acm-color-blend default-background blend-background (if is-dark-mode 0.8 0.9))))
-    (when (or force (equal (face-attribute 'acm-select-face :background) 'unspecified))
-      (set-face-background 'acm-select-face (acm-color-blend default-background blend-background 0.6)))
-    (when (or force (equal (face-attribute 'acm-select-face :foreground) 'unspecified))
-      (set-face-foreground 'acm-select-face (face-attribute 'font-lock-function-name-face :foreground)))))
-
-(defun acm-set-frame-colors (frame)
-  ;; Set frame border color.
-  (let* ((face (if (facep 'child-frame-border) 'child-frame-border 'internal-border))
-         (new (face-attribute 'acm-border-face :background nil 'default)))
-    (unless (equal (face-attribute face :background frame 'default) new)
-      (set-face-background face new frame)))
-
-  ;; Set frame background color.
-  (let ((new (face-attribute 'acm-default-face :background nil 'default)))
-    (unless (equal (frame-parameter frame 'background-color) new)
-      (set-frame-parameter frame 'background-color new))))
-
 (defun acm-reset-colors (&rest args)
   ;; Reset colors.
-  (acm-init-colors t)
+  (acm-frame-init-colors t)
 
   ;; Reset frame colors.
-  (when (frame-live-p acm-frame)
-    (acm-set-frame-colors acm-frame)
-    (when (frame-visible-p acm-frame)
+  (when (frame-live-p acm-menu-frame)
+    (acm-frame-set-frame-colors acm-menu-frame)
+    (when (frame-visible-p acm-menu-frame)
       (acm-menu-render
        (cons acm-menu-max-length-cache acm-menu-number-cache))))
   (when (frame-live-p acm-doc-frame)
-    (acm-set-frame-colors acm-doc-frame)))
+    (acm-frame-set-frame-colors acm-doc-frame)))
 
 (if (daemonp)
     ;; The :background of 'default is unavailable until frame is created in
     ;; daemon mode.
     (add-hook 'server-after-make-frame-hook
               (lambda ()
-                (advice-add #'load-theme :after #'acm-reset-colors)
+                (advice-add #'load-theme :after #'acm-frame-reset-colors)
                 ;; Compensation for missing the first `load-thme' in
                 ;; `after-init-hook'.
-                (acm-reset-colors)))
-  (advice-add #'load-theme :after #'acm-reset-colors))
-
-(defun acm-frame-get-popup-position ()
-  (let* ((edges (window-pixel-edges))
-         (window-left (+ (nth 0 edges)
-                         ;; We need adjust left margin for buffer centering module.
-                         (/ (- (window-pixel-width)
-                               (window-body-width nil t))
-                            2)))
-         (window-top (nth 1 edges))
-         (pos (posn-x-y (posn-at-point acm-frame-popup-point)))
-         (x (car pos))
-         (y (cdr pos))
-         (offset-y
-          ;; We need move down to skip tab-line and header-line.
-          (if (version< emacs-version "27.0")
-              (window-header-line-height)
-            (+ (window-tab-line-height)
-               (window-header-line-height)))))
-    (cons (+ x window-left)
-          (+ y window-top offset-y))))
+                (acm-frame-reset-colors)))
+  (advice-add #'load-theme :after #'acm-frame-reset-colors))
 
 (defun acm-hide ()
   (interactive)
@@ -714,8 +508,7 @@ The key of candidate will change between two LSP results."
     (acm-mode -1)
 
     ;; Hide menu frame.
-    (when (frame-live-p acm-frame)
-      (make-frame-invisible acm-frame))
+    (acm-frame-hide-frame acm-menu-frame)
 
     ;; Hide doc frame.
     (acm-doc-hide)
@@ -746,8 +539,7 @@ The key of candidate will change between two LSP results."
   (acm-doc--hide))
 
 (defun acm-doc--hide()
-  (when (acm-frame-visible-p acm-doc-frame)
-    (make-frame-invisible acm-doc-frame))
+  (acm-frame-hide-frame acm-doc-frame)
 
   (acm-cancel-timer acm-markdown-render-timer)
 
@@ -761,7 +553,7 @@ The key of candidate will change between two LSP results."
 (defun acm-complete ()
   (interactive)
   (let* ((candidate-info (acm-menu-current-candidate))
-         (bound-start acm-frame-popup-point)
+         (bound-start acm-menu-frame-popup-point)
          (backend (plist-get candidate-info :backend))
          (candidate-expand (intern-soft (format "acm-backend-%s-candidate-expand" backend))))
     (if (fboundp candidate-expand)
@@ -775,15 +567,14 @@ The key of candidate will change between two LSP results."
 (defun acm-complete-or-expand-yas-snippet ()
   "Do complete or expand yasnippet, you need binding this funtion to `<tab>' in `yas-keymap'."
   (interactive)
-  (if (and (boundp 'acm-frame)
-           (acm-frame-visible-p acm-frame))
+  (if (acm-frame-visible-p acm-menu-frame)
       (acm-complete)
     (yas-next-field-or-maybe-expand)))
 
 (defun acm-insert-common ()
   "Insert common prefix of menu."
   (interactive)
-  (when (acm-frame-visible-p acm-frame)
+  (when (acm-frame-visible-p acm-menu-frame)
     (let* ((common-string "")
            (items (mapcar (lambda (v) (plist-get v :label)) acm-menu-candidates))
            (item-min-length (cl-reduce #'min (mapcar #'string-width items)))
@@ -848,12 +639,12 @@ The key of candidate will change between two LSP results."
                ;; Render annotation color.
                (propertize (format "%s \n" (capitalize annotation-text))
                            'face
-                           (if (equal item-index menu-index) 'acm-select-face 'font-lock-doc-face))
+                           (if (equal item-index menu-index) 'acm-frame-select-face 'font-lock-doc-face))
                ))
 
         ;; Render current candidate.
         (when (equal item-index menu-index)
-          (add-face-text-property 0 (length candidate-line) 'acm-select-face 'append candidate-line)
+          (add-face-text-property 0 (length candidate-line) 'acm-frame-select-face 'append candidate-line)
 
           ;; Hide doc frame if some backend not support fetch candidate documentation.
           (when (and
@@ -875,10 +666,10 @@ The key of candidate will change between two LSP results."
   "Adjust menu frame position."
   (let* ((emacs-width (frame-pixel-width))
          (emacs-height (frame-pixel-height))
-         (acm-frame-width (frame-pixel-width acm-frame))
-         (acm-frame-height (frame-pixel-height acm-frame))
-         (cursor-x (car acm-frame-popup-position))
-         (cursor-y (cdr acm-frame-popup-position))
+         (acm-frame-width (frame-pixel-width acm-menu-frame))
+         (acm-frame-height (frame-pixel-height acm-menu-frame))
+         (cursor-x (car acm-menu-frame-popup-position))
+         (cursor-y (cdr acm-menu-frame-popup-position))
          (offset-x (* (window-font-width) acm-icon-width))
          (offset-y (line-pixel-height))
          (acm-frame-x (if (> (+ cursor-x acm-frame-width) emacs-width)
@@ -887,7 +678,7 @@ The key of candidate will change between two LSP results."
          (acm-frame-y (if (> (+ cursor-y acm-frame-height) emacs-height)
                           (- cursor-y acm-frame-height)
                         (+ cursor-y offset-y))))
-    (acm-set-frame-position acm-frame acm-frame-x acm-frame-y)))
+    (acm-frame-set-frame-position acm-menu-frame acm-frame-x acm-frame-y)))
 
 (defun acm-doc-try-show ()
   (when acm-enable-doc
@@ -904,7 +695,7 @@ The key of candidate will change between two LSP results."
                          candidate-doc
                        (format "%S" candidate-doc))))
             ;; Create doc frame if it not exist.
-            (acm-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame" 1)
+            (acm-frame-create-frame-if-not-exist acm-doc-frame acm-doc-buffer "acm doc frame" 1 t)
             (setq acm-doc-frame-hide-p nil)
 
             ;; Insert documentation and turn on wrap line.
@@ -934,9 +725,9 @@ The key of candidate will change between two LSP results."
 (defun acm-doc-frame-adjust ()
   (let* ((emacs-width (frame-pixel-width))
          (emacs-height (frame-pixel-height))
-         (acm-frame-width (frame-pixel-width acm-frame))
-         (acm-frame-height (frame-pixel-height acm-frame))
-         (acm-frame-pos (frame-position acm-frame))
+         (acm-frame-width (frame-pixel-width acm-menu-frame))
+         (acm-frame-height (frame-pixel-height acm-menu-frame))
+         (acm-frame-pos (frame-position acm-menu-frame))
          (acm-frame-x (car acm-frame-pos))
          (acm-frame-y (cdr acm-frame-pos))
 
@@ -949,10 +740,10 @@ The key of candidate will change between two LSP results."
          (acm-doc-frame-max-height (max acm-frame-top-distance acm-frame-bottom-distance)))
 
     ;; Make sure doc frame size not out of Emacs area.
-    (acm-set-frame-size acm-doc-frame
-                        (ceiling (/ acm-doc-frame-max-width (frame-char-width)))
-                        (min (ceiling (/ acm-doc-frame-max-height (window-default-line-height)))
-                             acm-doc-frame-max-lines))
+    (acm-frame-set-frame-max-size acm-doc-frame
+                                         (ceiling (/ acm-doc-frame-max-width (frame-char-width)))
+                                         (min (ceiling (/ acm-doc-frame-max-height (window-default-line-height)))
+                                              acm-doc-frame-max-lines))
 
     ;; Adjust doc frame with it's size.
     (let* ((acm-doc-frame-width (frame-pixel-width acm-doc-frame))
@@ -960,7 +751,7 @@ The key of candidate will change between two LSP results."
                                 (- acm-frame-x acm-doc-frame-width)
                               (+ acm-frame-x acm-frame-width)))
            (acm-doc-frame-y acm-frame-y))
-      (acm-set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y))))
+      (acm-frame-set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y))))
 
 (defun acm-menu-current-candidate ()
   "Get current candidate with menu index and offset."
@@ -987,7 +778,7 @@ The key of candidate will change between two LSP results."
     ;; or menu width not change when switch to next page.
     (when (or (not (equal menu-old-max-length menu-new-max-length))
               (not (equal menu-old-number menu-new-number)))
-      (acm-set-frame-size acm-frame)
+      (acm-frame-set-frame-max-size acm-menu-frame)
 
       ;; Adjust doc frame with menu frame position.
       (when (acm-frame-visible-p acm-doc-frame)
@@ -1032,10 +823,6 @@ The key of candidate will change between two LSP results."
   (let ((prev-char (char-before)))
     (if prev-char (char-to-string prev-char) "")))
 
-(defun acm-frame-visible-p (frame)
-  (and (frame-live-p frame)
-       (frame-visible-p frame)))
-
 (defun acm-is-elisp-mode-p ()
   (or (derived-mode-p 'emacs-lisp-mode)
       (derived-mode-p 'inferior-emacs-lisp-mode)
@@ -1078,14 +865,14 @@ The key of candidate will change between two LSP results."
 (defun acm-doc-scroll-up ()
   (interactive)
   (with-current-buffer acm-doc-buffer
-    (when (framep acm-frame)
+    (when (framep acm-menu-frame)
       (with-selected-frame acm-doc-frame
         (scroll-up-command)))))
 
 (defun acm-doc-scroll-down ()
   (interactive)
   (with-current-buffer acm-doc-buffer
-    (when (framep acm-frame)
+    (when (framep acm-menu-frame)
       (with-selected-frame acm-doc-frame
         (scroll-down-command)))))
 

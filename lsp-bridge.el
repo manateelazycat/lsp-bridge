@@ -77,6 +77,12 @@
 (require 'seq)
 (require 'subr-x)
 
+(defvar acm-library-path (expand-file-name "acm" (if load-file-name
+                                                     (file-name-directory load-file-name)
+                                                   default-directory)))
+(add-to-list 'load-path acm-library-path t)
+(require 'acm-frame)
+
 (require 'lsp-bridge-epc)
 (require 'lsp-bridge-ref)
 (require 'lsp-bridge-jdtls)
@@ -92,10 +98,6 @@
   "LSP-Bridge group."
   :group 'applications)
 
-(defvar acm-library-path (expand-file-name "acm" (if load-file-name
-                                                     (file-name-directory load-file-name)
-                                                   default-directory)))
-(add-to-list 'load-path acm-library-path t)
 (require 'acm)
 
 (setq acm-backend-lsp-fetch-completion-item-func 'lsp-bridge-fetch-completion-item-info)
@@ -953,7 +955,7 @@ So we build this macro to restore postion after code format."
   "If `lsp-bridge-complete-manually' is non-nil, hide completion menu."
   (or
    ;; Always update candidate if completion menu is visible now.
-   (acm-frame-visible-p acm-frame)
+   (acm-frame-visible-p acm-menu-frame)
    ;; Don't update candidate if `lsp-bridge-complete-manually' is non-nil.
    (not lsp-bridge-complete-manually)))
 
@@ -1103,8 +1105,7 @@ So we build this macro to restore postion after code format."
       (lsp-bridge-call-async "search_file_words_rebuild_cache"))))
 
 (defun lsp-bridge-completion-ui-visible-p ()
-  (and (frame-live-p acm-frame)
-       (frame-visible-p acm-frame)))
+  (acm-frame-visible-p acm-menu-frame))
 
 (defun lsp-bridge-monitor-after-save ()
   (lsp-bridge-call-file-api "save_file" (buffer-name)))
@@ -1771,8 +1772,11 @@ SymbolKind (defined in the LSP)."
 (defun lsp-bridge-code-action-popup-quit ()
   (interactive)
   (acm-cancel-timer lsp-bridge-code-action-popup-maybe-preview-timer)
-  (posframe-delete "*lsp-bridge-code-action-menu*")
-  (select-frame-set-input-focus lsp-bridge-call-hierarchy--emacs-frame)
+
+  (acm-frame-delete-frame lsp-bridge-call-hierarchy--frame)
+  (kill-buffer "*lsp-bridge-code-action-menu*")
+
+  (advice-remove 'lsp-bridge-call-hierarchy-maybe-preview #'lsp-bridge-code-action-popup-maybe-preview)
   (advice-remove 'lsp-bridge-call-hierarchy-select #'lsp-bridge-code-action-popup-select)
   (advice-remove 'lsp-bridge-call-hierarchy-quit #'lsp-bridge-code-action-popup-quit)
   (select-window (get-buffer-window lsp-bridge-code-action--current-buffer)))
@@ -1817,12 +1821,11 @@ SymbolKind (defined in the LSP)."
       (setq-local mode-line-format nil)
       (setq-local truncate-lines t))
 
-    (set-frame-width lsp-bridge-call-hierarchy--frame (max width call-frame-width))
-    (set-frame-height lsp-bridge-call-hierarchy--frame (+ height (length lsp-bridge-call-hierarchy--popup-response)))
-
-    (lsp-bridge-call-hierarchy-adjust-frame-pos)
-
+    (acm-frame-set-frame-size lsp-bridge-call-hierarchy--frame (max width call-frame-width)
+                                     (+ height (length lsp-bridge-call-hierarchy--popup-response)))
+    (acm-frame-adjust-frame-pos lsp-bridge-call-hierarchy--frame)
     (select-frame-set-input-focus lsp-bridge-call-hierarchy--frame)
+
     (let ((menu-window (get-buffer-window "*lsp-bridge-code-action-menu*"
                                           lsp-bridge-call-hierarchy--frame))
           (frame-window-list (window-list lsp-bridge-call-hierarchy--frame)))
@@ -1855,7 +1858,7 @@ SymbolKind (defined in the LSP)."
         (insert buffer-content)
         (lsp-bridge-code-action--fix-do action (current-buffer))
         (diff-no-select lsp-bridge-code-action--current-buffer (current-buffer)
-                        nil nil "*lsp-bridge-code-action-preview*"))
+                        nil nil (get-buffer-create "*lsp-bridge-code-action-preview*")))
 
       (if-let ((proc (get-buffer-process "*lsp-bridge-code-action-preview*")))
           (set-process-sentinel
@@ -1874,44 +1877,41 @@ SymbolKind (defined in the LSP)."
   (let ((recentf-keep '(".*" . nil)) ;; not push temp file in recentf-list
         (recentf-exclude '(".*"))
         (menu-lenght (length menu-items))
-        (menu-width 0))
-    (with-current-buffer (get-buffer-create "*lsp-bridge-code-action-menu*")
-      (cl-loop for i from 0 to (1- (length menu-items))
-               do (let* ((title (car (nth i menu-items)))
-                         (format-line (format "%d. %s\n" (1+ i) title))
-                         (line-width (length format-line)))
-                    (insert format-line)
-                    (setq menu-width (max line-width menu-width)))))
-
+        (menu-buffer (get-buffer-create "*lsp-bridge-code-action-menu*"))
+        (menu-width 0)
+        (cursor (acm-frame-get-popup-position (point))))
+    ;; prepare for previewing
     (setq lsp-bridge-code-action--current-buffer (current-buffer))
 
-    ;; prepare for previewing
-    (get-buffer-create "*lsp-bridge-code-action-preview*")
     (setq lsp-bridge-code-action--oldfile (make-temp-file
                                            (buffer-name) nil nil (buffer-string)))
     (setq lsp-bridge-code-action--preview-alist '())
 
     ;; reuse hierarchy popup keymap and mode here
     (setq lsp-bridge-call-hierarchy--popup-response menu-items)
-    (setq lsp-bridge-call-hierarchy--emacs-frame (selected-frame))
-    (setq lsp-bridge-call-hierarchy--frame
-          (posframe-show "*lsp-bridge-code-action-menu*"
-                         :position (point)
-                         :border-width 2
-                         :border-color "gray"
-                         :accept-focus t
-                         :min-height (length menu-items)
-                         :max-height (length menu-items)
-                         :max-width menu-width
-                         :min-width menu-width))
-    (select-frame-set-input-focus lsp-bridge-call-hierarchy--frame)
 
-    (lsp-bridge-call-hierarchy-mode)
-    (setq-local lsp-bridge-call-hierarchy-preview-height 0) ;; disable preview
+    (acm-frame-create-frame-if-not-exist lsp-bridge-call-hierarchy--frame
+                                         menu-buffer "code action" 0 nil)
+
+    (with-current-buffer menu-buffer
+      (cl-loop for i from 0 to (1- (length menu-items))
+               do (let* ((title (car (nth i menu-items)))
+                         (format-line (format "%d. %s\n" (1+ i) title))
+                         (line-width (length format-line)))
+                    (insert format-line)
+                    (setq menu-width (max line-width menu-width))))
+      (lsp-bridge-call-hierarchy-mode)
+      (goto-char (point-min))
+      (setq-local cursor-type nil)
+      (setq-local truncate-lines t)
+      (setq-local mode-line-format nil))
+
+    (acm-frame-set-frame-position lsp-bridge-call-hierarchy--frame (car cursor) (cdr cursor))
+    (acm-frame-set-frame-size lsp-bridge-call-hierarchy--frame menu-width menu-lenght)
+
     (advice-add 'lsp-bridge-call-hierarchy-maybe-preview :override #'lsp-bridge-code-action-popup-maybe-preview)
     (advice-add 'lsp-bridge-call-hierarchy-select :override #'lsp-bridge-code-action-popup-select)
     (advice-add 'lsp-bridge-call-hierarchy-quit :override #'lsp-bridge-code-action-popup-quit)
-    (goto-char (point-min))
 
     (lsp-bridge-code-action-popup-maybe-preview)
     ))
