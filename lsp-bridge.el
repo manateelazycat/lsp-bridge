@@ -1776,6 +1776,7 @@ SymbolKind (defined in the LSP)."
   (acm-frame-delete-frame lsp-bridge-call-hierarchy--frame)
   (kill-buffer "*lsp-bridge-code-action-menu*")
 
+  (advice-remove 'lsp-bridge-call-hierarchy-maybe-preview #'lsp-bridge-code-action-popup-maybe-preview)
   (advice-remove 'lsp-bridge-call-hierarchy-select #'lsp-bridge-code-action-popup-select)
   (advice-remove 'lsp-bridge-call-hierarchy-quit #'lsp-bridge-code-action-popup-quit)
   (select-window (get-buffer-window lsp-bridge-code-action--current-buffer)))
@@ -1890,7 +1891,7 @@ SymbolKind (defined in the LSP)."
     (setq lsp-bridge-call-hierarchy--popup-response menu-items)
 
     (acm-frame-create-frame-if-not-exist lsp-bridge-call-hierarchy--frame
-                                                menu-buffer "code action" 0 nil)
+                                         menu-buffer "code action" 0 nil)
 
     (with-current-buffer menu-buffer
       (cl-loop for i from 0 to (1- (length menu-items))
