@@ -918,10 +918,6 @@ The key of candidate will change between two LSP results."
   (display-line-numbers-mode -1)
   (font-lock-ensure)
 
-  ;; Only scale font for 4k screen.
-  (when (> (frame-pixel-width) 3000)
-    (text-scale-set 1.5))
-
   (setq-local mode-line-format nil))
 
 (defun acm-doc-markdown-render-content (doc)
