@@ -33,10 +33,6 @@
   "Face used to highlight the currently selected candidate.")
 
 
-(defface acm-frame-buffer-size-face
-  '()
-  "Face for content area.")
-
 (defvar acm-frame--mouse-ignore-map
   (let ((map (make-sparse-keymap)))
     (dotimes (i 7)
@@ -113,8 +109,15 @@
                    (mode-line-format . nil)
                    )))
 
+    ;; Make sure popup frame's font same as parent frame.
+    (with-selected-frame frame
+      (set-frame-font (with-selected-frame parent
+                        (face-attribute 'default :font))))
+
+    ;; Set popup frame colors.
     (acm-frame-set-frame-colors frame)
 
+    ;; Record parent frame.
     (setq acm-frame--emacs-frame parent)
 
     ;; Reset to the input focus to the parent frame.
@@ -147,8 +150,7 @@
                       (left-margin-width . ,margin)
                       (right-margin-width . ,margin)
                       (fringes-outside-margins . 0)))
-         (set (make-local-variable (car var)) (cdr var)))
-       (buffer-face-set 'acm-frame-buffer-size-face))
+         (set (make-local-variable (car var)) (cdr var))))
 
      ;; Set frame window and buffer.
      (let ((win (frame-root-window ,frame)))
@@ -208,7 +210,7 @@
   `(when (frame-live-p ,frame)
      (if (and (not (frame-parameter ,frame 'no-accept-focus))
               (frame-live-p acm-frame--emacs-frame))
-           (select-frame-set-input-focus acm-frame--emacs-frame))
+         (select-frame-set-input-focus acm-frame--emacs-frame))
      (delete-frame ,frame)
      (setq ,frame nil)))
 
@@ -237,8 +239,6 @@ influence of C1 on the result."
          (default-background (if (or force (equal (face-attribute 'acm-frame-default-face :background) 'unspecified))
                                  (face-attribute 'default :background)
                                (face-attribute 'acm-frame-default-face :background))))
-    ;; Make sure font size of frame same as Emacs.
-    (set-face-attribute 'acm-frame-buffer-size-face nil :height (face-attribute 'default :height))
 
     ;; Make sure menu follow the theme of Emacs.
     (when (or force (equal (face-attribute 'acm-frame-default-face :background) 'unspecified))
