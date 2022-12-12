@@ -158,39 +158,40 @@
                          (facep symbol)))))
 
 (defun acm-backend-elisp-local-symbols ()
-  (let ((regexp "[ \t\n]*\\(\\_<\\(?:\\sw\\|\\s_\\)*\\_>\\)")
-        (pos (point))
-        res)
-    (condition-case nil
-        (save-excursion
-          (dotimes (_ acm-backend-elisp-parse-depth)
-            (up-list -1)
-            (save-excursion
-              (when (eq (char-after) ?\()
-                (forward-char 1)
-                (when (ignore-errors
-                        (save-excursion (forward-list)
-                                        (<= (point) pos)))
-                  (skip-chars-forward " \t\n")
-                  (cond
-                   ((looking-at acm-backend-elisp-var-binding-regexp)
-                    (down-list 1)
-                    (condition-case nil
-                        (dotimes (_ acm-backend-elisp-parse-limit)
-                          (save-excursion
-                            (when (looking-at "[ \t\n]*(")
-                              (down-list 1))
-                            (when (looking-at regexp)
-                              (cl-pushnew (match-string-no-properties 1) res)))
-                          (forward-sexp))
-                      (scan-error nil)))
-                   ((looking-at acm-backend-elisp-var-binding-regexp-1)
-                    (down-list 1)
-                    (when (looking-at regexp)
-                      (cl-pushnew (match-string-no-properties 1) res)))))))))
-      (scan-error nil))
+  (when (acm-is-elisp-mode-p)
+    (let ((regexp "[ \t\n]*\\(\\_<\\(?:\\sw\\|\\s_\\)*\\_>\\)")
+          (pos (point))
+          res)
+      (condition-case nil
+          (save-excursion
+            (dotimes (_ acm-backend-elisp-parse-depth)
+              (up-list -1)
+              (save-excursion
+                (when (eq (char-after) ?\()
+                  (forward-char 1)
+                  (when (ignore-errors
+                          (save-excursion (forward-list)
+                                          (<= (point) pos)))
+                    (skip-chars-forward " \t\n")
+                    (cond
+                     ((looking-at acm-backend-elisp-var-binding-regexp)
+                      (down-list 1)
+                      (condition-case nil
+                          (dotimes (_ acm-backend-elisp-parse-limit)
+                            (save-excursion
+                              (when (looking-at "[ \t\n]*(")
+                                (down-list 1))
+                              (when (looking-at regexp)
+                                (cl-pushnew (match-string-no-properties 1) res)))
+                            (forward-sexp))
+                        (scan-error nil)))
+                     ((looking-at acm-backend-elisp-var-binding-regexp-1)
+                      (down-list 1)
+                      (when (looking-at regexp)
+                        (cl-pushnew (match-string-no-properties 1) res)))))))))
+        (scan-error nil))
 
-    res))
+      res)))
 
 (defun acm-backend-elisp-get-symbols ()
   (append (acm-backend-elisp-local-symbols)
