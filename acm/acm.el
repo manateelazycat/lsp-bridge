@@ -494,11 +494,11 @@ The key of candidate will change between two LSP results."
     ;; daemon mode.
     (add-hook 'server-after-make-frame-hook
               (lambda ()
-                (advice-add #'load-theme :after #'acm-frame-reset-colors)
+                (advice-add #'load-theme :after #'acm-reset-colors)
                 ;; Compensation for missing the first `load-thme' in
                 ;; `after-init-hook'.
-                (acm-frame-reset-colors)))
-  (advice-add #'load-theme :after #'acm-frame-reset-colors))
+                (acm-reset-colors)))
+  (advice-add #'load-theme :after #'acm-reset-colors))
 
 (defun acm-hide ()
   (interactive)
