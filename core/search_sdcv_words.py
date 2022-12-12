@@ -23,9 +23,8 @@ import threading
 import os
 import traceback
 import re
-import json
 
-from core.utils import get_emacs_vars, message_emacs, eval_in_emacs, logger
+from core.utils import get_emacs_vars, message_emacs, eval_in_emacs, logger, parse_json_content
 from core.pystardict import Dictionary
 
 
@@ -58,7 +57,7 @@ class SearchSdcvWords:
                 if os.path.exists("{}.ifo".format(pinyin_dictionary_path)):
                     pinyin_dictionary = Dictionary(pinyin_dictionary_path, in_memory=True)
                     for key, value in pinyin_dictionary.items():
-                        self.pinyin[key] = json.loads(value)
+                        self.pinyin[key] = parse_json_content(value)
 
                 if self.search_dictionary == "kdic-ec-11w":
                     dictionary_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", self.search_dictionary)
