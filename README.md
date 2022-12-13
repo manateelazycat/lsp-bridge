@@ -10,7 +10,7 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 
 ### The video explains the principle of lsp-bridge
 | <a href="https://emacsconf.org/2022/talks/lspbridge/">EmacsConf 2022 talk page</a>                               |
-| :--------:                                       
+| :--------:
 | [<img src="https://i.ytimg.com/vi/vLdqcYafY8w/hqdefault.jpg" width=600>](https://www.youtube.com/watch?v=vLdqcYafY8w) |
 
 
@@ -302,11 +302,15 @@ Please use `emacs -q` and load a minimal setup with only lsp-bridge to verify th
 
 If the problem still exists, please report it [here](https://github.com/manateelazycat/lsp-bridge/issues/new) with `*lsp-bridge*` buffer content, it contains many clues that can help us locate the problem faster.
 
-If you get a segfault error, please use the following way to collect crash information:
+* If you get a segfault error, please use the following way to collect crash information:
+  1. Install gdb and turn on option `lsp-bridge-enable-debug`
+  2. Use the command `lsp-bridge-restart-process` to restart the `LSP-BRIDGE` process
+  3. Send issue with `*lsp-bridge*` buffer content when next crash
 
-1. Install gdb and turn on option `lsp-bridge-enable-debug`
-2. Use the command `lsp-bridge-stop-process` to stop the current process
-3. Restart lsp-bridge, send issue with `*lsp-bridge*` buffer content when next crash
+* If you get other errors, please use the following way to collection information:
+  1. turn on option `lsp-bridge-enable-log`
+  2. Use the command `lsp-bridge-restart-process` to restart the `LSP-BRIDGE` process
+  3. Send issue with `*lsp-bridge*` buffer content
 
 ## Contributor
 
