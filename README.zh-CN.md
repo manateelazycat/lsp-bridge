@@ -10,7 +10,7 @@ lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建�
 
 ### 视频讲解 lsp-bridge 的原理
 | <a href="https://emacsconf.org/2022/talks/lspbridge/">EmacsConf 2022 演讲页面</a>                               |
-| :--------:                                       
+| :--------:
 | [<img src="https://i.ytimg.com/vi/vLdqcYafY8w/hqdefault.jpg" width=600>](https://www.youtube.com/watch?v=vLdqcYafY8w) |
 
 ## 安装
@@ -304,10 +304,15 @@ lsp-bridge 基于 Python 的多线程技术来构建补全后端， 有了多线
 
 如果`emacs -q`环境下问题依旧，请到[这里](https://github.com/manateelazycat/lsp-bridge/issues/new)反馈, 并附带 `*lsp-bridge*` 窗口的内容给我们提交 issue，那里面有很多线索可以帮助我们排查问题。。
 
-如果你遇到崩溃的问题, 请用下面的方式来收集崩溃信息:
-1. 先安装 gdb 并打开选项 `(setq lsp-bridge-enable-debug t)`
-2. 使用命令 `lsp-bridge-stop-process` 停止 LSP-BRIDGE 进程
-3. 重新打开 lsp-bridge, 并在下次崩溃时发送 `*lsp-bridge*` 的内容
+* 如果你遇到崩溃的问题, 请用下面的方式来收集崩溃信息:
+  1. 先安装 gdb 并打开选项 `(setq lsp-bridge-enable-debug t)`
+  2. 使用命令 `lsp-bridge-restart-process` 重启 LSP-BRIDGE 进程
+  3. 在下次崩溃时发送 `*lsp-bridge*` 的内容
+
+* 如果你遇到其他问题，请用下面的方式来收集信息
+  1. 打开选项 `(setq lsp-bridge-enable-log t)`
+  2. 使用命令 `lsp-bridge-restart-process` 重启LSP-BRIDGE进程
+  3. 发送`*lsp-bridge*`中的内容
 
 ## 贡献者
 
