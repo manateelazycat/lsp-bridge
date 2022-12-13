@@ -3,7 +3,8 @@
   "languageId": "python",
   "command": [
     "pyright-langserver",
-    "--stdio"
+    "--stdio",
+    "--cancellationReceive=file:%FILEHASH%"
   ],
   "ignore-diagnostic": "# type: ignore",
   "settings": {
