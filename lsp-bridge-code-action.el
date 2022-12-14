@@ -84,6 +84,9 @@
 
 ;;; Code:
 
+(require 'acm-frame)
+(require 'lsp-bridge-call-hierarchy)
+
 (defcustom lsp-bridge-code-action-preview-delay 0.5
   "The delay to show code action diff preview.
 
@@ -143,6 +146,7 @@ Default is 0.5 second, preview window will stick if this value too small."
               (call-frame-height (frame-height lsp-bridge-call-hierarchy--frame))
               (call-frame-width (frame-width lsp-bridge-call-hierarchy--frame))
               (width 0) (height 0)
+              (window-min-height 0) (window-min-width 0)
               (live-p (frame-live-p lsp-bridge-call-hierarchy--frame)))
     (with-current-buffer  "*lsp-bridge-code-action-preview*"
       (read-only-mode -1)
@@ -185,16 +189,22 @@ Default is 0.5 second, preview window will stick if this value too small."
 
     (let ((menu-window (get-buffer-window "*lsp-bridge-code-action-menu*"
                                           lsp-bridge-call-hierarchy--frame))
-          (frame-window-list (window-list lsp-bridge-call-hierarchy--frame)))
-      (when (eq (length frame-window-list) 1)
-        (split-window (selected-window) height 'below)
-        (setq frame-window-list (window-list lsp-bridge-call-hierarchy--frame)))
-      (dolist (window frame-window-list)
-        (unless (eq window menu-window)
-          (set-window-buffer window "*lsp-bridge-code-action-preview*")))
-      (select-window menu-window)
-      (set-window-text-height menu-window
-                              (length lsp-bridge-call-hierarchy--popup-response)))))
+          (frame-window-list (window-list lsp-bridge-call-hierarchy--frame))
+          (nodiff (= height 0)))
+      (if nodiff
+          ;; for code action based on execute_command, we are not support preview
+          (delete-other-windows menu-window)
+        ;; split preview window
+        (when (eq (length frame-window-list) 1)
+          (split-window (selected-window) height 'below)
+          (setq frame-window-list (window-list lsp-bridge-call-hierarchy--frame)))
+        ;; set preview buffer
+        (dolist (window frame-window-list)
+          (unless (eq window menu-window)
+            (set-window-buffer window "*lsp-bridge-code-action-preview*")))
+        (select-window menu-window)
+        (set-window-text-height menu-window
+                                (length lsp-bridge-call-hierarchy--popup-response))))))
 
 (defun lsp-bridge-code-action-popup-maybe-preview-do ()
   (let* ((buffer (buffer-name lsp-bridge-code-action--current-buffer))
@@ -297,6 +307,7 @@ Default is 0.5 second, preview window will stick if this value too small."
                  (dolist (argument arguments)
                    (lsp-bridge-workspace-apply-edit argument temp-buffer))
                ;; Otherwise send `workspace/executeCommand' request to LSP server.
+               ;; TODO execute_command with temp-buffer
                (lsp-bridge-call-file-api "execute_command" command)))))
     (unless temp-buffer
       (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
