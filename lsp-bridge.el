@@ -91,6 +91,7 @@
 (require 'lsp-bridge-jdtls)
 (require 'lsp-bridge-call-hierarchy)
 (require 'lsp-bridge-code-action)
+(require 'lsp-bridge-diagnostic)
 (require 'lsp-bridge-lsp-installer)
 
 (defgroup lsp-bridge nil
@@ -794,7 +795,6 @@ So we build this macro to restore postion after code format."
 
 (defvar-local lsp-bridge-last-cursor-position 0)
 (defvar-local lsp-bridge-prohibit-completion nil)
-(defvar-local lsp-bridge-diagnostic-overlays '())
 
 (defun lsp-bridge-monitor-post-command ()
   (let ((this-command-string (format "%s" this-command)))
@@ -1263,9 +1263,6 @@ So we build this macro to restore postion after code format."
   (when acm-markdown-render-height
     (set-face-attribute 'markdown-code-face nil :height acm-markdown-render-height)))
 
-(defun lsp-bridge-hide-diagnostic-tooltip ()
-  (posframe-hide lsp-bridge-diagnostic-tooltip))
-
 (defvar lsp-bridge-signature-posframe-params
   (list :poshandler #'posframe-poshandler-point-bottom-left-corner-upward
         :internal-border-width 20
@@ -1346,41 +1343,6 @@ So we build this macro to restore postion after code format."
 (defcustom lsp-bridge-org-babel-lang-list '("clojure" "latex" "python")
   "A list of org babel languages in which source code block lsp-bridge will be enabled."
   :type 'list
-  :group 'lsp-bridge)
-
-(defcustom lsp-bridge-diagnostic-fetch-idle 0.5
-  "The idle seconds to fetch diagnostics."
-  :type 'float
-  :group 'lsp-bridge)
-
-(defface lsp-bridge-diagnostics-error-face
-  '((t (:underline (:style wave :color "Red1"))))
-  "Face error diagnostic."
-  :group 'lsp-bridge)
-
-(defface lsp-bridge-diagnostics-warning-face
-  '((t (:underline (:style wave :color "DarkOrange"))))
-  "Face warning diagnostic."
-  :group 'lsp-bridge)
-
-(defface lsp-bridge-diagnostics-info-face
-  '((t (:underline (:style wave :color "ForestGreen"))))
-  "Face info diagnostic."
-  :group 'lsp-bridge)
-
-(defface lsp-bridge-diagnostics-hint-face
-  '((t (:underline (:style wave :color "grey"))))
-  "Face hint diagnostic."
-  :group 'lsp-bridge)
-
-(defcustom lsp-bridge-diagnostic-tooltip " *lsp-bridge-diagnostic*"
-  "Buffer for display diagnostic information."
-  :type 'string
-  :group 'lsp-bridge)
-
-(defcustom lsp-bridge-diagnostic-tooltip-border-width 20
-  "The border width of lsp-bridge diagnostic tooltip, in pixels."
-  :type 'integer
   :group 'lsp-bridge)
 
 (defvar lsp-bridge-signature-help-timer nil)
@@ -1466,125 +1428,6 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge--turn-off (filepath)
   (lsp-bridge--with-file-buffer filepath
     (lsp-bridge--disable)))
-
-(defun lsp-bridge-diagnostic--render (filepath diagnostics)
-  (lsp-bridge--with-file-buffer filepath
-    (when lsp-bridge-diagnostic-overlays
-      (dolist (diagnostic-overlay lsp-bridge-diagnostic-overlays)
-        (delete-overlay diagnostic-overlay)))
-
-    (setq-local lsp-bridge-diagnostic-overlays nil)
-
-    (let ((diagnostic-index 0)
-          (diagnostic-number (length diagnostics)))
-      (dolist (diagnostic diagnostics)
-        (let* ((diagnostic-start (acm-backend-lsp-position-to-point (plist-get (plist-get diagnostic :range) :start)))
-               (diagnostic-end (acm-backend-lsp-position-to-point (plist-get (plist-get diagnostic :range) :end)))
-               (overlay (if (eq diagnostic-start diagnostic-end)
-                            ;; Adjust diagnostic end position if start and end is same position.
-                            (make-overlay diagnostic-start (1+ diagnostic-start))
-                          (make-overlay diagnostic-start diagnostic-end)))
-               (severity (plist-get diagnostic :severity))
-               (message (plist-get diagnostic :message))
-               (overlay-face (cl-case severity
-                               (1 'lsp-bridge-diagnostics-error-face)
-                               (2 'lsp-bridge-diagnostics-warning-face)
-                               (3 'lsp-bridge-diagnostics-info-face)
-                               (4 'lsp-bridge-diagnostics-hint-face))))
-          (overlay-put overlay 'face overlay-face)
-          (overlay-put overlay 'message message)
-          (overlay-put overlay
-                       'display-message
-                       (if (> diagnostic-number 1)
-                           (format "[%s:%s] %s" (1+ diagnostic-index) diagnostic-number message)
-                         message))
-          (push overlay lsp-bridge-diagnostic-overlays))
-
-        (setq diagnostic-index (1+ diagnostic-index))))
-    (setq-local lsp-bridge-diagnostic-overlays (reverse lsp-bridge-diagnostic-overlays))))
-
-(defvar lsp-bridge-diagnostic-frame nil)
-
-(defun lsp-bridge-show-diagnostic-tooltip (diagnostic-overlay)
-  (let* ((diagnostic-display-message (overlay-get diagnostic-overlay 'display-message))
-         (diagnostic-message (overlay-get diagnostic-overlay 'message))
-         (foreground-color (plist-get (face-attribute (overlay-get diagnostic-overlay 'face) :underline) :color)))
-    (goto-char (overlay-start diagnostic-overlay))
-
-    (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-tooltip)
-      (erase-buffer)
-      (insert diagnostic-display-message)
-
-      (setq-local lsp-bridge-diagnostic-message diagnostic-message))
-
-    (when (posframe-workable-p)
-      ;; Perform redisplay make sure posframe can poup to
-      (redisplay 'force)
-      (sleep-for 0.01)
-      (setq lsp-bridge-diagnostic-frame
-            (posframe-show lsp-bridge-diagnostic-tooltip
-                           :position (point)
-                           :internal-border-width lsp-bridge-diagnostic-tooltip-border-width
-                           :background-color (acm-frame-background-color)
-                           :foreground-color foreground-color
-                           )))))
-
-(defun lsp-bridge-in-diagnostic-overlay-area-p (overlay)
-  (and
-   lsp-bridge-diagnostic-frame
-   (not (frame-visible-p lsp-bridge-diagnostic-frame))
-   (>= (point) (overlay-start overlay))
-   (<= (point) (overlay-end overlay))))
-
-(defun lsp-bridge-diagnostic-jump-next ()
-  (interactive)
-  (if (zerop (length lsp-bridge-diagnostic-overlays))
-      (message "[LSP-Bridge] No diagnostics.")
-    (if-let ((diagnostic-overlay (cl-find-if
-                                  (lambda (overlay)
-                                    (or (< (point) (overlay-start overlay))
-                                        ;; Show diagnostic information around cursor if diagnostic frame is not visiable.
-                                        (lsp-bridge-in-diagnostic-overlay-area-p overlay)))
-                                  lsp-bridge-diagnostic-overlays)))
-        (lsp-bridge-show-diagnostic-tooltip diagnostic-overlay)
-      (message "[LSP-Bridge] Reach last diagnostic."))))
-
-(defun lsp-bridge-diagnostic-jump-prev ()
-  (interactive)
-  (if (zerop (length lsp-bridge-diagnostic-overlays))
-      (message "[LSP-Bridge] No diagnostics."))
-  (if-let ((diagnostic-overlay (cl-find-if
-                                (lambda (overlay)
-                                  (or (> (point) (overlay-end overlay))
-                                      ;; Show diagnostic information around cursor if diagnostic frame is not visiable.
-                                      (lsp-bridge-in-diagnostic-overlay-area-p overlay)))
-                                (reverse lsp-bridge-diagnostic-overlays))))
-      (lsp-bridge-show-diagnostic-tooltip diagnostic-overlay)
-    (message "[LSP-Bridge] Reach first diagnostic.")))
-
-(defun lsp-bridge-diagnostic-overlay-at-point ()
-  (dolist (overlay lsp-bridge-diagnostic-overlays)
-    (when (and (>= (point) (overlay-start overlay))
-               (< (point) (overlay-end overlay)))
-      (cl-return overlay)
-      )))
-
-(defun lsp-bridge-diagnostic-copy ()
-  (interactive)
-  (if (zerop (length lsp-bridge-diagnostic-overlays))
-      (message "[LSP-Bridge] No diagnostics.")
-    (when-let ((overlay (lsp-bridge-diagnostic-overlay-at-point)))
-      (let ((diagnostic-message (overlay-get overlay 'message)))
-        (kill-new diagnostic-message)
-        (message "Copy diagnostics: '%s'" diagnostic-message)))))
-
-(defun lsp-bridge-diagnostic-list ()
-  (interactive)
-  (lsp-bridge-call-file-api "list_diagnostics"))
-
-(defun lsp-bridge-diagnostic-ignore()
-  (interactive)
-  (lsp-bridge-call-file-api "ignore_diagnostic"))
 
 (defcustom lsp-bridge-workspace-symbol-kind-to-face
   [("    " . nil)                          ; Unknown - 0
@@ -1727,47 +1570,6 @@ SymbolKind (defined in the LSP)."
                (nth (+ (* changes-index 2) 1) changes) temp-buffer))))))
 
   (setq-local lsp-bridge-prohibit-completion t))
-
-(defun lsp-bridge-diagnostic--ignore (comment-string)
-  (move-end-of-line 1)
-  (insert (format "    %s" comment-string)))
-
-(defun lsp-bridge-diagnostic--list (diagnostics)
-  (let ((filepath acm-backend-lsp-filepath)
-        (current-buffer (current-buffer))
-        (diagnostic-counter 0))
-    (with-temp-buffer
-      (insert (concat "\n" "\033[95m" filepath "\033[0m" "\n"))
-      (dolist (diagnostic diagnostics)
-        (let* ((range (plist-get diagnostic :range))
-               (message (plist-get diagnostic :message))
-               (start (plist-get range :start))
-               (end (plist-get range :end))
-               (line (1+ (plist-get start :line)))
-               (start-column (plist-get start :character))
-               (end-column (plist-get end :character))
-               (line-content (with-current-buffer current-buffer
-                               (save-excursion
-                                 (goto-line line)
-                                 (buffer-substring-no-properties (line-beginning-position) (line-end-position))))))
-          (insert (concat "\033[93m" (format "%s %s" (1+ diagnostic-counter) message) "\033[0m" "\n"))
-
-          ;; `start' point and `end' point will same if the diagnostic message is for a location rather than region.
-          ;; Then we need adjust end-column to highlight diagnostic location.
-          (when (equal start-column end-column)
-            (setq end-column (1+ end-column)))
-
-          (insert (format "%s:%s:%s\n\n"
-                          line
-                          start-column
-                          (concat (substring line-content 0 start-column)
-                                  "\033[94m"
-                                  (substring line-content start-column end-column)
-                                  "\033[0m"
-                                  (substring line-content end-column))))
-
-          (setq diagnostic-counter (1+ diagnostic-counter))))
-      (lsp-bridge-ref-popup (buffer-string) diagnostic-counter))))
 
 (defun lsp-bridge-completion-item--update (info)
   (let* ((filepath (plist-get info :filepath))
