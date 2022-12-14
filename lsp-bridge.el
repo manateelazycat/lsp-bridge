@@ -521,10 +521,9 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
 (cl-defmacro lsp-bridge--with-file-buffer (filepath &rest body)
   "Evaluate BODY in buffer with FILEPATH."
   (declare (indent 1))
-  `(let ((buffer (lsp-bridge-get-match-buffer ,filepath)))
-     (when buffer
-       (with-current-buffer buffer
-         ,@body))))
+  `(when-let ((buffer (lsp-bridge-get-match-buffer ,filepath)))
+     (with-current-buffer buffer
+       ,@body)))
 
 (cl-defmacro lsp-bridge-save-position (&rest body)
   "`save-excursion' not enough for LSP code format.
@@ -542,13 +541,12 @@ So we build this macro to restore postion after code format."
      (forward-char (max (- current-column indent-column) 0))))
 
 (defun lsp-bridge-get-match-buffer (filepath)
-  (catch 'find-match
-    (dolist (buffer (buffer-list))
-      (if-let ((file-name (buffer-file-name buffer)))
-          (when (or (string-equal file-name filepath)
-                    (string-equal (file-truename file-name) filepath))
-            (throw 'find-match buffer))))
-    nil))
+  (cl-dolist (buffer (buffer-list))
+    (if-let ((file-name (buffer-file-name buffer)))
+        (when (or (string-equal file-name filepath)
+                  (string-equal (file-truename file-name) filepath))
+          (cl-return buffer)
+          ))))
 
 (defun lsp-bridge--get-project-path-func (filepath)
   (when lsp-bridge-get-project-path-by-filepath
@@ -663,18 +661,17 @@ So we build this macro to restore postion after code format."
           )))
 
 (defun lsp-bridge-has-lsp-server-p ()
-  (let* ((filepath (ignore-errors (file-truename buffer-file-name))))
-    (when filepath
-      (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension filepath)
-                                                 (lsp-bridge--with-file-buffer filepath
-                                                   (lsp-bridge-get-multi-lang-server-by-mode))))
-             (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension filepath)
-                                           (lsp-bridge--with-file-buffer filepath
-                                             (lsp-bridge-get-single-lang-server-by-mode)))))
-        (if multi-lang-server-by-extension
-            multi-lang-server-by-extension
-          lang-server-by-extension)
-        ))))
+  (when-let* ((filepath (ignore-errors (file-truename buffer-file-name))))
+    (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension filepath)
+                                               (lsp-bridge--with-file-buffer filepath
+                                                 (lsp-bridge-get-multi-lang-server-by-mode))))
+           (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension filepath)
+                                         (lsp-bridge--with-file-buffer filepath
+                                           (lsp-bridge-get-single-lang-server-by-mode)))))
+      (if multi-lang-server-by-extension
+          multi-lang-server-by-extension
+        lang-server-by-extension)
+      )))
 
 (defun lsp-bridge-call-async (method &rest args)
   "Call Python EPC function METHOD and ARGS asynchronously."
@@ -804,11 +801,11 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-monitor-post-command ()
   (let ((this-command-string (format "%s" this-command)))
-    (when lsp-bridge-mode
-      (when (member this-command-string '("self-insert-command" "org-self-insert-command"))
-        (lsp-bridge-try-completion)))
+    (when (and lsp-bridge-mode
+               (member this-command-string '("self-insert-command" "org-self-insert-command")))
+      (lsp-bridge-try-completion))
 
-    (when  (lsp-bridge-has-lsp-server-p)
+    (when (lsp-bridge-has-lsp-server-p)
       ;; Only send `change_cursor' request when user change cursor, except cause by mouse wheel.
       (unless (equal (point) lsp-bridge-last-cursor-position)
         (unless (eq last-command 'mwheel-scroll)
@@ -1579,11 +1576,10 @@ So we build this macro to restore postion after code format."
   (interactive)
   (if (zerop (length lsp-bridge-diagnostic-overlays))
       (message "[LSP-Bridge] No diagnostics.")
-    (let ((overlay (lsp-bridge-diagnostic-overlay-at-point)))
-      (when overlay
-        (let ((diagnostic-message (overlay-get overlay 'message)))
-          (kill-new diagnostic-message)
-          (message "Copy diagnostics: '%s'" diagnostic-message))))))
+    (when-let ((overlay (lsp-bridge-diagnostic-overlay-at-point)))
+      (let ((diagnostic-message (overlay-get overlay 'message)))
+        (kill-new diagnostic-message)
+        (message "Copy diagnostics: '%s'" diagnostic-message)))))
 
 (defun lsp-bridge-diagnostic-list ()
   (interactive)
