@@ -253,6 +253,8 @@ The following is the directory structure of the lsp-bridge project:
 | lsp-bridge.el                | Elisp main logic part that provides custom options and elisp functions for python sub-process calls like code jumping, renaming, etc.                                        |
 | lsp-bridge-epc.el            | Communicating with lsp-bridge python sub-process, which mainly implements elisp IPC to connect to python EPC for data serialization, sending, receiving, and deserialization |
 | lsp-bridge-call-hierarchy.el | Show call hierarchy in popup frame.                                                                                                                                          |
+| lsp-bridge-code-action.el    | Code action functions                                                                                                                                                        |
+| lsp-bridge-diagnostic.el     | Diagnostic functions                                                                                                                                                         |
 | lsp-bridge-ref.el            | Framework of code referencing, providing references viewing, batch renames, regex filtering of reference results, etc. The core code is forked from color-rg.el              |
 | lsp-bridge-jdtls.el          | Provide java language third-party library jumping function                                                                                                                   |
 | lsp-bridge-lsp-installer.el  | Install TabNine and Omnisharp                                                                                                                                                |
