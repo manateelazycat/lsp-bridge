@@ -598,10 +598,9 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge--get-buffer-content-func (buffer-name)
   "Get buffer content for lsp. BUFFER-NAME is name eval from (buffer-name)."
-  (let* ((buf (get-buffer buffer-name)))
-    (if buf
-        (with-current-buffer buf
-          (buffer-substring-no-properties (point-min) (point-max))))))
+  (when-let* ((buf (get-buffer buffer-name)))
+    (with-current-buffer buf
+      (buffer-substring-no-properties (point-min) (point-max)))))
 
 (defun lsp-bridge-get-lang-server-by-extension (filepath extension-list)
   "Get lang server for file extension."
@@ -613,9 +612,9 @@ So we build this macro to restore postion after code format."
                                    (string-equal file-extension extension)
                                  (member file-extension extension))))
                            extension-list)))
-    (if langserver-info
-        (cdr langserver-info)
-      nil)))
+    (when langserver-info
+      (cdr langserver-info)
+      )))
 
 (defun lsp-bridge-get-multi-lang-server-by-extension (filepath)
   "Get lang server for file extension."
@@ -635,26 +634,24 @@ So we build this macro to restore postion after code format."
          (member major-mode mode))))
    mode-list))
 
+(defun lsp-bridge-get-symbol-string-value (info)
+  (pcase (format "%s" (type-of info))
+    ("string" info)
+    ("symbol" (symbol-value info))
+    ))
+
 (defun lsp-bridge-get-multi-lang-server-by-mode ()
   "Get lang server for file mode."
   (let ((langserver-info (lsp-bridge-lang-server-by-mode lsp-bridge-multi-lang-server-mode-list)))
-    (if langserver-info
-        (let ((info (cdr langserver-info)))
-          (pcase (format "%s" (type-of info))
-            ("string" info)
-            ("symbol" (symbol-value info))
-            ))
-      nil)))
+    (when langserver-info
+      (lsp-bridge-get-symbol-string-value (cdr langserver-info))
+      )))
 
 (defun lsp-bridge-get-single-lang-server-by-mode ()
   "Get lang server for file mode."
   (let ((langserver-info (lsp-bridge-lang-server-by-mode lsp-bridge-single-lang-server-mode-list)))
     (cond (langserver-info
-           (let ((info (cdr langserver-info)))
-             (pcase (format "%s" (type-of info))
-               ("string" info)
-               ("symbol" (symbol-value info))
-               )))
+           (lsp-bridge-get-symbol-string-value (cdr langserver-info)))
           ((and lsp-bridge-use-wenls-in-org-mode
                 (eq major-mode 'org-mode))
            "wen")
@@ -813,8 +810,8 @@ So we build this macro to restore postion after code format."
         (setq-local lsp-bridge-last-cursor-position (point)))
 
       ;; Hide hover tooltip.
-      (if (not (string-prefix-p "lsp-bridge-popup-documentation-scroll" this-command-string))
-          (lsp-bridge-hide-doc-tooltip))
+      (unless (string-prefix-p "lsp-bridge-popup-documentation-scroll" this-command-string)
+        (lsp-bridge-hide-doc-tooltip))
 
       ;; Hide diagnostic tooltip.
       (unless (member this-command-string '("lsp-bridge-diagnostic-jump-next"
@@ -1928,9 +1925,11 @@ SymbolKind (defined in the LSP)."
 
 (defun lsp-bridge--mode-line-format ()
   "Compose the LSP-bridge's mode-line."
-  (if (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-      (setq-local mode-face 'lsp-bridge-alive-mode-line)
-    (setq-local mode-face 'lsp-bridge-kill-mode-line))
+  (setq-local mode-face
+              (if (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+                  'lsp-bridge-alive-mode-line
+                'lsp-bridge-kill-mode-line))
+
   (when lsp-bridge-server
     (propertize (format "lsp-bridge:%s" lsp-bridge-server-port) 'face mode-face)))
 
