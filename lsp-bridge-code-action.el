@@ -179,6 +179,7 @@ Default is 0.5 second, preview window will stick if this value too small."
       ;; show top
       (goto-char (point-min))
       ;; truncate lines
+      (setq-local cursor-type nil)
       (setq-local mode-line-format nil)
       (setq-local truncate-lines t))
 
