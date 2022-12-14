@@ -605,7 +605,7 @@ So we build this macro to restore postion after code format."
         (with-current-buffer buf
           (buffer-substring-no-properties (point-min) (point-max))))))
 
-(defun lsp-bridge-get-multi-lang-server-by-extension (filepath)
+(defun lsp-bridge-get-lang-server-by-extension (filepath extension-list)
   "Get lang server for file extension."
   (let* ((file-extension (file-name-extension filepath))
          (langserver-info (cl-find-if
@@ -614,34 +614,32 @@ So we build this macro to restore postion after code format."
                                (if (eq (type-of extension) 'string)
                                    (string-equal file-extension extension)
                                  (member file-extension extension))))
-                           lsp-bridge-multi-lang-server-extension-list)))
+                           extension-list)))
     (if langserver-info
         (cdr langserver-info)
       nil)))
+
+(defun lsp-bridge-get-multi-lang-server-by-extension (filepath)
+  "Get lang server for file extension."
+  (lsp-bridge-get-lang-server-by-extension filepath lsp-bridge-multi-lang-server-extension-list))
 
 (defun lsp-bridge-get-single-lang-server-by-extension (filepath)
   "Get lang server for file extension."
-  (let* ((file-extension (file-name-extension filepath))
-         (langserver-info (cl-find-if
-                           (lambda (pair)
-                             (let ((extension (car pair)))
-                               (if (eq (type-of extension) 'string)
-                                   (string-equal file-extension extension)
-                                 (member file-extension extension))))
-                           lsp-bridge-single-lang-server-extension-list)))
-    (if langserver-info
-        (cdr langserver-info)
-      nil)))
+  (lsp-bridge-get-lang-server-by-extension filepath lsp-bridge-single-lang-server-extension-list))
+
+(defun lsp-bridge-lang-server-by-mode (mode-list)
+  "Get lang server for file mode."
+  (cl-find-if
+   (lambda (pair)
+     (let ((mode (car pair)))
+       (if (symbolp mode)
+           (eq major-mode mode)
+         (member major-mode mode))))
+   mode-list))
 
 (defun lsp-bridge-get-multi-lang-server-by-mode ()
   "Get lang server for file mode."
-  (let ((langserver-info (cl-find-if
-                          (lambda (pair)
-                            (let ((mode (car pair)))
-                              (if (symbolp mode)
-                                  (eq major-mode mode)
-                                (member major-mode mode))))
-                          lsp-bridge-multi-lang-server-mode-list)))
+  (let ((langserver-info (lsp-bridge-lang-server-by-mode lsp-bridge-multi-lang-server-mode-list)))
     (if langserver-info
         (let ((info (cdr langserver-info)))
           (pcase (format "%s" (type-of info))
@@ -652,13 +650,7 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-get-single-lang-server-by-mode ()
   "Get lang server for file mode."
-  (let ((langserver-info (cl-find-if
-                          (lambda (pair)
-                            (let ((mode (car pair)))
-                              (if (symbolp mode)
-                                  (eq major-mode mode)
-                                (member major-mode mode))))
-                          lsp-bridge-single-lang-server-mode-list)))
+  (let ((langserver-info (lsp-bridge-lang-server-by-mode lsp-bridge-single-lang-server-mode-list)))
     (cond (langserver-info
            (let ((info (cdr langserver-info)))
              (pcase (format "%s" (type-of info))
