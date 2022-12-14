@@ -80,12 +80,11 @@
 ;;
 
 ;;; Require
-
-
-;;; Code:
-
+(require 'acm)
 (require 'acm-frame)
 (require 'lsp-bridge-call-hierarchy)
+
+;;; Code:
 
 (defcustom lsp-bridge-code-action-preview-delay 0.5
   "The delay to show code action diff preview.
