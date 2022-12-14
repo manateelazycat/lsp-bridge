@@ -1,0 +1,9 @@
+{
+  "name": "vscode-json-language-server",
+  "languageId": "json",
+  "command": [
+    "vscode-json-language-server",
+    "--stdio"
+  ],
+  "settings": {}
+}

@@ -1,0 +1,9 @@
+{
+  "name": "vscode-eslint-language-server",
+  "languageId": "html",
+  "command": [
+    "vscode-eslint-language-server",
+    "--stdio"
+  ],
+  "settings": {}
+}
