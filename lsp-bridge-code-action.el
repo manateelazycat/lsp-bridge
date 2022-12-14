@@ -273,7 +273,7 @@ Default is 0.5 second, preview window will stick if this value too small."
       (setq-local truncate-lines t)
       (setq-local mode-line-format nil))
 
-    (acm-frame-set-frame-position lsp-bridge-call-hierarchy--frame (car cursor) (cdr cursor))
+    (acm-frame-set-frame-position lsp-bridge-call-hierarchy--frame (car cursor) (+ (cdr cursor) (line-pixel-height)))
     (acm-frame-set-frame-size lsp-bridge-call-hierarchy--frame menu-width menu-lenght)
 
     (advice-add 'lsp-bridge-call-hierarchy-maybe-preview :override #'lsp-bridge-code-action-popup-maybe-preview)
