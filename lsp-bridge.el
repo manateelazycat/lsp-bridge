@@ -819,7 +819,14 @@ So we build this macro to restore postion after code format."
         (lsp-bridge-hide-diagnostic-tooltip))
 
       ;; Hide signature tooltip.
-      (lsp-bridge-hide-signature-tooltip))))
+      (lsp-bridge-hide-signature-tooltip)
+
+      ;; Hide code action frame when Emacs got focus.
+      (unless (string-prefix-p "lsp-bridge-code-action" this-command-string)
+        (unless (member this-command-string '("handle-switch-frame"))
+          (ignore-errors
+            (lsp-bridge-code-action-popup-quit))))
+      )))
 
 (defun lsp-bridge-close-buffer-file ()
   (when (and (lsp-bridge-has-lsp-server-p)
