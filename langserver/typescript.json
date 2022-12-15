@@ -5,5 +5,10 @@
     "typescript-language-server",
     "--stdio"
   ],
-  "settings": {}
+  "settings": {},
+  "initializationOptions": {
+    "preferences": {
+	  "includeCompletionsForModuleExports": false
+	}
+  }
 }
