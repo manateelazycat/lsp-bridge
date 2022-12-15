@@ -1,0 +1,9 @@
+{
+  "name": "ansible-language-server",
+  "languageId": "ansible",
+  "command": [
+    "ansible-language-server",
+    "--stdio"
+  ],
+  "settings": {}
+}
