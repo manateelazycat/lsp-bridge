@@ -230,6 +230,7 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 | [omnisharp-mono](https://github.com/OmniSharp/omnisharp-roslyn)                                      | C#                                      | OmniSharp 是 .NET 开发平台, 使用命令 `M-x lsp-bridge-install-omnisharp` 来安 OmniSharp, 默认是 `omnisharp-mono`. `lsp-bridge-csharp-lsp-server` 设置成 `omnisharp-mono`               |
 | [omnisharp-dotnet](https://github.com/OmniSharp/omnisharp-roslyn)                                    | C#                                      | OmniSharp 是 .NET 开发平台, 使用命令 `M-x lsp-bridge-install-omnisharp` 来安 OmniSharp, 默认是 `omnisharp-mono`. `lsp-bridge-csharp-lsp-server` 设置成 `omnisharp-dotnet`             |
 | [deno](https://deno.land)                                                                            | Deno                                    | Deno 使用 TypeScript 来编程， 你需要定制选项 `lsp-bridge-get-single-lang-server-by-project` 当工程是 Deno 项目的路径时， 返回 "deno" 字符串                                           |
+| [ansible-language-server](https://github.com/ansible/ansible-language-server)                        | Ansible                                 | Ansible 使用 YAML 来编程，你需要定制选项 `lsp-bridge-get-single-lang-server-by-project` 当工程是 Ansible 项目的路径时， 返回 "ansible-language-server" 字符串                         |
 
 ### 不会支持的特性：
 lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端, 但不是实现 LSP 协议最全的 LSP 客户端。

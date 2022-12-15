@@ -231,6 +231,7 @@ You need to install the LSP server corresponding to each programming language, t
 | [omnisharp-mono](https://github.com/OmniSharp/omnisharp-roslyn)                                      | C#                                      | OmniSharp is a .NET development platform based on Roslyn workspaces. use `M-x lsp-bridge-install-omnisharp` to install it. `lsp-bridge-csharp-lsp-server` set to `omnisharp-mono`         |
 | [omnisharp-dotnet](https://github.com/OmniSharp/omnisharp-roslyn)                                    | C#                                      | OmniSharp is a .NET development platform based on Roslyn workspaces. use `M-x lsp-bridge-install-omnisharp` to install it. `lsp-bridge-csharp-lsp-server` set to `omnisharp-dotnet` (6.0) |
 | [deno](https://deno.land)                                                                            | Deno                                    | Deno runtime use TypeScript as source code, you need customize option `lsp-bridge-get-single-lang-server-by-project` that return result "deno" when `project-path` match Deno project.    |
+| [ansible-language-server](https://github.com/ansible/ansible-language-server)                        | Ansible                                 | Ansible uses YAML as source code, you'll need to customize `lsp-bridge-get-single-lang-server-by-project` to return "ansible-language-server".                                            |
 
 ### Features that won't be supported
 
