@@ -838,23 +838,23 @@ So we build this macro to restore postion after code format."
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
     (lsp-bridge-call-async "search_file_words_close_file" buffer-file-name)))
 
-(defun lsp-bridge-completion--record-items (filepath 
-                                            candidates position 
+(defun lsp-bridge-set-prefix-style (prefix-style)
+  ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
+  ;; other LSP server need use `bounds-of-thing-at-point' of symbol as keyword prefix.
+  (setq-local acm-input-bound-style prefix-style))
+
+(defun lsp-bridge-completion--record-items (filepath
+                                            candidates position
                                             server-name
                                             completion-trigger-characters
-                                            server-names
-                                            prefix-style)
+                                            server-names)
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
     (setq-local acm-backend-lsp-completion-position position)
     (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
     (setq-local acm-backend-lsp-server-names server-names)
     (setq-local lsp-bridge-completion-item-fetch-tick nil)
-    
-    ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
-    ;; other LSP server need use `bounds-of-thing-at-point' of symbol as keyword prefix.
-    (setq-local acm-input-bound-style prefix-style)
-    
+
     (let* ((lsp-items acm-backend-lsp-items)
            (completion-table (make-hash-table :test 'equal)))
       (dolist (item candidates)

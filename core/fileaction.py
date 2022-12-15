@@ -97,6 +97,10 @@ class FileAction:
             self.method_handlers[lsp_server.server_info["name"]] = method_handlers_dict
             
             lsp_server.attach(self)
+            
+        # Set acm-input-bound-style when opened file.
+        if self.single_server_info != None:
+            eval_in_emacs("lsp-bridge-set-prefix-style", self.single_server_info.get("prefixStyle", "ascii"))
 
     @property
     def last_change(self) -> Tuple[float, float]:
