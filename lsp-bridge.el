@@ -838,13 +838,23 @@ So we build this macro to restore postion after code format."
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
     (lsp-bridge-call-async "search_file_words_close_file" buffer-file-name)))
 
-(defun lsp-bridge-completion--record-items (filepath candidates position server-name completion-trigger-characters server-names)
+(defun lsp-bridge-completion--record-items (filepath 
+                                            candidates position 
+                                            server-name
+                                            completion-trigger-characters
+                                            server-names
+                                            prefix-style)
   (lsp-bridge--with-file-buffer filepath
     ;; Save completion items.
     (setq-local acm-backend-lsp-completion-position position)
     (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
     (setq-local acm-backend-lsp-server-names server-names)
     (setq-local lsp-bridge-completion-item-fetch-tick nil)
+    
+    ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
+    ;; other LSP server need use `bounds-of-thing-at-point' of symbol as keyword prefix.
+    (setq-local acm-input-bound-style prefix-style)
+    
     (let* ((lsp-items acm-backend-lsp-items)
            (completion-table (make-hash-table :test 'equal)))
       (dolist (item candidates)
@@ -1383,10 +1393,6 @@ So we build this macro to restore postion after code format."
   (acm-run-idle-func acm-backend-elisp-symbols-update-timer lsp-bridge-elisp-symbols-update-idle 'lsp-bridge-elisp-symbols-update)
 
   (when-let* ((lsp-server-name (lsp-bridge-has-lsp-server-p)))
-    ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
-    ;; other LSP server need use `bounds-of-thing-at-point' of symbol as keyword prefix.
-    (setq-local acm-input-bound-style (if (string-equal lsp-server-name "wen") "ascii" "symbol"))
-
     ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
     ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
     (unless (file-exists-p (buffer-file-name))

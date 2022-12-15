@@ -119,4 +119,5 @@ class Completion(Handler):
                           self.position,
                           self.method_server_name,
                           self.method_server.completion_trigger_characters,
-                          self.file_action.get_lsp_server_names())
+                          self.file_action.get_lsp_server_names(),
+                          self.method_server.server_info.get("prefixStyle", "ascii"))
