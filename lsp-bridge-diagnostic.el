@@ -80,7 +80,8 @@
 ;;
 
 ;;; Require
-
+(require 'acm)
+(require 'acm-frame)
 
 ;;; Code:
 
@@ -119,12 +120,24 @@
   :type 'integer
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-diagnostic-display-errors-delay 0.25
+  "The delay in seconds before displaying errors."
+  :type 'integer
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-diagnostic-disable-popup-error nil
+  "Whether to popup error message."
+  :type 'boolean
+  :group 'lsp-bridge)
+
 (defvar-local lsp-bridge-diagnostic-overlays '())
 
 (defvar lsp-bridge-diagnostic-frame nil)
 
+(defvar lsp-bridge-diagnostic-display-error-at-point-timer nil)
+
 (defun lsp-bridge-hide-diagnostic-tooltip ()
-  (posframe-hide lsp-bridge-diagnostic-tooltip))
+  (acm-frame-hide-frame lsp-bridge-diagnostic-frame))
 
 (defun lsp-bridge-diagnostic--render (filepath diagnostics)
   (lsp-bridge--with-file-buffer filepath
@@ -162,29 +175,36 @@
         (setq diagnostic-index (1+ diagnostic-index))))
     (setq-local lsp-bridge-diagnostic-overlays (reverse lsp-bridge-diagnostic-overlays))))
 
-(defun lsp-bridge-show-diagnostic-tooltip (diagnostic-overlay)
+(defun lsp-bridge-diagnostic-show-tooltip (diagnostic-overlay &optional goto-beginning)
   (let* ((diagnostic-display-message (overlay-get diagnostic-overlay 'display-message))
          (diagnostic-message (overlay-get diagnostic-overlay 'message))
-         (foreground-color (plist-get (face-attribute (overlay-get diagnostic-overlay 'face) :underline) :color)))
-    (goto-char (overlay-start diagnostic-overlay))
+         (cursor (acm-frame-get-popup-position (point))))
+    ;; weather goto beginning of diagnostic
+    (when goto-beginning
+      (goto-char (overlay-start diagnostic-overlay)))
 
     (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-tooltip)
       (erase-buffer)
+      (add-face-text-property 0 (length diagnostic-display-message) 'acm-frame-select-face 'append diagnostic-display-message)
       (insert diagnostic-display-message)
-
       (setq-local lsp-bridge-diagnostic-message diagnostic-message))
 
-    (when (posframe-workable-p)
-      ;; Perform redisplay make sure posframe can poup to
-      (redisplay 'force)
-      (sleep-for 0.01)
-      (setq lsp-bridge-diagnostic-frame
-            (posframe-show lsp-bridge-diagnostic-tooltip
-                           :position (point)
-                           :internal-border-width lsp-bridge-diagnostic-tooltip-border-width
-                           :background-color (acm-frame-background-color)
-                           :foreground-color foreground-color
-                           )))))
+    (cond
+     ((posframe-workable-p) ;; Perform redisplay make sure posframe can poup to
+      (acm-frame-create-frame-if-not-exist  lsp-bridge-diagnostic-frame lsp-bridge-diagnostic-tooltip
+                                            "lsp bridge diagnostic tooltip" 0 t)
+      (acm-frame-set-frame-position lsp-bridge-diagnostic-frame
+                                    (car cursor) (+ (cdr cursor) (line-pixel-height)))
+      (acm-frame-set-frame-max-size lsp-bridge-diagnostic-frame))
+     (t (message diagnostic-message)))))
+
+(defun lsp-bridge-diagnostic-maybe-display-error-at-point ()
+  "Display error message at point with a delay, unless already displayed."
+  (acm-cancel-timer lsp-bridge-diagnostic-display-error-at-point-timer)
+  (when-let ((ol (lsp-bridge-diagnostic-overlay-at-point)))
+    (setq lsp-bridge-diagnostic-display-error-at-point-timer
+          (run-at-time lsp-bridge-diagnostic-display-errors-delay nil
+                       'lsp-bridge-diagnostic-show-tooltip ol))))
 
 (defun lsp-bridge-in-diagnostic-overlay-area-p (overlay)
   (and
@@ -203,7 +223,7 @@
                                         ;; Show diagnostic information around cursor if diagnostic frame is not visiable.
                                         (lsp-bridge-in-diagnostic-overlay-area-p overlay)))
                                   lsp-bridge-diagnostic-overlays)))
-        (lsp-bridge-show-diagnostic-tooltip diagnostic-overlay)
+        (lsp-bridge-diagnostic-show-tooltip diagnostic-overlay)
       (message "[LSP-Bridge] Reach last diagnostic."))))
 
 (defun lsp-bridge-diagnostic-jump-prev ()
@@ -216,7 +236,7 @@
                                       ;; Show diagnostic information around cursor if diagnostic frame is not visiable.
                                       (lsp-bridge-in-diagnostic-overlay-area-p overlay)))
                                 (reverse lsp-bridge-diagnostic-overlays))))
-      (lsp-bridge-show-diagnostic-tooltip diagnostic-overlay)
+      (lsp-bridge-diagnostic-show-tooltip diagnostic-overlay)
     (message "[LSP-Bridge] Reach first diagnostic.")))
 
 (defun lsp-bridge-diagnostic-overlay-at-point ()

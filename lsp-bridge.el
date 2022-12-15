@@ -813,11 +813,18 @@ So we build this macro to restore postion after code format."
       (lsp-bridge-try-completion))
 
     (when (lsp-bridge-has-lsp-server-p)
-      ;; Only send `change_cursor' request when user change cursor, except cause by mouse wheel.
-      (unless (equal (point) lsp-bridge-last-cursor-position)
+      (unless (equal lsp-bridge-last-cursor-position
+                     (setq-local lsp-bridge-last-cursor-position (point)))
+        ;; Only show hover when cursor move.
+        (unless (or lsp-bridge-diagnostic-disable-popup-error
+                 (member this-command-string
+                         '("self-insert-command" "org-self-insert-command"
+                           "lsp-bridge-diagnostic-jump-next" "lsp-bridge-diagnostic-jump-prev")))
+          (lsp-bridge-diagnostic-maybe-display-error-at-point))
+
+        ;; Only send `change_cursor' request when user change cursor, except cause by mouse wheel.
         (unless (eq last-command 'mwheel-scroll)
-          (lsp-bridge-call-file-api "change_cursor" (lsp-bridge--position)))
-        (setq-local lsp-bridge-last-cursor-position (point)))
+          (lsp-bridge-call-file-api "change_cursor" (lsp-bridge--position))))
 
       ;; Hide hover tooltip.
       (unless (string-prefix-p "lsp-bridge-popup-documentation-scroll" this-command-string)
