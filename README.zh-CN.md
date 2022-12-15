@@ -303,6 +303,14 @@ lsp-bridge 基于 Python 的多线程技术来构建补全后端， 有了多线
 一般 `lsp-bridge-example-record` 都是这样定义的， 接到异步后端返回的 `candidates` 后， 先把搜索结果保存到 buffer 中， 这里是 `acm-backend-example-items` 局部变量 （需要自己定义）, 然后再调用函数 `lsp-bridge-try-completion` ， 尝试弹出补全菜单。
 
 
+## 优化 Python 性能
+1. 开启性能剖析选项： (setq lsp-bridge-enable-profile t)
+2. 重启 lsp-bridge: `lsp-bridge-restart-process`
+3. 正常写代码， 进行补全操作， 时间越长越好
+4. 输出性能剖析日志： `lsp-bridge-profile-dump`
+5. 安装 snakeviz: sudo pip3 install snakeviz
+6. 展示性能瓶颈： snakeviz ~/lsp-bridge.prof 
+
 ## 反馈问题
 
 请用命令 `emacs -q` 并只添加 lsp-bridge 配置做一个对比测试，如果 `emacs -q` 可以正常工作，请检查你个人的配置文件。
@@ -316,7 +324,7 @@ lsp-bridge 基于 Python 的多线程技术来构建补全后端， 有了多线
 
 * 如果你遇到其他问题，请用下面的方式来收集信息
   1. 打开选项 `(setq lsp-bridge-enable-log t)`
-  2. 使用命令 `lsp-bridge-restart-process` 重启LSP-BRIDGE进程
+  2. 使用命令 `lsp-bridge-restart-process` 重启 LSP-BRIDGE 进程
   3. 发送`*lsp-bridge*`中的内容
 
 ## 贡献者

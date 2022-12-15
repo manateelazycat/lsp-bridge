@@ -303,6 +303,14 @@ After completing the keyword cache, search through the interface function `searc
 
 Generally, `lsp-bridge-example-record` is defined in this way. After receiving `candidates` returned by the asynchronous backend, first save the search results in the buffer, here is `acm-backend-example-items` local variable (you need to define this variable yourself), and then call the function `lsp-bridge-try-completion`, try to popup the completion menu.
 
+## Optimize Python performance
+1. Enable the profiler option: (setq lsp-bridge-enable-profile t)
+2. Restart lsp-bridge: `lsp-bridge-restart-process`
+3. Write the code normally and complete the operation, the longer the better
+4. Output profiling log: `lsp-bridge-profile-dump`
+5. Install snakeviz: sudo pip3 install snakeviz
+6. Show performance bottlenecks: snakeviz ~/lsp-bridge.prof
+
 ## Report bug
 
 Please use `emacs -q` and load a minimal setup with only lsp-bridge to verify that the bug is reproducible. If `emacs -q` works fine, probably something is wrong with your Emacs config.
