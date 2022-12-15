@@ -1064,7 +1064,7 @@ So we build this macro to restore postion after code format."
             (unless (or (string-equal current-word "") (null current-word))
               (lsp-bridge-call-async "search_file_words_search" current-word)))
 
-          (lsp-bridge-call-async "search_file_words_change_file" buffer-file-name))
+          (lsp-bridge-search-words-update))
 
         ;; Send tailwind keyword search request just when cursor in class area.
         (when (and (derived-mode-p 'web-mode)
@@ -1100,9 +1100,13 @@ So we build this macro to restore postion after code format."
   (setq-local acm-backend-elisp-items candidates)
   (lsp-bridge-try-completion))
 
-(defun lsp-bridge-search-words-open-file ()
+(defun lsp-bridge-search-words-update ()
   (when (and buffer-file-name
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
+    ;; Save file before send `search_file_words_change_file' request.
+    (with-temp-message ""
+      (let ((inhibit-message t))
+        (basic-save-buffer)))
     (lsp-bridge-call-async "search_file_words_change_file" buffer-file-name)))
 
 (defun lsp-bridge-search-words-index-files ()
@@ -1360,7 +1364,7 @@ So we build this macro to restore postion after code format."
     (post-command-hook lsp-bridge-monitor-post-command nil t)
     (after-save-hook lsp-bridge-monitor-after-save nil t)
     (kill-buffer-hook lsp-bridge-close-buffer-file nil t)
-    (find-file-hook lsp-bridge-search-words-open-file nil t)
+    (find-file-hook lsp-bridge-search-words-update nil t)
     (before-revert-hook lsp-bridge-close-buffer-file nil t)
     (post-self-insert-hook lsp-bridge-monitor-post-self-insert 90 t)
     ))

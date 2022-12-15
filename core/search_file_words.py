@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
 import queue
 import threading
 import traceback
@@ -30,7 +31,6 @@ class SearchFileWords:
     def __init__(self):
         self.files = {}
         self.search_files = set()
-        self.search_files_mutex = threading.Lock()
         self.search_words_thread = None
         
         self.search_words_queue = queue.Queue()
@@ -39,17 +39,13 @@ class SearchFileWords:
     
     def close_file(self, filepath):
         if filepath in self.files:
-            self.search_files_mutex.acquire()
             if filepath in self.search_files:
                 self.search_files.remove(filepath)
-            self.search_files_mutex.release()
             
             del self.files[filepath]
     
     def change_file(self, filepath):
-        self.search_files_mutex.acquire()
         self.search_files.add(filepath)
-        self.search_files_mutex.release()
         
         if filepath not in self.files:
             self.files[filepath] = set()
@@ -106,8 +102,8 @@ class SearchFileWords:
             while True:
                 message = self.search_words_queue.get(block=True)
                 if message == "search_words":
-                    self.search_files_mutex.acquire()
-                    for search_file in self.search_files:
+                    search_files = copy.deepcopy(self.search_files)
+                    for search_file in search_files:
                         try:
                             words = set(re.findall("[\w|-]+", open(search_file).read()))
                         except (FileNotFoundError, UnicodeDecodeError):
@@ -118,7 +114,6 @@ class SearchFileWords:
                         self.files[search_file] = filter_words
                         
                     self.search_files.clear()
-                    self.search_files_mutex.release()
         except:
             logger.error(traceback.format_exc())
 
