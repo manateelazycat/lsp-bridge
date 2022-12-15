@@ -316,6 +316,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Enable this option to print log message in `*lsp-bridge*' buffer, default only print message header."
   :type 'boolean)
 
+(defcustom lsp-bridge-enable-profile nil
+  "Enable this option to output performance data to ~/lsp-bridge.prof."
+  :type 'boolean)
+
 (defcustom lsp-bridge-multi-lang-server-extension-list
   '(
     (("vue") . "volar_emmet"))
@@ -715,6 +719,10 @@ So we build this macro to restore postion after code format."
   (lsp-bridge-start-process)
   (message "[LSP-Bridge] Process restarted."))
 
+(defun lsp-bridge-profile-dump ()
+  (interactive)
+  (lsp-bridge-call-async "profile_dump"))
+
 (defun lsp-bridge-start-process ()
   "Start LSP-Bridge process if it isn't started."
   (setq lsp-bridge-is-starting t)
@@ -724,6 +732,8 @@ So we build this macro to restore postion after code format."
     (let* ((lsp-bridge-args (append
                              (list lsp-bridge-python-file)
                              (list (number-to-string lsp-bridge-server-port))
+                             (when lsp-bridge-enable-profile
+                               (list "profile"))
                              )))
 
       ;; Set process arguments.
