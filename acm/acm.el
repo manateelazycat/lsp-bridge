@@ -219,7 +219,7 @@
 (defvar-local acm-menu-index -1)
 (defvar-local acm-menu-offset 0)
 
-(defvar-local acm-input-bound-style nil)
+(defvar-local acm-input-bound-style "ascii")
 
 (defvar acm-doc-frame nil)
 (defvar acm-doc-frame-hide-p nil)
@@ -248,14 +248,24 @@
 
 
 (defun acm-get-input-prefix-bound ()
-  (if (string-equal acm-input-bound-style "symbol")
-      (bounds-of-thing-at-point 'symbol)
-    (let ((bound (bounds-of-thing-at-point 'symbol)))
-      (when bound
-        (let* ((keyword (buffer-substring-no-properties (car bound) (cdr bound)))
-               (offset (or (string-match "[[:nonascii:]]+" (reverse keyword))
-                           (length keyword))))
-          (cons (- (cdr bound) offset) (cdr bound)))))))
+  (pcase acm-input-bound-style
+    ("symbol"
+     (bounds-of-thing-at-point 'symbol))
+    ("string"
+     (cons (point)
+           (save-excursion
+             (if (search-backward-regexp "\\s-" (point-at-bol) t)
+                 (progn
+                   (forward-char)
+                   (point))
+               (point-at-bol)))))
+    ("ascii"
+     (let ((bound (bounds-of-thing-at-point 'symbol)))
+       (when bound
+         (let* ((keyword (buffer-substring-no-properties (car bound) (cdr bound)))
+                (offset (or (string-match "[[:nonascii:]]+" (reverse keyword))
+                            (length keyword))))
+           (cons (- (cdr bound) offset) (cdr bound))))))))
 
 (defun acm-get-input-prefix ()
   "Get user input prefix."
@@ -741,9 +751,9 @@ The key of candidate will change between two LSP results."
 
     ;; Make sure doc frame size not out of Emacs area.
     (acm-frame-set-frame-max-size acm-doc-frame
-                                         (ceiling (/ acm-doc-frame-max-width (frame-char-width)))
-                                         (min (ceiling (/ acm-doc-frame-max-height (window-default-line-height)))
-                                              acm-doc-frame-max-lines))
+                                  (ceiling (/ acm-doc-frame-max-width (frame-char-width)))
+                                  (min (ceiling (/ acm-doc-frame-max-height (window-default-line-height)))
+                                       acm-doc-frame-max-lines))
 
     ;; Adjust doc frame with it's size.
     (let* ((acm-doc-frame-width (frame-pixel-width acm-doc-frame))

@@ -6,5 +6,5 @@
     "--stdio"
   ],
   "settings": {},
-  "prefixStyle": "symbol"
+  "prefixStyle": "string"
 }
