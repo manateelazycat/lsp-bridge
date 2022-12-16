@@ -83,7 +83,7 @@ class LspServerSender(MessageSender):
         self.process.stdin.write(message_str.encode("utf-8"))    # type: ignore
         self.process.stdin.flush()    # type: ignore
 
-        logger.info("\n--- Send ({}): {}".format(
+        log_time("Send ({}): {}".format(
             message.get('id', 'notification'), message.get('method', 'response')))
 
         logger.debug(json.dumps(message, indent=3))
@@ -158,7 +158,7 @@ class LspServerReceiver(MessageReceiver):
                         self.emit_message(msg.decode("utf-8"))
                 if self.process.stderr:
                     logger.info(self.process.stderr.read())
-            logger.info("\n--- Lsp server exited, exit code: {}".format(self.process.returncode))
+            log_time("Lsp server exited, exit code: {}".format(self.process.returncode))
             logger.info(self.process.stdout.read())    # type: ignore
             if self.process.stderr:
                 logger.info(self.process.stderr.read())
@@ -247,7 +247,7 @@ class LspServer:
             logger.error(traceback.format_exc())
 
     def send_initialize_request(self):
-        logger.info("\n--- Send initialize for {} ({})".format(self.project_path, self.server_info["name"]))
+        log_time("Send initialize for {} ({})".format(self.project_path, self.server_info["name"]))
 
         initialize_options = self.server_info.get("initializationOptions", {})
 
@@ -463,7 +463,7 @@ class LspServer:
 
     def handle_recv_message(self, message: dict):
         if "error" in message:
-            logger.error("\n--- Recv message (error):")
+            logger.error("Recv message (error):")
             logger.error(json.dumps(message, indent=3))
 
             error_message = message["error"]["message"]
@@ -487,21 +487,21 @@ class LspServer:
         if "id" in message:
             if "method" in message:
                 # server request
-                logger.info("\n--- Recv request ({}): {}".format(message["id"], message["method"]))
+                log_time("Recv request ({}): {}".format(message["id"], message["method"]))
             else:
                 # server response
                 if message["id"] in self.request_dict:
                     method = self.request_dict[message["id"]].method
-                    logger.info("\n--- Recv response {} ({}): {}".format(self.server_info["name"], message["id"], method))
+                    log_time("Recv response {} ({}): {}".format(self.server_info["name"], message["id"], method))
                 else:
-                    logger.info("\n--- Recv response {} ({})".format(self.server_info["name"], message["id"]))
+                    log_time("Recv response {} ({})".format(self.server_info["name"], message["id"]))
         else:
             if "method" in message:
                 # server notification
-                logger.info("\n--- Recv notification: %s", message["method"])
+                log_time("Recv notification: {}".format(message["method"]))
             else:
                 # others
-                logger.info("\n--- Recv message")
+                log_time("Recv message")
 
         if "method" in message and message["method"] == "textDocument/publishDiagnostics":
             filepath = uri_to_path(message["params"]["uri"])
@@ -616,4 +616,4 @@ class LspServer:
                 try:
                     os.kill(self.lsp_subprocess.pid, 9)
                 except ProcessLookupError:
-                    logger.info("\n--- Lsp server process {} already exited!".format(self.lsp_subprocess.pid))
+                    log_time("Lsp server process {} already exited!".format(self.lsp_subprocess.pid))

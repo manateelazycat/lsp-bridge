@@ -107,10 +107,10 @@ class Completion(Handler):
                 
             completion_candidates = sorted(completion_candidates, key=cmp_to_key(self.compare_candidates))
             
+        log_time("Completion items number: {}".format(len(completion_candidates)))
+        
         # Avoid returning too many items to cause Emacs to do GC operation.
         completion_candidates = completion_candidates[:min(len(completion_candidates), self.file_action.completion_items_limit)]
-        
-        logger.info("\n--- Completion items number: {}".format(len(completion_candidates)))
         
         if len(completion_candidates) > 0:
             eval_in_emacs("lsp-bridge-completion--record-items",

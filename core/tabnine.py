@@ -26,7 +26,7 @@ import subprocess
 import threading
 import traceback
 
-from core.utils import MessageReceiver, MessageSender, eval_in_emacs, get_emacs_var, logger, get_os_name, parse_json_content
+from core.utils import *
 from platform import version
 from subprocess import PIPE
 from sys import stderr
@@ -160,7 +160,7 @@ class TabNineSender(MessageSender):
         self.process.stdin.write(data.encode("utf-8"))    # type: ignore
         self.process.stdin.flush()    # type: ignore
         
-        logger.info("\n--- Send TabNine Complete Request: {}".format(message["request"]["Autocomplete"]["filename"]))
+        log_time("Send TabNine Complete Request: {}".format(message["request"]["Autocomplete"]["filename"]))
         
         logger.debug(json.dumps(message, indent=3))
         
