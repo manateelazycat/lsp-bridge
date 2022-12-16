@@ -125,8 +125,8 @@
   :type 'integer
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-diagnostic-disable-popup-error nil
-  "Whether to popup error message."
+(defcustom lsp-bridge-enable-hover-diagnostic nil
+  "Whether to popup diagnostic message when hover diagnostic place."
   :type 'boolean
   :group 'lsp-bridge)
 

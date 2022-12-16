@@ -816,10 +816,10 @@ So we build this macro to restore postion after code format."
       (unless (equal lsp-bridge-last-cursor-position
                      (setq-local lsp-bridge-last-cursor-position (point)))
         ;; Only show hover when cursor move.
-        (unless (or lsp-bridge-diagnostic-disable-popup-error
-                 (member this-command-string
-                         '("self-insert-command" "org-self-insert-command"
-                           "lsp-bridge-diagnostic-jump-next" "lsp-bridge-diagnostic-jump-prev")))
+        (when (and lsp-bridge-enable-hover-diagnostic
+                   (not (member this-command-string
+                                '("self-insert-command" "org-self-insert-command"
+                                  "lsp-bridge-diagnostic-jump-next" "lsp-bridge-diagnostic-jump-prev"))))
           (lsp-bridge-diagnostic-maybe-display-error-at-point))
 
         ;; Only send `change_cursor' request when user change cursor, except cause by mouse wheel.
