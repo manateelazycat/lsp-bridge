@@ -181,7 +181,8 @@
          (cursor (acm-frame-get-popup-position (point))))
     ;; weather goto beginning of diagnostic
     (when goto-beginning
-      (goto-char (overlay-start diagnostic-overlay)))
+      (goto-char (overlay-start diagnostic-overlay))
+      (setq cursor (acm-frame-get-popup-position (point))))
 
     (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-tooltip)
       (erase-buffer)
@@ -223,7 +224,7 @@
                                         ;; Show diagnostic information around cursor if diagnostic frame is not visiable.
                                         (lsp-bridge-in-diagnostic-overlay-area-p overlay)))
                                   lsp-bridge-diagnostic-overlays)))
-        (lsp-bridge-diagnostic-show-tooltip diagnostic-overlay)
+        (lsp-bridge-diagnostic-show-tooltip diagnostic-overlay t)
       (message "[LSP-Bridge] Reach last diagnostic."))))
 
 (defun lsp-bridge-diagnostic-jump-prev ()
@@ -236,7 +237,7 @@
                                       ;; Show diagnostic information around cursor if diagnostic frame is not visiable.
                                       (lsp-bridge-in-diagnostic-overlay-area-p overlay)))
                                 (reverse lsp-bridge-diagnostic-overlays))))
-      (lsp-bridge-diagnostic-show-tooltip diagnostic-overlay)
+      (lsp-bridge-diagnostic-show-tooltip diagnostic-overlay t)
     (message "[LSP-Bridge] Reach first diagnostic.")))
 
 (defun lsp-bridge-diagnostic-overlay-at-point ()
