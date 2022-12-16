@@ -116,7 +116,7 @@ class TabNine:
                 self.dispatcher = threading.Thread(target=self.message_dispatcher)
                 self.dispatcher.start()
                 
-                logger.info("\nStart TabNine server{}".format(self.path))
+                log_time("\nStart TabNine server{}".format(self.path))
                 
             return self.process != None
         else:
