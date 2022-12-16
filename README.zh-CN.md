@@ -105,6 +105,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-get-workspace-folder`: 在 Java 中需要把多个项目放到一个 Workspace 目录下， 才能正常进行定义跳转， 可以自定义这个函数， 函数输入是项目路径， 返回对应的 Workspace 目录
 * `lsp-bridge-org-babel-lang-list`: 支持 org-mode 代码块补全的语言列表, 需要先在代码块调用命令 `org-edit-special`， 在弹出窗口 lsp-bridge 才能提供补全
 * `lsp-bridge-enable-diagnostics`: 代码诊断， 默认打开
+* `lsp-bridge-enable-hover-diagnostic`: 光标移动到错误位置弹出诊断信息， 默认关闭
 * `lsp-bridge-enable-search-words`: 索引打开文件的单词， 默认打开
 * `lsp-bridge-enable-auto-format-code`: 自动格式化代码, 默认关闭
 * `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认打开
