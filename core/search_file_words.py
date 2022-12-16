@@ -31,25 +31,45 @@ class SearchFileWords:
     def __init__(self):
         self.files = {}
         self.search_files = set()
+        self.search_content_dict = {}
         self.search_words_thread = None
         
         self.search_words_queue = queue.Queue()
         self.search_words_dispatcher_thread = threading.Thread(target=self.search_dispatcher)
         self.search_words_dispatcher_thread.start()
     
-    def close_file(self, filepath):
-        if filepath in self.files:
-            if filepath in self.search_files:
-                self.search_files.remove(filepath)
+    def index_files(self, filepaths):
+        for filepath in filepaths:
+            self.search_files.add(filepath)
+        
+        add_queue = False
+        for filepath in filepaths:
+            if filepath not in self.files:
+                self.files[filepath] = set()
+                add_queue = True
+                
+        if add_queue:
+            self.search_words_queue.put("search_words")
             
-            del self.files[filepath]
-    
-    def change_file(self, filepath):
+    def change_file(self, filepath, base64_string):
+        import base64
+        content = base64.b64decode(base64_string).decode("utf-8")
         self.search_files.add(filepath)
+        self.search_content_dict[filepath] = content
         
         if filepath not in self.files:
             self.files[filepath] = set()
             self.search_words_queue.put("search_words")
+    
+    def close_file(self, filepath):
+        if filepath in self.files:
+            if filepath in self.search_files:
+                self.search_files.remove(filepath)
+                
+            if filepath in self.search_content_dict:
+                del self.search_content_dict[filepath]
+                
+            del self.files[filepath]
     
     def search(self, prefix: str):
         self.search_words_thread = threading.Thread(target=lambda : self.search_words_from_files(prefix))
@@ -103,9 +123,14 @@ class SearchFileWords:
                 message = self.search_words_queue.get(block=True)
                 if message == "search_words":
                     search_files = copy.deepcopy(self.search_files)
+                    search_content_dict = copy.deepcopy(self.search_content_dict)
+                    
                     for search_file in search_files:
                         try:
-                            words = set(re.findall("[\w|-]+", open(search_file).read()))
+                            if search_file in search_content_dict:
+                                words = set(re.findall("[\w|-]+", search_content_dict[search_file]))
+                            else:
+                                words = set(re.findall("[\w|-]+", open(search_file).read()))
                         except (FileNotFoundError, UnicodeDecodeError):
                             continue
                         filter_words = set(map(lambda word: re.sub('[^A-Za-z0-9-_]+', '', word),

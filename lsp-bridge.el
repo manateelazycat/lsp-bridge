@@ -1110,11 +1110,10 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-search-words-update ()
   (when (and buffer-file-name
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
-    ;; Save file before send `search_file_words_change_file' request.
-    (with-temp-message ""
-      (let ((inhibit-message t))
-        (basic-save-buffer)))
-    (lsp-bridge-call-async "search_file_words_change_file" buffer-file-name)))
+    (lsp-bridge-call-async "search_file_words_change_file"
+                           buffer-file-name
+                           (base64-encode-string (encode-coding-string (buffer-string) 'utf-8))
+                           )))
 
 (defun lsp-bridge-search-words-index-files ()
   "Index files when lsp-bridge python process finish."

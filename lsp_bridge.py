@@ -79,7 +79,7 @@ class LspBridge:
 
         # Init search file words.
         self.search_file_words = SearchFileWords()
-        for name in ["change_file", "close_file", "rebuild_cache", "search"]:
+        for name in ["index_files", "change_file", "close_file", "rebuild_cache", "search"]:
             self.build_prefix_function("search_file_words", "search_file_words", name)
             
         # Init search sdcv words.
@@ -329,10 +329,6 @@ class LspBridge:
             logger.info("Exit server: {}".format(server_name))
             del LSP_SERVER_DICT[server_name]
             
-    def search_file_words_index_files(self, filepaths):
-        for filepath in filepaths:
-            self.search_file_words.change_file(filepath)
-        
     def cleanup(self):
         """Do some cleanup before exit python process."""
         close_epc_client()
