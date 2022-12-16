@@ -1107,14 +1107,17 @@ So we build this macro to restore postion after code format."
   (setq-local acm-backend-elisp-items candidates)
   (lsp-bridge-try-completion))
 
+(defvar-local lsp-bridge-search-words-temp-file nil)
 (defun lsp-bridge-search-words-update ()
   (when (and buffer-file-name
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
     ;; Save file before send `search_file_words_change_file' request.
-    (with-temp-message ""
-      (let ((inhibit-message t))
-        (basic-save-buffer)))
-    (lsp-bridge-call-async "search_file_words_change_file" buffer-file-name)))
+    (if lsp-bridge-search-words-temp-file
+        (write-region nil nil lsp-bridge-search-words-temp-file nil 0)
+      (setq-local lsp-bridge-search-words-temp-file
+                  (make-temp-file (format "lsp-bridge-search-words-%s" (buffer-name)) nil nil
+                                  (buffer-substring-no-properties (point-min) (point-max)))))
+    (lsp-bridge-call-async "search_file_words_change_file" lsp-bridge-search-words-temp-file)))
 
 (defun lsp-bridge-search-words-index-files ()
   "Index files when lsp-bridge python process finish."
