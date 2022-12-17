@@ -1065,11 +1065,12 @@ So we build this macro to restore postion after code format."
         (lsp-bridge-elisp-symbols-search current-symbol)
 
         ;; Send change file to search-words backend.
-        (when buffer-file-name
-          (let ((current-word (acm-backend-search-file-words-get-point-string)))
-            ;; Search words if current prefix is not empty.
-            (unless (or (string-equal current-word "") (null current-word))
-              (lsp-bridge-call-async "search_file_words_search" current-word))))
+        (unless lsp-bridge-prohibit-completion
+          (when buffer-file-name
+            (let ((current-word (acm-backend-search-file-words-get-point-string)))
+              ;; Search words if current prefix is not empty.
+              (unless (or (string-equal current-word "") (null current-word))
+                (lsp-bridge-call-async "search_file_words_search" current-word)))))
 
         ;; Send tailwind keyword search request just when cursor in class area.
         (when (and (derived-mode-p 'web-mode)
@@ -1123,7 +1124,7 @@ So we build this macro to restore postion after code format."
   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
     ;; Update file search words when idle.
     (lsp-bridge-search-words-update)
-    
+
     (unless (eq last-command 'mwheel-scroll)
       (lsp-bridge-call-async "search_file_words_rebuild_cache"))))
 

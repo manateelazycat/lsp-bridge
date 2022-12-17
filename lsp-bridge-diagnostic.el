@@ -268,6 +268,7 @@
   (lsp-bridge-call-file-api "ignore_diagnostic"))
 
 (defun lsp-bridge-diagnostic--ignore (comment-string)
+  (setq-local lsp-bridge-prohibit-completion t)
   (move-end-of-line 1)
   (insert (format "    %s" comment-string)))
 
