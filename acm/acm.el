@@ -407,7 +407,7 @@ Only calculate template candidate when type last character."
     ;; Return candidates.
     (if acm-filter-overlay
         ;; When acm-filter turn on, use `acm-filter-string' filter candidates.
-        (remove-if-not (lambda (candidate)
+        (cl-remove-if-not (lambda (candidate)
                          (string-match-p (regexp-quote acm-filter-string) (plist-get candidate :label)))
                        candidates)
       ;; Otherwise return origin candidates.
