@@ -833,7 +833,7 @@ So we build this macro to restore postion after code format."
       ;; Hide diagnostic tooltip.
       (unless (member this-command-string '("lsp-bridge-diagnostic-jump-next"
                                             "lsp-bridge-diagnostic-jump-prev"))
-        (lsp-bridge-hide-diagnostic-tooltip))
+        (lsp-bridge-diagnostic-hide-tooltip))
 
       ;; Hide signature tooltip.
       (lsp-bridge-hide-signature-tooltip)
@@ -1356,7 +1356,7 @@ So we build this macro to restore postion after code format."
   (unless (eq (current-buffer)
               lsp-bridge--last-buffer)
     (lsp-bridge-hide-doc-tooltip)
-    (lsp-bridge-hide-diagnostic-tooltip)
+    (lsp-bridge-diagnostic-hide-tooltip)
     (lsp-bridge-hide-signature-tooltip))
 
   (unless (or (minibufferp)
