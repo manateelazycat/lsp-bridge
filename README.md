@@ -60,6 +60,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 | Tab          | acm-complete              | Complete completion                                                          |
 | Alt + h      | acm-complete              | Complete completion                                                          |
 | Alt + H      | acm-insert-common         | Insert common part of candidates                                             |
+| Alt + u      | acm-filter                | Filter candidates with overlay string                                        |
 | Alt + d      | acm-doc-toggle            | Enable or disable candidate documentation                                    |
 | Alt + j      | acm-doc-scroll-up         | Scroll up candidate documentation                                            |
 | Alt + k      | acm-doc-scroll-down       | Scroll down candidate documentation                                          |

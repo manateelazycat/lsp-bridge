@@ -806,6 +806,17 @@ So we build this macro to restore postion after code format."
 (defvar-local lsp-bridge-last-cursor-position 0)
 (defvar-local lsp-bridge-prohibit-completion nil)
 
+(defun lsp-bridge-monitor-pre-command ()
+  (when acm-filter-overlay
+    (let ((this-command-string (format "%s" this-command)))
+      (cond ((member this-command-string '("self-insert-command" "org-self-insert-command"))
+             (setq this-command 'acm-filter-insert-char)
+             (setq last-command 'acm-filter-insert-char))
+            ((member this-command-string '("delete-block-backward" "grammatical-edit-backward-delete"))
+             (setq this-command 'acm-filter-delete-char)
+             (setq last-command 'acm-filter-delete-char))
+            ))))
+
 (defun lsp-bridge-monitor-post-command ()
   (let ((this-command-string (format "%s" this-command)))
     (when (and lsp-bridge-mode
@@ -1369,6 +1380,7 @@ So we build this macro to restore postion after code format."
 (defconst lsp-bridge--internal-hooks
   '((before-change-functions lsp-bridge-monitor-before-change nil t)
     (after-change-functions lsp-bridge-monitor-after-change nil t)
+    (pre-command-hook lsp-bridge-monitor-pre-command nil t)
     (post-command-hook lsp-bridge-monitor-post-command nil t)
     (after-save-hook lsp-bridge-monitor-after-save nil t)
     (kill-buffer-hook lsp-bridge-close-buffer-file nil t)

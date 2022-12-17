@@ -59,12 +59,13 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 | Tab          | acm-complete              | 完成补全                                                 |
 | Alt + h      | acm-complete              | 完成补全                                                 |
 | Alt + H      | acm-insert-common         | 插入后选词共有部分                                       |
+| Alt + u      | acm-filter                | 用Overlay进一步过滤后选词                              |
 | Alt + d      | acm-doc-toggle            | 开启或关闭后选词文档                                     |
 | Alt + j      | acm-doc-scroll-up         | 向下滚动后选词文档                                       |
 | Alt + k      | acm-doc-scroll-down       | 向上滚动后选词文档                                       |
 | Alt + l      | acm-hide                  | 隐藏补全窗口                                             |
 | Ctrl + g     | acm-hide                  | 隐藏补全窗口                                             |
-| Alt + 数字键 | acm-complete-quick-access | 快速选择后选词， 需要开启 `acm-enable-quick-access` 选项 |
+| Alt + 数字键 | acm-complete-quick-access | 快速选择后选词， 需要开启 `acm-enable-quick-access` 选项  |
 
 ## 命令列表
 
