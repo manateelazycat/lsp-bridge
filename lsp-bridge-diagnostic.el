@@ -241,7 +241,7 @@
     (message "[LSP-Bridge] Reach first diagnostic.")))
 
 (defun lsp-bridge-diagnostic-overlay-at-point ()
-  (dolist (overlay lsp-bridge-diagnostic-overlays)
+  (cl-dolist (overlay lsp-bridge-diagnostic-overlays)
     (when (and (>= (point) (overlay-start overlay))
                (< (point) (overlay-end overlay)))
       (cl-return overlay)
