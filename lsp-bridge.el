@@ -682,10 +682,13 @@ So we build this macro to restore postion after code format."
 
 (defvar-local lsp-bridge-buffer-file-deleted nil)
 
+(defun lsp-bridge-call-file-api-p ()
+  (and lsp-bridge-mode
+       (lsp-bridge-has-lsp-server-p)
+       (lsp-bridge-epc-live-p lsp-bridge-epc-process)))
+
 (defun lsp-bridge-call-file-api (method &rest args)
-  (when (and lsp-bridge-mode
-             (lsp-bridge-has-lsp-server-p)
-             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
+  (when (lsp-bridge-call-file-api-p)
     (if (and (boundp 'acm-backend-lsp-filepath)
              (file-exists-p acm-backend-lsp-filepath))
         (if lsp-bridge-buffer-file-deleted
@@ -1049,15 +1052,16 @@ So we build this macro to restore postion after code format."
     (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
 
     ;; Send change_file request to trigger LSP completion.
-    (lsp-bridge-call-file-api "change_file"
-                              lsp-bridge--before-change-begin-pos
-                              lsp-bridge--before-change-end-pos
-                              length
-                              (buffer-substring-no-properties begin end)
-                              (lsp-bridge--position)
-                              (acm-char-before)
-                              (buffer-name)
-                              (acm-get-input-prefix))
+    (when (lsp-bridge-call-file-api-p)
+      (lsp-bridge-call-file-api "change_file"
+                                lsp-bridge--before-change-begin-pos
+                                lsp-bridge--before-change-end-pos
+                                length
+                                (buffer-substring-no-properties begin end)
+                                (lsp-bridge--position)
+                                (acm-char-before)
+                                (buffer-name)
+                                (acm-get-input-prefix)))
 
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       (let* ((current-word (thing-at-point 'word t))
