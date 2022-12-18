@@ -1045,56 +1045,62 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-monitor-after-change (begin end length)
   (unless lsp-bridge-revert-buffer-flag
-    ;; Record last command to `lsp-bridge-last-change-command'.
-    (setq lsp-bridge-last-change-command (format "%s" this-command))
+    (let ((this-command-string (format "%s" this-command)))
+      ;; Record last command to `lsp-bridge-last-change-command'.
+      (setq lsp-bridge-last-change-command (format "%s" this-command))
 
-    ;; Record last change position to avoid popup outdate completions.
-    (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
+      ;; Record last change position to avoid popup outdate completions.
+      (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
 
-    ;; Send change_file request to trigger LSP completion.
-    (when (lsp-bridge-call-file-api-p)
-      (lsp-bridge-call-file-api "change_file"
-                                lsp-bridge--before-change-begin-pos
-                                lsp-bridge--before-change-end-pos
-                                length
-                                (buffer-substring-no-properties begin end)
-                                (lsp-bridge--position)
-                                (acm-char-before)
-                                (buffer-name)
-                                (acm-get-input-prefix)))
+      ;; Send change_file request to trigger LSP completion.
+      (when (lsp-bridge-call-file-api-p)
+        (lsp-bridge-call-file-api "change_file"
+                                  lsp-bridge--before-change-begin-pos
+                                  lsp-bridge--before-change-end-pos
+                                  length
+                                  (buffer-substring-no-properties begin end)
+                                  (lsp-bridge--position)
+                                  (acm-char-before)
+                                  (buffer-name)
+                                  (acm-get-input-prefix)))
 
-    (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-      (let* ((current-word (thing-at-point 'word t))
-             (current-symbol (thing-at-point 'symbol t)))
-        ;; TabNine search.
-        (when acm-enable-tabnine
-          (lsp-bridge-tabnine-complete))
+      (when (and (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+                 ;; NOTE:
+                 ;; `org-todo' will insert extra characters after `PROPERTIES'
+                 ;; if we call (thing-at-point 'symbol t) in `after-change-functions'
+                 ;; It's looks like the bug of `org-todo' that conflict with `thing-at-point'.
+                 (not (member this-command-string '("org-todo"))))
+        (let* ((current-word (thing-at-point 'word t))
+               (current-symbol (thing-at-point 'symbol t)))
+          ;; TabNine search.
+          (when acm-enable-tabnine
+            (lsp-bridge-tabnine-complete))
 
-        ;; Search sdcv dictionary.
-        (when acm-enable-search-sdcv-words
-          ;; Search words if current prefix is not empty.
-          (unless (or (string-equal current-word "") (null current-word))
-            (lsp-bridge-call-async "search_sdcv_words_search" current-word)))
+          ;; Search sdcv dictionary.
+          (when acm-enable-search-sdcv-words
+            ;; Search words if current prefix is not empty.
+            (unless (or (string-equal current-word "") (null current-word))
+              (lsp-bridge-call-async "search_sdcv_words_search" current-word)))
 
-        ;; Search elisp symbol.
-        (lsp-bridge-elisp-symbols-search current-symbol)
+          ;; Search elisp symbol.
+          (lsp-bridge-elisp-symbols-search current-symbol)
 
-        ;; Send change file to search-words backend.
-        (unless lsp-bridge-prohibit-completion
-          (when buffer-file-name
-            (let ((current-word (acm-backend-search-file-words-get-point-string)))
-              ;; Search words if current prefix is not empty.
-              (unless (or (string-equal current-word "") (null current-word))
-                (lsp-bridge-call-async "search_file_words_search" current-word)))))
+          ;; Send change file to search-words backend.
+          (unless lsp-bridge-prohibit-completion
+            (when buffer-file-name
+              (let ((current-word (acm-backend-search-file-words-get-point-string)))
+                ;; Search words if current prefix is not empty.
+                (unless (or (string-equal current-word "") (null current-word))
+                  (lsp-bridge-call-async "search_file_words_search" current-word)))))
 
-        ;; Send tailwind keyword search request just when cursor in class area.
-        (when (and (derived-mode-p 'web-mode)
-                   (acm-in-string-p)
-                   (save-excursion
-                     (search-backward-regexp "class=" (point-at-bol) t)))
-          (unless (or (string-equal current-symbol "") (null current-symbol))
-            (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol)))
-        ))))
+          ;; Send tailwind keyword search request just when cursor in class area.
+          (when (and (derived-mode-p 'web-mode)
+                     (acm-in-string-p)
+                     (save-excursion
+                       (search-backward-regexp "class=" (point-at-bol) t)))
+            (unless (or (string-equal current-symbol "") (null current-symbol))
+              (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol)))
+          )))))
 
 (defun lsp-bridge-elisp-symbols-update ()
   "We need synchronize elisp symbols to Python side when idle."
