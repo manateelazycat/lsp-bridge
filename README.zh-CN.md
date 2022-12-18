@@ -35,7 +35,9 @@ lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建�
 (global-lsp-bridge-mode)
 ```
 
-请注意， 使用 lsp-bridge 时， 请先关闭其他补全插件， 比如 lsp-mode, eglot, company, corfu 等等， lsp-bridge 提供从补全后端、 补全前端到多后端融合的全套解决方案。
+请注意:
+1. 使用 lsp-bridge 时， 请先关闭其他补全插件， 比如 lsp-mode, eglot, company, corfu 等等， lsp-bridge 提供从补全后端、 补全前端到多后端融合的全套解决方案。
+2. 在补全菜单弹出时， `acm-mode`会自动启用， 补全菜单消失时, `acm-mode` 会自动禁用， 请不要手动把 `acm-mode` 加到任何 mode-hook 中， 也不要手动执行 `acm-mode`
 
 ## 使用
 lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://github.com/manateelazycat/lsp-bridge/blob/master/README.zh-CN.md#%E5%B7%B2%E7%BB%8F%E6%94%AF%E6%8C%81%E7%9A%84%E8%AF%AD%E8%A8%80%E6%9C%8D%E5%8A%A1%E5%99%A8)和模式插件以后， 直接写代码即可， 不需要额外的设置。
@@ -59,7 +61,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 | Tab          | acm-complete              | 完成补全                                                 |
 | Alt + h      | acm-complete              | 完成补全                                                 |
 | Alt + H      | acm-insert-common         | 插入后选词共有部分                                       |
-| Alt + u      | acm-filter                | 用Overlay进一步过滤后选词                              |
+| Alt + u      | acm-filter                | 用 Overlay 进一步过滤后选词                              |
 | Alt + d      | acm-doc-toggle            | 开启或关闭后选词文档                                     |
 | Alt + j      | acm-doc-scroll-up         | 向下滚动后选词文档                                       |
 | Alt + k      | acm-doc-scroll-down       | 向上滚动后选词文档                                       |

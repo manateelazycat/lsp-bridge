@@ -36,7 +36,9 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 (global-lsp-bridge-mode)
 ```
 
-NOTE: When use lsp-bridge, please disable other completion plugin first, such as lsp-mode, eglot, company, corfu, etc. lsp-bridge provides a full set from completion backend, completion frontend to multi-backend integration solution.
+NOTE:
+1. When use lsp-bridge, please disable other completion plugin first, such as lsp-mode, eglot, company, corfu, etc. lsp-bridge provides a full set from completion backend, completion frontend to multi-backend integration solution.
+2. When the completion menu pops up, `acm-mode` will be automatically enabled, and when the completion menu disappears, `acm-mode` will be automatically disabled, please do not manually add `acm-mode` to any mode-hook, also don't manually execute `acm-mode`
 
 ## Usage
 lsp-bridge is design for out the box. After installing the [LSP server](https://github.com/manateelazycat/lsp-bridge#supported-language-servers) and mode plugin corresponding to the open file, you can write the code directly without additional settings.
