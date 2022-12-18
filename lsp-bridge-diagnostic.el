@@ -136,6 +136,8 @@
 
 (defvar lsp-bridge-diagnostic-display-error-at-point-timer nil)
 
+(autoload 'lsp-bridge--with-file-buffer "lsp-bridge")
+
 (defun lsp-bridge-diagnostic-hide-tooltip ()
   (posframe-hide lsp-bridge-diagnostic-tooltip))
 
