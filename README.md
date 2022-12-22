@@ -17,7 +17,7 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 ## Installation
 
 1. Install Emacs 28 and above versions
-2. Install Python dependencies: `pip3 install epc orjson six` (orjson is optional, orjson is based on Rust, providing faster JSON parsing performance)
+2. Install Python dependencies: `pip3 install epc orjson sexpdata six` (orjson is optional, orjson is based on Rust, providing faster JSON parsing performance)
 3. Install Elisp dependencies:
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
