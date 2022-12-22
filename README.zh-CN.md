@@ -16,7 +16,7 @@ lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建�
 ## 安装
 
 1. 安装 Emacs 28 及以上版本
-2. 安装 Python 依赖: `pip3 install epc orjson six` (orjson 是可选的， orjson 基于 Rust， 提供更快的 JSON 解析性能)
+2. 安装 Python 依赖: `pip3 install epc orjson sexpdata six` (orjson 是可选的， orjson 基于 Rust， 提供更快的 JSON 解析性能)
 3. 安装 Elisp 依赖:
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
