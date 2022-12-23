@@ -243,13 +243,8 @@ Setting this to nil or 0 will turn off the indicator."
                                                                      (file-name-directory load-file-name)
                                                                    default-directory)))
 
-(defvar lsp-bridge-mark-ring nil
+(defvar-local lsp-bridge-mark-ring nil
   "The list of saved lsp-bridge marks, most recent first.")
-
-(defcustom lsp-bridge-mark-ring-max 16
-  "Maximum size of lsp-bridge mark ring.  \
-Start discarding off end if gets this big."
-  :type 'integer)
 
 (defvar lsp-bridge-server-port nil)
 
@@ -1172,7 +1167,7 @@ So we build this macro to restore postion after code format."
   (interactive)
   ;; Pop entries that refer to non-existent buffers.
   (while (and lsp-bridge-mark-ring (not (marker-buffer (car lsp-bridge-mark-ring))))
-    (setq lsp-bridge-mark-ring (cdr lsp-bridge-mark-ring)))
+    (setq-local lsp-bridge-mark-ring (cdr lsp-bridge-mark-ring)))
   (or lsp-bridge-mark-ring
       (error "[LSP-Bridge] No lsp-bridge mark set"))
   (let* ((this-buffer (current-buffer))
@@ -1271,24 +1266,30 @@ So we build this macro to restore postion after code format."
   (setq-local lsp-bridge-prohibit-completion t))
 
 (defun lsp-bridge-define--jump (filepath position)
-  ;; Record postion.
-  (set-marker (mark-marker) (point) (current-buffer))
-  (add-to-history 'lsp-bridge-mark-ring (copy-marker (mark-marker)) lsp-bridge-mark-ring-max t)
+  (let (position-before-jump)
+    ;; Record postion.
+    (set-marker (mark-marker) (point) (current-buffer))
+    (setq position-before-jump (copy-marker (mark-marker)))
+    (setq mark-ring lsp-bridge-mark-ring)
 
-  ;; Jump to define.
-  ;; Show define in other window if `lsp-bridge-jump-to-def-in-other-window' is non-nil.
-  (if lsp-bridge-jump-to-def-in-other-window
-      (find-file-other-window filepath)
-    (find-file filepath))
+    ;; Jump to define.
+    ;; Show define in other window if `lsp-bridge-jump-to-def-in-other-window' is non-nil.
+    (if lsp-bridge-jump-to-def-in-other-window
+        (find-file-other-window filepath)
+      (find-file filepath))
 
-  (goto-char (acm-backend-lsp-position-to-point position))
-  (recenter)
+    ;; Init jump history in new buffer.
+    (setq-local lsp-bridge-mark-ring (append (list position-before-jump) mark-ring))
 
-  ;; Flash define line.
-  (require 'pulse)
-  (let ((pulse-iterations 1)
-        (pulse-delay lsp-bridge-flash-line-delay))
-    (pulse-momentary-highlight-one-line (point) 'lsp-bridge-font-lock-flash)))
+    ;; Jump to define postion.
+    (goto-char (acm-backend-lsp-position-to-point position))
+    (recenter)
+
+    ;; Flash define line.
+    (require 'pulse)
+    (let ((pulse-iterations 1)
+          (pulse-delay lsp-bridge-flash-line-delay))
+      (pulse-momentary-highlight-one-line (point) 'lsp-bridge-font-lock-flash))))
 
 (defun lsp-bridge-popup-documentation-scroll-up (&optional arg)
   (interactive)
