@@ -1,6 +1,6 @@
 {
-  "completion": ["vscode-css-language-server", "emmet-ls-css"],
-  "completion_item_resolve": ["vscode-css-language-server", "emmet-ls-css"],
+  "completion": ["emmet-ls-css", "vscode-css-language-server"],
+  "completion_item_resolve": ["emmet-ls-css", "vscode-css-language-server"],
   "diagnostics": ["vscode-css-language-server", "emmet-ls-css"],
   "code_action": ["vscode-css-language-server", "emmet-ls-css"],
   "execute_command": ["vscode-css-language-server", "emmet-ls-css"],
