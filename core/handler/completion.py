@@ -112,11 +112,10 @@ class Completion(Handler):
         # Avoid returning too many items to cause Emacs to do GC operation.
         completion_candidates = completion_candidates[:min(len(completion_candidates), self.file_action.completion_items_limit)]
         
-        if len(completion_candidates) > 0:
-            eval_in_emacs("lsp-bridge-completion--record-items",
-                          self.file_action.filepath,
-                          completion_candidates,
-                          self.position,
-                          self.method_server_name,
-                          self.method_server.completion_trigger_characters,
-                          self.file_action.get_lsp_server_names())
+        eval_in_emacs("lsp-bridge-completion--record-items",
+                      self.file_action.filepath,
+                      completion_candidates,
+                      self.position,
+                      self.method_server_name,
+                      self.method_server.completion_trigger_characters,
+                      self.file_action.get_lsp_server_names())
