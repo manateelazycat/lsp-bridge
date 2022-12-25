@@ -117,6 +117,7 @@
                                                     lsp-bridge-not-match-stop-commands
                                                     lsp-bridge-not-complete-manually
                                                     lsp-bridge-not-follow-complete
+                                                    lsp-bridge-not-execute-macro
                                                     lsp-bridge-not-in-string
                                                     lsp-bridge-not-in-org-table
                                                     lsp-bridge-not-in-multiple-cursors
@@ -938,6 +939,10 @@ So we build this macro to restore postion after code format."
    (ignore-errors
      (and (thing-at-point 'filename)
           (file-exists-p (file-name-directory (thing-at-point 'filename)))))))
+
+(defun lsp-bridge-not-execute-macro ()
+  "Hide completion during executing macros."
+  (not executing-kbd-macro))
 
 (defun lsp-bridge-not-in-mark-macro ()
   "Hide completion markmacro enable."
