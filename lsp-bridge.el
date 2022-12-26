@@ -364,14 +364,14 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defcustom lsp-bridge-single-lang-server-mode-list
   '(
-    ((c-mode c++-mode objc-mode) . lsp-bridge-c-lsp-server)
+    ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode) . lsp-bridge-c-lsp-server)
     (cmake-mode . "cmake-language-server")
     (java-mode . "jdtls")
     (python-mode . lsp-bridge-python-lsp-server)
     (ruby-mode . "solargraph")
-    ((rust-mode rustic-mode) . "rust-analyzer")
+    ((rust-mode rustic-mode rust-ts-mode) . "rust-analyzer")
     (elixir-mode . "elixirLS")
-    (go-mode . "gopls")
+    ((go-mode go-ts-mode) . "gopls")
     (groovy-mode . "groovy-language-server")
     (haskell-mode . "hls")
     (lua-mode . "sumneko")
@@ -388,7 +388,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ((css-mode) . "vscode-css-language-server")
     (elm-mode . "elm-language-server")
     (php-mode . lsp-bridge-php-lsp-server)
-    (yaml-mode . "yaml-language-server")
+    ((yaml-mode yaml-ts-mode) . "yaml-language-server")
     (zig-mode . "zls")
     (dockerfile-mode . "docker-langserver")
     (d-mode . "serve-d")
