@@ -168,10 +168,6 @@ class FileAction:
         self.version += 1
 
     def try_completion(self, position, before_char, prefix):
-        # Only send textDocument/completion request when match one of following rules:
-        # 1. Character before cursor is match completion trigger characters.
-        # 2. Completion UI is invisible.
-        # 3. Last completion candidates is empty.
         if self.multi_servers:
             for lsp_server in self.multi_servers.values():
                 if lsp_server.server_info["name"] in self.multi_servers_info["completion"]:
