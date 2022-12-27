@@ -66,6 +66,13 @@ class Completion(Handler):
                     if server.server_name.endswith("#" + self.method_server_name):
                         fuzzy = server.server_info.get("incomplete-fuzzy-match")
                         break
+                    
+            # Some LSP server, such as Wen, need assign textEdit/newText to display-label.
+            display_new_text = False
+            for server in self.file_action.get_match_lsp_servers("completion"):
+                if server.server_info.get("displayNewText", False):
+                    display_new_text = True
+                    break
             
             for item in response["items"] if "items" in response else response:
                 kind = KIND_MAP[item.get("kind", 0)].lower()
@@ -78,7 +85,12 @@ class Completion(Handler):
                 annotation = kind if kind != "" else item.get("detail", "")
                 key = "{},{}".format(item_index, label)
                 display_label = label[:self.file_action.display_label_max_length] + " ..." if len(label) > self.file_action.display_label_max_length else label
-
+                
+                if display_new_text:
+                    text_edit = item.get("textEdit", None)
+                    if text_edit != None:
+                        display_label = text_edit.get("newText", None)
+                
                 candidate = {
                     "key": key,
                     "icon": annotation,

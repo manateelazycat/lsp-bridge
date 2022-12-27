@@ -123,11 +123,7 @@
         (dolist (server-name acm-backend-lsp-server-names)
           (when-let* ((server-items (gethash server-name acm-backend-lsp-items)))
             (maphash (lambda (k v)
-                       (let ((candidate-label (plist-get v :label)))
-                         (when (equal server-name "文")
-                           (plist-put v :display-label (plist-get (plist-get v :textEdit) :newText)))
-
-                         (add-to-list 'candidates v t)))
+                       (add-to-list 'candidates v t))
                      server-items)))))
 
     ;; NOTE:

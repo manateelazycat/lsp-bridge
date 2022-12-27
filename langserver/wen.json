@@ -3,5 +3,6 @@
   "languageId": "文",
   "command": ["wenls"],
   "settings": {},
-  "prefixStyle": "symbol"
+  "prefixStyle": "symbol",
+  "displayNewText": true
 }
