@@ -32,7 +32,7 @@ class FindReferences(Handler):
             references_counter = 0
             references_content = ""
             for i, (path, ranges) in enumerate(references_dict.items()):
-                references_content += "\n" + REFERENCE_PATH + path + REFERENCE_ENDC + "\n"
+                references_content += "".join(["\n", REFERENCE_PATH, path, REFERENCE_ENDC, "\n"])
 
                 for rg in ranges:
                     with open(path, encoding="utf-8", errors="ignore") as f:
@@ -44,9 +44,8 @@ class FindReferences(Handler):
                         references_content += "{}:{}:{}".format(
                             line + 1,
                             start_column,
-                            line_content[:start_column] + REFERENCE_TEXT +
-                            line_content[start_column:end_column] + REFERENCE_ENDC +
-                            line_content[end_column:])
+                            "".join([line_content[:start_column], REFERENCE_TEXT, line_content[start_column:end_column], REFERENCE_ENDC, line_content[end_column:]])
+                            )
                         references_counter += 1
 
             linecache.clearcache()  # clear line cache
