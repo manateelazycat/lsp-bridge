@@ -102,6 +102,9 @@ class FileAction:
         if self.single_server_info != None:
             eval_in_emacs("lsp-bridge-set-prefix-style", self.single_server_info.get("prefixStyle", "ascii"))
 
+        # Init server names.
+        eval_in_emacs("lsp-bridge-set-server-names", self.filepath, self.get_lsp_server_names())
+
     @property
     def last_change(self) -> Tuple[float, float]:
         """Return the last change information as a tuple."""

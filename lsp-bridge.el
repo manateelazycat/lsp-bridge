@@ -875,6 +875,10 @@ So we build this macro to restore postion after code format."
   ;; other LSP server need use `bounds-of-thing-at-point' of symbol as keyword prefix.
   (setq-local acm-input-bound-style prefix-style))
 
+(defun lsp-bridge-set-server-names (filepath server-names)
+  (lsp-bridge--with-file-buffer filepath
+    (setq-local acm-backend-lsp-server-names server-names)))
+
 (defun lsp-bridge-completion--record-items (filepath
                                             candidates position
                                             server-name
