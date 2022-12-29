@@ -112,18 +112,23 @@
       (lsp-bridge-call-async "fetch_completion_item_info" acm-backend-lsp-filepath key server-name)
       (setq-local lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath key kind)))))
 
-(defcustom lsp-bridge-completion-popup-predicates '(lsp-bridge-not-only-blank-before-cursor
-                                                    lsp-bridge-not-match-hide-characters
-                                                    lsp-bridge-not-match-stop-commands
-                                                    lsp-bridge-not-complete-manually
+(defcustom lsp-bridge-completion-popup-predicates '(
                                                     lsp-bridge-not-follow-complete
-                                                    lsp-bridge-not-execute-macro
+                                                    lsp-bridge-not-match-stop-commands
+                                                    lsp-bridge-not-match-hide-characters
+
+                                                    lsp-bridge-not-only-blank-before-cursor
                                                     lsp-bridge-not-in-string
                                                     lsp-bridge-not-in-org-table
+
+                                                    lsp-bridge-not-execute-macro
                                                     lsp-bridge-not-in-multiple-cursors
                                                     lsp-bridge-not-in-mark-macro
+
                                                     lsp-bridge-is-evil-state
                                                     lsp-bridge-is-meow-state
+
+                                                    lsp-bridge-not-complete-manually
                                                     )
   "A list of predicate functions with no argument to enable popup completion in callback."
   :type 'list
