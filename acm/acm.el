@@ -430,11 +430,10 @@ The key of candidate will change between two LSP results."
          (current-select-candidate-index (cl-position previous-select-candidate (mapcar 'acm-menu-index-info menu-candidates) :test 'equal))
          (bounds (acm-get-input-prefix-bound)))
     (cond
-     ;; Hide completion menu if user type first candidate completely.
+     ;; Hide completion menu if user type first candidate completely, except when candidate annotation is `emmet' or `snippet'.
      ((and (equal (length candidates) 1)
            (string-equal keyword (plist-get (nth 0 candidates) :label))
-           ;; Volar always send back single emmet candidate, we need filter this condition.
-           (not (string-equal "Emmet Abbreviation" (plist-get (nth 0 candidates) :annotation))))
+           (not (member (plist-get (nth 0 candidates) :annotation) '("Emmet Abbreviation" "Snippet"))))
       (acm-hide))
      ((> (length candidates) 0)
       (let* ((menu-old-cache (cons acm-menu-max-length-cache acm-menu-number-cache)))
