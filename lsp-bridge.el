@@ -520,17 +520,17 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
   "A mapping from `major-mode' to its indent variable.")
 
 (defcustom lsp-bridge-string-interpolation-open-chars-alist
-  '(;;; for {}
+  '(;; For {}
     (python-mode . "[^\$]\{")
-    ;;; for ${}
+    ;; For ${}
     (js-mode . "\$\{")
     (js2-mode . "\$\{")
     (js3-mode . "\$\{")
     (typescript-mode . "\$\{")
     (sh-mode . "\$\{")
-    ;;; for #{}
+    ;; For #{}
     (ruby-mode . "\#\{")
-    ;;; for {{}}
+    ;; For {{}}
     (yaml-mode . "\{\{"))
   "Open characters for string interpolation. The elements are cons cell (major-mode . open-char-regexp)"
   :type 'cons)
@@ -951,12 +951,10 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-string-interpolation-p (string-interpolation-open-chars-alist)
   "Check if the cursor position is subject to string interpolation"
-  (let ((search-char (cdr (assoc (buffer-local-value 'major-mode (current-buffer))
-                                 string-interpolation-open-chars-alist))))
-    (when search-char
-      (let ((open-pos (save-excursion (search-backward-regexp search-char nil t))))
-        (when open-pos
-          (not (save-excursion (search-backward-regexp "\}" open-pos t))))))))
+  (when-let ((search-char (cdr (assoc (buffer-local-value 'major-mode (current-buffer))
+                                      string-interpolation-open-chars-alist))))
+    (when-let ((open-pos (save-excursion (search-backward-regexp search-char nil t))))
+      (not (save-excursion (search-backward-regexp "\}" open-pos t))))))
 
 (defun lsp-bridge-not-in-string ()
   "Hide completion if cursor in string area."
