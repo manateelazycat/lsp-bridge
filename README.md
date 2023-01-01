@@ -55,8 +55,8 @@ It should be noted that there are three scan modes of lsp-bridge:
 | Down         | acm-select-next           | Select next candidate                                                        |
 | Alt + p      | acm-select-prev           | Select previous candidate                                                    |
 | Up           | acm-select-prev           | Select previous candidate                                                    |
-| Alt + .      | acm-select-last           | Select last candidate                                                        |
-| Alt + ,      | acm-select-first          | Select first candidate                                                       |
+| Alt + ,      | acm-select-last           | Select last candidate                                                        |
+| Alt + .      | acm-select-first          | Select first candidate                                                       |
 | Ctrl + m     | acm-complete              | Complete completion                                                          |
 | Return       | acm-complete              | Complete completion                                                          |
 | Tab          | acm-complete              | Complete completion                                                          |

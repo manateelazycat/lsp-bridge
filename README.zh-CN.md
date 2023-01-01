@@ -54,8 +54,8 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 | Down         | acm-select-next           | 选择下一个后选词                                         |
 | Alt + p      | acm-select-prev           | 选择上一个后选词                                         |
 | Up           | acm-select-prev           | 选择上一个后选词                                         |
-| Alt + .      | acm-select-last           | 选择最后一个后选词                                       |
-| Alt + ,      | acm-select-first          | 选择第一个后选词                                         |
+| Alt + ,      | acm-select-last           | 选择最后一个后选词                                       |
+| Alt + .      | acm-select-first          | 选择第一个后选词                                         |
 | Ctrl + m     | acm-complete              | 完成补全                                                 |
 | Return       | acm-complete              | 完成补全                                                 |
 | Tab          | acm-complete              | 完成补全                                                 |
