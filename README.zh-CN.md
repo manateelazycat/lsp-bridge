@@ -48,26 +48,26 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 3. 自定义 `lsp-bridge-get-project-path-by-filepath` 函数， 输入参数是打开文件的路径字符串， 输出参数是项目目录路径， lsp-bridge 会根据输出目录路径来提供补全
 
 ## 按键
-| 按键         | 命令                      | 备注                                                     |
-| :---         | :---                      | :---                                                     |
-| Alt + n      | acm-select-next           | 选择下一个后选词                                         |
-| Down         | acm-select-next           | 选择下一个后选词                                         |
-| Alt + p      | acm-select-prev           | 选择上一个后选词                                         |
-| Up           | acm-select-prev           | 选择上一个后选词                                         |
-| Alt + ,      | acm-select-last           | 选择最后一个后选词                                       |
-| Alt + .      | acm-select-first          | 选择第一个后选词                                         |
-| Ctrl + m     | acm-complete              | 完成补全                                                 |
-| Return       | acm-complete              | 完成补全                                                 |
-| Tab          | acm-complete              | 完成补全                                                 |
-| Alt + h      | acm-complete              | 完成补全                                                 |
-| Alt + H      | acm-insert-common         | 插入后选词共有部分                                       |
-| Alt + u      | acm-filter                | 用 Overlay 进一步过滤后选词                              |
-| Alt + d      | acm-doc-toggle            | 开启或关闭后选词文档                                     |
-| Alt + j      | acm-doc-scroll-up         | 向下滚动后选词文档                                       |
-| Alt + k      | acm-doc-scroll-down       | 向上滚动后选词文档                                       |
-| Alt + l      | acm-hide                  | 隐藏补全窗口                                             |
-| Ctrl + g     | acm-hide                  | 隐藏补全窗口                                             |
-| Alt + 数字键 | acm-complete-quick-access | 快速选择后选词， 需要开启 `acm-enable-quick-access` 选项  |
+| 按键         | 命令                      | 备注                                                                 |
+|:-------------|:--------------------------|:---------------------------------------------------------------------|
+| Alt + n      | acm-select-next           | 选择下一个后选词                                                     |
+| Down         | acm-select-next           | 选择下一个后选词                                                     |
+| Alt + p      | acm-select-prev           | 选择上一个后选词                                                     |
+| Up           | acm-select-prev           | 选择上一个后选词                                                     |
+| Alt + ,      | acm-select-last           | 选择最后一个后选词                                                   |
+| Alt + .      | acm-select-first          | 选择第一个后选词                                                     |
+| Ctrl + m     | acm-complete              | 完成补全                                                             |
+| Return       | acm-complete              | 完成补全                                                             |
+| Tab          | acm-complete              | 完成补全                                                             |
+| Alt + h      | acm-complete              | 完成补全                                                             |
+| Alt + H      | acm-insert-common         | 插入后选词共有部分                                                   |
+| Alt + u      | acm-filter                | 用 Overlay 进一步过滤后选词                                          |
+| Alt + d      | acm-doc-toggle            | 开启或关闭后选词文档                                                 |
+| Alt + j      | acm-doc-scroll-up         | 向下滚动后选词文档                                                   |
+| Alt + k      | acm-doc-scroll-down       | 向上滚动后选词文档                                                   |
+| Alt + l      | acm-hide                  | 隐藏补全窗口                                                         |
+| Ctrl + g     | acm-hide                  | 隐藏补全窗口                                                         |
+| Alt + 数字键 | acm-complete-quick-access | 快速选择后选词， 需要开启 `acm-enable-quick-access` 选项, 重启才生效 |
 
 ## 命令列表
 

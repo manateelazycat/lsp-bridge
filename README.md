@@ -49,26 +49,26 @@ It should be noted that there are three scan modes of lsp-bridge:
 3. Custom `lsp-bridge-get-project-path-by-filepath` function, the input parameter is the path string of opened file, the output parameter is the project directory path, lsp-bridge will scan project directory path to provide provide completion
 
 ## Keymap
-| Key          | Command                   | Description                                                                  |
-| :---         | :---                      | :---                                                                         |
-| Alt + n      | acm-select-next           | Select next candidate                                                        |
-| Down         | acm-select-next           | Select next candidate                                                        |
-| Alt + p      | acm-select-prev           | Select previous candidate                                                    |
-| Up           | acm-select-prev           | Select previous candidate                                                    |
-| Alt + ,      | acm-select-last           | Select last candidate                                                        |
-| Alt + .      | acm-select-first          | Select first candidate                                                       |
-| Ctrl + m     | acm-complete              | Complete completion                                                          |
-| Return       | acm-complete              | Complete completion                                                          |
-| Tab          | acm-complete              | Complete completion                                                          |
-| Alt + h      | acm-complete              | Complete completion                                                          |
-| Alt + H      | acm-insert-common         | Insert common part of candidates                                             |
-| Alt + u      | acm-filter                | Filter candidates with overlay string                                        |
-| Alt + d      | acm-doc-toggle            | Enable or disable candidate documentation                                    |
-| Alt + j      | acm-doc-scroll-up         | Scroll up candidate documentation                                            |
-| Alt + k      | acm-doc-scroll-down       | Scroll down candidate documentation                                          |
-| Alt + l      | acm-hide                  | Hide completion menu                                                         |
-| Ctrl + g     | acm-hide                  | Hide completion menu                                                         |
-| Alt + Number | acm-complete-quick-access | Selecting candidate quickly, you need enable `acm-enable-quick-access` first |
+| Key          | Command                   | Description                                                                                                         |
+|:-------------|:--------------------------|:--------------------------------------------------------------------------------------------------------------------|
+| Alt + n      | acm-select-next           | Select next candidate                                                                                               |
+| Down         | acm-select-next           | Select next candidate                                                                                               |
+| Alt + p      | acm-select-prev           | Select previous candidate                                                                                           |
+| Up           | acm-select-prev           | Select previous candidate                                                                                           |
+| Alt + ,      | acm-select-last           | Select last candidate                                                                                               |
+| Alt + .      | acm-select-first          | Select first candidate                                                                                              |
+| Ctrl + m     | acm-complete              | Complete completion                                                                                                 |
+| Return       | acm-complete              | Complete completion                                                                                                 |
+| Tab          | acm-complete              | Complete completion                                                                                                 |
+| Alt + h      | acm-complete              | Complete completion                                                                                                 |
+| Alt + H      | acm-insert-common         | Insert common part of candidates                                                                                    |
+| Alt + u      | acm-filter                | Filter candidates with overlay string                                                                               |
+| Alt + d      | acm-doc-toggle            | Enable or disable candidate documentation                                                                           |
+| Alt + j      | acm-doc-scroll-up         | Scroll up candidate documentation                                                                                   |
+| Alt + k      | acm-doc-scroll-down       | Scroll down candidate documentation                                                                                 |
+| Alt + l      | acm-hide                  | Hide completion menu                                                                                                |
+| Ctrl + g     | acm-hide                  | Hide completion menu                                                                                                |
+| Alt + Number | acm-complete-quick-access | Selecting candidate quickly, you need enable `acm-enable-quick-access` first, it takes effect only after restarting |
 
 
 ## Commands
