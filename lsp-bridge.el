@@ -951,14 +951,12 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-string-interpolation-p (string-interpolation-open-chars-alist)
   "Check if the cursor position is subject to string interpolation"
-  (save-excursion
-    (let* ((initial-pos (point))
-           (search-char (cdr (or (assoc (buffer-local-value 'major-mode (current-buffer))
-                                        string-interpolation-open-chars-alist)
-                                 (assoc t string-interpolation-open-chars-alist))))
-           (open-pos (search-backward-regexp search-char nil t)))
-      (if open-pos
-          (not (search-forward-regexp "\}" initial-pos t))))))
+  (let ((search-char (cdr (assoc (buffer-local-value 'major-mode (current-buffer))
+                                 string-interpolation-open-chars-alist))))
+    (when search-char
+      (let ((open-pos (save-excursion (search-backward-regexp search-char nil t))))
+        (when open-pos
+          (not (save-excursion (search-backward-regexp "\}" open-pos t))))))))
 
 (defun lsp-bridge-not-in-string ()
   "Hide completion if cursor in string area."
