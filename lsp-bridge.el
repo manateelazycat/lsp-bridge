@@ -520,9 +520,18 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
   "A mapping from `major-mode' to its indent variable.")
 
 (defcustom lsp-bridge-string-interpolation-open-chars-alist
-  '((python-mode . "[^\$]\{")
-    (yaml-mode . "\{\{")
-    (t . "\$\{"))
+  '(;;; for {}
+    (python-mode . "[^\$]\{")
+    ;;; for ${}
+    (js-mode . "\$\{")
+    (js2-mode . "\$\{")
+    (js3-mode . "\$\{")
+    (typescript-mode . "\$\{")
+    (sh-mode . "\$\{")
+    ;;; for #{}
+    (ruby-mode . "\#\{")
+    ;;; for {{}}
+    (yaml-mode . "\{\{"))
   "Open characters for string interpolation. The elements are cons cell (major-mode . open-char-regexp)"
   :type 'cons)
 
