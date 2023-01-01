@@ -519,6 +519,13 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (default                    . standard-indent)) ; default fallback
   "A mapping from `major-mode' to its indent variable.")
 
+(defcustom lsp-bridge-string-interpolation-open-chars-alist
+  '((python-mode . "[^\$]\{")
+    (yaml-mode . "\{\{")
+    (t . "\$\{"))
+  "Open characters for string interpolation. The elements are cons cell (major-mode . open-char-regexp)"
+  :type 'cons)
+
 (defun lsp-bridge--get-indent-width (mode)
   "Get indentation offset for MODE."
   (or (alist-get mode lsp-bridge-formatting-indent-alist)
@@ -933,6 +940,17 @@ So we build this macro to restore postion after code format."
   (not (or (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands)
            (member (format "%s" last-command) lsp-bridge-completion-stop-commands))))
 
+(defun lsp-bridge-string-interpolation-p (string-interpolation-open-chars-alist)
+  "Check if the cursor position is subject to string interpolation"
+  (save-excursion
+    (let* ((initial-pos (point))
+           (search-char (cdr (or (assoc (buffer-local-value 'major-mode (current-buffer))
+                                        string-interpolation-open-chars-alist)
+                                 (assoc t string-interpolation-open-chars-alist))))
+           (open-pos (search-backward-regexp search-char nil t)))
+      (if open-pos
+          (not (search-forward-regexp "\}" initial-pos t))))))
+
 (defun lsp-bridge-not-in-string ()
   "Hide completion if cursor in string area."
   (or
@@ -944,6 +962,8 @@ So we build this macro to restore postion after code format."
         (string-suffix-p ".vue" acm-backend-lsp-filepath))
    ;; Other language not allowed popup completion in string, it's annoy
    (not (acm-in-string-p))
+   ;; Allow popup completion menu for string interpolation
+   (lsp-bridge-string-interpolation-p lsp-bridge-string-interpolation-open-chars-alist)
    ;; Allow file path completion in string area
    (ignore-errors
      (and (thing-at-point 'filename)
