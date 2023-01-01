@@ -17,6 +17,14 @@
                  (const :tag "Control key" control))
   :group 'acm-quick-access)
 
+(defvar acm-quick-access-init-p nil)
+
+(defun acm-quick-access-init ()
+  (when (and (not acm-quick-access-init-p)
+             acm-enable-quick-access)
+    (acm-keymap--bind-quick-access acm-mode-map)
+    (setq acm-quick-access-init-p t)))
+
 (defun acm-keymap--quick-access-modifier ()
   "Return string representation of the `acm-quick-access-modifier'."
   (if-let ((modifier (assoc-default acm-quick-access-modifier
@@ -30,13 +38,12 @@
     "M"))
 
 (defun acm-keymap--bind-quick-access (keymap)
-  (if acm-enable-quick-access
-      (let ((modifier (acm-keymap--quick-access-modifier)))
-        (dolist (key acm-quick-access-keys)
-          (let ((key-seq (acm-keymap--kbd-quick-access modifier key)))
-            (if (lookup-key keymap key-seq)
-                (warn "Key sequence %s already bound" (key-description key-seq))
-              (define-key keymap key-seq #'acm-complete-quick-access)))))))
+  (when acm-enable-quick-access
+    (let ((modifier (acm-keymap--quick-access-modifier)))
+      (dolist (key acm-quick-access-keys)
+        (let ((key-seq (acm-keymap--kbd-quick-access modifier key)))
+          (unless (lookup-key keymap key-seq)
+            (define-key keymap key-seq #'acm-complete-quick-access)))))))
 
 (defun acm-keymap--kbd-quick-access (modifier key)
   (kbd (format "%s-%s" modifier key)))

@@ -203,7 +203,6 @@
     (define-key map "\M-k" #'acm-doc-scroll-down)
     (define-key map "\M-l" #'acm-hide)
     (define-key map "\C-g" #'acm-hide)
-    (acm-keymap--bind-quick-access map)
     map)
   "Keymap used when popup is shown.")
 
@@ -419,6 +418,9 @@ The key of candidate will change between two LSP results."
   (format "%s###%s" (plist-get candidate :label) (plist-get candidate :backend)))
 
 (defun acm-update ()
+  ;; Init quick mode map.
+  (acm-quick-access-init)
+
   ;; Adjust `gc-cons-threshold' to maximize temporary,
   ;; make sure Emacs not do GC when filter/sort candidates.
   (let* ((gc-cons-threshold most-positive-fixnum)

@@ -960,7 +960,7 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-not-follow-complete ()
   "Hide completion if last command is `acm-complete'."
-  (or (not (eq last-command 'acm-complete))
+  (or (not (member (format "%s" last-command) '("acm-complete" "acm-complete-quick-access")))
       (member (format "%s" this-command) '("self-insert-command" "org-self-insert-command"))))
 
 (defun lsp-bridge-not-only-blank-before-cursor ()
