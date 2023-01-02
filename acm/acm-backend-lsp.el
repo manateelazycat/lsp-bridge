@@ -112,19 +112,19 @@
 
 (defun acm-backend-lsp-candidates (keyword)
   (let* ((candidates (list)))
-    (when (>= (length keyword) acm-backend-lsp-candidate-min-length)
-      (when (and
-             (boundp 'acm-backend-lsp-items)
-             acm-backend-lsp-items
-             (boundp 'acm-backend-lsp-server-names)
-             acm-backend-lsp-server-names
-             (hash-table-p acm-backend-lsp-items))
-        ;; Sort multi-server items by
-        (dolist (server-name acm-backend-lsp-server-names)
-          (when-let* ((server-items (gethash server-name acm-backend-lsp-items)))
-            (maphash (lambda (k v)
-                       (add-to-list 'candidates v t))
-                     server-items)))))
+    (when (and
+           (>= (length keyword) acm-backend-lsp-candidate-min-length)
+           (boundp 'acm-backend-lsp-items)
+           acm-backend-lsp-items
+           (boundp 'acm-backend-lsp-server-names)
+           acm-backend-lsp-server-names
+           (hash-table-p acm-backend-lsp-items))
+      ;; Sort multi-server items by
+      (dolist (server-name acm-backend-lsp-server-names)
+        (when-let* ((server-items (gethash server-name acm-backend-lsp-items)))
+          (maphash (lambda (k v)
+                     (add-to-list 'candidates v t))
+                   server-items))))
 
     ;; NOTE:
     ;; lsp-bridge has sort candidate at Python side,

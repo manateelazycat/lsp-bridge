@@ -443,11 +443,10 @@ user more freedom to use rg with special arguments."
   (string-to-number (thing-at-point 'symbol)))
 
 (defun lsp-bridge-ref-get-match-buffer (filepath)
-  (catch 'find-match
-    (dolist (buffer (buffer-list))
-      (when (string-equal (buffer-file-name buffer) filepath)
-        (throw 'find-match buffer)))
-    nil))
+  (cl-dolist (buffer (buffer-list))
+    (when (string-equal (buffer-file-name buffer) filepath)
+      (cl-return buffer)
+      )))
 
 (defun lsp-bridge-ref-current-line-empty-p ()
   (save-excursion
@@ -866,13 +865,12 @@ user more freedom to use rg with special arguments."
     ;; View the function name when navigate in match line.
     (when lsp-bridge-ref-show-function-name-p
       (require 'which-func)
-      (let ((function-name (which-function)))
-        (when function-name
-          (message "[LSP-Bridge] Located in function: %s"
-                   (propertize
-                    function-name
-                    'face 'lsp-bridge-ref-font-lock-function-location
-                    )))))))
+      (when-let ((function-name (which-function)))
+        (message "[LSP-Bridge] Located in function: %s"
+                 (propertize
+                  function-name
+                  'face 'lsp-bridge-ref-font-lock-function-location
+                  ))))))
 
 (defun lsp-bridge-ref-in-org-link-content-p ()
   (and (looking-back "\\[\\[.*" (line-beginning-position))
