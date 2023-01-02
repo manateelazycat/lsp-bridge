@@ -462,6 +462,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     swift-mode-hook
     csharp-mode-hook
     telega-chat-mode-hook
+    markdown-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type 'list)
