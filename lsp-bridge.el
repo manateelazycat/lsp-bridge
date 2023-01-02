@@ -564,11 +564,10 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-get-match-buffer (filepath)
   (cl-dolist (buffer (buffer-list))
-    (if-let ((file-name (buffer-file-name buffer)))
-        (when (or (string-equal file-name filepath)
-                  (string-equal (file-truename file-name) filepath))
-          (cl-return buffer)
-          ))))
+    (when-let* ((file-name (buffer-file-name buffer))
+                (match-buffer (or (string-equal file-name filepath)
+                                  (string-equal (file-truename file-name) filepath))))
+      (cl-return buffer))))
 
 (defun lsp-bridge--get-project-path-func (filepath)
   (when lsp-bridge-get-project-path-by-filepath
@@ -626,17 +625,15 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-get-lang-server-by-extension (filepath extension-list)
   "Get lang server for file extension."
-  (let* ((file-extension (file-name-extension filepath))
-         (langserver-info (cl-find-if
-                           (lambda (pair)
-                             (let ((extension (car pair)))
-                               (if (eq (type-of extension) 'string)
-                                   (string-equal file-extension extension)
-                                 (member file-extension extension))))
-                           extension-list)))
-    (when langserver-info
-      (cdr langserver-info)
-      )))
+  (when-let* ((file-extension (file-name-extension filepath))
+              (langserver-info (cl-find-if
+                                (lambda (pair)
+                                  (let ((extension (car pair)))
+                                    (if (eq (type-of extension) 'string)
+                                        (string-equal file-extension extension)
+                                      (member file-extension extension))))
+                                extension-list)))
+    (cdr langserver-info)))
 
 (defun lsp-bridge-get-multi-lang-server-by-extension (filepath)
   "Get lang server for file extension."
@@ -664,10 +661,8 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-get-multi-lang-server-by-mode ()
   "Get lang server for file mode."
-  (let ((langserver-info (lsp-bridge-lang-server-by-mode lsp-bridge-multi-lang-server-mode-list)))
-    (when langserver-info
-      (lsp-bridge-get-symbol-string-value (cdr langserver-info))
-      )))
+  (when-let ((langserver-info (lsp-bridge-lang-server-by-mode lsp-bridge-multi-lang-server-mode-list)))
+    (lsp-bridge-get-symbol-string-value (cdr langserver-info))))
 
 (defun lsp-bridge-get-single-lang-server-by-mode ()
   "Get lang server for file mode."
