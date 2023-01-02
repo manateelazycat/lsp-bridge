@@ -320,8 +320,7 @@ Only calculate template candidate when type last character."
 (defun acm-template-candidate-update ()
   "Set `acm-template-candidate-show-p' to t to calculate template candidates."
   (setq-local acm-template-candidate-show-p t)
-  (when (acm-frame-visible-p acm-menu-frame)
-    (acm-update)))
+  (acm-update))
 
 (cl-defmacro acm-cancel-timer (timer)
   `(when ,timer
