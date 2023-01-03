@@ -390,7 +390,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defcustom lsp-bridge-multi-lang-server-mode-list
   '(((python-mode python-ts-mode) . lsp-bridge-python-multi-lsp-server)
-    ((qml-mode qml-ts-mode) . "qmlls_javascript"))
+    ((qml-mode qml-ts-mode) . "qmlls_javascript")
+    ((js2-mode js-mode js-ts-mode rjsx-mode) . "js_eslint")
+    ((typescript-mode typescript-ts-mode) . "ts_eslint")
+    ((typescript-tsx-mode) . "tsx_eslint"))
   "The multi lang server rule for file mode."
   :type 'cons)
 
@@ -410,9 +413,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (lua-mode . "sumneko")
     (dart-mode . "dart-analysis-server")
     (scala-mode . "metals")
-    ((js2-mode js-mode js-ts-mode rjsx-mode) . "javascript")
     ((typescript-tsx-mode tsx-ts-mode) . "typescriptreact")
-    ((typescript-mode typescript-ts-mode) . "typescript")
     (tuareg-mode . "ocamllsp")
     (erlang-mode . "erlang-ls")
     ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . lsp-bridge-tex-lsp-server)

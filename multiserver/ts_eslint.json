@@ -1,0 +1,15 @@
+{
+  "completion": "typescript",
+  "completion_item_resolve": "typescript",
+  "diagnostics": ["vscode-eslint-language-server", "typescript"],
+  "code_action": ["vscode-eslint-language-server", "typescript"],
+  "execute_command": ["vscode-eslint-language-server", "typescript"],
+  "find_define": "typescript",
+  "find_implementation": "typescript",
+  "find_references": "typescript",
+  "formatting": "typescript",
+  "hover": ["vscode-eslint-language-server", "typescript"],
+  "signature_help": "typescript",
+  "prepare_rename": "typescript",
+  "rename": "typescript"
+}

@@ -1,0 +1,15 @@
+{
+  "completion": "javascript",
+  "completion_item_resolve": "javascript",
+  "diagnostics": ["vscode-eslint-language-server", "javascript"],
+  "code_action": ["vscode-eslint-language-server", "javascript"],
+  "execute_command": ["vscode-eslint-language-server", "javascript"],
+  "find_define": "javascript",
+  "find_implementation": "javascript",
+  "find_references": "javascript",
+  "formatting": "javascript",
+  "hover": "javascript",
+  "signature_help": "javascript",
+  "prepare_rename": "javascript",
+  "rename": "javascript"
+}
