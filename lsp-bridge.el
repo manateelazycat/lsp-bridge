@@ -1130,6 +1130,11 @@ So we build this macro to restore postion after code format."
                        (search-backward-regexp "class=" (point-at-bol) t)))
             (unless (or (string-equal current-symbol "") (null current-symbol))
               (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol)))
+
+          ;; Send path search request when detect path string.
+          (when (acm-in-string-p)
+            (when-let* ((filepath (ignore-errors (expand-file-name (file-name-directory (thing-at-point 'filename))))))
+              (lsp-bridge-call-async "search_paths_search" filepath (file-name-base current-symbol))))
           )))))
 
 (defun lsp-bridge-elisp-symbols-update ()
@@ -1771,6 +1776,10 @@ SymbolKind (defined in the LSP)."
 
 (defun lsp-bridge-search-tailwind-keywords--record-items (items)
   (setq-local acm-backend-tailwind-items items)
+  (lsp-bridge-try-completion))
+
+(defun lsp-bridge-search-paths--record-items (items)
+  (setq-local acm-backend-path-items items)
   (lsp-bridge-try-completion))
 
 ;; https://tecosaur.github.io/emacs-config/config.html#lsp-support-src

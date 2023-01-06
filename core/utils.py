@@ -276,6 +276,14 @@ def windows_get_env_value(var_name: str) -> str:
     if var_name in os.environ.keys():
         return os.environ[var_name]
 
+def cmp(x, y):
+    if x < y:
+        return -1
+    elif x > y:
+        return 1
+    else:
+        return 0
+
 class MessageSender(Thread):
     
     def __init__(self, process: subprocess.Popen):

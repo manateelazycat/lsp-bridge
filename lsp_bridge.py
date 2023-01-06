@@ -38,6 +38,7 @@ from core.search_file_words import SearchFileWords
 from core.search_sdcv_words import SearchSdcvWords
 from core.search_list import SearchList
 from core.search_tailwindcss_keywords import SearchTailwindKeywords
+from core.search_paths import SearchPaths
 from core.tabnine import TabNine
 from core.utils import *
 from core.handler import *
@@ -96,6 +97,11 @@ class LspBridge:
         self.search_tailwind_keywords = SearchTailwindKeywords()
         for name in ["search"]:
             self.build_prefix_function("search_tailwind_keywords", "search_tailwind_keywords", name)
+
+        # Init search paths.
+        self.search_paths = SearchPaths()
+        for name in ["search"]:
+            self.build_prefix_function("search_paths", "search_paths", name)
             
         # Init emacs option.
         enable_lsp_server_log = get_emacs_var("lsp-bridge-enable-log")

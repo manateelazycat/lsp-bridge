@@ -93,27 +93,11 @@
   :type 'boolean
   :group 'acm-backend-path)
 
+(defvar-local acm-backend-path-items nil)
+
 (defun acm-backend-path-candidates (keyword)
   (when acm-enable-path
-    (let* ((candidates (list))
-           (parent-dir (ignore-errors (expand-file-name (file-name-directory (thing-at-point 'filename))))))
-      (when (and parent-dir
-                 (file-exists-p parent-dir))
-        (let ((current-file (file-name-base keyword))
-              (files (cl-remove-if (lambda (subdir) (or (member subdir '("." ".."))))
-                                   (directory-files parent-dir))))
-          (dolist (file files)
-            (when (acm-candidate-fuzzy-search current-file file)
-              (let* ((file-path (expand-file-name file parent-dir))
-                     (file-type (if (file-directory-p file-path) "dir" "file")))
-                (add-to-list 'candidates (list :key file
-                                               :icon file-type
-                                               :label file
-                                               :display-label file
-                                               :annotation (capitalize file-type)
-                                               :backend "path")
-                             t))))))
-      (acm-candidate-sort-by-prefix keyword candidates))))
+    acm-backend-path-items))
 
 (defun acm-backend-path-candidate-expand (candidate-info bound-start)
   (let* ((keyword (acm-get-input-prefix))
