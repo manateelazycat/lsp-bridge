@@ -121,6 +121,8 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-completion-popup-predicates`: 补全菜单显示的检查函数， 这个选项包括的所有函数都检查过以后， 补全菜单才能显示
 * `lsp-bridge-completion-stop-commands`: 这些命令执行以后，不再弹出补全菜单
 * `lsp-bridge-completion-hide-characters`: 这些字符的后面不再弹出补全菜单
+* `acm-frame-background-dark-color`: 暗色主题下的菜单背景颜色
+* `acm-frame-background-light-color`: 亮色主题下的菜单背景颜色
 * `acm-markdown-render-font-height`: 弹出文档的字体高度， 默认是 130
 * `acm-enable-doc`: 补全菜单是否显示帮助文档
 * `acm-enable-icon`: 补全菜单是否显示图标, macOS 用户需要给 brew 命令增加选项 `--with-rsvg` 来安装 Emacs 才能显示 SVG 图片

@@ -123,6 +123,8 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-completion-popup-predicates`: the predicate function for completion menu, completion menu popup after all the functions pass
 * `lsp-bridge-completion-stop-commands`: completion menu will not popup if these commands are executed
 * `lsp-bridge-completion-hide-characters`: completion menu will not popup when cursor after those characters
+* `acm-frame-background-dark-color`: Menu background color in dark theme
+* `acm-frame-background-light-color`: Menu background color in light theme
 * `acm-markdown-render-font-height`: The font height of function documentation, default is 130
 * `acm-enable-doc`: Whether the complete menu display the help document
 * `acm-enable-doc-markdown-render`: Richly render Markdown for completion popups, you can choose `'async`, `t` or `nil`. When set to `'async`, styles are applied asynchronously, choose `t`, styles are applied synchronously and will slow down the completion speed, default is `async`

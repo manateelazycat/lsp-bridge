@@ -176,6 +176,16 @@
   :type 'integer
   :group 'acm)
 
+(defcustom acm-frame-background-dark-color "#191a1b"
+  "The frame background color for dark theme."
+  :type 'string
+  :group 'acm)
+
+(defcustom acm-frame-background-light-color "#f0f0f0"
+  "The frame background color for dark theme."
+  :type 'string
+  :group 'acm)
+
 (cl-defmacro acm-run-idle-func (timer idle func)
   `(unless ,timer
      (setq ,timer
@@ -926,8 +936,9 @@ The key of candidate will change between two LSP results."
      ("&lt;" . ?<) ("&gt;" . ?>) ("&amp;" . ?&))))
 
 (defun acm-frame-background-color ()
-  (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode))))
-    (if (string-equal theme-mode "dark") "#191a1b" "#f0f0f0")))
+  (pcase (format "%s" (frame-parameter nil 'background-mode))
+    ("dark" acm-frame-background-dark-color)
+    ("light" acm-frame-background-light-color)))
 
 (defun acm-markdown-render-content ()
   (when (fboundp 'gfm-view-mode)
