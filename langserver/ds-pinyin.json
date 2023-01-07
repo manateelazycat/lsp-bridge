@@ -13,6 +13,6 @@
     "match_long_input": true,
     "max_suggest": 50
   },
-  "prefixStyle": "symbol",
+  "prefixStyle": "ascii",
   "displayNewText": true
 }
