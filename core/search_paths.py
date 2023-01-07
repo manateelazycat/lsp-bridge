@@ -41,15 +41,14 @@ class SearchPaths:
         search_thread.start()
         self.search_thread_queue.append(search_thread)
 
-    def match_symbol(self, prefix, prefix_regexp, symbol):
-        return symbol.startswith(prefix) or symbol.replace("-", "").startswith(prefix) or prefix in symbol or prefix_regexp.match(symbol)
+    def match_symbol(self, prefix, symbol):
+        return symbol.startswith(prefix) or symbol.replace("-", "").startswith(prefix) or prefix in symbol
         
     def search_symbols(self, filename: str, prefix: str, ticker: int):
         candidates = []
-        prefix_regexp = re.compile(re.sub(r'([a-zA-Z0-9-_])', r'\1.*', re.escape(prefix)))
 
         for file in os.listdir(filename):
-            if self.match_symbol(prefix, prefix_regexp, file):
+            if self.match_symbol(prefix.lower(), file.lower()):
                 file_type = "dir" if os.path.isdir(os.path.join(filename, file)) else "file"
 
                 candidates.append({
