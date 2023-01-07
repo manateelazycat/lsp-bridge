@@ -359,6 +359,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defcustom lsp-bridge-use-wenls-in-org-mode nil
   "Use `wen' lsp server in org-mode, default is disable.")
 
+(defcustom lsp-bridge-use-ds-pinyin-in-org-mode nil
+  "Use `ds-pinyin' lsp server in org-mode, default is disable.")
+
 (defcustom lsp-bridge-complete-manually nil
   "Only popup completion menu when user call `lsp-bridge-popup-complete-menu' command.")
 
@@ -670,10 +673,12 @@ So we build this macro to restore postion after code format."
   (let ((langserver-info (lsp-bridge-lang-server-by-mode lsp-bridge-single-lang-server-mode-list)))
     (cond (langserver-info
            (lsp-bridge-get-symbol-string-value (cdr langserver-info)))
-          ((and lsp-bridge-use-wenls-in-org-mode
-                (eq major-mode 'org-mode))
-           "wen")
-          )))
+          ((eq major-mode 'org-mode)
+           (cond
+            (lsp-bridge-use-wenls-in-org-mode
+             "wen")
+            (lsp-bridge-use-ds-pinyin-in-org-mode
+             "ds-pinyin"))))))
 
 (defun lsp-bridge-has-lsp-server-p ()
   (when-let* ((dirname (ignore-errors (file-truename buffer-file-name))))

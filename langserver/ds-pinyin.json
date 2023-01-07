@@ -1,0 +1,18 @@
+{
+  "name": "ds-pinyin",
+  "languageId": "ds-pinyin",
+  "command": ["$HOME/.cargo/bin/ds-pinyin-lsp"],
+  "settings": {},
+  "initializationOptions": {
+    "db_path": "$HOME/.emacs.d/ds-pinyin/dict.db3",
+    "completion_on": true,
+    "show_symbols": true,
+    "show_symbols_only_follow_by_hanzi": false,
+    "show_symbols_by_n_times": 0,
+    "match_as_same_as_input": true,
+    "match_long_input": true,
+    "max_suggest": 50
+  },
+  "prefixStyle": "symbol",
+  "displayNewText": true
+}
