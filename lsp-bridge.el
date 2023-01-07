@@ -1124,10 +1124,13 @@ So we build this macro to restore postion after code format."
               (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol)))
 
           ;; Send path search request when detect path string.
-          (when (acm-in-string-p)
-            (when-let* ((filepath (ignore-errors (expand-file-name (file-name-directory (thing-at-point 'filename))))))
-              (when (file-exists-p filepath)
-                (lsp-bridge-call-async "search_paths_search" filepath (file-name-base current-symbol)))))
+          (if (acm-in-string-p)
+              (when-let* ((filepath (ignore-errors (expand-file-name (file-name-directory (thing-at-point 'filename))))))
+                (when (file-exists-p filepath)
+                  (lsp-bridge-call-async "search_paths_search" filepath (file-name-base current-symbol))))
+            ;; We need cleanup `acm-backend-path-items' when cursor not in string.
+            ;; Otherwise, other completion backend won't show up.
+            (setq-local acm-backend-path-items nil))
           )))))
 
 (defun lsp-bridge-elisp-symbols-update ()
