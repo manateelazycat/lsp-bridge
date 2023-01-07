@@ -148,7 +148,7 @@ class TabNine:
                         
                     completion_candidates = sorted(completion_candidates, key=lambda candidate: candidate["annotation"], reverse=True)
                 
-                eval_in_emacs("lsp-bridge-tabnine--record-items", completion_candidates)
+                eval_in_emacs("lsp-bridge-search-backend--record-items", "tabnine", completion_candidates)
         except:
             logger.error(traceback.format_exc())
     

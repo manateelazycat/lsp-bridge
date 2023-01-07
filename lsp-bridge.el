@@ -912,14 +912,6 @@ So we build this macro to restore postion after code format."
       (setq-local acm-backend-lsp-items lsp-items))
     (lsp-bridge-try-completion)))
 
-(defun lsp-bridge-search-file-words--record-items (candidates)
-  (setq-local acm-backend-search-file-words-items candidates)
-  (lsp-bridge-try-completion))
-
-(defun lsp-bridge-search-sdcv-words--record-items (candidates)
-  (setq-local acm-backend-search-sdcv-words-items candidates)
-  (lsp-bridge-try-completion))
-
 (defun lsp-bridge-try-completion ()
   (cond (lsp-bridge-prohibit-completion
          (setq-local lsp-bridge-prohibit-completion nil))
@@ -1771,19 +1763,15 @@ SymbolKind (defined in the LSP)."
                            (= after-point buffer-max)
                            max-num-results)))
 
-(defun lsp-bridge-tabnine--record-items (items)
-  (setq-local acm-backend-tabnine-items items)
+(defun lsp-bridge-search-backend--record-items (backend-name items)
+  (pcase backend-name
+    ("file-words" (setq-local acm-backend-search-file-words-items items))
+    ("sdcv-words" (setq-local acm-backend-search-sdcv-words-items items))
+    ("tabnine" (setq-local acm-backend-tabnine-items items))
+    ("tailwind-keywords" (setq-local acm-backend-tailwind-items items))
+    ("paths" (setq-local acm-backend-path-items items)))
   (lsp-bridge-try-completion))
 
-(defun lsp-bridge-search-tailwind-keywords--record-items (items)
-  (setq-local acm-backend-tailwind-items items)
-  (lsp-bridge-try-completion))
-
-(defun lsp-bridge-search-paths--record-items (items)
-  (setq-local acm-backend-path-items items)
-  (lsp-bridge-try-completion))
-
-;; https://tecosaur.github.io/emacs-config/config.html#lsp-support-src
 (cl-defmacro lsp-org-babel-enable (lang)
   "Support LANG in org source code block."
   (cl-check-type lang string)
