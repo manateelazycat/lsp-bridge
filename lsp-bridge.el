@@ -1134,7 +1134,8 @@ So we build this macro to restore postion after code format."
           ;; Send path search request when detect path string.
           (when (acm-in-string-p)
             (when-let* ((filepath (ignore-errors (expand-file-name (file-name-directory (thing-at-point 'filename))))))
-              (lsp-bridge-call-async "search_paths_search" filepath (file-name-base current-symbol))))
+              (when (file-exists-p filepath)
+                (lsp-bridge-call-async "search_paths_search" filepath (file-name-base current-symbol)))))
           )))))
 
 (defun lsp-bridge-elisp-symbols-update ()
