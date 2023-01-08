@@ -86,7 +86,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-diagnostic-list`: 列出所有诊断信息
 * `lsp-bridge-diagnostic-copy`: 拷贝当前诊断信息到剪切板
 * `lsp-bridge-diagnostic-ignore`: 插入注视忽略当前诊断
-* `lsp-bridge-code-action`: 弹出代码修复菜单, 也可以指需要修复的代码动作类型, 详细的类型分类有 "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports", "source.fixAll"
+* `lsp-bridge-code-action`: 弹出代码修复菜单, 也可以指需要修复的代码动作类型: "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports", "source.fixAll"
 * `lsp-bridge-workspace-list-symbols`: 列出工作区所有符号，并跳转到符号定义
 * `lsp-bridge-signature-help-fetch`: 在 minibuffer 显示参数信息
 * `lsp-bridge-popup-complete-menu`: 手动弹出补全菜单， 只有当打开 `lsp-bridge-complete-manually` 选项才需要使用这个命令
