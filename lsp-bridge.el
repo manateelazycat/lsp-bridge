@@ -1093,10 +1093,10 @@ So we build this macro to restore postion after code format."
 
       (when (and (lsp-bridge-epc-live-p lsp-bridge-epc-process)
                  ;; NOTE:
-                 ;; `org-todo' will insert extra characters after `PROPERTIES'
-                 ;; if we call (thing-at-point 'symbol t) in `after-change-functions'
-                 ;; It's looks like the bug of `org-todo' that conflict with `thing-at-point'.
-                 (not (member this-command-string '("org-todo"))))
+                 ;;
+                 ;; If we call (thing-at-point 'symbol t) in `after-change-functions'
+                 ;; some org commands conflict with `thing-at-point' that make org commands failed.
+                 (not (member this-command-string '("org-todo" "org-shiftright"))))
         (let* ((current-word (thing-at-point 'word t))
                (current-symbol (thing-at-point 'symbol t)))
           ;; TabNine search.
