@@ -321,6 +321,8 @@ lsp-bridge 基于 Python 的多线程技术来构建补全后端， 有了多线
 
 ## 反馈问题
 
+关于一些常用问题， 请先阅读[Wiki](https://github.com/manateelazycat/lsp-bridge/wiki)
+
 请用命令 `emacs -q` 并只添加 lsp-bridge 配置做一个对比测试，如果 `emacs -q` 可以正常工作，请检查你个人的配置文件。
 
 如果`emacs -q`环境下问题依旧，请到[这里](https://github.com/manateelazycat/lsp-bridge/issues/new)反馈, 并附带 `*lsp-bridge*` 窗口的内容给我们提交 issue，那里面有很多线索可以帮助我们排查问题。。

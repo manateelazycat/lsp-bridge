@@ -321,6 +321,8 @@ Generally, `lsp-bridge-example-record` is defined in this way. After receiving `
 
 ## Report bug
 
+For some common problems, please read [Wiki](https://github.com/manateelazycat/lsp-bridge/wiki) first.
+
 Please use `emacs -q` and load a minimal setup with only lsp-bridge to verify that the bug is reproducible. If `emacs -q` works fine, probably something is wrong with your Emacs config.
 
 If the problem still exists, please report it [here](https://github.com/manateelazycat/lsp-bridge/issues/new) with `*lsp-bridge*` buffer content, it contains many clues that can help us locate the problem faster.
