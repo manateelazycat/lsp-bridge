@@ -185,12 +185,8 @@
             (setq-local acm-backend-citre-search-keyword (concat acm-backend-citre-search-keyword (substring (string-reverse keyword) 0 1)))
           (setq-local acm-backend-citre-search-keyword keyword)))
       (let* ((collection (unless (string-empty-p acm-backend-citre-search-keyword)
-                           (pcase-let
-                               ((`(closure ((cands . ,cands) . ,_) . ,_)
-                                 (let ((cands (citre-get-completions)))
-                                   (nth 2 (citre-capf--make-collection
-                                           (nth 2 cands) (nth 0 cands) (nth 1 cands))))))
-                             (delete-dups cands)))))
+                           (let ((cands (citre-get-completions)))
+                             (delete-dups (mapcar #'citre-capf--make-candidate (nth 2 cands)))))))
         (when acm-backend-citre-keyword-complete
           (setq collection (append (acm-backend-citre-get-mode-keyword) collection)))
         (when collection
