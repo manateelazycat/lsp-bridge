@@ -89,7 +89,7 @@
   :group 'acm)
 
 (defcustom acm-backend-lsp-candidate-min-length 0
-  "Maximal length of candidate."
+  "Minimal length of candidate."
   :type 'integer
   :group 'acm-backend-lsp)
 
