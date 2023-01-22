@@ -197,11 +197,13 @@
     (define-key map [remap previous-line] #'acm-select-prev)
     (define-key map [down] #'acm-select-next)
     (define-key map [up] #'acm-select-prev)
-    (define-key map [tab]  #'acm-complete)
     (define-key map "\M-n" #'acm-select-next)
     (define-key map "\M-p" #'acm-select-prev)
     (define-key map "\M-," #'acm-select-last)
     (define-key map "\M-." #'acm-select-first)
+    (define-key map "\C-v" #'acm-select-next-page)
+    (define-key map "\M-v" #'acm-select-prev-page)
+    (define-key map [tab]  #'acm-complete)
     (define-key map "\C-m" #'acm-complete)
     (define-key map "\t" #'acm-complete)
     (define-key map "\n" #'acm-complete)
@@ -849,6 +851,16 @@ The key of candidate will change between two LSP results."
           (menu-old-cache (cons acm-menu-max-length-cache acm-menu-number-cache)))
      ,@body
 
+     (cond ((< acm-menu-index 0)
+            (setq-local acm-menu-index 0))
+           ((>= acm-menu-index (length acm-menu-candidates))
+            (setq-local acm-menu-index (1- (length acm-menu-candidates)))))
+
+     (cond ((< acm-menu-offset 0)
+            (setq-local acm-menu-offset 0))
+           ((>= acm-menu-offset (- (length acm-candidates) (length acm-menu-candidates)))
+            (setq-local acm-menu-offset (- (length acm-candidates) (length acm-menu-candidates)))))
+
      ;; Only update menu candidates when menu index or offset changed.
      (when (or (not (equal menu-old-index acm-menu-index))
                (not (equal menu-old-offset acm-menu-offset)))
@@ -898,6 +910,24 @@ The key of candidate will change between two LSP results."
           (setq-local acm-menu-index (1- acm-menu-index)))
          ((> acm-menu-offset 0)
           (setq-local acm-menu-offset (1- acm-menu-offset))))))
+
+(defun acm-select-next-page ()
+  "Select next page candidate."
+  (interactive)
+  (acm-menu-update
+   (cond ((< acm-menu-index (1- (length acm-menu-candidates)))
+          (setq-local acm-menu-index (+ acm-menu-index acm-menu-length)))
+         ((< (+ acm-menu-offset acm-menu-index) (1- (length acm-candidates)))
+          (setq-local acm-menu-offset (+ acm-menu-offset acm-menu-length))))))
+
+(defun acm-select-prev-page ()
+  "Select previous page candidate."
+  (interactive)
+  (acm-menu-update
+   (cond ((> acm-menu-index 0)
+          (setq-local acm-menu-index (- acm-menu-index acm-menu-length)))
+         ((> acm-menu-offset 0)
+          (setq-local acm-menu-offset (- acm-menu-offset acm-menu-length))))))
 
 (defun acm-doc-scroll-up ()
   (interactive)

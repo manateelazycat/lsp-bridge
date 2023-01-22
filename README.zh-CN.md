@@ -48,26 +48,28 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 3. 自定义 `lsp-bridge-get-project-path-by-filepath` 函数， 输入参数是打开文件的路径字符串， 输出参数是项目目录路径， lsp-bridge 会根据输出目录路径来提供补全
 
 ## 按键
-| 按键         | 命令                      | 备注                                                     |
-|:-------------|:--------------------------|:---------------------------------------------------------|
-| Alt + n      | acm-select-next           | 选择下一个候选词                                         |
-| Down         | acm-select-next           | 选择下一个候选词                                         |
-| Alt + p      | acm-select-prev           | 选择上一个候选词                                         |
-| Up           | acm-select-prev           | 选择上一个候选词                                         |
-| Alt + ,      | acm-select-last           | 选择最后一个候选词                                       |
-| Alt + .      | acm-select-first          | 选择第一个候选词                                         |
-| Ctrl + m     | acm-complete              | 完成补全                                                 |
-| Return       | acm-complete              | 完成补全                                                 |
-| Tab          | acm-complete              | 完成补全                                                 |
-| Alt + h      | acm-complete              | 完成补全                                                 |
-| Alt + H      | acm-insert-common         | 插入候选词共有部分                                       |
-| Alt + u      | acm-filter                | 用 Overlay 进一步过滤候选词                              |
-| Alt + d      | acm-doc-toggle            | 开启或关闭候选词文档                                     |
-| Alt + j      | acm-doc-scroll-up         | 向下滚动候选词文档                                       |
-| Alt + k      | acm-doc-scroll-down       | 向上滚动候选词文档                                       |
-| Alt + l      | acm-hide                  | 隐藏补全窗口                                             |
-| Ctrl + g     | acm-hide                  | 隐藏补全窗口                                             |
-| Alt + 数字键 | acm-complete-quick-access | 快速选择候选词， 需要开启 `acm-enable-quick-access` 选项 |
+| 按键           | 命令                        | 备注                                                       |
+| :------------- | :-------------------------- | :--------------------------------------------------------- |
+| Alt + n        | acm-select-next             | 选择下一个候选词                                           |
+| Down           | acm-select-next             | 选择下一个候选词                                           |
+| Alt + p        | acm-select-prev             | 选择上一个候选词                                           |
+| Up             | acm-select-prev             | 选择上一个候选词                                           |
+| Alt + ,        | acm-select-last             | 选择最后一个候选词                                         |
+| Alt + .        | acm-select-first            | 选择第一个候选词                                           |
+| Ctrl + v       | acm-select-next-page        | 向下滚动候选菜单                                           |
+| Alt + v        | acm-select-prev-page        | 向上滚动候选菜单                                           |
+| Ctrl + m       | acm-complete                | 完成补全                                                   |
+| Return         | acm-complete                | 完成补全                                                   |
+| Tab            | acm-complete                | 完成补全                                                   |
+| Alt + h        | acm-complete                | 完成补全                                                   |
+| Alt + H        | acm-insert-common           | 插入候选词共有部分                                         |
+| Alt + u        | acm-filter                  | 用 Overlay 进一步过滤候选词                                |
+| Alt + d        | acm-doc-toggle              | 开启或关闭候选词文档                                       |
+| Alt + j        | acm-doc-scroll-up           | 向下滚动候选词文档                                         |
+| Alt + k        | acm-doc-scroll-down         | 向上滚动候选词文档                                         |
+| Alt + l        | acm-hide                    | 隐藏补全窗口                                               |
+| Ctrl + g       | acm-hide                    | 隐藏补全窗口                                               |
+| Alt + 数字键   | acm-complete-quick-access   | 快速选择候选词， 需要开启 `acm-enable-quick-access` 选项   |
 
 ## 命令列表
 
@@ -126,7 +128,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `acm-markdown-render-font-height`: 弹出文档的字体高度， 默认是 130
 * `acm-enable-doc`: 补全菜单是否显示帮助文档
 * `acm-enable-icon`: 补全菜单是否显示图标, macOS 用户需要给 brew 命令增加选项 `--with-rsvg` 来安装 Emacs 才能显示 SVG 图片
-* `acm-enable-doc-markdown-render`: 对补全文档中的 Markdown 内容进行语法着色， 你可以选择`'async`, `t` 或者 `nil`. 当选择`'async` 时, lsp-bridge 会采用异步渲染， 当选择 `t` 时, lsp-bridge 会采用同步渲染， 同步渲染会降低补全速度， 默认是 `async` 选项
+* `acm-enable-doc-markdown-render`: 对补全文档中的 Markdown 内容进行语法着色， 你可以选择`'async`, `t` 或者 `nil`. 当选择`'async` 时, lsp-bridge 会采用异步渲， 当选择 `t` 时, lsp-bridge 会采用同步渲染， 同步渲染会降低补全速度， 默认是 `async` 选项
 * `acm-enable-tabnine`: 是否打开 tabnine 补全支持，默认打开，打开后需要运行命令 `lsp-bridge-install-tabnine` 来安装 tabnine 后就可以使用了。 TabNine 会消耗巨大的 CPU， 导致你整个电脑都卡顿， 如果电脑性能不好， 不建议开启此选项
 * `acm-enable-search-file-words`: 补全菜单是否显示打开文件的单词， 默认打开
 * `acm-enable-quick-access`: 是否在图标后面显示索引， 可以通过 Alt + Number 来快速选择候选词， 默认关闭
