@@ -125,6 +125,8 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-completion-popup-predicates`: the predicate function for completion menu, completion menu popup after all the functions pass
 * `lsp-bridge-completion-stop-commands`: completion menu will not popup if these commands are executed
 * `lsp-bridge-completion-hide-characters`: completion menu will not popup when cursor after those characters
+* `lsp-bridge-user-langserver-dir`: the dir where user place langserver configuration file, if the configuration file name in the dir is the same as that in [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) , lsp-bridge will use the configuration file in this dir
+* `lsp-bridge-user-multiserver-dir`: the dir where user place multiserver configuration file, if the configuration file name in the dir is the same as that in [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) , lsp-bridge will use the configuration file in this dir
 * `acm-frame-background-dark-color`: Menu background color in dark theme
 * `acm-frame-background-light-color`: Menu background color in light theme
 * `acm-markdown-render-font-height`: The font height of function documentation, default is 130
@@ -176,6 +178,21 @@ For example, we can enable the Deno LSP server for the Deno script with the foll
                   (when (search-forward-regexp (regexp-quote "from \"https://deno.land") nil t)
                     (return "deno")))))))))
 ```
+
+## Customize language server configuration file
+Copy the configuration file in  [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) or [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) to `lsp-bridge-user-langserver-dir` or `lsp-bridge-user-multiserver-dir` for customization, lsp-bridge will read the configuration file in `lsp-bridge-user-langserver-dir` or `lsp-bridge-user-multiserver-dir` first.
+
+We can set the value of `lsp-bridge-user-langserver-dir` or `lsp-bridge-user-multiserver-dir` before starting `lsp-bridge-mode` to realize different configuration files for different projects.
+
+```elisp
+(defun enable-lsp-bridge()
+  (when-let* ((project (project-current))
+              (project-root (nth 2 project)))
+    (setq-local lsp-bridge-user-langserver-dir project-root
+                lsp-bridge-user-multiserver-dir project-root))
+  (lsp-bridge-mode))
+```
+
 
 ## Add support for new language?
 
