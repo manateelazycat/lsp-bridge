@@ -1,0 +1,6 @@
+{
+  "name": "ruff",
+  "languageId": "python",
+  "command": ["ruff-lsp"],
+  "settings": {}
+}
