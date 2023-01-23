@@ -341,7 +341,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   '(
     (("wxml") . "wxml-language-server")
     (("html") . "vscode-html-language-server")
-	(("astro") . "astro-ls")
+    (("astro") . "astro-ls")
     )
   "The lang server rule for file extension."
   :type 'cons)
