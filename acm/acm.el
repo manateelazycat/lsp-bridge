@@ -976,8 +976,11 @@ The key of candidate will change between two LSP results."
       (setq-local markdown-fontify-code-blocks-natively t)
       (setq acm-markdown-render-background (face-background 'markdown-code-face))
       (setq acm-markdown-render-height (face-attribute 'markdown-code-face :height))
-      (face-remap-add-relative 'markdown-code-face :background (acm-frame-background-color))
-      (face-remap-add-relative 'markdown-code-face :height acm-markdown-render-font-height)
+      ;; NOTE:
+      ;; Please DON'T use `face-remap-add-relative' here, it's WRONG.
+      ;;
+      (set-face-background 'markdown-code-face (acm-frame-background-color))
+      (set-face-attribute 'markdown-code-face nil :height acm-markdown-render-font-height)
       (gfm-view-mode)))
   (read-only-mode 0)
   (setq prettify-symbols-alist acm-markdown-render-prettify-symbols-alist)
