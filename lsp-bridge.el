@@ -235,6 +235,16 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'float
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-user-langserver-dir nil
+  "The directory where the user place langserver configuration."
+  :type 'string
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-user-multiserver-dir nil
+  "The directory where the user place multiserver configuration."
+  :type 'string
+  :group 'lsp-bridge)
+
 (defface lsp-bridge-font-lock-flash
   '((t (:inherit highlight)))
   "Face to flash the current line."

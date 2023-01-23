@@ -170,6 +170,11 @@ class LspBridge:
             multi_lang_server_dir = Path(__file__).resolve().parent / "multiserver"
             multi_lang_server_path = multi_lang_server_dir / "{}.json".format(multi_lang_server)
             
+            user_multi_lang_server_dir = Path(str(get_emacs_var("lsp-bridge-user-multiserver-dir")))
+            user_multi_lang_server_path = user_multi_lang_server_dir / "{}.json".format(multi_lang_server)
+            if user_multi_lang_server_path.exists():
+                multi_lang_server_path = user_multi_lang_server_path
+
             with open(multi_lang_server_path, encoding="utf-8", errors="ignore") as f:
                 multi_lang_server_info = json.load(f)
                 servers = self.pick_multi_server_names(multi_lang_server_info)
@@ -374,6 +379,15 @@ def get_lang_server_path(server_name):
     server_dir = Path(__file__).resolve().parent / "langserver"
     server_path_current = server_dir / "{}_{}.json".format(server_name, get_os_name())
     server_path_default = server_dir / "{}.json".format(server_name)
+
+    user_server_dir = Path(str(get_emacs_var("lsp-bridge-user-langserver-dir")))
+    user_server_path_current = user_server_dir / "{}_{}.json".format(server_name, get_os_name())
+    user_server_path_default = user_server_dir / "{}.json".format(server_name)
+
+    if user_server_path_current.exists():
+        server_path_current = user_server_path_current
+    elif user_server_path_default.exists():
+        server_path_current = user_server_path_default
 
     return server_path_current if server_path_current.exists() else server_path_default
     
