@@ -1,0 +1,15 @@
+{
+  "completion": ["pyright-background-analysis"],
+  "completion_item_resolve": ["pyright-background-analysis"],
+  "diagnostics": ["ruff"],
+  "code_action": ["ruff"],
+  "execute_command": ["pyright-background-analysis", "ruff"],
+  "find_define": "pyright-background-analysis",
+  "find_implementation": "pyright-background-analysis",
+  "find_references": "pyright-background-analysis",
+  "formatting": "pyright-background-analysis",
+  "hover": "pyright-background-analysis",
+  "signature_help": "pyright-background-analysis",
+  "prepare_rename": "pyright-background-analysis",
+  "rename": "pyright-background-analysis"
+}

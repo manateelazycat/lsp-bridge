@@ -1,0 +1,15 @@
+{
+  "completion": ["python-ms"],
+  "completion_item_resolve": ["python-ms"],
+  "diagnostics": ["ruff"],
+  "code_action": ["ruff"],
+  "execute_command": ["python-ms", "ruff"],
+  "find_define": "python-ms",
+  "find_implementation": "python-ms",
+  "find_references": "python-ms",
+  "formatting": "python-ms",
+  "hover": "python-ms",
+  "signature_help": "python-ms",
+  "prepare_rename": "python-ms",
+  "rename": "python-ms"
+}

@@ -1,0 +1,15 @@
+{
+  "completion": ["jedi"],
+  "completion_item_resolve": ["jedi"],
+  "diagnostics": ["ruff"],
+  "code_action": ["ruff"],
+  "execute_command": ["jedi", "ruff"],
+  "find_define": "jedi",
+  "find_implementation": "jedi",
+  "find_references": "jedi",
+  "formatting": "jedi",
+  "hover": "jedi",
+  "signature_help": "jedi",
+  "prepare_rename": "jedi",
+  "rename": "jedi"
+}

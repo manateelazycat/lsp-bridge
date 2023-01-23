@@ -358,6 +358,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Default LSP server for Python language, you can choose `pyright', `jedi', `python-ms', `pylsp'."
   :type 'string)
 
+(defcustom lsp-bridge-python-ruff-lsp-server ""
+  "Default LSP server for Python Ruff, you can choose `pyright_ruff', `jedi_ruff', `python-ms_ruff', `pylsp_ruff'."
+  :type 'string)
+
 (defcustom lsp-bridge-tex-lsp-server "texlab"
   "Default LSP server for (la)tex, you can choose `taxlab' or `digestif'."
   :type 'string)
@@ -376,7 +380,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Only popup completion menu when user call `lsp-bridge-popup-complete-menu' command.")
 
 (defcustom lsp-bridge-multi-lang-server-mode-list
-  '()
+  '(((python-mode python-ts-mode) . lsp-bridge-python-ruff-lsp-server))
   "The multi lang server rule for file mode."
   :type 'cons)
 
