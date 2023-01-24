@@ -381,7 +381,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Only popup completion menu when user call `lsp-bridge-popup-complete-menu' command.")
 
 (defcustom lsp-bridge-multi-lang-server-mode-list
-  '(((python-mode python-ts-mode) . lsp-bridge-python-ruff-lsp-server))
+  '(((python-mode python-ts-mode) . lsp-bridge-python-ruff-lsp-server)
+    ((qml-mode qml-ts-mode) . "qmlls_javascript"))
   "The multi lang server rule for file mode."
   :type 'cons)
 
