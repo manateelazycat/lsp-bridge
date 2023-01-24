@@ -288,6 +288,9 @@ class LspBridge:
                     message_emacs(error_message)
 
                 return False
+            # We always replace LSP server command with absolute path of 'which' command.
+            lang_server_info["command"][0] = server_command_path
+
         else:
             error_message = "Error: {}'s command argument is empty".format(filepath)
 
