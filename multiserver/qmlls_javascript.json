@@ -1,0 +1,15 @@
+{
+  "completion": ["qmlls", "javascript"],
+  "completion_item_resolve": ["qmlls", "javascript"],
+  "diagnostics": ["qmlls"],
+  "code_action": ["qmlls"],
+  "execute_command": ["qmlls"],
+  "find_define": "qmlls",
+  "find_implementation": "qmlls",
+  "find_references": "qmlls",
+  "formatting": "qmlls",
+  "hover": "qmlls",
+  "signature_help": "qmlls",
+  "prepare_rename": "qmlls",
+  "rename": "qmlls"
+}
