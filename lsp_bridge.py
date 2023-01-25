@@ -188,7 +188,7 @@ class LspBridge:
                         server_path = get_lang_server_path(server_name)
 
                         with open(server_path, encoding="utf-8", errors="ignore") as server_path_file:
-                            lang_server_info = json.load(server_path_file)
+                            lang_server_info = read_lang_server_info(server_path_file)
                             lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info)
                             if lsp_server:
                                 multi_servers[lang_server_info["name"]] = lsp_server
@@ -242,43 +242,17 @@ class LspBridge:
         message_emacs(message)
         eval_in_emacs("lsp-bridge--turn-off", filepath)
 
-    def replace_template(self, arg):
-        if "%USER_EMACS_DIRECTORY%" in arg:
-            user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
-            return arg.replace("%USER_EMACS_DIRECTORY%", user_emacs_dir)
-        elif "$HOME" in arg:
-                return os.path.expandvars(arg)
-        elif "%FILEHASH%" in arg:
-            # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.
-            return arg.replace("%FILEHASH%", os.urandom(21).hex())
-        elif "%USERPROFILE%" in arg:
-            return arg.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
-        else:
-            return arg
-
-    def server_info_replace_template(self, lang_server_info):
-        # Replace template in command options.
-        command_args = lang_server_info["command"]
-        for i, arg in enumerate(command_args):
-            command_args[i] = self.replace_template(arg)
-        lang_server_info["command"] = command_args
-
-        # Replace template in initializationOptions.
-        if "initializationOptions" in lang_server_info:
-            initialization_options_args = lang_server_info["initializationOptions"]
-            for i, arg in enumerate(initialization_options_args):
-                if type(initialization_options_args[arg]) == str:
-                    initialization_options_args[arg] = self.replace_template(initialization_options_args[arg])
-            lang_server_info["initializationOptions"] = initialization_options_args
-
-        return lang_server_info
-        
     def check_lang_server_command(self, lang_server_info, filepath, turn_off_on_error=True):
         if len(lang_server_info["command"]) > 0:
             server_command = lang_server_info["command"][0]
             server_command_path = shutil.which(server_command)
 
-            if not server_command_path:
+            if server_command_path:
+                # We always replace LSP server command with absolute path of 'which' command.
+                lang_server_info["command"][0] = server_command_path
+
+                return True
+            else:
                 error_message = "Error: can't find command '{}' to start LSP server {} ({})".format(
                     server_command, lang_server_info["name"], filepath)
 
@@ -288,9 +262,6 @@ class LspBridge:
                     message_emacs(error_message)
 
                 return False
-            # We always replace LSP server command with absolute path of 'which' command.
-            lang_server_info["command"][0] = server_command_path
-
         else:
             error_message = "Error: {}'s command argument is empty".format(filepath)
 
@@ -301,14 +272,12 @@ class LspBridge:
 
             return False
 
-        return True
-
     def check_multi_server_command(self, server_names, filepath):
         for server_name in server_names:
             server_path = get_lang_server_path(server_name)
 
             with open(server_path, encoding="utf-8", errors="ignore") as server_path_file:
-                lang_server_info = json.load(server_path_file)
+                lang_server_info = read_lang_server_info(server_path_file)
 
                 if not self.check_lang_server_command(lang_server_info, filepath, False):
                     return False
@@ -316,8 +285,6 @@ class LspBridge:
         return True
 
     def create_lsp_server(self, filepath, project_path, lang_server_info):
-        lang_server_info = self.server_info_replace_template(lang_server_info)
-        
         if not self.check_lang_server_command(lang_server_info, filepath):
             return False
 
@@ -409,6 +376,9 @@ class LspBridge:
         except:
             message_emacs("Set option 'lsp-bridge-enable-profile' to 't' and call lsp-bridge-restart-process, then call lsp-bridge-profile-dump again.")
 
+def read_lang_server_info(lang_server_path):
+    return server_info_replace_template(json.load(lang_server_path))
+
 def load_single_server_info(lang_server):
     lang_server_info_path = ""
     if os.path.exists(lang_server) and os.path.dirname(lang_server) != "":
@@ -419,8 +389,39 @@ def load_single_server_info(lang_server):
         lang_server_info_path = get_lang_server_path(lang_server)
         
     with open(lang_server_info_path, encoding="utf-8", errors="ignore") as f:
-        return json.load(f)
-    
+        return read_lang_server_info(f)
+
+def replace_template(arg):
+    if "%USER_EMACS_DIRECTORY%" in arg:
+        user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
+        return arg.replace("%USER_EMACS_DIRECTORY%", user_emacs_dir)
+    elif "$HOME" in arg:
+            return os.path.expandvars(arg)
+    elif "%FILEHASH%" in arg:
+        # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.
+        return arg.replace("%FILEHASH%", os.urandom(21).hex())
+    elif "%USERPROFILE%" in arg:
+        return arg.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
+    else:
+        return arg
+
+def server_info_replace_template(lang_server_info):
+    # Replace template in command options.
+    command_args = lang_server_info["command"]
+    for i, arg in enumerate(command_args):
+        command_args[i] = replace_template(arg)
+    lang_server_info["command"] = command_args
+
+    # Replace template in initializationOptions.
+    if "initializationOptions" in lang_server_info:
+        initialization_options_args = lang_server_info["initializationOptions"]
+        for i, arg in enumerate(initialization_options_args):
+            if type(initialization_options_args[arg]) == str:
+                initialization_options_args[arg] = replace_template(initialization_options_args[arg])
+        lang_server_info["initializationOptions"] = initialization_options_args
+
+    return lang_server_info
+
 def get_lang_server_path(server_name):
     server_dir = Path(__file__).resolve().parent / "langserver"
     server_path_current = server_dir / "{}_{}.json".format(server_name, get_os_name())
