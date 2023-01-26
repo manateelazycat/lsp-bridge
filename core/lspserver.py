@@ -43,8 +43,10 @@ from core.utils import *
 DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
 
 class LspServerSender(MessageSender):
-    def __init__(self, process: subprocess.Popen):
+    def __init__(self, process: subprocess.Popen, server_name):
         super().__init__(process)
+
+        self.server_name = server_name
 
         self.init_queue = queue.Queue()
         self.initialized = threading.Event()
@@ -83,8 +85,10 @@ class LspServerSender(MessageSender):
         self.process.stdin.write(message_str.encode("utf-8"))    # type: ignore
         self.process.stdin.flush()    # type: ignore
 
-        log_time("Send ({}): {}".format(
-            message.get('id', 'notification'), message.get('method', 'response')))
+        log_time("Send {} ({}): {}".format(
+            self.server_name,
+            message.get('id', 'notification'),
+            message.get('method', 'response')))
 
         logger.debug(json.dumps(message, indent=3))
 
@@ -166,13 +170,14 @@ class LspServerReceiver(MessageReceiver):
             logger.error(traceback.format_exc())
 
 class LspServer:
-    def __init__(self, message_queue, project_path, server_info, server_name):
+    def __init__(self, message_queue, project_path, server_info, server_name, enable_diagnostics):
         self.message_queue = message_queue
         self.project_path = project_path
         self.server_info = server_info
 
         self.initialize_id = generate_request_id()
         self.server_name = server_name
+        self.enable_diagnostics = enable_diagnostics
         self.request_dict: Dict[int, Handler] = dict()
         self.root_path = self.project_path
         self.worksplace_folder = None
@@ -212,7 +217,7 @@ class LspServer:
         self.receiver = LspServerReceiver(self.lsp_subprocess)
         self.receiver.start()
 
-        self.sender = LspServerSender(self.lsp_subprocess)
+        self.sender = LspServerSender(self.lsp_subprocess, self.server_info["name"])
         self.sender.start()
 
         # All LSP server response running in ls_message_thread.
@@ -319,6 +324,13 @@ class LspServer:
             merge_capabilites = merge(merge_capabilites, {
                 "workspace": {
                      "workspaceFolders": True
+                }
+            })
+
+        if not self.enable_diagnostics:
+            merge_capabilites = merge(merge_capabilites, {
+                "textDocument": {
+                    "publishDiagnostics": False
                 }
             })
 
@@ -505,8 +517,8 @@ class LspServer:
 
         if "method" in message and message["method"] == "textDocument/publishDiagnostics":
             filepath = uri_to_path(message["params"]["uri"])
-            if is_in_path_dict(self.files, filepath):
-                get_from_path_dict(self.files, filepath).record_diagnostics(message["params"]["diagnostics"])
+            if self.enable_diagnostics and is_in_path_dict(self.files, filepath):
+                get_from_path_dict(self.files, filepath).record_diagnostics(message["params"]["diagnostics"], self.server_info["name"])
 
         logger.debug(json.dumps(message, indent=3))
 

@@ -189,7 +189,11 @@ class LspBridge:
 
                         with open(server_path, encoding="utf-8", errors="ignore") as server_path_file:
                             lang_server_info = read_lang_server_info(server_path_file)
-                            lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info)
+                            lsp_server = self.create_lsp_server(
+                                filepath,
+                                project_path,
+                                lang_server_info,
+                                server_name in multi_lang_server_info.get("diagnostics", []))
                             if lsp_server:
                                 multi_servers[lang_server_info["name"]] = lsp_server
                             else:
@@ -284,7 +288,7 @@ class LspBridge:
 
         return True
 
-    def create_lsp_server(self, filepath, project_path, lang_server_info):
+    def create_lsp_server(self, filepath, project_path, lang_server_info, enable_diagnostics=True):
         if not self.check_lang_server_command(lang_server_info, filepath):
             return False
 
@@ -295,7 +299,8 @@ class LspBridge:
                 message_queue=self.message_queue,
                 project_path=project_path,
                 server_info=lang_server_info,
-                server_name=lsp_server_name)
+                server_name=lsp_server_name,
+                enable_diagnostics=enable_diagnostics)
             
         return LSP_SERVER_DICT[lsp_server_name]
     
