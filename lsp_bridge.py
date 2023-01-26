@@ -361,7 +361,7 @@ class LspBridge:
             
     def handle_server_process_exit(self, server_name):
         if server_name in LSP_SERVER_DICT:
-            logger.info("Exit server: {}".format(server_name))
+            log_time("Exit server {}".format(server_name))
             del LSP_SERVER_DICT[server_name]
             
     def cleanup(self):

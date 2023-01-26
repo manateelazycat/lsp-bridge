@@ -119,7 +119,10 @@ class Completion(Handler):
                 
             completion_candidates = sorted(completion_candidates, key=cmp_to_key(self.compare_candidates))
             
-        log_time("Completion items number: {}".format(len(completion_candidates)))
+        log_time("Recv completion candidates number {} from '{}' for file {}".format(
+            len(completion_candidates),
+            self.method_server_name,
+            os.path.basename(self.file_action.filepath)))
         
         # Avoid returning too many items to cause Emacs to do GC operation.
         completion_candidates = completion_candidates[:min(len(completion_candidates), self.file_action.completion_items_limit)]
