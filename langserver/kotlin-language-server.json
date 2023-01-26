@@ -1,0 +1,22 @@
+{
+  "name": "kotlin-language-server",
+  "languageId": "kotlin",
+  "command": [
+    "kotlin-language-server"
+  ],
+  "ignore-diagnostic": "# type: ignore",
+  "settings": {
+    "kotlin.externalSources": {
+      "autoConvertToKotlin": true,
+      "useKlsScheme": true
+    },
+    "kotlin.debugAdapter": {
+      "path": "",
+      "enabled": true
+    } ,
+    "kotlin.completion.snippets.enabled": true,
+    "kotlin.linting.debounceTime": 250,
+    "kotlin.compiler.jvm.target": "11",
+    "kotlin.trace.server": "off"
+  }
+}
