@@ -487,7 +487,7 @@ class LspServer:
         if "id" in message:
             if "method" in message:
                 # server request
-                log_time("Recv request ({}): {}".format(message["id"], message["method"]))
+                log_time("Recv request {} ({}): {}".format(self.server_info["name"], message["id"], message["method"]))
             else:
                 # server response
                 if message["id"] in self.request_dict:
@@ -498,7 +498,7 @@ class LspServer:
         else:
             if "method" in message:
                 # server notification
-                log_time("Recv notification: {}".format(message["method"]))
+                log_time("Recv notification: {} {}".format(self.server_info["name"], message["method"]))
             else:
                 # others
                 log_time("Recv message")
