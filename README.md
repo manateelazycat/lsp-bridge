@@ -263,7 +263,7 @@ You need to install the LSP server corresponding to each programming language, t
 | [ansible-language-server](https://github.com/ansible/ansible-language-server)                      | Ansible                                 | Ansible uses YAML as source code, you'll need to customize `lsp-bridge-get-single-lang-server-by-project` to return "ansible-language-server".                                                                                                                    |
 | [astro](https://github.com/withastro/language-tools/tree/main/packages/language-server)            | Astro                                   | `npm i -g @astrojs/language-server`                                                                                                                                                                                                                               |
 | [qmlls](https://github.com/qt/qtdeclarative/tree/dev/tools/qmlls)                                  | QML                                     | The `qmlls` binary should be part of the normal Qt packages since Qt 6.3.0 Ensure that the directory  of `qmlls` binary file is in PATH                                                                                                                           |
-
+| [kotlin-language-server'(https://github.com/fwcd/kotlin-language-server)                           | Kotlin                                  |                                                                   |
 ### Features that won't be supported
 
 The goal of lsp-bridge is to become the fastest LSP client in Emacs, not a complete implementation of LSP protocol.

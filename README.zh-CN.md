@@ -261,6 +261,7 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 | [ansible-language-server](https://github.com/ansible/ansible-language-server)                      | Ansible                                 | Ansible 使用 YAML 来编程，你需要定制选项 `lsp-bridge-get-single-lang-server-by-project` 当工程是 Ansible 项目的路径时， 返回 "ansible-language-server" 字符串                                                           |
 | [astro](https://github.com/withastro/language-tools/tree/main/packages/language-server)            | Astro                                   | `npm i -g @astrojs/language-server`                                                                                                                                                                                     |
 | [qmlls]((https://github.com/qt/qtdeclarative/tree/dev/tools/qmlls))                                | QML                                     | QT 6.3.0 之后的版本自带 qmlls，将 qmlls 所在目录加到 PATH 中                                                                                                                                                            |
+| [kotlin-language-server'(https://github.com/fwcd/kotlin-language-server)                           | Kotlin                                  |                                                                                                                                                                                                                         |
 
 ### 不会支持的特性：
 lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端, 但不是实现 LSP 协议最全的 LSP 客户端。
