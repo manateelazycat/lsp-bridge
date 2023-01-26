@@ -6,10 +6,14 @@
   ],
   "ignore-diagnostic": "# type: ignore",
   "settings": {
-    "kotlin.externalSources.autoConvertToKotlin": true,
-    "kotlin.externalSources.useKlsScheme": true,
-    "kotlin.debugAdapter.path": "",
-    "kotlin.debugAdapter.enabled": true,
+    "kotlin.externalSources": {
+      "autoConvertToKotlin": true,
+      "useKlsScheme": true
+    },
+    "kotlin.debugAdapter": {
+      "path": "",
+      "enabled": true
+    } ,
     "kotlin.completion.snippets.enabled": true,
     "kotlin.linting.debounceTime": 250,
     "kotlin.compiler.jvm.target": "11",
