@@ -1114,7 +1114,9 @@ So we build this macro to restore postion after code format."
                  ;;
                  ;; If we call (thing-at-point 'symbol t) in `after-change-functions'
                  ;; some org commands conflict with `thing-at-point' that make org commands failed.
-                 (not (member this-command-string '("org-todo" "org-shiftright"))))
+                 ;; We only allow `org-self-insert-command' trigger lsp-bridge action.
+                 (not (and (string-prefix-p "org-" this-command-string)
+                           (not (string-equal this-command-string "org-self-insert-command")))))
         (let* ((current-word (thing-at-point 'word t))
                (current-symbol (thing-at-point 'symbol t)))
           ;; TabNine search.
