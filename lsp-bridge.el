@@ -102,15 +102,14 @@
 
 (setq acm-backend-lsp-fetch-completion-item-func 'lsp-bridge-fetch-completion-item-info)
 
-(defvar-local lsp-bridge-completion-item-fetch-tick nil)
 (defun lsp-bridge-fetch-completion-item-info (candidate)
   (let ((kind (plist-get candidate :icon))
         (server-name (plist-get candidate :server))
         (key (plist-get candidate :key)))
     ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
-    (unless (equal lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath key kind))
+    (unless (equal acm-backend-lsp-fetch-completion-item-ticker (list acm-backend-lsp-filepath key kind))
       (lsp-bridge-call-async "fetch_completion_item_info" acm-backend-lsp-filepath key server-name)
-      (setq-local lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath key kind)))))
+      (setq-local acm-backend-lsp-fetch-completion-item-ticker (list acm-backend-lsp-filepath key kind)))))
 
 (defcustom lsp-bridge-completion-popup-predicates '(
                                                     lsp-bridge-not-follow-complete
@@ -925,7 +924,7 @@ So we build this macro to restore postion after code format."
     (setq-local acm-backend-lsp-completion-position position)
     (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
     (setq-local acm-backend-lsp-server-names server-names)
-    (setq-local lsp-bridge-completion-item-fetch-tick nil)
+    (setq-local acm-backend-lsp-fetch-completion-item-ticker nil)
 
     (let* ((lsp-items acm-backend-lsp-items)
            (completion-table (make-hash-table :test 'equal)))
@@ -1714,7 +1713,7 @@ SymbolKind (defined in the LSP)."
 
       (if has-doc-p
           ;; Show doc frame if `documentation' exist and not empty.
-          (acm-doc-try-show)
+          (acm-doc-try-show t)
         ;; Hide doc frame immediately.
         (acm-doc-hide)))))
 
@@ -1775,7 +1774,7 @@ SymbolKind (defined in the LSP)."
 (defun lsp-bridge--completion-hide-advisor (&rest args)
   (when lsp-bridge-mode
     ;; Clean LSP backend completion tick.
-    (setq-local lsp-bridge-completion-item-fetch-tick nil)))
+    (setq-local acm-backend-lsp-fetch-completion-item-ticker nil)))
 
 (defun lsp-bridge-tabnine-complete ()
   (interactive)

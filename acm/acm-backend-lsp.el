@@ -109,6 +109,7 @@
   :group 'acm-backend-lsp)
 
 (defvar acm-backend-lsp-fetch-completion-item-func nil)
+(defvar-local acm-backend-lsp-fetch-completion-item-ticker nil)
 
 (defun acm-backend-lsp-candidates (keyword)
   (let* ((candidates (list)))
@@ -184,10 +185,17 @@
       (acm-backend-lsp-apply-text-edits additional-text-edits))))
 
 (defun acm-backend-lsp-candidate-doc (candidate)
-  (let* ((documentation (plist-get candidate :documentation)))
+  ;; NOTE:
+  ;; We only use `key' of candidate, then fetch documentation from `acm-backend-lsp-items',
+  ;; otherwise, we can't fetch documentation even `lsp-bridge-completion-item--update' update `acm-backend-lsp-items'
+  (let* ((key (plist-get candidate :key))
+         (server-name (plist-get candidate :server))
+         (documentation (plist-get (gethash key (gethash server-name acm-backend-lsp-items)) :documentation)))
     ;; Call fetch documentation function.
     (when (and acm-backend-lsp-fetch-completion-item-func
-               (not (and documentation (not (string-empty-p documentation)))))
+               (not (and documentation
+                         (not (string-empty-p documentation)))))
+      (setq-local acm-backend-lsp-fetch-completion-item-ticker nil)
       (funcall acm-backend-lsp-fetch-completion-item-func candidate))
 
     documentation))

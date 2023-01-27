@@ -719,7 +719,7 @@ The key of candidate will change between two LSP results."
                         (+ cursor-y offset-y))))
     (acm-frame-set-frame-position acm-menu-frame acm-frame-x acm-frame-y)))
 
-(defun acm-doc-try-show ()
+(defun acm-doc-try-show (&optional update-completion-item)
   (when acm-enable-doc
     (let* ((candidate (acm-menu-current-candidate))
            (backend (plist-get candidate :backend))
@@ -727,8 +727,7 @@ The key of candidate will change between two LSP results."
            (candidate-doc
             (when (fboundp candidate-doc-func)
               (funcall candidate-doc-func candidate))))
-      (if (or (consp candidate-doc) ; If the type fo snippet is set to command,
-                                        ; then the "doc" will be a list.
+      (if (or (consp candidate-doc) ; If the type fo snippet is set to command, then the "doc" will be a list.
               (and (stringp candidate-doc) (not (string-empty-p candidate-doc))))
           (let ((doc (if (stringp candidate-doc)
                          candidate-doc
@@ -757,8 +756,9 @@ The key of candidate will change between two LSP results."
             (acm-doc-frame-adjust))
 
         ;; Hide doc frame immediately if backend is not LSP.
-        ;; If backend is LSP, doc frame hide is control by `lsp-bridge-completion-item--update'.
-        (unless (string-equal backend "lsp")
+        ;; If backend is LSP, doc frame hide when `update-completion-item' is t.
+        (when (and (string-equal backend "lsp")
+                   update-completion-item)
           (acm-doc-hide))))))
 
 (defun acm-doc-frame-adjust ()

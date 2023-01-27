@@ -238,8 +238,9 @@ class FileAction:
             
     def completion_item_resolve(self, item_key, server_name):
         if server_name in self.completion_items:
+            self.completion_item_resolve_key = item_key
+
             if item_key in self.completion_items[server_name]:
-                self.completion_item_resolve_key = item_key
                 
                 if self.multi_servers:
                     method_server = self.multi_servers[server_name]
@@ -256,7 +257,10 @@ class FileAction:
                         server_name,
                         item["documentation"] if "documentation" in item else "",
                         item["additionalTextEdits"] if "additionalTextEdits" in item else "")
-                    
+            else:
+                # Still update completion documentation/additionalTextEdits with empty if item not in completion_items.
+                self.completion_item_update(item_key, server_name, "", "")
+
     def completion_item_update(self, item_key, server_name, documentation, additional_text_edits):
         if self.completion_item_resolve_key == item_key:
            if type(documentation) == dict:
