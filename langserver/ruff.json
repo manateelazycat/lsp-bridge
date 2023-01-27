@@ -2,5 +2,10 @@
   "name": "ruff",
   "languageId": "python",
   "command": ["ruff-lsp"],
+  "initializationOptions": {
+    "settings": {
+      "args": ["--line-length=500"]
+    }
+  },
   "settings": {}
 }
