@@ -1,6 +1,5 @@
 from core.handler import Handler
 from core.utils import *
-import linecache
 
 
 def make_code_block(language, string):

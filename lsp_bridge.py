@@ -25,12 +25,10 @@ import threading
 import traceback
 import json
 from pathlib import Path
-from typing import Dict
 
 from epc.server import ThreadingEPCServer
 
-from core.fileaction import (FileAction, 
-                             create_file_action_with_single_server, 
+from core.fileaction import (create_file_action_with_single_server,
                              create_file_action_with_multi_servers,
                              FILE_ACTION_DICT, LSP_SERVER_DICT)
 from core.lspserver import LspServer
@@ -228,7 +226,7 @@ class LspBridge:
 
         if ((not os.path.isdir(project_path)) and
             "support-single-file" in lang_server_info and
-            lang_server_info["support-single-file"] == False):
+            lang_server_info["support-single-file"] is False):
             self.turn_off(
                 filepath,
                 "ERROR: {} not support single-file, put this file in a git repository to enable lsp-bridge-mode.".format(single_lang_server))

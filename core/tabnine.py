@@ -21,16 +21,13 @@
 
 import json
 import os
-import queue
 import subprocess
 import threading
 import traceback
 
 from core.utils import *
-from platform import version
 from subprocess import PIPE
 from sys import stderr
-from threading import Thread
 from distutils.version import StrictVersion
 
 TABNINE_PROTOCOL_VERSION = "1.0.14"

@@ -88,7 +88,7 @@ class Completion(Handler):
                 
                 if display_new_text:
                     text_edit = item.get("textEdit", None)
-                    if text_edit != None:
+                    if text_edit is not None:
                         display_label = text_edit.get("newText", None)
                 
                 candidate = {

@@ -35,18 +35,17 @@ class FindReferences(Handler):
                 references_content += "".join(["\n", REFERENCE_PATH, path, REFERENCE_ENDC, "\n"])
 
                 for rg in ranges:
-                    with open(path, encoding="utf-8", errors="ignore") as f:
-                        line = rg["start"]["line"]
-                        start_column = rg["start"]["character"]
-                        end_column = rg["end"]["character"]
-                        line_content = linecache.getline(path, rg["start"]["line"] + 1)
+                    line = rg["start"]["line"]
+                    start_column = rg["start"]["character"]
+                    end_column = rg["end"]["character"]
+                    line_content = linecache.getline(path, rg["start"]["line"] + 1)
 
-                        references_content += "{}:{}:{}".format(
-                            line + 1,
-                            start_column,
-                            "".join([line_content[:start_column], REFERENCE_TEXT, line_content[start_column:end_column], REFERENCE_ENDC, line_content[end_column:]])
-                            )
-                        references_counter += 1
+                    references_content += "{}:{}:{}".format(
+                        line + 1,
+                        start_column,
+                        "".join([line_content[:start_column], REFERENCE_TEXT, line_content[start_column:end_column], REFERENCE_ENDC, line_content[end_column:]])
+                        )
+                    references_counter += 1
 
             linecache.clearcache()  # clear line cache
 

@@ -1,8 +1,4 @@
-import hashlib
 import os
-import re
-import tempfile
-from urllib.parse import urlparse, unquote
 
 from core.handler import Handler
 from core.utils import *
@@ -25,7 +21,7 @@ class DenoUriResolver(Handler):
         return dict(textDocument={"uri": uri})
 
     def process_response(self, response):
-        if response != None:
+        if response is not None:
             import tempfile
             deno_virtual_text_document_path = os.path.join(tempfile.gettempdir(), self.external_file_link.split("/")[-1])
             with open(deno_virtual_text_document_path, "w") as f:

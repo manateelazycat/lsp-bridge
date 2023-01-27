@@ -99,7 +99,7 @@ class FileAction:
             lsp_server.attach(self)
             
         # Set acm-input-bound-style when opened file.
-        if self.single_server_info != None:
+        if self.single_server_info is not None:
             eval_in_emacs("lsp-bridge-set-prefix-style", self.single_server_info.get("prefixStyle", "ascii"))
 
         # Init server names.
