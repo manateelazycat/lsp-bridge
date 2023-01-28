@@ -19,7 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import copy
 import json
 import os
 import queue
@@ -29,7 +28,6 @@ import threading
 import traceback
 from subprocess import PIPE
 from sys import stderr
-from threading import Thread
 from urllib.parse import urlparse
 from typing import Dict, TYPE_CHECKING
 from core.mergedeep import merge
@@ -43,8 +41,11 @@ from core.utils import *
 DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
 
 class LspServerSender(MessageSender):
-    def __init__(self, process: subprocess.Popen):
+    def __init__(self, process: subprocess.Popen, server_name, project_name):
         super().__init__(process)
+
+        self.server_name = server_name
+        self.project_name = project_name
 
         self.init_queue = queue.Queue()
         self.initialized = threading.Event()
@@ -60,19 +61,22 @@ class LspServerSender(MessageSender):
         self.enqueue_message(dict(
             id=request_id,
             method=method,
-            params=params
+            params=params,
+            message_type="request"
         ), **kwargs)
 
     def send_notification(self, method, params, **kwargs):
         self.enqueue_message(dict(
             method=method,
-            params=params
+            params=params,
+            message_type="notification"
         ), **kwargs)
 
     def send_response(self, request_id, result, **kwargs):
         self.enqueue_message(dict(
             id=request_id,
-            result=result
+            result=result,
+            message_type="response"
         ), **kwargs)
 
     def send_message(self, message: dict):
@@ -83,22 +87,44 @@ class LspServerSender(MessageSender):
         self.process.stdin.write(message_str.encode("utf-8"))    # type: ignore
         self.process.stdin.flush()    # type: ignore
 
-        log_time("Send ({}): {}".format(
-            message.get('id', 'notification'), message.get('method', 'response')))
+        message_type = message.get("message_type")
+
+        if message_type == "request":
+            log_time("Send {} request ({}) to '{}' for project {}".format(
+                message.get('method', 'response'),
+                message.get('id', 'notification'),
+                self.server_name,
+                self.project_name
+            ))
+        elif message_type == "notification":
+            log_time("Send {} notification to '{}' for project {}".format(
+                message.get('method', 'response'),
+                self.server_name,
+                self.project_name
+            ))
+        elif message_type == "response":
+            log_time("Send response to server request {} to '{}' for project {}".format(
+                message.get('id', 'notification'),
+                self.server_name,
+                self.project_name
+            ))
 
         logger.debug(json.dumps(message, indent=3))
 
     def run(self) -> None:
         try:
-            # send "initialize" request
+            # Send "initialize" request.
             self.send_message(self.init_queue.get())
-            # wait until initialized
+
+            # Wait until initialized.
             self.initialized.wait()
-            # send other initialization-related messages
+
+            # Send other initialization-related messages.
             while not self.init_queue.empty():
                 message = self.init_queue.get()
                 self.send_message(message)
-            # send all others
+
+            # Send all others.
             while self.process.poll() is None:
                 message = self.queue.get()
                 self.send_message(message)
@@ -106,6 +132,11 @@ class LspServerSender(MessageSender):
             logger.error(traceback.format_exc())
 
 class LspServerReceiver(MessageReceiver):
+
+    def __init__(self, process: subprocess.Popen, server_name):
+        super().__init__(process)
+
+        self.server_name = server_name
 
     def emit_message(self, line):
         if not line:
@@ -158,7 +189,7 @@ class LspServerReceiver(MessageReceiver):
                         self.emit_message(msg.decode("utf-8"))
                 if self.process.stderr:
                     logger.info(self.process.stderr.read())
-            log_time("Lsp server exited, exit code: {}".format(self.process.returncode))
+            log_time("LSP server '{}' exited with code {}".format(self.server_name, self.process.returncode))
             logger.info(self.process.stdout.read())    # type: ignore
             if self.process.stderr:
                 logger.info(self.process.stderr.read())
@@ -166,13 +197,15 @@ class LspServerReceiver(MessageReceiver):
             logger.error(traceback.format_exc())
 
 class LspServer:
-    def __init__(self, message_queue, project_path, server_info, server_name):
+    def __init__(self, message_queue, project_path, server_info, server_name, enable_diagnostics):
         self.message_queue = message_queue
         self.project_path = project_path
+        self.project_name = os.path.basename(project_path)
         self.server_info = server_info
 
         self.initialize_id = generate_request_id()
         self.server_name = server_name
+        self.enable_diagnostics = enable_diagnostics
         self.request_dict: Dict[int, Handler] = dict()
         self.root_path = self.project_path
         self.worksplace_folder = None
@@ -209,10 +242,10 @@ class LspServer:
         message_emacs("Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path))
 
         # Two separate thread (read/write) to communicate with LSP server.
-        self.receiver = LspServerReceiver(self.lsp_subprocess)
+        self.receiver = LspServerReceiver(self.lsp_subprocess, self.server_info["name"])
         self.receiver.start()
 
-        self.sender = LspServerSender(self.lsp_subprocess)
+        self.sender = LspServerSender(self.lsp_subprocess, self.server_info["name"], self.project_name)
         self.sender.start()
 
         # All LSP server response running in ls_message_thread.
@@ -247,8 +280,6 @@ class LspServer:
             logger.error(traceback.format_exc())
 
     def send_initialize_request(self):
-        log_time("Send initialize for {} ({})".format(self.project_path, self.server_info["name"]))
-
         initialize_options = self.server_info.get("initializationOptions", {})
 
         self.worksplace_folder = get_emacs_func_result("get-workspace-folder", self.project_path)
@@ -319,6 +350,13 @@ class LspServer:
             merge_capabilites = merge(merge_capabilites, {
                 "workspace": {
                      "workspaceFolders": True
+                }
+            })
+
+        if not self.enable_diagnostics:
+            merge_capabilites = merge(merge_capabilites, {
+                "textDocument": {
+                    "publishDiagnostics": False
                 }
             })
 
@@ -487,26 +525,26 @@ class LspServer:
         if "id" in message:
             if "method" in message:
                 # server request
-                log_time("Recv request ({}): {}".format(message["id"], message["method"]))
+                log_time("Recv {} request ({}) from '{}' for project {}".format(message["method"], message["id"], self.server_info["name"], self.project_name))
             else:
                 # server response
                 if message["id"] in self.request_dict:
                     method = self.request_dict[message["id"]].method
-                    log_time("Recv response {} ({}): {}".format(self.server_info["name"], message["id"], method))
+                    log_time("Recv {} response ({}) from '{}' for project {}".format(method, message["id"], self.server_info["name"], self.project_name))
                 else:
-                    log_time("Recv response {} ({})".format(self.server_info["name"], message["id"]))
+                    log_time("Recv response ({}) from '{}' for project {}".format(message["id"], self.server_info["name"], self.project_name))
         else:
             if "method" in message:
                 # server notification
-                log_time("Recv notification: {}".format(message["method"]))
+                log_time("Recv {} notification from '{}' for project {}".format(message["method"], self.server_info["name"], self.project_name))
             else:
                 # others
-                log_time("Recv message")
+                log_time("Recv message {} from '{}' for project {}".format(message, self.server_info["name"], self.project_name))
 
         if "method" in message and message["method"] == "textDocument/publishDiagnostics":
             filepath = uri_to_path(message["params"]["uri"])
-            if is_in_path_dict(self.files, filepath):
-                get_from_path_dict(self.files, filepath).record_diagnostics(message["params"]["diagnostics"])
+            if self.enable_diagnostics and is_in_path_dict(self.files, filepath):
+                get_from_path_dict(self.files, filepath).record_diagnostics(message["params"]["diagnostics"], self.server_info["name"])
 
         logger.debug(json.dumps(message, indent=3))
 
@@ -616,4 +654,4 @@ class LspServer:
                 try:
                     os.kill(self.lsp_subprocess.pid, 9)
                 except ProcessLookupError:
-                    log_time("Lsp server process {} already exited!".format(self.lsp_subprocess.pid))
+                    log_time("LSP server {} ({}) already exited!".format(self.server_info["name"], self.lsp_subprocess.pid))

@@ -99,7 +99,7 @@ class FileAction:
             lsp_server.attach(self)
             
         # Set acm-input-bound-style when opened file.
-        if self.single_server_info != None:
+        if self.single_server_info is not None:
             eval_in_emacs("lsp-bridge-set-prefix-style", self.single_server_info.get("prefixStyle", "ascii"))
 
         # Init server names.
@@ -212,7 +212,9 @@ class FileAction:
         else:
             return 0
         
-    def record_diagnostics(self, diagnostics):
+    def record_diagnostics(self, diagnostics, server_name):
+        log_time("Record diagnostics from '{}' for file {}".format(server_name, os.path.basename(self.filepath)))
+
         # Record diagnostics data that push from LSP server.
         import functools
         self.diagnostics = sorted(diagnostics, key=functools.cmp_to_key(self.sort_diagnostic))
@@ -236,8 +238,9 @@ class FileAction:
             
     def completion_item_resolve(self, item_key, server_name):
         if server_name in self.completion_items:
+            self.completion_item_resolve_key = item_key
+
             if item_key in self.completion_items[server_name]:
-                self.completion_item_resolve_key = item_key
                 
                 if self.multi_servers:
                     method_server = self.multi_servers[server_name]
@@ -254,7 +257,10 @@ class FileAction:
                         server_name,
                         item["documentation"] if "documentation" in item else "",
                         item["additionalTextEdits"] if "additionalTextEdits" in item else "")
-                    
+            else:
+                # Still update completion documentation/additionalTextEdits with empty if item not in completion_items.
+                self.completion_item_update(item_key, server_name, "", "")
+
     def completion_item_update(self, item_key, server_name, documentation, additional_text_edits):
         if self.completion_item_resolve_key == item_key:
            if type(documentation) == dict:

@@ -102,15 +102,14 @@
 
 (setq acm-backend-lsp-fetch-completion-item-func 'lsp-bridge-fetch-completion-item-info)
 
-(defvar-local lsp-bridge-completion-item-fetch-tick nil)
 (defun lsp-bridge-fetch-completion-item-info (candidate)
   (let ((kind (plist-get candidate :icon))
         (server-name (plist-get candidate :server))
         (key (plist-get candidate :key)))
     ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
-    (unless (equal lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath key kind))
+    (unless (equal acm-backend-lsp-fetch-completion-item-ticker (list acm-backend-lsp-filepath key kind))
       (lsp-bridge-call-async "fetch_completion_item_info" acm-backend-lsp-filepath key server-name)
-      (setq-local lsp-bridge-completion-item-fetch-tick (list acm-backend-lsp-filepath key kind)))))
+      (setq-local acm-backend-lsp-fetch-completion-item-ticker (list acm-backend-lsp-filepath key kind)))))
 
 (defcustom lsp-bridge-completion-popup-predicates '(
                                                     lsp-bridge-not-follow-complete
@@ -235,6 +234,16 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'float
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-user-langserver-dir nil
+  "The directory where the user place langserver configuration."
+  :type 'string
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-user-multiserver-dir nil
+  "The directory where the user place multiserver configuration."
+  :type 'string
+  :group 'lsp-bridge)
+
 (defface lsp-bridge-font-lock-flash
   '((t (:inherit highlight)))
   "Face to flash the current line."
@@ -331,6 +340,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   '(
     (("wxml") . "wxml-language-server")
     (("html") . "vscode-html-language-server")
+    (("astro") . "astro-ls")
     )
   "The lang server rule for file extension."
   :type 'cons)
@@ -346,6 +356,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defcustom lsp-bridge-python-lsp-server "pyright"
   "Default LSP server for Python language, you can choose `pyright', `jedi', `python-ms', `pylsp'."
+  :type 'string)
+
+(defcustom lsp-bridge-python-ruff-lsp-server "pyright_ruff"
+  "Default LSP server for Python Ruff, you can choose `pyright_ruff', `jedi_ruff', `python-ms_ruff', `pylsp_ruff'."
   :type 'string)
 
 (defcustom lsp-bridge-tex-lsp-server "texlab"
@@ -366,7 +380,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Only popup completion menu when user call `lsp-bridge-popup-complete-menu' command.")
 
 (defcustom lsp-bridge-multi-lang-server-mode-list
-  '()
+  '(((python-mode python-ts-mode) . lsp-bridge-python-ruff-lsp-server)
+    ((qml-mode qml-ts-mode) . "qmlls_javascript"))
   "The multi lang server rule for file mode."
   :type 'cons)
 
@@ -406,6 +421,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (graphql-mode . "graphql-lsp")
     (swift-mode . "swift-sourcekit")
     (csharp-mode . lsp-bridge-csharp-lsp-server)
+    (kotlin-mode . "kotlin-language-server")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -466,6 +482,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     csharp-mode-hook
     telega-chat-mode-hook
     markdown-mode-hook
+    kotlin-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type 'list)
@@ -520,6 +537,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (ess-mode                   . ess-indent-offset)    ; ESS (R)
     (yaml-mode                  . yaml-indent-offset)   ; YAML
     (hack-mode                  . hack-indent-offset)   ; Hack
+    (kotlin-mode                . c-basic-offset)       ; Kotlin
     (default                    . standard-indent)) ; default fallback
   "A mapping from `major-mode' to its indent variable.")
 
@@ -906,7 +924,7 @@ So we build this macro to restore postion after code format."
     (setq-local acm-backend-lsp-completion-position position)
     (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
     (setq-local acm-backend-lsp-server-names server-names)
-    (setq-local lsp-bridge-completion-item-fetch-tick nil)
+    (setq-local acm-backend-lsp-fetch-completion-item-ticker nil)
 
     (let* ((lsp-items acm-backend-lsp-items)
            (completion-table (make-hash-table :test 'equal)))
@@ -1096,7 +1114,9 @@ So we build this macro to restore postion after code format."
                  ;;
                  ;; If we call (thing-at-point 'symbol t) in `after-change-functions'
                  ;; some org commands conflict with `thing-at-point' that make org commands failed.
-                 (not (member this-command-string '("org-todo" "org-shiftright"))))
+                 ;; We only allow `org-self-insert-command' trigger lsp-bridge action.
+                 (not (and (string-prefix-p "org-" this-command-string)
+                           (not (string-equal this-command-string "org-self-insert-command")))))
         (let* ((current-word (thing-at-point 'word t))
                (current-symbol (thing-at-point 'symbol t)))
           ;; TabNine search.
@@ -1695,7 +1715,7 @@ SymbolKind (defined in the LSP)."
 
       (if has-doc-p
           ;; Show doc frame if `documentation' exist and not empty.
-          (acm-doc-try-show)
+          (acm-doc-try-show t)
         ;; Hide doc frame immediately.
         (acm-doc-hide)))))
 
@@ -1756,7 +1776,7 @@ SymbolKind (defined in the LSP)."
 (defun lsp-bridge--completion-hide-advisor (&rest args)
   (when lsp-bridge-mode
     ;; Clean LSP backend completion tick.
-    (setq-local lsp-bridge-completion-item-fetch-tick nil)))
+    (setq-local acm-backend-lsp-fetch-completion-item-ticker nil)))
 
 (defun lsp-bridge-tabnine-complete ()
   (interactive)

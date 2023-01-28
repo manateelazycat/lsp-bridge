@@ -42,7 +42,7 @@ class Handler(abc.ABC):
             logger.error(traceback.format_exc())
 
 # import subclasses so that we can use core.handler.Handler.__subclasses__()
-# import at the end of this file to avoid circular import
+# import at the end of this file to avoid CIRCULAR IMPORT
 from core.handler.completion import Completion
 from core.handler.completion_item import CompletionItem
 from core.handler.find_define import FindDefine

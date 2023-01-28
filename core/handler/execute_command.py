@@ -10,7 +10,7 @@ class ExecuteCommand(Handler):
     def process_request(self, command) -> dict:
         arguments = []
         
-        if self.file_action.code_action_response != None:
+        if self.file_action.code_action_response is not None:
             for action in self.file_action.code_action_response:    # type: ignore
                 try:
                     if action["command"] == command:

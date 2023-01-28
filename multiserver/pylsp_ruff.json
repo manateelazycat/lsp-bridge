@@ -1,0 +1,15 @@
+{
+  "completion": ["pylsp"],
+  "completion_item_resolve": ["pylsp"],
+  "diagnostics": ["ruff"],
+  "code_action": ["ruff"],
+  "execute_command": ["pylsp", "ruff"],
+  "find_define": "pylsp",
+  "find_implementation": "pylsp",
+  "find_references": "pylsp",
+  "formatting": "pylsp",
+  "hover": "pylsp",
+  "signature_help": "pylsp",
+  "prepare_rename": "pylsp",
+  "rename": "pylsp"
+}

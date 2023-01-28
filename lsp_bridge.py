@@ -25,12 +25,10 @@ import threading
 import traceback
 import json
 from pathlib import Path
-from typing import Dict
 
 from epc.server import ThreadingEPCServer
 
-from core.fileaction import (FileAction, 
-                             create_file_action_with_single_server, 
+from core.fileaction import (create_file_action_with_single_server,
                              create_file_action_with_multi_servers,
                              FILE_ACTION_DICT, LSP_SERVER_DICT)
 from core.lspserver import LspServer
@@ -167,109 +165,131 @@ class LspBridge:
         multi_lang_server = get_emacs_func_result("get-multi-lang-server", project_path, filepath)
         
         if multi_lang_server:
+            # Try to load multi language server when get-multi-lang-server return match one.
             multi_lang_server_dir = Path(__file__).resolve().parent / "multiserver"
             multi_lang_server_path = multi_lang_server_dir / "{}.json".format(multi_lang_server)
             
+            user_multi_lang_server_dir = Path(str(get_emacs_var("lsp-bridge-user-multiserver-dir")))
+            user_multi_lang_server_path = user_multi_lang_server_dir / "{}.json".format(multi_lang_server)
+            if user_multi_lang_server_path.exists():
+                multi_lang_server_path = user_multi_lang_server_path
+
             with open(multi_lang_server_path, encoding="utf-8", errors="ignore") as f:
                 multi_lang_server_info = json.load(f)
                 servers = self.pick_multi_server_names(multi_lang_server_info)
                 
-                multi_servers = {}
-                
-                for server_name in servers:
-                    server_path = get_lang_server_path(server_name)
-                    
-                    with open(server_path, encoding="utf-8", errors="ignore") as server_path_file:
-                        lang_server_info = json.load(server_path_file)
-                        lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info)
-                        if lsp_server:
-                            multi_servers[lang_server_info["name"]] = lsp_server
-                        else:
-                            return False
-                        
-                create_file_action_with_multi_servers(filepath, multi_lang_server_info, multi_servers)
-        else:
-            single_lang_server = get_emacs_func_result("get-single-lang-server", project_path, filepath)
-            
-            if not single_lang_server:
-                self.turn_off(filepath, "ERROR: can't find the corresponding server for {}, disable lsp-bridge-mode.".format(filepath))
-            
-                return False
-            
-            lang_server_info = load_single_server_info(single_lang_server)
+                # Load multi language server only when all language server commands exist.
+                if self.check_multi_server_command(servers, filepath):
+                    multi_servers = {}
 
-            if ((not os.path.isdir(project_path)) and
-                "support-single-file" in lang_server_info and
-                lang_server_info["support-single-file"] == False):
-                self.turn_off(
-                    filepath,
-                    "ERROR: {} not support single-file, put this file in a git repository to enable lsp-bridge-mode.".format(single_lang_server))
-            
-                return False
-            
-            lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info)
-            
-            if lsp_server:
-                create_file_action_with_single_server(filepath, lang_server_info, lsp_server)
-            else:
-                return False
-        
+                    for server_name in servers:
+                        server_path = get_lang_server_path(server_name)
+
+                        with open(server_path, encoding="utf-8", errors="ignore") as server_path_file:
+                            lang_server_info = read_lang_server_info(server_path_file)
+                            lsp_server = self.create_lsp_server(
+                                filepath,
+                                project_path,
+                                lang_server_info,
+                                server_name in multi_lang_server_info.get("diagnostics", []))
+                            if lsp_server:
+                                multi_servers[lang_server_info["name"]] = lsp_server
+                            else:
+                                return False
+
+                    create_file_action_with_multi_servers(filepath, multi_lang_server_info, multi_servers)
+                else:
+                    # Try load single language server if multi language server load failed.
+                    single_lang_server = get_emacs_func_result("get-single-lang-server", project_path, filepath)
+
+                    if single_lang_server:
+                        self.load_single_lang_server(project_path, filepath)
+                    else:
+                        self.turn_off(
+                            filepath,
+                            "ERROR: can't find all command of multi-server for {}, haven't found match single-server, disable lsp-bridge-mode.".format(filepath))
+        else:
+            # Try to load single language server.
+            self.load_single_lang_server(project_path, filepath)
+
         return True
+
+    def load_single_lang_server(self, project_path, filepath):
+        single_lang_server = get_emacs_func_result("get-single-lang-server", project_path, filepath)
+
+        if not single_lang_server:
+            self.turn_off(filepath, "ERROR: can't find the corresponding server for {}, disable lsp-bridge-mode.".format(filepath))
+
+            return False
+
+        lang_server_info = load_single_server_info(single_lang_server)
+
+        if ((not os.path.isdir(project_path)) and
+            "support-single-file" in lang_server_info and
+            lang_server_info["support-single-file"] is False):
+            self.turn_off(
+                filepath,
+                "ERROR: {} not support single-file, put this file in a git repository to enable lsp-bridge-mode.".format(single_lang_server))
+
+            return False
+
+        lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info)
+
+        if lsp_server:
+            create_file_action_with_single_server(filepath, lang_server_info, lsp_server)
+        else:
+            return False
     
     def turn_off(self, filepath, message):
         message_emacs(message)
         eval_in_emacs("lsp-bridge--turn-off", filepath)
 
-    def replace_template(self, arg):
-        if "%USER_EMACS_DIRECTORY%" in arg:
-            user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
-            return arg.replace("%USER_EMACS_DIRECTORY%", user_emacs_dir)
-        elif "$HOME" in arg:
-                return os.path.expandvars(arg)
-        elif "%FILEHASH%" in arg:
-            # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.
-            return arg.replace("%FILEHASH%", os.urandom(21).hex())
-        elif "%USERPROFILE%" in arg:
-            return arg.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
-        else:
-            return arg
-
-    def server_info_replace_template(self, lang_server_info):
-        # Replace template in command options.
-        command_args = lang_server_info["command"]
-        for i, arg in enumerate(command_args):
-            command_args[i] = self.replace_template(arg)
-        lang_server_info["command"] = command_args
-
-        # Replace template in initializationOptions.
-        if "initializationOptions" in lang_server_info:
-            initialization_options_args = lang_server_info["initializationOptions"]
-            for i, arg in enumerate(initialization_options_args):
-                if type(initialization_options_args[arg]) == str:
-                    initialization_options_args[arg] = self.replace_template(initialization_options_args[arg])
-            lang_server_info["initializationOptions"] = initialization_options_args
-
-        return lang_server_info
-        
-    def create_lsp_server(self, filepath, project_path, lang_server_info):
-        lang_server_info = self.server_info_replace_template(lang_server_info)
-        
+    def check_lang_server_command(self, lang_server_info, filepath, turn_off_on_error=True):
         if len(lang_server_info["command"]) > 0:
             server_command = lang_server_info["command"][0]
             server_command_path = shutil.which(server_command)
+
             if server_command_path:
                 # We always replace LSP server command with absolute path of 'which' command.
                 lang_server_info["command"][0] = server_command_path
-            elif not os.path.exists(server_command):
-                self.turn_off(filepath, "Error: can't find command '{}' to start LSP server {} ({}), disable lsp-bridge-mode.".format(
-                    server_command, lang_server_info["name"], filepath))
-        
+
+                return True
+            else:
+                error_message = "Error: can't find command '{}' to start LSP server {} ({})".format(
+                    server_command, lang_server_info["name"], filepath)
+
+                if turn_off_on_error:
+                    self.turn_off(filepath, error_message + ", disable lsp-bridge-mode.")
+                else:
+                    message_emacs(error_message)
+
                 return False
         else:
-            self.turn_off(filepath, "Error: {}'s command argument is empty, disable lsp-bridge-mode.".format(filepath))
-        
+            error_message = "Error: {}'s command argument is empty".format(filepath)
+
+            if turn_off_on_error:
+                self.turn_off(filepath, error_message + ", disable lsp-bridge-mode.")
+            else:
+                message_emacs(error_message)
+
             return False
-        
+
+    def check_multi_server_command(self, server_names, filepath):
+        for server_name in server_names:
+            server_path = get_lang_server_path(server_name)
+
+            with open(server_path, encoding="utf-8", errors="ignore") as server_path_file:
+                lang_server_info = read_lang_server_info(server_path_file)
+
+                if not self.check_lang_server_command(lang_server_info, filepath, False):
+                    return False
+
+        return True
+
+    def create_lsp_server(self, filepath, project_path, lang_server_info, enable_diagnostics=True):
+        if not self.check_lang_server_command(lang_server_info, filepath):
+            return False
+
         lsp_server_name = "{}#{}".format(path_as_key(project_path), lang_server_info["name"])
                                 
         if lsp_server_name not in LSP_SERVER_DICT:
@@ -277,7 +297,8 @@ class LspBridge:
                 message_queue=self.message_queue,
                 project_path=project_path,
                 server_info=lang_server_info,
-                server_name=lsp_server_name)
+                server_name=lsp_server_name,
+                enable_diagnostics=enable_diagnostics)
             
         return LSP_SERVER_DICT[lsp_server_name]
     
@@ -338,7 +359,7 @@ class LspBridge:
             
     def handle_server_process_exit(self, server_name):
         if server_name in LSP_SERVER_DICT:
-            logger.info("Exit server: {}".format(server_name))
+            log_time("Exit server {}".format(server_name))
             del LSP_SERVER_DICT[server_name]
             
     def cleanup(self):
@@ -358,6 +379,9 @@ class LspBridge:
         except:
             message_emacs("Set option 'lsp-bridge-enable-profile' to 't' and call lsp-bridge-restart-process, then call lsp-bridge-profile-dump again.")
 
+def read_lang_server_info(lang_server_path):
+    return server_info_replace_template(json.load(lang_server_path))
+
 def load_single_server_info(lang_server):
     lang_server_info_path = ""
     if os.path.exists(lang_server) and os.path.dirname(lang_server) != "":
@@ -368,12 +392,52 @@ def load_single_server_info(lang_server):
         lang_server_info_path = get_lang_server_path(lang_server)
         
     with open(lang_server_info_path, encoding="utf-8", errors="ignore") as f:
-        return json.load(f)
-    
+        return read_lang_server_info(f)
+
+def replace_template(arg):
+    if "%USER_EMACS_DIRECTORY%" in arg:
+        user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
+        return arg.replace("%USER_EMACS_DIRECTORY%", user_emacs_dir)
+    elif "$HOME" in arg:
+            return os.path.expandvars(arg)
+    elif "%FILEHASH%" in arg:
+        # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.
+        return arg.replace("%FILEHASH%", os.urandom(21).hex())
+    elif "%USERPROFILE%" in arg:
+        return arg.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
+    else:
+        return arg
+
+def server_info_replace_template(lang_server_info):
+    # Replace template in command options.
+    command_args = lang_server_info["command"]
+    for i, arg in enumerate(command_args):
+        command_args[i] = replace_template(arg)
+    lang_server_info["command"] = command_args
+
+    # Replace template in initializationOptions.
+    if "initializationOptions" in lang_server_info:
+        initialization_options_args = lang_server_info["initializationOptions"]
+        for i, arg in enumerate(initialization_options_args):
+            if type(initialization_options_args[arg]) == str:
+                initialization_options_args[arg] = replace_template(initialization_options_args[arg])
+        lang_server_info["initializationOptions"] = initialization_options_args
+
+    return lang_server_info
+
 def get_lang_server_path(server_name):
     server_dir = Path(__file__).resolve().parent / "langserver"
     server_path_current = server_dir / "{}_{}.json".format(server_name, get_os_name())
     server_path_default = server_dir / "{}.json".format(server_name)
+
+    user_server_dir = Path(str(get_emacs_var("lsp-bridge-user-langserver-dir")))
+    user_server_path_current = user_server_dir / "{}_{}.json".format(server_name, get_os_name())
+    user_server_path_default = user_server_dir / "{}.json".format(server_name)
+
+    if user_server_path_current.exists():
+        server_path_current = user_server_path_current
+    elif user_server_path_default.exists():
+        server_path_current = user_server_path_default
 
     return server_path_current if server_path_current.exists() else server_path_default
     
