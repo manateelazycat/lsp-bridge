@@ -169,7 +169,7 @@ class LspBridge:
             multi_lang_server_dir = Path(__file__).resolve().parent / "multiserver"
             multi_lang_server_path = multi_lang_server_dir / "{}.json".format(multi_lang_server)
             
-            user_multi_lang_server_dir = Path(str(get_emacs_var("lsp-bridge-user-multiserver-dir")))
+            user_multi_lang_server_dir = Path(str(get_emacs_var("lsp-bridge-user-multiserver-dir"))).expanduser()
             user_multi_lang_server_path = user_multi_lang_server_dir / "{}.json".format(multi_lang_server)
             if user_multi_lang_server_path.exists():
                 multi_lang_server_path = user_multi_lang_server_path
