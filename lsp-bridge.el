@@ -1112,10 +1112,10 @@ So we build this macro to restore postion after code format."
       (when (and (lsp-bridge-epc-live-p lsp-bridge-epc-process)
                  ;; NOTE:
                  ;;
-                 ;; If we call (thing-at-point 'symbol t) in `after-change-functions'
-                 ;; some org commands conflict with `thing-at-point' that make org commands failed.
+                 ;; Most org-mode commands will make lsp-bridge failed that casue (thing-at-point 'symbol t).
                  ;; We only allow `org-self-insert-command' trigger lsp-bridge action.
-                 (not (and (string-prefix-p "org-" this-command-string)
+                 (not (and (or (string-prefix-p "org-" this-command-string)
+                               (string-prefix-p "+org/" this-command-string))
                            (not (string-equal this-command-string "org-self-insert-command")))))
         (let* ((current-word (thing-at-point 'word t))
                (current-symbol (thing-at-point 'symbol t)))
