@@ -430,7 +430,7 @@ def get_lang_server_path(server_name):
     server_path_current = server_dir / "{}_{}.json".format(server_name, get_os_name())
     server_path_default = server_dir / "{}.json".format(server_name)
 
-    user_server_dir = Path(str(get_emacs_var("lsp-bridge-user-langserver-dir")))
+    user_server_dir = Path(str(get_emacs_var("lsp-bridge-user-langserver-dir"))).expanduser()
     user_server_path_current = user_server_dir / "{}_{}.json".format(server_name, get_os_name())
     user_server_path_default = user_server_dir / "{}.json".format(server_name)
 
