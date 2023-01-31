@@ -332,7 +332,7 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
 (defun lsp-bridge-code-action--fix (actions action-kind)
   (let* ((menu-items
           (or
-           (remove-if #'null (mapcar #'(lambda (action)
+           (cl-remove-if #'null (mapcar #'(lambda (action)
                                          (when (or (not action-kind)
                                                    (equal action-kind (plist-get action :kind)))
                                            (cons (plist-get action :title) action)))
