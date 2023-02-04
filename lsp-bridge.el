@@ -1873,7 +1873,7 @@ SymbolKind (defined in the LSP)."
                 'lsp-bridge-kill-mode-line))
 
   (when lsp-bridge-server
-    (propertize (format "lsp-bridge:%s" lsp-bridge-server-port) 'face mode-face)))
+    (propertize "lsp-bridge"'face mode-face)))
 
 (when lsp-bridge-enable-mode-line
   (add-to-list 'mode-line-misc-info
