@@ -388,9 +388,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defcustom lsp-bridge-single-lang-server-mode-list
   '(
     ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode) . lsp-bridge-c-lsp-server)
-    (cmake-mode . "cmake-language-server")
+    ((cmake-mode cmake-ts-mode) . "cmake-language-server")
     (java-mode . "jdtls")
-    (python-mode . lsp-bridge-python-lsp-server)
+    ((python-mode python-ts-mode) . lsp-bridge-python-lsp-server)
     (ruby-mode . "solargraph")
     ((rust-mode rustic-mode rust-ts-mode) . "rust-analyzer")
     (elixir-mode . "elixirLS")
@@ -400,15 +400,15 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (lua-mode . "sumneko")
     (dart-mode . "dart-analysis-server")
     (scala-mode . "metals")
-    ((js2-mode js-mode rjsx-mode) . "javascript")
+    ((js2-mode js-mode js-ts-mode rjsx-mode) . "javascript")
     (typescript-tsx-mode . "typescriptreact")
-    ((typescript-mode) . "typescript")
+    ((typescript-mode typescript-ts-mode) . "typescript")
     (tuareg-mode . "ocamllsp")
     (erlang-mode . "erlang-ls")
     ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . lsp-bridge-tex-lsp-server)
     ((clojure-mode clojurec-mode clojurescript-mode clojurex-mode) . "clojure-lsp")
-    ((sh-mode) . "bash-language-server")
-    ((css-mode) . "vscode-css-language-server")
+    ((sh-mode bash-mode bash-ts-mode) . "bash-language-server")
+    ((css-mode css-ts-mode) . "vscode-css-language-server")
     (elm-mode . "elm-language-server")
     (php-mode . lsp-bridge-php-lsp-server)
     ((yaml-mode yaml-ts-mode) . "yaml-language-server")
@@ -460,6 +460,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     clojurescript-mode-hook
     clojurex-mode-hook
     sh-mode-hook
+    bash-mode-hook
     web-mode-hook
     css-mode-hook
     elm-mode-hook
@@ -483,6 +484,17 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     telega-chat-mode-hook
     markdown-mode-hook
     kotlin-mode-hook
+
+    c-ts-mode-hook
+    c++-ts-mode-hook
+    cmake-ts-mode-hook
+    toml-ts-mode-hook
+    css-ts-mode-hook
+    js-ts-mode-hook
+    json-ts-mode-hook
+    python-ts-mode-hook
+    bash-ts-mode-hook
+    typescript-ts-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type 'list)
@@ -544,12 +556,17 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
 (defcustom lsp-bridge-string-interpolation-open-chars-alist
   '(;; For {}
     (python-mode . "[^\$]\{")
+    (python-ts-mode . "[^\$]\{")
     ;; For ${}
     (js-mode . "\$\{")
+    (js-ts-mode . "\$\{")
     (js2-mode . "\$\{")
     (js3-mode . "\$\{")
     (typescript-mode . "\$\{")
+    (typescript-ts-mode . "\$\{")
     (sh-mode . "\$\{")
+    (bash-mode . "\$\{")
+    (bash-ts-mode . "\$\{")
     ;; For #{}
     (ruby-mode . "\#\{")
     ;; For {{}}
