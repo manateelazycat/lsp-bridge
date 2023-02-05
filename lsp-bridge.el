@@ -1877,7 +1877,7 @@ SymbolKind (defined in the LSP)."
 
 (when lsp-bridge-enable-mode-line
   (add-to-list 'mode-line-misc-info
-               `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] "))))
+               `(lsp-bridge-mode ("" lsp-bridge--mode-line-format " "))))
 
 (provide 'lsp-bridge)
 
