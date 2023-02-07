@@ -613,13 +613,6 @@ class LspServer:
                                               self.get_server_workspace_change_configuration(), init=True)
 
                 self.sender.initialized.set()
-
-                # Notify user server is ready.
-                message_emacs("Start LSP server ({}) for {} with '{}' mode, enjoy hacking!".format(
-                    self.server_info["name"],
-                    self.root_path,
-                    "project" if os.path.isdir(self.root_path) else "single-file"
-                ))
             else:
                 if "method" not in message and message["id"] in self.request_dict:
                     handler = self.request_dict[message["id"]]

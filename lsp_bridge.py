@@ -197,6 +197,8 @@ class LspBridge:
                             else:
                                 return False
 
+                    self.enjoy_hacking(servers, project_path)
+
                     create_file_action_with_multi_servers(filepath, multi_lang_server_info, multi_servers)
                 else:
                     # Try load single language server if multi language server load failed.
@@ -213,6 +215,14 @@ class LspBridge:
             self.load_single_lang_server(project_path, filepath)
 
         return True
+
+    def enjoy_hacking(self, servers, project_path):
+        # Notify user server is ready.
+        message_emacs("Start LSP server ({}) for {} with '{}' mode, enjoy hacking!".format(
+            ", ".join(servers),
+            project_path,
+            "project" if os.path.isdir(project_path) else "single-file"
+        ))
 
     def load_single_lang_server(self, project_path, filepath):
         single_lang_server = get_emacs_func_result("get-single-lang-server", project_path, filepath)
@@ -236,6 +246,8 @@ class LspBridge:
         lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info)
 
         if lsp_server:
+            self.enjoy_hacking([lang_server_info["name"]], project_path)
+
             create_file_action_with_single_server(filepath, lang_server_info, lsp_server)
         else:
             return False
