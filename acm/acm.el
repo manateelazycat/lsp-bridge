@@ -760,7 +760,7 @@ The key of candidate will change between two LSP results."
           ("lsp" (when update-completion-item
                    (acm-doc-hide)))
           ;; Hide doc frame immediately if backend is not LSP.
-          (t (acm-doc-hide)))))))
+          (_ (acm-doc-hide)))))))
 
 (defun acm-doc-frame-adjust ()
   (let* ((emacs-width (frame-pixel-width))
