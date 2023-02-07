@@ -1,5 +1,5 @@
 {
-  "name": "pyright",
+  "name": "pyright-background-analysis",
   "languageId": "python",
   "command": [
     "pyright-langserver",
