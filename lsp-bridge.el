@@ -422,6 +422,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (swift-mode . "swift-sourcekit")
     (csharp-mode . lsp-bridge-csharp-lsp-server)
     (kotlin-mode . "kotlin-language-server")
+    (vhdl-mode . "vhdl-tool")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -484,6 +485,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     telega-chat-mode-hook
     markdown-mode-hook
     kotlin-mode-hook
+    vhdl-mode-hook
 
     c-ts-mode-hook
     c++-ts-mode-hook
@@ -550,6 +552,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (yaml-mode                  . yaml-indent-offset)   ; YAML
     (hack-mode                  . hack-indent-offset)   ; Hack
     (kotlin-mode                . c-basic-offset)       ; Kotlin
+    (vhdl-mode                  . vhdl-basic-offset)     ; VHDL
     (default                    . standard-indent)) ; default fallback
   "A mapping from `major-mode' to its indent variable.")
 
