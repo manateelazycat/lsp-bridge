@@ -389,7 +389,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   '(
     ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode) . lsp-bridge-c-lsp-server)
     ((cmake-mode cmake-ts-mode) . "cmake-language-server")
-    (java-mode . "jdtls")
+    ((java-mode java-ts-mode) . "jdtls")
     ((python-mode python-ts-mode) . lsp-bridge-python-lsp-server)
     (ruby-mode . "solargraph")
     ((rust-mode rustic-mode rust-ts-mode) . "rust-analyzer")
@@ -401,7 +401,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (dart-mode . "dart-analysis-server")
     (scala-mode . "metals")
     ((js2-mode js-mode js-ts-mode rjsx-mode) . "javascript")
-    (typescript-tsx-mode . "typescriptreact")
+    ((typescript-tsx-mode tsx-ts-mode) . "typescriptreact")
     ((typescript-mode typescript-ts-mode) . "typescript")
     (tuareg-mode . "ocamllsp")
     (erlang-mode . "erlang-ls")
@@ -522,6 +522,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (csharp-tree-sitter-mode    . csharp-tree-sitter-indent-offset) ; C#
     (d-mode                     . c-basic-offset)     ; D
     (java-mode                  . c-basic-offset)     ; Java
+    (java-ts-mode               . java-ts-mode-indent-offset) ; Java
     (jde-mode                   . c-basic-offset)     ; Java (JDE)
     (js-mode                    . js-indent-level)    ; JavaScript
     (js2-mode                   . js2-basic-offset)   ; JavaScript-IDE
@@ -539,12 +540,15 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (nxml-mode                  . nxml-child-indent)       ; XML
     (pascal-mode                . pascal-indent-level)     ; Pascal
     (typescript-mode            . typescript-indent-level) ; Typescript
+    (typescript-ts-mode         . typescript-ts-mode-indent-offset) ; Typescript
+    (tsx-ts-mode                . typescript-ts-mode-indent-offset) ; Typescript[TSX]
     (sh-mode                    . sh-basic-offset)   ; Shell Script
     (ruby-mode                  . ruby-indent-level) ; Ruby
     (enh-ruby-mode              . enh-ruby-indent-level) ; Ruby
     (crystal-mode               . crystal-indent-level) ; Crystal (Ruby)
     (css-mode                   . css-indent-offset)    ; CSS
     (rust-mode                  . rust-indent-offset)   ; Rust
+    (rust-ts-mode               . rust-ts-mode-indent-offset) ; Rust
     (rustic-mode                . rustic-indent-offset) ; Rust
     (scala-mode                 . scala-indent:step)    ; Scala
     (powershell-mode            . powershell-indent)    ; PowerShell
