@@ -130,6 +130,13 @@
   :type 'boolean
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-diagnostic-max-number 50
+  "The maximum number of diagnostic will be render.
+
+Too many diagnostic render will cause do long time Emacs GC."
+  :type 'integer
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-diagnostic-hide-severities nil
   "The rule to hide diagnostic that return from LSP server.
 
