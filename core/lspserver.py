@@ -89,7 +89,8 @@ class LspServerSender(MessageSender):
 
         message_type = message.get("message_type")
 
-        if message_type == "request":
+        if message_type == "request" and \
+           not message.get('method', 'response') == 'textDocument/documentSymbol':
             log_time("Send {} request ({}) to '{}' for project {}".format(
                 message.get('method', 'response'),
                 message.get('id', 'notification'),
@@ -530,7 +531,9 @@ class LspServer:
                 # server response
                 if message["id"] in self.request_dict:
                     method = self.request_dict[message["id"]].method
-                    log_time("Recv {} response ({}) from '{}' for project {}".format(method, message["id"], self.server_info["name"], self.project_name))
+                    if method != 'textDocument/documentSymbol':
+                        # not log for textDocument/documentSymbol
+                        log_time("Recv {} response ({}) from '{}' for project {}".format(method, message["id"], self.server_info["name"], self.project_name))
                 else:
                     log_time("Recv response ({}) from '{}' for project {}".format(message["id"], self.server_info["name"], self.project_name))
         else:
