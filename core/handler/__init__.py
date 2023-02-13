@@ -59,3 +59,4 @@ from core.handler.formatting import Formatting
 from core.handler.execute_command import ExecuteCommand
 from core.handler.workspace_symbol import WorkspaceSymbol
 from core.handler.call_hierarchy import PrepareCallHierarchyIncomingCalls, PrepareCallHierarchyOutgoingCalls, CallHierarchyIncomingCalls, CallHierarchyOutgoingCalls
+from core.handler.document_symbol import DocumentSymbol

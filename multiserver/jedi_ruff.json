@@ -11,5 +11,6 @@
   "hover": "jedi",
   "signature_help": "jedi",
   "prepare_rename": "jedi",
-  "rename": "jedi"
+  "rename": "jedi",
+  "document_symbol": "jedi"
 }

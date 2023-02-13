@@ -126,6 +126,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-completion-hide-characters`: 这些字符的后面不再弹出补全菜单
 * `lsp-bridge-user-langserver-dir`: 用户 langserver 配置文件目录，如果目录下的配置文件和 [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) 里的配置文件同名，lsp-bridge 会使用这个目录下的配置文件
 * `lsp-bridge-user-multiserver-dir`: 用户 multiserver 配置文件目录，如果目录下的配置文件和 [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) 里的配置文件同名，lsp-bridge 会使用这个目录下的配置文件
+* `lsp-bridge-symbols-enable-which-func`: 在`which-func`使用lsp后端, 默认关闭
 * `acm-frame-background-dark-color`: 暗色主题下的菜单背景颜色
 * `acm-frame-background-light-color`: 亮色主题下的菜单背景颜色
 * `acm-markdown-render-font-height`: 弹出文档的字体高度， 默认是 130
