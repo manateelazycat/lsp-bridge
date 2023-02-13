@@ -84,7 +84,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-popup-documentation-scroll-down`: 文档窗口向下滚动
 * `lsp-bridge-rename`: 重命名
 * `lsp-bridge-diagnostic-jump-next`: 跳转到下一个诊断位置
-* `lsp-bridge-diagnostic-jump-erev`: 跳转到上一个诊断位置
+* `lsp-bridge-diagnostic-jump-prev`: 跳转到上一个诊断位置
 * `lsp-bridge-diagnostic-list`: 列出所有诊断信息
 * `lsp-bridge-diagnostic-copy`: 拷贝当前诊断信息到剪切板
 * `lsp-bridge-diagnostic-ignore`: 插入注视忽略当前诊断
