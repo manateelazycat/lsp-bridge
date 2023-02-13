@@ -4,15 +4,7 @@
   "command": [
     "jdtls"
   ],
-  "settings": {
-    "java": {
-      "completion": {
-        "guessMethodArguments": true,
-        "overwrite": true,
-        "enabled": true
-      }
-    }
-  },
+  "settings": {},
   "initializationOptions": {
     "settings": {
       "java": {
@@ -33,11 +25,27 @@
           "importHint": true,
           "importOnFirstTimeStartup": "automatic",
           "referencedLibraries": [
-            "lib/**/*.jar"
+            "lib/**"
           ]
         },
         "server": {
           "launchMode": "Hybrid"
+        },
+        "completion": {
+          "guessMethodArguments": true,
+          "overwrite": true,
+          "enabled": true,
+          "favoriteStaticMembers": [
+            "org.junit.Assert.*",
+            "org.junit.Assume.*",
+            "org.junit.jupiter.api.Assertions.*",
+            "org.junit.jupiter.api.Assumptions.*",
+            "org.junit.jupiter.api.DynamicContainer.*",
+            "org.junit.jupiter.api.DynamicTest.*",
+            "org.mockito.Mockito.*",
+            "org.mockito.ArgumentMatchers.*",
+            "org.mockito.Answers.*"
+          ]
         }
       }
     },
