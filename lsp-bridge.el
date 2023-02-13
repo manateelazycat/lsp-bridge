@@ -244,6 +244,11 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'string
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-symbols-enable-which-func nil
+  "Wether use lsp-bridge in which-func"
+  :type 'boolean
+  :group 'lsp-bridge)
+
 (defface lsp-bridge-font-lock-flash
   '((t (:inherit highlight)))
   "Face to flash the current line."
@@ -899,7 +904,8 @@ So we build this macro to restore postion after code format."
         ;; Only send `change_cursor' request when user change cursor, except cause by mouse wheel.
         (unless (eq last-command 'mwheel-scroll)
           (lsp-bridge-call-file-api "change_cursor" (lsp-bridge--position))
-          (if (and (featurep 'which-func) which-function-mode)
+          (if (and lsp-bridge-symbols-enable-which-func
+                   (featurep 'which-func) which-function-mode)
               (lsp-bridge-call-file-api "document_symbol" (lsp-bridge--position)))))
 
       ;; Hide hover tooltip.
@@ -1525,7 +1531,8 @@ So we build this macro to restore postion after code format."
     (setq create-lockfiles nil))
 
   ;; Add `lsp-bridge-symbols--current-defun' to `whic-func-functions'.
-  (if (and (featurep 'which-func) which-function-mode)
+  (if (and lsp-bridge-symbols-enable-which-func
+           (featurep 'which-func) which-function-mode)
       (setq-local which-func-functions
                   (add-to-list 'which-func-functions #'lsp-bridge-symbols--current-defun)))
 
