@@ -11,5 +11,6 @@
   "hover": "pyright-background-analysis",
   "signature_help": "pyright-background-analysis",
   "prepare_rename": "pyright-background-analysis",
-  "rename": "pyright-background-analysis"
+  "rename": "pyright-background-analysis",
+  "document_symbol": "pyright-background-analysis"
 }

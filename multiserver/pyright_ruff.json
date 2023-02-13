@@ -11,5 +11,6 @@
   "hover": "pyright",
   "signature_help": "pyright",
   "prepare_rename": "pyright",
-  "rename": "pyright"
+  "rename": "pyright",
+  "document_symbol": "pyright"
 }

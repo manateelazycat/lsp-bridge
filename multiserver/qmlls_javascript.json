@@ -11,5 +11,6 @@
   "hover": "qmlls",
   "signature_help": "qmlls",
   "prepare_rename": "qmlls",
-  "rename": "qmlls"
+  "rename": "qmlls",
+  "document_symbol": "qmalls"
 }
