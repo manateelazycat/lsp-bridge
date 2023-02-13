@@ -195,7 +195,7 @@ class FileAction:
         if len(self.diagnostics) == 0:
             message_emacs("No diagnostics found.")
         else:
-            eval_in_emacs("lsp-bridge-diagnostic--list", self.diagnostics)
+            eval_in_emacs("lsp-bridge-diagnostic--list", self.diagnostics[:self.diagnostics_max_number])
             
     def sort_diagnostic(self, diagnostic_a, diagnostic_b):
         score_a = [diagnostic_a["range"]["start"]["line"],
