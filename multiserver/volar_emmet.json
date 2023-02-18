@@ -11,5 +11,6 @@
   "hover": "volar",
   "signature_help": "volar",
   "prepare_rename": "volar",
-  "rename": "volar"
+  "rename": "volar",
+  "document_symbol": "volar"
 }

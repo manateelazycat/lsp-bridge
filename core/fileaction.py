@@ -57,7 +57,7 @@ class FileAction:
         self.code_action_response = None
         self.completion_item_resolve_key = None
         self.completion_items = {}
-        self.diagnostics = []
+        self.diagnostics = {}
         self.diagnostics_ticker = 0
         self.external_file_link = external_file_link
         self.filepath = filepath
@@ -78,13 +78,15 @@ class FileAction:
          self.insert_spaces,
          self.enable_push_diagnostics,
          self.push_diagnostic_idle,
-         self.display_label_max_length) = get_emacs_vars([
+         self.display_label_max_length,
+         self.diagnostics_max_number) = get_emacs_vars([
              "acm-backend-lsp-enable-auto-import",
              "acm-backend-lsp-candidates-max-number",
              "indent-tabs-mode",
              "lsp-bridge-enable-diagnostics",
              "lsp-bridge-diagnostic-fetch-idle",
-             "acm-backend-lsp-candidate-max-length"
+             "acm-backend-lsp-candidate-max-length",
+             "lsp-bridge-diagnostic-max-number"
         ])
         self.insert_spaces = not self.insert_spaces
 
@@ -188,12 +190,31 @@ class FileAction:
             eval_in_emacs("lsp-bridge-diagnostic--ignore", lsp_server.server_info["ignore-diagnostic"])
         else:
             message_emacs("Not found 'ignore_diagnostic' field in LSP server configure file.")
-            
+
+    def get_diagnostics(self):
+        diagnostics = []
+        diagnostic_count = 0
+        for server_name in self.diagnostics:
+            for diagnostic in self.diagnostics[server_name]:
+                diagnostic["server-name"] = server_name
+                diagnostics.append(diagnostic)
+
+                diagnostic_count += 1
+
+                if diagnostic_count >= self.diagnostics_max_number:
+                    return diagnostics
+
+        return diagnostics
+
     def list_diagnostics(self):
-        if len(self.diagnostics) == 0:
+        diagnostic_count = 0
+        for server_name in self.diagnostics:
+            diagnostic_count += len(self.diagnostics[server_name])
+
+        if diagnostic_count == 0:
             message_emacs("No diagnostics found.")
         else:
-            eval_in_emacs("lsp-bridge-diagnostic--list", self.diagnostics)
+            eval_in_emacs("lsp-bridge-diagnostic--list", self.get_diagnostics())
             
     def sort_diagnostic(self, diagnostic_a, diagnostic_b):
         score_a = [diagnostic_a["range"]["start"]["line"],
@@ -217,7 +238,7 @@ class FileAction:
 
         # Record diagnostics data that push from LSP server.
         import functools
-        self.diagnostics = sorted(diagnostics, key=functools.cmp_to_key(self.sort_diagnostic))
+        self.diagnostics[server_name] = sorted(diagnostics, key=functools.cmp_to_key(self.sort_diagnostic))
         self.diagnostics_ticker += 1 
         
         # Try to push diagnostics to Emacs.
@@ -230,8 +251,26 @@ class FileAction:
         # Only push diagnostics to Emacs when ticker is newest.
         # Drop all temporarily diagnostics when typing.
         if ticker == self.diagnostics_ticker:
-            eval_in_emacs("lsp-bridge-diagnostic--render", self.filepath, self.diagnostics)
-            
+            eval_in_emacs("lsp-bridge-diagnostic--render", self.filepath, self.get_diagnostics())
+
+    def try_code_action(self, range_start, range_end, action_kind):
+        if self.multi_servers:
+            for lsp_server in self.multi_servers.values():
+                if lsp_server.server_info["name"] in self.multi_servers_info["code_action"]:
+                    lsp_server_name = lsp_server.server_info["name"]
+                    self.send_server_request(
+                        lsp_server,
+                        "code_action",
+                        self.diagnostics[lsp_server_name] if lsp_server_name in self.diagnostics else [],
+                        range_start, range_end, action_kind)
+        else:
+            lsp_server_name = self.single_server.server_info["name"]
+            self.send_server_request(
+                self.single_server,
+                "code_action",
+                self.diagnostics[lsp_server_name] if lsp_server_name in self.diagnostics else [],
+                range_start, range_end, action_kind)
+
     def save_file(self, buffer_name):
         for lsp_server in self.get_lsp_servers():
             lsp_server.send_did_save_notification(self.filepath, buffer_name)

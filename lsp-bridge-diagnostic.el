@@ -130,6 +130,25 @@
   :type 'boolean
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-diagnostic-max-number 50
+  "The maximum number of diagnostic will be render.
+
+Too many diagnostic render will cause do long time Emacs GC."
+  :type 'integer
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-diagnostic-hide-severities nil
+  "The rule to hide diagnostic that return from LSP server.
+
+1 mean error
+2 mean warning
+3 mean info
+4 mean hint
+
+You can set this value with `(2 3 4) if you just need render error diagnostic."
+  :type 'list
+  :group 'lsp-bridge)
+
 (defvar-local lsp-bridge-diagnostic-overlays '())
 
 (defvar lsp-bridge-diagnostic-frame nil)
@@ -152,27 +171,28 @@
     (let ((diagnostic-index 0)
           (diagnostic-number (length diagnostics)))
       (dolist (diagnostic diagnostics)
-        (let* ((diagnostic-start (acm-backend-lsp-position-to-point (plist-get (plist-get diagnostic :range) :start)))
-               (diagnostic-end (acm-backend-lsp-position-to-point (plist-get (plist-get diagnostic :range) :end)))
-               (overlay (if (eq diagnostic-start diagnostic-end)
-                            ;; Adjust diagnostic end position if start and end is same position.
-                            (make-overlay diagnostic-start (1+ diagnostic-start))
-                          (make-overlay diagnostic-start diagnostic-end)))
-               (severity (plist-get diagnostic :severity))
-               (message (plist-get diagnostic :message))
-               (overlay-face (cl-case severity
-                               (1 'lsp-bridge-diagnostics-error-face)
-                               (2 'lsp-bridge-diagnostics-warning-face)
-                               (3 'lsp-bridge-diagnostics-info-face)
-                               (4 'lsp-bridge-diagnostics-hint-face))))
-          (overlay-put overlay 'face overlay-face)
-          (overlay-put overlay 'message message)
-          (overlay-put overlay
-                       'display-message
-                       (if (> diagnostic-number 1)
-                           (format "[%s:%s] %s" (1+ diagnostic-index) diagnostic-number message)
-                         message))
-          (push overlay lsp-bridge-diagnostic-overlays))
+        (let ((severity (plist-get diagnostic :severity)))
+          (unless (member severity lsp-bridge-diagnostic-hide-severities)
+            (let* ((diagnostic-start (acm-backend-lsp-position-to-point (plist-get (plist-get diagnostic :range) :start)))
+                   (diagnostic-end (acm-backend-lsp-position-to-point (plist-get (plist-get diagnostic :range) :end)))
+                   (overlay (if (eq diagnostic-start diagnostic-end)
+                                ;; Adjust diagnostic end position if start and end is same position.
+                                (make-overlay diagnostic-start (1+ diagnostic-start))
+                              (make-overlay diagnostic-start diagnostic-end)))
+                   (message (plist-get diagnostic :message))
+                   (overlay-face (cl-case severity
+                                   (1 'lsp-bridge-diagnostics-error-face)
+                                   (2 'lsp-bridge-diagnostics-warning-face)
+                                   (3 'lsp-bridge-diagnostics-info-face)
+                                   (4 'lsp-bridge-diagnostics-hint-face))))
+              (overlay-put overlay 'face overlay-face)
+              (overlay-put overlay 'message message)
+              (overlay-put overlay
+                           'display-message
+                           (if (> diagnostic-number 1)
+                               (format "[%s:%s] %s" (1+ diagnostic-index) diagnostic-number message)
+                             message))
+              (push overlay lsp-bridge-diagnostic-overlays))))
 
         (setq diagnostic-index (1+ diagnostic-index))))
     (setq-local lsp-bridge-diagnostic-overlays (reverse lsp-bridge-diagnostic-overlays))))

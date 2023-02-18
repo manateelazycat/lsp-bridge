@@ -244,6 +244,11 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'string
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-symbols-enable-which-func nil
+  "Wether use lsp-bridge in which-func"
+  :type 'boolean
+  :group 'lsp-bridge)
+
 (defface lsp-bridge-font-lock-flash
   '((t (:inherit highlight)))
   "Face to flash the current line."
@@ -358,8 +363,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Default LSP server for Python language, you can choose `pyright', `jedi', `python-ms', `pylsp'."
   :type 'string)
 
-(defcustom lsp-bridge-python-ruff-lsp-server "pyright_ruff"
-  "Default LSP server for Python Ruff, you can choose `pyright_ruff', `jedi_ruff', `python-ms_ruff', `pylsp_ruff'."
+(defcustom lsp-bridge-python-multi-lsp-server "pyright-background-analysis_ruff"
+  "Default Multi LSP server for Python, you can choose `pyright_ruff', `jedi_ruff', `python-ms_ruff', `pylsp_ruff'."
   :type 'string)
 
 (defcustom lsp-bridge-tex-lsp-server "texlab"
@@ -380,7 +385,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Only popup completion menu when user call `lsp-bridge-popup-complete-menu' command.")
 
 (defcustom lsp-bridge-multi-lang-server-mode-list
-  '(((python-mode python-ts-mode) . lsp-bridge-python-ruff-lsp-server)
+  '(((python-mode python-ts-mode) . lsp-bridge-python-multi-lsp-server)
     ((qml-mode qml-ts-mode) . "qmlls_javascript"))
   "The multi lang server rule for file mode."
   :type 'cons)
@@ -388,9 +393,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defcustom lsp-bridge-single-lang-server-mode-list
   '(
     ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode) . lsp-bridge-c-lsp-server)
-    (cmake-mode . "cmake-language-server")
-    (java-mode . "jdtls")
-    (python-mode . lsp-bridge-python-lsp-server)
+    ((cmake-mode cmake-ts-mode) . "cmake-language-server")
+    ((java-mode java-ts-mode) . "jdtls")
+    ((python-mode python-ts-mode) . lsp-bridge-python-lsp-server)
     (ruby-mode . "solargraph")
     ((rust-mode rustic-mode rust-ts-mode) . "rust-analyzer")
     (elixir-mode . "elixirLS")
@@ -400,15 +405,15 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (lua-mode . "sumneko")
     (dart-mode . "dart-analysis-server")
     (scala-mode . "metals")
-    ((js2-mode js-mode rjsx-mode) . "javascript")
-    (typescript-tsx-mode . "typescriptreact")
-    ((typescript-mode) . "typescript")
+    ((js2-mode js-mode js-ts-mode rjsx-mode) . "javascript")
+    ((typescript-tsx-mode tsx-ts-mode) . "typescriptreact")
+    ((typescript-mode typescript-ts-mode) . "typescript")
     (tuareg-mode . "ocamllsp")
     (erlang-mode . "erlang-ls")
     ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . lsp-bridge-tex-lsp-server)
     ((clojure-mode clojurec-mode clojurescript-mode clojurex-mode) . "clojure-lsp")
-    ((sh-mode) . "bash-language-server")
-    ((css-mode) . "vscode-css-language-server")
+    ((sh-mode bash-mode bash-ts-mode) . "bash-language-server")
+    ((css-mode css-ts-mode) . "vscode-css-language-server")
     (elm-mode . "elm-language-server")
     (php-mode . lsp-bridge-php-lsp-server)
     ((yaml-mode yaml-ts-mode) . "yaml-language-server")
@@ -422,6 +427,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (swift-mode . "swift-sourcekit")
     (csharp-mode . lsp-bridge-csharp-lsp-server)
     (kotlin-mode . "kotlin-language-server")
+    (vhdl-mode . "vhdl-tool")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -460,6 +466,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     clojurescript-mode-hook
     clojurex-mode-hook
     sh-mode-hook
+    bash-mode-hook
     web-mode-hook
     css-mode-hook
     elm-mode-hook
@@ -483,6 +490,18 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     telega-chat-mode-hook
     markdown-mode-hook
     kotlin-mode-hook
+    vhdl-mode-hook
+
+    c-ts-mode-hook
+    c++-ts-mode-hook
+    cmake-ts-mode-hook
+    toml-ts-mode-hook
+    css-ts-mode-hook
+    js-ts-mode-hook
+    json-ts-mode-hook
+    python-ts-mode-hook
+    bash-ts-mode-hook
+    typescript-ts-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type 'list)
@@ -508,6 +527,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (csharp-tree-sitter-mode    . csharp-tree-sitter-indent-offset) ; C#
     (d-mode                     . c-basic-offset)     ; D
     (java-mode                  . c-basic-offset)     ; Java
+    (java-ts-mode               . java-ts-mode-indent-offset) ; Java
     (jde-mode                   . c-basic-offset)     ; Java (JDE)
     (js-mode                    . js-indent-level)    ; JavaScript
     (js2-mode                   . js2-basic-offset)   ; JavaScript-IDE
@@ -525,12 +545,15 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (nxml-mode                  . nxml-child-indent)       ; XML
     (pascal-mode                . pascal-indent-level)     ; Pascal
     (typescript-mode            . typescript-indent-level) ; Typescript
+    (typescript-ts-mode         . typescript-ts-mode-indent-offset) ; Typescript
+    (tsx-ts-mode                . typescript-ts-mode-indent-offset) ; Typescript[TSX]
     (sh-mode                    . sh-basic-offset)   ; Shell Script
     (ruby-mode                  . ruby-indent-level) ; Ruby
     (enh-ruby-mode              . enh-ruby-indent-level) ; Ruby
     (crystal-mode               . crystal-indent-level) ; Crystal (Ruby)
     (css-mode                   . css-indent-offset)    ; CSS
     (rust-mode                  . rust-indent-offset)   ; Rust
+    (rust-ts-mode               . rust-ts-mode-indent-offset) ; Rust
     (rustic-mode                . rustic-indent-offset) ; Rust
     (scala-mode                 . scala-indent:step)    ; Scala
     (powershell-mode            . powershell-indent)    ; PowerShell
@@ -538,18 +561,24 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (yaml-mode                  . yaml-indent-offset)   ; YAML
     (hack-mode                  . hack-indent-offset)   ; Hack
     (kotlin-mode                . c-basic-offset)       ; Kotlin
+    (vhdl-mode                  . vhdl-basic-offset)     ; VHDL
     (default                    . standard-indent)) ; default fallback
   "A mapping from `major-mode' to its indent variable.")
 
 (defcustom lsp-bridge-string-interpolation-open-chars-alist
   '(;; For {}
     (python-mode . "[^\$]\{")
+    (python-ts-mode . "[^\$]\{")
     ;; For ${}
     (js-mode . "\$\{")
+    (js-ts-mode . "\$\{")
     (js2-mode . "\$\{")
     (js3-mode . "\$\{")
     (typescript-mode . "\$\{")
+    (typescript-ts-mode . "\$\{")
     (sh-mode . "\$\{")
+    (bash-mode . "\$\{")
+    (bash-ts-mode . "\$\{")
     ;; For #{}
     (ruby-mode . "\#\{")
     ;; For {{}}
@@ -874,7 +903,10 @@ So we build this macro to restore postion after code format."
 
         ;; Only send `change_cursor' request when user change cursor, except cause by mouse wheel.
         (unless (eq last-command 'mwheel-scroll)
-          (lsp-bridge-call-file-api "change_cursor" (lsp-bridge--position))))
+          (lsp-bridge-call-file-api "change_cursor" (lsp-bridge--position))
+          (if (and lsp-bridge-symbols-enable-which-func
+                   (featurep 'which-func) which-function-mode)
+              (lsp-bridge-call-file-api "document_symbol" (lsp-bridge--position)))))
 
       ;; Hide hover tooltip.
       (unless (string-prefix-p "lsp-bridge-popup-documentation-scroll" this-command-string)
@@ -1112,10 +1144,10 @@ So we build this macro to restore postion after code format."
       (when (and (lsp-bridge-epc-live-p lsp-bridge-epc-process)
                  ;; NOTE:
                  ;;
-                 ;; If we call (thing-at-point 'symbol t) in `after-change-functions'
-                 ;; some org commands conflict with `thing-at-point' that make org commands failed.
+                 ;; Most org-mode commands will make lsp-bridge failed that casue (thing-at-point 'symbol t).
                  ;; We only allow `org-self-insert-command' trigger lsp-bridge action.
-                 (not (and (string-prefix-p "org-" this-command-string)
+                 (not (and (or (string-prefix-p "org-" this-command-string)
+                               (string-prefix-p "+org/" this-command-string))
                            (not (string-equal this-command-string "org-self-insert-command")))))
         (let* ((current-word (thing-at-point 'word t))
                (current-symbol (thing-at-point 'symbol t)))
@@ -1498,6 +1530,12 @@ So we build this macro to restore postion after code format."
     (setq auto-save-default nil)
     (setq create-lockfiles nil))
 
+  ;; Add `lsp-bridge-symbols--current-defun' to `whic-func-functions'.
+  (if (and lsp-bridge-symbols-enable-which-func
+           (featurep 'which-func) which-function-mode)
+      (setq-local which-func-functions
+                  (add-to-list 'which-func-functions #'lsp-bridge-symbols--current-defun)))
+
   (setq-local lsp-bridge-revert-buffer-flag nil)
 
   (acm-run-idle-func acm-backend-elisp-symbols-update-timer lsp-bridge-elisp-symbols-update-idle 'lsp-bridge-elisp-symbols-update)
@@ -1833,6 +1871,19 @@ SymbolKind (defined in the LSP)."
   (dolist (lang lsp-bridge-org-babel-lang-list)
     (eval `(lsp-org-babel-enable ,lang))))
 
+;;; support which-func-mode
+;;;
+
+(defvar-local lsp-bridge-symbols-current-defun nil)
+
+(defun lsp-bridge-symbols--record-current-defun (current-defun)
+  "Record `CURRENT-DEFUN' from lsp."
+  (setq-local lsp-bridge-symbols-current-defun current-defun))
+
+(defun lsp-bridge-symbols--current-defun ()
+  "Add `lsp-bridge-symbols-current-defun' to `which-func-functions'."
+  lsp-bridge-symbols-current-defun)
+
 ;;; Mode-line
 ;;;
 
@@ -1856,11 +1907,11 @@ SymbolKind (defined in the LSP)."
                 'lsp-bridge-kill-mode-line))
 
   (when lsp-bridge-server
-    (propertize (format "lsp-bridge:%s" lsp-bridge-server-port) 'face mode-face)))
+    (propertize "lsp-bridge"'face mode-face)))
 
 (when lsp-bridge-enable-mode-line
   (add-to-list 'mode-line-misc-info
-               `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] "))))
+               `(lsp-bridge-mode ("" lsp-bridge--mode-line-format " "))))
 
 (provide 'lsp-bridge)
 
