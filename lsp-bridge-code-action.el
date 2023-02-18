@@ -131,7 +131,7 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
   (interactive)
   (when (lsp-bridge-has-lsp-server-p)
     (let ((range (lsp-bridge-code-action-get-range)))
-      (lsp-bridge-call-file-api "code_action"
+      (lsp-bridge-call-file-api "try_code_action"
                                 (lsp-bridge--point-position (car range))
                                 (lsp-bridge--point-position (cdr range))
                                 action-kind)

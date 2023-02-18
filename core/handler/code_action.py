@@ -9,7 +9,7 @@ class CodeAction(Handler):
     provider = "code_action_provider"
     provider_message = "Current server not support code action."
 
-    def process_request(self, range_start, range_end, action_kind) -> dict:
+    def process_request(self, diagnostics, range_start, range_end, action_kind) -> dict:
         self.action_kind = action_kind
         
         range = {
@@ -17,8 +17,6 @@ class CodeAction(Handler):
             "end": range_end
         }
         
-        diagnostics = self.file_action.diagnostics
-                
         if isinstance(action_kind, str):
             context = {
                 "diagnostics": diagnostics,
