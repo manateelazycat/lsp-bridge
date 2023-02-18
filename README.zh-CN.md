@@ -101,10 +101,10 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 ## LSP 服务器选项
 * `lsp-bridge-c-lsp-server`: C 语言的服务器，可以选择`clangd`或者`ccls`
 * `lsp-bridge-python-lsp-server`: Python 语言的服务器，可以选择 `pyright`, `jedi`, `python-ms`, `pylsp`, `ruff`
-* `lsp-bridge-python-ruff-lsp-server`: Python Ruff linter 的服务器，可以选择 `pyright_ruff`, `jedi_ruff`, `python-ms_ruff`, `pylsp_ruff`
 * `lsp-bridge-php-lsp-server`: PHP 语言的服务器，可以选择`intelephense`或者`phpactor`
 * `lsp-bridge-tex-lsp-server`: LaTeX 语言的服务器，可以选择`texlab`或者`digestif`
 * `lsp-bridge-csharp-lsp-server`: C#语言的服务器， 可以选择`omnisharp-mono` 或者 ` omnisharp-dotnet`, 注意你需要给 OmniSharp 文件**执行权限**才能正常工作
+* `lsp-bridge-python-multi-lsp-server`: Python 多语言服务器，可以选择 `pyright_ruff`, `jedi_ruff`, `python-ms_ruff`, `pylsp_ruff`
 
 ## 选项
 * `lsp-bridge-python-command`: Python 命令的路径, 如果你用 `conda`， 你也许会定制这个选项。 Windows 平台用的是 `python.exe` 而不是 `python3`, 如果 lsp-bridge 不能工作， 可以尝试改成 `python3`
@@ -215,7 +215,7 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 | [jedi](https://github.com/pappasam/jedi-language-server)                                             | Python                                    | `lsp-bridge-python-lsp-server` 设置成 `jedi`                                                                                                                                   |                                       |      |   |
 | [python-ms](https://github.com/microsoft/python-language-server)                                     | Python                                    | 支持 Python2 的 lsp                                                                                                                                                            |                                       |      |   |
 | [pylsp](https://github.com/python-lsp/python-lsp-server)                                             | Python                                    | lsp-bridge-python-lsp-server 设置成 `pylsp`                                                                                                                                    |                                       |      |   |
-| [ruff](https://github.com/charliermarsh/ruff-lsp)                                                    | Python                                    | `pip install ruff-lsp`，`lsp-bridge-python-lsp-server` 设置成 `ruff`，只具备 linter 的功能。如需补全等功能，安装其他的 Python 语言服务器，并把 `lsp-bridge-python-ruff-lsp-server` 设置成 `[相应的语言服务器名称]_ruff` |                                       |      |   |
+| [ruff](https://github.com/charliermarsh/ruff-lsp)                                                    | Python                                    | `pip install ruff-lsp`，`lsp-bridge-python-lsp-server` 设置成 `ruff`，只具备 linter 的功能。如需补全等功能，安装其他的 Python 语言服务器，并把 `lsp-bridge-python-multi-lsp-server` 设置成 `[相应的语言服务器名称]_ruff` |                                       |      |   |
 | [solargraph](https://github.com/castwide/solargraph)                                                 | Ruby                                      |                                                                                                                                                                               |                                       |      |   |
 | [rust-analyzer](https://github.com/rust-lang/rust-analyzer)                                          | Rust                                      |                                                                                                                                                                               |                                       |      |   |
 | [elixirLS](https://github.com/elixir-lsp/elixir-ls)                                                  | Elixir                                    | 请确保导出 `elixir-ls` 目录到你系统的 PATH 路径                                                                                                                                    |                                       |      |   |

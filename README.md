@@ -103,10 +103,10 @@ It should be noted that there are three scan modes of lsp-bridge:
 ## LSP server options
 * `lsp-bridge-c-lsp-server`: C language server, you can choose `clangd` or` ccls`
 * `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright`, `jedi`, `python-ms`, `pylsp`, `ruff`
-* `lsp-bridge-python-ruff-lsp-server`: Python Ruff linter server, you can choose `pyright_ruff`, `jedi_ruff`, `python-ms_ruff`, `pylsp_ruff`
 * `lsp-bridge-php-lsp-server`: PHP language server, you can choose `intelephense` or `phpactor`
 * `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `taxlab` or` digestif`
 * `lsp-bridge-csharp-lsp-server`: C# language server, you can choose `omnisharp-mono` or` omnisharp-dotnet`, note that you need to give **execute permissions** to the OmniSharp file
+* `lsp-bridge-python-multi-lsp-server`: Python multi-language servers, you can choose `pyright_ruff`, `jedi_ruff`, `python-ms_ruff`, `pylsp_ruff`
 
 ## Options
 * `lsp-bridge-python-command`: The path of the python command, if you use `conda`, you may customize this option. Windows platform using `python.exe` rather than `python3`, if lsp-bridge can't work, try set to `python3`
@@ -217,7 +217,7 @@ You need to install the LSP server corresponding to each programming language, t
 | [jedi](https://github.com/pappasam/jedi-language-server)                                             | Python                                    | `lsp-bridge-python-lsp-server` set to `jedi`                                                                                                                                  |
 | [python-ms](https://github.com/microsoft/python-language-server)                                     | Python                                    | Legacy language server for Python2                                                                                                                                            |
 | [pylsp](https://github.com/python-lsp/python-lsp-server)                                             | Python                                    | `lsp-bridge-python-lsp-server` set to `pylsp`                                                                                                                                 |
-| [ruff](https://github.com/charliermarsh/ruff-lsp)                                                    | Python                                    | `pip install ruff-lsp`,`lsp-bridge-python-lsp-server` is set to `ruff`, which only has the function of linter. If you need to complete the functions, install other Python language servers, and set the `lsp-bridge-python-ruff-lsp-server` to `[LSP NAME]_ruff` |
+| [ruff](https://github.com/charliermarsh/ruff-lsp)                                                    | Python                                    | `pip install ruff-lsp`,`lsp-bridge-python-lsp-server` is set to `ruff`, which only has the function of linter. If you need to complete the functions, install other Python language servers, and set the `lsp-bridge-python-multi-lsp-server` to `[LSP NAME]_ruff` |
 | [solargraph](https://github.com/castwide/solargraph)                                                 | Ruby                                      |                                                                                                                                                                               |
 | [rust-analyzer](https://github.com/rust-lang/rust-analyzer)                                          | Rust                                      |                                                                                                                                                                               |
 | [elixirLS](https://github.com/elixir-lsp/elixir-ls)                                                  | Elixir                                    | Please ensure that the `elixir-ls` release directory is in your system PATH at first                                                                                          |
