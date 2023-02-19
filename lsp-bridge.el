@@ -1400,6 +1400,7 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-popup-documentation--show (value)
   (with-current-buffer (get-buffer-create lsp-bridge-lookup-doc-tooltip)
+    (read-only-mode -1)
     (erase-buffer)
     (insert value)
     (acm-markdown-render-content))
