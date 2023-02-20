@@ -38,13 +38,7 @@ class SearchFileWords:
         self.search_words_dispatcher_thread = threading.Thread(target=self.search_dispatcher)
         self.search_words_dispatcher_thread.start()
 
-        # not search words for no text file
-        self.search_file_ignore_regex = re.compile(r"(\.pdf|\.png|\.jpg|\.jpeg|\.gif|\.svg)$")
-    
     def index_files(self, filepaths):
-        filepaths = list(filter(lambda filepath: not self.search_file_ignore_regex.search(filepath),
-                                filepaths))
-
         for filepath in filepaths:
             self.search_files.add(filepath)
         
@@ -58,9 +52,6 @@ class SearchFileWords:
             self.search_words_queue.put("search_words")
             
     def change_file(self, filepath, base64_string):
-        if self.search_file_ignore_regex.search(filepath):
-            return
-
         import base64
         try:
             content = base64.b64decode(base64_string).decode("utf-8")

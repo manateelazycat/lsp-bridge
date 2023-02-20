@@ -214,6 +214,11 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'float
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-search-words-prohibit-file-extensions '("png" "jpg" "jpeg" "gif" "pdf")
+  "The file extensions to prohibit search words."
+  :type 'list
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-enable-auto-format-code nil
   "Whether to auto format code."
   :type 'boolean
@@ -1221,12 +1226,18 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-search-words-index-files ()
   "Index files when lsp-bridge python process finish."
-  (let ((files (cl-remove-if 'null (mapcar #'buffer-file-name (buffer-list)))))
+  (let ((files (cl-remove-if (lambda (elt)
+                               (or (null elt)
+                                   (member (file-name-extension elt)
+                                           lsp-bridge-search-words-prohibit-file-extensions)))
+                             (mapcar #'buffer-file-name (buffer-list)))))
     (lsp-bridge-call-async "search_file_words_index_files" files)))
 
 (defun lsp-bridge-search-words-update ()
   (when (and buffer-file-name
-             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
+             (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+             (not (member (file-name-extension buffer-file-name)
+                          lsp-bridge-search-words-prohibit-file-extensions)))
     (lsp-bridge-call-async "search_file_words_change_file"
                            buffer-file-name
                            (base64-encode-string (encode-coding-string (buffer-string) 'utf-8))
