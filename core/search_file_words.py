@@ -37,7 +37,7 @@ class SearchFileWords:
         self.search_words_queue = queue.Queue()
         self.search_words_dispatcher_thread = threading.Thread(target=self.search_dispatcher)
         self.search_words_dispatcher_thread.start()
-    
+
     def index_files(self, filepaths):
         for filepath in filepaths:
             self.search_files.add(filepath)
@@ -53,7 +53,12 @@ class SearchFileWords:
             
     def change_file(self, filepath, base64_string):
         import base64
-        content = base64.b64decode(base64_string).decode("utf-8")
+        try:
+            content = base64.b64decode(base64_string).decode("utf-8")
+        except UnicodeDecodeError:
+            print('ignore non utf-8 file: %s' % filepath)
+            return
+
         self.search_files.add(filepath)
         self.search_content_dict[filepath] = content
         
