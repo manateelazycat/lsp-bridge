@@ -489,7 +489,7 @@ class LspServer:
         settings = self.server_info.get("settings", {})
 
         # We send empty message back to server if nothing in 'settings' of server.json file.
-        if len(settings) == 0:
+        if settings is None or len(settings) == 0:
             self.sender.send_response(request_id, [])
             return
 
