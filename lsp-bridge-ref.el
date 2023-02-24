@@ -752,17 +752,21 @@ user more freedom to use rg with special arguments."
           (lsp-bridge-ref-open-file))
       (message "[LSP-Bridge] Reach to first line."))))
 
-(defun lsp-bridge-ref-jump-next-file ()
+(defun lsp-bridge-ref-jump-next-file (&optional stay)
   (interactive)
   (let*  ((next-position (lsp-bridge-ref-find-next-position lsp-bridge-ref-regexp-file)))
     (if next-position
         (progn
           (goto-char next-position)
           (forward-line)
-          (lsp-bridge-ref-open-file))
+          (lsp-bridge-ref-open-file stay))
       (message "[LSP-Bridge] Reach to last file."))))
 
-(defun lsp-bridge-ref-jump-prev-file ()
+(defun lsp-bridge-ref-jump-next-file-and-stay ()
+  (interactive)
+  (lsp-bridge-ref-jump-next-file t))
+
+(defun lsp-bridge-ref-jump-prev-file (&optional stay)
   (interactive)
   (let ((prev-match-pos
          (if (save-excursion (search-backward-regexp lsp-bridge-ref-regexp-file nil t))
@@ -787,8 +791,12 @@ user more freedom to use rg with special arguments."
         (progn
           (goto-char prev-match-pos)
           (forward-line)
-          (lsp-bridge-ref-open-file))
+          (lsp-bridge-ref-open-file stay))
       (message "[LSP-Bridge] Reach to first file."))))
+
+(defun lsp-bridge-ref-jump-prev-file-and-stay ()
+  (interactive)
+  (lsp-bridge-ref-jump-prev-file t))
 
 (defun lsp-bridge-ref-insert-current-line ()
   (interactive)
