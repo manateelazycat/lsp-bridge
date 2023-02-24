@@ -839,7 +839,7 @@ user more freedom to use rg with special arguments."
             )))
       ;; Flash match line.
       (lsp-bridge-ref-flash-line))
-    (unless stay
+    (when stay
       ;; Keep cursor in search buffer's window.
       (setq ref-buffer-window (get-buffer-window lsp-bridge-ref-buffer))
       (if ref-buffer-window
@@ -858,19 +858,22 @@ user more freedom to use rg with special arguments."
   (lsp-bridge-ref-open-file t))
 
 (defun lsp-bridge-ref-flash-line ()
-  (let ((pulse-iterations 1)
-        (pulse-delay lsp-bridge-ref-flash-line-delay))
-    ;; Flash match line.
-    (pulse-momentary-highlight-one-line (point) 'lsp-bridge-ref-font-lock-flash)
-    ;; View the function name when navigate in match line.
-    (when lsp-bridge-ref-show-function-name-p
-      (require 'which-func)
-      (when-let ((function-name (which-function)))
-        (message "[LSP-Bridge] Located in function: %s"
-                 (propertize
-                  function-name
-                  'face 'lsp-bridge-ref-font-lock-function-location
-                  ))))))
+  (put 'pulse-iterations 'initial-value pulse-iterations)
+  (put 'pulse-delay 'initial-value pulse-delay)
+  (setq pulse-iterations 1
+        pulse-delay lsp-bridge-ref-flash-line-delay)
+  ;; Flash match line.
+  (pulse-momentary-highlight-one-line (point) 'lsp-bridge-ref-font-lock-flash)
+  ;; View the function name when navigate in match line.
+  (when lsp-bridge-ref-show-function-name-p
+    (require 'which-func)
+    (when-let ((function-name (which-function)))
+      (message "[LSP-Bridge] Located in function: %s"
+               (propertize
+                function-name
+                'face 'lsp-bridge-ref-font-lock-function-location))))
+  (setq pulse-iterations (get 'pulse-iterations 'initial-value)
+        pulse-delay (get 'pulse-delay 'initial-value)))
 
 (defun lsp-bridge-ref-in-org-link-content-p ()
   (and (looking-back "\\[\\[.*" (line-beginning-position))
