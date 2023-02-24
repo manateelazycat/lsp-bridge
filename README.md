@@ -297,6 +297,7 @@ Please read below articles first:
 * [LSP Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
 * [The Design of lsp-bridge](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html)
 * [Why lsp-bridge not use capf](https://manateelazycat.github.io/emacs/2022/06/26/why-lsp-bridge-not-use-capf.html)
+* [lsp-bridge Wiki](https://github.com/manateelazycat/lsp-bridge/wiki)
 
 Then turn on develop option ```lsp-bridge-enable-log``` and happy hacking! ;)
 
