@@ -858,6 +858,7 @@ user more freedom to use rg with special arguments."
   (lsp-bridge-ref-open-file t))
 
 (defun lsp-bridge-ref-flash-line ()
+  (require 'pulse)
   (put 'pulse-iterations 'initial-value pulse-iterations)
   (put 'pulse-delay 'initial-value pulse-delay)
   (setq pulse-iterations 1
