@@ -265,13 +265,6 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 | [kotlin-language-server](https://github.com/fwcd/kotlin-language-server)                           | Kotlin                                  |                                                                                                                                                                                                                          |
 | [vhdl-tool](https://www.vhdltool.com)                                                              | VHDL                                    |                                                                                                                                                                                                                          |
 
-### 不会支持的特性：
-lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端, 但不是实现 LSP 协议最全的 LSP 客户端。
-
-下面的功能用 Emacs 现有生态做更好：
-1. 语法高亮: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) 是一个静态高性能的语法分析库，比 LSP 更适合完成语法高亮
-2. Xref: Xref 的机制是同步等待， lsp-bridge 是完全异步的， 两个机制无法融合， 请使用 `lsp-bridge-find-references` 来查看代码引用。
-
 ## 加入开发
 
 下图是 lsp-bridge 的架构设计:
@@ -306,43 +299,6 @@ lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端, 但�
 * [为什么 lsp-bridge 不用 capf](https://manateelazycat.github.io/emacs/2022/06/26/why-lsp-bridge-not-use-capf.html)
 
 接着打开开发选项 ```lsp-bridge-enable-log``` ， happy hacking! ;)
-
-### 开发多线程异步补全后端
-lsp-bridge 基于 Python 的多线程技术来构建补全后端， 有了多线程技术的加持， 不管你搜索多大的数据， lsp-bridge 都将保障补全体验持续丝滑， 复杂的补全后端请多参考已有后端 (lsp-bridge/acm/acm-backend-*.el) 的设计。
-
-针对一些小场景， 比如某种语言需要添加额外的关键字补全， lsp-bridge 提供了一些脚手架代码帮助你快速构建自己的异步补全后端：
-
-#### 1. 缓存关键字列表
-```elisp
-(lsp-bridge-call-async "search_list_update" "example" (list "keyword_a" "keyword_b" "keyword_c") 100   "lsp-bridge-example-record")
-```
-
-我们可以通过接口函数 `search_list_update` 快速把关键字列表缓存到 lsp-bridge 的 Python 进程， 其中 `example` 是补全后端的名字， `(list "keyword_a" "keyword_b" "keyword_c")` 是关键字列表， `100` 是搜索侯选词的最大数目， `lsp-bridge-example-record` 是搜索完成后调用的回调函数名称。
-
-#### 2. 多线程搜索过滤
-```elisp
-(lsp-bridge-call-async "search_list_search" "example" "current_symbol")
-```
-
-当完成关键字缓存以后， 再通过接口函数 `search_list_search` 进行搜索， 其中 `example` 是补全后端名字， `current_symbol` 是搜索关键字， 一般都是光标处的符号。 当调用 `search_list_search` 时， lsp-bridge 会自动用子线程进行搜索过滤， 并自动检测搜索结果是否已经过期？ 如果搜索结果没有过期， 调用回调函数 `lsp-bridge-example-record` 记录搜索结果。
-
-#### 3. 异步数据弹出补全
-```elisp
-(defun lsp-bridge-example-record (candidates)
-  (setq-local acm-backend-example-items candidates)
-  (lsp-bridge-try-completion))
-```
-
-一般 `lsp-bridge-example-record` 都是这样定义的， 接到异步后端返回的 `candidates` 后， 先把搜索结果保存到 buffer 中， 这里是 `acm-backend-example-items` 局部变量 （需要自己定义）, 然后再调用函数 `lsp-bridge-try-completion` ， 尝试弹出补全菜单。
-
-
-## 优化 Python 性能
-1. 开启性能剖析选项： (setq lsp-bridge-enable-profile t)
-2. 重启 lsp-bridge: `lsp-bridge-restart-process`
-3. 正常写代码， 进行补全操作， 时间越长越好
-4. 输出性能剖析日志： `lsp-bridge-profile-dump`
-5. 安装 snakeviz: sudo pip3 install snakeviz
-6. 展示性能瓶颈： snakeviz ~/lsp-bridge.prof 
 
 ## 反馈问题
 

@@ -266,14 +266,6 @@ You need to install the LSP server corresponding to each programming language, t
 | [qmlls](https://github.com/qt/qtdeclarative/tree/dev/tools/qmlls)                                    | QML                                       | The `qmlls` binary should be part of the normal Qt packages since Qt 6.3.0 Ensure that the directory  of `qmlls` binary file is in PATH                                       |
 | [kotlin-language-server](https://github.com/fwcd/kotlin-language-server)                             | Kotlin                                    |                                                                                                                                                                               |
 | [vhdl-tool](https://www.vhdltool.com)                                                                | VHDL                                |                                                                                                                                                                               |
-### Features that won't be supported
-
-The goal of lsp-bridge is to become the fastest LSP client in Emacs, not a complete implementation of LSP protocol.
-
-Emacs can do better for the following tasks, we will not reinvent the wheel in lsp-bridge:
-1. Syntax highlighting: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) is a wonderful incremental parsing library for syntax highlighting.
-2. Xref: Xref's mechanism is synchronous, but lsp-bridge is completely asynchronous. Please use the `lsp-bridge-find-references` to view the code references.
-
 ## Join development
 
 The following is the framework of lsp-bridge:
@@ -308,41 +300,6 @@ Please read below articles first:
 
 Then turn on develop option ```lsp-bridge-enable-log``` and happy hacking! ;)
 
-### Develop a multi-threaded asynchronous completion backend
-lsp-bridge builds the completion backend based on Python's multi-threading technology. With the support of multi-threading technology, no matter how much data you search, lsp-bridge will ensure that the completion experience smooth as butter. Please refer to the design of the existing backend (lsp-bridge/acm/acm-backend-*.el) for complicated backend.
-
-For some small scenarios, such as a language that needs to add additional keyword completion, lsp-bridge provides some scaffolding code to help you quickly build your own asynchronous completion backend:
-
-#### 1. Cache keyword list
-```elisp
-(lsp-bridge-call-async "search_list_update" "example" (list "keyword_a" "keyword_b" "keyword_c") 100 "lsp-bridge-example-record")
-```
-
-We can quickly cache the keyword list to the Python process of lsp-bridge through the interface function `search_list_update`, where `example` is the name of the completion backend, `(list "keyword_a" "keyword_b" "keyword_c")` is the keyword list, `100` is the maximum number of search candidates, `lsp-bridge-example-record` is the name of the callback function called after the search is completed.
-
-#### 2. Multi-threaded search and filter
-```elisp
-(lsp-bridge-call-async "search_list_search" "example" "current_symbol")
-```
-
-After completing the keyword cache, search through the interface function `search_list_search`, where `example` is the name of the completion backend, and `current_symbol` is the search keyword, which is generally the symbol at the cursor. When calling `search_list_search`, lsp-bridge will automatically use sub-threads to search and filter, and automatically detect whether the search results have expired? If the search result is not expired, call the callback function `lsp-bridge-example-record` to record the search result.
-
-#### 3. Asynchronous data pop-up completion
-```elisp
-(defun lsp-bridge-example-record (candidates)
-   (setq-local acm-backend-example-items candidates)
-   (lsp-bridge-try-completion))
-```
-
-Generally, `lsp-bridge-example-record` is defined in this way. After receiving `candidates` returned by the asynchronous backend, first save the search results in the buffer, here is `acm-backend-example-items` local variable (you need to define this variable yourself), and then call the function `lsp-bridge-try-completion`, try to popup the completion menu.
-
-## Optimize Python performance
-1. Enable the profiler option: (setq lsp-bridge-enable-profile t)
-2. Restart lsp-bridge: `lsp-bridge-restart-process`
-3. Write the code normally and complete the operation, the longer the better
-4. Output profiling log: `lsp-bridge-profile-dump`
-5. Install snakeviz: sudo pip3 install snakeviz
-6. Show performance bottlenecks: snakeviz ~/lsp-bridge.prof
 
 ## Report bug
 
