@@ -10,6 +10,7 @@ class Handler(abc.ABC):
     method: str  # Method name defined by LSP
     cancel_on_change = False  # Whether to cancel request on file change or cursor change
     send_document_uri = True
+    cancel_send_request = False # Whether to cancel send request to lsp server
     
     def __init__(self, file_action: "FileAction"):
         self.latest_request_id = -1  # Latest request id
@@ -60,3 +61,4 @@ from core.handler.execute_command import ExecuteCommand
 from core.handler.workspace_symbol import WorkspaceSymbol
 from core.handler.call_hierarchy import PrepareCallHierarchyIncomingCalls, PrepareCallHierarchyOutgoingCalls, CallHierarchyIncomingCalls, CallHierarchyOutgoingCalls
 from core.handler.document_symbol import DocumentSymbol
+from core.handler.semantic_tokens import SemanticTokens

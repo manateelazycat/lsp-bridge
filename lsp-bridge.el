@@ -93,6 +93,7 @@
 (require 'lsp-bridge-code-action)
 (require 'lsp-bridge-diagnostic)
 (require 'lsp-bridge-lsp-installer)
+(require 'lsp-bridge-semantic-tokens)
 
 (defgroup lsp-bridge nil
   "LSP-Bridge group."
@@ -291,6 +292,7 @@ Setting this to nil or 0 will turn off the indicator."
                (lsp-bridge-epc-define-method mngr 'get-user-emacs-directory 'lsp-bridge--user-emacs-directory)
                (lsp-bridge-epc-define-method mngr 'is-snippet-support 'acm-backend-lsp-snippet-expansion-fn)
                (lsp-bridge-epc-define-method mngr 'get-buffer-content 'lsp-bridge--get-buffer-content-func)
+               (lsp-bridge-epc-define-method mngr 'get-window-line-range 'lsp-bridge--get-window-line-range)
                ))))
     (if lsp-bridge-server
         (setq lsp-bridge-server-port (process-contact lsp-bridge-server :service))
@@ -679,6 +681,14 @@ So we build this macro to restore postion after code format."
   (when-let* ((buf (get-buffer buffer-name)))
     (with-current-buffer buf
       (buffer-substring-no-properties (point-min) (point-max)))))
+
+(defun lsp-bridge--get-window-line-range (buffer-name)
+  "Get buffer window line range for lsp. BUFFER-NAME is name eval from (buffer-name)."
+  (when-let* ((window (get-buffer-window buffer-name)))
+    (with-selected-window window
+      (list
+       (line-number-at-pos (window-start))
+       (line-number-at-pos (window-end))))))
 
 (defun lsp-bridge-get-lang-server-by-extension (dirname extension-list)
   "Get lang server for file extension."

@@ -231,6 +231,7 @@ class LspServer:
             "source.organizeImports"]
         self.text_document_sync = 2 # refer TextDocumentSyncKind. Can be None = 0, Full = 1 or Incremental = 2
         self.save_include_text = False
+        self.semantic_tokens_provider = False
 
         # Start LSP server.
         self.lsp_subprocess = subprocess.Popen(self.server_info["command"],
@@ -606,6 +607,12 @@ class LspServer:
                     self.save_include_text = message["result"]["capabilities"]["textDocumentSync"]["save"]["includeText"]
                 except Exception:
                     pass
+
+                try:
+                    self.semantic_tokens_provider = message["result"]["capabilities"]["semanticTokensProvider"]
+                except Exception:
+                    pass
+
 
                 self.sender.send_notification("initialized", {}, init=True)
 

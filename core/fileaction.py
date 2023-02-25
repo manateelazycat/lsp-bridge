@@ -328,6 +328,10 @@ class FileAction:
         lsp_server.record_request_id(request_id, handler)
         
         params = handler.process_request(*args, **kwargs)
+
+        if handler.cancel_send_request:
+            return
+
         if handler.send_document_uri:
             params["textDocument"] = {"uri": lsp_server.parse_document_uri(self.filepath, self.external_file_link)}
 
