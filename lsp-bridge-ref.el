@@ -90,13 +90,6 @@
   :type 'hook
   :group 'lsp-bridge-ref)
 
-(defcustom lsp-bridge-ref-flash-line-delay .3
-  "How many seconds to flash `lsp-bridge-ref-font-lock-flash' after navigation.
-
-Setting this to nil or 0 will turn off the indicator."
-  :type 'number
-  :group 'lsp-bridge-ref)
-
 (defcustom lsp-bridge-ref-kill-temp-buffer-p t
   "Default this option is true, it will kill temp buffer when quit lsp-bridge-ref buffer.
 
@@ -169,11 +162,6 @@ Default is enable, set this variable to nil if you don't like this feature."
 (defface lsp-bridge-ref-font-lock-mark-deleted
   '((t (:foreground "#ff3b30" :bold t)))
   "Face for keyword match."
-  :group 'lsp-bridge-ref)
-
-(defface lsp-bridge-ref-font-lock-flash
-  '((t (:inherit highlight)))
-  "Face to flash the current line."
   :group 'lsp-bridge-ref)
 
 (defface lsp-bridge-ref-font-lock-function-location
@@ -752,21 +740,17 @@ user more freedom to use rg with special arguments."
           (lsp-bridge-ref-open-file))
       (message "[LSP-Bridge] Reach to first line."))))
 
-(defun lsp-bridge-ref-jump-next-file (&optional stay)
+(defun lsp-bridge-ref-jump-next-file ()
   (interactive)
   (let*  ((next-position (lsp-bridge-ref-find-next-position lsp-bridge-ref-regexp-file)))
     (if next-position
         (progn
           (goto-char next-position)
           (forward-line)
-          (lsp-bridge-ref-open-file stay))
+          (lsp-bridge-ref-open-file))
       (message "[LSP-Bridge] Reach to last file."))))
 
-(defun lsp-bridge-ref-jump-next-file-and-stay ()
-  (interactive)
-  (lsp-bridge-ref-jump-next-file t))
-
-(defun lsp-bridge-ref-jump-prev-file (&optional stay)
+(defun lsp-bridge-ref-jump-prev-file ()
   (interactive)
   (let ((prev-match-pos
          (if (save-excursion (search-backward-regexp lsp-bridge-ref-regexp-file nil t))
@@ -791,12 +775,8 @@ user more freedom to use rg with special arguments."
         (progn
           (goto-char prev-match-pos)
           (forward-line)
-          (lsp-bridge-ref-open-file stay))
+          (lsp-bridge-ref-open-file))
       (message "[LSP-Bridge] Reach to first file."))))
-
-(defun lsp-bridge-ref-jump-prev-file-and-stay ()
-  (interactive)
-  (lsp-bridge-ref-jump-prev-file t))
 
 (defun lsp-bridge-ref-insert-current-line ()
   (interactive)
@@ -847,7 +827,7 @@ user more freedom to use rg with special arguments."
             )))
       ;; Flash match line.
       (lsp-bridge-ref-flash-line))
-    (when stay
+    (unless stay
       ;; Keep cursor in search buffer's window.
       (setq ref-buffer-window (get-buffer-window lsp-bridge-ref-buffer))
       (if ref-buffer-window
@@ -866,13 +846,8 @@ user more freedom to use rg with special arguments."
   (lsp-bridge-ref-open-file t))
 
 (defun lsp-bridge-ref-flash-line ()
-  (require 'pulse)
-  (put 'pulse-iterations 'initial-value pulse-iterations)
-  (put 'pulse-delay 'initial-value pulse-delay)
-  (setq pulse-iterations 1
-        pulse-delay lsp-bridge-ref-flash-line-delay)
   ;; Flash match line.
-  (pulse-momentary-highlight-one-line (point) 'lsp-bridge-ref-font-lock-flash)
+  (lsp-bridge-flash-line)
   ;; View the function name when navigate in match line.
   (when lsp-bridge-ref-show-function-name-p
     (require 'which-func)
@@ -880,9 +855,7 @@ user more freedom to use rg with special arguments."
       (message "[LSP-Bridge] Located in function: %s"
                (propertize
                 function-name
-                'face 'lsp-bridge-ref-font-lock-function-location))))
-  (setq pulse-iterations (get 'pulse-iterations 'initial-value)
-        pulse-delay (get 'pulse-delay 'initial-value)))
+                'face 'lsp-bridge-ref-font-lock-function-location)))))
 
 (defun lsp-bridge-ref-in-org-link-content-p ()
   (and (looking-back "\\[\\[.*" (line-beginning-position))

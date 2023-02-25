@@ -133,7 +133,7 @@
   :type 'list
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-flash-line-delay .3
+(defcustom lsp-bridge-flash-region-delay .3
   "How many seconds to flash `lsp-bridge-font-lock-flash' after navigation.
 
 Setting this to nil or 0 will turn off the indicator."
@@ -530,8 +530,8 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (c++-mode                   . c-basic-offset) ; C++
     (csharp-mode                . c-basic-offset) ; C#
     (csharp-tree-sitter-mode    . csharp-tree-sitter-indent-offset) ; C#
-    (d-mode                     . c-basic-offset)     ; D
-    (java-mode                  . c-basic-offset)     ; Java
+    (d-mode                     . c-basic-offset)             ; D
+    (java-mode                  . c-basic-offset)             ; Java
     (java-ts-mode               . java-ts-mode-indent-offset) ; Java
     (jde-mode                   . c-basic-offset)     ; Java (JDE)
     (js-mode                    . js-indent-level)    ; JavaScript
@@ -559,14 +559,14 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (css-mode                   . css-indent-offset)    ; CSS
     (rust-mode                  . rust-indent-offset)   ; Rust
     (rust-ts-mode               . rust-ts-mode-indent-offset) ; Rust
-    (rustic-mode                . rustic-indent-offset) ; Rust
-    (scala-mode                 . scala-indent:step)    ; Scala
-    (powershell-mode            . powershell-indent)    ; PowerShell
-    (ess-mode                   . ess-indent-offset)    ; ESS (R)
-    (yaml-mode                  . yaml-indent-offset)   ; YAML
-    (hack-mode                  . hack-indent-offset)   ; Hack
-    (kotlin-mode                . c-basic-offset)       ; Kotlin
-    (vhdl-mode                  . vhdl-basic-offset)     ; VHDL
+    (rustic-mode                . rustic-indent-offset)       ; Rust
+    (scala-mode                 . scala-indent:step)          ; Scala
+    (powershell-mode            . powershell-indent)  ; PowerShell
+    (ess-mode                   . ess-indent-offset)  ; ESS (R)
+    (yaml-mode                  . yaml-indent-offset) ; YAML
+    (hack-mode                  . hack-indent-offset) ; Hack
+    (kotlin-mode                . c-basic-offset)     ; Kotlin
+    (vhdl-mode                  . vhdl-basic-offset)  ; VHDL
     (default                    . standard-indent)) ; default fallback
   "A mapping from `major-mode' to its indent variable.")
 
@@ -1320,15 +1320,24 @@ So we build this macro to restore postion after code format."
   (let ((new-name (read-string "Rename to: " (thing-at-point 'symbol 'no-properties))))
     (lsp-bridge-call-file-api "rename" (lsp-bridge--position) new-name)))
 
+(defun lsp-bridge-flash-region (start-pos end-pos)
+  (require 'pulse)
+  (let ((pulse-iterations 1)
+        (pulse-delay lsp-bridge-flash-region-delay))
+    (pulse-momentary-highlight-region start-pos end-pos 'lsp-bridge-font-lock-flash)))
+
+(defun lsp-bridge-flash-line ()
+  (lsp-bridge-flash-region
+     (save-excursion
+       (vertical-motion 0) (point))
+     (save-excursion
+       (vertical-motion 1) (point))))
+
 (defun lsp-bridge-rename--highlight (dirname bound-start bound-end)
   (lsp-bridge--with-file-buffer dirname
-    (require 'pulse)
-    (let ((pulse-iterations 1)
-          (pulse-delay lsp-bridge-flash-line-delay))
-      (pulse-momentary-highlight-region
-       (acm-backend-lsp-position-to-point bound-start)
-       (acm-backend-lsp-position-to-point bound-end)
-       'lsp-bridge-font-lock-flash))))
+    (lsp-bridge-flash-region
+     (acm-backend-lsp-position-to-point bound-start)
+     (acm-backend-lsp-position-to-point bound-end))))
 
 (defun lsp-bridge-popup-documentation ()
   (interactive)
@@ -1394,10 +1403,7 @@ So we build this macro to restore postion after code format."
     (recenter)
 
     ;; Flash define line.
-    (require 'pulse)
-    (let ((pulse-iterations 1)
-          (pulse-delay lsp-bridge-flash-line-delay))
-      (pulse-momentary-highlight-one-line (point) 'lsp-bridge-font-lock-flash))))
+    (lsp-bridge-flash-line)))
 
 (defun lsp-bridge-popup-documentation-scroll-up (&optional arg)
   (interactive)
