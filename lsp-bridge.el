@@ -538,6 +538,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (js2-mode                   . js2-basic-offset)   ; JavaScript-IDE
     (js3-mode                   . js3-indent-level)   ; JavaScript-IDE
     (json-mode                  . js-indent-level)    ; JSON
+    (json-ts-mode               . js-indent-level)    ; JSON
     (lua-mode                   . lua-indent-level)   ; Lua
     (objc-mode                  . c-basic-offset)     ; Objective C
     (php-mode                   . c-basic-offset)     ; PHP
