@@ -1210,9 +1210,8 @@ So we build this macro to restore postion after code format."
             (setq-local acm-backend-path-items nil))
 
           ;; Send semantic tokens request when semantic mode enabled
-          (when lsp-bridge-semantic-tokens-mode
-            (lsp-bridge-semantic-tokens--after-change))
-          )))))
+          (when lsp-bridge-semantic-tokens--monitor-change
+            (lsp-bridge-semantic-tokens--after-change)))))))
 
 (defun lsp-bridge-elisp-symbols-update ()
   "We need synchronize elisp symbols to Python side when idle."
