@@ -996,6 +996,7 @@ The key of candidate will change between two LSP results."
   (when (and (acm-frame-visible-p acm-doc-frame)
              (not (string-equal doc acm-markdown-render-doc)))
     (with-current-buffer (get-buffer-create acm-doc-buffer)
+      (read-only-mode -1)
       (acm-markdown-render-content))
 
     (setq acm-markdown-render-doc doc)))
