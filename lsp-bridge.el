@@ -1208,6 +1208,10 @@ So we build this macro to restore postion after code format."
             ;; We need cleanup `acm-backend-path-items' when cursor not in string.
             ;; Otherwise, other completion backend won't show up.
             (setq-local acm-backend-path-items nil))
+
+          ;; Send semantic tokens request when semantic mode enabled
+          (when lsp-bridge-semantic-tokens-mode
+            (lsp-bridge-semantic-tokens--after-change))
           )))))
 
 (defun lsp-bridge-elisp-symbols-update ()

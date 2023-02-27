@@ -3,34 +3,40 @@ import time
 from core.handler import Handler
 from core.utils import *
 
-
 class SemanticTokens(Handler):
     name = "semantic_tokens"
     method = "textDocument/semanticTokens/full"
-    cancel_on_change = True
+    cancel_on_change = False
     send_document_uri = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.tokens = None
-        self.render_tokens = set()
         self.buffer_name = None
+        self.range_begin = None
+        self.range_end = None
+
         self.pre_last_change = (time.time(), time.time())
+        self.tokens = []
+        self.render_tokens = set()
+
         self.type_face_names = None
         self.type_face_names_dict = dict()
         self.type_modifier_face_names = None
         self.ignore_modifier_limit_types = None
 
-    def process_request(self, buffer_name, force):
-        self.buffer_name = buffer_name
-        self.cancel_send_request = False
 
+    def process_request(self, buffer_name, range_begin, range_end, use_cache):
+        self.buffer_name = buffer_name
+        self.range_begin = range_begin
+        self.range_end = range_end
         if (self.file_action.single_server is None or
             self.file_action.single_server.semantic_tokens_provider is None):
             # server not support
             self.cancel_send_request = True
             return None
-        if force:
+
+        if not use_cache:
+            self.cancel_send_request = False
             return dict()
 
         if self.pre_last_change[0] == self.last_change[0] and self.tokens is not None:
@@ -38,7 +44,9 @@ class SemanticTokens(Handler):
             self.update_tokens(self.tokens) # When the file has not changed, use cached tokens
         else:
             self.pre_last_change = self.last_change
+            self.cancel_send_request = False
             return dict()
+
 
     def process_response(self, response):
         if response is None:
@@ -52,33 +60,25 @@ class SemanticTokens(Handler):
     def update_tokens(self, tokens):
         if tokens is None:
             return
-
-        window_line_range = get_emacs_func_result("get-window-line-range", self.buffer_name)
-        if window_line_range is None or len(window_line_range) != 2:
-            return
-        [window_line_begin, window_line_end] = window_line_range
-
-        # window line start at 1, token line start at 0
-        window_line_begin -= 1
-        window_line_end -= 1
-
         index = 0
         cur_line = 0
-        column = 0
+        start_character = 0
         render_tokens = set()
         while index < len(tokens):
             if tokens[index] != 0:
-                column = 0
+                start_character = 0
                 cur_line += tokens[index]
-            column += tokens[index + 1]
-            if cur_line >= window_line_begin and cur_line <= window_line_end: # in window range
+            start_character += tokens[index + 1]
+            if (cur_line >= self.range_begin["line"] and
+                cur_line <= self.range_end["line"]):
                 faces_index = self.get_faces_index(tokens[index + 3], tokens[index + 4])
                 if faces_index is not None:
-                    render_tokens.add((cur_line, column, tokens[index + 2], faces_index[0], faces_index[1]))
+                    render_tokens.add((cur_line, start_character, tokens[index + 2], faces_index[0], faces_index[1]))
             index = index + 5
 
         (new_tokens, old_tokens) = self.calc_diff_tokens(self.render_tokens, render_tokens)
-        if len(new_tokens) != 0:
+
+        if len(new_tokens) != 0 or len(old_tokens) != 0:
             eval_in_emacs("lsp-bridge-semantic-tokens--update", self.buffer_name, list(old_tokens), self.absolute_line_to_relative(new_tokens))
         self.render_tokens = render_tokens
 
@@ -140,8 +140,6 @@ class SemanticTokens(Handler):
 
     def calc_diff_tokens(self, pre_tokens, cur_tokens):
         common_tokens = cur_tokens & pre_tokens
-        if len(common_tokens) == len(cur_tokens):
-            return ([], [])
         new_tokens = list(cur_tokens - common_tokens)
         old_tokens = list(pre_tokens - common_tokens)
         new_tokens.sort(key = lambda token : token[0])
@@ -152,11 +150,16 @@ class SemanticTokens(Handler):
         relative_tokens = []
         cur_line = 0
         delta_line = 0
+        start_character = 0
+        delta_character = 0
         for token in tokens:
             delta_line = token[0] - cur_line
             if token[0] != cur_line:
                 cur_line = token[0]
-            relative_tokens.append((delta_line, token[1], token[2], token[3], token[4]))
+                start_character = 0
+            delta_character = token[1] - start_character
+            start_character = token[1]
+            relative_tokens.append((delta_line, delta_character, token[2], token[3], token[4]))
 
         return relative_tokens
 
