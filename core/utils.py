@@ -105,20 +105,33 @@ def message_emacs(message: str):
 
 
 def epc_arg_transformer(arg):
-    """Transform [Symbol(":a"), 1, Symbol(":b"), 2] to dict(a=1, b=2)"""
-    if type(arg) != list or len(arg) % 2 != 0:
+    """Transform elisp object to python object
+    1                          => 1
+    "string"                   => "string"
+    (list :a 1 :b 2)           => {"a": 1, "b": 2}
+    (list :a 1 :b (list :c 2)) => {"a": 1, "b": {"c": 2}}
+    (list 1 2 3)               => [1 2 3]
+    (list 1 2 (list 3 4))      => [1 2 [3 4]]
+    """
+    if type(arg) != list:
         return arg
 
-    for i, v in enumerate(arg):
-        if i % 2 == 1:
-            continue
-        if type(v) != sexpdata.Symbol or not v.value().startswith(":"):
-            return arg
+    # check if we can tranform arg to python dict instance
+    type_dict_p = len(arg) % 2 == 0
+    if type_dict_p:
+        for v in arg[::2]:
+            if type(v) != sexpdata.Symbol or not v.value().startswith(":"):
+                type_dict_p = False
+                break
 
-    ret = dict()
-    for i in range(0, len(arg), 2):
-        ret[arg[i].value()[1:]] = epc_arg_transformer(arg[i + 1])
-    return ret
+    if type_dict_p:
+        # transform [Symbol(":a"), 1, Symbol(":b"), 2] to dict(a=1, b=2)
+        ret = dict()
+        for i in range(0, len(arg), 2):
+            ret[arg[i].value()[1:]] = epc_arg_transformer(arg[i + 1])
+        return ret
+    else:
+        return list(map(epc_arg_transformer, arg))
 
 
 def convert_emacs_bool(symbol_value, symbol_is_boolean):
