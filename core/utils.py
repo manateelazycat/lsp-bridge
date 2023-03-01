@@ -117,7 +117,7 @@ def epc_arg_transformer(arg):
 
     ret = dict()
     for i in range(0, len(arg), 2):
-        ret[arg[i].value()[1:]] = arg[i + 1]
+        ret[arg[i].value()[1:]] = epc_arg_transformer(arg[i + 1])
     return ret
 
 
