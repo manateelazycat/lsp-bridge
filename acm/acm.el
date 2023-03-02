@@ -738,6 +738,7 @@ The key of candidate will change between two LSP results."
 
             ;; Insert documentation and turn on wrap line.
             (with-current-buffer (get-buffer-create acm-doc-buffer)
+              (read-only-mode -1)
               (erase-buffer)
               (insert doc)
               (visual-line-mode 1))
