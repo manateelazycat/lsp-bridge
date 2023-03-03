@@ -141,7 +141,6 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `acm-enable-yas`: yasnippet completion, enable by default
 * `acm-enable-citre`: Integration with [citre(ctags)](https://github.com/universal-ctags/citre). Enable this to add citre (ctags) backend (disabled by default)
 * `acm-doc-frame-max-lines`: Max line number of help documentation, default is 20
-* `acm-snippet-insert-index`: The display position of snippet candidate in the complementary menu
 * `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
 * `acm-backend-lsp-candidate-min-length`: The minimum characters to trigger completion, default is 0
 * `acm-backend-lsp-enable-auto-import`: automatic insert import code, enable by default

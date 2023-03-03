@@ -139,7 +139,6 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `acm-enable-yas`: yasnippet 补全，默认打开
 * `acm-enable-citre`: [citre(ctags)](https://github.com/universal-ctags/citre) 补全，默认关闭
 * `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是 20
-* `acm-snippet-insert-index`: 代码模板候选词在补全菜单中的显示位置
 * `acm-candidate-match-function`: 补全菜单匹配算法， orderless-* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
 * `acm-backend-lsp-candidate-min-length`: LSP 补全最小的触发字符数, 默认是 0
 * `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
