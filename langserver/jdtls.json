@@ -50,7 +50,8 @@
       }
     },
     "extendedClientCapabilities": {
-      "classFileContentsSupport": true
+      "classFileContentsSupport": true,
+      "overrideMethodsPromptSupport": true
     }
   }
 }

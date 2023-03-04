@@ -93,6 +93,13 @@ Default is 0.5 second, preview window will stick if this value too small."
   :type 'float
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-code-action-command-handlers
+  '(java.apply.workspaceEdit lsp-bridge-jdtls-apply-workspace-edit
+    java.action.overrideMethodsPrompt lsp-bridge-jdtls-override-methods-prompt)
+  "LSP extra command handlers"
+  :type 'cons
+  :group 'lsp-bridge)
+
 (defvar-local lsp-bridge-code-action-notify nil)
 
 (defvar lsp-bridge-code-action--current-buffer nil)
@@ -300,34 +307,28 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
     (lsp-bridge-code-action-popup-maybe-preview)
     ))
 
-
 (defun lsp-bridge-code-action--fix-do (action &optional temp-buffer)
   (let* ((command (plist-get action :command))
          (edit (plist-get action :edit))
          (arguments (plist-get action :arguments)))
     (cond (edit
            (lsp-bridge-workspace-apply-edit edit temp-buffer))
+          ;; command string with arguments
           (arguments
-           (dolist (argument arguments)
-             (lsp-bridge-workspace-apply-edit argument temp-buffer)))
-          (command
-           (let (arguments)
-             ;; Pick command and arguments.
-             (cond ((consp command)
-                    (setq arguments (plist-get command :arguments))
-                    (setq command (plist-get command :command)))
-                   ((stringp command)
-                    (setq arguments (plist-get action :arguments))))
-
-             (if (member command lsp-bridge-apply-edit-commands)
-                 ;; Apply workspace edit if command match `lsp-bridge-apply-edit-commands'.
-                 (dolist (argument arguments)
-                   (lsp-bridge-workspace-apply-edit argument temp-buffer))
-               ;; Otherwise send `workspace/executeCommand' request to LSP server.
-               ;; TODO execute_command with temp-buffer
-               (lsp-bridge-call-file-api "execute_command" command)))))
+           (if-let ((handler (plist-get lsp-bridge-code-action-command-handlers (intern command))))
+               (funcall handler action temp-buffer)
+             (dolist (argument arguments)
+               (lsp-bridge-workspace-apply-edit argument temp-buffer))))
+          ;; command string no arguments
+          ((stringp command)
+           ;; send `workspace/executecommand' request to lsp server.
+           ;; todo execute_command with temp-buffer
+           (lsp-bridge-call-file-api "execute_command" command))
+          ;; command object
+          ((plistp command)
+           (lsp-bridge-code-action--fix-do command temp-buffer)))
     (unless temp-buffer
-      (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
+      (message "[lsp-bridge] execute code action '%s'" (plist-get action :title)))))
 
 (defun lsp-bridge-code-action--fix (actions action-kind)
   (let* ((menu-items
