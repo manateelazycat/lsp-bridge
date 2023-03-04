@@ -91,17 +91,15 @@
 (defvar-local acm-backend-tailwind-items nil)
 
 (defun acm-backend-tailwind-candidates (keyword)
-  (let* ((candidates (list)))
-    (dolist (tailwind-symbol acm-backend-tailwind-items)
-      (add-to-list 'candidates (list :key tailwind-symbol
-                                     :icon "tailwind"
-                                     :label tailwind-symbol
-                                     :display-label tailwind-symbol
-                                     :annotation "Tailwind"
-                                     :backend "tailwind")
-                   t))
-
-    candidates))
+  (mapcar
+   (lambda (tailwind-symbol)
+     (list :key tailwind-symbol
+           :icon "tailwind"
+           :label tailwind-symbol
+           :display-label tailwind-symbol
+           :annotation "Tailwind"
+           :backend "tailwind"))
+   acm-backend-tailwind-items))
 
 (provide 'acm-backend-tailwind)
 

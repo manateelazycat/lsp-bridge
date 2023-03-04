@@ -168,40 +168,43 @@
 
 (defun acm-backend-citre-candidates (keyword)
   (when acm-enable-citre
-    (let* ((candidates (list)))
-      (if (string-empty-p keyword)
-          (progn
-            (setq-local acm-backend-citre-prefix-keyword 
-                        (save-excursion
-                          (backward-char)
-                          (if (string= (char-to-string (following-char)) ".")
-                              (thing-at-point 'symbol)
-                            "")))
-            ;; When there is nothing in front of the . , it will get nil
-            (unless acm-backend-citre-prefix-keyword
-              (setq-local acm-backend-citre-prefix-keyword ""))
-            (setq-local acm-backend-citre-search-keyword acm-backend-citre-prefix-keyword))
-        (if (string-suffix-p (substring keyword 0 (1- (length keyword))) acm-backend-citre-search-keyword)
-            (setq-local acm-backend-citre-search-keyword (concat acm-backend-citre-search-keyword (substring (string-reverse keyword) 0 1)))
-          (setq-local acm-backend-citre-search-keyword keyword)))
-      (let* ((collection (unless (string-empty-p acm-backend-citre-search-keyword)
-                           (let ((cands (citre-get-completions)))
-                             (delete-dups (mapcar #'citre-capf--make-candidate (nth 2 cands)))))))
-        (when acm-backend-citre-keyword-complete
-          (setq collection (append (acm-backend-citre-get-mode-keyword) collection)))
-        (when collection
-          (dolist (candidate collection)
+    (if (string-empty-p keyword)
+        (progn
+          (setq-local acm-backend-citre-prefix-keyword
+                      (save-excursion
+                        (backward-char)
+                        (if (string= (char-to-string (following-char)) ".")
+                            (thing-at-point 'symbol)
+                          "")))
+          ;; When there is nothing in front of the . , it will get nil
+          (unless acm-backend-citre-prefix-keyword
+            (setq-local acm-backend-citre-prefix-keyword ""))
+          (setq-local acm-backend-citre-search-keyword acm-backend-citre-prefix-keyword))
+      (if (string-suffix-p (substring keyword 0 (1- (length keyword))) acm-backend-citre-search-keyword)
+          (setq-local acm-backend-citre-search-keyword (concat acm-backend-citre-search-keyword (substring (string-reverse keyword) 0 1)))
+        (setq-local acm-backend-citre-search-keyword keyword)))
+    (let* ((collection (unless (string-empty-p acm-backend-citre-search-keyword)
+                         (let ((cands (citre-get-completions)))
+                           (delete-dups (mapcar #'citre-capf--make-candidate (nth 2 cands)))))))
+      (when acm-backend-citre-keyword-complete
+        (setq collection (append (acm-backend-citre-get-mode-keyword) collection)))
+      (when collection
+        (acm-candidate-sort-by-prefix
+         acm-backend-citre-search-keyword
+         (mapcan
+          (lambda (candidate)
             (when (acm-candidate-fuzzy-search acm-backend-citre-search-keyword candidate)
               (let* ((annotation (replace-regexp-in-string "[() ]" "" (replace-regexp-in-string ")?@.*" "" (citre-get-property 'annotation candidate))))
                      (candidate-fix (replace-regexp-in-string (concat "^" acm-backend-citre-prefix-keyword "\\.?") "" candidate)))
-                (add-to-list 'candidates (list :key candidate-fix
-                                               :icon (downcase annotation)
-                                               :label candidate-fix
-                                               :display-label candidate-fix
-                                               :annotation annotation 
-                                               :backend "citre")
-                             t))))
-          (acm-candidate-sort-by-prefix acm-backend-citre-search-keyword candidates))))))
+                (list
+                 (list
+                  :key candidate-fix
+                  :icon (downcase annotation)
+                  :label candidate-fix
+                  :display-label candidate-fix
+                  :annotation annotation
+                  :backend "citre")))))
+          collection))))))
 
 (defun acm-backend-citre-candidate-expand (candidate-info bound-start)
   (delete-region bound-start (point))

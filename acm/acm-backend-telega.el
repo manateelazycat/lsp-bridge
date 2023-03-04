@@ -47,12 +47,13 @@
                ))
     (if (string-equal keyword "")
         acm-backend-telega-items
-      (let ((candiates (list)))
-        (dolist (item acm-backend-telega-items)
-          (when (or (string-match keyword (plist-get item :label))
-                    (string-match keyword (plist-get item :annotation)))
-            (add-to-list 'candiates item)))
-        (acm-candidate-sort-by-prefix keyword candiates)))))
+      (acm-candidate-sort-by-prefix
+       keyword
+       (seq-filter
+        (lambda (item)
+          (or (string-match keyword (plist-get item :label))
+              (string-match keyword (plist-get item :annotation))))
+        acm-backend-telega-items)))))
 
 ;; Update userlist when first switch to telega buffer.
 (add-hook 'buffer-list-update-hook #'acm-backend-telega-update-items)
