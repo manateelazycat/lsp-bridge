@@ -109,7 +109,7 @@ E.g. Use `-javaagent:/home/user/.emacs.d/plugin/lombok.jar` to add lombok suppor
                                     (let* ((name (plist-get method :name))
                                            (parameters (plist-get method :parameters))
                                            (class (plist-get method :declaringClass)))
-                                      (cons (format "%s(%s) class: %s" name (s-join ", " parameters) class) method)))
+                                      (cons (format "%s(%s) class: %s" name (string-join parameters ", ") class) method)))
                                   methods))
               (selected-methods (cl-map 'vector
                                         (lambda (choice) (alist-get choice menu-items nil nil 'equal))
