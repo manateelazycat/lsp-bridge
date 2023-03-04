@@ -87,5 +87,37 @@ E.g. Use `-javaagent:/home/user/.emacs.d/plugin/lombok.jar` to add lombok suppor
 (add-hook 'java-mode-hook (lambda ()
                             (setq-local lsp-bridge-get-single-lang-server-by-project 'lsp-bridge-get-jdtls-server-by-project)))
 
+(defun lsp-bridge-jdtls-apply-workspace-edit (action &optional temp-buffer)
+  "Command java.apply.workspaceEdit handler."
+  (let ((arguments (plist-get action :arguments)))
+    (dolist (argument arguments)
+      (lsp-bridge-workspace-apply-edit argument temp-buffer))))
+
+(defun lsp-bridge-jdtls-override-methods-prompt (action &optional temp-buffer)
+  "Command java.action.overrideMethodsPrompt handler."
+  (let ((argument (car (plist-get action :arguments))))
+    (lsp-bridge-call-file-api "jdtls_list_overridable_methods" argument)))
+
+(defun lsp-bridge-jdtls-add-overridable-methods (resp-json)
+  "Recv java/listOverridableMethods response and process java/addoverridablemethods command"
+  ;; NOTE: The reason using json-string directly is that lsp-bridge elisp object <-> python object is still unreliable
+  (when-let* ((resp (json-parse-string resp-json :object-type 'plist))
+              (response (plist-get resp :response))
+              (context (plist-get resp :context))
+              (methods (plist-get response :methods))
+              (menu-items (mapcar (lambda (method)
+                                    (let* ((name (plist-get method :name))
+                                           (parameters (plist-get method :parameters))
+                                           (class (plist-get method :declaringClass)))
+                                      (cons (format "%s(%s) class: %s" name (string-join parameters ", ") class) method)))
+                                  methods))
+              (selected-methods (cl-map 'vector
+                                        (lambda (choice) (alist-get choice menu-items nil nil 'equal))
+                                        (delete-dups
+                                         (completing-read-multiple "overridable methods: " menu-items))))
+              (params (list :overridableMethods selected-methods :context context)))
+    (lsp-bridge-call-file-api "jdtls_add_overridable_methods" (json-serialize params))))
+
+
 (provide 'lsp-bridge-jdtls)
 ;;; lsp-bridge-jdtls.el ends here

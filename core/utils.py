@@ -116,6 +116,9 @@ def epc_arg_transformer(arg):
     if type(arg) != list:
         return arg
 
+    # NOTE: Empty list elisp can be treated as both empty python dict/list
+    # Convert empty elisp list to empty python dict due to compatibility.
+
     # check if we can tranform arg to python dict instance
     type_dict_p = len(arg) % 2 == 0
     if type_dict_p:
