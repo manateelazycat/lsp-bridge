@@ -93,6 +93,12 @@ Default is 0.5 second, preview window will stick if this value too small."
   :type 'float
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-code-action-enable-popup-menu t
+  "Enable code action menu and changes preview popup,
+Set it `nil' to improve performance."
+  :type 'boolean
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-code-action-command-handlers
   '(java.apply.workspaceEdit lsp-bridge-jdtls-apply-workspace-edit
     java.action.overrideMethodsPrompt lsp-bridge-jdtls-override-methods-prompt)
@@ -352,7 +358,7 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
     (cond
      (action
       (lsp-bridge-code-action--fix-do action))
-     ((posframe-workable-p) ;;posframe
+     ((and lsp-bridge-code-action-enable-popup-menu (posframe-workable-p)) ;;posframe
       (lsp-bridge-code-action-popup-menu menu-items default-action))
      (t
       (let ((select-name
