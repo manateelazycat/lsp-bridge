@@ -328,7 +328,7 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
           ((plistp command)
            (lsp-bridge-code-action--fix-do command temp-buffer)))
     (unless temp-buffer
-      (message "[lsp-bridge] execute code action '%s'" (plist-get action :title)))))
+      (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
 
 (defun lsp-bridge-code-action--fix (actions action-kind)
   (let* ((menu-items
