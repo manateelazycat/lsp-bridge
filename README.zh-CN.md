@@ -119,6 +119,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-enable-log`: 启用 LSP 消息日志， 默认关闭, 除非开发目的， 平常请勿打开此选项以避免影响性能
 * `lsp-bridge-enable-debug`: 启用程序调试， 默认关闭
 * `lsp-bridge-disable-backup`: 禁止 emacs 对文件做版本管理， 默认打开
+* `lsp-bridge-code-action-enable-popup-menu`: 启用code action posframe菜单，默认打开
 * `lsp-bridge-diagnostic-fetch-idle`： 诊断延迟，默认是停止敲键盘后 0.5 秒开始拉取诊断信息
 * `lsp-bridge-signature-show-function`: 用于显示签名信息的函数, 默认是在 minibuffer 显示， 设置成 `lsp-bridge-signature-posframe` 后可以用 frame 来显示函数的签名信息
 * `lsp-bridge-completion-popup-predicates`: 补全菜单显示的检查函数， 这个选项包括的所有函数都检查过以后， 补全菜单才能显示
