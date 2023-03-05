@@ -121,6 +121,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-enable-log`: enable LSP message log, disable by default, only enable this option for development purposes, usually do not turn on this option to avoid affecting performance
 * `lsp-bridge-enable-debug`: enable program debugging, disable by default
 * `lsp-bridge-disable-backup`: forbidden version manage of emacs, enable by default
+* `lsp-bridge-code-action-enable-popup-menu`: enable code action posframe popup menu, enable by default
 * `lsp-bridge-diagnostic-fetch-idle`: diagnostic delay, start pulling diagnostic information 0.5 second after stopping typing
 * `lsp-bridge-signature-show-function`: The function used for displaying signature info, default show message in minibuffer, set `lsp-bridge-signature-posframe` to show signature info in frame
 * `lsp-bridge-completion-popup-predicates`: the predicate function for completion menu, completion menu popup after all the functions pass
