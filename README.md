@@ -121,6 +121,7 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `lsp-bridge-enable-log`: enable LSP message log, disable by default, only enable this option for development purposes, usually do not turn on this option to avoid affecting performance
 * `lsp-bridge-enable-debug`: enable program debugging, disable by default
 * `lsp-bridge-disable-backup`: forbidden version manage of emacs, enable by default
+* `lsp-bridge-code-action-enable-popup-menu`: enable code action posframe popup menu, enable by default
 * `lsp-bridge-diagnostic-fetch-idle`: diagnostic delay, start pulling diagnostic information 0.5 second after stopping typing
 * `lsp-bridge-signature-show-function`: The function used for displaying signature info, default show message in minibuffer, set `lsp-bridge-signature-posframe` to show signature info in frame
 * `lsp-bridge-completion-popup-predicates`: the predicate function for completion menu, completion menu popup after all the functions pass
@@ -141,7 +142,6 @@ It should be noted that there are three scan modes of lsp-bridge:
 * `acm-enable-yas`: yasnippet completion, enable by default
 * `acm-enable-citre`: Integration with [citre(ctags)](https://github.com/universal-ctags/citre). Enable this to add citre (ctags) backend (disabled by default)
 * `acm-doc-frame-max-lines`: Max line number of help documentation, default is 20
-* `acm-snippet-insert-index`: The display position of snippet candidate in the complementary menu
 * `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
 * `acm-backend-lsp-candidate-min-length`: The minimum characters to trigger completion, default is 0
 * `acm-backend-lsp-enable-auto-import`: automatic insert import code, enable by default

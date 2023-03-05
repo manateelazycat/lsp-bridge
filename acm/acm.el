@@ -151,11 +151,6 @@
   :type 'boolean
   :group 'acm)
 
-(defcustom acm-snippet-insert-index 8
-  "Insert index of snippet candidate of menu."
-  :type 'integer
-  :group 'acm)
-
 (defcustom acm-candidate-match-function 'regexp-quote
   "acm candidate match function."
   :type '(choice (const regexp-quote)
@@ -345,12 +340,20 @@ Only calculate template candidate when type last character."
                                 (backward-char (length keyword))
                                 (acm-char-before)))
          (candidates (list))
+         (mode-candidates-min-index 2)
+         (template-candidates-min-index 2)
          lsp-candidates
          path-candidates
          yas-candidates
          tabnine-candidates
          tempel-candidates
          mode-candidates
+         mode-first-part-candidates
+         mode-second-part-candidates
+         mode-candidates-split-index
+         template-candidates
+         template-first-part-candidates
+         template-second-part-candidates
          citre-candidates)
     (when acm-enable-tabnine
       (setq tabnine-candidates (acm-backend-tabnine-candidates keyword)))
@@ -402,16 +405,36 @@ Only calculate template candidate when type last character."
             (acm-cancel-timer acm-template-candidate-timer)
             (setq acm-template-candidate-timer (run-with-timer 0.2 nil #'acm-template-candidate-update)))))
 
-        ;; Insert snippet candidates in first page of menu.
-        (setq candidates
-              (if (> (length mode-candidates) acm-snippet-insert-index)
-                  (append (cl-subseq mode-candidates 0 acm-snippet-insert-index)
-                          yas-candidates
-                          tempel-candidates
-                          (cl-subseq mode-candidates acm-snippet-insert-index)
-                          tabnine-candidates)
-                (append mode-candidates yas-candidates tempel-candidates tabnine-candidates)
-                ))))
+        ;; Build template candidates.
+        ;; And make sure show part of template candidates in first completion menu.
+        (setq template-candidates (append yas-candidates tempel-candidates))
+        (if (> (length template-candidates) template-candidates-min-index)
+            (progn
+              (setq template-first-part-candidates (cl-subseq template-candidates 0 template-candidates-min-index))
+              (setq template-second-part-candidates (cl-subseq template-candidates template-candidates-min-index)))
+          (setq template-first-part-candidates template-candidates)
+          (setq template-second-part-candidates nil))
+
+        ;; Make sure show part of TabNine candidates in first completion menu.
+        (setq mode-candidates-split-index
+              (max (- acm-menu-length (+ (length template-first-part-candidates) (length tabnine-candidates)))
+                   mode-candidates-min-index))
+
+        ;; Build mode candidates.
+        (if (> (length mode-candidates) mode-candidates-split-index)
+            (progn
+              (setq mode-first-part-candidates (cl-subseq mode-candidates 0 mode-candidates-split-index))
+              (setq mode-second-part-candidates (cl-subseq mode-candidates mode-candidates-split-index)))
+          (setq mode-first-part-candidates mode-candidates)
+          (setq mode-second-part-candidates nil))
+
+        ;; Build all backend candidates.
+        (setq candidates (append mode-first-part-candidates
+                                 template-first-part-candidates
+                                 tabnine-candidates
+                                 template-second-part-candidates
+                                 mode-second-part-candidates)
+              )))
 
     ;; Return candidates.
     (if acm-filter-overlay
@@ -738,6 +761,7 @@ The key of candidate will change between two LSP results."
 
             ;; Insert documentation and turn on wrap line.
             (with-current-buffer (get-buffer-create acm-doc-buffer)
+              (read-only-mode -1)
               (erase-buffer)
               (insert doc)
               (visual-line-mode 1))

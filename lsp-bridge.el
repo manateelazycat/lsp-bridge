@@ -165,11 +165,6 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'boolean
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-apply-edit-commands '("java.apply.workspaceEdit")
-  "Apply workspace edit if command match `lsp-bridge-apply-edit-commands', otherwise send workspace/executeCommand to LSP server."
-  :type 'cons
-  :group 'lsp-bridge)
-
 (defcustom lsp-bridge-lookup-doc-tooltip " *lsp-bridge-hover*"
   "Buffer for display hover information."
   :type 'string
