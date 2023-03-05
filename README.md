@@ -2,9 +2,9 @@ English | [简体中文](./README.zh-CN.md)
 
 # lsp-bridge
 
-Lsp-bridge's goal is to become the fastest LSP client in Emacs.
+The goal of lsp-bridge is to implement the fastest LSP client in the Emacs ecosystem.
 
-Lsp-bridge uses python's threading technology to build caches that bridge Emacs and LSP server. Lsp-bridge will provide smooth completion experience without compromise to slow down emacs' performance.
+Using Python multithreading techniques, lsp-bridge builds a high-speed cache between Emacs and the LSP server, ensuring that Emacs never gets stuck while providing a smooth and seamless code completion experience.
 
 <img src="./screenshot.png">
 
@@ -16,15 +16,15 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 
 ## Installation
 
-1. Install Emacs 28 and above versions
-2. Install Python dependencies: `pip3 install epc orjson sexpdata==0.0.3 six` (orjson is optional, orjson is based on Rust, providing faster JSON parsing performance)
+1. Install Emacs version 28 or higher.
+2. Install Python dependencies: `pip3 install epc orjson sexpdata==0.0.3 six` (orjson is optional and provides faster JSON parsing performance based on Rust).
 3. Install Elisp dependencies:
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
 + [yasnippet](https://github.com/joaotavora/yasnippet)
 + [acm-terminal](https://github.com/twlz0ne/acm-terminal) (optional, only for terminal user)
-4. Clone or download this repository (path of the folder is the `<path-to-lsp-bridge>` used below).
-5. Add following code in your ~/.emacs:
+4. Download this repository using git clone, and replace the load-path path in the configuration below.
+5. Add the following code to your configuration file ~/.emacs:
 
 ```elisp
 (add-to-list 'load-path "<path-to-lsp-bridge>")
@@ -36,17 +36,19 @@ Lsp-bridge uses python's threading technology to build caches that bridge Emacs 
 (global-lsp-bridge-mode)
 ```
 
-NOTE:
-1. When use lsp-bridge, please disable other completion plugin first, such as lsp-mode, eglot, company, corfu, etc. lsp-bridge provides a full set from completion backend, completion frontend to multi-backend integration solution.
-2. When the completion menu pops up, `acm-mode` will be automatically enabled, and when the completion menu disappears, `acm-mode` will be automatically disabled, please do not manually add `acm-mode` to any mode-hook, also don't manually execute `acm-mode`
+Please note that:
+
+1. When using lsp-bridge, please first disable other completion plugins such as lsp-mode, eglot, company, corfu, etc. Lsp-bridge provides a complete solution from completion backend, frontend to multi-backend fusion.
+2. When the completion menu pops up, `acm-mode` will be automatically enabled, and when the completion menu disappears, `acm-mode` will be automatically disabled. Please do not manually add `acm-mode` to any mode-hook or manually execute `acm-mode`.
 
 ## Usage
-lsp-bridge is design for out the box. After installing the [LSP server](https://github.com/manateelazycat/lsp-bridge#supported-language-servers) and mode plugin corresponding to the open file, you can write the code directly without additional settings.
+Lsp-bridge is design with out of box. After installing the corresponding [LSP server](https://github.com/manateelazycat/lsp-bridge#supported-language-servers) and mode plugin for the language, you can start coding directly without any additional settings.
 
-It should be noted that there are three scan modes of lsp-bridge:
-1. When detecting the `.git` directory (check by command `git rev-parse-is-inside-work-tree`), lsp-bridge scan the entire directory file to provide completion
-2. When the `.git` directory was not detected, lsp-bridge only scan opened file to provide completion
-3. Custom `lsp-bridge-get-project-path-by-filepath` function, the input parameter is the path string of opened file, the output parameter is the project directory path, lsp-bridge will scan project directory path to provide provide completion
+It should be noted that lsp-bridge has three scanning modes:
+
+1. When the `.git` directory is detected (determined by the command `git rev-parse --is-inside-work-tree`), lsp-bridge will scan the entire directory to provide completion.
+2. When the `.git` directory is not detected, lsp-bridge only provides single-file completion for the opened file.
+3. Custom `lsp-bridge-get-project-path-by-filepath` function, where the input parameter is the path string of the opened file and the output parameter is the project directory path. Lsp-bridge will provide completion based on the output directory path.
 
 ## Keymap
 | Key            | Command                     | Description                                                                    |
@@ -152,20 +154,19 @@ It should be noted that there are three scan modes of lsp-bridge:
 
 ## Customize language server configuration
 
-The default configuration of for each language server is stored at [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
+The configuration for the LSP server of each language in lsp-bridge is stored in [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
 
-In most cases, you can customize server configuration with the following priority:
-1. ```lsp-bridge-get-single-lang-server-by-project```: The user custom function, the input parameter is `project-path` and `file-path`, return the corresponding LSP server string, you can query all LSP servers in the list of `lsp-bridge-single-lang-server-mode-list` option, this function return nil default
-2. ```lsp-bridge-single-lang-server-extension-list```: load server configuration based on file extension, such as, we launch ```wxml``` server when open *.wxml file
-3. ```lsp-bridge-single-lang-server-mode-list```: load server configuration based on major-mode
+In most cases, you can customize the server configuration according to the following priority order:
+1. `lsp-bridge-get-single-lang-server-by-project`: A user-defined function that takes project-path and file-path as input parameters and returns the corresponding LSP server string. You can query the names of all LSP servers in the lsp-bridge-single-lang-server-mode-list list. By default, this function returns nil.
+2. `lsp-bridge-single-lang-server-extension-list`: Returns the server based on the file extension, for example, when opening a *.wxml file, we will use the wxml LSP server for completion.
+3. `lsp-bridge-single-lang-server-mode-list`: Returns the corresponding server based on Emacs's major-mode.
 
-If you are writing JavaScript code, you may need to customize multi-server configuration:
-1. ```lsp-bridge-get-multi-lang-server-by-project```: The user custom function, the input parameter is `project-path` and `file-path`, return the multi-server configuration name, you can find configuration name in the subdirectory
-[lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver)
-2. ```lsp-bridge-multi-lang-server-extension-list```: Return multi-server configuration name according to the expansion of the file, for example, when opening the *.vue file, we will use the `volar` and `emmet-ls` to provide completion service
-3. ```lsp-bridge-multi-lang-server-mode-list```: Return the corresponding multi-server configuration name according to Emacs's major-mode
+If you are writing JavaScript code, you may need to customize multiple server configurations:
+1. `lsp-bridge-get-multi-lang-server-by-project`: A user-defined function that takes project-path and file-path as input parameters and returns the multiple server configuration names. You can search for them in the subdirectory [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver).
+2. `lsp-bridge-multi-lang-server-extension-list`: Returns multiple server configuration names based on the file extension. For example, when opening a *.vue file, we will use volar_emmet to simultaneously utilize volar and emmet-ls for completion.
+3. `lsp-bridge-multi-lang-server-mode-list`: Returns the corresponding multiple server configuration names based on Emacs's major-mode.
 
-For example, we can enable the Deno LSP server for the Deno script with the following configuration:
+For example, we can enable the Deno LSP server for Deno scripts with the following configuration:
 
 ```elisp
 (setq lsp-bridge-get-single-lang-server-by-project
@@ -182,9 +183,10 @@ For example, we can enable the Deno LSP server for the Deno script with the foll
 ```
 
 ## Customize language server configuration file
-Copy the configuration file in  [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) or [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) to `lsp-bridge-user-langserver-dir` or `lsp-bridge-user-multiserver-dir` for customization, lsp-bridge will read the configuration file in `lsp-bridge-user-langserver-dir` or `lsp-bridge-user-multiserver-dir` first.
+Copy the configuration files in [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) or [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) to lsp-bridge-user-langserver-dir or lsp-bridge-user-multiserver-dir for customization. Lsp-bridge will prioritize reading the configuration files in lsp-bridge-user-langserver-dir or lsp-bridge-user-multiserver-dir.
 
-We can set the value of `lsp-bridge-user-langserver-dir` or `lsp-bridge-user-multiserver-dir` before starting `lsp-bridge-mode` to realize different configuration files for different projects.
+We can set the value of lsp-bridge-user-langserver-dir or lsp-bridge-user-multiserver-dir before starting lsp-bridge-mode to achieve different project-specific configuration files.
+
 
 ```elisp
 (defun enable-lsp-bridge()
@@ -198,12 +200,12 @@ We can set the value of `lsp-bridge-user-langserver-dir` or `lsp-bridge-user-mul
 
 ## Add support for new language?
 
-1. Create configuration file under lsp-bridge/langserver, such as `pyright.json` for pyright (windows user please uses `pyright_windows.json`, macOS user please uses `pyright_darwin.json`).
-2. Add `(mode . server_name)` to `lsp-bridge-single-lang-server-mode-list` in `lsp-bridge.el`, such as `(python-mode . "pyright")`.
-3. Add new mode-hook to `lsp-bridge-default-mode-hooks` in `lsp-bridge.el`.
-4. Add new mode indent to `lsp-bridge-formatting-indent-alist` in `lsp-bridge.el`.
+1. Create a configuration file in the lsp-bridge/langserver directory. For example, `pyright.json` is the configuration file for the pyright server (use `pyright_windows.json` for Windows and `pyright_darwin.json` for macOS).
+2. Add `(mode . server_name)` to the `lsp-bridge-single-lang-server-mode-list` option in the lsp-bridge.el file, for example, `(python-mode . "pyright")`.
+3. Add a new mode-hook to the `lsp-bridge-default-mode-hooks` option in the lsp-bridge.el file.
+4. Add a new indentation variable to the `lsp-bridge-formatting-indent-alist` option in the lsp-bridge.el file.
 
-Welcome to send PR to help us improve support for LSP servers, thanks for your contribution!
+We welcome patches to help us support more LSP servers. Thank you for your help!
 
 ## Supported language servers
 
