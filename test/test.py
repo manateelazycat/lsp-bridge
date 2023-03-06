@@ -1,30 +1,12 @@
 import logging
 import os
-import pathlib
-import subprocess
 import sys
 import unittest
-from pathlib import Path
 from unittest import TestLoader
 
 from core.utils import logger
 from test import common
-from test.common import eval_sexp, eval_sexp_sync
-
-EMACS = 'emacs'
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-
-def run(args, cwd=BASE_DIR):
-    print('Running command:', args)
-    with subprocess.Popen(args, cwd=cwd, text=True,
-                          stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as p:
-        for line in p.stdout:
-            print(line.rstrip())
-    if p.returncode != 0:
-        print('Command failed with exit code', p.returncode)
-        exit(p.returncode)
+from test.common import BASE_DIR, eval_sexp, eval_sexp_sync, run_batch_sync
 
 
 def test_entrypoint():
@@ -36,25 +18,6 @@ def test_entrypoint():
         os.environ["TEMP"] = tmppath
 
     print('Installing dependencies...')
-    init_eval = """
-    (progn
-        (setq network-security-level 'low) ; see https://github.com/jcs090218/setup-emacs-windows/issues/156#issuecomment-932956432
-        (setq package-user-dir (expand-file-name "lsp-bridge-test" temporary-file-directory))
-        (require 'package)
-        (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-        (package-initialize)
-        (package-refresh-contents)
-        (package-install 'posframe)
-        (package-install 'markdown-mode)
-        (package-install 'yasnippet)
-        (package-install 'tempel)
-        
-        ;; for Windows
-        (prefer-coding-system 'utf-8-unix)
-        (set-language-environment 'utf-8)
-        (setq default-buffer-file-coding-system 'utf-8-unix)
-    )
-    """
     setup_eval = """
     (progn
         (set-face-background 'default "#000000")
@@ -66,15 +29,13 @@ def test_entrypoint():
         (yas-global-mode 1)
         (global-lsp-bridge-mode)
     )"""
-    run([
-        EMACS, '-Q', '--batch',
-        '--eval', init_eval,
-        '-L', '.',
+
+    sys.exit(run_batch_sync([
         '-l', os.path.join(BASE_DIR, 'lsp-bridge.el'),
         '-l', os.path.join(BASE_DIR, 'test', 'lsp-bridge-test.el'),
         '--eval', setup_eval,
         '--eval', '(lsp-bridge-start-test)'
-    ])
+    ]))
 
 
 def start_test(lsp_bridge):

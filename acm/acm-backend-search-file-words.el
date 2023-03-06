@@ -97,17 +97,15 @@
 
 (defun acm-backend-search-file-words-candidates (keyword)
   (when acm-enable-search-file-words
-    (let* ((candidates (list)))
-      (dolist (candidate-label acm-backend-search-file-words-items)
-        (add-to-list 'candidates (list :key candidate-label
-                                       :icon "search"
-                                       :label candidate-label
-                                       :display-label candidate-label
-                                       :annotation "Search Word"
-                                       :backend "search-file-words")
-                     t))
-
-      candidates)))
+    (mapcar
+     (lambda (candidate-label)
+       (list :key candidate-label
+             :icon "search"
+             :label candidate-label
+             :display-label candidate-label
+             :annotation "Search Word"
+             :backend "search-file-words"))
+     acm-backend-search-file-words-items)))
 
 (defun acm-backend-search-file-words-candidate-expand (candidate-info bound-start)
   (if (acm-is-elisp-mode-p)
