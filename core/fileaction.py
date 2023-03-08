@@ -175,7 +175,6 @@ class FileAction:
                 self.org_line_bias = None
                 return
 
-        print("change_file", start, end, range_length, change_text, position, before_char, buffer_name, prefix)
         buffer_content = ''
         # Send didChange request to LSP server.
         for lsp_server in self.get_lsp_servers():
