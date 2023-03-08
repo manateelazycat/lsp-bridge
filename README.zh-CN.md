@@ -265,6 +265,7 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 | [qmlls]((https://github.com/qt/qtdeclarative/tree/dev/tools/qmlls))                                | QML                                     | QT 6.3.0 之后的版本自带 qmlls，将 qmlls 所在目录加到 PATH 中                                                                                                                                                             |
 | [kotlin-language-server](https://github.com/fwcd/kotlin-language-server)                           | Kotlin                                  |                                                                                                                                                                                                                          |
 | [vhdl-tool](https://www.vhdltool.com)                                                              | VHDL                                    |                                                                                                                                                                                                                          |
+| [julials](https://github.com/julia-vscode/LanguageServer.jl)                                         | Julia                                |                                                                                                                                                                               |
 
 ## 加入开发
 

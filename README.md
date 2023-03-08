@@ -269,6 +269,7 @@ You need to install the LSP server corresponding to each programming language, t
 | [qmlls](https://github.com/qt/qtdeclarative/tree/dev/tools/qmlls)                                    | QML                                       | The `qmlls` binary should be part of the normal Qt packages since Qt 6.3.0 Ensure that the directory  of `qmlls` binary file is in PATH                                       |
 | [kotlin-language-server](https://github.com/fwcd/kotlin-language-server)                             | Kotlin                                    |                                                                                                                                                                               |
 | [vhdl-tool](https://www.vhdltool.com)                                                                | VHDL                                |                                                                                                                                                                               |
+| [julials](https://github.com/julia-vscode/LanguageServer.jl)                                         | Julia                                |                                                                                                                                                                               |
 ## Join development
 
 The following is the framework of lsp-bridge:
