@@ -66,6 +66,12 @@ class FileAction:
         self.request_dict = {}
         self.try_completion_timer = None
         self.version = 1
+        self.org_file = os.path.splitext(filepath)[-1] == '.org'
+        self.org_line_bias = None
+        # we need multiple servers to handle org files
+        self.org_lang_servers = {}
+        if self.org_file:
+             self.org_lang_servers[self.single_server.server_name] = self.single_server
 
         # Initialize handlers.
         self.handlers: Dict[str, Handler] = dict()
@@ -90,16 +96,8 @@ class FileAction:
         ])
         self.insert_spaces = not self.insert_spaces
 
-        self.method_handlers = {}
-        for lsp_server in self.get_lsp_servers():
-            method_handlers_dict = {}
-            for handler_cls in Handler.__subclasses__():
-                method_handlers_dict[handler_cls.name] = handler_cls(self)
-                    
-            self.method_handlers[lsp_server.server_info["name"]] = method_handlers_dict
-            
-            lsp_server.attach(self)
-            
+        self.set_method_handler()
+
         # Set acm-input-bound-style when opened file.
         if self.single_server_info is not None:
             eval_in_emacs("lsp-bridge-set-prefix-style", self.single_server_info.get("prefixStyle", "ascii"))
@@ -107,11 +105,34 @@ class FileAction:
         # Init server names.
         eval_in_emacs("lsp-bridge-set-server-names", self.filepath, self.get_lsp_server_names())
 
+    def set_method_handler(self):
+        """Set LSP handlers """
+        self.method_handlers = {}
+        for lsp_server in self.get_lsp_servers():
+            method_handlers_dict = {}
+            for handler_cls in Handler.__subclasses__():
+                method_handlers_dict[handler_cls.name] = handler_cls(self)
+
+            self.method_handlers[lsp_server.server_info["name"]] = method_handlers_dict
+
+            lsp_server.attach(self)
+
+
     @property
     def last_change(self) -> Tuple[float, float]:
         """Return the last change information as a tuple."""
         return self.last_change_file_time, self.last_change_cursor_time
-    
+
+    def read_file(self):
+        """Read file content."""
+        file_content = ''
+        if self.org_file:
+            file_content = get_emacs_func_result('get-buffer-content', os.path.basename(self.filepath))
+        else:
+            with open(self.filepath, encoding="utf-8", errors="ignore") as f:
+                file_content = f.read()
+        return file_content
+
     def call(self, method, *args, **kwargs):
         """Call any handler or method of file action."""
         if method in self.handlers:
@@ -140,12 +161,27 @@ class FileAction:
             self.send_server_request(method_server, method, *args, **kwargs) 
             
     def change_file(self, start, end, range_length, change_text, position, before_char, buffer_name, prefix):
+        need_whole_change = False
+        if self.org_file:
+            # TODO support lang server change in org buffer
+            line_bias = get_emacs_func_result('get-org-block-line-bias', buffer_name)
+            start['line'] -= line_bias
+            end['line'] -= line_bias
+            position['line'] -= line_bias
+            need_whole_change = self.org_line_bias != line_bias
+            self.org_line_bias = line_bias
+
+            if start['line'] < 0 or end['line'] < 0 or position['line'] < 0:
+                self.org_line_bias = None
+                return
+
+        print("change_file", start, end, range_length, change_text, position, before_char, buffer_name, prefix)
         buffer_content = ''
         # Send didChange request to LSP server.
         for lsp_server in self.get_lsp_servers():
             if lsp_server.text_document_sync == 0:
                 continue
-            elif lsp_server.text_document_sync == 1:
+            elif lsp_server.text_document_sync == 1 or need_whole_change:
                 if not buffer_content:
                     buffer_content = get_emacs_func_result('get-buffer-content', buffer_name)
                 lsp_server.send_whole_change_notification(self.filepath, self.version, buffer_content)

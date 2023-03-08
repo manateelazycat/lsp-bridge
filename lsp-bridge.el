@@ -286,6 +286,7 @@ Setting this to nil or 0 will turn off the indicator."
                (lsp-bridge-epc-define-method mngr 'get-user-emacs-directory 'lsp-bridge--user-emacs-directory)
                (lsp-bridge-epc-define-method mngr 'is-snippet-support 'acm-backend-lsp-snippet-expansion-fn)
                (lsp-bridge-epc-define-method mngr 'get-buffer-content 'lsp-bridge--get-buffer-content-func)
+               (lsp-bridge-epc-define-method mngr 'get-org-block-line-bias 'lsp-bridge--get-org-block-line-bias)
                ))))
     (if lsp-bridge-server
         (setq lsp-bridge-server-port (process-contact lsp-bridge-server :service))
@@ -380,6 +381,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defcustom lsp-bridge-use-ds-pinyin-in-org-mode nil
   "Use `ds-pinyin' lsp server in org-mode, default is disable.")
+
+(defcustom lsp-bridge-enable-org-babel nil
+  "Use `lsp-bridge' in org-babel, default is disable.")
 
 (defcustom lsp-bridge-complete-manually nil
   "Only popup completion menu when user call `lsp-bridge-popup-complete-menu' command.")
@@ -672,8 +676,12 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge--get-buffer-content-func (buffer-name)
   "Get buffer content for lsp. BUFFER-NAME is name eval from (buffer-name)."
   (when-let* ((buf (get-buffer buffer-name)))
-    (with-current-buffer buf
-      (buffer-substring-no-properties (point-min) (point-max)))))
+    (if (and lsp-bridge-enable-org-babel
+             (eq major-mode 'org-mode))
+        (with-current-buffer buf
+          (nth 1 (org-babel-get-src-block-info)))
+      (with-current-buffer buf
+        (buffer-substring-no-properties (point-min) (point-max))))))
 
 (defun lsp-bridge-get-lang-server-by-extension (dirname extension-list)
   "Get lang server for file extension."
@@ -726,20 +734,36 @@ So we build this macro to restore postion after code format."
             (lsp-bridge-use-wenls-in-org-mode
              "wen")
             (lsp-bridge-use-ds-pinyin-in-org-mode
-             "ds-pinyin"))))))
+             "ds-pinyin")
+            (lsp-bridge-enable-org-babel
+             ;; get lang server according to org babel
+             (let* ((lang (nth 0 (org-babel-get-src-block-info)))
+                    (mode-name (concat (symbol-name (cdr (assoc lang org-src-lang-modes))) "-mode"))
+                    (major-mode (intern mode-name)))
+               (if (eq major-mode 'emacs-lisp-mode)
+                   (setq-local acm-is-elisp-mode-in-org t))
+               (lsp-bridge-get-single-lang-server-by-mode))))))))
 
 (defun lsp-bridge-has-lsp-server-p ()
-  (when-let* ((dirname (ignore-errors (file-truename buffer-file-name))))
-    (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension dirname)
-                                               (lsp-bridge--with-file-buffer dirname
-                                                 (lsp-bridge-get-multi-lang-server-by-mode))))
-           (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension dirname)
-                                         (lsp-bridge--with-file-buffer dirname
-                                           (lsp-bridge-get-single-lang-server-by-mode)))))
-      (if multi-lang-server-by-extension
-          multi-lang-server-by-extension
-        lang-server-by-extension)
-      )))
+  (cond ((and lsp-bridge-enable-org-babel (eq major-mode 'org-mode))
+         (setq-local acm-is-elisp-mode-in-org nil)
+         (and (org-babel-when-in-src-block)
+              ;; not send change-file for begin_src and end_src
+              (not (string-match-p "^[[:space:]]*#\\+"
+                              (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
+              (lsp-bridge-get-single-lang-server-by-mode)))
+        (t
+         (when-let* ((dirname (ignore-errors (file-truename buffer-file-name))))
+           (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension dirname)
+                                                      (lsp-bridge--with-file-buffer dirname
+                                                        (lsp-bridge-get-multi-lang-server-by-mode))))
+                  (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension dirname)
+                                                (lsp-bridge--with-file-buffer dirname
+                                                  (lsp-bridge-get-single-lang-server-by-mode)))))
+             (if multi-lang-server-by-extension
+                 multi-lang-server-by-extension
+               lang-server-by-extension)
+             )))))
 
 (defun lsp-bridge-call-async (method &rest args)
   "Call Python EPC function METHOD and ARGS asynchronously."
@@ -1855,6 +1879,15 @@ SymbolKind (defined in the LSP)."
     ("tailwind-keywords" (setq-local acm-backend-tailwind-items items))
     ("paths" (setq-local acm-backend-path-items items)))
   (lsp-bridge-try-completion))
+
+(defun lsp-bridge--get-org-block-line-bias (buffer-name)
+  "Get buffer content for lsp. BUFFER-NAME is name eval from (buffer-name)."
+  (when-let* ((buf (get-buffer buffer-name)))
+    (if (eq major-mode 'org-mode)
+        (with-current-buffer buf
+          (line-number-at-pos (nth 5 (org-babel-get-src-block-info))))
+      (with-current-buffer buf
+        (buffer-substring-no-properties (point-min) (point-max))))))
 
 (cl-defmacro lsp-org-babel-enable (lang)
   "Support LANG in org source code block."
