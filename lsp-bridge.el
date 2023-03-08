@@ -399,6 +399,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode) . lsp-bridge-c-lsp-server)
     ((cmake-mode cmake-ts-mode) . "cmake-language-server")
     ((java-mode java-ts-mode) . "jdtls")
+    ((julia-mode) . "julials")
     ((python-mode python-ts-mode) . lsp-bridge-python-lsp-server)
     (ruby-mode . "solargraph")
     ((rust-mode rustic-mode rust-ts-mode) . "rust-analyzer")
@@ -441,6 +442,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     c++-mode-hook
     cmake-mode-hook
     java-mode-hook
+    julia-mode-hook
     python-mode-hook
     ruby-mode-hook
     lua-mode-hook
@@ -530,6 +532,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (csharp-mode                . c-basic-offset) ; C#
     (csharp-tree-sitter-mode    . csharp-tree-sitter-indent-offset) ; C#
     (d-mode                     . c-basic-offset)             ; D
+    (julia-mode                 . c-basic-offset) ; Julia
     (java-mode                  . c-basic-offset)             ; Java
     (java-ts-mode               . java-ts-mode-indent-offset) ; Java
     (jde-mode                   . c-basic-offset)     ; Java (JDE)
