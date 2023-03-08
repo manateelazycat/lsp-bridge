@@ -270,7 +270,7 @@ class LspServer:
         # STEP 4: Tell LSP server open file.
         # We need send 'textDocument/didOpen' notification,
         # then LSP server will return file information, such as completion, find-define, find-references and rename etc.
-        self.send_did_open_notification(fa.filepath, fa.external_file_link)
+        self.send_did_open_notification(fa)
 
     def lsp_message_dispatcher(self):
         try:
@@ -391,16 +391,15 @@ class LspServer:
 
         return uri
 
-    def send_did_open_notification(self, filepath, external_file_link=None):
-        with open(filepath, encoding="utf-8", errors="ignore") as f:
-            self.sender.send_notification("textDocument/didOpen", {
-                "textDocument": {
-                    "uri": self.parse_document_uri(filepath, external_file_link),
-                    "languageId": self.server_info["languageId"],
-                    "version": 0,
-                    "text": f.read()
-                }
-            })
+    def send_did_open_notification(self, fa: "FileAction"):
+        self.sender.send_notification("textDocument/didOpen", {
+            "textDocument": {
+                "uri": self.parse_document_uri(fa.filepath, fa.external_file_link),
+                "languageId": self.server_info["languageId"],
+                "version": 0,
+                "text": fa.read_file()
+            }
+        })
 
     def send_did_close_notification(self, filepath):
         self.sender.send_notification("textDocument/didClose", {
