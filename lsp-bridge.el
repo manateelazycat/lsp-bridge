@@ -1581,7 +1581,9 @@ So we build this macro to restore postion after code format."
 
   (acm-run-idle-func acm-backend-elisp-symbols-update-timer lsp-bridge-elisp-symbols-update-idle 'lsp-bridge-elisp-symbols-update)
 
-  (when-let* ((lsp-server-name (lsp-bridge-has-lsp-server-p)))
+  (when (or (lsp-bridge-has-lsp-server-p)
+            ;; init acm backend for org babel
+            (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)))
     ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
     ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
     (unless (file-exists-p (buffer-file-name))
