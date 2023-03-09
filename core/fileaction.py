@@ -70,8 +70,10 @@ class FileAction:
         self.org_line_bias = None
         # we need multiple servers to handle org files
         self.org_lang_servers = {}
+        self.org_server_infos = {}
         if self.org_file:
              self.org_lang_servers[self.single_server.server_name] = self.single_server
+             self.org_server_infos[self.single_server.server_name] = self.single_server_info
 
         # Initialize handlers.
         self.handlers: Dict[str, Handler] = dict()
@@ -96,17 +98,10 @@ class FileAction:
         ])
         self.insert_spaces = not self.insert_spaces
 
-        self.set_method_handler()
+        self.set_lsp_server()
 
-        # Set acm-input-bound-style when opened file.
-        if self.single_server_info is not None:
-            eval_in_emacs("lsp-bridge-set-prefix-style", self.single_server_info.get("prefixStyle", "ascii"))
-
-        # Init server names.
-        eval_in_emacs("lsp-bridge-set-server-names", self.filepath, self.get_lsp_server_names())
-
-    def set_method_handler(self):
-        """Set LSP handlers """
+    def set_lsp_server(self):
+        """Set LSP handlers, prefix and name """
         self.method_handlers = {}
         for lsp_server in self.get_lsp_servers():
             method_handlers_dict = {}
@@ -117,6 +112,12 @@ class FileAction:
 
             lsp_server.attach(self)
 
+        # Set acm-input-bound-style when opened file.
+        if self.single_server_info is not None:
+            eval_in_emacs("lsp-bridge-set-prefix-style", self.single_server_info.get("prefixStyle", "ascii"))
+
+        # Init server names.
+        eval_in_emacs("lsp-bridge-set-server-names", self.filepath, self.get_lsp_server_names())
 
     @property
     def last_change(self) -> Tuple[float, float]:
@@ -372,7 +373,7 @@ class FileAction:
             request_id=request_id)
         
     def exit(self):
-        for lsp_server in self.get_lsp_servers():
+        for lsp_server in (self.org_lang_servers.values() if self.org_file else self.get_lsp_servers()):
             if lsp_server.server_name in LSP_SERVER_DICT:
                 lsp_server = LSP_SERVER_DICT[lsp_server.server_name]
                 lsp_server.close_file(self.filepath)
