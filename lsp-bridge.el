@@ -131,7 +131,7 @@
                                                     lsp-bridge-not-complete-manually
                                                     )
   "A list of predicate functions with no argument to enable popup completion in callback."
-  :type 'list
+  :type '(repeat function)
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-flash-line-delay .3
@@ -465,7 +465,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     markdown-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
-  :type 'list)
+  :type '(repeat variable))
 
 (defcustom lsp-bridge-get-single-lang-server-by-project nil
   "Get lang server with project path and file path.")
@@ -1439,7 +1439,7 @@ So we build this macro to restore postion after code format."
 
 (defcustom lsp-bridge-org-babel-lang-list '("clojure" "latex" "python")
   "A list of org babel languages in which source code block lsp-bridge will be enabled."
-  :type 'list
+  :type '(repeat string)
   :group 'lsp-bridge)
 
 (defvar lsp-bridge-signature-help-timer nil)
