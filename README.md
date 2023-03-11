@@ -42,7 +42,7 @@ Please note that:
 2. When the completion menu pops up, `acm-mode` will be automatically enabled, and when the completion menu disappears, `acm-mode` will be automatically disabled. Please do not manually add `acm-mode` to any mode-hook or manually execute `acm-mode`.
 
 ## Usage
-Lsp-bridge is design with out of box. After installing the corresponding [LSP server](https://github.com/manateelazycat/lsp-bridge#supported-language-servers) and mode plugin for the language, you can start coding directly without any additional settings.
+Lsp-bridge works out of the box. After installing the corresponding [LSP server](https://github.com/manateelazycat/lsp-bridge#supported-language-servers) and mode plugin for the language, you can start coding directly without any additional settings.
 
 It should be noted that lsp-bridge has three scanning modes:
 
@@ -106,7 +106,7 @@ It should be noted that lsp-bridge has three scanning modes:
 * `lsp-bridge-c-lsp-server`: C language server, you can choose `clangd` or` ccls`
 * `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright`, `jedi`, `python-ms`, `pylsp`, `ruff`
 * `lsp-bridge-php-lsp-server`: PHP language server, you can choose `intelephense` or `phpactor`
-* `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `taxlab` or` digestif`
+* `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `texlab` or` digestif`
 * `lsp-bridge-csharp-lsp-server`: C# language server, you can choose `omnisharp-mono` or` omnisharp-dotnet`, note that you need to give **execute permissions** to the OmniSharp file
 * `lsp-bridge-python-multi-lsp-server`: Python multi-language servers, you can choose `pyright_ruff`, `jedi_ruff`, `python-ms_ruff`, `pylsp_ruff`
 
@@ -253,7 +253,7 @@ You need to install the LSP server corresponding to each programming language, t
 | [fortls](https://github.com/gnikit/fortls)                                                           | Fortran                                   |                                                                                                                                                                               |
 | [emmet-ls](https://github.com/aca/emmet-ls)                                                          | HTML, JavaScript, CSS, SASS, SCSS, LESS   |                                                                                                                                                                               |
 | [rnix-lsp](https://github.com/nix-community/rnix-lsp)                                                | Nix                                       |                                                                                                                                                                               |
-| [taxlab](https://github.com/latex-lsp/texlab)                                                        | Latex                                     | `lsp-bridge-tex-lsp-server` set to `taxlab`                                                                                                                                   |
+| [texlab](https://github.com/latex-lsp/texlab)                                                        | Latex                                     | `lsp-bridge-tex-lsp-server` set to `texlab`                                                                                                                                   |
 | [digestif](https://github.com/astoff/digestif)                                                       | Latex                                     | `lsp-bridge-tex-lsp-server` set to `digestif`                                                                                                                                 |
 | [rlanguageserver](https://github.com/REditorSupport/languageserver)                                  | R                                         |                                                                                                                                                                               |
 | [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli)   | GraphQL                                   |                                                                                                                                                                               |
