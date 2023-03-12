@@ -1,0 +1,27 @@
+{
+    "name": "julials",
+    "languageId": "julia",
+    "command": [
+        "julia.exe",
+        "--project=~/.julia/packages/LanguageServer/0vsx2/src",
+        "-e",
+        "using LanguageServer; runserver()"
+    ],
+    "settings": {
+        "julia.lint.call": true,
+        "julia.lint.iter": true,
+        "julia.lint.nothingcomp": true,
+        "julia.lint.constif": true,
+        "julia.lint.lazy": true,
+        "julia.lint.datadecl": true,
+        "julia.lint.typeparam": true,
+        "julia.lint.modname": true,
+        "julia.lint.pirates": true,
+        "julia.lint.useoffuncargs": true,
+        "julia.lint.run": true,
+        "julia.lint.missingrefs": "all",
+        "julia.lint.disabledDirs": [],
+        "julia.completionmode": true
+    },
+    "support-single-file": true
+}

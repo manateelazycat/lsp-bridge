@@ -131,7 +131,7 @@
                                                     lsp-bridge-not-complete-manually
                                                     )
   "A list of predicate functions with no argument to enable popup completion in callback."
-  :type 'list
+  :type '(repeat function)
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-flash-region-delay .3
@@ -288,6 +288,8 @@ Setting this to nil or 0 will turn off the indicator."
                (lsp-bridge-epc-define-method mngr 'is-snippet-support 'acm-backend-lsp-snippet-expansion-fn)
                (lsp-bridge-epc-define-method mngr 'get-buffer-content 'lsp-bridge--get-buffer-content-func)
                (lsp-bridge-epc-define-method mngr 'get-window-line-range 'lsp-bridge--get-window-line-range)
+               (lsp-bridge-epc-define-method mngr 'get-org-block-line-bias 'lsp-bridge--get-org-block-line-bias)
+
                ))))
     (if lsp-bridge-server
         (setq lsp-bridge-server-port (process-contact lsp-bridge-server :service))
@@ -370,7 +372,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   :type 'string)
 
 (defcustom lsp-bridge-tex-lsp-server "texlab"
-  "Default LSP server for (la)tex, you can choose `taxlab' or `digestif'."
+  "Default LSP server for (la)tex, you can choose `texlab' or `digestif'."
   :type 'string)
 
 (defcustom lsp-bridge-csharp-lsp-server "omnisharp-dotnet"
@@ -382,6 +384,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defcustom lsp-bridge-use-ds-pinyin-in-org-mode nil
   "Use `ds-pinyin' lsp server in org-mode, default is disable.")
+
+(defcustom lsp-bridge-enable-org-babel nil
+  "Use `lsp-bridge' in org-babel, default is disable.")
 
 (defcustom lsp-bridge-complete-manually nil
   "Only popup completion menu when user call `lsp-bridge-popup-complete-menu' command.")
@@ -397,6 +402,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode) . lsp-bridge-c-lsp-server)
     ((cmake-mode cmake-ts-mode) . "cmake-language-server")
     ((java-mode java-ts-mode) . "jdtls")
+    ((julia-mode) . "julials")
     ((python-mode python-ts-mode) . lsp-bridge-python-lsp-server)
     (ruby-mode . "solargraph")
     ((rust-mode rustic-mode rust-ts-mode) . "rust-analyzer")
@@ -439,6 +445,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     c++-mode-hook
     cmake-mode-hook
     java-mode-hook
+    julia-mode-hook
     python-mode-hook
     ruby-mode-hook
     lua-mode-hook
@@ -506,7 +513,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     typescript-ts-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
-  :type 'list)
+  :type '(repeat variable))
 
 (defcustom lsp-bridge-get-single-lang-server-by-project nil
   "Get lang server with project path and file path.")
@@ -528,6 +535,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (csharp-mode                . c-basic-offset) ; C#
     (csharp-tree-sitter-mode    . csharp-tree-sitter-indent-offset) ; C#
     (d-mode                     . c-basic-offset)             ; D
+    (julia-mode                 . c-basic-offset) ; Julia
     (java-mode                  . c-basic-offset)             ; Java
     (java-ts-mode               . java-ts-mode-indent-offset) ; Java
     (jde-mode                   . c-basic-offset)     ; Java (JDE)
@@ -674,8 +682,12 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge--get-buffer-content-func (buffer-name)
   "Get buffer content for lsp. BUFFER-NAME is name eval from (buffer-name)."
   (when-let* ((buf (get-buffer buffer-name)))
-    (with-current-buffer buf
-      (buffer-substring-no-properties (point-min) (point-max)))))
+    (if (and lsp-bridge-enable-org-babel
+             (eq major-mode 'org-mode))
+        (with-current-buffer buf
+          (nth 1 (org-babel-get-src-block-info)))
+      (with-current-buffer buf
+        (buffer-substring-no-properties (point-min) (point-max))))))
 
 (defun lsp-bridge--get-window-line-range (buffer-name)
   "Get buffer window line range for lsp. BUFFER-NAME is name eval from (buffer-name)."
@@ -736,20 +748,36 @@ So we build this macro to restore postion after code format."
             (lsp-bridge-use-wenls-in-org-mode
              "wen")
             (lsp-bridge-use-ds-pinyin-in-org-mode
-             "ds-pinyin"))))))
+             "ds-pinyin")
+            (lsp-bridge-enable-org-babel
+             ;; get lang server according to org babel
+             (let* ((lang (nth 0 (org-babel-get-src-block-info)))
+                    (mode-name (concat (symbol-name (cdr (assoc lang org-src-lang-modes))) "-mode"))
+                    (major-mode (intern mode-name)))
+               (if (eq major-mode 'emacs-lisp-mode)
+                   (setq-local acm-is-elisp-mode-in-org t))
+               (lsp-bridge-get-single-lang-server-by-mode))))))))
 
 (defun lsp-bridge-has-lsp-server-p ()
-  (when-let* ((dirname (ignore-errors (file-truename buffer-file-name))))
-    (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension dirname)
-                                               (lsp-bridge--with-file-buffer dirname
-                                                 (lsp-bridge-get-multi-lang-server-by-mode))))
-           (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension dirname)
-                                         (lsp-bridge--with-file-buffer dirname
-                                           (lsp-bridge-get-single-lang-server-by-mode)))))
-      (if multi-lang-server-by-extension
-          multi-lang-server-by-extension
-        lang-server-by-extension)
-      )))
+  (cond ((and lsp-bridge-enable-org-babel (eq major-mode 'org-mode))
+         (setq-local acm-is-elisp-mode-in-org nil)
+         (and (org-babel-when-in-src-block)
+              ;; not send change-file for begin_src and end_src
+              (not (string-match-p "^[[:space:]]*#\\+"
+                              (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
+              (lsp-bridge-get-single-lang-server-by-mode)))
+        (t
+         (when-let* ((dirname (ignore-errors (file-truename buffer-file-name))))
+           (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension dirname)
+                                                      (lsp-bridge--with-file-buffer dirname
+                                                        (lsp-bridge-get-multi-lang-server-by-mode))))
+                  (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension dirname)
+                                                (lsp-bridge--with-file-buffer dirname
+                                                  (lsp-bridge-get-single-lang-server-by-mode)))))
+             (if multi-lang-server-by-extension
+                 multi-lang-server-by-extension
+               lang-server-by-extension)
+             )))))
 
 (defun lsp-bridge-call-async (method &rest args)
   "Call Python EPC function METHOD and ARGS asynchronously."
@@ -1528,7 +1556,7 @@ So we build this macro to restore postion after code format."
 
 (defcustom lsp-bridge-org-babel-lang-list '("clojure" "latex" "python")
   "A list of org babel languages in which source code block lsp-bridge will be enabled."
-  :type 'list
+  :type '(repeat string)
   :group 'lsp-bridge)
 
 (defvar lsp-bridge-signature-help-timer nil)
@@ -1567,7 +1595,9 @@ So we build this macro to restore postion after code format."
 
   (acm-run-idle-func acm-backend-elisp-symbols-update-timer lsp-bridge-elisp-symbols-update-idle 'lsp-bridge-elisp-symbols-update)
 
-  (when-let* ((lsp-server-name (lsp-bridge-has-lsp-server-p)))
+  (when (or (lsp-bridge-has-lsp-server-p)
+            ;; init acm backend for org babel
+            (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)))
     ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
     ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
     (unless (file-exists-p (buffer-file-name))
@@ -1868,6 +1898,15 @@ SymbolKind (defined in the LSP)."
     ("tailwind-keywords" (setq-local acm-backend-tailwind-items items))
     ("paths" (setq-local acm-backend-path-items items)))
   (lsp-bridge-try-completion))
+
+(defun lsp-bridge--get-org-block-line-bias (buffer-name)
+  "Get buffer content for lsp. BUFFER-NAME is name eval from (buffer-name)."
+  (when-let* ((buf (get-buffer buffer-name)))
+    (if (eq major-mode 'org-mode)
+        (with-current-buffer buf
+          (line-number-at-pos (nth 5 (org-babel-get-src-block-info))))
+      (with-current-buffer buf
+        (buffer-substring-no-properties (point-min) (point-max))))))
 
 (cl-defmacro lsp-org-babel-enable (lang)
   "Support LANG in org source code block."

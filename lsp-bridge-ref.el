@@ -587,7 +587,7 @@ user more freedom to use rg with special arguments."
         (setq start (point))
         (setq filename (buffer-substring-no-properties start end))
         (end-of-line)
-        (add-to-list 'file-extensions (lsp-bridge-ref-file-extension filename))))
+        (cl-pushnew (lsp-bridge-ref-file-extension filename) file-extensions :test 'string-equal)))
     (if (< (length file-extensions) 2)
         (message (format "[LSP-Bridge] Has one type files now."))
       (setq filter-extension (ido-completing-read (if match-files

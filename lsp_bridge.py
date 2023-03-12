@@ -166,8 +166,14 @@ class LspBridge:
     def _open_file(self, filepath):
         project_path = get_project_path(filepath)
         multi_lang_server = get_emacs_func_result("get-multi-lang-server", project_path, filepath)
-        
-        if multi_lang_server:
+
+        if os.path.splitext(filepath)[-1] == '.org':
+            single_lang_server = get_emacs_func_result("get-single-lang-server", project_path, filepath)
+            lang_server_info = load_single_server_info(single_lang_server)
+            #TODO support diagnostic
+            lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info, enable_diagnostics=False)
+            create_file_action_with_single_server(filepath, lang_server_info, lsp_server)
+        elif multi_lang_server:
             # Try to load multi language server when get-multi-lang-server return match one.
             multi_lang_server_dir = Path(__file__).resolve().parent / "multiserver"
             multi_lang_server_path = multi_lang_server_dir / "{}.json".format(multi_lang_server)
@@ -331,13 +337,36 @@ class LspBridge:
     def _close_file(self, filepath):
         if is_in_path_dict(FILE_ACTION_DICT, filepath):
             get_from_path_dict(FILE_ACTION_DICT, filepath).exit()
-            
+
+    def maybe_create_org_babel_server(self, filepath):
+        action = get_from_path_dict(FILE_ACTION_DICT, filepath)
+        current_lang_server = get_emacs_func_result("get-single-lang-server",
+                                                    action.single_server.project_path, filepath)
+        lsp_server_name = "{}#{}".format(action.single_server.project_path, current_lang_server)
+        if lsp_server_name != action.single_server.server_name and type(current_lang_server) is str:
+            if lsp_server_name not in action.org_lang_servers:
+                lang_server_info = load_single_server_info(current_lang_server)
+                server = self.create_lsp_server(filepath, action.single_server.project_path,
+                                                lang_server_info, enable_diagnostics=False)
+                action.org_lang_servers[lsp_server_name] = server
+                action.org_server_infos[lsp_server_name] = lang_server_info
+                server.attach(action)
+            else:
+                lang_server_info = action.org_server_infos[lsp_server_name]
+                server = action.org_lang_servers[lsp_server_name]
+            action.single_server = server
+            action.single_server_info = lang_server_info
+            action.set_lsp_server()
+
     def build_file_action_function(self, name):
         def _do(filepath, *args):
             open_file_success = True
 
             if not is_in_path_dict(FILE_ACTION_DICT, filepath):
                 open_file_success = self._open_file(filepath)  # _do is called inside event_loop, so we can block here.
+            elif os.path.splitext(filepath)[-1] == '.org' and get_emacs_var('lsp-bridge-enable-org-babel'):
+                # check weather need create new lsp server
+                self.maybe_create_org_babel_server(filepath)
 
             if open_file_success:
                 action = get_from_path_dict(FILE_ACTION_DICT, filepath)

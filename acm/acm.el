@@ -897,10 +897,13 @@ The key of candidate will change between two LSP results."
   (let ((prev-char (char-before)))
     (if prev-char (char-to-string prev-char) "")))
 
+(defvar-local acm-is-elisp-mode-in-org nil)
 (defun acm-is-elisp-mode-p ()
   (or (derived-mode-p 'emacs-lisp-mode)
       (derived-mode-p 'inferior-emacs-lisp-mode)
-      (derived-mode-p 'lisp-interaction-mode)))
+      (derived-mode-p 'lisp-interaction-mode)
+      (and (eq major-mode 'org-mode)
+           acm-is-elisp-mode-in-org)))
 
 (defun acm-select-first ()
   "Select first candidate."

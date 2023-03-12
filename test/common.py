@@ -1,10 +1,11 @@
 import os
 import pprint
+import subprocess
+import sys
 import tempfile
 import time
-import pathlib
-import sys
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, List, Tuple, Callable, Optional, NamedTuple
 
 import core.utils
@@ -12,6 +13,59 @@ from core.utils import logger, epc_client
 
 
 lsp_bridge = None
+
+EMACS = 'emacs'
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def run_batch_sync(args, cwd=BASE_DIR):
+    with run_batch(args, cwd) as p:
+        for line in p.stdout:
+            if "Error:" in line:
+                logger.error(line)
+            elif "Warning:" in line:
+                logger.warn(line)
+            else:
+                logger.info(line)
+
+    if p.returncode != 0:
+        logger.error("Command failed with exit code %d", p.returncode)
+
+    return p.returncode
+
+
+def run_batch(args, cwd=BASE_DIR):
+    init_eval = """
+    (progn
+        (setq network-security-level 'low) ; see https://github.com/jcs090218/setup-emacs-windows/issues/156#issuecomment-932956432
+        (setq package-user-dir (expand-file-name "lsp-bridge-test" temporary-file-directory))
+        (require 'package)
+        (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+        (package-initialize)
+        (package-refresh-contents)
+        (package-install 'posframe)
+        (package-install 'markdown-mode)
+        (package-install 'yasnippet)
+        (package-install 'tempel)
+
+        ;; for Windows
+        (prefer-coding-system 'utf-8-unix)
+        (set-language-environment 'utf-8)
+        (setq default-buffer-file-coding-system 'utf-8-unix)
+    )
+    """
+
+    args = [
+        EMACS, "-Q", "--batch",
+        '--eval', init_eval,
+        "-L", os.path.join(BASE_DIR, 'acm'),
+        "-L", str(BASE_DIR),
+    ] + args
+
+    logger.debug("Running command: {}".format(args))
+    return subprocess.Popen(args, cwd=cwd, text=True,
+                            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 
 def interceptor(expectation: Callable[[str, List[Any]], bool],
@@ -39,7 +93,7 @@ def interceptor(expectation: Callable[[str, List[Any]], bool],
                     logger.error("timeout")
                     break
 
-            core.utils.logger.debug("Calls: %s", pprint.pformat(calls))
+            logger.debug("Calls: %s", pprint.pformat(calls))
             core.utils.test_interceptor = None
 
             if teardown:
@@ -62,7 +116,7 @@ def _buffer_file_name(abspath: str) -> str:
     if sys.platform != "win32":
         return abspath
     # same as (buffer-file-name) in Emacs under Windows
-    path = pathlib.Path(abspath).as_posix()
+    path = Path(abspath).as_posix()
     drive = path[0]
     path = drive.lower() + path[1:]
     return path

@@ -16,7 +16,7 @@ lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建�
 ## 安装
 
 1. 安装 Emacs 28 及以上版本
-2. 安装 Python 依赖: `pip3 install epc orjson sexpdata==0.0.3 six` (orjson 是可选的， orjson 基于 Rust， 提供更快的 JSON 解析性能)
+2. 安装 Python 依赖: `pip3 install epc orjson sexpdata six` (orjson 是可选的， orjson 基于 Rust， 提供更快的 JSON 解析性能)
 3. 安装 Elisp 依赖:
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
@@ -119,7 +119,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-enable-log`: 启用 LSP 消息日志， 默认关闭, 除非开发目的， 平常请勿打开此选项以避免影响性能
 * `lsp-bridge-enable-debug`: 启用程序调试， 默认关闭
 * `lsp-bridge-disable-backup`: 禁止 emacs 对文件做版本管理， 默认打开
-* `lsp-bridge-code-action-enable-popup-menu`: 启用code action posframe菜单，默认打开
+* `lsp-bridge-code-action-enable-popup-menu`: 启用 code action posframe 菜单，默认打开
 * `lsp-bridge-diagnostic-fetch-idle`： 诊断延迟，默认是停止敲键盘后 0.5 秒开始拉取诊断信息
 * `lsp-bridge-signature-show-function`: 用于显示签名信息的函数, 默认是在 minibuffer 显示， 设置成 `lsp-bridge-signature-posframe` 后可以用 frame 来显示函数的签名信息
 * `lsp-bridge-completion-popup-predicates`: 补全菜单显示的检查函数， 这个选项包括的所有函数都检查过以后， 补全菜单才能显示
@@ -128,6 +128,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-user-langserver-dir`: 用户 langserver 配置文件目录，如果目录下的配置文件和 [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) 里的配置文件同名，lsp-bridge 会使用这个目录下的配置文件
 * `lsp-bridge-user-multiserver-dir`: 用户 multiserver 配置文件目录，如果目录下的配置文件和 [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) 里的配置文件同名，lsp-bridge 会使用这个目录下的配置文件
 * `lsp-bridge-symbols-enable-which-func`: 在`which-func`使用 lsp 后端, 默认关闭
+* `lsp-bridge-enable-org-babel`: 在 org babel 里使用 lsp 补全，默认关闭
 * `acm-frame-background-dark-color`: 暗色主题下的菜单背景颜色
 * `acm-frame-background-light-color`: 亮色主题下的菜单背景颜色
 * `acm-markdown-render-font-height`: 弹出文档的字体高度， 默认是 130
@@ -248,7 +249,7 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 | [fortls](https://github.com/gnikit/fortls)                                                         | Fortran                                 |                                                                                                                                                                                                                          |
 | [emmet-ls](https://github.com/aca/emmet-ls)                                                        | HTML, JavaScript, CSS, SASS, SCSS, LESS |                                                                                                                                                                                                                          |
 | [rnix-lsp](https://github.com/nix-community/rnix-lsp)                                              | Nix                                     |                                                                                                                                                                                                                          |
-| [taxlab](https://github.com/latex-lsp/texlab)                                                      | Latex                                   | `lsp-bridge-tex-lsp-server` 设置成 `taxlab`                                                                                                                                                                              |
+| [texlab](https://github.com/latex-lsp/texlab)                                                      | Latex                                   | `lsp-bridge-tex-lsp-server` 设置成 `texlab`                                                                                                                                                                              |
 | [digestif](https://github.com/astoff/digestif)                                                     | Latex                                   | `lsp-bridge-tex-lsp-server` 设置成 `digestif`                                                                                                                                                                            |
 | [rlanguageserver](https://github.com/REditorSupport/languageserver)                                | R                                       |                                                                                                                                                                                                                          |
 | [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli) | GraphQL                                 |                                                                                                                                                                                                                          |
@@ -264,6 +265,7 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 | [qmlls]((https://github.com/qt/qtdeclarative/tree/dev/tools/qmlls))                                | QML                                     | QT 6.3.0 之后的版本自带 qmlls，将 qmlls 所在目录加到 PATH 中                                                                                                                                                             |
 | [kotlin-language-server](https://github.com/fwcd/kotlin-language-server)                           | Kotlin                                  |                                                                                                                                                                                                                          |
 | [vhdl-tool](https://www.vhdltool.com)                                                              | VHDL                                    |                                                                                                                                                                                                                          |
+| [julials](https://github.com/julia-vscode/LanguageServer.jl)                                         | Julia                                |                                                                                                                                                                               |
 
 ## 加入开发
 
