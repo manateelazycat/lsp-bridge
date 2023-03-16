@@ -77,22 +77,24 @@ class Completion(Handler):
             for item in response["items"] if "items" in response else response:
                 kind = KIND_MAP[item.get("kind", 0)].lower()
                 label = item["label"]
+                detail = item.get("detail", "")
                 
                 # If LSP Sever return `isIncomplete` is False, need filter some candidate.
                 if filter and not string_match(label.lower(), filter.lower(), fuzzy=fuzzy):
                     continue
                 
-                annotation = kind if kind != "" else item.get("detail", "")
+                annotation = kind if kind != "" else detail
 
-                # Key use label, don't add index in key, elisp hashmap will create new item when index change.
-                key = label
+                # The key keyword combines the values ​​of 'label' and 'detail'
+                # to handle different libraries provide the same function.
+                key = f"{label}_{detail}"
                 display_label = label[:self.file_action.display_label_max_length] + " ..." if len(label) > self.file_action.display_label_max_length else label
-                
+
                 if display_new_text:
                     text_edit = item.get("textEdit", None)
                     if text_edit is not None:
                         display_label = text_edit.get("newText", None)
-                
+
                 candidate = {
                     "key": key,
                     "icon": annotation,
@@ -105,30 +107,30 @@ class Completion(Handler):
                     "server": self.method_server_name,
                     "backend": "lsp"
                 }
-                
+
                 self.sort_dict[key] = item.get("sortText", "")
-                
+
                 if self.file_action.enable_auto_import:
                     candidate["additionalTextEdits"] = item.get("additionalTextEdits", [])
 
                 completion_candidates.append(candidate)
-                
+
                 items[key] = item
-                
+
                 item_index += 1
-                
+
             self.file_action.completion_items[self.method_server_name] = items
-                
+
             completion_candidates = sorted(completion_candidates, key=cmp_to_key(self.compare_candidates))
-            
+
         log_time("Recv completion candidates number {} from '{}' for file {}".format(
             len(completion_candidates),
             self.method_server_name,
             os.path.basename(self.file_action.filepath)))
-        
+
         # Avoid returning too many items to cause Emacs to do GC operation.
         completion_candidates = completion_candidates[:min(len(completion_candidates), self.file_action.completion_items_limit)]
-        
+
         eval_in_emacs("lsp-bridge-completion--record-items",
                       self.file_action.filepath,
                       completion_candidates,
