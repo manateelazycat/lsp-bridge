@@ -507,8 +507,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     json-ts-mode-hook
     python-ts-mode-hook
     bash-ts-mode-hook
-    typescript-ts-mode-hook
-    )
+    typescript-ts-mode-hook)
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
 
