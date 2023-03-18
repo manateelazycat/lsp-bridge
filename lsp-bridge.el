@@ -501,6 +501,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     c-ts-mode-hook
     c++-ts-mode-hook
     cmake-ts-mode-hook
+    elixir-ts-mode-hook
     toml-ts-mode-hook
     css-ts-mode-hook
     js-ts-mode-hook
