@@ -587,6 +587,8 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (sh-mode . "\$\{")
     (bash-mode . "\$\{")
     (bash-ts-mode . "\$\{")
+    (elixir-mode . "\#\{")
+    (elixir-ts-mode . "\#\{")
     ;; For #{}
     (ruby-mode . "\#\{")
     ;; For {{}}
