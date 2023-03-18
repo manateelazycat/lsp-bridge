@@ -501,14 +501,14 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     c-ts-mode-hook
     c++-ts-mode-hook
     cmake-ts-mode-hook
+    elixir-ts-mode-hook
     toml-ts-mode-hook
     css-ts-mode-hook
     js-ts-mode-hook
     json-ts-mode-hook
     python-ts-mode-hook
     bash-ts-mode-hook
-    typescript-ts-mode-hook
-    )
+    typescript-ts-mode-hook)
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
 
@@ -587,6 +587,8 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (sh-mode . "\$\{")
     (bash-mode . "\$\{")
     (bash-ts-mode . "\$\{")
+    (elixir-mode . "\#\{")
+    (elixir-ts-mode . "\#\{")
     ;; For #{}
     (ruby-mode . "\#\{")
     ;; For {{}}
