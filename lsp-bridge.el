@@ -403,7 +403,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ((python-mode python-ts-mode) . lsp-bridge-python-lsp-server)
     (ruby-mode . "solargraph")
     ((rust-mode rustic-mode rust-ts-mode) . "rust-analyzer")
-    (elixir-mode . "elixirLS")
+    ((elixir-mode elixir-ts-mode heex-ts-mode) . "elixirLS")
     ((go-mode go-ts-mode) . "gopls")
     (groovy-mode . "groovy-language-server")
     (haskell-mode . "hls")
