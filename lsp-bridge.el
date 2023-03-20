@@ -1830,7 +1830,11 @@ SymbolKind (defined in the LSP)."
 
   (dolist (hook lsp-bridge-default-mode-hooks)
     (add-hook hook (lambda ()
-                     (lsp-bridge-mode 1)
+                     ;; Except `mind-wave-chat-mode'.
+                     (when (or
+                            (not (buffer-file-name))
+                            (not (string-equal (file-name-extension (buffer-file-name)) "chat")))
+                       (lsp-bridge-mode 1))
                      ))))
 
 (with-eval-after-load 'evil
