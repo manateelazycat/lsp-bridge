@@ -325,7 +325,12 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
            (lsp-bridge-workspace-apply-edit edit temp-buffer))
           ;; prioritize custom handlers
           (handler
-             (funcall handler action temp-buffer))
+           (funcall handler action temp-buffer))
+          ;; arguments are for workspaceApplyEdit
+          ((and arguments
+             (cl-every (lambda (x) (or (plist-get x :documentChanges) (plist-get x :changes))) arguments))
+           (dolist (argument arguments)
+             (lsp-bridge-workspace-apply-edit argument temp-buffer)))
           ;; command is string. send `workspace/executeCommand' request to lsp server. arguments are cached in python side
           ((stringp command)
            ;; todo execute_command with temp-buffer
