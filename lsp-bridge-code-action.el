@@ -316,6 +316,7 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
 (defun lsp-bridge-code-action--fix-do (action &optional temp-buffer)
   (let* ((command (plist-get action :command))
          (edit (plist-get action :edit))
+         (server_name (plist-get action :server-name))
          (arguments (plist-get action :arguments)))
     (cond (edit
            (lsp-bridge-workspace-apply-edit edit temp-buffer))
@@ -329,7 +330,7 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
           ((stringp command)
            ;; send `workspace/executecommand' request to lsp server.
            ;; todo execute_command with temp-buffer
-           (lsp-bridge-call-file-api "execute_command" command))
+           (lsp-bridge-call-file-api "execute_command" server_name command))
           ;; command object
           ((plistp command)
            (lsp-bridge-code-action--fix-do command temp-buffer)))

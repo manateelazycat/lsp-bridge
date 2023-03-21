@@ -54,21 +54,30 @@ class FileAction:
         self.multi_servers = multi_servers
         self.multi_servers_info = multi_servers_info
         
-        self.code_action_response = None
+        self.code_actions = {}
+        
         self.completion_item_resolve_key = None
         self.completion_items = {}
+        
         self.diagnostics = {}
         self.diagnostics_ticker = 0
+        
         self.external_file_link = external_file_link
         self.filepath = filepath
+        
         self.last_change_cursor_time = -1.0
         self.last_change_file_time = -1.0
+        
         self.request_dict = {}
+        
         self.try_completion_timer = None
+        
         self.version = 1
+        
         self.org_file = os.path.splitext(filepath)[-1] == '.org'
         self.org_line_bias = None
-        # we need multiple servers to handle org files
+        
+        # We need multiple servers to handle org files
         self.org_lang_servers = {}
         self.org_server_infos = {}
         if self.org_file:
@@ -289,6 +298,22 @@ class FileAction:
         if ticker == self.diagnostics_ticker:
             eval_in_emacs("lsp-bridge-diagnostic--render", self.filepath, self.get_diagnostics())
 
+    def record_code_actions(self, actions, server_name, action_kind):
+        log_time("Record actions from '{}' for file {}".format(server_name, os.path.basename(self.filepath)))
+
+        self.code_actions[server_name] = actions
+        
+        eval_in_emacs("lsp-bridge-code-action--fix", self.get_code_actions(), action_kind)
+
+    def get_code_actions(self):
+        code_actions = []
+        for server_name in self.code_actions:
+            for code_action in self.code_actions[server_name]:
+                code_action["server-name"] = server_name
+                code_actions.append(code_action)
+
+        return code_actions
+
     def try_code_action(self, range_start, range_end, action_kind):
         if self.multi_servers:
             for lsp_server in self.multi_servers.values():
@@ -297,6 +322,7 @@ class FileAction:
                     self.send_server_request(
                         lsp_server,
                         "code_action",
+                        lsp_server_name,
                         self.diagnostics[lsp_server_name] if lsp_server_name in self.diagnostics else [],
                         range_start, range_end, action_kind)
         else:
@@ -304,6 +330,7 @@ class FileAction:
             self.send_server_request(
                 self.single_server,
                 "code_action",
+                lsp_server_name,
                 self.diagnostics[lsp_server_name] if lsp_server_name in self.diagnostics else [],
                 range_start, range_end, action_kind)
 

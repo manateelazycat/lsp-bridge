@@ -7,11 +7,11 @@ class ExecuteCommand(Handler):
     method = "workspace/executeCommand"
     send_document_uri = False
 
-    def process_request(self, command) -> dict:
+    def process_request(self, server_name, command) -> dict:
         arguments = []
         
-        if self.file_action.code_action_response is not None:
-            for action in self.file_action.code_action_response:    # type: ignore
+        if self.file_action.code_actions[server_name] is not None:
+            for action in self.file_action.code_actions[server_name]:    # type: ignore
                 try:
                     if action["command"] == command:
                         arguments = action["arguments"]

@@ -9,8 +9,9 @@ class CodeAction(Handler):
     provider = "code_action_provider"
     provider_message = "Current server not support code action."
 
-    def process_request(self, diagnostics, range_start, range_end, action_kind) -> dict:
+    def process_request(self, lsp_server_name, diagnostics, range_start, range_end, action_kind) -> dict:
         self.action_kind = action_kind
+        self.lsp_server_name = lsp_server_name
         
         range = {
             "start": range_start,
@@ -30,9 +31,4 @@ class CodeAction(Handler):
         return dict(range=range, context=context)
 
     def process_response(self, response) -> None:
-        if response != None and len(response) > 0:
-            self.file_action.code_action_response = response    # type: ignore
-            eval_in_emacs("lsp-bridge-code-action--fix", response, self.action_kind)
-        else:
-            self.file_action.code_action_response = None
-            message_emacs("No code action found.")
+        self.file_action.record_code_actions(response, self.lsp_server_name, self.action_kind)
