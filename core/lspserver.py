@@ -487,7 +487,9 @@ class LspServer:
     def handle_workspace_configuration_request(self, name, request_id, params):
         settings = self.server_info.get("settings", {})
 
-        # We send empty message back to server if nothing in 'settings' of server.json file.
+        # NOTE: We send message fill null with same length of workspace/configuration params and send back to server
+        # if nothing in 'settings' of server.json file.
+        # Otherwise, some LSP server, such as zls will crash if we just send back empty list.
         if settings is None or len(settings) == 0:
             self.sender.send_response(request_id, [None] * len(params["items"]))
             return
@@ -586,7 +588,7 @@ class LspServer:
                     self.signature_help_provider = message["result"]["capabilities"]["signatureHelpProvider"]
                 except Exception:
                     pass
-                
+
                 try:
                     self.workspace_symbol_provider = message["result"]["capabilities"]["workspaceSymbolProvider"]
                 except Exception:
@@ -600,7 +602,7 @@ class LspServer:
                         self.text_document_sync = text_document_sync["change"]
                 except Exception:
                     pass
-                
+
                 try:
                     self.save_include_text = message["result"]["capabilities"]["textDocumentSync"]["save"]["includeText"]
                 except Exception:
