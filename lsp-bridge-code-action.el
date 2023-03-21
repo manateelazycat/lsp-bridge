@@ -292,6 +292,7 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
                                          menu-buffer "code action" 0 nil)
 
     (with-current-buffer menu-buffer
+      (read-only-mode -1)
       (cl-loop for i from 0 to (1- (length menu-items))
                do (let* ((title (car (nth i menu-items)))
                          (format-line (format "%d. %s\n" (1+ i) title))
