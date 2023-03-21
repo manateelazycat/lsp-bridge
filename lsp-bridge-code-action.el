@@ -163,7 +163,6 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
   (acm-cancel-timer lsp-bridge-code-action-popup-maybe-preview-timer)
 
   (acm-frame-delete-frame lsp-bridge-call-hierarchy--frame)
-  (kill-buffer "*lsp-bridge-code-action-menu*")
 
   (advice-remove 'lsp-bridge-call-hierarchy-maybe-preview #'lsp-bridge-code-action-popup-maybe-preview)
   (advice-remove 'lsp-bridge-call-hierarchy-select #'lsp-bridge-code-action-popup-select)
