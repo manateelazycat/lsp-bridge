@@ -338,8 +338,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defcustom lsp-bridge-multi-lang-server-extension-list
   '(
-    (("vue") . "volar_emmet")
-    (("ts")  . "typescript_eslint")
+    (("vue")        . "volar_emmet")
+    (("ts" "tsx")   . "typescript_eslint")
     )
   "The multi lang server rule for file extension."
   :type 'cons)
