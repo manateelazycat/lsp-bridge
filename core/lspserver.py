@@ -489,7 +489,7 @@ class LspServer:
 
         # We send empty message back to server if nothing in 'settings' of server.json file.
         if settings is None or len(settings) == 0:
-            self.sender.send_response(request_id, [])
+            self.sender.send_response(request_id, [None] * len(params["items"]))
             return
 
         # Otherwise, send back section value or default settings.
