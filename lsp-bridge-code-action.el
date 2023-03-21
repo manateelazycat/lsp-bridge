@@ -317,18 +317,17 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
   (let* ((command (plist-get action :command))
          (edit (plist-get action :edit))
          (server_name (plist-get action :server-name))
-         (arguments (plist-get action :arguments)))
+         (arguments (plist-get action :arguments))
+         (handler (when (stringp command)
+                     (plist-get lsp-bridge-code-action-command-handlers (intern command)))))
+
     (cond (edit
            (lsp-bridge-workspace-apply-edit edit temp-buffer))
-          ;; command string with arguments
-          (arguments
-           (if-let ((handler (plist-get lsp-bridge-code-action-command-handlers (intern command))))
-               (funcall handler action temp-buffer)
-             (dolist (argument arguments)
-               (lsp-bridge-workspace-apply-edit argument temp-buffer))))
-          ;; command string no arguments
+          ;; prioritize custom handlers
+          (handler
+             (funcall handler action temp-buffer))
+          ;; command is string. send `workspace/executeCommand' request to lsp server. arguments are cached in python side
           ((stringp command)
-           ;; send `workspace/executecommand' request to lsp server.
            ;; todo execute_command with temp-buffer
            (lsp-bridge-call-file-api "execute_command" server_name command))
           ;; command object
