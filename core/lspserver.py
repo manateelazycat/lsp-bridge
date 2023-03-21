@@ -498,7 +498,15 @@ class LspServer:
         items = []
         for p in params["items"]:
             section = p.get("section", self.server_info["name"])
-            items.append(settings.get(section, {}))
+            sessionSettings = settings.get(section, {})
+
+            if self.server_info["name"] == "vscode-eslint-language-server":
+                sessionSettings["workspaceFolder"] = {
+                    "name": self.project_name,
+                    "uri": path_to_uri(self.project_path),
+                }
+
+            items.append(sessionSettings)
         self.sender.send_response(request_id, items)
 
     def handle_recv_message(self, message: dict):

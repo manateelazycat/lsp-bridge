@@ -1,9 +1,50 @@
 {
   "name": "vscode-eslint-language-server",
-  "languageId": "html",
+  "languageId": "javascript",
   "command": [
     "vscode-eslint-language-server",
     "--stdio"
   ],
-  "settings": {}
+  "settings": {
+    "": {
+      "probe": [
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact",
+        "html",
+        "vue",
+        "markdown"
+      ],
+      "validate": "probe",
+      "packageManager": "npm",
+      "useESLintClass": false,
+      "experimental": {
+        "useFlatConfig": false
+      },
+      "codeActionOnSave": {
+        "mode": "all"
+      },
+      "format": false,
+      "quiet": false,
+      "onIgnoredFiles": "off",
+      "options": {},
+      "rulesCustomizations": [],
+      "run": "onType",
+      "problems": {
+        "shortenToSingleLine": false
+      },
+      "nodePath": null,
+      "codeAction": {
+        "disableRuleComment": {
+          "enable": true,
+          "location": "separateLine",
+          "commentStyle": "line"
+        },
+        "showDocumentation": {
+          "enable": true
+        }
+      }
+    }
+  }
 }
