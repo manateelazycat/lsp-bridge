@@ -31,4 +31,4 @@ class CodeAction(Handler):
         return dict(range=range, context=context)
 
     def process_response(self, response) -> None:
-        self.file_action.record_code_actions(response, self.lsp_server_name, self.action_kind)
+        self.file_action.push_code_actions(response, self.lsp_server_name, self.action_kind)

@@ -298,12 +298,16 @@ class FileAction:
         if ticker == self.diagnostics_ticker:
             eval_in_emacs("lsp-bridge-diagnostic--render", self.filepath, self.get_diagnostics())
 
-    def record_code_actions(self, actions, server_name, action_kind):
+    def push_code_actions(self, actions, server_name, action_kind):
         log_time("Record actions from '{}' for file {}".format(server_name, os.path.basename(self.filepath)))
 
         self.code_actions[server_name] = actions
         
-        eval_in_emacs("lsp-bridge-code-action--fix", self.get_code_actions(), action_kind)
+        code_actions = self.get_code_actions()
+        if len(code_actions) > 0:
+            eval_in_emacs("lsp-bridge-code-action--fix", self.get_code_actions(), action_kind)
+        else:
+            message_emacs("No code actions here")
 
     def get_code_actions(self):
         code_actions = []
