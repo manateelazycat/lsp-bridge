@@ -274,25 +274,32 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
 (defun lsp-bridge-code-action-popup-menu (menu-items default-action)
   (let ((recentf-keep '(".*" . nil)) ;; not push temp file in recentf-list
         (recentf-exclude '(".*"))
-        (menu-lenght (length menu-items))
+        (menu-length (length menu-items))
         (menu-buffer (get-buffer-create "*lsp-bridge-code-action-menu*"))
         (menu-width 0)
-        (cursor (acm-frame-get-popup-position (point))))
-    ;; prepare for previewing
-    (setq lsp-bridge-code-action--current-buffer (current-buffer))
+        (menu-frame-exist (frame-live-p lsp-bridge-call-hierarchy--frame))
+        cursor)
+    ;; Calcuate cursor position when menu frame is not visible.
+    (unless menu-frame-exist
+      (setq cursor (acm-frame-get-popup-position (point))))
 
+    ;; Prepare for previewing.
+    (setq lsp-bridge-code-action--current-buffer (current-buffer))
     (setq lsp-bridge-code-action--oldfile (make-temp-file
                                            (buffer-name) nil nil (buffer-string)))
     (setq lsp-bridge-code-action--preview-alist '())
 
-    ;; reuse hierarchy popup keymap and mode here
+    ;; Reuse hierarchy popup keymap and mode here.
     (setq lsp-bridge-call-hierarchy--popup-response menu-items)
 
     (acm-frame-create-frame-if-not-exist lsp-bridge-call-hierarchy--frame
                                          menu-buffer "code action" 0 nil)
 
     (with-current-buffer menu-buffer
+      ;; Erase menu buffer for multiple code-action response from Python side.
       (read-only-mode -1)
+      (erase-buffer)
+
       (cl-loop for i from 0 to (1- (length menu-items))
                do (let* ((title (car (nth i menu-items)))
                          (format-line (format "%d. %s\n" (1+ i) title))
@@ -305,8 +312,10 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
       (setq-local truncate-lines t)
       (setq-local mode-line-format nil))
 
-    (acm-frame-set-frame-position lsp-bridge-call-hierarchy--frame (car cursor) (+ (cdr cursor) (line-pixel-height)))
-    (acm-frame-set-frame-size lsp-bridge-call-hierarchy--frame menu-width menu-lenght)
+    ;; Don't adjust frame position if code action menu current is visible.
+    (unless menu-frame-exist
+      (acm-frame-set-frame-position lsp-bridge-call-hierarchy--frame (car cursor) (+ (cdr cursor) (line-pixel-height)))
+      (acm-frame-set-frame-size lsp-bridge-call-hierarchy--frame menu-width menu-length))
 
     (advice-add 'lsp-bridge-call-hierarchy-maybe-preview :override #'lsp-bridge-code-action-popup-maybe-preview)
     (advice-add 'lsp-bridge-call-hierarchy-select :override #'lsp-bridge-code-action-popup-select)
