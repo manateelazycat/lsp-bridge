@@ -55,6 +55,7 @@ class FileAction:
         self.multi_servers_info = multi_servers_info
         
         self.code_actions = {}
+        self.code_action_counter = 0
         
         self.completion_item_resolve_key = None
         self.completion_items = {}
@@ -300,11 +301,18 @@ class FileAction:
 
     def push_code_actions(self, actions, server_name, action_kind):
         log_time("Record actions from '{}' for file {}".format(server_name, os.path.basename(self.filepath)))
+        self.code_action_counter += 1
 
         self.code_actions[server_name] = actions
-        
+
+        check_counter = 1
+        if self.multi_servers:
+            check_counter = len(self.multi_servers_info["code_action"])
+
         code_actions = self.get_code_actions()
-        if len(code_actions) > 0:
+
+        # Only send code action when all LSP server has received response.
+        if len(code_actions) > 0 and self.code_action_counter >= check_counter:
             eval_in_emacs("lsp-bridge-code-action--fix", self.get_code_actions(), action_kind)
         else:
             message_emacs("No code actions here")
@@ -319,6 +327,8 @@ class FileAction:
         return code_actions
 
     def try_code_action(self, range_start, range_end, action_kind):
+        self.code_action_counter = 0
+
         if self.multi_servers:
             for lsp_server in self.multi_servers.values():
                 if lsp_server.server_info["name"] in self.multi_servers_info["code_action"]:
