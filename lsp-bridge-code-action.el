@@ -101,7 +101,7 @@ Set it `nil' to improve performance."
 
 (defcustom lsp-bridge-code-action-command-handlers
   '(java.apply.workspaceEdit lsp-bridge-jdtls-apply-workspace-edit
-    java.action.overrideMethodsPrompt lsp-bridge-jdtls-override-methods-prompt)
+                             java.action.overrideMethodsPrompt lsp-bridge-jdtls-override-methods-prompt)
   "LSP extra command handlers"
   :type 'cons
   :group 'lsp-bridge)
@@ -321,8 +321,7 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
     (advice-add 'lsp-bridge-call-hierarchy-select :override #'lsp-bridge-code-action-popup-select)
     (advice-add 'lsp-bridge-call-hierarchy-quit :override #'lsp-bridge-code-action-popup-quit)
 
-    (lsp-bridge-code-action-popup-maybe-preview)
-    ))
+    (lsp-bridge-code-action-popup-maybe-preview)))
 
 (defun lsp-bridge-code-action--fix-do (action &optional temp-buffer)
   (let* ((command (plist-get action :command))
@@ -330,40 +329,44 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
          (server_name (plist-get action :server-name))
          (arguments (plist-get action :arguments))
          (handler (when (stringp command)
-                     (plist-get lsp-bridge-code-action-command-handlers (intern command)))))
-
-    (cond (edit
-           (lsp-bridge-workspace-apply-edit edit temp-buffer))
-          ;; prioritize custom handlers
-          (handler
-           (funcall handler action temp-buffer))
-          ;; arguments are for workspaceApplyEdit
-          ((and arguments
-             (cl-every (lambda (x) (or (plist-get x :documentChanges) (plist-get x :changes))) arguments))
-           (dolist (argument arguments)
-             (lsp-bridge-workspace-apply-edit argument temp-buffer)))
-          ;; command is string. send `workspace/executeCommand' request to lsp server. arguments are cached in python side
-          ((stringp command)
-           ;; todo execute_command with temp-buffer
-           (lsp-bridge-call-file-api "execute_command" server_name command))
-          ;; command object
-          ((plistp command)
-           ;; We need add server-name in `command', otherwise `lsp-bridge-code-action--fix-do' will send empty server name to Python.
-           (let ((server-command command))
-             (plist-put server-command :server-name server_name)
-             (lsp-bridge-code-action--fix-do command temp-buffer))
-           ))
+                    (plist-get lsp-bridge-code-action-command-handlers (intern command)))))
+    (cond
+     ;; Apply workspace if found `edit' argument.
+     (edit
+      (lsp-bridge-workspace-apply-edit edit temp-buffer))
+     ;; Prioritize custom handlers.
+     (handler
+      (funcall handler action temp-buffer))
+     ;; Arguments are for `workspaceApplyEdit'.
+     ((and arguments
+           (cl-every (lambda (x) (or (plist-get x :documentChanges) (plist-get x :changes))) arguments))
+      (dolist (argument arguments)
+        (lsp-bridge-workspace-apply-edit argument temp-buffer)))
+     ;; Command is string, send `workspace/executeCommand' request to LSP server. arguments are cached in Python side.
+     ((stringp command)
+      ;; Execute command with temp-buffer.
+      (lsp-bridge-call-file-api "execute_command" server_name command))
+     ;; Parse command argument if command is plist, and call `lsp-bridge-code-action--fix-do' again.
+     ((plistp command)
+      ;; We need add server-name in `command', otherwise `lsp-bridge-code-action--fix-do' will send empty server name to Python.
+      (let ((server-command command))
+        (plist-put server-command :server-name server_name)
+        (lsp-bridge-code-action--fix-do command temp-buffer))))
     (unless temp-buffer
       (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
+
+(defun lsp-bridge-code-action--filter (action action-kind)
+  (when (or (not action-kind)
+            (equal action-kind (plist-get action :kind)))
+    (cons (plist-get action :title) action)))
 
 (defun lsp-bridge-code-action--fix (actions action-kind)
   (let* ((menu-items
           (or
-           (cl-remove-if #'null (mapcar #'(lambda (action)
-                                         (when (or (not action-kind)
-                                                   (equal action-kind (plist-get action :kind)))
-                                           (cons (plist-get action :title) action)))
-                                     actions))
+           (cl-remove-if #'null
+                         (mapcar #'(lambda (action)
+                                     (lsp-bridge-code-action--filter action action-kind))
+                                 actions))
            (apply #'error
                   (if action-kind
                       (format "No '%s' code action here" action-kind)
@@ -376,11 +379,14 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
          (action (if (and action-kind (null (cadr menu-items)))
                      (cdr (car menu-items)) nil)))
     (cond
+     ;; Fix action if only one match.
      (action
       (lsp-bridge-code-action--fix-do action))
-     ((and lsp-bridge-code-action-enable-popup-menu (posframe-workable-p)) ;;posframe
+     ;; Popup menu if `lsp-bridge-code-action-enable-popup-menu' option is non-nil.
+     ((and lsp-bridge-code-action-enable-popup-menu (posframe-workable-p))
       (lsp-bridge-code-action-popup-menu menu-items default-action))
      (t
+      ;; Choose action from minibuffer.
       (let ((select-name
              (completing-read
               (format "[LSP-BRIDGE] Pick an action (default: %s): " default-action)
