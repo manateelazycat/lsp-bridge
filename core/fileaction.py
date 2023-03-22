@@ -301,23 +301,20 @@ class FileAction:
 
     def push_code_actions(self, actions, server_name, action_kind):
         log_time("Record actions from '{}' for file {}".format(server_name, os.path.basename(self.filepath)))
-        self.code_action_counter += 1
-
         self.code_actions[server_name] = actions
 
-        check_counter = 1
-        if self.multi_servers:
-            check_counter = len(self.multi_servers_info["code_action"])
-
-        code_actions = self.get_code_actions()
+        self.code_action_counter += 1
+        check_counter = len(self.multi_servers_info.get("code_action", [])) if self.multi_servers else 1
 
         # Only send code action when all LSP server has received response.
-        if len(code_actions) > 0:
-            if self.code_action_counter >= check_counter:
-                self.code_action_counter = 0
+        if self.code_action_counter >= check_counter:
+            self.code_action_counter = 0
+
+            code_actions = self.get_code_actions()
+            if len(code_actions) > 0:
                 eval_in_emacs("lsp-bridge-code-action--fix", self.get_code_actions(), action_kind)
-        else:
-            message_emacs("No code actions here")
+            else:
+                message_emacs("No code actions here")
 
     def get_code_actions(self):
         code_actions = []
