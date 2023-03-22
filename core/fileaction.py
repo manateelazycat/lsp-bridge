@@ -312,8 +312,10 @@ class FileAction:
         code_actions = self.get_code_actions()
 
         # Only send code action when all LSP server has received response.
-        if len(code_actions) > 0 and self.code_action_counter >= check_counter:
-            eval_in_emacs("lsp-bridge-code-action--fix", self.get_code_actions(), action_kind)
+        if len(code_actions) > 0:
+            if self.code_action_counter >= check_counter:
+                self.code_action_counter = 0
+                eval_in_emacs("lsp-bridge-code-action--fix", self.get_code_actions(), action_kind)
         else:
             message_emacs("No code actions here")
 
