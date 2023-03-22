@@ -331,21 +331,18 @@ class FileAction:
         if self.multi_servers:
             for lsp_server in self.multi_servers.values():
                 if lsp_server.server_info["name"] in self.multi_servers_info["code_action"]:
-                    lsp_server_name = lsp_server.server_info["name"]
-                    self.send_server_request(
-                        lsp_server,
-                        "code_action",
-                        lsp_server_name,
-                        self.diagnostics[lsp_server_name] if lsp_server_name in self.diagnostics else [],
-                        range_start, range_end, action_kind)
+                    self.send_code_action_request(lsp_server, range_start, range_end, action_kind)
         else:
-            lsp_server_name = self.single_server.server_info["name"]
-            self.send_server_request(
-                self.single_server,
-                "code_action",
-                lsp_server_name,
-                self.diagnostics[lsp_server_name] if lsp_server_name in self.diagnostics else [],
-                range_start, range_end, action_kind)
+            self.send_code_action_request(self.single_server, range_start, range_end, action_kind)
+
+    def send_code_action_request(self, lsp_server, range_start, range_end, action_kind):
+        lsp_server_name = lsp_server.server_info["name"]
+        self.send_server_request(
+            lsp_server,
+            "code_action",
+            lsp_server_name,
+            self.diagnostics[lsp_server_name] if lsp_server_name in self.diagnostics else [],
+            range_start, range_end, action_kind)
 
     def save_file(self, buffer_name):
         for lsp_server in self.get_lsp_servers():
