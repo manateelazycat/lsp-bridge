@@ -40,10 +40,12 @@ class Completion(Handler):
             return -1
         elif y_include_prefix and not x_include_prefix:
             return 1
-        elif len(x_label) == len(y_label):
-            return self.sort_dict[x["key"]] < self.sort_dict[y["key"]]
+        elif len(x_label) < len(y_label):
+            return -1
+        elif len(x_label) > len(y_label):
+            return 1
         else:
-            return len(x_label) < len(y_label)
+            return 0
     
     def process_response(self, response: dict) -> None:
         # Get completion items.
