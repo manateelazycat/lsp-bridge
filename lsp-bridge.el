@@ -539,7 +539,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (csharp-mode                . c-basic-offset) ; C#
     (csharp-tree-sitter-mode    . csharp-tree-sitter-indent-offset) ; C#
     (d-mode                     . c-basic-offset)             ; D
-    (julia-mode                 . c-basic-offset) ; Julia
+    (julia-mode                 . c-basic-offset)             ; Julia
     (java-mode                  . c-basic-offset)             ; Java
     (java-ts-mode               . java-ts-mode-indent-offset) ; Java
     (jde-mode                   . c-basic-offset)     ; Java (JDE)
@@ -834,6 +834,8 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-restart-process ()
   "Stop and restart LSP-Bridge process."
   (interactive)
+  (lsp-bridge-diagnostic-hide-overlays)
+
   (setq lsp-bridge-is-starting nil)
 
   (lsp-bridge-kill-process)
@@ -1150,11 +1152,11 @@ So we build this macro to restore postion after code format."
   (when (lsp-bridge-has-lsp-server-p)
     ;; send whole org src block to lsp server
     (when (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)
-             lsp-bridge--org-babel-block-bop
-             lsp-bridge--org-update-file-before-change)
-        (setq-local lsp-bridge--org-update-file-before-change nil)
-        (lsp-bridge-call-file-api "update_file" (buffer-name)
-                                  (line-number-at-pos lsp-bridge--org-babel-block-bop)))
+               lsp-bridge--org-babel-block-bop
+               lsp-bridge--org-update-file-before-change)
+      (setq-local lsp-bridge--org-update-file-before-change nil)
+      (lsp-bridge-call-file-api "update_file" (buffer-name)
+                                (line-number-at-pos lsp-bridge--org-babel-block-bop)))
 
     (setq-local lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
     (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))))
@@ -1391,10 +1393,10 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-flash-line ()
   (lsp-bridge-flash-region
-     (save-excursion
-       (vertical-motion 0) (point))
-     (save-excursion
-       (vertical-motion 1) (point))))
+   (save-excursion
+     (vertical-motion 0) (point))
+   (save-excursion
+     (vertical-motion 1) (point))))
 
 (defun lsp-bridge-rename--highlight (dirname bound-start bound-end)
   (lsp-bridge--with-file-buffer dirname

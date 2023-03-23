@@ -160,13 +160,16 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
 (defun lsp-bridge-diagnostic-hide-tooltip ()
   (posframe-hide lsp-bridge-diagnostic-tooltip))
 
+(defun lsp-bridge-diagnostic-hide-overlays ()
+  (when lsp-bridge-diagnostic-overlays
+    (dolist (diagnostic-overlay lsp-bridge-diagnostic-overlays)
+      (delete-overlay diagnostic-overlay)))
+
+  (setq-local lsp-bridge-diagnostic-overlays nil))
+
 (defun lsp-bridge-diagnostic--render (filepath diagnostics)
   (lsp-bridge--with-file-buffer filepath
-    (when lsp-bridge-diagnostic-overlays
-      (dolist (diagnostic-overlay lsp-bridge-diagnostic-overlays)
-        (delete-overlay diagnostic-overlay)))
-
-    (setq-local lsp-bridge-diagnostic-overlays nil)
+    (lsp-bridge-diagnostic-hide-overlays)
 
     (let ((diagnostic-index 0)
           (diagnostic-number (length diagnostics)))
