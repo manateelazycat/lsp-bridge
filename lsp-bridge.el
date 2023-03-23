@@ -268,6 +268,11 @@ Setting this to nil or 0 will turn off the indicator."
 
 (defvar lsp-bridge-server-port nil)
 
+;; org babel cache
+(defvar-local lsp-bridge--org-babel-info-cache nil)
+(defvar-local lsp-bridge--org-babel-block-bop nil)
+(defvar-local lsp-bridge--org-babel-block-eop nil)
+
 (defun lsp-bridge--start-epc-server ()
   "Function to start the EPC server."
   (unless (process-live-p lsp-bridge-server)
@@ -685,8 +690,7 @@ So we build this macro to restore postion after code format."
   (when-let* ((buf (get-buffer buffer-name)))
     (if (and lsp-bridge-enable-org-babel
              (eq major-mode 'org-mode))
-        (with-current-buffer buf
-          (nth 1 (org-babel-get-src-block-info)))
+        (and lsp-bridge--org-babel-info-cache (org-element-property :value lsp-bridge--org-babel-info-cache))
       (with-current-buffer buf
         (buffer-substring-no-properties (point-min) (point-max))))))
 
@@ -744,21 +748,38 @@ So we build this macro to restore postion after code format."
              "ds-pinyin")
             (lsp-bridge-enable-org-babel
              ;; get lang server according to org babel
-             (let* ((lang (nth 0 (org-babel-get-src-block-info)))
+             (let* ((lang (org-element-property :language lsp-bridge--org-babel-info-cache))
                     (mode-name (concat (symbol-name (cdr (assoc lang org-src-lang-modes))) "-mode"))
                     (major-mode (intern mode-name)))
                (if (eq major-mode 'emacs-lisp-mode)
                    (setq-local acm-is-elisp-mode-in-org t))
                (lsp-bridge-get-single-lang-server-by-mode))))))))
 
+(defvar-local lsp-bridge--org-update-file-before-change nil)
+(defun lsp-bridge-check-org-babel-lsp-server ()
+  "Check if current point is in org babel block. "
+  (if (and lsp-bridge--org-babel-block-bop lsp-bridge--org-babel-block-eop lsp-bridge--org-babel-info-cache
+           (> (point) lsp-bridge--org-babel-block-bop) (< (point) lsp-bridge--org-babel-block-eop))
+      lsp-bridge--org-babel-info-cache
+    (setq-local lsp-bridge--org-babel-info-cache (org-element-context))
+    (unless (eq (org-element-type lsp-bridge--org-babel-info-cache) 'src-block)
+      (setq-local lsp-bridge--org-babel-info-cache nil))
+    (when lsp-bridge--org-babel-info-cache
+      (setq-local lsp-bridge--org-babel-block-bop (org-element-property :begin lsp-bridge--org-babel-info-cache))
+      (setq-local lsp-bridge--org-babel-block-eop (org-element-property :end lsp-bridge--org-babel-info-cache))
+      ;; sync it in `lsp-bridge-monitor-before-change'
+      (setq-local lsp-bridge--org-update-file-before-change t)))
+
+  (and lsp-bridge--org-babel-info-cache
+       ;; not send change-file for begin_src and end_src
+       (not (string-match-p "^[[:space:]]*#\\+"
+                            (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
+       (lsp-bridge-get-single-lang-server-by-mode)))
+
 (defun lsp-bridge-has-lsp-server-p ()
   (cond ((and lsp-bridge-enable-org-babel (eq major-mode 'org-mode))
          (setq-local acm-is-elisp-mode-in-org nil)
-         (and (org-babel-when-in-src-block)
-              ;; not send change-file for begin_src and end_src
-              (not (string-match-p "^[[:space:]]*#\\+"
-                              (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
-              (lsp-bridge-get-single-lang-server-by-mode)))
+         (lsp-bridge-check-org-babel-lsp-server))
         (t
          (when-let* ((dirname (ignore-errors (file-truename buffer-file-name))))
            (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension dirname)
@@ -1127,6 +1148,14 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-monitor-before-change (begin end)
   (when (lsp-bridge-has-lsp-server-p)
+    ;; send whole org src block to lsp server
+    (when (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)
+             lsp-bridge--org-babel-block-bop
+             lsp-bridge--org-update-file-before-change)
+        (setq-local lsp-bridge--org-update-file-before-change nil)
+        (lsp-bridge-call-file-api "update_file" (buffer-name)
+                                  (line-number-at-pos lsp-bridge--org-babel-block-bop)))
+
     (setq-local lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
     (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))))
 
@@ -1160,6 +1189,13 @@ So we build this macro to restore postion after code format."
 
       ;; Record last change position to avoid popup outdate completions.
       (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
+
+      ;; estimate org block end point according change length
+      (when (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)
+                 (> begin lsp-bridge--org-babel-block-bop)
+                 (< begin lsp-bridge--org-babel-block-eop))
+        (setq-local lsp-bridge--org-babel-block-eop
+                    (- lsp-bridge--org-babel-block-eop length (- begin end))))
 
       ;; Send change_file request to trigger LSP completion.
       (when (lsp-bridge-call-file-api-p)
@@ -1893,14 +1929,6 @@ SymbolKind (defined in the LSP)."
     ("paths" (setq-local acm-backend-path-items items)))
   (lsp-bridge-try-completion))
 
-(defun lsp-bridge--get-org-block-line-bias (buffer-name)
-  "Get buffer content for lsp. BUFFER-NAME is name eval from (buffer-name)."
-  (when-let* ((buf (get-buffer buffer-name)))
-    (if (eq major-mode 'org-mode)
-        (with-current-buffer buf
-          (line-number-at-pos (nth 5 (org-babel-get-src-block-info))))
-      (with-current-buffer buf
-        (buffer-substring-no-properties (point-min) (point-max))))))
 
 (cl-defmacro lsp-org-babel-enable (lang)
   "Support LANG in org source code block."
