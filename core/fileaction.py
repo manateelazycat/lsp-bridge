@@ -170,28 +170,21 @@ class FileAction:
                 message_emacs(getattr(handler, "provider_message"))
         else:
             self.send_server_request(method_server, method, *args, **kwargs) 
-            
+
     def change_file(self, start, end, range_length, change_text, position, before_char, buffer_name, prefix):
-        need_whole_change = False
         if self.org_file:
-            # TODO support lang server change in org buffer
-            line_bias = get_emacs_func_result('get-org-block-line-bias', buffer_name)
+            if self.org_line_bias is None: return
+            line_bias = self.org_line_bias
             start['line'] -= line_bias
             end['line'] -= line_bias
             position['line'] -= line_bias
-            need_whole_change = self.org_line_bias != line_bias
-            self.org_line_bias = line_bias
-
-            if start['line'] < 0 or end['line'] < 0 or position['line'] < 0:
-                self.org_line_bias = None
-                return
 
         buffer_content = ''
         # Send didChange request to LSP server.
         for lsp_server in self.get_lsp_servers():
             if lsp_server.text_document_sync == 0:
                 continue
-            elif lsp_server.text_document_sync == 1 or need_whole_change:
+            elif lsp_server.text_document_sync == 1:
                 if not buffer_content:
                     buffer_content = get_emacs_func_result('get-buffer-content', buffer_name)
                 lsp_server.send_whole_change_notification(self.filepath, self.version, buffer_content)
@@ -211,11 +204,11 @@ class FileAction:
         self.try_completion_timer = threading.Timer(0.1, lambda : self.try_completion(position, before_char, prefix))
         self.try_completion_timer.start()
         
-    def update_file(self, buffer_name):
+    def update_file(self, buffer_name, org_line_bias=None):
+        self.org_line_bias = org_line_bias
         buffer_content = get_emacs_func_result('get-buffer-content', buffer_name)
         for lsp_server in self.get_lsp_servers():
             lsp_server.send_whole_change_notification(self.filepath, self.version, buffer_content)
-
         self.version += 1
 
     def try_completion(self, position, before_char, prefix):
@@ -229,7 +222,7 @@ class FileAction:
     def change_cursor(self, position):
         # Record change cursor time.
         self.last_change_cursor_time = time.time()
-        
+
     def ignore_diagnostic(self):
         lsp_server = self.get_match_lsp_servers("completion")[0]
         if "ignore-diagnostic" in lsp_server.server_info:
