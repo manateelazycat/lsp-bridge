@@ -144,7 +144,13 @@
 
     (with-selected-frame acm-doc-frame
       (set-frame-font acm-frame-font))))
-(add-function :after after-focus-change-function #'acm-frame-restore-font)
+
+(if (daemonp)
+    (add-hook 'server-after-make-frame-hook
+              (lambda ()
+                (add-function :after after-focus-change-function #'acm-frame-restore-font)
+                ))
+  (add-function :after after-focus-change-function #'acm-frame-restore-font))
 
 (cl-defmacro acm-frame-create-frame-if-not-exist (frame frame-buffer frame-name margin no-accept-focus)
   `(unless (frame-live-p ,frame)
