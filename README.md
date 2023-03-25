@@ -114,7 +114,7 @@ It should be noted that lsp-bridge has three scanning modes:
 * `lsp-bridge-python-command`: The path of the python command, if you use `conda`, you may customize this option. Windows platform using `python.exe` rather than `python3`, if lsp-bridge can't work, try set to `python3`
 * `lsp-bridge-complete-manually`: Only popup completion menu when user call `lsp-bridge-popup-complete-menu` command, default is nil
 * `lsp-bridge-get-workspace-folder`: You need to put multiple project in a `workspace` directory in Java before you can jump function defintion normally. This function can be customized, the function input is the project path and returns the `workspace` directory corresponding
-* `lsp-bridge-org-babel-lang-list`: list of language to support org-mode code block completion, need move cursor to code block and execute command `org-edit-special`, then lsp-bridge can show completion menu in popup window
+* `lsp-bridge-org-babel-lang-list`: list of language to support org-mode code block completion, nil enable all languages, default is nil
 * `lsp-bridge-enable-diagnostics`: code diagnostic, enable by default
 * `lsp-bridge-enable-hover-diagnostic`: show diagnostic tooltip when cursor hover diagnostic place, disable by default
 * `lsp-bridge-enable-search-words`: index the word of the file, enable by default

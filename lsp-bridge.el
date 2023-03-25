@@ -392,6 +392,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 (defcustom lsp-bridge-enable-org-babel nil
   "Use `lsp-bridge' in org-babel, default is disable.")
 
+(defcustom lsp-bridge-org-babel-lang-list nil
+  "A list of org babel languages like (\"python\" \"bash\"), which enable lsp-bridge. if nil means enable all languages."
+  :type '(repeat string))
+
 (defcustom lsp-bridge-complete-manually nil
   "Only popup completion menu when user call `lsp-bridge-popup-complete-menu' command.")
 
@@ -749,11 +753,14 @@ So we build this macro to restore postion after code format."
             (lsp-bridge-enable-org-babel
              ;; get lang server according to org babel
              (let* ((lang (org-element-property :language lsp-bridge--org-babel-info-cache))
-                    (mode-name (concat (symbol-name (cdr (assoc lang org-src-lang-modes))) "-mode"))
+                    (lang-name (symbol-name (cdr (assoc lang org-src-lang-modes))))
+                    (mode-name (concat lang-name "-mode"))
                     (major-mode (intern mode-name)))
-               (if (eq major-mode 'emacs-lisp-mode)
-                   (setq-local acm-is-elisp-mode-in-org t))
-               (lsp-bridge-get-single-lang-server-by-mode))))))))
+               (setq-local acm-is-elisp-mode-in-org (eq major-mode 'emacs-lisp-mode))
+               ;; if `lsp-bridge-org-babel-lang-list' is set, only enable lsp when lang in it
+               (when (or (eq lsp-bridge-org-babel-lang-list nil)
+                         (member lang-name lsp-bridge-org-babel-lang-list))
+                 (lsp-bridge-get-single-lang-server-by-mode)))))))))
 
 (defvar-local lsp-bridge--org-update-file-before-change nil)
 (defun lsp-bridge-check-org-babel-lsp-server ()
