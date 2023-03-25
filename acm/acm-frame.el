@@ -62,10 +62,13 @@
     (unless (equal (frame-parameter frame 'background-color) new)
       (set-frame-parameter frame 'background-color new))))
 
+(defvar acm-frame-font nil)
 (defvar x-gtk-resize-child-frames) ;; not present on non-gtk builds
 (defun acm-frame-make-frame (frame-name &optional no-accept-focus)
   (let* ((after-make-frame-functions nil)
          (parent (selected-frame))
+         (parent-font (with-selected-frame parent
+                        (face-attribute 'default :font)))
          (border-width (if no-accept-focus 0 1)) ;; no border if no-accept-focus
          (x-gtk-resize-child-frames
           (let ((case-fold-search t))
@@ -111,8 +114,11 @@
 
     ;; Make sure popup frame's font same as parent frame.
     (with-selected-frame frame
-      (set-frame-font (with-selected-frame parent
-                        (face-attribute 'default :font))))
+      (set-frame-font parent-font)
+
+      ;; Record frame font to restore frame font after computer suspend.
+      (unless acm-frame-font
+        (setq acm-frame-font parent-font)))
 
     ;; Set popup frame colors.
     (acm-frame-set-frame-colors frame)
@@ -125,6 +131,20 @@
         (redirect-frame-focus frame parent)
       (select-frame-set-input-focus frame))
     frame))
+
+;; In Emacs 30, if you use 4k screen,
+;; font will become small when system return from suspend.
+;; I don't know why Emacs 30 does this,
+;; so I call `acm-frame-restore-font' on hook `after-focus-change-function'
+;; make sure font size restore to normal size when system return from suspend.
+(defun acm-frame-restore-font ()
+  (ignore-errors
+    (with-selected-frame acm-menu-frame
+      (set-frame-font acm-frame-font))
+
+    (with-selected-frame acm-doc-frame
+      (set-frame-font acm-frame-font))))
+(add-function :after after-focus-change-function #'acm-frame-restore-font)
 
 (cl-defmacro acm-frame-create-frame-if-not-exist (frame frame-buffer frame-name margin no-accept-focus)
   `(unless (frame-live-p ,frame)
