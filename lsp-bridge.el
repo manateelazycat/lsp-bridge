@@ -772,7 +772,7 @@ So we build this macro to restore postion after code format."
     (if (not (eq (org-element-type lsp-bridge--org-babel-info-cache) 'src-block))
         (setq-local lsp-bridge--org-babel-info-cache nil)
       (save-excursion
-        (goto-char (org-element-property :begin lsp-bridge--org-babel-info-cache))
+        (goto-char (org-element-property :post-affiliated lsp-bridge--org-babel-info-cache))
         (setq-local lsp-bridge--org-babel-block-bop (1+ (point-at-eol))))
       (setq-local lsp-bridge--org-babel-block-eop (+ lsp-bridge--org-babel-block-bop
                                                      (length (org-element-property :value lsp-bridge--org-babel-info-cache))))
