@@ -623,12 +623,25 @@ So we build this macro to restore postion after code format."
      (back-to-indentation)
      (forward-char (max (- current-column indent-column) 0))))
 
-(defun lsp-bridge-get-match-buffer (dirname)
+(defun lsp-bridge-is-nova-file ()
+  (and (boundp 'nova-is-remote-file)
+       nova-is-remote-file))
+
+(defun lsp-bridge-get-buffer-truename (&optional filename)
+  (if (lsp-bridge-is-nova-file)
+      nova-remote-file-path
+    (file-truename (or filename buffer-file-name))))
+
+(defun lsp-bridge-get-match-buffer (name)
   (cl-dolist (buffer (buffer-list))
-    (when-let* ((file-name (buffer-file-name buffer))
-                (match-buffer (or (string-equal file-name dirname)
-                                  (string-equal (file-truename file-name) dirname))))
-      (cl-return buffer))))
+    (with-current-buffer buffer
+      (if (lsp-bridge-is-nova-file)
+          (when (string-equal nova-remote-file-path name)
+            (cl-return buffer))
+        (when-let* ((file-name (buffer-file-name buffer))
+                    (match-buffer (or (string-equal file-name name)
+                                      (string-equal (file-truename file-name) name))))
+          (cl-return buffer))))))
 
 (defun lsp-bridge--get-project-path-func (dirname)
   (when lsp-bridge-get-project-path-by-filepath
@@ -748,12 +761,14 @@ So we build this macro to restore postion after code format."
          (setq-local acm-is-elisp-mode-in-org nil)
          (lsp-bridge-org-babel-check-lsp-server))
         (t
-         (when-let* ((dirname (ignore-errors (file-truename buffer-file-name))))
-           (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension dirname)
-                                                      (lsp-bridge--with-file-buffer dirname
+         (when-let* ((filename (or (ignore-errors (file-truename buffer-file-name))
+                                   (when (lsp-bridge-is-nova-file)
+                                     nova-remote-file-path))))
+           (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension filename)
+                                                      (lsp-bridge--with-file-buffer filename
                                                         (lsp-bridge-get-multi-lang-server-by-mode))))
-                  (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension dirname)
-                                                (lsp-bridge--with-file-buffer dirname
+                  (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension filename)
+                                                (lsp-bridge--with-file-buffer filename
                                                   (lsp-bridge-get-single-lang-server-by-mode)))))
              (if multi-lang-server-by-extension
                  multi-lang-server-by-extension
@@ -774,27 +789,29 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-call-file-api (method &rest args)
   (when (lsp-bridge-call-file-api-p)
-    (if (and (boundp 'acm-backend-lsp-filepath)
-             (file-exists-p acm-backend-lsp-filepath))
-        (if lsp-bridge-buffer-file-deleted
-            ;; If buffer's file create again (such as switch branch back), we need save buffer first,
-            ;; send the LSP request after the file is changed next time.
-            (progn
-              (save-buffer)
-              (setq-local lsp-bridge-buffer-file-deleted nil)
-              (message "[LSP-Bridge] %s is back, will send the LSP request after the file is changed next time." acm-backend-lsp-filepath))
-          (when (and acm-backend-lsp-filepath
-                     (not (string-equal acm-backend-lsp-filepath "")))
-            (lsp-bridge-deferred-chain
-              (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) (append (list acm-backend-lsp-filepath) args)))))
-      ;; We need send `closeFile' request to lsp server if we found buffer's file is not exist,
-      ;; it is usually caused by switching branch or other tools to delete file.
-      ;;
-      ;; We won't send any lsp request until buffer's file create again.
-      (unless lsp-bridge-buffer-file-deleted
-        (lsp-bridge-close-buffer-file)
-        (setq-local lsp-bridge-buffer-file-deleted t)
-        (message "[LSP-Bridge] %s is not exist, stop send the LSP request until file create again." acm-backend-lsp-filepath)))))
+    (if (lsp-bridge-is-nova-file)
+        (nova-send-lsp-request method args)
+      (if (and (boundp 'acm-backend-lsp-filepath)
+               (file-exists-p acm-backend-lsp-filepath))
+          (if lsp-bridge-buffer-file-deleted
+              ;; If buffer's file create again (such as switch branch back), we need save buffer first,
+              ;; send the LSP request after the file is changed next time.
+              (progn
+                (save-buffer)
+                (setq-local lsp-bridge-buffer-file-deleted nil)
+                (message "[LSP-Bridge] %s is back, will send the %s LSP request after the file is changed next time." acm-backend-lsp-filepath method))
+            (when (and acm-backend-lsp-filepath
+                       (not (string-equal acm-backend-lsp-filepath "")))
+              (lsp-bridge-deferred-chain
+                (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) (append (list acm-backend-lsp-filepath) args)))))
+        ;; We need send `closeFile' request to lsp server if we found buffer's file is not exist,
+        ;; it is usually caused by switching branch or other tools to delete file.
+        ;;
+        ;; We won't send any lsp request until buffer's file create again.
+        (unless lsp-bridge-buffer-file-deleted
+          (lsp-bridge-close-buffer-file)
+          (setq-local lsp-bridge-buffer-file-deleted t)
+          (message "[LSP-Bridge] %s is not exist, stop send the %s LSP request until file create again." acm-backend-lsp-filepath method))))))
 
 (defvar lsp-bridge-is-starting nil)
 
@@ -1126,7 +1143,9 @@ So we build this macro to restore postion after code format."
                                 (1- (line-number-at-pos lsp-bridge-org-babel--block-bop))))
 
     (setq-local lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
-    (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))))
+    (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))
+
+    ))
 
 (defun lsp-bridge-monitor-post-self-insert ()
   ;; Make sure this function be called after `electric-pair-mode'
@@ -1586,12 +1605,13 @@ So we build this macro to restore postion after code format."
             (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)))
     ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
     ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
-    (unless (file-exists-p (buffer-file-name))
-      (save-buffer))
+    (unless (lsp-bridge-is-nova-file)
+      (unless (file-exists-p (buffer-file-name))
+        (save-buffer)))
 
     (setq-local acm-backend-lsp-completion-trigger-characters nil)
     (setq-local acm-backend-lsp-completion-position nil)
-    (setq-local acm-backend-lsp-filepath (file-truename buffer-file-name))
+    (setq-local acm-backend-lsp-filepath (lsp-bridge-get-buffer-truename))
     (setq-local acm-backend-lsp-items (make-hash-table :test 'equal))
     (setq-local acm-backend-lsp-server-names nil)
 
