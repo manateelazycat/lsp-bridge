@@ -24,6 +24,7 @@ import shutil
 import threading
 import traceback
 import json
+import socket
 from pathlib import Path
 
 from epc.server import ThreadingEPCServer
@@ -119,11 +120,40 @@ class LspBridge:
         self.message_thread = threading.Thread(target=self.message_dispatcher)
         self.message_thread.start()
 
+        self.remote_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.remote_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.remote_server.bind(("0.0.0.0", 9998))
+        self.remote_server.listen(5)
+
+        self.remote_server_loop = threading.Thread(target=self.remote_server_dispatcher)
+        self.remote_server_loop.start()
+
         # Pass epc port and webengine codec information to Emacs when first start lsp-bridge.
         eval_in_emacs('lsp-bridge--first-start', self.server.server_address[1])
 
         # event_loop never exit, simulation event loop.
         self.event_loop.join()
+
+    def remote_server_dispatcher(self):
+        try:
+            while True:
+                client_socket, client_address = self.remote_server.accept()
+                print(f"[*] Accepted connection from {client_address[0]}:{client_address[1]}")
+
+                client_handler = threading.Thread(target=self.handle_remote_client, args=(client_socket,))
+                client_handler.start()
+        except:
+            print(traceback.format_exc())
+
+    def handle_remote_client(self, client_socket):
+        client_file = client_socket.makefile('r')
+        while True:
+            message = client_file.readline().strip()
+            if not message:
+                break
+
+            print("***** ", message, client_socket)
+        client_socket.close()
 
     def event_dispatcher(self):
         try:
