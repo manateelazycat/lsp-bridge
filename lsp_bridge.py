@@ -140,7 +140,7 @@ class LspBridge:
         try:
             while True:
                 self.client_socket, client_address = self.remote_server.accept()
-                core.utils.eval_in_emacs = eval_in_remote_emacs
+                core.utils.eval_in_emacs = self.eval_in_remote_emacs
 
                 print(f"[*] Accepted connection from {client_address[0]}:{client_address[1]}")
 
