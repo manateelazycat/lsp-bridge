@@ -651,41 +651,39 @@ So we build this macro to restore postion after code format."
   (when lsp-bridge-get-workspace-folder
     (funcall lsp-bridge-get-workspace-folder project-path)))
 
-(defun lsp-bridge--get-multi-lang-server-func (project-path dirname)
+(defun lsp-bridge--get-multi-lang-server-func (project-path filename)
   "Get lang server with project path, file path or file extension."
   (let (lang-server-by-project
         lang-server-by-extension)
     ;; Step 1: Search lang server base on project rule provide by `lsp-bridge-get-multi-lang-server-by-project'.
     (when lsp-bridge-get-multi-lang-server-by-project
-      (setq lang-server-by-project (funcall lsp-bridge-get-multi-lang-server-by-project project-path dirname)))
+      (setq lang-server-by-project (funcall lsp-bridge-get-multi-lang-server-by-project project-path filename)))
 
     (if lang-server-by-project
         lang-server-by-project
       ;; Step 2: search lang server base on extension rule provide by `lsp-bridge-multi-lang-server-extension-list'.
-      (setq lang-server-by-extension (lsp-bridge-get-multi-lang-server-by-extension dirname))
+      (setq lang-server-by-extension (lsp-bridge-get-multi-lang-server-by-extension filename))
       (if lang-server-by-extension
           lang-server-by-extension
         ;; Step 3: search lang server base on mode rule provide by `lsp-bridge-multi-lang-server-extension-list'.
-        (lsp-bridge--with-file-buffer dirname
-          (lsp-bridge-get-multi-lang-server-by-mode))))))
+        (lsp-bridge-get-multi-lang-server-by-file-mode filename)))))
 
-(defun lsp-bridge--get-single-lang-server-func (project-path dirname)
+(defun lsp-bridge--get-single-lang-server-func (project-path filename)
   "Get lang server with project path, file path or file extension."
   (let (lang-server-by-project
         lang-server-by-extension)
     ;; Step 1: Search lang server base on project rule provide by `lsp-bridge-get-single-lang-server-by-project'.
     (when lsp-bridge-get-single-lang-server-by-project
-      (setq lang-server-by-project (funcall lsp-bridge-get-single-lang-server-by-project project-path dirname)))
+      (setq lang-server-by-project (funcall lsp-bridge-get-single-lang-server-by-project project-path filename)))
 
     (if lang-server-by-project
         lang-server-by-project
       ;; Step 2: search lang server base on extension rule provide by `lsp-bridge-single-lang-server-extension-list'.
-      (setq lang-server-by-extension (lsp-bridge-get-single-lang-server-by-extension dirname))
+      (setq lang-server-by-extension (lsp-bridge-get-single-lang-server-by-extension filename))
       (if lang-server-by-extension
           lang-server-by-extension
         ;; Step 3: search lang server base on mode rule provide by `lsp-bridge-single-lang-server-extension-list'.
-        (lsp-bridge--with-file-buffer dirname
-          (lsp-bridge-get-single-lang-server-by-mode))))))
+        (lsp-bridge-get-single-lang-server-by-file-mode filename)))))
 
 (defun lsp-bridge--user-emacs-directory ()
   "Get lang server with project path, file path or file extension."
@@ -720,14 +718,14 @@ So we build this macro to restore postion after code format."
   "Get lang server for file extension."
   (lsp-bridge-get-lang-server-by-extension dirname lsp-bridge-single-lang-server-extension-list))
 
-(defun lsp-bridge-lang-server-by-mode (mode-list)
+(defun lsp-bridge-lang-server-by-mode (target-mode mode-list)
   "Get lang server for file mode."
   (cl-find-if
    (lambda (pair)
      (let ((mode (car pair)))
        (if (symbolp mode)
-           (eq major-mode mode)
-         (member major-mode mode))))
+           (eq target-mode mode)
+         (member target-mode mode))))
    mode-list))
 
 (defun lsp-bridge-get-symbol-string-value (info)
@@ -736,17 +734,31 @@ So we build this macro to restore postion after code format."
     ("symbol" (symbol-value info))
     ))
 
-(defun lsp-bridge-get-multi-lang-server-by-mode ()
+(defun lsp-brige-get-mode-name-from-file-path (file-path)
+  (cdr (assoc file-path
+              auto-mode-alist
+              'string-match-p)))
+
+(defun lsp-brige-get-mode (filepath)
+  (let ((buffer (lsp-bridge-get-match-buffer filepath)))
+    (if buffer
+        (with-current-buffer buffer
+          major-mode)
+      (lsp-brige-get-mode-name-from-file-path filepath))))
+
+(defun lsp-bridge-get-multi-lang-server-by-file-mode (filename)
   "Get lang server for file mode."
-  (when-let ((langserver-info (lsp-bridge-lang-server-by-mode lsp-bridge-multi-lang-server-mode-list)))
+  (when-let* ((mode (lsp-brige-get-mode filename))
+              (langserver-info (lsp-bridge-lang-server-by-mode mode lsp-bridge-multi-lang-server-mode-list)))
     (lsp-bridge-get-symbol-string-value (cdr langserver-info))))
 
-(defun lsp-bridge-get-single-lang-server-by-mode ()
+(defun lsp-bridge-get-single-lang-server-by-file-mode (filename)
   "Get lang server for file mode."
-  (let ((langserver-info (lsp-bridge-lang-server-by-mode lsp-bridge-single-lang-server-mode-list)))
+  (let* ((mode (lsp-brige-get-mode filename))
+         (langserver-info (lsp-bridge-lang-server-by-mode mode lsp-bridge-single-lang-server-mode-list)))
     (cond (langserver-info
            (lsp-bridge-get-symbol-string-value (cdr langserver-info)))
-          ((eq major-mode 'org-mode)
+          ((eq mode 'org-mode)
            (cond
             (lsp-bridge-use-wenls-in-org-mode
              "wen")
@@ -765,11 +777,9 @@ So we build this macro to restore postion after code format."
                                    (when (lsp-bridge-is-nova-file)
                                      nova-remote-file-path))))
            (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension filename)
-                                                      (lsp-bridge--with-file-buffer filename
-                                                        (lsp-bridge-get-multi-lang-server-by-mode))))
+                                                      (lsp-bridge-get-multi-lang-server-by-file-mode filename)))
                   (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension filename)
-                                                (lsp-bridge--with-file-buffer filename
-                                                  (lsp-bridge-get-single-lang-server-by-mode)))))
+                                                (lsp-bridge-get-single-lang-server-by-file-mode filename))))
              (if multi-lang-server-by-extension
                  multi-lang-server-by-extension
                lang-server-by-extension)
