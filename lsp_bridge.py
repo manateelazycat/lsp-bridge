@@ -152,6 +152,12 @@ class LspBridge:
             if not message:
                 break
 
+            if message["command"] == "lsp_request":
+                self.event_queue.put({
+                    "name": "action_func",
+                    "content": ("_{}".format(message["method"]), message["args"])
+                })
+
             print("***** ", message, client_socket)
         client_socket.close()
 
