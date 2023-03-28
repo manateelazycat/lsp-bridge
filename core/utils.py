@@ -29,7 +29,6 @@ import platform
 import sys
 import subprocess
 import queue
-import traceback
 import os
 
 from epc.client import EPCClient

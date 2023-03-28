@@ -120,16 +120,18 @@ class LspBridge:
         self.message_thread = threading.Thread(target=self.message_dispatcher)
         self.message_thread.start()
 
+        # Pass epc port and webengine codec information to Emacs when first start lsp-bridge.
+        eval_in_emacs('lsp-bridge--first-start', self.server.server_address[1])
+
         self.remote_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.remote_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.remote_server.bind(("0.0.0.0", 9998))
         self.remote_server.listen(5)
 
+        self.client_socket = None
+
         self.remote_server_loop = threading.Thread(target=self.remote_server_dispatcher)
         self.remote_server_loop.start()
-
-        # Pass epc port and webengine codec information to Emacs when first start lsp-bridge.
-        eval_in_emacs('lsp-bridge--first-start', self.server.server_address[1])
 
         # event_loop never exit, simulation event loop.
         self.event_loop.join()
@@ -137,30 +139,44 @@ class LspBridge:
     def remote_server_dispatcher(self):
         try:
             while True:
-                client_socket, client_address = self.remote_server.accept()
+                self.client_socket, client_address = self.remote_server.accept()
+                core.utils.eval_in_emacs = eval_in_remote_emacs
+
                 print(f"[*] Accepted connection from {client_address[0]}:{client_address[1]}")
 
-                client_handler = threading.Thread(target=self.handle_remote_client, args=(client_socket,))
+                client_handler = threading.Thread(target=self.handle_remote_client)
                 client_handler.start()
         except:
             print(traceback.format_exc())
 
-    def handle_remote_client(self, client_socket):
-        client_file = client_socket.makefile('r')
+    def eval_in_remote_emacs(self, method_name, *args):
+        args = [sexpdata.Symbol(method_name)] + list(map(handle_arg_types, args))    # type: ignore
+        sexp = sexpdata.dumps(args)
+
+        message = {
+            "command": "eval-in-emacs",
+            "sexp": [sexp]
+        }
+        data = json.dumps(message)
+
+        self.client_socket.send(f"{data}\n".encode("utf-8"))
+
+    def handle_remote_client(self):
+        client_file = self.client_socket.makefile('r')
         while True:
             message = client_file.readline().strip()
             if not message:
                 break
 
             message = json.loads(message)
+
             if message["command"] == "lsp_request":
                 self.event_queue.put({
                     "name": "action_func",
                     "content": ("_{}".format(message["method"]), [message["path"]] + message["args"])
                 })
 
-            print("***** ", message, client_socket)
-        client_socket.close()
+            print("***** ", message)
 
     def event_dispatcher(self):
         try:
