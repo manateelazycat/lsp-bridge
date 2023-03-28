@@ -86,7 +86,14 @@ def handle_arg_types(arg):
     return sexpdata.Quoted(arg)
 
 remote_emacs_socket = None
+def set_remote_emacs_socket(socket):
+    global remote_emacs_socket
+
+    remote_emacs_socket = socket
+
 def eval_in_emacs(method_name, *args):
+    global remote_emacs_socket
+
     if test_interceptor:  # for test purpose, record all eval_in_emacs calls
         test_interceptor(method_name, args)
 

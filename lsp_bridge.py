@@ -137,12 +137,11 @@ class LspBridge:
         self.event_loop.join()
 
     def remote_server_dispatcher(self):
-        global remote_emacs_socket
-
         try:
             while True:
-                self.client_socket, client_address = self.remote_server.accept()
-                remote_emacs_socket = self.client_socket
+                client_socket, client_address = self.remote_server.accept()
+                set_remote_emacs_socket(client_socket)
+                self.client_socket = client_socket
 
                 print(f"[*] Accepted connection from {client_address[0]}:{client_address[1]}")
 
