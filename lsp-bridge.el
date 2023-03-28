@@ -612,7 +612,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
   "`save-excursion' not enough for LSP code format.
 So we build this macro to restore postion after code format."
   `(let* ((current-buf (current-buffer))
-          (current-line (line-number-at-pos))
+          (current-line (line-number-at-pos nil t))
           (current-column (lsp-bridge--calculate-column))
           (indent-column (save-excursion
                            (back-to-indentation)
@@ -1127,7 +1127,9 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge--position ()
   "Get position of cursor."
-  (list :line (1- (line-number-at-pos)) :character (lsp-bridge--calculate-column)))
+  ;; we should use ABSOLUTE line number to be compatible with narrowed buffer
+  (list :line (1- (line-number-at-pos nil t))
+        :character (lsp-bridge--calculate-column)))
 
 (defvar-local lsp-bridge--before-change-begin-pos nil)
 (defvar-local lsp-bridge--before-change-end-pos nil)
@@ -1140,7 +1142,7 @@ So we build this macro to restore postion after code format."
                lsp-bridge-org-babel--update-file-before-change)
       (setq-local lsp-bridge-org-babel--update-file-before-change nil)
       (lsp-bridge-call-file-api "update_file" (buffer-name)
-                                (1- (line-number-at-pos lsp-bridge-org-babel--block-bop))))
+                                (1- (line-number-at-pos lsp-bridge-org-babel--block-bop t))))
 
     (setq-local lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
     (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))
