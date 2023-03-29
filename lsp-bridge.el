@@ -601,10 +601,12 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
   (or (alist-get mode lsp-bridge-formatting-indent-alist)
       (lsp-bridge--get-indent-width (or (get mode 'derived-mode-parent) 'default))))
 
-(cl-defmacro lsp-bridge--with-file-buffer (filename &rest body)
+(cl-defmacro lsp-bridge--with-file-buffer (filename filehost &rest body)
   "Evaluate BODY in buffer with FILEPATH."
   (declare (indent 1))
-  `(when-let ((buffer (lsp-bridge-get-match-buffer ,filename)))
+  `(when-let ((buffer (pcase filehost
+                        ("" (lsp-bridge-get-match-buffer-by-filepath ,filename))
+                        (t (lsp-bridge-get-match-buffer-by-remote-file ,filehost ,filename)))))
      (with-current-buffer buffer
        ,@body)))
 
@@ -632,16 +634,20 @@ So we build this macro to restore postion after code format."
       nova-remote-file-path
     (file-truename (or filename buffer-file-name))))
 
-(defun lsp-bridge-get-match-buffer (name)
+(defun lsp-bridge-get-match-buffer-by-remote-file (host path)
   (cl-dolist (buffer (buffer-list))
     (with-current-buffer buffer
-      (if (lsp-bridge-is-nova-file)
-          (when (string-equal nova-remote-file-path name)
-            (cl-return buffer))
-        (when-let* ((file-name (buffer-file-name buffer))
-                    (match-buffer (or (string-equal file-name name)
-                                      (string-equal (file-truename file-name) name))))
-          (cl-return buffer))))))
+      (when (string-equal (buffer-name) (format "nova %s:%s" host path))
+        (cl-return buffer))
+      )))
+
+(defun lsp-bridge-get-match-buffer-by-filepath (name)
+  (cl-dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when-let* ((file-name (buffer-file-name buffer))
+                  (match-buffer (or (string-equal file-name name)
+                                    (string-equal (file-truename file-name) name))))
+        (cl-return buffer)))))
 
 (defun lsp-bridge--get-project-path-func (filename)
   (when lsp-bridge-get-project-path-by-filepath
@@ -740,7 +746,7 @@ So we build this macro to restore postion after code format."
               'string-match-p)))
 
 (defun lsp-brige-get-mode (filepath)
-  (let ((buffer (lsp-bridge-get-match-buffer filepath)))
+  (let ((buffer (lsp-bridge-get-match-buffer-by-filepath filepath)))
     (if buffer
         (with-current-buffer buffer
           major-mode)
@@ -991,30 +997,31 @@ So we build this macro to restore postion after code format."
   ;; other LSP server need use `bounds-of-thing-at-point' of symbol as keyword prefix.
   (setq-local acm-input-bound-style prefix-style))
 
-(defun lsp-bridge-set-server-names (filename server-names)
-  (lsp-bridge--with-file-buffer filename
-    (setq-local acm-backend-lsp-server-names server-names)))
+(defun lsp-bridge-set-server-names (filename filehost server-names)
+  (lsp-bridge--with-file-buffer filename filehost
+                                (setq-local acm-backend-lsp-server-names server-names)))
 
 (defun lsp-bridge-completion--record-items (filename
+                                            filehost
                                             candidates position
                                             server-name
                                             completion-trigger-characters
                                             server-names)
-  (lsp-bridge--with-file-buffer filename
-    ;; Save completion items.
-    (setq-local acm-backend-lsp-completion-position position)
-    (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
-    (setq-local acm-backend-lsp-server-names server-names)
-    (setq-local acm-backend-lsp-fetch-completion-item-ticker nil)
+  (lsp-bridge--with-file-buffer filename filehost
+                                ;; Save completion items.
+                                (setq-local acm-backend-lsp-completion-position position)
+                                (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
+                                (setq-local acm-backend-lsp-server-names server-names)
+                                (setq-local acm-backend-lsp-fetch-completion-item-ticker nil)
 
-    (let* ((lsp-items acm-backend-lsp-items)
-           (completion-table (make-hash-table :test 'equal)))
-      (dolist (item candidates)
-        (plist-put item :annotation (capitalize (plist-get item :icon)))
-        (puthash (plist-get item :key) item completion-table))
-      (puthash server-name completion-table lsp-items)
-      (setq-local acm-backend-lsp-items lsp-items))
-    (lsp-bridge-try-completion)))
+                                (let* ((lsp-items acm-backend-lsp-items)
+                                       (completion-table (make-hash-table :test 'equal)))
+                                  (dolist (item candidates)
+                                    (plist-put item :annotation (capitalize (plist-get item :icon)))
+                                    (puthash (plist-get item :key) item completion-table))
+                                  (puthash server-name completion-table lsp-items)
+                                  (setq-local acm-backend-lsp-items lsp-items))
+                                (lsp-bridge-try-completion)))
 
 (defun lsp-bridge-try-completion ()
   (cond (lsp-bridge-prohibit-completion
@@ -1392,11 +1399,11 @@ So we build this macro to restore postion after code format."
    (save-excursion
      (vertical-motion 1) (point))))
 
-(defun lsp-bridge-rename--highlight (filename bound-start bound-end)
-  (lsp-bridge--with-file-buffer filename
-    (lsp-bridge-flash-region
-     (acm-backend-lsp-position-to-point bound-start)
-     (acm-backend-lsp-position-to-point bound-end))))
+(defun lsp-bridge-rename--highlight (filename filehost bound-start bound-end)
+  (lsp-bridge--with-file-buffer filename filehost
+                                (lsp-bridge-flash-region
+                                 (acm-backend-lsp-position-to-point bound-start)
+                                 (acm-backend-lsp-position-to-point bound-end))))
 
 (defun lsp-bridge-popup-documentation ()
   (interactive)
@@ -1661,9 +1668,9 @@ So we build this macro to restore postion after code format."
   ;; Remove hide advice.
   (advice-remove #'acm-hide #'lsp-bridge--completion-hide-advisor))
 
-(defun lsp-bridge--turn-off (filename)
-  (lsp-bridge--with-file-buffer filename
-    (lsp-bridge--disable)))
+(defun lsp-bridge--turn-off (filename filehost)
+  (lsp-bridge--with-file-buffer filename filehost
+                                (lsp-bridge--disable)))
 
 (defcustom lsp-bridge-workspace-symbol-kind-to-face
   [("    " . nil)                          ; Unknown - 0
@@ -1807,7 +1814,7 @@ SymbolKind (defined in the LSP)."
 
   (setq-local lsp-bridge-prohibit-completion t))
 
-(defun lsp-bridge-completion-item--update (info)
+(defun lsp-bridge-completion-item--update (info filehost)
   (let* ((filename (plist-get info :filepath))
          (key (plist-get info :key))
          (server-name (plist-get info :server))
@@ -1815,22 +1822,22 @@ SymbolKind (defined in the LSP)."
          (documentation (plist-get info :documentation))
          (has-doc-p (and documentation
                          (not (string-equal documentation "")))))
-    (lsp-bridge--with-file-buffer filename
-      ;; Update `documentation' and `additionalTextEdits'
-      (when-let (item (gethash key (gethash server-name acm-backend-lsp-items)))
-        (when additional-text-edits
-          (plist-put item :additionalTextEdits additional-text-edits))
+    (lsp-bridge--with-file-buffer filename filehost
+                                  ;; Update `documentation' and `additionalTextEdits'
+                                  (when-let (item (gethash key (gethash server-name acm-backend-lsp-items)))
+                                    (when additional-text-edits
+                                      (plist-put item :additionalTextEdits additional-text-edits))
 
-        (when has-doc-p
-          (plist-put item :documentation documentation))
+                                    (when has-doc-p
+                                      (plist-put item :documentation documentation))
 
-        (puthash key item (gethash server-name acm-backend-lsp-items)))
+                                    (puthash key item (gethash server-name acm-backend-lsp-items)))
 
-      (if has-doc-p
-          ;; Show doc frame if `documentation' exist and not empty.
-          (acm-doc-try-show t)
-        ;; Hide doc frame immediately.
-        (acm-doc-hide)))))
+                                  (if has-doc-p
+                                      ;; Show doc frame if `documentation' exist and not empty.
+                                      (acm-doc-try-show t)
+                                    ;; Hide doc frame immediately.
+                                    (acm-doc-hide)))))
 
 (defun lsp-bridge-toggle-sdcv-helper ()
   "Toggle sdcv helper."

@@ -140,6 +140,7 @@ class LspBridge:
         try:
             while True:
                 client_socket, client_address = self.remote_server.accept()
+                set_lsp_file_host(client_address[0])
                 set_remote_emacs_socket(client_socket)
                 self.client_socket = client_socket
 
@@ -305,7 +306,7 @@ class LspBridge:
     
     def turn_off(self, filepath, message):
         message_emacs(message)
-        eval_in_emacs("lsp-bridge--turn-off", filepath)
+        eval_in_emacs("lsp-bridge--turn-off", filepath, get_lsp_file_host())
 
     def check_lang_server_command(self, lang_server_info, filepath, turn_off_on_error=True):
         if len(lang_server_info["command"]) > 0:

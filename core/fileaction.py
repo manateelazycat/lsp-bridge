@@ -127,7 +127,7 @@ class FileAction:
             eval_in_emacs("lsp-bridge-set-prefix-style", self.single_server_info.get("prefixStyle", "ascii"))
 
         # Init server names.
-        eval_in_emacs("lsp-bridge-set-server-names", self.filepath, self.get_lsp_server_names())
+        eval_in_emacs("lsp-bridge-set-server-names", self.filepath, get_lsp_file_host(), self.get_lsp_server_names())
 
     @property
     def last_change(self) -> Tuple[float, float]:
@@ -290,7 +290,7 @@ class FileAction:
         # Only push diagnostics to Emacs when ticker is newest.
         # Drop all temporarily diagnostics when typing.
         if ticker == self.diagnostics_ticker:
-            eval_in_emacs("lsp-bridge-diagnostic--render", self.filepath, self.get_diagnostics())
+            eval_in_emacs("lsp-bridge-diagnostic--render", self.filepath, get_lsp_file_host(), self.get_diagnostics())
 
     def push_code_actions(self, actions, server_name, action_kind):
         log_time("Record actions from '{}' for file {}".format(server_name, os.path.basename(self.filepath)))
@@ -379,7 +379,9 @@ class FileAction:
                              "server": server_name,
                              "additionalTextEdits": additional_text_edits,
                              "documentation": documentation
-                         })
+                         },
+                         get_lsp_file_host()
+                         )
 
 
     def rename_file(self, old_filepath, new_filepath):

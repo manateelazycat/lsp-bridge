@@ -86,6 +86,14 @@ def handle_arg_types(arg):
 
     return sexpdata.Quoted(arg)
 
+lsp_file_host = ""
+def set_lsp_file_host(host):
+    global lsp_file_host
+    lsp_file_host = host
+
+def get_lsp_file_host():
+    return lsp_file_host
+
 remote_emacs_socket = None
 def set_remote_emacs_socket(socket):
     global remote_emacs_socket

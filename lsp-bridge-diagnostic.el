@@ -167,8 +167,8 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
 
   (setq-local lsp-bridge-diagnostic-overlays nil))
 
-(defun lsp-bridge-diagnostic--render (filepath diagnostics)
-  (lsp-bridge--with-file-buffer filepath
+(defun lsp-bridge-diagnostic--render (filepath filehost diagnostics)
+  (lsp-bridge--with-file-buffer filepath filehost
     (lsp-bridge-diagnostic-hide-overlays)
 
     (let ((diagnostic-index 0)
