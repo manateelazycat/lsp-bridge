@@ -1258,8 +1258,7 @@ So we build this macro to restore postion after code format."
                 (when (file-exists-p dirname)
                   (if (lsp-bridge-is-nova-file)
                       (nova-send-search-request "search_paths_search"
-                                                dirname
-                                                (file-name-base filename))
+                                                (list dirname (file-name-base filename)))
                     (lsp-bridge-call-async "search_paths_search"
                                            dirname
                                            (file-name-base filename)
