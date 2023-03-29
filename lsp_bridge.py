@@ -80,30 +80,23 @@ class LspBridge:
         # Init tabnine.
         self.tabnine = TabNine()        
 
-        # Init search file words.
+        # Init search backends.
         self.search_file_words = SearchFileWords()
-        for name in ["index_files", "change_file", "load_file", "close_file", "rebuild_cache", "search"]:
-            self.build_prefix_function("search_file_words", "search_file_words", name)
-            
-        # Init search sdcv words.
         self.search_sdcv_words = SearchSdcvWords()
-        for name in ["search"]:
-            self.build_prefix_function("search_sdcv_words", "search_sdcv_words", name)
-            
-        # Init search list.
         self.search_list = SearchList()
-        for name in ["search", "update"]:
-            self.build_prefix_function("search_list", "search_list", name)
-            
-        # Init search tailwind keywords
         self.search_tailwind_keywords = SearchTailwindKeywords()
-        for name in ["search"]:
-            self.build_prefix_function("search_tailwind_keywords", "search_tailwind_keywords", name)
-
-        # Init search paths.
         self.search_paths = SearchPaths()
-        for name in ["search"]:
-            self.build_prefix_function("search_paths", "search_paths", name)
+
+        search_backend_export_functions = {
+            "search_file_words": ["index_files", "change_file", "load_file", "close_file", "rebuild_cache", "search"],
+            "search_sdcv_words": ["search"],
+            "search_list": ["search", "update"],
+            "search_tailwind_keywords": ["search"],
+            "search_paths": ["search"]
+        }
+        for search_backend, export_functions in search_backend_export_functions.items():
+            for name in export_functions:
+                self.build_prefix_function(search_backend, search_backend, name)
             
         # Init emacs option.
         enable_lsp_server_log = get_emacs_var("lsp-bridge-enable-log")
