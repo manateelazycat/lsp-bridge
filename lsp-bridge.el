@@ -1263,7 +1263,9 @@ So we build this macro to restore postion after code format."
                      (save-excursion
                        (search-backward-regexp "class=" (point-at-bol) t)))
             (unless (or (string-equal current-symbol "") (null current-symbol))
-              (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol)))
+              (if (lsp-bridge-is-nova-file)
+                  (nova-send-search-request "search_tailwind_keywords_search" (list nova-remote-file-path current-symbol))
+                (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol))))
 
           ;; Send path search request when detect path string.
           (if (acm-in-string-p)
