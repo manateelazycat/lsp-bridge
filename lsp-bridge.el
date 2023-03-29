@@ -1248,7 +1248,8 @@ So we build this macro to restore postion after code format."
 
           ;; Send change file to search-words backend.
           (unless lsp-bridge-prohibit-completion
-            (when buffer-file-name
+            (when (or buffer-file-name
+                      (lsp-bridge-is-nova-file))
               (let ((current-word (acm-backend-search-file-words-get-point-string)))
                 ;; Search words if current prefix is not empty.
                 (unless (or (string-equal current-word "") (null current-word))
