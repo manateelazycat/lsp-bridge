@@ -287,7 +287,6 @@ Setting this to nil or 0 will turn off the indicator."
                (lsp-bridge-epc-define-method mngr 'get-user-emacs-directory 'lsp-bridge--user-emacs-directory)
                (lsp-bridge-epc-define-method mngr 'is-snippet-support 'acm-backend-lsp-snippet-expansion-fn)
                (lsp-bridge-epc-define-method mngr 'get-buffer-content 'lsp-bridge--get-buffer-content-func)
-               (lsp-bridge-epc-define-method mngr 'get-org-block-line-bias 'lsp-bridge--get-org-block-line-bias)
                ))))
     (if lsp-bridge-server
         (setq lsp-bridge-server-port (process-contact lsp-bridge-server :service))
