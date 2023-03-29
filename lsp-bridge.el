@@ -601,10 +601,10 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
   (or (alist-get mode lsp-bridge-formatting-indent-alist)
       (lsp-bridge--get-indent-width (or (get mode 'derived-mode-parent) 'default))))
 
-(cl-defmacro lsp-bridge--with-file-buffer (dirname &rest body)
+(cl-defmacro lsp-bridge--with-file-buffer (filename &rest body)
   "Evaluate BODY in buffer with FILEPATH."
   (declare (indent 1))
-  `(when-let ((buffer (lsp-bridge-get-match-buffer ,dirname)))
+  `(when-let ((buffer (lsp-bridge-get-match-buffer ,filename)))
      (with-current-buffer buffer
        ,@body)))
 
@@ -643,9 +643,9 @@ So we build this macro to restore postion after code format."
                                       (string-equal (file-truename file-name) name))))
           (cl-return buffer))))))
 
-(defun lsp-bridge--get-project-path-func (dirname)
+(defun lsp-bridge--get-project-path-func (filename)
   (when lsp-bridge-get-project-path-by-filepath
-    (funcall lsp-bridge-get-project-path-by-filepath dirname)))
+    (funcall lsp-bridge-get-project-path-by-filepath filename)))
 
 (defun lsp-bridge--get-workspace-folder-func (project-path)
   (when lsp-bridge-get-workspace-folder
@@ -698,9 +698,9 @@ So we build this macro to restore postion after code format."
       (with-current-buffer buf
         (buffer-substring-no-properties (point-min) (point-max))))))
 
-(defun lsp-bridge-get-lang-server-by-extension (dirname extension-list)
+(defun lsp-bridge-get-lang-server-by-extension (filename extension-list)
   "Get lang server for file extension."
-  (when-let* ((file-extension (file-name-extension dirname))
+  (when-let* ((file-extension (file-name-extension filename))
               (langserver-info (cl-find-if
                                 (lambda (pair)
                                   (let ((extension (car pair)))
@@ -710,13 +710,13 @@ So we build this macro to restore postion after code format."
                                 extension-list)))
     (cdr langserver-info)))
 
-(defun lsp-bridge-get-multi-lang-server-by-extension (dirname)
+(defun lsp-bridge-get-multi-lang-server-by-extension (filename)
   "Get lang server for file extension."
-  (lsp-bridge-get-lang-server-by-extension dirname lsp-bridge-multi-lang-server-extension-list))
+  (lsp-bridge-get-lang-server-by-extension filename lsp-bridge-multi-lang-server-extension-list))
 
-(defun lsp-bridge-get-single-lang-server-by-extension (dirname)
+(defun lsp-bridge-get-single-lang-server-by-extension (filename)
   "Get lang server for file extension."
-  (lsp-bridge-get-lang-server-by-extension dirname lsp-bridge-single-lang-server-extension-list))
+  (lsp-bridge-get-lang-server-by-extension filename lsp-bridge-single-lang-server-extension-list))
 
 (defun lsp-bridge-lang-server-by-mode (target-mode mode-list)
   "Get lang server for file mode."
@@ -991,16 +991,16 @@ So we build this macro to restore postion after code format."
   ;; other LSP server need use `bounds-of-thing-at-point' of symbol as keyword prefix.
   (setq-local acm-input-bound-style prefix-style))
 
-(defun lsp-bridge-set-server-names (dirname server-names)
-  (lsp-bridge--with-file-buffer dirname
+(defun lsp-bridge-set-server-names (filename server-names)
+  (lsp-bridge--with-file-buffer filename
     (setq-local acm-backend-lsp-server-names server-names)))
 
-(defun lsp-bridge-completion--record-items (dirname
+(defun lsp-bridge-completion--record-items (filename
                                             candidates position
                                             server-name
                                             completion-trigger-characters
                                             server-names)
-  (lsp-bridge--with-file-buffer dirname
+  (lsp-bridge--with-file-buffer filename
     ;; Save completion items.
     (setq-local acm-backend-lsp-completion-position position)
     (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
@@ -1392,8 +1392,8 @@ So we build this macro to restore postion after code format."
    (save-excursion
      (vertical-motion 1) (point))))
 
-(defun lsp-bridge-rename--highlight (dirname bound-start bound-end)
-  (lsp-bridge--with-file-buffer dirname
+(defun lsp-bridge-rename--highlight (filename bound-start bound-end)
+  (lsp-bridge--with-file-buffer filename
     (lsp-bridge-flash-region
      (acm-backend-lsp-position-to-point bound-start)
      (acm-backend-lsp-position-to-point bound-end))))
@@ -1409,39 +1409,39 @@ So we build this macro to restore postion after code format."
     (unless (eq last-command 'mwheel-scroll)
       (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))))
 
-(defun lsp-bridge-pick-file-path (dirname)
+(defun lsp-bridge-pick-file-path (filename)
   ;; Remove `file://' and `:file://' prefix.
-  (cond ((string-prefix-p "file://" dirname)
-         (setq dirname (string-remove-prefix "file://" dirname)))
-        ((string-prefix-p ":file://" dirname)
-         (setq dirname (string-remove-prefix ":file://" dirname))))
+  (cond ((string-prefix-p "file://" filename)
+         (setq filename (string-remove-prefix "file://" filename)))
+        ((string-prefix-p ":file://" filename)
+         (setq filename (string-remove-prefix ":file://" filename))))
 
   ;; Convert `%XX' sequences to `:'
-  (setq dirname (url-unhex-string dirname))
+  (setq filename (url-unhex-string filename))
 
   ;; Remove / before drive letter on Windows
-  (when (string-match "^/[A-Za-z]:" dirname)
-    (setq dirname (substring dirname 1)))
+  (when (string-match "^/[A-Za-z]:" filename)
+    (setq filename (substring filename 1)))
 
-  dirname)
+  filename)
 
-(defun lsp-bridge-file-apply-edits (dirname edits &optional temp-buffer)
+(defun lsp-bridge-file-apply-edits (filename edits &optional temp-buffer)
   (if temp-buffer
       ;; Apply edits to temp buffer.
       (with-current-buffer temp-buffer
         (acm-backend-lsp-apply-text-edits edits))
 
-    ;; Pick dirname from LSP return file string.
-    (setq dirname (lsp-bridge-pick-file-path dirname))
+    ;; Pick filename from LSP return file string.
+    (setq filename (lsp-bridge-pick-file-path filename))
 
-    (find-file-noselect dirname)
+    (find-file-noselect filename)
     (save-excursion
-      (find-file dirname)
+      (find-file filename)
       (acm-backend-lsp-apply-text-edits edits)))
 
   (setq-local lsp-bridge-prohibit-completion t))
 
-(defun lsp-bridge-define--jump (dirname position)
+(defun lsp-bridge-define--jump (filename position)
   (let (position-before-jump)
     ;; Record postion.
     (set-marker (mark-marker) (point) (current-buffer))
@@ -1451,8 +1451,8 @@ So we build this macro to restore postion after code format."
     ;; Jump to define.
     ;; Show define in other window if `lsp-bridge-jump-to-def-in-other-window' is non-nil.
     (if lsp-bridge-jump-to-def-in-other-window
-        (find-file-other-window dirname)
-      (find-file dirname))
+        (find-file-other-window filename)
+      (find-file filename))
 
     ;; Init jump history in new buffer.
     (setq-local lsp-bridge-mark-ring (append (list position-before-jump) mark-ring))
@@ -1661,8 +1661,8 @@ So we build this macro to restore postion after code format."
   ;; Remove hide advice.
   (advice-remove #'acm-hide #'lsp-bridge--completion-hide-advisor))
 
-(defun lsp-bridge--turn-off (dirname)
-  (lsp-bridge--with-file-buffer dirname
+(defun lsp-bridge--turn-off (filename)
+  (lsp-bridge--with-file-buffer filename
     (lsp-bridge--disable)))
 
 (defcustom lsp-bridge-workspace-symbol-kind-to-face
@@ -1776,12 +1776,12 @@ SymbolKind (defined in the LSP)."
              (not tempel--active)))
     (lsp-bridge-call-file-api "formatting" (symbol-value (lsp-bridge--get-indent-width major-mode)))))
 
-(defun lsp-bridge-format--update (dirname edits)
+(defun lsp-bridge-format--update (filename edits)
   ;; We need set `inhibit-modification-hooks' to t to avoid GC freeze Emacs.
   (lsp-bridge-save-position
    (let ((inhibit-modification-hooks t))
      ;; Apply code format edits, not sort, just reverse order.
-     (lsp-bridge-file-apply-edits dirname edits)
+     (lsp-bridge-file-apply-edits filename edits)
      ;; Make LSP server update full content.
      (lsp-bridge-call-file-api "update_file" (buffer-name))
      ;; Notify format complete.
@@ -1808,14 +1808,14 @@ SymbolKind (defined in the LSP)."
   (setq-local lsp-bridge-prohibit-completion t))
 
 (defun lsp-bridge-completion-item--update (info)
-  (let* ((dirname (plist-get info :filepath))
+  (let* ((filename (plist-get info :filepath))
          (key (plist-get info :key))
          (server-name (plist-get info :server))
          (additional-text-edits (plist-get info :additionalTextEdits))
          (documentation (plist-get info :documentation))
          (has-doc-p (and documentation
                          (not (string-equal documentation "")))))
-    (lsp-bridge--with-file-buffer dirname
+    (lsp-bridge--with-file-buffer filename
       ;; Update `documentation' and `additionalTextEdits'
       (when-let (item (gethash key (gethash server-name acm-backend-lsp-items)))
         (when additional-text-edits
