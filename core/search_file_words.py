@@ -51,6 +51,20 @@ class SearchFileWords:
         if add_queue:
             self.search_words_queue.put("search_words")
             
+    def load_file(self, filepath):
+        try:
+            with open(filepath) as f:
+                content = f.read()
+        except:
+            return
+
+        self.search_files.add(filepath)
+        self.search_content_dict[filepath] = content
+
+        if filepath not in self.files:
+            self.files[filepath] = set()
+            self.search_words_queue.put("search_words")
+
     def change_file(self, filepath, base64_string):
         import base64
         try:

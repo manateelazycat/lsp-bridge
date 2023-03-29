@@ -990,7 +990,10 @@ So we build this macro to restore postion after code format."
 
   (when (and buffer-file-name
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
-    (lsp-bridge-call-async "search_file_words_close_file" buffer-file-name)))
+    (lsp-bridge-call-async "search_file_words_close_file" buffer-file-name))
+
+  (when (lsp-bridge-is-nova-file)
+    (nova-send-search-request "search_file_words_close_file" nova-remote-file-path)))
 
 (defun lsp-bridge-set-prefix-style (prefix-style)
   ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
@@ -1249,7 +1252,9 @@ So we build this macro to restore postion after code format."
               (let ((current-word (acm-backend-search-file-words-get-point-string)))
                 ;; Search words if current prefix is not empty.
                 (unless (or (string-equal current-word "") (null current-word))
-                  (lsp-bridge-call-async "search_file_words_search" current-word)))))
+                  (if (lsp-bridge-is-nova-file)
+                      (nova-send-search-request "search_file_words_search" current-word)
+                    (lsp-bridge-call-async "search_file_words_search" current-word))))))
 
           ;; Send tailwind keyword search request just when cursor in class area.
           (when (and (derived-mode-p 'web-mode)
@@ -1303,31 +1308,53 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-search-words-index-files ()
   "Index files when lsp-bridge python process finish."
-  (let ((files (cl-remove-if (lambda (elt)
-                               (or (null elt)
-                                   (member (file-name-extension elt)
-                                           lsp-bridge-search-words-prohibit-file-extensions)))
-                             (mapcar #'buffer-file-name (buffer-list)))))
-    (lsp-bridge-call-async "search_file_words_index_files" files)))
+  (if (lsp-bridge-is-nova-file)
+      (let* ((host nova-remote-file-host)
+             (buffers (cl-remove-if-not (lambda (buf)
+                                          (with-current-buffer buf
+                                            (and (lsp-bridge-is-nova-file)
+                                                 (string-equal nova-remote-file-host host))))
+                                        (buffer-list)))
+             (files (mapcar (lambda (buf)
+                              (with-current-buffer buf
+                                nnova-remote-file-path))
+                            buffers)))
+        (nova-send-search-request "search_file_words_index_files" files))
+    (let ((files (cl-remove-if (lambda (elt)
+                                 (or (null elt)
+                                     (member (file-name-extension elt)
+                                             lsp-bridge-search-words-prohibit-file-extensions)))
+                               (mapcar #'buffer-file-name (buffer-list)))))
+      (lsp-bridge-call-async "search_file_words_index_files" files))))
 
 (defun lsp-bridge-search-words-update ()
-  (when (and buffer-file-name
-             (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-             (not (member (file-name-extension buffer-file-name)
-                          lsp-bridge-search-words-prohibit-file-extensions)))
-    (lsp-bridge-call-async "search_file_words_change_file"
-                           buffer-file-name
-                           (base64-encode-string (encode-coding-string (buffer-string) 'utf-8))
-                           )))
+  (if (lsp-bridge-is-nova-file)
+      (progn
+        (nova-save-buffer)
+        (nova-send-search-request "search_file_words_load_file" nova-remote-file-path))
+    (when (and buffer-file-name
+               (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+               (not (member (file-name-extension buffer-file-name)
+                            lsp-bridge-search-words-prohibit-file-extensions)))
+      (lsp-bridge-call-async "search_file_words_change_file"
+                             buffer-file-name
+                             (base64-encode-string (encode-coding-string (buffer-string) 'utf-8))
+                             ))))
 
 (defun lsp-bridge-search-words-rebuild-cache ()
   "Rebuild words cache when idle."
-  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-    ;; Update file search words when idle.
-    (lsp-bridge-search-words-update)
+  (if (lsp-bridge-is-nova-file)
+      (progn
+        (lsp-bridge-search-words-update)
 
-    (unless (eq last-command 'mwheel-scroll)
-      (lsp-bridge-call-async "search_file_words_rebuild_cache"))))
+        (unless (eq last-command 'mwheel-scroll)
+          (nova-send-search-request "search_file_words_rebuild_cache")))
+    (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+      ;; Update file search words when idle.
+      (lsp-bridge-search-words-update)
+
+      (unless (eq last-command 'mwheel-scroll)
+        (lsp-bridge-call-async "search_file_words_rebuild_cache")))))
 
 (defun lsp-bridge-completion-ui-visible-p ()
   (acm-frame-visible-p acm-menu-frame))
