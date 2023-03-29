@@ -166,8 +166,6 @@ class LspBridge:
                     "content": ("_{}".format(message["method"]), [message["path"]] + message["args"])
                 })
 
-            print("***** ", message)
-
     def event_dispatcher(self):
         try:
             while True:
