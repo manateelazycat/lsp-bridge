@@ -606,7 +606,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
   (declare (indent 1))
   `(when-let ((buffer (pcase filehost
                         ("" (lsp-bridge-get-match-buffer-by-filepath ,filename))
-                        (t (lsp-bridge-get-match-buffer-by-remote-file ,filehost ,filename)))))
+                        (_ (lsp-bridge-get-match-buffer-by-remote-file ,filehost ,filename)))))
      (with-current-buffer buffer
        ,@body)))
 
@@ -1028,16 +1028,21 @@ So we build this macro to restore postion after code format."
          (setq-local lsp-bridge-prohibit-completion nil))
         (t
          ;; Don't popup completion menu when `lsp-bridge-last-change-position' (cursor before send completion request) is not equal current cursor position.
-         (if (equal lsp-bridge-last-change-position
-                    (list (current-buffer) (buffer-chars-modified-tick) (point)))
-             ;; Try popup completion frame.
-             (if (cl-every (lambda (pred)
-                             (if (functionp pred) (funcall pred) t))
-                           lsp-bridge-completion-popup-predicates)
-                 (progn
-                   (acm-template-candidate-init)
-                   (acm-update))
-               (acm-hide))))))
+         (when (equal lsp-bridge-last-change-position
+                      (list (current-buffer) (buffer-chars-modified-tick) (point)))
+           ;; Try popup completion frame.
+           (if (cl-every (lambda (pred)
+                           (if (functionp pred)
+                               (let ((result (funcall pred)))
+                                 ;; Uncomment below code when you want to know why `lsp-bridge-try-completion' failed.
+                                 ;; (message "*** %s %s" pred result)
+                                 result)
+                             t))
+                         lsp-bridge-completion-popup-predicates)
+               (progn
+                 (acm-template-candidate-init)
+                 (acm-update))
+             (acm-hide))))))
 
 (defun lsp-bridge-popup-complete-menu ()
   (interactive)
@@ -1071,7 +1076,10 @@ So we build this macro to restore postion after code format."
    ;; Allow file path completion in string area
    (ignore-errors
      (and (thing-at-point 'filename)
-          (file-exists-p (file-name-directory (thing-at-point 'filename)))))))
+          (or (file-exists-p (file-name-directory (thing-at-point 'filename)))
+              ;; Allow string in nova file.
+              (lsp-bridge-is-nova-file))))
+   ))
 
 (defun lsp-bridge-not-execute-macro ()
   "Hide completion during executing macros."
@@ -1255,10 +1263,10 @@ So we build this macro to restore postion after code format."
           (if (acm-in-string-p)
               (when-let* ((filename (thing-at-point 'filename t))
                           (dirname (ignore-errors (expand-file-name (file-name-directory filename)))))
-                (when (file-exists-p dirname)
-                  (if (lsp-bridge-is-nova-file)
-                      (nova-send-search-request "search_paths_search"
-                                                (list dirname (file-name-base filename)))
+                (if (lsp-bridge-is-nova-file)
+                    (nova-send-search-request "search_paths_search"
+                                              (list dirname (file-name-base filename)))
+                  (when (file-exists-p dirname)
                     (lsp-bridge-call-async "search_paths_search"
                                            dirname
                                            (file-name-base filename)
