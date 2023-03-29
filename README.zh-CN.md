@@ -39,13 +39,31 @@ lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建�
 1. 使用 lsp-bridge 时， 请先关闭其他补全插件， 比如 lsp-mode, eglot, company, corfu 等等， lsp-bridge 提供从补全后端、 补全前端到多后端融合的全套解决方案。
 2. 在补全菜单弹出时， `acm-mode`会自动启用， 补全菜单消失时, `acm-mode` 会自动禁用， 请不要手动把 `acm-mode` 加到任何 mode-hook 中， 也不要手动执行 `acm-mode`
 
-## 使用
+## 本地使用
 lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://github.com/manateelazycat/lsp-bridge/blob/master/README.zh-CN.md#%E5%B7%B2%E7%BB%8F%E6%94%AF%E6%8C%81%E7%9A%84%E8%AF%AD%E8%A8%80%E6%9C%8D%E5%8A%A1%E5%99%A8)和模式插件以后， 直接写代码即可， 不需要额外的设置。
 
 需要注意的是 lsp-bridge 有三种扫描模式：
 1. 检测到 `.git` 目录时(通过命令 `git rev-parse --is-inside-work-tree` 来判断)， lsp-bridge 会扫描整个目录文件来提供补全
 2. 没有检测到 `.git` 目录时， lsp-bridge 只会对打开的文件提供单文件补全
 3. 自定义 `lsp-bridge-get-project-path-by-filepath` 函数， 输入参数是打开文件的路径字符串， 输出参数是项目目录路径， lsp-bridge 会根据输出目录路径来提供补全
+
+## 远程使用
+lsp-bridge 也可以像 VSCode 那样对远程服务器的文件提供代码语法补全。 对于那些资源要求过高或者运行环境配置复杂， 不方便在本地开发的大型复杂软件，提供远程代码补全的功能是很有用的。以下是配置远程代码补全的步骤：
+
+1. 下载 [nova](https://github.com/manateelazycat/nova): `nova` 是一个多线程的远程文件编辑和同步插件, 利用多线程技术保证编辑远程文件时不会卡住 Emacs
+2. 将`nova`的 `server.py` 拷贝到远程服务器，并执行命令 `python3 server.py` 启动 `nova` 的服务端
+3. 在远程服务器上安装 LSP Server、lsp-bridge 和 Emacs
+4. 在远程 Emacs 中配置默认加载 `lsp-bridge` 插件， 并自动启动`lsp-bridge`服务`(lsp-bridge-start-process)`
+5. 使用命令 `nova-open-file` 打开远程文件，输入远程服务器 IP 和文件路径，比如 `xxx.xxx.xxx.xxx:/path/file`
+
+远程文件打开后，`lsp-bridge`会自动弹出补全菜单。`lsp-bridge`与`nova`协同工作的原理是：
+
+1. `nova`通过 SSH 认证的方式登录远程服务器, 并访问和编辑远程文件
+2. 在本地编辑远程文件时，`lsp-bridge`会实时发送 diff 序列给 `nova` 服务端， `nova` 会根据 diff 序列在服务端重建文件的最新内容
+3. 编辑远程文件产生的 LSP 请求转发到服务器端的`lsp-bridge`，`lsp-bridge`会根据远程文件最新内容和服务器里的 LSP Server 进行语法补全计算
+4. `lsp-bridge`在远端计算好 LSP 补全菜单项后，发送补全数据到本机，再由本机的 `lsp-bridge` 进行补全菜单渲染
+
+如果补全菜单没有弹出，请登录远程服务器，打开 Emacs，查看 `*lsp-bridge*` 缓冲区的内容。一般情况下，都是由于服务端的 Emacs 插件或者 LSP Server 没有安装完整导致的。
 
 ## 按键
 | 按键           | 命令                        | 备注                                                       |
@@ -110,7 +128,7 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-python-command`: Python 命令的路径, 如果你用 `conda`， 你也许会定制这个选项。 Windows 平台用的是 `python.exe` 而不是 `python3`, 如果 lsp-bridge 不能工作， 可以尝试改成 `python3`
 * `lsp-bridge-complete-manually`: 只有当用户手动调用 `lsp-bridge-popup-complete-menu` 命令的时候才弹出补全菜单， 默认关闭
 * `lsp-bridge-get-workspace-folder`: 在 Java 中需要把多个项目放到一个 Workspace 目录下， 才能正常进行定义跳转， 可以自定义这个函数， 函数输入是项目路径， 返回对应的 Workspace 目录
-* `lsp-bridge-org-babel-lang-list`: 支持 org-mode 代码块补全的语言列表，默认nil对于所有语言使用
+* `lsp-bridge-org-babel-lang-list`: 支持 org-mode 代码块补全的语言列表，默认 nil 对于所有语言使用
 * `lsp-bridge-enable-diagnostics`: 代码诊断， 默认打开
 * `lsp-bridge-enable-hover-diagnostic`: 光标移动到错误位置弹出诊断信息， 默认关闭
 * `lsp-bridge-enable-search-words`: 索引打开文件的单词， 默认打开
