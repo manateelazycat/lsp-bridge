@@ -1952,13 +1952,21 @@ SymbolKind (defined in the LSP)."
          (max-num-results 10)     ; maximum number of results to show.
          (before-point (max (point-min) (- (point) chars-number-before-point)))
          (after-point (min (point-max) (+ (point) chars-number-after-point))))
-    (lsp-bridge-call-async "tabnine_complete"
-                           (buffer-substring-no-properties before-point (point))
-                           (buffer-substring-no-properties (point) after-point)
-                           (or (buffer-file-name) nil)
-                           (= before-point buffer-min)
-                           (= after-point buffer-max)
-                           max-num-results)))
+    (if (lsp-bridge-is-nova-file)
+        (nova-send-search-request "tabnine_complete"
+                                  (list (buffer-substring-no-properties before-point (point))
+                                        (buffer-substring-no-properties (point) after-point)
+                                        (or nova-remote-file-path nil)
+                                        (= before-point buffer-min)
+                                        (= after-point buffer-max)
+                                        max-num-results))
+      (lsp-bridge-call-async "tabnine_complete"
+                             (buffer-substring-no-properties before-point (point))
+                             (buffer-substring-no-properties (point) after-point)
+                             (or (buffer-file-name) nil)
+                             (= before-point buffer-min)
+                             (= after-point buffer-max)
+                             max-num-results))))
 
 (defun lsp-bridge-search-backend--record-items (backend-name items)
   (pcase backend-name
