@@ -1256,10 +1256,14 @@ So we build this macro to restore postion after code format."
               (when-let* ((filename (thing-at-point 'filename t))
                           (dirname (ignore-errors (expand-file-name (file-name-directory filename)))))
                 (when (file-exists-p dirname)
-                  (lsp-bridge-call-async "search_paths_search"
-                                         dirname
-                                         (file-name-base filename)
-                                         )))
+                  (if (lsp-bridge-is-nova-file)
+                      (nova-send-search-request "search_paths_search"
+                                                dirname
+                                                (file-name-base filename))
+                    (lsp-bridge-call-async "search_paths_search"
+                                           dirname
+                                           (file-name-base filename)
+                                           ))))
             ;; We need cleanup `acm-backend-path-items' when cursor not in string.
             ;; Otherwise, other completion backend won't show up.
             (setq-local acm-backend-path-items nil))
