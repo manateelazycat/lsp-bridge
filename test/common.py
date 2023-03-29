@@ -129,7 +129,7 @@ def with_file(file: SingleFile):
                 t_file.write(file.code.encode('utf-8'))
                 t_file.close()
 
-                func(*args, **kwargs, filename=_buffer_file_name(t_file.name), "")
+                func(*args, **kwargs, filename=_buffer_file_name(t_file.name))
 
                 os.remove(t_file.name)
         return wrapper

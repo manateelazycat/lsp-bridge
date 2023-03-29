@@ -8,7 +8,11 @@ from test.common import *
 def try_complete(file: SingleFile, label: str):
     def must_include_completion(method: str, args: List[Any]):
         if method == "lsp-bridge-completion--record-items":
-            items = args[1]
+            # NOTE:
+            # We need pick `candidates` from `lsp-bridge-completion--record-items`
+            # if you change API of lsp-bridge-completion--record-items
+            # you need replace below index of `args` with index of `candidates`
+            items = args[2]
             for item in items:
                 if item['label'] == label:
                     return True
