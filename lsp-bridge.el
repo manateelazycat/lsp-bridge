@@ -993,7 +993,7 @@ So we build this macro to restore postion after code format."
     (lsp-bridge-call-async "search_file_words_close_file" buffer-file-name))
 
   (when (lsp-bridge-is-nova-file)
-    (nova-send-search-request "search_file_words_close_file" nova-remote-file-path)))
+    (nova-send-search-request "search_file_words_close_file" (list nova-remote-file-path))))
 
 (defun lsp-bridge-set-prefix-style (prefix-style)
   ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
@@ -1253,7 +1253,7 @@ So we build this macro to restore postion after code format."
                 ;; Search words if current prefix is not empty.
                 (unless (or (string-equal current-word "") (null current-word))
                   (if (lsp-bridge-is-nova-file)
-                      (nova-send-search-request "search_file_words_search" current-word)
+                      (nova-send-search-request "search_file_words_search" (list current-word))
                     (lsp-bridge-call-async "search_file_words_search" current-word))))))
 
           ;; Send tailwind keyword search request just when cursor in class area.
@@ -1319,7 +1319,7 @@ So we build this macro to restore postion after code format."
                               (with-current-buffer buf
                                 nnova-remote-file-path))
                             buffers)))
-        (nova-send-search-request "search_file_words_index_files" files))
+        (nova-send-search-request "search_file_words_index_files" (list files)))
     (let ((files (cl-remove-if (lambda (elt)
                                  (or (null elt)
                                      (member (file-name-extension elt)
@@ -1331,7 +1331,7 @@ So we build this macro to restore postion after code format."
   (if (lsp-bridge-is-nova-file)
       (progn
         (nova-save-buffer)
-        (nova-send-search-request "search_file_words_load_file" nova-remote-file-path))
+        (nova-send-search-request "search_file_words_load_file" (list nova-remote-file-path)))
     (when (and buffer-file-name
                (lsp-bridge-epc-live-p lsp-bridge-epc-process)
                (not (member (file-name-extension buffer-file-name)
