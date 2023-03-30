@@ -756,8 +756,6 @@ class RemoteFileServer:
         client_socket.close()
 
     def handle_message(self, message, client_socket):
-        log_time(f"[*] '{message}'")
-
         data = json.loads(message)
         command = data["command"]
 
@@ -824,8 +822,6 @@ class RemoteFileServer:
         if path in self.file_dict:
             with open(path, 'w') as file:
                 file.write(self.file_dict[path])
-        else:
-            log_time(f"[*] Write file {path} because path not exist in file_dict somehow.")
 
     def handle_close_file(self, data, client_socket):
         path = data["path"]
