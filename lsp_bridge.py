@@ -25,7 +25,6 @@ import threading
 import traceback
 import json
 import socket
-import paramiko
 import glob
 from functools import wraps
 from pathlib import Path
@@ -689,6 +688,7 @@ class Client(threading.Thread):
         return pub_keys[0]
 
     def connect_ssh(self):
+        import paramiko
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(self.ssh_host, username=self.ssh_user, key_filename=self.ssh_pub_key())
