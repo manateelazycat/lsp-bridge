@@ -300,8 +300,6 @@ class LspServer:
     def get_capabilities(self):
         server_capabilities = self.server_info.get("capabilities", {})
 
-        is_snippet_support = get_emacs_func_result("is-snippet-support")
-
         merge_capabilites = merge(server_capabilities, {
             "workspace": {
                 "configuration": True,
@@ -314,7 +312,7 @@ class LspServer:
             "textDocument": {
                 "completion": {
                     "completionItem": {
-                        "snippetSupport": False if not is_snippet_support else True,
+                        "snippetSupport": True,
                         "deprecatedSupport": True,
                         "tagSupport": {
                             "valueSet": [
