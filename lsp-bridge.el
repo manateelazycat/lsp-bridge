@@ -657,37 +657,17 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge--get-multi-lang-server-func (project-path filename)
   "Get lang server with project path, file path or file extension."
-  (let (lang-server-by-project
-        lang-server-by-extension)
-    ;; Step 1: Search lang server base on project rule provide by `lsp-bridge-get-multi-lang-server-by-project'.
-    (when lsp-bridge-get-multi-lang-server-by-project
-      (setq lang-server-by-project (funcall lsp-bridge-get-multi-lang-server-by-project project-path filename)))
-
-    (if lang-server-by-project
-        lang-server-by-project
-      ;; Step 2: search lang server base on extension rule provide by `lsp-bridge-multi-lang-server-extension-list'.
-      (setq lang-server-by-extension (lsp-bridge-get-multi-lang-server-by-extension filename))
-      (if lang-server-by-extension
-          lang-server-by-extension
-        ;; Step 3: search lang server base on mode rule provide by `lsp-bridge-multi-lang-server-extension-list'.
-        (lsp-bridge-get-multi-lang-server-by-file-mode filename)))))
+  (or (when lsp-bridge-get-multi-lang-server-by-project
+        (funcall lsp-bridge-get-multi-lang-server-by-project project-path filename))
+      (lsp-bridge-get-multi-lang-server-by-extension filename)
+      (lsp-bridge-get-multi-lang-server-by-file-mode filename)))
 
 (defun lsp-bridge--get-single-lang-server-func (project-path filename)
   "Get lang server with project path, file path or file extension."
-  (let (lang-server-by-project
-        lang-server-by-extension)
-    ;; Step 1: Search lang server base on project rule provide by `lsp-bridge-get-single-lang-server-by-project'.
-    (when lsp-bridge-get-single-lang-server-by-project
-      (setq lang-server-by-project (funcall lsp-bridge-get-single-lang-server-by-project project-path filename)))
-
-    (if lang-server-by-project
-        lang-server-by-project
-      ;; Step 2: search lang server base on extension rule provide by `lsp-bridge-single-lang-server-extension-list'.
-      (setq lang-server-by-extension (lsp-bridge-get-single-lang-server-by-extension filename))
-      (if lang-server-by-extension
-          lang-server-by-extension
-        ;; Step 3: search lang server base on mode rule provide by `lsp-bridge-single-lang-server-extension-list'.
-        (lsp-bridge-get-single-lang-server-by-file-mode filename)))))
+  (or (when lsp-bridge-get-single-lang-server-by-project
+        (funcall lsp-bridge-get-single-lang-server-by-project project-path filename))
+      (lsp-bridge-get-single-lang-server-by-extension filename)
+      (lsp-bridge-get-single-lang-server-by-file-mode filename)))
 
 (defun lsp-bridge--user-emacs-directory ()
   "Get lang server with project path, file path or file extension."
@@ -1273,7 +1253,7 @@ So we build this macro to restore postion after code format."
                           (dirname (ignore-errors (expand-file-name (file-name-directory filename)))))
                 (if (lsp-bridge-is-nova-file)
                     (nova-send-func-request "search_paths_search"
-                                              (list dirname (file-name-base filename)))
+                                            (list dirname (file-name-base filename)))
                   (when (file-exists-p dirname)
                     (lsp-bridge-call-async "search_paths_search"
                                            dirname
@@ -1956,12 +1936,12 @@ SymbolKind (defined in the LSP)."
          (after-point (min (point-max) (+ (point) chars-number-after-point))))
     (if (lsp-bridge-is-nova-file)
         (nova-send-func-request "tabnine_complete"
-                                  (list (buffer-substring-no-properties before-point (point))
-                                        (buffer-substring-no-properties (point) after-point)
-                                        (or nova-remote-file-path nil)
-                                        (= before-point buffer-min)
-                                        (= after-point buffer-max)
-                                        max-num-results))
+                                (list (buffer-substring-no-properties before-point (point))
+                                      (buffer-substring-no-properties (point) after-point)
+                                      (or nova-remote-file-path nil)
+                                      (= before-point buffer-min)
+                                      (= after-point buffer-max)
+                                      max-num-results))
       (lsp-bridge-call-async "tabnine_complete"
                              (buffer-substring-no-properties before-point (point))
                              (buffer-substring-no-properties (point) after-point)
