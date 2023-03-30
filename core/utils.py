@@ -297,11 +297,6 @@ def log_time(message):
     import datetime
     logger.info("\n--- [{}] {}".format(datetime.datetime.now().time(), message))
 
-@functools.lru_cache(maxsize=None)
-def get_emacs_version():
-    return get_emacs_func_result("get-emacs-version")
-
-
 def get_os_name():
     return platform.system().lower()
 

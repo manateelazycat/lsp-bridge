@@ -290,7 +290,7 @@ class LspServer:
             "rootPath": self.root_path,
             "clientInfo": {
                 "name": "emacs",
-                "version": get_emacs_version()
+                "version": "lsp-bridge"
             },
             "rootUri": path_to_uri(self.project_path),
             "capabilities": self.get_capabilities(),
