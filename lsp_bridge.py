@@ -155,7 +155,7 @@ class LspBridge:
                     "name": "action_func",
                     "content": ("_{}".format(message["method"]), [message["path"]] + message["args"])
                 })
-            elif message["command"] == "search_request":
+            elif message["command"] == "func_request":
                 getattr(self, message["method"])(*message["args"])
 
     def event_dispatcher(self):

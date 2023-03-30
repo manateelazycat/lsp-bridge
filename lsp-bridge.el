@@ -110,7 +110,7 @@
     ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
     (unless (equal acm-backend-lsp-fetch-completion-item-ticker (list acm-backend-lsp-filepath key kind))
       (if (lsp-bridge-is-nova-file)
-          (nova-send-search-request "fetch_completion_item_info" (list acm-backend-lsp-filepath key server-name))
+          (nova-send-func-request "fetch_completion_item_info" (list acm-backend-lsp-filepath key server-name))
         (lsp-bridge-call-async "fetch_completion_item_info" acm-backend-lsp-filepath key server-name))
       (setq-local acm-backend-lsp-fetch-completion-item-ticker (list acm-backend-lsp-filepath key kind)))))
 
@@ -988,7 +988,7 @@ So we build this macro to restore postion after code format."
              (lsp-bridge-epc-live-p lsp-bridge-epc-process)
              (boundp 'acm-backend-lsp-filepath))
     (if (lsp-bridge-is-nova-file)
-        (nova-send-search-request "close_file" (list acm-backend-lsp-filepath))
+        (nova-send-func-request "close_file" (list acm-backend-lsp-filepath))
       (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath)))
 
   (when (and buffer-file-name
@@ -996,7 +996,7 @@ So we build this macro to restore postion after code format."
     (lsp-bridge-call-async "search_file_words_close_file" buffer-file-name))
 
   (when (lsp-bridge-is-nova-file)
-    (nova-send-search-request "search_file_words_close_file" (list nova-remote-file-path))))
+    (nova-send-func-request "search_file_words_close_file" (list nova-remote-file-path))))
 
 (defun lsp-bridge-set-prefix-style (prefix-style)
   ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
@@ -1257,7 +1257,7 @@ So we build this macro to restore postion after code format."
                 ;; Search words if current prefix is not empty.
                 (unless (or (string-equal current-word "") (null current-word))
                   (if (lsp-bridge-is-nova-file)
-                      (nova-send-search-request "search_file_words_search" (list current-word))
+                      (nova-send-func-request "search_file_words_search" (list current-word))
                     (lsp-bridge-call-async "search_file_words_search" current-word))))))
 
           ;; Send tailwind keyword search request just when cursor in class area.
@@ -1267,7 +1267,7 @@ So we build this macro to restore postion after code format."
                        (search-backward-regexp "class=" (point-at-bol) t)))
             (unless (or (string-equal current-symbol "") (null current-symbol))
               (if (lsp-bridge-is-nova-file)
-                  (nova-send-search-request "search_tailwind_keywords_search" (list nova-remote-file-path current-symbol))
+                  (nova-send-func-request "search_tailwind_keywords_search" (list nova-remote-file-path current-symbol))
                 (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol))))
 
           ;; Send path search request when detect path string.
@@ -1275,7 +1275,7 @@ So we build this macro to restore postion after code format."
               (when-let* ((filename (thing-at-point 'filename t))
                           (dirname (ignore-errors (expand-file-name (file-name-directory filename)))))
                 (if (lsp-bridge-is-nova-file)
-                    (nova-send-search-request "search_paths_search"
+                    (nova-send-func-request "search_paths_search"
                                               (list dirname (file-name-base filename)))
                   (when (file-exists-p dirname)
                     (lsp-bridge-call-async "search_paths_search"
@@ -1325,7 +1325,7 @@ So we build this macro to restore postion after code format."
                               (with-current-buffer buf
                                 nnova-remote-file-path))
                             buffers)))
-        (nova-send-search-request "search_file_words_index_files" (list files)))
+        (nova-send-func-request "search_file_words_index_files" (list files)))
     (let ((files (cl-remove-if (lambda (elt)
                                  (or (null elt)
                                      (member (file-name-extension elt)
@@ -1337,7 +1337,7 @@ So we build this macro to restore postion after code format."
   (if (lsp-bridge-is-nova-file)
       (progn
         (nova-save-buffer)
-        (nova-send-search-request "search_file_words_load_file" (list nova-remote-file-path)))
+        (nova-send-func-request "search_file_words_load_file" (list nova-remote-file-path)))
     (when (and buffer-file-name
                (lsp-bridge-epc-live-p lsp-bridge-epc-process)
                (not (member (file-name-extension buffer-file-name)
@@ -1354,7 +1354,7 @@ So we build this macro to restore postion after code format."
         (lsp-bridge-search-words-update)
 
         (unless (eq last-command 'mwheel-scroll)
-          (nova-send-search-request "search_file_words_rebuild_cache" (list))))
+          (nova-send-func-request "search_file_words_rebuild_cache" (list))))
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       ;; Update file search words when idle.
       (lsp-bridge-search-words-update)
@@ -1929,7 +1929,7 @@ SymbolKind (defined in the LSP)."
     (let ((new-name (expand-file-name (nth 0 args))))
       (lsp-bridge-call-file-api "rename_file" new-name)
       (if (lsp-bridge-is-nova-file)
-          (nova-send-search-request "close_file" (list acm-backend-lsp-filepath))
+          (nova-send-func-request "close_file" (list acm-backend-lsp-filepath))
         (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath))
       (set-visited-file-name new-name t t)
       (setq-local acm-backend-lsp-filepath new-name)))
@@ -1958,7 +1958,7 @@ SymbolKind (defined in the LSP)."
          (before-point (max (point-min) (- (point) chars-number-before-point)))
          (after-point (min (point-max) (+ (point) chars-number-after-point))))
     (if (lsp-bridge-is-nova-file)
-        (nova-send-search-request "tabnine_complete"
+        (nova-send-func-request "tabnine_complete"
                                   (list (buffer-substring-no-properties before-point (point))
                                         (buffer-substring-no-properties (point) after-point)
                                         (or nova-remote-file-path nil)
