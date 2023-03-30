@@ -50,20 +50,17 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 ## 远程使用
 lsp-bridge 也可以像 VSCode 那样对远程服务器的文件提供代码语法补全。 对于那些资源要求过高或者运行环境配置复杂， 不方便在本地开发的大型复杂软件，提供远程代码补全的功能是很有用的。以下是配置远程代码补全的步骤：
 
-1. 下载 [nova](https://github.com/manateelazycat/nova): `nova` 是一个多线程的远程文件编辑和同步插件, 利用多线程技术保证编辑远程文件时不会卡住 Emacs
-2. 将`nova`的 `server.py` 拷贝到远程服务器，并执行命令 `python3 server.py` 启动 `nova` 的服务端
-3. 在远程服务器上安装 LSP Server、lsp-bridge 和 Emacs
-4. 在远程 Emacs 中配置默认加载 `lsp-bridge` 插件， 并自动启动`lsp-bridge`服务`(lsp-bridge-start-process)`
-5. 使用命令 `nova-open-file` 打开远程文件，输入远程服务器 IP 和文件路径，比如 `xxx.xxx.xxx.xxx:/path/file`
+1. 在远程服务器上安装 lsp-bridge 以及对应的LSP Server
+2. 启动lsp-bridge 服务: python3 lsp-bridge/lsp_bridge.py
+3. 使用命令 `lsp-bridge-open-remote-file` 打开远程文件，输入远程服务器 IP 和文件路径，比如 `xxx.xxx.xxx.xxx:/path/file`
 
-远程文件打开后，`lsp-bridge`会自动弹出补全菜单。`lsp-bridge`与`nova`协同工作的原理是：
+远程文件打开后，`lsp-bridge`会自动弹出补全菜单, `lsp-bridge远程补全的原理是：
 
-1. `nova`通过 SSH 认证的方式登录远程服务器, 并访问和编辑远程文件
-2. 在本地编辑远程文件时，`lsp-bridge`会实时发送 diff 序列给 `nova` 服务端， `nova` 会根据 diff 序列在服务端重建文件的最新内容
-3. 编辑远程文件产生的 LSP 请求转发到服务器端的`lsp-bridge`，`lsp-bridge`会根据远程文件最新内容和服务器里的 LSP Server 进行语法补全计算
-4. `lsp-bridge`在远端计算好 LSP 补全菜单项后，发送补全数据到本机，再由本机的 `lsp-bridge` 进行补全菜单渲染
+1. 通过 SSH 认证的方式登录远程服务器, 并访问和编辑远程文件
+2. 在本地编辑远程文件时， 会实时发送 diff 序列给lsp-bridge服务端， 服务端会根据 diff 序列在服务端重建文件的最新内容并调用LSP Server进行语法补全计算
+3. `lsp-bridge`在远端计算好 LSP 补全菜单项后，发送补全数据到本机，再由本机的 `lsp-bridge` 进行补全菜单渲染
 
-如果补全菜单没有弹出，请登录远程服务器，打开 Emacs，查看 `*lsp-bridge*` 缓冲区的内容。一般情况下，都是由于服务端的 Emacs 插件或者 LSP Server 没有安装完整导致的。
+如果补全菜单没有弹出，请登录远程服务器， 查看 lsp_bridge.py的终端输出。一般情况下，都是由于服务端的 LSP Server 没有安装完整导致的。
 
 ## 按键
 | 按键           | 命令                        | 备注                                                       |
@@ -160,7 +157,7 @@ lsp-bridge 也可以像 VSCode 那样对远程服务器的文件提供代码语�
 * `acm-enable-citre`: [citre(ctags)](https://github.com/universal-ctags/citre) 补全，默认关闭
 * `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是 20
 * `acm-candidate-match-function`: 补全菜单匹配算法， orderless-* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
-* `acm-completion-backend-merge-order`: 补全后端的显示顺序， 默认是按照LSP、 模板、 TabNine顺序合并多个补全后端后， 再显示剩下的模板和LSP补全选项， 你可以根据你的需求调整补全后端合并顺序
+* `acm-completion-backend-merge-order`: 补全后端的显示顺序， 默认是按照 LSP、 模板、 TabNine 顺序合并多个补全后端后， 再显示剩下的模板和 LSP 补全选项， 你可以根据你的需求调整补全后端合并顺序
 * `acm-backend-lsp-candidate-min-length`: LSP 补全最小的触发字符数, 默认是 0
 * `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
 * `acm-backend-lsp-candidate-max-length`: LSP 候选词最大长度， 一些语言参数较长， 可以适当增加这个选项的值以看清楚参数列表

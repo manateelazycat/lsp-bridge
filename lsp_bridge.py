@@ -25,6 +25,9 @@ import threading
 import traceback
 import json
 import socket
+import paramiko
+import glob
+from functools import wraps
 from pathlib import Path
 
 from epc.server import ThreadingEPCServer
@@ -42,8 +45,75 @@ from core.tabnine import TabNine
 from core.utils import *
 from core.handler import *
 
+def threaded(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        thread = threading.Thread(target=func, args=args, kwargs=kwargs)
+        thread.start()
+        if hasattr(args[0], 'thread_queue'):
+            args[0].thread_queue.append(thread)
+    return wrapper
+
 class LspBridge:
     def __init__(self, args):
+        self.running_in_server = len(args) == 0
+
+        if self.running_in_server:
+            thread = threading.Thread(target=self.init_remote_file_server)
+            thread.start()
+
+        # Init EPC client port.
+        if not self.running_in_server:
+            init_epc_client(int(args[0]))
+
+        # Build EPC server.
+        self.server = ThreadingEPCServer(('localhost', 0), log_traceback=True)
+        self.server.allow_reuse_address = True
+
+        self.server.register_instance(self)  # register instance functions let elisp side call
+
+        # Start EPC server with sub-thread, avoid block Qt main loop.
+        self.server_thread = threading.Thread(target=self.server.serve_forever)
+        self.server_thread.start()
+
+        self.thread_queue = []
+        self.client_dict = {}
+        self.lsp_client_dict = {}
+
+        # All Emacs request running in event_loop.
+        self.event_queue = queue.Queue()
+        self.event_loop = threading.Thread(target=self.event_dispatcher)
+        self.event_loop.start()
+
+        if not self.running_in_server:
+            self.init()
+
+        # Pass epc port and webengine codec information to Emacs when first start lsp-bridge.
+        if not self.running_in_server:
+            eval_in_emacs('lsp-bridge--first-start', self.server.server_address[1])
+
+        self.remote_emacs = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.remote_emacs.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.remote_emacs.bind(("0.0.0.0", 9997))
+        self.remote_emacs.listen(5)
+
+        self.remote_emacs_loop = threading.Thread(target=self.remote_emacs_dispatcher)
+        self.remote_emacs_loop.start()
+
+        # event_loop never exit, simulation event loop.
+        self.event_loop.join()
+
+    def init(self):
+        # Init tabnine.
+        self.tabnine = TabNine()
+
+        # Init search backends.
+        self.search_file_words = SearchFileWords()
+        self.search_sdcv_words = SearchSdcvWords()
+        self.search_list = SearchList()
+        self.search_tailwind_keywords = SearchTailwindKeywords()
+        self.search_paths = SearchPaths()
+
         # Build EPC interfaces.
         handler_subclasses = list(map(lambda cls: cls.name, Handler.__subclasses__()))
         for name in ["change_file", "update_file",  "save_file",
@@ -52,37 +122,6 @@ class LspBridge:
                      "try_code_action",
                      "workspace_symbol"] + handler_subclasses:
             self.build_file_action_function(name)
-            
-        # Init EPC client port.
-        init_epc_client(int(args[0]))
-
-        # Build EPC server.
-        self.server = ThreadingEPCServer(('localhost', 0), log_traceback=True)
-        # self.server.logger.setLevel(logging.DEBUG)
-        self.server.allow_reuse_address = True
-
-        # ch = logging.FileHandler(filename=os.path.join(lsp-bridge_config_dir, 'epc_log.txt'), mode='w')
-        # formatter = logging.Formatter('%(asctime)s | %(levelname)-8s | %(lineno)04d | %(message)s')
-        # ch.setFormatter(formatter)
-        # ch.setLevel(logging.DEBUG)
-        # self.server.logger.addHandler(ch)
-        # self.server.logger = logger
-
-        self.server.register_instance(self)  # register instance functions let elisp side call
-
-        # Start EPC server with sub-thread, avoid block Qt main loop.
-        self.server_thread = threading.Thread(target=self.server.serve_forever)
-        self.server_thread.start()
-        
-        # Init tabnine.
-        self.tabnine = TabNine()        
-
-        # Init search backends.
-        self.search_file_words = SearchFileWords()
-        self.search_sdcv_words = SearchSdcvWords()
-        self.search_list = SearchList()
-        self.search_tailwind_keywords = SearchTailwindKeywords()
-        self.search_paths = SearchPaths()
 
         search_backend_export_functions = {
             "search_file_words": ["index_files", "change_file", "load_file", "close_file", "rebuild_cache", "search"],
@@ -94,24 +133,16 @@ class LspBridge:
         for search_backend, export_functions in search_backend_export_functions.items():
             for name in export_functions:
                 self.build_prefix_function(search_backend, search_backend, name)
-            
+
         # Init emacs option.
         [enable_lsp_server_log] = get_emacs_vars(["lsp-bridge-enable-log"])
         if enable_lsp_server_log:
             logger.setLevel(logging.DEBUG)
 
-        # All Emacs request running in event_loop.
-        self.event_queue = queue.Queue()
-        self.event_loop = threading.Thread(target=self.event_dispatcher)
-        self.event_loop.start()
-
         # All LSP server response running in message_thread.
         self.message_queue = queue.Queue()
         self.message_thread = threading.Thread(target=self.message_dispatcher)
         self.message_thread.start()
-
-        # Pass epc port and webengine codec information to Emacs when first start lsp-bridge.
-        eval_in_emacs('lsp-bridge--first-start', self.server.server_address[1])
 
         self.remote_request = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.remote_request.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -123,8 +154,194 @@ class LspBridge:
         self.remote_request_loop = threading.Thread(target=self.remote_request_dispatcher)
         self.remote_request_loop.start()
 
-        # event_loop never exit, simulation event loop.
-        self.event_loop.join()
+        # Nova
+        self.nova_sender_queue = queue.Queue()
+        self.nova_sender_thread = threading.Thread(target=self.send_message_dispatcher, args=(self.nova_sender_queue, 9999))
+        self.nova_sender_thread.start()
+
+        self.lsp_bridge_sender_queue = queue.Queue()
+        self.lsp_bridge_sender_thread = threading.Thread(target=self.send_message_dispatcher, args=(self.lsp_bridge_sender_queue, 9998))
+        self.lsp_bridge_sender_thread.start()
+
+        self.nova_receiver_queue = queue.Queue()
+        self.nova_receiver_thread = threading.Thread(target=self.receive_message_dispatcher, args=(self.nova_receiver_queue, self.handle_nova_message))
+        self.nova_receiver_thread.start()
+
+        self.lsp_bridge_receiver_queue = queue.Queue()
+        self.lsp_bridge_receiver_thread = threading.Thread(target=self.receive_message_dispatcher, args=(self.lsp_bridge_receiver_queue, self.handle_lsp_message))
+        self.lsp_bridge_receiver_thread.start()
+
+    def send_message_dispatcher(self, queue, port):
+        try:
+            while True:
+                data = queue.get(True)
+
+                client = self.get_socket_client(data["host"], port)
+                client.send_message(data["message"])
+
+                queue.task_done()
+        except:
+            logger.error(traceback.format_exc())
+
+    def receive_message_dispatcher(self, queue, handle_nova_message):
+        try:
+            while True:
+                message = queue.get(True)
+                handle_nova_message(message)
+                queue.task_done()
+        except:
+            logger.error(traceback.format_exc())
+
+    @threaded
+    def nova_open_file(self, path):
+        if is_valid_ip_path(path):
+            [server_host, server_path] = path.split(":")
+
+            message_emacs(f"Open file {server_path}...")
+
+            client_id = f"{server_host}:9997"
+            if client_id not in self.client_dict:
+                client = self.get_socket_client(server_host, 9997)
+                client.send_message("Connect")
+
+            self.send_nova_message(server_host, {
+                "command": "open_file",
+                "server": server_host,
+                "path": server_path
+            })
+        else:
+            message_emacs("Please input valid path match rule: 'ip:/path/file'.")
+
+    @threaded
+    def nova_save_file(self, remote_file_host, remote_file_path):
+        self.send_nova_message(remote_file_host, {
+            "command": "save_file",
+            "server": remote_file_host,
+            "path": remote_file_path
+        })
+
+    @threaded
+    def nova_close_file(self, remote_file_host, remote_file_path):
+        self.send_nova_message(remote_file_host, {
+            "command": "close_file",
+            "server": remote_file_host,
+            "path": remote_file_path
+        })
+
+    @threaded
+    def handle_nova_message(self, message):
+        data = json.loads(message)
+        command = data["command"]
+
+        if command == "open_file":
+            if "error" in data:
+                message_emacs(data["error"])
+            else:
+                path = data["path"]
+                eval_in_emacs("lsp-bridge-nova-open-file--response", data["server"], path, string_to_base64(data["content"]))
+                message_emacs(f"Open file {path} done.")
+
+    @threaded
+    def handle_lsp_message(self, message):
+        data = json.loads(message)
+        if data["command"] == "eval-in-emacs":
+            eval_sexp_in_emacs(data["sexp"])
+
+    @threaded
+    def lsp_request(self, remote_file_host, remote_file_path, method, args):
+        if method == "change_file":
+            self.send_nova_message(remote_file_host, {
+                "command": "change_file",
+                "server": remote_file_host,
+                "path": remote_file_path,
+                "args": list(map(epc_arg_transformer, args))
+            })
+
+        self.send_lsp_bridge_message(remote_file_host, {
+            "command": "lsp_request",
+            "server": remote_file_host,
+            "path": remote_file_path,
+            "method": method,
+            "args": list(map(epc_arg_transformer, args))
+        })
+
+    @threaded
+    def func_request(self, remote_file_host, remote_file_path, method, args):
+        self.send_lsp_bridge_message(remote_file_host, {
+            "command": "func_request",
+            "server": remote_file_host,
+            "path": remote_file_path,
+            "method": method,
+            "args": list(map(epc_arg_transformer, args))
+        })
+
+    def send_nova_message(self, host, message):
+        self.nova_sender_queue.put({
+            "host": host,
+            "message": message
+        })
+
+    def send_lsp_bridge_message(self, host, message):
+        self.lsp_bridge_sender_queue.put({
+            "host": host,
+            "message": message
+        })
+
+    def init_remote_file_server(self):
+        self.remote_file_server = Server("0.0.0.0", 9999)
+
+    def get_socket_client(self, server_host, server_port):
+        client_id = f"{server_host}:{server_port}"
+
+        if client_id in self.client_dict:
+            client = self.client_dict[client_id]
+        else:
+            client = Client(server_host,
+                            "root",
+                            server_port,
+                            lambda message: self.receive_socket_message(message, server_port))
+            client.start()
+
+            self.client_dict[client_id] = client
+
+        return client
+
+    def receive_socket_message(self, message, server_port):
+        if server_port == 9999:
+            self.nova_receiver_queue.put(message)
+        elif server_port == 9998:
+            self.lsp_bridge_receiver_queue.put(message)
+        elif server_port == 9997:
+            log_time(f"Receive remote message: {message}")
+
+            data = json.loads(message)
+            host = data["host"]
+
+            client = self.get_socket_client(host, 9997)
+
+            if data["command"] == "get_emacs_func_result":
+                result = get_emacs_func_result(data["method"], *data["args"])
+            elif data["command"] == "get_emacs_vars":
+                result = get_emacs_vars(data["args"])
+
+            client.send_message(result)
+
+    def remote_emacs_dispatcher(self):
+        try:
+            while True:
+                client_socket, client_address = self.remote_emacs.accept()
+                if get_remote_rpc_socket() is None:
+                    log_time(f"Build connect from {client_address[0]}:{client_address[1]}")
+
+                    set_remote_rpc_socket(client_socket, client_address[0])
+
+                    socket_file = client_socket.makefile("r")
+                    socket_file.readline().strip()
+                    socket_file.close()
+
+                    self.init()
+        except:
+            print(traceback.format_exc())
 
     def remote_request_dispatcher(self):
         try:
@@ -452,6 +669,47 @@ class LspBridge:
         except:
             message_emacs("Set option 'lsp-bridge-enable-profile' to 't' and call lsp-bridge-restart-process, then call lsp-bridge-profile-dump again.")
 
+class Client(threading.Thread):
+    def __init__(self, ssh_host, ssh_user, server_port, callback):
+        threading.Thread.__init__(self)
+
+        self.ssh_host = ssh_host
+        self.ssh_user = ssh_user
+        self.server_port = server_port
+
+        self.callback = callback
+
+        self.ssh = self.connect_ssh()
+        self.transport = self.ssh.get_transport()
+        self.chan = self.transport.open_channel("direct-tcpip", (self.ssh_host, self.server_port), ('0.0.0.0', 0))
+
+    def ssh_pub_key(self):
+        ssh_dir = os.path.expanduser('~/.ssh')
+        pub_keys = glob.glob(os.path.join(ssh_dir, '*.pub'))
+        return pub_keys[0]
+
+    def connect_ssh(self):
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(self.ssh_host, username=self.ssh_user, key_filename=self.ssh_pub_key())
+        return ssh
+
+    def send_message(self, message):
+        try:
+            data = json.dumps(message)
+            self.chan.sendall(f"{data}\n".encode("utf-8"))
+        except:
+            logger.error(traceback.format_exc())
+
+    def run(self):
+        chan_file = self.chan.makefile('r')
+        while True:
+            message = chan_file.readline().strip()
+            if not message:
+                break
+            self.callback(message)
+        self.chan.close()
+
 def read_lang_server_info(lang_server_path):
     return server_info_replace_template(json.load(lang_server_path))
 
@@ -513,7 +771,143 @@ def get_lang_server_path(server_name):
         server_path_current = user_server_path_default
 
     return server_path_current if server_path_current.exists() else server_path_default
-    
+
+class Server:
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        self.server.bind((self.host, self.port))
+        self.server.listen(5)
+        print(f"[*] Listening on {self.host}:{self.port}")
+
+        self.event_loop = threading.Thread(target=self.event_dispatcher)
+        self.event_loop.start()
+
+        self.message_queue = queue.Queue()
+        self.message_thread = threading.Thread(target=self.message_dispatcher)
+        self.message_thread.start()
+
+        self.file_dict = {}
+
+    def event_dispatcher(self):
+        try:
+            while True:
+                client_socket, client_address = self.server.accept()
+                print(f"[*] Accepted connection from {client_address[0]}:{client_address[1]}")
+
+                client_handler = threading.Thread(target=self.handle_client, args=(client_socket,))
+                client_handler.start()
+        except:
+            print(traceback.format_exc())
+
+    def message_dispatcher(self):
+        try:
+            while True:
+                client_socket = self.message_queue.get(True)
+                self.handle_client(client_socket)
+                self.message_queue.task_done()
+        except:
+            print(traceback.format_exc())
+
+    def handle_client(self, client_socket):
+        client_file = client_socket.makefile('r')
+        while True:
+            message = client_file.readline().strip()
+            if not message:
+                break
+            self.handle_message(message, client_socket)
+        client_socket.close()
+
+    def handle_message(self, message, client_socket):
+        print(f"[*] '{message}'")
+
+        data = json.loads(message)
+        command = data["command"]
+
+        if command == "open_file":
+            self.handle_open_file(data, client_socket)
+        elif command == "save_file":
+            self.handle_save_file(data, client_socket)
+        elif command == "close_file":
+            self.handle_close_file(data, client_socket)
+        elif command == "change_file":
+            self.handle_change_file(data, client_socket)
+
+    def handle_open_file(self, data, client_socket):
+        path = data["path"]
+        server = data["server"]
+
+        if os.path.exists(path):
+            with open(path) as f:
+                content = f.read()
+
+                response = {
+                    "command": "open_file",
+                    "server": server,
+                    "path": path,
+                    "content": content
+                }
+
+                self.file_dict[path] = content
+        else:
+            response = {
+                "command": "open_file",
+                "server": server,
+                "path": path,
+                "content": "",
+                "error": f"Cannot found file {path} on server."
+            }
+
+        response_data = json.dumps(response)
+        client_socket.send(f"{response_data}\n".encode("utf-8"))
+
+    def handle_change_file(self, data, client_socket):
+        path = data["path"]
+        if path not in self.file_dict:
+            with open(path) as f:
+                self.file_dict[path] = f.read()
+
+        content = self.file_dict[path]
+
+        start_line = data["args"][0]['line']
+        start_char = data['args'][0]['character']
+        end_line = data['args'][1]['line']
+        end_char = data['args'][1]['character']
+
+        start_pos = get_position(content, start_line, start_char)
+        end_pos = get_position(content, end_line, end_char)
+
+        content = content[:start_pos] + data['args'][3] + content[end_pos:]
+
+        self.file_dict[path] = content
+
+        print(f"###\n{content}###\n")
+
+    def handle_save_file(self, data, client_socket):
+        path = data["path"]
+
+        if path in self.file_dict:
+            with open(path, 'w') as file:
+                file.write(self.file_dict[path])
+                print(f"Write data to file {path}")
+        else:
+            print(f"Write file {path} because path not exist in file_dict somehow.")
+
+    def handle_close_file(self, data, client_socket):
+        path = data["path"]
+
+        if path in self.file_dict:
+            self.file_dict[path] = ""
+            print(f"Close file {path}")
+
+def get_position(content, line, character):
+    lines = content.split('\n')
+    position = sum(len(lines[i]) + 1 for i in range(line)) + character
+    return position
+
 if __name__ == "__main__":
     if len(sys.argv) >= 3:
         import cProfile

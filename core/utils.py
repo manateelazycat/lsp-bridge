@@ -18,7 +18,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import functools
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -100,6 +99,35 @@ def set_remote_eval_socket(socket):
 
     remote_eval_socket = socket
 
+remote_rpc_socket = None
+remote_rpc_host = None
+def set_remote_rpc_socket(socket, host):
+    global remote_rpc_socket
+    global remote_rpc_host
+
+    remote_rpc_socket = socket
+    remote_rpc_host = host
+
+def get_remote_rpc_socket():
+    global remote_rpc_socket
+    return remote_rpc_socket
+
+def call_remote_rpc(message):
+    global remote_rpc_socket, remote_rpc_host
+
+    if remote_rpc_socket is not None:
+        message["host"] = remote_rpc_host
+        data = json.dumps(message)
+        remote_rpc_socket.send(f"{data}\n".encode("utf-8"))
+
+        socket_file = remote_rpc_socket.makefile("r")
+        result = socket_file.readline().strip()
+        socket_file.close()
+
+        return result
+    else:
+        return None
+
 def eval_in_emacs(method_name, *args):
     global remote_eval_socket
 
@@ -168,15 +196,33 @@ def convert_emacs_bool(symbol_value, symbol_is_boolean):
 
 
 def get_emacs_vars(args):
-    return list(map(lambda result: convert_emacs_bool(result[0], result[1]) if result != [] else False,
-                    epc_client.call_sync("get-emacs-vars", args)))    # type: ignore
+    global remote_rpc_socket
 
+    if remote_rpc_socket:
+        results = call_remote_rpc({
+            "command": "get_emacs_vars",
+            "args": args
+        })
+        results = json.loads(results)
+        return results
+    else:
+        results = epc_client.call_sync("get-emacs-vars", args)
+        return list(map(lambda result: convert_emacs_bool(result[0], result[1]) if result != [] else False, results))
 
 def get_emacs_func_result(method_name, *args):
     """Call eval-in-emacs elisp function synchronously and return the result."""
-    result = epc_client.call_sync(method_name, args)    # type: ignore
-    return result
+    global remote_rpc_socket
 
+    if remote_rpc_socket:
+        result = call_remote_rpc({
+            "command": "get_emacs_func_result",
+            "method": method_name,
+            "args": args
+        })
+        return json.loads(result)
+    else:
+        result = epc_client.call_sync(method_name, args)    # type: ignore
+        return result
 
 def get_command_result(command_string, cwd):
     import subprocess
@@ -311,6 +357,22 @@ def cmp(x, y):
         return 1
     else:
         return 0
+
+def is_valid_ip_path(ip_path: str) -> bool:
+    import re
+    ip_path_regex = r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):(/[^\x00-\x1F]+)+/?$'
+    return re.fullmatch(ip_path_regex, ip_path)
+
+def eval_sexp_in_emacs(sexp):
+    epc_client.call("eval-in-emacs", [sexp])
+
+def string_to_base64(text):
+    import base64
+
+    base64_bytes = base64.b64encode(text.encode("utf-8"))
+    base64_string = base64_bytes.decode("utf-8")
+
+    return base64_string
 
 class MessageSender(Thread):
     

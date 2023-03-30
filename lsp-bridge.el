@@ -2002,6 +2002,73 @@ SymbolKind (defined in the LSP)."
   (add-to-list 'mode-line-misc-info
                `(lsp-bridge-mode ("" lsp-bridge--mode-line-format " "))))
 
+(defvar-local nova-is-remote-file nil)
+(defvar-local nova-remote-file-host nil)
+(defvar-local nova-remote-file-path nil)
+
+(defun lsp-bridge-open-remote-file (path)
+  (interactive "sPath: ")
+  (lsp-bridge-call-async "nova_open_file" path))
+
+(defun lsp-bridge-nova-open-file--response(server path content)
+  (let ((buf-name (format "nova %s:%s" server path)))
+    (with-current-buffer (get-buffer-create buf-name)
+      (text-mode)
+
+      (read-only-mode -1)
+      (erase-buffer)
+      (insert (nova-decode-base64 content))
+      (goto-char (point-min))
+
+      (add-hook 'kill-buffer-hook 'nova-kill-buffer nil t)
+
+      (let ((mode (nova-get-mode-name-from-file-path path)))
+        (when mode
+          (let ((nova-is-remote-file t)
+                (nova-remote-file-host server)
+                (nova-remote-file-path path))
+            (funcall mode)))))
+
+    (switch-to-buffer buf-name)
+
+    (setq-local nova-is-remote-file t)
+    (setq-local nova-remote-file-host server)
+    (setq-local nova-remote-file-path path)
+    ))
+
+(defun nova-kill-buffer ()
+  (when nova-is-remote-file
+    (lsp-bridge-call-async "nova_close_file" nova-remote-file-host nova-remote-file-path)
+    ))
+
+(defun nova-get-mode-name-from-file-path (file-path)
+  (cdr (assoc file-path
+              auto-mode-alist
+              'string-match-p)))
+
+(defun nova-decode-base64 (base64-string)
+  (decode-coding-string (base64-decode-string base64-string) 'utf-8))
+
+(defun nova-send-lsp-request (method &rest args)
+  (lsp-bridge-deferred-chain
+    (lsp-bridge-epc-call-deferred lsp-bridge-epc-process
+                                  (read "lsp_request")
+                                  (append
+                                   (list nova-remote-file-host nova-remote-file-path method) args))))
+
+(defun nova-send-func-request (method &rest args)
+  (lsp-bridge-deferred-chain
+    (lsp-bridge-epc-call-deferred lsp-bridge-epc-process
+                                  (read "func_request")
+                                  (append
+                                   (list nova-remote-file-host nova-remote-file-path method) args))))
+
+(defun nova-save-buffer ()
+  (interactive)
+  (if nova-is-remote-file
+      (lsp-bridge-call-async "nova_save_file" nova-remote-file-host nova-remote-file-path)
+    (message "nova-save-buffer only for nova file.")))
+
 (provide 'lsp-bridge)
 
 ;;; lsp-bridge.el ends here
