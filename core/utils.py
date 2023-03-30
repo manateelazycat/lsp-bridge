@@ -172,12 +172,6 @@ def get_emacs_vars(args):
                     epc_client.call_sync("get-emacs-vars", args)))    # type: ignore
 
 
-def get_emacs_var(var_name):
-    symbol_value, symbol_is_boolean = epc_client.call_sync("get-emacs-var", [var_name])    # type: ignore
-
-    return convert_emacs_bool(symbol_value, symbol_is_boolean)
-
-
 def get_emacs_func_result(method_name, *args):
     """Call eval-in-emacs elisp function synchronously and return the result."""
     result = epc_client.call_sync(method_name, args)    # type: ignore

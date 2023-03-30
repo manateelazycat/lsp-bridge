@@ -96,7 +96,7 @@ class LspBridge:
                 self.build_prefix_function(search_backend, search_backend, name)
             
         # Init emacs option.
-        enable_lsp_server_log = get_emacs_var("lsp-bridge-enable-log")
+        [enable_lsp_server_log] = get_emacs_vars(["lsp-bridge-enable-log"])
         if enable_lsp_server_log:
             logger.setLevel(logging.DEBUG)
 
@@ -209,7 +209,7 @@ class LspBridge:
             multi_lang_server_dir = Path(__file__).resolve().parent / "multiserver"
             multi_lang_server_path = multi_lang_server_dir / "{}.json".format(multi_lang_server)
             
-            user_multi_lang_server_dir = Path(str(get_emacs_var("lsp-bridge-user-multiserver-dir"))).expanduser()
+            user_multi_lang_server_dir = Path(str(get_emacs_vars(["lsp-bridge-user-multiserver-dir"])[0])).expanduser()
             user_multi_lang_server_path = user_multi_lang_server_dir / "{}.json".format(multi_lang_server)
             if user_multi_lang_server_path.exists():
                 multi_lang_server_path = user_multi_lang_server_path
@@ -402,7 +402,7 @@ class LspBridge:
 
             if not is_in_path_dict(FILE_ACTION_DICT, filepath):
                 open_file_success = self.open_file(filepath)  # _do is called inside event_loop, so we can block here.
-            elif os.path.splitext(filepath)[-1] == '.org' and get_emacs_var('lsp-bridge-enable-org-babel'):
+            elif os.path.splitext(filepath)[-1] == '.org' and get_emacs_vars(['lsp-bridge-enable-org-babel'])[0]:
                 # check weather need create new lsp server
                 self.maybe_create_org_babel_server(filepath)
 
@@ -503,7 +503,7 @@ def get_lang_server_path(server_name):
     server_path_current = server_dir / "{}_{}.json".format(server_name, get_os_name())
     server_path_default = server_dir / "{}.json".format(server_name)
 
-    user_server_dir = Path(str(get_emacs_var("lsp-bridge-user-langserver-dir"))).expanduser()
+    user_server_dir = Path(str(get_emacs_vars(["lsp-bridge-user-langserver-dir"])[0])).expanduser()
     user_server_path_current = user_server_dir / "{}_{}.json".format(server_name, get_os_name())
     user_server_path_default = user_server_dir / "{}.json".format(server_name)
 

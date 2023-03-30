@@ -279,7 +279,6 @@ Setting this to nil or 0 will turn off the indicator."
            (lambda (mngr)
              (let ((mngr mngr))
                (lsp-bridge-epc-define-method mngr 'eval-in-emacs 'lsp-bridge--eval-in-emacs-func)
-               (lsp-bridge-epc-define-method mngr 'get-emacs-var 'lsp-bridge--get-emacs-var-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-vars 'lsp-bridge--get-emacs-vars-func)
                (lsp-bridge-epc-define-method mngr 'get-project-path 'lsp-bridge--get-project-path-func)
                (lsp-bridge-epc-define-method mngr 'get-workspace-folder 'lsp-bridge--get-workspace-folder-func)
