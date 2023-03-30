@@ -59,54 +59,41 @@ REMOTE_FILE_ELISP_CHANNEL = 9997
 
 class LspBridge:
     def __init__(self, args):
+        # Check running environment.
         self.running_in_server = len(args) == 0
-
-        if self.running_in_server:
-            thread = threading.Thread(target=self.init_remote_file_server)
-            thread.start()
-
-        # Init EPC client port.
-        if not self.running_in_server:
-            init_epc_client(int(args[0]))
 
         # Build EPC server.
         self.server = ThreadingEPCServer(('localhost', 0), log_traceback=True)
         self.server.allow_reuse_address = True
-
         self.server.register_instance(self)  # register instance functions let elisp side call
 
-        # Start EPC server with sub-thread, avoid block Qt main loop.
+        # Start EPC server.
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.start()
 
+        # Init variables.
         self.thread_queue = []
         self.client_dict = {}
         self.lsp_client_dict = {}
 
-        # All Emacs request running in event_loop.
+        # Init event loop.
         self.event_queue = queue.Queue()
         self.event_loop = threading.Thread(target=self.event_dispatcher)
         self.event_loop.start()
 
-        if not self.running_in_server:
-            self.init()
-
-        # Pass epc port and webengine codec information to Emacs when first start lsp-bridge.
-        if not self.running_in_server:
+        if self.running_in_server:
+            # Start remote file server if lsp-bridge running in server.
+            self.init_remote_file_server()
+        else:
+            # Init EPC client and search backends if lsp-bridge running in local.
+            init_epc_client(int(args[0]))
+            self.init_search_backends()
             eval_in_emacs('lsp-bridge--first-start', self.server.server_address[1])
-
-        self.remote_file_elisp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.remote_file_elisp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.remote_file_elisp.bind(("0.0.0.0", REMOTE_FILE_ELISP_CHANNEL))
-        self.remote_file_elisp.listen(5)
-
-        self.remote_file_elisp_loop = threading.Thread(target=self.remote_file_elisp_dispatcher)
-        self.remote_file_elisp_loop.start()
 
         # event_loop never exit, simulation event loop.
         self.event_loop.join()
 
-    def init(self):
+    def init_search_backends(self):
         # Init tabnine.
         self.tabnine = TabNine()
 
@@ -137,7 +124,7 @@ class LspBridge:
             for name in export_functions:
                 self.build_prefix_function(search_backend, search_backend, name)
 
-        # Init emacs option.
+        # Set log level.
         [enable_lsp_server_log] = get_emacs_vars(["lsp-bridge-enable-log"])
         if enable_lsp_server_log:
             logger.setLevel(logging.DEBUG)
@@ -147,31 +134,25 @@ class LspBridge:
         self.message_thread = threading.Thread(target=self.message_dispatcher)
         self.message_thread.start()
 
-        self.remote_request = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.remote_request.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.remote_request.bind(("0.0.0.0", REMOTE_FILE_COMMAND_CHANNEL))
-        self.remote_request.listen(5)
-
-        self.remote_request_socket = None
-
-        self.remote_request_loop = threading.Thread(target=self.remote_request_dispatcher)
-        self.remote_request_loop.start()
-
+        # Build loop to open remote file.
         self.remote_file_sender_queue = queue.Queue()
         self.remote_file_sender_thread = threading.Thread(target=self.send_message_dispatcher,
                                                           args=(self.remote_file_sender_queue, REMOTE_FILE_SYNC_CHANNEL))
         self.remote_file_sender_thread.start()
 
+        # Build loop to call remote Python command.
         self.remote_file_command_sender_queue = queue.Queue()
         self.remote_file_command_sender_thread = threading.Thread(target=self.send_message_dispatcher,
                                                          args=(self.remote_file_command_sender_queue, REMOTE_FILE_COMMAND_CHANNEL))
         self.remote_file_command_sender_thread.start()
 
+        # Build loop to send remote file to local Emacs.
         self.remote_file_receiver_queue = queue.Queue()
         self.remote_file_receiver_thread = threading.Thread(target=self.receive_message_dispatcher,
                                                             args=(self.remote_file_receiver_queue, self.handle_remote_file_message))
         self.remote_file_receiver_thread.start()
 
+        # Build loop to send elisp command from remote server to local Emacs.
         self.remote_file_command_receiver_queue = queue.Queue()
         self.remote_file_command_receiver_thread = threading.Thread(target=self.receive_message_dispatcher,
                                                            args=(self.remote_file_command_receiver_queue, self.handle_lsp_message))
@@ -251,6 +232,7 @@ class LspBridge:
     def handle_lsp_message(self, message):
         data = json.loads(message)
         if data["command"] == "eval-in-emacs":
+            # Execute emacs command from remote server.
             eval_sexp_in_emacs(data["sexp"])
 
     @threaded
@@ -293,8 +275,31 @@ class LspBridge:
             "message": message
         })
 
+    @threaded
     def init_remote_file_server(self):
+        print("* Running lsp-bridge in remote server, use command 'lsp-bridge-open-remote-file' to open remote file.")
+
+        # Build loop for call local Emacs function from server.
         self.remote_file_server = RemoteFileServer("0.0.0.0", REMOTE_FILE_SYNC_CHANNEL)
+
+        self.remote_file_elisp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.remote_file_elisp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.remote_file_elisp.bind(("0.0.0.0", REMOTE_FILE_ELISP_CHANNEL))
+        self.remote_file_elisp.listen(5)
+
+        self.remote_file_elisp_loop = threading.Thread(target=self.remote_file_elisp_dispatcher)
+        self.remote_file_elisp_loop.start()
+
+        # Build loop for call remote command from local Emacs.
+        self.remote_request = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.remote_request.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.remote_request.bind(("0.0.0.0", REMOTE_FILE_COMMAND_CHANNEL))
+        self.remote_request.listen(5)
+
+        self.remote_request_socket = None
+
+        self.remote_request_loop = threading.Thread(target=self.remote_request_dispatcher)
+        self.remote_request_loop.start()
 
     def get_socket_client(self, server_host, server_port):
         client_id = f"{server_host}:{server_port}"
@@ -319,13 +324,14 @@ class LspBridge:
         elif server_port == REMOTE_FILE_COMMAND_CHANNEL:
             self.remote_file_command_receiver_queue.put(message)
         elif server_port == REMOTE_FILE_ELISP_CHANNEL:
+            # Receive elisp RPC call from remote server.
             log_time(f"Receive remote message: {message}")
 
             data = json.loads(message)
             host = data["host"]
 
+            # Read elisp code from local Emacs, and sendback to remote server.
             client = self.get_socket_client(host, REMOTE_FILE_ELISP_CHANNEL)
-
             if data["command"] == "get_emacs_func_result":
                 result = get_emacs_func_result(data["method"], *data["args"])
             elif data["command"] == "get_emacs_vars":
@@ -337,22 +343,26 @@ class LspBridge:
         try:
             while True:
                 client_socket, client_address = self.remote_file_elisp.accept()
+
+                # Record first socket client to make remote server call elisp function from local Emacs.
                 if get_remote_rpc_socket() is None:
                     log_time(f"Build connect from {client_address[0]}:{client_address[1]}")
 
                     set_remote_rpc_socket(client_socket, client_address[0])
 
+                    # Drop first "say hello" message from local Emacs.
                     socket_file = client_socket.makefile("r")
                     socket_file.readline().strip()
                     socket_file.close()
 
-                    self.init()
+                    self.init_search_backends()
         except:
             print(traceback.format_exc())
 
     def remote_request_dispatcher(self):
         try:
             while True:
+                # Record server host when lsp-bridge running in remote server.
                 client_socket, client_address = self.remote_request.accept()
                 set_lsp_file_host(client_address[0])
                 set_remote_eval_socket(client_socket)
@@ -366,6 +376,7 @@ class LspBridge:
     def handle_remote_request(self):
         client_file = self.remote_request_socket.makefile('r')
         while True:
+            # Receive Python command request from local Emacs.
             message = client_file.readline().strip()
             if not message:
                 break
@@ -373,11 +384,13 @@ class LspBridge:
             message = json.loads(message)
 
             if message["command"] == "lsp_request":
+                # Call LSP request.
                 self.event_queue.put({
                     "name": "action_func",
                     "content": ("_{}".format(message["method"]), [message["path"]] + message["args"])
                 })
             elif message["command"] == "func_request":
+                # Call lsp-bridge normal function.
                 getattr(self, message["method"])(*message["args"])
 
     def event_dispatcher(self):
@@ -678,17 +691,19 @@ class RemoteFileClient(threading.Thread):
     def __init__(self, ssh_host, ssh_user, server_port, callback):
         threading.Thread.__init__(self)
 
+        # Init.
         self.ssh_host = ssh_host
         self.ssh_user = ssh_user
         self.server_port = server_port
-
         self.callback = callback
 
+        # Build SSH channel between local client and remote server.
         self.ssh = self.connect_ssh()
         self.transport = self.ssh.get_transport()
         self.chan = self.transport.open_channel("direct-tcpip", (self.ssh_host, self.server_port), ('0.0.0.0', 0))
 
     def ssh_pub_key(self):
+        # Read SSH public key.
         ssh_dir = os.path.expanduser('~/.ssh')
         pub_keys = glob.glob(os.path.join(ssh_dir, '*.pub'))
         return pub_keys[0]
@@ -718,17 +733,19 @@ class RemoteFileClient(threading.Thread):
 
 class RemoteFileServer:
     def __init__(self, host, port):
+        # Init.
         self.host = host
         self.port = port
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
         self.server.bind((self.host, self.port))
         self.server.listen(5)
 
+        # Build event loop.
         self.event_loop = threading.Thread(target=self.event_dispatcher)
         self.event_loop.start()
 
+        # Build message loop.
         self.message_queue = queue.Queue()
         self.message_thread = threading.Thread(target=self.message_dispatcher)
         self.message_thread.start()
@@ -812,6 +829,7 @@ class RemoteFileServer:
 
         content = self.file_dict[path]
 
+        # Synchronously file content in memory for edit big file non-block.
         start_line = data["args"][0]['line']
         start_char = data['args'][0]['character']
         end_line = data['args'][1]['line']
