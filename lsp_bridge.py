@@ -53,6 +53,10 @@ def threaded(func):
             args[0].thread_queue.append(thread)
     return wrapper
 
+REMOTE_FILE_SYNC_CHANNEL = 9999
+REMOTE_FILE_COMMAND_CHANNEL = 9998
+REMOTE_FILE_ELISP_CHANNEL = 9997
+
 class LspBridge:
     def __init__(self, args):
         self.running_in_server = len(args) == 0
@@ -91,13 +95,13 @@ class LspBridge:
         if not self.running_in_server:
             eval_in_emacs('lsp-bridge--first-start', self.server.server_address[1])
 
-        self.remote_emacs = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.remote_emacs.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.remote_emacs.bind(("0.0.0.0", 9997))
-        self.remote_emacs.listen(5)
+        self.remote_file_elisp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.remote_file_elisp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.remote_file_elisp.bind(("0.0.0.0", REMOTE_FILE_ELISP_CHANNEL))
+        self.remote_file_elisp.listen(5)
 
-        self.remote_emacs_loop = threading.Thread(target=self.remote_emacs_dispatcher)
-        self.remote_emacs_loop.start()
+        self.remote_file_elisp_loop = threading.Thread(target=self.remote_file_elisp_dispatcher)
+        self.remote_file_elisp_loop.start()
 
         # event_loop never exit, simulation event loop.
         self.event_loop.join()
@@ -145,7 +149,7 @@ class LspBridge:
 
         self.remote_request = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.remote_request.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.remote_request.bind(("0.0.0.0", 9998))
+        self.remote_request.bind(("0.0.0.0", REMOTE_FILE_COMMAND_CHANNEL))
         self.remote_request.listen(5)
 
         self.remote_request_socket = None
@@ -154,20 +158,24 @@ class LspBridge:
         self.remote_request_loop.start()
 
         self.remote_file_sender_queue = queue.Queue()
-        self.remote_file_sender_thread = threading.Thread(target=self.send_message_dispatcher, args=(self.remote_file_sender_queue, 9999))
+        self.remote_file_sender_thread = threading.Thread(target=self.send_message_dispatcher,
+                                                          args=(self.remote_file_sender_queue, REMOTE_FILE_SYNC_CHANNEL))
         self.remote_file_sender_thread.start()
 
-        self.lsp_bridge_sender_queue = queue.Queue()
-        self.lsp_bridge_sender_thread = threading.Thread(target=self.send_message_dispatcher, args=(self.lsp_bridge_sender_queue, 9998))
-        self.lsp_bridge_sender_thread.start()
+        self.remote_file_command_sender_queue = queue.Queue()
+        self.remote_file_command_sender_thread = threading.Thread(target=self.send_message_dispatcher,
+                                                         args=(self.remote_file_command_sender_queue, REMOTE_FILE_COMMAND_CHANNEL))
+        self.remote_file_command_sender_thread.start()
 
         self.remote_file_receiver_queue = queue.Queue()
-        self.remote_file_receiver_thread = threading.Thread(target=self.receive_message_dispatcher, args=(self.remote_file_receiver_queue, self.handle_remote_file_message))
+        self.remote_file_receiver_thread = threading.Thread(target=self.receive_message_dispatcher,
+                                                            args=(self.remote_file_receiver_queue, self.handle_remote_file_message))
         self.remote_file_receiver_thread.start()
 
-        self.lsp_bridge_receiver_queue = queue.Queue()
-        self.lsp_bridge_receiver_thread = threading.Thread(target=self.receive_message_dispatcher, args=(self.lsp_bridge_receiver_queue, self.handle_lsp_message))
-        self.lsp_bridge_receiver_thread.start()
+        self.remote_file_command_receiver_queue = queue.Queue()
+        self.remote_file_command_receiver_thread = threading.Thread(target=self.receive_message_dispatcher,
+                                                           args=(self.remote_file_command_receiver_queue, self.handle_lsp_message))
+        self.remote_file_command_receiver_thread.start()
 
     def send_message_dispatcher(self, queue, port):
         try:
@@ -197,9 +205,9 @@ class LspBridge:
 
             message_emacs(f"Open file {server_path}...")
 
-            client_id = f"{server_host}:9997"
+            client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
             if client_id not in self.client_dict:
-                client = self.get_socket_client(server_host, 9997)
+                client = self.get_socket_client(server_host, REMOTE_FILE_ELISP_CHANNEL)
                 client.send_message("Connect")
 
             self.send_remote_file_message(server_host, {
@@ -280,13 +288,13 @@ class LspBridge:
         })
 
     def send_lsp_bridge_message(self, host, message):
-        self.lsp_bridge_sender_queue.put({
+        self.remote_file_command_sender_queue.put({
             "host": host,
             "message": message
         })
 
     def init_remote_file_server(self):
-        self.remote_file_server = RemoteFileServer("0.0.0.0", 9999)
+        self.remote_file_server = RemoteFileServer("0.0.0.0", REMOTE_FILE_SYNC_CHANNEL)
 
     def get_socket_client(self, server_host, server_port):
         client_id = f"{server_host}:{server_port}"
@@ -306,17 +314,17 @@ class LspBridge:
         return client
 
     def receive_socket_message(self, message, server_port):
-        if server_port == 9999:
+        if server_port == REMOTE_FILE_SYNC_CHANNEL:
             self.remote_file_receiver_queue.put(message)
-        elif server_port == 9998:
-            self.lsp_bridge_receiver_queue.put(message)
-        elif server_port == 9997:
+        elif server_port == REMOTE_FILE_COMMAND_CHANNEL:
+            self.remote_file_command_receiver_queue.put(message)
+        elif server_port == REMOTE_FILE_ELISP_CHANNEL:
             log_time(f"Receive remote message: {message}")
 
             data = json.loads(message)
             host = data["host"]
 
-            client = self.get_socket_client(host, 9997)
+            client = self.get_socket_client(host, REMOTE_FILE_ELISP_CHANNEL)
 
             if data["command"] == "get_emacs_func_result":
                 result = get_emacs_func_result(data["method"], *data["args"])
@@ -325,10 +333,10 @@ class LspBridge:
 
             client.send_message(result)
 
-    def remote_emacs_dispatcher(self):
+    def remote_file_elisp_dispatcher(self):
         try:
             while True:
-                client_socket, client_address = self.remote_emacs.accept()
+                client_socket, client_address = self.remote_file_elisp.accept()
                 if get_remote_rpc_socket() is None:
                     log_time(f"Build connect from {client_address[0]}:{client_address[1]}")
 
