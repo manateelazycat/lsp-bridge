@@ -987,7 +987,9 @@ So we build this macro to restore postion after code format."
   (when (and (lsp-bridge-has-lsp-server-p)
              (lsp-bridge-epc-live-p lsp-bridge-epc-process)
              (boundp 'acm-backend-lsp-filepath))
-    (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath))
+    (if (lsp-bridge-is-nova-file)
+        (nova-send-search-request "close_file" (list acm-backend-lsp-filepath))
+      (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath)))
 
   (when (and buffer-file-name
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
@@ -1926,7 +1928,9 @@ SymbolKind (defined in the LSP)."
              (boundp 'acm-backend-lsp-filepath))
     (let ((new-name (expand-file-name (nth 0 args))))
       (lsp-bridge-call-file-api "rename_file" new-name)
-      (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath)
+      (if (lsp-bridge-is-nova-file)
+          (nova-send-search-request "close_file" (list acm-backend-lsp-filepath))
+        (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath))
       (set-visited-file-name new-name t t)
       (setq-local acm-backend-lsp-filepath new-name)))
   (apply orig-fun arg args))
