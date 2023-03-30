@@ -286,7 +286,7 @@ class LspBridge:
         })
 
     def init_remote_file_server(self):
-        self.remote_file_server = Server("0.0.0.0", 9999)
+        self.remote_file_server = RemoteFileServer("0.0.0.0", 9999)
 
     def get_socket_client(self, server_host, server_port):
         client_id = f"{server_host}:{server_port}"
@@ -294,10 +294,11 @@ class LspBridge:
         if client_id in self.client_dict:
             client = self.client_dict[client_id]
         else:
-            client = Client(server_host,
-                            "root",
-                            server_port,
-                            lambda message: self.receive_socket_message(message, server_port))
+            client = RemoteFileClient(
+                server_host,
+                "root",
+                server_port,
+                lambda message: self.receive_socket_message(message, server_port))
             client.start()
 
             self.client_dict[client_id] = client
@@ -348,8 +349,6 @@ class LspBridge:
                 set_lsp_file_host(client_address[0])
                 set_remote_eval_socket(client_socket)
                 self.remote_request_socket = client_socket
-
-                print(f"[*] Accepted connection from {client_address[0]}:{client_address[1]}")
 
                 client_handler = threading.Thread(target=self.handle_remote_request)
                 client_handler.start()
@@ -667,7 +666,7 @@ class LspBridge:
         except:
             message_emacs("Set option 'lsp-bridge-enable-profile' to 't' and call lsp-bridge-restart-process, then call lsp-bridge-profile-dump again.")
 
-class Client(threading.Thread):
+class RemoteFileClient(threading.Thread):
     def __init__(self, ssh_host, ssh_user, server_port, callback):
         threading.Thread.__init__(self)
 
@@ -709,54 +708,7 @@ class Client(threading.Thread):
             self.callback(message)
         self.chan.close()
 
-def read_lang_server_info(lang_server_path):
-    lang_server_info = json.load(lang_server_path)
-
-    # Replace template in command options.
-    command_args = lang_server_info["command"]
-    for i, arg in enumerate(command_args):
-        command_args[i] = replace_template(arg)
-    lang_server_info["command"] = command_args
-
-    # Replace template in initializationOptions.
-    if "initializationOptions" in lang_server_info:
-        initialization_options_args = lang_server_info["initializationOptions"]
-        for i, arg in enumerate(initialization_options_args):
-            if type(initialization_options_args[arg]) == str:
-                initialization_options_args[arg] = replace_template(initialization_options_args[arg])
-        lang_server_info["initializationOptions"] = initialization_options_args
-
-    return lang_server_info
-
-def load_single_server_info(lang_server):
-    lang_server_info_path = ""
-    if os.path.exists(lang_server) and os.path.dirname(lang_server) != "":
-        # If lang_server is real file path, we load the LSP server configuration from the user specified file.
-        lang_server_info_path = lang_server
-    else:
-        # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
-        lang_server_info_path = get_lang_server_path(lang_server)
-        
-    with open(lang_server_info_path, encoding="utf-8", errors="ignore") as f:
-        return read_lang_server_info(f)
-
-def get_lang_server_path(server_name):
-    server_dir = Path(__file__).resolve().parent / "langserver"
-    server_path_current = server_dir / "{}_{}.json".format(server_name, get_os_name())
-    server_path_default = server_dir / "{}.json".format(server_name)
-
-    user_server_dir = Path(str(get_emacs_vars(["lsp-bridge-user-langserver-dir"])[0])).expanduser()
-    user_server_path_current = user_server_dir / "{}_{}.json".format(server_name, get_os_name())
-    user_server_path_default = user_server_dir / "{}.json".format(server_name)
-
-    if user_server_path_current.exists():
-        server_path_current = user_server_path_current
-    elif user_server_path_default.exists():
-        server_path_current = user_server_path_default
-
-    return server_path_current if server_path_current.exists() else server_path_default
-
-class Server:
+class RemoteFileServer:
     def __init__(self, host, port):
         self.host = host
         self.port = port
@@ -765,7 +717,6 @@ class Server:
 
         self.server.bind((self.host, self.port))
         self.server.listen(5)
-        print(f"[*] Listening on {self.host}:{self.port}")
 
         self.event_loop = threading.Thread(target=self.event_dispatcher)
         self.event_loop.start()
@@ -780,7 +731,6 @@ class Server:
         try:
             while True:
                 client_socket, client_address = self.server.accept()
-                print(f"[*] Accepted connection from {client_address[0]}:{client_address[1]}")
 
                 client_handler = threading.Thread(target=self.handle_client, args=(client_socket,))
                 client_handler.start()
@@ -806,7 +756,7 @@ class Server:
         client_socket.close()
 
     def handle_message(self, message, client_socket):
-        print(f"[*] '{message}'")
+        log_time(f"[*] '{message}'")
 
         data = json.loads(message)
         command = data["command"]
@@ -868,24 +818,67 @@ class Server:
 
         self.file_dict[path] = content
 
-        print(f"###\n{content}###\n")
-
     def handle_save_file(self, data, client_socket):
         path = data["path"]
 
         if path in self.file_dict:
             with open(path, 'w') as file:
                 file.write(self.file_dict[path])
-                print(f"Write data to file {path}")
         else:
-            print(f"Write file {path} because path not exist in file_dict somehow.")
+            log_time(f"[*] Write file {path} because path not exist in file_dict somehow.")
 
     def handle_close_file(self, data, client_socket):
         path = data["path"]
 
         if path in self.file_dict:
             self.file_dict[path] = ""
-            print(f"Close file {path}")
+
+def read_lang_server_info(lang_server_path):
+    lang_server_info = json.load(lang_server_path)
+
+    # Replace template in command options.
+    command_args = lang_server_info["command"]
+    for i, arg in enumerate(command_args):
+        command_args[i] = replace_template(arg)
+    lang_server_info["command"] = command_args
+
+    # Replace template in initializationOptions.
+    if "initializationOptions" in lang_server_info:
+        initialization_options_args = lang_server_info["initializationOptions"]
+        for i, arg in enumerate(initialization_options_args):
+            if type(initialization_options_args[arg]) == str:
+                initialization_options_args[arg] = replace_template(initialization_options_args[arg])
+        lang_server_info["initializationOptions"] = initialization_options_args
+
+    return lang_server_info
+
+def load_single_server_info(lang_server):
+    lang_server_info_path = ""
+    if os.path.exists(lang_server) and os.path.dirname(lang_server) != "":
+        # If lang_server is real file path, we load the LSP server configuration from the user specified file.
+        lang_server_info_path = lang_server
+    else:
+        # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
+        lang_server_info_path = get_lang_server_path(lang_server)
+
+    with open(lang_server_info_path, encoding="utf-8", errors="ignore") as f:
+        return read_lang_server_info(f)
+
+def get_lang_server_path(server_name):
+    server_dir = Path(__file__).resolve().parent / "langserver"
+    server_path_current = server_dir / "{}_{}.json".format(server_name, get_os_name())
+    server_path_default = server_dir / "{}.json".format(server_name)
+
+    user_server_dir = Path(str(get_emacs_vars(["lsp-bridge-user-langserver-dir"])[0])).expanduser()
+    user_server_path_current = user_server_dir / "{}_{}.json".format(server_name, get_os_name())
+    user_server_path_default = user_server_dir / "{}.json".format(server_name)
+
+    if user_server_path_current.exists():
+        server_path_current = user_server_path_current
+    elif user_server_path_default.exists():
+        server_path_current = user_server_path_default
+
+    return server_path_current if server_path_current.exists() else server_path_default
 
 if __name__ == "__main__":
     if len(sys.argv) >= 3:
