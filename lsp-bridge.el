@@ -109,7 +109,9 @@
         (key (plist-get candidate :key)))
     ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
     (unless (equal acm-backend-lsp-fetch-completion-item-ticker (list acm-backend-lsp-filepath key kind))
-      (lsp-bridge-call-async "fetch_completion_item_info" acm-backend-lsp-filepath key server-name)
+      (if (lsp-bridge-is-nova-file)
+          (nova-send-search-request "fetch_completion_item_info" (list acm-backend-lsp-filepath key server-name))
+        (lsp-bridge-call-async "fetch_completion_item_info" acm-backend-lsp-filepath key server-name))
       (setq-local acm-backend-lsp-fetch-completion-item-ticker (list acm-backend-lsp-filepath key kind)))))
 
 (defcustom lsp-bridge-completion-popup-predicates '(
@@ -1350,7 +1352,7 @@ So we build this macro to restore postion after code format."
         (lsp-bridge-search-words-update)
 
         (unless (eq last-command 'mwheel-scroll)
-          (nova-send-search-request "search_file_words_rebuild_cache")))
+          (nova-send-search-request "search_file_words_rebuild_cache" (list))))
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       ;; Update file search words when idle.
       (lsp-bridge-search-words-update)
