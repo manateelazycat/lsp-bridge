@@ -374,6 +374,25 @@ def string_to_base64(text):
 
     return base64_string
 
+def get_position(content, line, character):
+    lines = content.split('\n')
+    position = sum(len(lines[i]) + 1 for i in range(line)) + character
+    return position
+
+def replace_template(arg):
+    if "%USER_EMACS_DIRECTORY%" in arg:
+        user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
+        return arg.replace("%USER_EMACS_DIRECTORY%", user_emacs_dir)
+    elif "$HOME" in arg:
+            return os.path.expandvars(arg)
+    elif "%FILEHASH%" in arg:
+        # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.
+        return arg.replace("%FILEHASH%", os.urandom(21).hex())
+    elif "%USERPROFILE%" in arg:
+        return arg.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
+    else:
+        return arg
+
 class MessageSender(Thread):
     
     def __init__(self, process: subprocess.Popen):

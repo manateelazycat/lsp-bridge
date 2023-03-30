@@ -710,35 +710,8 @@ class Client(threading.Thread):
         self.chan.close()
 
 def read_lang_server_info(lang_server_path):
-    return server_info_replace_template(json.load(lang_server_path))
+    lang_server_info = json.load(lang_server_path)
 
-def load_single_server_info(lang_server):
-    lang_server_info_path = ""
-    if os.path.exists(lang_server) and os.path.dirname(lang_server) != "":
-        # If lang_server is real file path, we load the LSP server configuration from the user specified file.
-        lang_server_info_path = lang_server
-    else:
-        # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
-        lang_server_info_path = get_lang_server_path(lang_server)
-        
-    with open(lang_server_info_path, encoding="utf-8", errors="ignore") as f:
-        return read_lang_server_info(f)
-
-def replace_template(arg):
-    if "%USER_EMACS_DIRECTORY%" in arg:
-        user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
-        return arg.replace("%USER_EMACS_DIRECTORY%", user_emacs_dir)
-    elif "$HOME" in arg:
-            return os.path.expandvars(arg)
-    elif "%FILEHASH%" in arg:
-        # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.
-        return arg.replace("%FILEHASH%", os.urandom(21).hex())
-    elif "%USERPROFILE%" in arg:
-        return arg.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
-    else:
-        return arg
-
-def server_info_replace_template(lang_server_info):
     # Replace template in command options.
     command_args = lang_server_info["command"]
     for i, arg in enumerate(command_args):
@@ -754,6 +727,18 @@ def server_info_replace_template(lang_server_info):
         lang_server_info["initializationOptions"] = initialization_options_args
 
     return lang_server_info
+
+def load_single_server_info(lang_server):
+    lang_server_info_path = ""
+    if os.path.exists(lang_server) and os.path.dirname(lang_server) != "":
+        # If lang_server is real file path, we load the LSP server configuration from the user specified file.
+        lang_server_info_path = lang_server
+    else:
+        # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
+        lang_server_info_path = get_lang_server_path(lang_server)
+        
+    with open(lang_server_info_path, encoding="utf-8", errors="ignore") as f:
+        return read_lang_server_info(f)
 
 def get_lang_server_path(server_name):
     server_dir = Path(__file__).resolve().parent / "langserver"
@@ -901,11 +886,6 @@ class Server:
         if path in self.file_dict:
             self.file_dict[path] = ""
             print(f"Close file {path}")
-
-def get_position(content, line, character):
-    lines = content.split('\n')
-    position = sum(len(lines[i]) + 1 for i in range(line)) + character
-    return position
 
 if __name__ == "__main__":
     if len(sys.argv) >= 3:
