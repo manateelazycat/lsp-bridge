@@ -53,9 +53,6 @@ class LspBridge:
                      "workspace_symbol"] + handler_subclasses:
             self.build_file_action_function(name)
             
-        for name in ["open_file", "close_file"]:
-            self.build_message_function(name)
-            
         # Init EPC client port.
         init_epc_client(int(args[0]))
 
@@ -166,9 +163,7 @@ class LspBridge:
             while True:
                 message = self.event_queue.get(True)
             
-                if message["name"] == "open_file":
-                    self._open_file(message["content"])
-                elif message["name"] == "close_file":
+                if message["name"] == "close_file":
                     self._close_file(message["content"])
                 elif message["name"] == "action_func":
                     (func_name, func_args) = message["content"]
@@ -199,7 +194,7 @@ class LspBridge:
         if is_in_path_dict(FILE_ACTION_DICT, filepath):
             get_from_path_dict(FILE_ACTION_DICT, filepath).completion_item_resolve(item_key, server_name)
     
-    def _open_file(self, filepath):
+    def open_file(self, filepath):
         project_path = get_project_path(filepath)
         multi_lang_server = get_emacs_func_result("get-multi-lang-server", project_path, filepath)
 
@@ -260,6 +255,17 @@ class LspBridge:
             self.load_single_lang_server(project_path, filepath)
 
         return True
+
+    def close_file(self, filepath):
+        # Add queue, make sure close file after other LSP request.
+        self.event_queue.put({
+            "name": "close_file",
+            "content": filepath
+        })
+
+    def _close_file(self, filepath):
+        if is_in_path_dict(FILE_ACTION_DICT, filepath):
+            get_from_path_dict(FILE_ACTION_DICT, filepath).exit()
 
     def enjoy_hacking(self, servers, project_path):
         # Notify user server is ready.
@@ -370,10 +376,6 @@ class LspBridge:
         
         return list(dict.fromkeys(servers))
 
-    def _close_file(self, filepath):
-        if is_in_path_dict(FILE_ACTION_DICT, filepath):
-            get_from_path_dict(FILE_ACTION_DICT, filepath).exit()
-
     def maybe_create_org_babel_server(self, filepath):
         action = get_from_path_dict(FILE_ACTION_DICT, filepath)
         current_lang_server = get_emacs_func_result("get-single-lang-server",
@@ -399,7 +401,7 @@ class LspBridge:
             open_file_success = True
 
             if not is_in_path_dict(FILE_ACTION_DICT, filepath):
-                open_file_success = self._open_file(filepath)  # _do is called inside event_loop, so we can block here.
+                open_file_success = self.open_file(filepath)  # _do is called inside event_loop, so we can block here.
             elif os.path.splitext(filepath)[-1] == '.org' and get_emacs_var('lsp-bridge-enable-org-babel'):
                 # check weather need create new lsp server
                 self.maybe_create_org_babel_server(filepath)
@@ -424,15 +426,6 @@ class LspBridge:
             getattr(getattr(self, obj_name), name)(*args, **kwargs)
 
         setattr(self, "{}_{}".format(prefix, name), _do)
-        
-    def build_message_function(self, name):
-        def _do(filepath):
-            self.event_queue.put({
-                "name": name,
-                "content": filepath
-            })
-            
-        setattr(self, name, _do)
         
     def tabnine_complete(self, before, after, filename, region_includes_beginning, region_includes_end, max_num_results):
         self.tabnine.complete(before, after, filename, region_includes_beginning, region_includes_end, max_num_results)
