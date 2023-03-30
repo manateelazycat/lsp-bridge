@@ -181,6 +181,15 @@
   :type 'string
   :group 'acm)
 
+(defcustom acm-completion-backend-merge-order '("mode-first-part-candidates"
+                                                "template-first-part-candidates"
+                                                "tabnine-candidates"
+                                                "template-second-part-candidates"
+                                                "mode-second-part-candidates")
+  "The merge order for completion backend."
+  :type 'list
+  :group 'acm)
+
 (cl-defmacro acm-run-idle-func (timer idle func)
   `(unless ,timer
      (setq ,timer
@@ -429,11 +438,15 @@ Only calculate template candidate when type last character."
           (setq mode-second-part-candidates nil))
 
         ;; Build all backend candidates.
-        (setq candidates (append mode-first-part-candidates
-                                 template-first-part-candidates
-                                 tabnine-candidates
-                                 template-second-part-candidates
-                                 mode-second-part-candidates)
+        (setq candidates (apply #'append (mapcar (lambda (backend-name)
+                                                   (pcase backend-name
+                                                     ("mode-first-part-candidates" mode-first-part-candidates)
+                                                     ("template-first-part-candidates" template-first-part-candidates)
+                                                     ("tabnine-candidates" tabnine-candidates)
+                                                     ("template-second-part-candidates" template-second-part-candidates)
+                                                     ("mode-second-part-candidates" mode-second-part-candidates)
+                                                     ))
+                                                 acm-completion-backend-merge-order))
               )))
 
     ;; Return candidates.

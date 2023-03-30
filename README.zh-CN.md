@@ -160,6 +160,7 @@ lsp-bridge 也可以像 VSCode 那样对远程服务器的文件提供代码语�
 * `acm-enable-citre`: [citre(ctags)](https://github.com/universal-ctags/citre) 补全，默认关闭
 * `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是 20
 * `acm-candidate-match-function`: 补全菜单匹配算法， orderless-* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
+* `acm-completion-backend-merge-order`: 补全后端的显示顺序， 默认是按照LSP、 模板、 TabNine顺序合并多个补全后端后， 再显示剩下的模板和LSP补全选项， 你可以根据你的需求调整补全后端合并顺序
 * `acm-backend-lsp-candidate-min-length`: LSP 补全最小的触发字符数, 默认是 0
 * `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
 * `acm-backend-lsp-candidate-max-length`: LSP 候选词最大长度， 一些语言参数较长， 可以适当增加这个选项的值以看清楚参数列表
