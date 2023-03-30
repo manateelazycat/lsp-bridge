@@ -109,8 +109,8 @@
         (key (plist-get candidate :key)))
     ;; Try send `completionItem/resolve' request to fetch `documentation' and `additionalTextEdits' information.
     (unless (equal acm-backend-lsp-fetch-completion-item-ticker (list acm-backend-lsp-filepath key kind))
-      (if (lsp-bridge-is-nova-file)
-          (nova-send-func-request "fetch_completion_item_info" (list acm-backend-lsp-filepath key server-name))
+      (if (lsp-bridge-is-remote-file)
+          (lsp-bridge-remote-send-func-request "fetch_completion_item_info" (list acm-backend-lsp-filepath key server-name))
         (lsp-bridge-call-async "fetch_completion_item_info" acm-backend-lsp-filepath key server-name))
       (setq-local acm-backend-lsp-fetch-completion-item-ticker (list acm-backend-lsp-filepath key kind)))))
 
@@ -623,19 +623,19 @@ So we build this macro to restore postion after code format."
      (back-to-indentation)
      (forward-char (max (- current-column indent-column) 0))))
 
-(defun lsp-bridge-is-nova-file ()
-  (and (boundp 'nova-is-remote-file)
-       nova-is-remote-file))
+(defun lsp-bridge-is-remote-file ()
+  (and (boundp 'lsp-bridge-remote-file-flag)
+       lsp-bridge-remote-file-flag))
 
 (defun lsp-bridge-get-buffer-truename (&optional filename)
-  (if (lsp-bridge-is-nova-file)
-      nova-remote-file-path
+  (if (lsp-bridge-is-remote-file)
+      lsp-bridge-remote-file-path
     (file-truename (or filename buffer-file-name))))
 
 (defun lsp-bridge-get-match-buffer-by-remote-file (host path)
   (cl-dolist (buffer (buffer-list))
     (with-current-buffer buffer
-      (when (string-equal (buffer-name) (format "nova %s:%s" host path))
+      (when (string-equal (buffer-name) (format "lsp-bridge-remote %s:%s" host path))
         (cl-return buffer))
       )))
 
@@ -718,7 +718,7 @@ So we build this macro to restore postion after code format."
     ("symbol" (symbol-value info))
     ))
 
-(defun lsp-brige-get-mode-name-from-file-path (file-path)
+(defun lsp-bridge-get-mode-name-from-file-path (file-path)
   (cdr (assoc file-path
               auto-mode-alist
               'string-match-p)))
@@ -728,7 +728,7 @@ So we build this macro to restore postion after code format."
     (if buffer
         (with-current-buffer buffer
           major-mode)
-      (lsp-brige-get-mode-name-from-file-path filepath))))
+      (lsp-bridge-get-mode-name-from-file-path filepath))))
 
 (defun lsp-bridge-get-multi-lang-server-by-file-mode (filename)
   "Get lang server for file mode."
@@ -758,8 +758,8 @@ So we build this macro to restore postion after code format."
          (lsp-bridge-org-babel-check-lsp-server))
         (t
          (when-let* ((filename (or (ignore-errors (file-truename buffer-file-name))
-                                   (when (lsp-bridge-is-nova-file)
-                                     nova-remote-file-path))))
+                                   (when (lsp-bridge-is-remote-file)
+                                     lsp-bridge-remote-file-path))))
            (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension filename)
                                                       (lsp-bridge-get-multi-lang-server-by-file-mode filename)))
                   (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension filename)
@@ -783,8 +783,8 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-call-file-api (method &rest args)
   (when (lsp-bridge-call-file-api-p)
-    (if (lsp-bridge-is-nova-file)
-        (nova-send-lsp-request method args)
+    (if (lsp-bridge-is-remote-file)
+        (lsp-bridge-remote-send-lsp-request method args)
       (if (and (boundp 'acm-backend-lsp-filepath)
                (file-exists-p acm-backend-lsp-filepath))
           (if lsp-bridge-buffer-file-deleted
@@ -964,16 +964,16 @@ So we build this macro to restore postion after code format."
   (when (and (lsp-bridge-has-lsp-server-p)
              (lsp-bridge-epc-live-p lsp-bridge-epc-process)
              (boundp 'acm-backend-lsp-filepath))
-    (if (lsp-bridge-is-nova-file)
-        (nova-send-func-request "close_file" (list acm-backend-lsp-filepath))
+    (if (lsp-bridge-is-remote-file)
+        (lsp-bridge-remote-send-func-request "close_file" (list acm-backend-lsp-filepath))
       (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath)))
 
   (when (and buffer-file-name
              (lsp-bridge-epc-live-p lsp-bridge-epc-process))
     (lsp-bridge-call-async "search_file_words_close_file" buffer-file-name))
 
-  (when (lsp-bridge-is-nova-file)
-    (nova-send-func-request "search_file_words_close_file" (list nova-remote-file-path))))
+  (when (lsp-bridge-is-remote-file)
+    (lsp-bridge-remote-send-func-request "search_file_words_close_file" (list lsp-bridge-remote-file-path))))
 
 (defun lsp-bridge-set-prefix-style (prefix-style)
   ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
@@ -1060,8 +1060,8 @@ So we build this macro to restore postion after code format."
    (ignore-errors
      (and (thing-at-point 'filename)
           (or (file-exists-p (file-name-directory (thing-at-point 'filename)))
-              ;; Allow string in nova file.
-              (lsp-bridge-is-nova-file))))
+              ;; Allow string in lsp-bridge-remote file.
+              (lsp-bridge-is-remote-file))))
    ))
 
 (defun lsp-bridge-not-execute-macro ()
@@ -1229,12 +1229,12 @@ So we build this macro to restore postion after code format."
           ;; Send change file to search-words backend.
           (unless lsp-bridge-prohibit-completion
             (when (or buffer-file-name
-                      (lsp-bridge-is-nova-file))
+                      (lsp-bridge-is-remote-file))
               (let ((current-word (acm-backend-search-file-words-get-point-string)))
                 ;; Search words if current prefix is not empty.
                 (unless (or (string-equal current-word "") (null current-word))
-                  (if (lsp-bridge-is-nova-file)
-                      (nova-send-func-request "search_file_words_search" (list current-word))
+                  (if (lsp-bridge-is-remote-file)
+                      (lsp-bridge-remote-send-func-request "search_file_words_search" (list current-word))
                     (lsp-bridge-call-async "search_file_words_search" current-word))))))
 
           ;; Send tailwind keyword search request just when cursor in class area.
@@ -1243,16 +1243,16 @@ So we build this macro to restore postion after code format."
                      (save-excursion
                        (search-backward-regexp "class=" (point-at-bol) t)))
             (unless (or (string-equal current-symbol "") (null current-symbol))
-              (if (lsp-bridge-is-nova-file)
-                  (nova-send-func-request "search_tailwind_keywords_search" (list nova-remote-file-path current-symbol))
+              (if (lsp-bridge-is-remote-file)
+                  (lsp-bridge-remote-send-func-request "search_tailwind_keywords_search" (list lsp-bridge-remote-file-path current-symbol))
                 (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol))))
 
           ;; Send path search request when detect path string.
           (if (acm-in-string-p)
               (when-let* ((filename (thing-at-point 'filename t))
                           (dirname (ignore-errors (expand-file-name (file-name-directory filename)))))
-                (if (lsp-bridge-is-nova-file)
-                    (nova-send-func-request "search_paths_search"
+                (if (lsp-bridge-is-remote-file)
+                    (lsp-bridge-remote-send-func-request "search_paths_search"
                                             (list dirname (file-name-base filename)))
                   (when (file-exists-p dirname)
                     (lsp-bridge-call-async "search_paths_search"
@@ -1291,18 +1291,18 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-search-words-index-files ()
   "Index files when lsp-bridge python process finish."
-  (if (lsp-bridge-is-nova-file)
-      (let* ((host nova-remote-file-host)
+  (if (lsp-bridge-is-remote-file)
+      (let* ((host lsp-bridge-remote-file-host)
              (buffers (cl-remove-if-not (lambda (buf)
                                           (with-current-buffer buf
-                                            (and (lsp-bridge-is-nova-file)
-                                                 (string-equal nova-remote-file-host host))))
+                                            (and (lsp-bridge-is-remote-file)
+                                                 (string-equal lsp-bridge-remote-file-host host))))
                                         (buffer-list)))
              (files (mapcar (lambda (buf)
                               (with-current-buffer buf
-                                nnova-remote-file-path))
+                                lsp-bridge-remote-file-path))
                             buffers)))
-        (nova-send-func-request "search_file_words_index_files" (list files)))
+        (lsp-bridge-remote-send-func-request "search_file_words_index_files" (list files)))
     (let ((files (cl-remove-if (lambda (elt)
                                  (or (null elt)
                                      (member (file-name-extension elt)
@@ -1311,10 +1311,10 @@ So we build this macro to restore postion after code format."
       (lsp-bridge-call-async "search_file_words_index_files" files))))
 
 (defun lsp-bridge-search-words-update ()
-  (if (lsp-bridge-is-nova-file)
+  (if (lsp-bridge-is-remote-file)
       (progn
-        (nova-save-buffer)
-        (nova-send-func-request "search_file_words_load_file" (list nova-remote-file-path)))
+        (lsp-bridge-remote-save-buffer)
+        (lsp-bridge-remote-send-func-request "search_file_words_load_file" (list lsp-bridge-remote-file-path)))
     (when (and buffer-file-name
                (lsp-bridge-epc-live-p lsp-bridge-epc-process)
                (not (member (file-name-extension buffer-file-name)
@@ -1326,12 +1326,12 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-search-words-rebuild-cache ()
   "Rebuild words cache when idle."
-  (if (lsp-bridge-is-nova-file)
+  (if (lsp-bridge-is-remote-file)
       (progn
         (lsp-bridge-search-words-update)
 
         (unless (eq last-command 'mwheel-scroll)
-          (nova-send-func-request "search_file_words_rebuild_cache" (list))))
+          (lsp-bridge-remote-send-func-request "search_file_words_rebuild_cache" (list))))
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       ;; Update file search words when idle.
       (lsp-bridge-search-words-update)
@@ -1645,7 +1645,7 @@ So we build this macro to restore postion after code format."
             (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)))
     ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
     ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
-    (unless (lsp-bridge-is-nova-file)
+    (unless (lsp-bridge-is-remote-file)
       (unless (file-exists-p (buffer-file-name))
         (save-buffer)))
 
@@ -1905,8 +1905,8 @@ SymbolKind (defined in the LSP)."
              (boundp 'acm-backend-lsp-filepath))
     (let ((new-name (expand-file-name (nth 0 args))))
       (lsp-bridge-call-file-api "rename_file" new-name)
-      (if (lsp-bridge-is-nova-file)
-          (nova-send-func-request "close_file" (list acm-backend-lsp-filepath))
+      (if (lsp-bridge-is-remote-file)
+          (lsp-bridge-remote-send-func-request "close_file" (list acm-backend-lsp-filepath))
         (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath))
       (set-visited-file-name new-name t t)
       (setq-local acm-backend-lsp-filepath new-name)))
@@ -1934,11 +1934,11 @@ SymbolKind (defined in the LSP)."
          (max-num-results 10)     ; maximum number of results to show.
          (before-point (max (point-min) (- (point) chars-number-before-point)))
          (after-point (min (point-max) (+ (point) chars-number-after-point))))
-    (if (lsp-bridge-is-nova-file)
-        (nova-send-func-request "tabnine_complete"
+    (if (lsp-bridge-is-remote-file)
+        (lsp-bridge-remote-send-func-request "tabnine_complete"
                                 (list (buffer-substring-no-properties before-point (point))
                                       (buffer-substring-no-properties (point) after-point)
-                                      (or nova-remote-file-path nil)
+                                      (or lsp-bridge-remote-file-path nil)
                                       (= before-point buffer-min)
                                       (= after-point buffer-max)
                                       max-num-results))
@@ -2002,72 +2002,67 @@ SymbolKind (defined in the LSP)."
   (add-to-list 'mode-line-misc-info
                `(lsp-bridge-mode ("" lsp-bridge--mode-line-format " "))))
 
-(defvar-local nova-is-remote-file nil)
-(defvar-local nova-remote-file-host nil)
-(defvar-local nova-remote-file-path nil)
+(defvar-local lsp-bridge-remote-file-flag nil)
+(defvar-local lsp-bridge-remote-file-host nil)
+(defvar-local lsp-bridge-remote-file-path nil)
 
 (defun lsp-bridge-open-remote-file (path)
   (interactive "sPath: ")
-  (lsp-bridge-call-async "nova_open_file" path))
+  (lsp-bridge-call-async "open_remote_file" path))
 
-(defun lsp-bridge-nova-open-file--response(server path content)
-  (let ((buf-name (format "nova %s:%s" server path)))
+(defun lsp-bridge-open-remote-file--response(server path content)
+  (let ((buf-name (format "lsp-bridge-remote %s:%s" server path)))
     (with-current-buffer (get-buffer-create buf-name)
       (text-mode)
 
       (read-only-mode -1)
       (erase-buffer)
-      (insert (nova-decode-base64 content))
+      (insert (lsp-bridge-decode-base64 content))
       (goto-char (point-min))
 
-      (add-hook 'kill-buffer-hook 'nova-kill-buffer nil t)
+      (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)
 
-      (let ((mode (nova-get-mode-name-from-file-path path)))
+      (let ((mode (lsp-bridge-get-mode-name-from-file-path path)))
         (when mode
-          (let ((nova-is-remote-file t)
-                (nova-remote-file-host server)
-                (nova-remote-file-path path))
+          (let ((lsp-bridge-remote-file-flag t)
+                (lsp-bridge-remote-file-host server)
+                (lsp-bridge-remote-file-path path))
             (funcall mode)))))
 
     (switch-to-buffer buf-name)
 
-    (setq-local nova-is-remote-file t)
-    (setq-local nova-remote-file-host server)
-    (setq-local nova-remote-file-path path)
+    (setq-local lsp-bridge-remote-file-flag t)
+    (setq-local lsp-bridge-remote-file-host server)
+    (setq-local lsp-bridge-remote-file-path path)
     ))
 
-(defun nova-kill-buffer ()
-  (when nova-is-remote-file
-    (lsp-bridge-call-async "nova_close_file" nova-remote-file-host nova-remote-file-path)
+(defun lsp-bridge-remote-kill-buffer ()
+  (when lsp-bridge-remote-file-flag
+    (lsp-bridge-call-async "close_remote_file" lsp-bridge-remote-file-host lsp-bridge-remote-file-path)
     ))
 
-(defun nova-get-mode-name-from-file-path (file-path)
-  (cdr (assoc file-path
-              auto-mode-alist
-              'string-match-p)))
-
-(defun nova-decode-base64 (base64-string)
+(defun lsp-bridge-decode-base64 (base64-string)
   (decode-coding-string (base64-decode-string base64-string) 'utf-8))
 
-(defun nova-send-lsp-request (method &rest args)
+(defun lsp-bridge-remote-send-lsp-request (method &rest args)
   (lsp-bridge-deferred-chain
     (lsp-bridge-epc-call-deferred lsp-bridge-epc-process
                                   (read "lsp_request")
                                   (append
-                                   (list nova-remote-file-host nova-remote-file-path method) args))))
+                                   (list lsp-bridge-remote-file-host lsp-bridge-remote-file-path method) args))))
 
-(defun nova-send-func-request (method &rest args)
+(defun lsp-bridge-remote-send-func-request (method &rest args)
   (lsp-bridge-deferred-chain
     (lsp-bridge-epc-call-deferred lsp-bridge-epc-process
                                   (read "func_request")
                                   (append
-                                   (list nova-remote-file-host nova-remote-file-path method) args))))
+                                   (list lsp-bridge-remote-file-host lsp-bridge-remote-file-path method) args))))
 
-(defun nova-save-buffer ()
+(defun lsp-bridge-remote-save-buffer ()
   (interactive)
-  (if nova-is-remote-file
-      (lsp-bridge-call-async "nova_save_file" nova-remote-file-host nova-remote-file-path)
-    (message "nova-save-buffer only for nova file.")))
+  (if lsp-bridge-remote-file-flag
+      (lsp-bridge-call-async "save_remote_file" lsp-bridge-remote-file-host lsp-bridge-remote-file-path)
+    (message "lsp-bridge-remote-save-buffer only for lsp-bridge-remote file.")))
 
 (provide 'lsp-bridge)
 

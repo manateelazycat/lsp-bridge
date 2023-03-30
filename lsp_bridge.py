@@ -153,18 +153,17 @@ class LspBridge:
         self.remote_request_loop = threading.Thread(target=self.remote_request_dispatcher)
         self.remote_request_loop.start()
 
-        # Nova
-        self.nova_sender_queue = queue.Queue()
-        self.nova_sender_thread = threading.Thread(target=self.send_message_dispatcher, args=(self.nova_sender_queue, 9999))
-        self.nova_sender_thread.start()
+        self.remote_file_sender_queue = queue.Queue()
+        self.remote_file_sender_thread = threading.Thread(target=self.send_message_dispatcher, args=(self.remote_file_sender_queue, 9999))
+        self.remote_file_sender_thread.start()
 
         self.lsp_bridge_sender_queue = queue.Queue()
         self.lsp_bridge_sender_thread = threading.Thread(target=self.send_message_dispatcher, args=(self.lsp_bridge_sender_queue, 9998))
         self.lsp_bridge_sender_thread.start()
 
-        self.nova_receiver_queue = queue.Queue()
-        self.nova_receiver_thread = threading.Thread(target=self.receive_message_dispatcher, args=(self.nova_receiver_queue, self.handle_nova_message))
-        self.nova_receiver_thread.start()
+        self.remote_file_receiver_queue = queue.Queue()
+        self.remote_file_receiver_thread = threading.Thread(target=self.receive_message_dispatcher, args=(self.remote_file_receiver_queue, self.handle_remote_file_message))
+        self.remote_file_receiver_thread.start()
 
         self.lsp_bridge_receiver_queue = queue.Queue()
         self.lsp_bridge_receiver_thread = threading.Thread(target=self.receive_message_dispatcher, args=(self.lsp_bridge_receiver_queue, self.handle_lsp_message))
@@ -182,17 +181,17 @@ class LspBridge:
         except:
             logger.error(traceback.format_exc())
 
-    def receive_message_dispatcher(self, queue, handle_nova_message):
+    def receive_message_dispatcher(self, queue, handle_remote_file_message):
         try:
             while True:
                 message = queue.get(True)
-                handle_nova_message(message)
+                handle_remote_file_message(message)
                 queue.task_done()
         except:
             logger.error(traceback.format_exc())
 
     @threaded
-    def nova_open_file(self, path):
+    def open_remote_file(self, path):
         if is_valid_ip_path(path):
             [server_host, server_path] = path.split(":")
 
@@ -203,7 +202,7 @@ class LspBridge:
                 client = self.get_socket_client(server_host, 9997)
                 client.send_message("Connect")
 
-            self.send_nova_message(server_host, {
+            self.send_remote_file_message(server_host, {
                 "command": "open_file",
                 "server": server_host,
                 "path": server_path
@@ -212,23 +211,23 @@ class LspBridge:
             message_emacs("Please input valid path match rule: 'ip:/path/file'.")
 
     @threaded
-    def nova_save_file(self, remote_file_host, remote_file_path):
-        self.send_nova_message(remote_file_host, {
+    def save_remote_file(self, remote_file_host, remote_file_path):
+        self.send_remote_file_message(remote_file_host, {
             "command": "save_file",
             "server": remote_file_host,
             "path": remote_file_path
         })
 
     @threaded
-    def nova_close_file(self, remote_file_host, remote_file_path):
-        self.send_nova_message(remote_file_host, {
+    def close_remote_file(self, remote_file_host, remote_file_path):
+        self.send_remote_file_message(remote_file_host, {
             "command": "close_file",
             "server": remote_file_host,
             "path": remote_file_path
         })
 
     @threaded
-    def handle_nova_message(self, message):
+    def handle_remote_file_message(self, message):
         data = json.loads(message)
         command = data["command"]
 
@@ -237,7 +236,7 @@ class LspBridge:
                 message_emacs(data["error"])
             else:
                 path = data["path"]
-                eval_in_emacs("lsp-bridge-nova-open-file--response", data["server"], path, string_to_base64(data["content"]))
+                eval_in_emacs("lsp-bridge-open-remote-file--response", data["server"], path, string_to_base64(data["content"]))
                 message_emacs(f"Open file {path} done.")
 
     @threaded
@@ -249,7 +248,7 @@ class LspBridge:
     @threaded
     def lsp_request(self, remote_file_host, remote_file_path, method, args):
         if method == "change_file":
-            self.send_nova_message(remote_file_host, {
+            self.send_remote_file_message(remote_file_host, {
                 "command": "change_file",
                 "server": remote_file_host,
                 "path": remote_file_path,
@@ -274,8 +273,8 @@ class LspBridge:
             "args": list(map(epc_arg_transformer, args))
         })
 
-    def send_nova_message(self, host, message):
-        self.nova_sender_queue.put({
+    def send_remote_file_message(self, host, message):
+        self.remote_file_sender_queue.put({
             "host": host,
             "message": message
         })
@@ -307,7 +306,7 @@ class LspBridge:
 
     def receive_socket_message(self, message, server_port):
         if server_port == 9999:
-            self.nova_receiver_queue.put(message)
+            self.remote_file_receiver_queue.put(message)
         elif server_port == 9998:
             self.lsp_bridge_receiver_queue.put(message)
         elif server_port == 9997:
