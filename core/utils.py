@@ -94,14 +94,14 @@ def set_lsp_file_host(host):
 def get_lsp_file_host():
     return lsp_file_host
 
-remote_emacs_socket = None
-def set_remote_emacs_socket(socket):
-    global remote_emacs_socket
+remote_eval_socket = None
+def set_remote_eval_socket(socket):
+    global remote_eval_socket
 
-    remote_emacs_socket = socket
+    remote_eval_socket = socket
 
 def eval_in_emacs(method_name, *args):
-    global remote_emacs_socket
+    global remote_eval_socket
 
     if test_interceptor:  # for test purpose, record all eval_in_emacs calls
         test_interceptor(method_name, args)
@@ -112,13 +112,13 @@ def eval_in_emacs(method_name, *args):
     logger.debug("Eval in Emacs: %s", sexp)
 
     # Call eval-in-emacs elisp function.
-    if remote_emacs_socket:
+    if remote_eval_socket:
         message = {
             "command": "eval-in-emacs",
             "sexp": [sexp]
         }
         data = json.dumps(message)
-        remote_emacs_socket.send(f"{data}\n".encode("utf-8"))
+        remote_eval_socket.send(f"{data}\n".encode("utf-8"))
     else:
         epc_client.call("eval-in-emacs", [sexp])    # type: ignore
 

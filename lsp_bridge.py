@@ -131,7 +131,7 @@ class LspBridge:
             while True:
                 client_socket, client_address = self.remote_request.accept()
                 set_lsp_file_host(client_address[0])
-                set_remote_emacs_socket(client_socket)
+                set_remote_eval_socket(client_socket)
                 self.remote_request_socket = client_socket
 
                 print(f"[*] Accepted connection from {client_address[0]}:{client_address[1]}")
