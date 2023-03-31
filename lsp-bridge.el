@@ -2023,9 +2023,10 @@ SymbolKind (defined in the LSP)."
 (defun lsp-bridge-open-remote-file ()
   (interactive)
   (let* ((ip-file (file-name-concat (lsp-bridge--user-emacs-directory) "lsp-bridge" "remote_file" "ip.txt"))
-         (path (completing-read "Host: " (with-temp-buffer
-                                           (insert-file-contents ip-file)
-                                           (split-string (buffer-string) "\n" t)))))
+         (path (completing-read "Open remote file (ip:path): "
+                                (with-temp-buffer
+                                  (insert-file-contents ip-file)
+                                  (split-string (buffer-string) "\n" t)))))
     (lsp-bridge-call-async "open_remote_file" path (list :line 0 :character 0))))
 
 (defun lsp-bridge-open-remote-file--response(server path content position)

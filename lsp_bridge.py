@@ -184,19 +184,24 @@ class LspBridge:
         if is_valid_ip_path(path):
             [server_host, server_path] = path.split(":")
 
-            message_emacs(f"Open file {server_path}...")
+            import paramiko
 
-            client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
-            if client_id not in self.client_dict:
-                client = self.get_socket_client(server_host, REMOTE_FILE_ELISP_CHANNEL)
-                client.send_message("Connect")
+            try:
+                client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
+                if client_id not in self.client_dict:
+                    client = self.get_socket_client(server_host, REMOTE_FILE_ELISP_CHANNEL)
+                    client.send_message("Connect")
 
-            self.send_remote_file_message(server_host, {
-                "command": "open_file",
-                "server": server_host,
-                "path": server_path,
-                "jump_define_pos": epc_arg_transformer(jump_define_pos)
-            })
+                    message_emacs(f"Open file {server_path}...")
+
+                    self.send_remote_file_message(server_host, {
+                        "command": "open_file",
+                        "server": server_host,
+                        "path": server_path,
+                        "jump_define_pos": epc_arg_transformer(jump_define_pos)
+                    })
+            except paramiko.ssh_exception.ChannelException:
+                message_emacs(f"Connect {server_host} failed, please make sure `lsp_bridge.py` has start at server.")
 
             save_ip(server_host)
         else:
