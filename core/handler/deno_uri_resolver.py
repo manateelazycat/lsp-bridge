@@ -27,4 +27,4 @@ class DenoUriResolver(Handler):
             with open(deno_virtual_text_document_path, "w") as f:
                 f.write(response)    # type: ignore
                 
-            eval_in_emacs("lsp-bridge-define--jump", deno_virtual_text_document_path, self.start_pos)
+            eval_in_emacs("lsp-bridge-define--jump", deno_virtual_text_document_path, get_lsp_file_host(), self.start_pos)

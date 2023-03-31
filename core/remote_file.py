@@ -136,6 +136,7 @@ class RemoteFileServer:
     def handle_open_file(self, data, client_socket):
         path = data["path"]
         server = data["server"]
+        jump_define_pos = data["jump_define_pos"]
 
         if os.path.exists(path):
             with open(path) as f:
@@ -145,6 +146,7 @@ class RemoteFileServer:
                     "command": "open_file",
                     "server": server,
                     "path": path,
+                    "jump_define_pos": jump_define_pos,
                     "content": content
                 }
 
@@ -154,6 +156,7 @@ class RemoteFileServer:
                 "command": "open_file",
                 "server": server,
                 "path": path,
+                "jump_define_pos": jump_define_pos,
                 "content": "",
                 "error": f"Cannot found file {path} on server."
             }

@@ -1253,7 +1253,7 @@ So we build this macro to restore postion after code format."
                           (dirname (ignore-errors (expand-file-name (file-name-directory filename)))))
                 (if (lsp-bridge-is-remote-file)
                     (lsp-bridge-remote-send-func-request "search_paths_search"
-                                            (list dirname (file-name-base filename)))
+                                                         (list dirname (file-name-base filename)))
                   (when (file-exists-p dirname)
                     (lsp-bridge-call-async "search_paths_search"
                                            dirname
@@ -1469,28 +1469,35 @@ So we build this macro to restore postion after code format."
 
   (setq-local lsp-bridge-prohibit-completion t))
 
-(defun lsp-bridge-define--jump (filename position)
+(defun lsp-bridge-define--jump (filename filehost position)
   (let (position-before-jump)
     ;; Record postion.
     (set-marker (mark-marker) (point) (current-buffer))
     (setq position-before-jump (copy-marker (mark-marker)))
     (setq mark-ring lsp-bridge-mark-ring)
 
-    ;; Jump to define.
-    ;; Show define in other window if `lsp-bridge-jump-to-def-in-other-window' is non-nil.
-    (if lsp-bridge-jump-to-def-in-other-window
-        (find-file-other-window filename)
-      (find-file filename))
+    (if (string-equal filehost "")
+        (progn
+          ;; Jump to define.
+          ;; Show define in other window if `lsp-bridge-jump-to-def-in-other-window' is non-nil.
+          (if lsp-bridge-jump-to-def-in-other-window
+              (find-file-other-window filename)
+            (find-file filename))
 
-    ;; Init jump history in new buffer.
-    (setq-local lsp-bridge-mark-ring (append (list position-before-jump) mark-ring))
+          ;; Init jump history in new buffer.
+          (setq-local lsp-bridge-mark-ring (append (list position-before-jump) mark-ring))
 
-    ;; Jump to define postion.
-    (goto-char (acm-backend-lsp-position-to-point position))
-    (recenter)
+          (lsp-bridge-define--jump-flash position))
+      (lsp-bridge-call-async "open_remote_file" (format "%s:%s" filehost filename) position))
+    ))
 
-    ;; Flash define line.
-    (lsp-bridge-flash-line)))
+(defun lsp-bridge-define--jump-flash (position)
+  ;; Jump to define postion.
+  (goto-char (acm-backend-lsp-position-to-point position))
+  (recenter)
+
+  ;; Flash define line.
+  (lsp-bridge-flash-line))
 
 (defun lsp-bridge-popup-documentation-scroll-up (&optional arg)
   (interactive)
@@ -1936,12 +1943,12 @@ SymbolKind (defined in the LSP)."
          (after-point (min (point-max) (+ (point) chars-number-after-point))))
     (if (lsp-bridge-is-remote-file)
         (lsp-bridge-remote-send-func-request "tabnine_complete"
-                                (list (buffer-substring-no-properties before-point (point))
-                                      (buffer-substring-no-properties (point) after-point)
-                                      (or lsp-bridge-remote-file-path nil)
-                                      (= before-point buffer-min)
-                                      (= after-point buffer-max)
-                                      max-num-results))
+                                             (list (buffer-substring-no-properties before-point (point))
+                                                   (buffer-substring-no-properties (point) after-point)
+                                                   (or lsp-bridge-remote-file-path nil)
+                                                   (= before-point buffer-min)
+                                                   (= after-point buffer-max)
+                                                   max-num-results))
       (lsp-bridge-call-async "tabnine_complete"
                              (buffer-substring-no-properties before-point (point))
                              (buffer-substring-no-properties (point) after-point)
@@ -2008,9 +2015,9 @@ SymbolKind (defined in the LSP)."
 
 (defun lsp-bridge-open-remote-file (path)
   (interactive "sPath: ")
-  (lsp-bridge-call-async "open_remote_file" path))
+  (lsp-bridge-call-async "open_remote_file" path 0))
 
-(defun lsp-bridge-open-remote-file--response(server path content)
+(defun lsp-bridge-open-remote-file--response(server path content position)
   (let ((buf-name (format "lsp-bridge-remote %s:%s" server path)))
     (with-current-buffer (get-buffer-create buf-name)
       (text-mode)
@@ -2030,6 +2037,9 @@ SymbolKind (defined in the LSP)."
             (funcall mode)))))
 
     (switch-to-buffer buf-name)
+
+    (when (> position 0)
+      (lsp-bridge-define--jump-flash position))
 
     (setq-local lsp-bridge-remote-file-flag t)
     (setq-local lsp-bridge-remote-file-host server)

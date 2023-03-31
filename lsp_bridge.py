@@ -180,7 +180,7 @@ class LspBridge:
             logger.error(traceback.format_exc())
 
     @threaded
-    def open_remote_file(self, path):
+    def open_remote_file(self, path, jump_define_pos):
         if is_valid_ip_path(path):
             [server_host, server_path] = path.split(":")
 
@@ -194,7 +194,8 @@ class LspBridge:
             self.send_remote_file_message(server_host, {
                 "command": "open_file",
                 "server": server_host,
-                "path": server_path
+                "path": server_path,
+                "jump_define_pos": jump_define_pos
             })
         else:
             message_emacs("Please input valid path match rule: 'ip:/path/file'.")
@@ -225,7 +226,7 @@ class LspBridge:
                 message_emacs(data["error"])
             else:
                 path = data["path"]
-                eval_in_emacs("lsp-bridge-open-remote-file--response", data["server"], path, string_to_base64(data["content"]))
+                eval_in_emacs("lsp-bridge-open-remote-file--response", data["server"], path, string_to_base64(data["content"]), data["jump_define_pos"])
                 message_emacs(f"Open file {path} done.")
 
     @threaded
