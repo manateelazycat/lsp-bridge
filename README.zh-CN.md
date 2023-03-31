@@ -310,7 +310,7 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 | core/remote_file.py                    | 用于处理远程服务器文件访问和同步                           |
 | core/utils.py                          | 一些全局工具函数，方便各模块调用                                                                                  |
 | core/mergedeep.py                      | JSON 信息合并， 主要用于发送自定义选项给 LSP 服务器                                                               |
-| core/hanlder/                          | LSP 消息发送和接受的实现，其中 __init__.py 是基类                                                                 |
+| core/hanlder/                          | LSP 消息发送和接受的实现，其中 ```__init__.py``` 是基类                                                                 |
 | core/tabnine.py                        | TabNine 后端搜索和补全                                                                 |
 | core/search_file_words.py              | 文件单词异步搜索后端                                                                 |
 | core/search_paths.py                   | 文件路径异步搜索后端                                                                 |

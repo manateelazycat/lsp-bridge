@@ -313,7 +313,7 @@ The following is the directory structure of the lsp-bridge project:
 | core/remote_file.py | Used to handle remote server file access and synchronization. |
 | core/utils.py | Some global utility functions that facilitate the calling of various modules. |
 | core/mergedeep.py | JSON information merge, mainly used to send custom options to LSP servers. |
-| core/hanlder/ | Implementation of LSP message sending and receiving, where __init__.py is the base class. |
+| core/hanlder/ | Implementation of LSP message sending and receiving, where ```__init__.py``` is the base class. |
 | core/tabnine.py | The backend searches and completes with TabNine. |
 | core/search_file_words.py | Asynchronous search backend for file words. |
 | core/search_paths.py | Asynchronous search backend for file paths. |
