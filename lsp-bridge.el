@@ -1469,12 +1469,15 @@ So we build this macro to restore postion after code format."
 
   (setq-local lsp-bridge-prohibit-completion t))
 
+(defun lsp-bridge-define--jump-record-postion ()
+  ;; Record postion.
+  (set-marker (mark-marker) (point) (current-buffer))
+  (setq position-before-jump (copy-marker (mark-marker)))
+  (setq mark-ring lsp-bridge-mark-ring))
+
 (defun lsp-bridge-define--jump (filename filehost position)
   (let (position-before-jump)
-    ;; Record postion.
-    (set-marker (mark-marker) (point) (current-buffer))
-    (setq position-before-jump (copy-marker (mark-marker)))
-    (setq mark-ring lsp-bridge-mark-ring)
+    (lsp-bridge-define--jump-record-postion)
 
     (if (string-equal filehost "")
         (progn
@@ -2019,6 +2022,8 @@ SymbolKind (defined in the LSP)."
 
 (defun lsp-bridge-open-remote-file--response(server path content position)
   (let ((buf-name (format "[LBR] %s" (file-name-nondirectory path))))
+    (lsp-bridge-define--jump-record-postion)
+
     (with-current-buffer (get-buffer-create buf-name)
       (text-mode)
 
@@ -2039,6 +2044,8 @@ SymbolKind (defined in the LSP)."
     (switch-to-buffer buf-name)
 
     (unless (equal position (list :line 0 :character 0))
+      (setq-local lsp-bridge-mark-ring (append (list position-before-jump) mark-ring))
+
       (lsp-bridge-define--jump-flash position))
 
     (setq-local lsp-bridge-remote-file-flag t)
