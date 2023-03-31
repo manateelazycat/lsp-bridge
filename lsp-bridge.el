@@ -635,7 +635,7 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-get-match-buffer-by-remote-file (host path)
   (cl-dolist (buffer (buffer-list))
     (with-current-buffer buffer
-      (when (string-equal (buffer-name) (format "lsp-bridge-remote %s:%s" host path))
+      (when (string-equal (buffer-name) (format "[LBR] %s" (file-name-nondirectory path)))
         (cl-return buffer))
       )))
 
@@ -2018,7 +2018,7 @@ SymbolKind (defined in the LSP)."
   (lsp-bridge-call-async "open_remote_file" path (list :line 0 :character 0)))
 
 (defun lsp-bridge-open-remote-file--response(server path content position)
-  (let ((buf-name (format "lsp-bridge-remote %s:%s" server path)))
+  (let ((buf-name (format "[LBR] %s" (file-name-nondirectory path))))
     (with-current-buffer (get-buffer-create buf-name)
       (text-mode)
 
