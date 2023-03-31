@@ -195,7 +195,7 @@ class LspBridge:
                 "command": "open_file",
                 "server": server_host,
                 "path": server_path,
-                "jump_define_pos": jump_define_pos
+                "jump_define_pos": epc_arg_transformer(jump_define_pos)
             })
         else:
             message_emacs("Please input valid path match rule: 'ip:/path/file'.")

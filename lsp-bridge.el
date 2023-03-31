@@ -2015,7 +2015,7 @@ SymbolKind (defined in the LSP)."
 
 (defun lsp-bridge-open-remote-file (path)
   (interactive "sPath: ")
-  (lsp-bridge-call-async "open_remote_file" path 0))
+  (lsp-bridge-call-async "open_remote_file" path (list :line 0 :character 0)))
 
 (defun lsp-bridge-open-remote-file--response(server path content position)
   (let ((buf-name (format "lsp-bridge-remote %s:%s" server path)))
@@ -2038,7 +2038,7 @@ SymbolKind (defined in the LSP)."
 
     (switch-to-buffer buf-name)
 
-    (when (> position 0)
+    (unless (equal position (list :line 0 :character 0))
       (lsp-bridge-define--jump-flash position))
 
     (setq-local lsp-bridge-remote-file-flag t)
