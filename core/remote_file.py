@@ -198,3 +198,22 @@ class RemoteFileServer:
 
         if path in self.file_dict:
             self.file_dict[path] = ""
+
+def save_ip_to_file(ip, filename):
+    with open(filename, 'r') as f:
+        existing_ips = f.read().splitlines()
+
+    if ip in existing_ips:
+        return
+
+    existing_ips.append(ip)
+
+    with open(filename, 'w') as f:
+        f.write('\n'.join(existing_ips))
+
+def save_ip(ip):
+    user_emacs_dir = get_emacs_func_result("get-user-emacs-directory")
+    ip_file = os.path.join(user_emacs_dir, "lsp-bridge", "remote_file", "ip.txt")
+    touch(ip_file)
+
+    save_ip_to_file(ip, ip_file)

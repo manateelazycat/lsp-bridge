@@ -381,7 +381,10 @@ def get_position(content, line, character):
 
 def replace_template(arg):
     if "%USER_EMACS_DIRECTORY%" in arg:
-        user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
+        if get_os_name() == "windows":
+            user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
+        else:
+            user_emacs_dir = get_emacs_func_result("get-user-emacs-directory")
         return arg.replace("%USER_EMACS_DIRECTORY%", user_emacs_dir)
     elif "$HOME" in arg:
             return os.path.expandvars(arg)
@@ -392,6 +395,18 @@ def replace_template(arg):
         return arg.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
     else:
         return arg
+
+def touch(path):
+    import os
+
+    if not os.path.exists(path):
+        basedir = os.path.dirname(path)
+
+        if not os.path.exists(basedir):
+            os.makedirs(basedir)
+
+        with open(path, 'a'):
+            os.utime(path)
 
 class MessageSender(Thread):
     

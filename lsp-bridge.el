@@ -2016,9 +2016,17 @@ SymbolKind (defined in the LSP)."
 (defvar-local lsp-bridge-remote-file-host nil)
 (defvar-local lsp-bridge-remote-file-path nil)
 
-(defun lsp-bridge-open-remote-file (path)
-  (interactive "sPath: ")
-  (lsp-bridge-call-async "open_remote_file" path (list :line 0 :character 0)))
+(when (version< emacs-version "30")
+  (defun file-name-concat (&rest parts)
+    (cl-reduce (lambda (a b) (expand-file-name b a)) parts)))
+
+(defun lsp-bridge-open-remote-file ()
+  (interactive)
+  (let* ((ip-file (file-name-concat (lsp-bridge--user-emacs-directory) "lsp-bridge" "remote_file" "ip.txt"))
+         (path (completing-read "Host: " (with-temp-buffer
+                                           (insert-file-contents ip-file)
+                                           (split-string (buffer-string) "\n" t)))))
+    (lsp-bridge-call-async "open_remote_file" path (list :line 0 :character 0))))
 
 (defun lsp-bridge-open-remote-file--response(server path content position)
   (let ((buf-name (format "[LBR] %s" (file-name-nondirectory path))))

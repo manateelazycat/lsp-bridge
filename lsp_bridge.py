@@ -42,7 +42,7 @@ from core.search_paths import SearchPaths
 from core.tabnine import TabNine
 from core.utils import *
 from core.handler import *
-from core.remote_file import RemoteFileClient, RemoteFileServer
+from core.remote_file import RemoteFileClient, RemoteFileServer, save_ip
 
 def threaded(func):
     @wraps(func)
@@ -197,6 +197,8 @@ class LspBridge:
                 "path": server_path,
                 "jump_define_pos": epc_arg_transformer(jump_define_pos)
             })
+
+            save_ip(server_host)
         else:
             message_emacs("Please input valid path match rule: 'ip:/path/file'.")
 
