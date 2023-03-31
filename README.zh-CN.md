@@ -50,17 +50,17 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 ## 远程使用
 lsp-bridge 也可以像 VSCode 那样对远程服务器的文件提供代码语法补全。 对于那些资源要求过高或者运行环境配置复杂， 不方便在本地开发的大型复杂软件，提供远程代码补全的功能是很有用的。以下是配置远程代码补全的步骤：
 
-1. 在远程服务器上安装 lsp-bridge 以及对应的LSP Server
-2. 启动lsp-bridge 服务: python3 lsp-bridge/lsp_bridge.py
+1. 在远程服务器上安装 lsp-bridge 以及对应的 LSP Server
+2. 启动 lsp-bridge 服务: python3 lsp-bridge/lsp_bridge.py
 3. 使用命令 `lsp-bridge-open-remote-file` 打开远程文件，输入远程服务器 IP 和文件路径，比如 `xxx.xxx.xxx.xxx:/path/file`
 
-远程文件打开后，`lsp-bridge`会自动弹出补全菜单, `lsp-bridge远程补全的原理是：
+远程文件打开后，`lsp-bridge`会自动弹出补全菜单, `lsp-bridge 远程补全的原理是：
 
 1. 通过 SSH 认证的方式登录远程服务器, 并访问和编辑远程文件
-2. 在本地编辑远程文件时， 会实时发送 diff 序列给lsp-bridge服务端， 服务端会根据 diff 序列在服务端重建文件的最新内容并调用LSP Server进行语法补全计算
+2. 在本地编辑远程文件时， 会实时发送 diff 序列给 lsp-bridge 服务端， 服务端会根据 diff 序列在服务端重建文件的最新内容并调用 LSP Server 进行语法补全计算
 3. `lsp-bridge`在远端计算好 LSP 补全菜单项后，发送补全数据到本机，再由本机的 `lsp-bridge` 进行补全菜单渲染
 
-如果补全菜单没有弹出，请登录远程服务器， 查看 lsp_bridge.py的终端输出。一般情况下，都是由于服务端的 LSP Server 没有安装完整导致的。
+如果补全菜单没有弹出，请登录远程服务器， 查看 lsp_bridge.py 的终端输出。一般情况下，都是由于服务端的 LSP Server 没有安装完整导致的。
 
 ## 按键
 | 按键           | 命令                        | 备注                                                       |
@@ -288,6 +288,8 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 下图是 lsp-bridge 的架构设计:
 
 <img src="./framework.png">
+
+<img src="./remote_file_framework.png">
 
 下面是 lsp-bridge 项目的目录结构：
 

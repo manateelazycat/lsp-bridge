@@ -292,6 +292,8 @@ The following is the framework of lsp-bridge:
 
 <img src="./framework.png">
 
+<img src="./remote_file_framework.png">
+
 The following is the directory structure of the lsp-bridge project:
 
 | File                         | Explanation                                                                                                                                                                  |
