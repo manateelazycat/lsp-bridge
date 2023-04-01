@@ -749,8 +749,7 @@ So we build this macro to restore postion after code format."
             (lsp-bridge-use-ds-pinyin-in-org-mode
              "ds-pinyin")
             (lsp-bridge-enable-org-babel
-             ;; get lang server according to org babel
-             (lsp-bridge-org-babel-get-single-lang-server)))))))
+             (lsp-bridge-org-babel-check-lsp-server)))))))
 
 (defun lsp-bridge-has-lsp-server-p ()
   (cond ((and lsp-bridge-enable-org-babel (eq major-mode 'org-mode))
