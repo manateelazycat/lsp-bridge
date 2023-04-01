@@ -91,7 +91,22 @@ def set_lsp_file_host(host):
     lsp_file_host = host
 
 def get_lsp_file_host():
+    global lsp_file_host
     return lsp_file_host
+
+remote_file_server = None
+def set_remote_file_server(server):
+    global remote_file_server
+
+    remote_file_server = server
+
+def get_buffer_content(filename, buffer_name):
+    global remote_file_server, lsp_file_host
+
+    if lsp_file_host != "":
+        return remote_file_server.file_dict[filename]
+    else:
+        return get_emacs_func_result('get-buffer-content', buffer_name)
 
 remote_eval_socket = None
 def set_remote_eval_socket(socket):

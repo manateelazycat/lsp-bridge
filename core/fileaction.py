@@ -138,7 +138,7 @@ class FileAction:
         """Read file content."""
         file_content = ''
         if self.org_file:
-            file_content = get_emacs_func_result('get-buffer-content', os.path.basename(self.filepath))
+            file_content = get_buffer_content(self.filepath, os.path.basename(self.filepath))
         else:
             with open(self.filepath, encoding="utf-8", errors="ignore") as f:
                 file_content = f.read()
@@ -186,7 +186,7 @@ class FileAction:
                 continue
             elif lsp_server.text_document_sync == 1:
                 if not buffer_content:
-                    buffer_content = get_emacs_func_result('get-buffer-content', buffer_name)
+                    buffer_content = get_buffer_content(self.filepath, buffer_name)
                 lsp_server.send_whole_change_notification(self.filepath, self.version, buffer_content)
             else:
                 lsp_server.send_did_change_notification(self.filepath, self.version, start, end, range_length, change_text)
@@ -206,7 +206,7 @@ class FileAction:
         
     def update_file(self, buffer_name, org_line_bias=None):
         self.org_line_bias = org_line_bias
-        buffer_content = get_emacs_func_result('get-buffer-content', buffer_name)
+        buffer_content = get_buffer_content(self.filepath, buffer_name)
         for lsp_server in self.get_lsp_servers():
             lsp_server.send_whole_change_notification(self.filepath, self.version, buffer_content)
         self.version += 1

@@ -425,7 +425,7 @@ class LspServer:
         if self.save_include_text:
             args = merge(args, {
                 "textDocument": {
-                    "text": get_emacs_func_result('get-buffer-content', buffer_name)
+                    "text": get_buffer_content(filepath, buffer_name)
                 }
             })
         
