@@ -289,7 +289,7 @@ class LspBridge:
 
         # Build loop for call local Emacs function from server.
         remote_file_server = RemoteFileServer("0.0.0.0", REMOTE_FILE_SYNC_CHANNEL)
-        self.self.remote_file_server = remote_file_server
+        self.remote_file_server = remote_file_server
         set_remote_file_server(remote_file_server)
 
         self.remote_file_elisp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
