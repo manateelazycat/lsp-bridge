@@ -62,20 +62,23 @@
       (setq-local lsp-bridge-org-babel--update-file-before-change t)))
 
   (and lsp-bridge-org-babel--info-cache
-       (lsp-bridge-get-single-lang-server-by-mode)))
+       (lsp-bridge-org-babel-get-single-lang-server)))
 
 (defun lsp-bridge-org-babel-get-single-lang-server ()
   "Get single lang server for org block."
   (let* ((lang (org-element-property :language lsp-bridge-org-babel--info-cache))
          (lang-name (symbol-name (cdr (assoc lang org-src-lang-modes))))
          (mode-name (concat lang-name "-mode"))
-         (major-mode (intern mode-name)))
+         (major-mode (intern mode-name))
+         (langserver-info
+          (lsp-bridge-lang-server-by-mode major-mode lsp-bridge-single-lang-server-mode-list)))
     (setq-local acm-is-elisp-mode-in-org (eq major-mode 'emacs-lisp-mode))
     ;; if `lsp-bridge-org-babel-lang-list' is set, only enable lsp when lang in it
-    (when (and (lsp-bridge-org-babel-in-block-p (point))
+    (when (and langserver-info
+               (lsp-bridge-org-babel-in-block-p (point))
                (or (eq lsp-bridge-org-babel-lang-list nil)
                    (member lang-name lsp-bridge-org-babel-lang-list)))
-      (lsp-bridge-get-single-lang-server-by-mode))))
+      (lsp-bridge-get-symbol-string-value (cdr langserver-info)))))
 
 (defun lsp-bridge-org-babel-monitor-after-change (begin end length)
   "Monitor org babel after change, BEGIN END LENGTH."
