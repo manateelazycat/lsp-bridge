@@ -192,14 +192,14 @@ class LspBridge:
                     client = self.get_socket_client(server_host, REMOTE_FILE_ELISP_CHANNEL)
                     client.send_message("Connect")
 
-                    message_emacs(f"Open file {server_path}...")
+                message_emacs(f"Open file {server_path}...")
 
-                    self.send_remote_file_message(server_host, {
-                        "command": "open_file",
-                        "server": server_host,
-                        "path": server_path,
-                        "jump_define_pos": epc_arg_transformer(jump_define_pos)
-                    })
+                self.send_remote_file_message(server_host, {
+                    "command": "open_file",
+                    "server": server_host,
+                    "path": server_path,
+                    "jump_define_pos": epc_arg_transformer(jump_define_pos)
+                })
             except paramiko.ssh_exception.ChannelException:
                 message_emacs(f"Connect {server_host} failed, please make sure `lsp_bridge.py` has start at server.")
 
