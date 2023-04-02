@@ -182,9 +182,13 @@ class LspBridge:
     @threaded
     def open_remote_file(self, path, jump_define_pos):
         if is_valid_ip_path(path):
-            [server_host, server_path] = path.split(":")
-
             import paramiko
+            from urllib.parse import urlparse
+
+            parsed_url = urlparse('ssh://' + path)
+
+            server_host = parsed_url.hostname
+            server_path = parsed_url.path
 
             try:
                 client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
