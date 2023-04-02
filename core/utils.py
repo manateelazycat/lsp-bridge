@@ -85,6 +85,17 @@ def handle_arg_types(arg):
 
     return sexpdata.Quoted(arg)
 
+running_in_server = False
+def set_running_in_server():
+    global running_in_server
+
+    running_in_server = True
+
+def is_running_in_server():
+    global running_in_server
+
+    return running_in_server
+
 lsp_file_host = ""
 def set_lsp_file_host(host):
     global lsp_file_host

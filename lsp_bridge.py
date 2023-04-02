@@ -61,6 +61,8 @@ class LspBridge:
     def __init__(self, args):
         # Check running environment.
         self.running_in_server = len(args) == 0
+        if self.running_in_server:
+            set_running_in_server()
 
         # Build EPC server.
         self.server = ThreadingEPCServer(('localhost', 0), log_traceback=True)

@@ -201,7 +201,8 @@ class FileAction:
         self.last_change_file_time = time.time()
 
         # Send textDocument/completion 100ms later.
-        self.try_completion_timer = threading.Timer(0.1, lambda : self.try_completion(position, before_char, prefix))
+        delay = 0 if is_running_in_server() else 0.1
+        self.try_completion_timer = threading.Timer(delay, lambda : self.try_completion(position, before_char, prefix))
         self.try_completion_timer.start()
         
     def update_file(self, buffer_name, org_line_bias=None):
