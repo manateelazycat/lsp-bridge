@@ -51,19 +51,19 @@ It should be noted that lsp-bridge has three scanning modes:
 3. Custom `lsp-bridge-get-project-path-by-filepath` function, where the input parameter is the path string of the opened file and the output parameter is the project directory path. Lsp-bridge will provide completion based on the output directory path.
 
 ## Remote Usage
-lsp-bridge can also provide code syntax completion for files on remote servers, like VSCode. It is very useful to provide remote code completion for large and complex software that have high resource requirements or complex runtime environment configuration, making it inconvenient for local development. The following are the steps to configure remote code completion:
+`lsp-bridge` can also provide code syntax completion for files on a remote server, similar to VSCode. Providing remote code completion is very useful when dealing with large and complex software that requires high resource demands or has complex environment configuration. The following are the steps to configure remote code completion:
 
-1. Install lsp-bridge and the corresponding LSP Server on the remote server
-2. Start the lsp-bridge service: python3 lsp-bridge/lsp_bridge.py
-3. Use the command `lsp-bridge-open-remote-file` to open a remote file, enter the username, server IP, and file path, such as `user@ip:/path/file`.
+1. Install `lsp-bridge` and the corresponding LSP server on the remote server.
+2. Start `lsp-bridge` service: `python3 lsp-bridge/lsp_bridge.py`.
+3. Use the command `lsp-bridge-open-remote-file` to open the remote file and enter the username, server IP, and file path, such as `user@ip:/path/file`.
 
-After the remote file is opened, `lsp-bridge` will automatically pop up the completion menu. The principle of `lsp-bridge` remote completion is:
+Once the remote file is opened, `lsp-bridge` will automatically display the code completion menu. The remote completion principle of `lsp-bridge` is as follows:
 
-1. Login to the remote server through SSH authentication, and access and edit the remote file
-2. When editing the remote file locally, it will send diff sequences to the lsp-bridge service in real-time. The service will rebuild the latest content of the file on the server according to the diff sequence and call LSP Server for syntax completion calculation
-3. `lsp-bridge` sends the completion data to the local machine after calculating the LSP completion menu on the remote end, and then `lsp-bridge` on the local machine renders the completion menu
+1. Login to the remote server with SSH authentication and access and edit the remote file.
+2. When editing the remote file locally, incremental diff sequences are sent to the `lsp-bridge` server in real-time. The server will rebuild the latest content of the file based on the incremental diff sequence and call the LSP server to complete the syntax calculation.
+3. After calculating the LSP completion menu items, `lsp-bridge` will send the completion data to the local computer and render the completion menu.
 
-If the completion menu does not pop up, please log in to the remote server and check the terminal output of lsp_bridge.py. Usually, it is due to incomplete installation of the LSP Server on the server.
+If the completion menu does not appear, log in to the remote server and check the terminal output of `lsp_bridge.py`. Generally, incomplete installation of the service-side LSP server is the cause.
 
 ## Keymap
 | Key            | Command                     | Description                                                                    |
