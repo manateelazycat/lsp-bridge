@@ -1852,22 +1852,28 @@ SymbolKind (defined in the LSP)."
          (documentation (plist-get info :documentation))
          (has-doc-p (and documentation
                          (not (string-equal documentation "")))))
-    (lsp-bridge--with-file-buffer filename filehost
-                                  ;; Update `documentation' and `additionalTextEdits'
-                                  (when-let (item (gethash key (gethash server-name acm-backend-lsp-items)))
-                                    (when additional-text-edits
-                                      (plist-put item :additionalTextEdits additional-text-edits))
+    (lsp-bridge--with-file-buffer
+        filename filehost
+        ;; When lsp-bridge running in server, `acm-backend-lsp-items' maybe nil when receive `lsp-bridge-completion-item--update' response.
+        ;; So we need check `acm-backend-lsp-items' value before update item documentation.
+        (when-let ((server-lsp-items (gethash server-name acm-backend-lsp-items)))
+          ;; Update `documentation' and `additionalTextEdits'
+          (when-let (item (gethash key server-lsp-items))
+            (when additional-text-edits
+              (plist-put item :additionalTextEdits additional-text-edits))
 
-                                    (when has-doc-p
-                                      (plist-put item :documentation documentation))
+            (when has-doc-p
+              (plist-put item :documentation documentation))
 
-                                    (puthash key item (gethash server-name acm-backend-lsp-items)))
+            (puthash key item (gethash server-name acm-backend-lsp-items)))
 
-                                  (if has-doc-p
-                                      ;; Show doc frame if `documentation' exist and not empty.
-                                      (acm-doc-try-show t)
-                                    ;; Hide doc frame immediately.
-                                    (acm-doc-hide)))))
+          (if has-doc-p
+              ;; Show doc frame if `documentation' exist and not empty.
+              (acm-doc-try-show t)
+            ;; Hide doc frame immediately.
+            (acm-doc-hide))
+          )
+        )))
 
 (defun lsp-bridge-toggle-sdcv-helper ()
   "Toggle sdcv helper."
