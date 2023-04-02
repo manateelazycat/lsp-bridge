@@ -55,7 +55,7 @@ lsp-bridge can also provide code syntax completion for files on remote servers, 
 
 1. Install lsp-bridge and the corresponding LSP Server on the remote server
 2. Start the lsp-bridge service: python3 lsp-bridge/lsp_bridge.py
-3. Use the command `lsp-bridge-open-remote-file` to open the remote file, enter the remote server IP and file path, such as `xxx.xxx.xxx.xxx:/path/file`
+3. Use the command `lsp-bridge-open-remote-file` to open a remote file, enter the username, server IP, and file path, such as `user@ip:/path/file`.
 
 After the remote file is opened, `lsp-bridge` will automatically pop up the completion menu. The principle of `lsp-bridge` remote completion is:
 

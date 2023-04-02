@@ -373,10 +373,10 @@ def cmp(x, y):
     else:
         return 0
 
-def is_valid_ip_path(ip_path: str) -> bool:
+def is_valid_ip_path(string):
     import re
-    ip_path_regex = r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):(/[^\x00-\x1F]+)+/?$'
-    return re.fullmatch(ip_path_regex, ip_path)
+    pattern = re.compile(r'^(\w+@)?([\w\.\:]+):(/.*)$')
+    return pattern.match(string)
 
 def eval_sexp_in_emacs(sexp):
     epc_client.call("eval-in-emacs", [sexp])

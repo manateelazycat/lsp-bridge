@@ -75,6 +75,7 @@ class LspBridge:
         self.thread_queue = []
         self.client_dict = {}
         self.lsp_client_dict = {}
+        self.host_names = {}
 
         # Init event loop.
         self.event_queue = queue.Queue()
@@ -190,13 +191,23 @@ class LspBridge:
             server_host = parsed_url.hostname
             server_path = parsed_url.path
 
+            server_username = parsed_url.username
+            if not server_username:
+                if server_host in self.host_names:
+                    server_username = self.host_names[server_host]
+                else:
+                    server_username = "root"
+                    self.host_names[server_host] = server_username
+            else:
+                self.host_names[server_host] = server_username
+
             try:
                 client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
                 if client_id not in self.client_dict:
                     client = self.get_socket_client(server_host, REMOTE_FILE_ELISP_CHANNEL)
                     client.send_message("Connect")
 
-                message_emacs(f"Open file {server_path}...")
+                message_emacs(f"Open {server_username}@{server_host}:{server_path}...")
 
                 self.send_remote_file_message(server_host, {
                     "command": "open_file",
@@ -204,10 +215,11 @@ class LspBridge:
                     "path": server_path,
                     "jump_define_pos": epc_arg_transformer(jump_define_pos)
                 })
+
+                save_ip(f"{server_username}@{server_host}")
             except paramiko.ssh_exception.ChannelException:
                 message_emacs(f"Connect {server_host} failed, please make sure `lsp_bridge.py` has start at server.")
 
-            save_ip(server_host)
         else:
             message_emacs("Please input valid path match rule: 'ip:/path/file'.")
 
@@ -236,9 +248,10 @@ class LspBridge:
             if "error" in data:
                 message_emacs(data["error"])
             else:
+                server = data["server"]
                 path = data["path"]
                 eval_in_emacs("lsp-bridge-open-remote-file--response", data["server"], path, string_to_base64(data["content"]), data["jump_define_pos"])
-                message_emacs(f"Open file {path} done.")
+                message_emacs(f"Open file {server}:{path}")
 
     @threaded
     def handle_lsp_message(self, message):
@@ -323,7 +336,7 @@ class LspBridge:
         else:
             client = RemoteFileClient(
                 server_host,
-                "root",
+                self.host_names[server_host],
                 server_port,
                 lambda message: self.receive_socket_message(message, server_port))
             client.start()
