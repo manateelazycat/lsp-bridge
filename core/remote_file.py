@@ -27,12 +27,13 @@ import traceback
 from core.utils import *
 
 class RemoteFileClient(threading.Thread):
-    def __init__(self, ssh_host, ssh_user, server_port, callback):
+    def __init__(self, ssh_host, ssh_user, ssh_port, server_port, callback):
         threading.Thread.__init__(self)
 
         # Init.
         self.ssh_host = ssh_host
         self.ssh_user = ssh_user
+        self.ssh_port = ssh_port
         self.server_port = server_port
         self.callback = callback
 
@@ -51,7 +52,7 @@ class RemoteFileClient(threading.Thread):
         import paramiko
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(self.ssh_host, username=self.ssh_user, key_filename=self.ssh_pub_key())
+        ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, key_filename=self.ssh_pub_key())
         return ssh
 
     def send_message(self, message):

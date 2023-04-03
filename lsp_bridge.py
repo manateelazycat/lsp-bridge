@@ -192,16 +192,23 @@ class LspBridge:
 
             server_host = parsed_url.hostname
             server_path = parsed_url.path
-
+            ssh_port = parsed_url.port
             server_username = parsed_url.username
+
             if not server_username:
                 if server_host in self.host_names:
-                    server_username = self.host_names[server_host]
+                    server_username = self.host_names[server_host]["username"]
                 else:
                     server_username = "root"
-                    self.host_names[server_host] = server_username
-            else:
-                self.host_names[server_host] = server_username
+
+            if not ssh_port:
+                if server_host in self.host_names:
+                    ssh_port = self.host_names[server_host]["ssh_port"]
+                else:
+                    ssh_port = 22
+
+            if server_username and ssh_port:
+                self.host_names[server_host] = {"username": server_username, "ssh_port": ssh_port}
 
             try:
                 client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
@@ -209,7 +216,7 @@ class LspBridge:
                     client = self.get_socket_client(server_host, REMOTE_FILE_ELISP_CHANNEL)
                     client.send_message("Connect")
 
-                message_emacs(f"Open {server_username}@{server_host}:{server_path}...")
+                message_emacs(f"Open {server_username}@{server_host}#{ssh_port}:{server_path}...")
 
                 self.send_remote_file_message(server_host, {
                     "command": "open_file",
@@ -218,9 +225,9 @@ class LspBridge:
                     "jump_define_pos": epc_arg_transformer(jump_define_pos)
                 })
 
-                save_ip(f"{server_username}@{server_host}")
+                save_ip(f"{server_username}@{server_host}:{ssh_port}")
             except paramiko.ssh_exception.ChannelException:
-                message_emacs(f"Connect {server_host} failed, please make sure `lsp_bridge.py` has start at server.")
+                message_emacs(f"Connect {server_username}@{server_host}:{ssh_port} failed, please make sure `lsp_bridge.py` has start at server.")
 
         else:
             message_emacs("Please input valid path match rule: 'ip:/path/file'.")
@@ -338,7 +345,8 @@ class LspBridge:
         else:
             client = RemoteFileClient(
                 server_host,
-                self.host_names[server_host],
+                self.host_names[server_host]["username"],
+                self.host_names[server_host]["ssh_port"],
                 server_port,
                 lambda message: self.receive_socket_message(message, server_port))
             client.start()
