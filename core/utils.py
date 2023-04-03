@@ -386,7 +386,7 @@ def cmp(x, y):
 
 def is_valid_ip_path(string):
     import re
-    pattern = re.compile(r'^(\w+@)?([\w\.\:]+):(/.*)$')
+    pattern = re.compile(r'^(\w+@)?([\w\.\:]+):([0-9]+)?(/.*)$')
     return pattern.match(string)
 
 def eval_sexp_in_emacs(sexp):

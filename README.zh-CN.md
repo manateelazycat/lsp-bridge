@@ -52,7 +52,7 @@ lsp-bridge 也可以对远程服务器的文件进行代码语法补全，效果
 
 1. 在远程服务器上安装 lsp-bridge 和对应的 LSP Server。
 2. 启动 lsp-bridge 服务：python3 lsp-bridge/lsp_bridge.py。
-3. 使用命令`lsp-bridge-open-remote-file`打开远程文件，输入用户名、服务器 IP 和文件路径，比如`user@ip:/path/file`。
+3. 使用命令`lsp-bridge-open-remote-file`打开远程文件，输入用户名、服务器 IP、SSH 端口(默认为: 22) 和文件路径，比如`user@ip:[ssh_port]/path/file`。
 
 一旦打开远程文件，`lsp-bridge`将自动显示代码补全菜单。`lsp-bridge` 远程补全的原理如下：
 
