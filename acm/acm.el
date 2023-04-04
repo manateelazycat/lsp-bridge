@@ -916,7 +916,9 @@ The key of candidate will change between two LSP results."
       (derived-mode-p 'inferior-emacs-lisp-mode)
       (derived-mode-p 'lisp-interaction-mode)
       (and (eq major-mode 'org-mode)
-           acm-is-elisp-mode-in-org)))
+           acm-is-elisp-mode-in-org)
+      (and (minibufferp)
+           (where-is-internal #'completion-at-point (list (current-local-map))))))
 
 (defun acm-select-first ()
   "Select first candidate."

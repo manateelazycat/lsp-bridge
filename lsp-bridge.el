@@ -1600,6 +1600,13 @@ So we build this macro to restore postion after code format."
 
 (add-hook 'post-command-hook 'lsp-bridge-monitor-window-buffer-change)
 
+(defun lsp-bridge-enable-in-minibuffer ()
+  (when (where-is-internal #'completion-at-point (list (current-local-map)))
+    (lsp-bridge-mode 1)
+    ))
+
+(add-hook 'minibuffer-setup-hook #'lsp-bridge-enable-in-minibuffer)
+
 (defconst lsp-bridge--internal-hooks
   '((before-change-functions lsp-bridge-monitor-before-change nil t)
     (after-change-functions lsp-bridge-monitor-after-change nil t)
