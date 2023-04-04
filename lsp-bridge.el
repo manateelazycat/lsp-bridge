@@ -313,6 +313,7 @@ Setting this to nil or 0 will turn off the indicator."
 (defvar lsp-bridge-internal-process nil)
 (defvar lsp-bridge-internal-process-prog nil)
 (defvar lsp-bridge-internal-process-args nil)
+(defvar position-before-jump nil)
 
 (defcustom lsp-bridge-name "*lsp-bridge*"
   "Name of LSP-Bridge buffer."
@@ -1470,8 +1471,8 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-define--jump-record-postion ()
   ;; Record postion.
-  (set-marker (mark-marker) (point) (current-buffer))
-  (setq position-before-jump (copy-marker (mark-marker)))
+  (let ((marker (set-marker (mark-marker) (point) (current-buffer))))
+    (setq position-before-jump (copy-marker marker)))
   (setq mark-ring lsp-bridge-mark-ring))
 
 (defun lsp-bridge-define--jump (filename filehost position)
