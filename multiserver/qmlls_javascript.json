@@ -5,6 +5,7 @@
   "code_action": ["qmlls"],
   "execute_command": ["qmlls"],
   "find_define": "qmlls",
+  "find_type_define": "qmlls",
   "find_implementation": "qmlls",
   "find_references": "qmlls",
   "formatting": "qmlls",

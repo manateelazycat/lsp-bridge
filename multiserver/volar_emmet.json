@@ -5,6 +5,7 @@
   "code_action": ["volar", "emmet-ls"],
   "execute_command": ["volar", "emmet-ls"],
   "find_define": "volar",
+  "find_type_define": "volar",
   "find_implementation": "volar",
   "find_references": "volar",
   "formatting": "volar",

@@ -5,6 +5,7 @@
   "code_action": ["ruff"],
   "execute_command": ["pylsp", "ruff"],
   "find_define": "pylsp",
+  "find_type_define": "pylsp",
   "find_implementation": "pylsp",
   "find_references": "pylsp",
   "formatting": "pylsp",

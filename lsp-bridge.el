@@ -1380,6 +1380,16 @@ So we build this macro to restore postion after code format."
     (unless (equal buffer this-buffer)
       (switch-to-buffer buffer))))
 
+(defun lsp-bridge-find-type-def ()
+  (interactive)
+  (setq-local lsp-bridge-jump-to-def-in-other-window nil)
+  (lsp-bridge-call-file-api "find_type_define" (lsp-bridge--position)))
+
+(defun lsp-bridge-find-type-def-other-window ()
+  (interactive)
+  (setq-local lsp-bridge-jump-to-def-in-other-window t)
+  (lsp-bridge-call-file-api "find_type_define" (lsp-bridge--position)))
+
 (defun lsp-bridge-find-impl ()
   (interactive)
   (setq-local lsp-bridge-jump-to-def-in-other-window nil)

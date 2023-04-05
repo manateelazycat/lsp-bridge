@@ -5,6 +5,7 @@
   "code_action": ["ruff"],
   "execute_command": ["python-ms", "ruff"],
   "find_define": "python-ms",
+  "find_type_define": "python-ms",
   "find_implementation": "python-ms",
   "find_references": "python-ms",
   "formatting": "python-ms",

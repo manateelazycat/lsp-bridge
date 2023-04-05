@@ -5,6 +5,7 @@
   "code_action": ["vscode-css-language-server", "emmet-ls-css"],
   "execute_command": ["vscode-css-language-server", "emmet-ls-css"],
   "find_define": "vscode-css-language-server",
+  "find_type_define": "vscode-css-language-server",
   "find_implementation": "vscode-css-language-server",
   "find_references": "vscode-css-language-server",
   "formatting": "vscode-css-language-server",

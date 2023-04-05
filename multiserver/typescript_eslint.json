@@ -5,6 +5,7 @@
   "code_action": ["typescript", "vscode-eslint-language-server"],
   "execute_command": ["typescript", "vscode-eslint-language-server"],
   "find_define": "typescript",
+  "find_type_define": "typescript",
   "find_implementation": "typescript",
   "find_references": "typescript",
   "formatting": "typescript",

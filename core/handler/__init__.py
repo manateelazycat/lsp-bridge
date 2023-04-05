@@ -46,6 +46,7 @@ class Handler(abc.ABC):
 from core.handler.completion import Completion
 from core.handler.completion_item import CompletionItem
 from core.handler.find_define import FindDefine
+from core.handler.find_type_define import FindTypeDefine
 from core.handler.find_implementation import FindImplementation
 from core.handler.find_references import FindReferences
 from core.handler.hover import Hover

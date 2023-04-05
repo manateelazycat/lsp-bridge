@@ -93,6 +93,8 @@ lsp-bridge 也可以对远程服务器的文件进行代码语法补全，效果
 * `lsp-bridge-find-def-return`: 返回跳转之前的位置
 * `lsp-bridge-find-impl`: 跳转到接口实现位置
 * `lsp-bridge-find-impl-other-window`: 在其他窗口跳转到接口实现位置
+* `lsp-bridge-find-type-def`: 跳转到类型定义位置
+* `lsp-bridge-find-type-def-other-window`: 在其他窗口跳转到类型定义位置
 * `lsp-bridge-find-references`: 查看代码引用
 * `lsp-bridge-popup-documentation`: 查看光标处的文档
 * `lsp-bridge-popup-documentation-scroll-up`: 文档窗口向上滚动

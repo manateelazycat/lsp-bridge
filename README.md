@@ -95,6 +95,8 @@ If the completion menu does not appear, log in to the remote server and check th
 * `lsp-bridge-find-def`: jump to the definition
 * `lsp-bridge-find-def-other-window`: jump to the definition in other-window
 * `lsp-bridge-find-def-return`: return to the location before calling `lsp-bridge-find-def`
+* `lsp-bridge-find-type-def`: Jump to the position of type definition.
+* `lsp-bridge-find-type-def-other-window`: Jump to the position of type definition in another window.
 * `lsp-bridge-find-impl`: jump to the implementation
 * `lsp-bridge-find-impl-other-window`: jump to the implementation in other-window
 * `lsp-bridge-find-references`: traverse across code references (forked from color-rg.el)

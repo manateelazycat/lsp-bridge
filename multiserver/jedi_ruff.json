@@ -5,6 +5,7 @@
   "code_action": ["ruff"],
   "execute_command": ["jedi", "ruff"],
   "find_define": "jedi",
+  "find_type_define": "jedi",
   "find_implementation": "jedi",
   "find_references": "jedi",
   "formatting": "jedi",

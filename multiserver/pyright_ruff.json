@@ -5,6 +5,7 @@
   "code_action": ["ruff"],
   "execute_command": ["pyright", "ruff"],
   "find_define": "pyright",
+  "find_type_define": "pyright",
   "find_implementation": "pyright",
   "find_references": "pyright",
   "formatting": "pyright",
