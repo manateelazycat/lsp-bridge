@@ -753,7 +753,9 @@ user more freedom to use rg with special arguments."
 (defun lsp-bridge-ref-jump-prev-file ()
   (interactive)
   (let ((prev-match-pos
-         (if (save-excursion (search-backward-regexp lsp-bridge-ref-regexp-file nil t))
+         (if (save-excursion
+               (and (search-backward-regexp lsp-bridge-ref-regexp-file nil t)
+                    (search-backward-regexp lsp-bridge-ref-regexp-split-line nil t)))
              (let* ((first-search-line
                      (save-excursion
                        (search-backward-regexp lsp-bridge-ref-regexp-file nil t)
