@@ -497,23 +497,23 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     kotlin-mode-hook
     vhdl-mode-hook
 
-		js-ts-mode
-		c-ts-mode
-		yaml-ts-mode
-		css-ts-mode
-		csharp-ts-mode
-		dockerfile-ts-mode
-		bash-ts-mode
-		ruby-ts-mode
-		java-ts-mode
-		python-ts-mode
-		typescript-ts-mode
-		go-mod-ts-mode
-		cmake-ts-mode
-		c++-ts-mode
-		json-ts-mode
-		go-ts-mode
-		rust-ts-mode)
+    js-ts-mode
+    c-ts-mode
+    yaml-ts-mode
+    css-ts-mod
+    csharp-ts-mode
+    dockerfile-ts-mode
+    bash-ts-mode
+    ruby-ts-mode
+    java-ts-mode
+    python-ts-mode
+    typescript-ts-mode
+    go-mod-ts-mode
+    cmake-ts-mode
+    c++-ts-mode
+    json-ts-mode
+    go-ts-mode
+    rust-ts-mode)
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
 
