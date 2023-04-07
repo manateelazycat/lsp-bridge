@@ -1101,7 +1101,8 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-is-meow-state ()
   "If `meow' mode is enable, only show completion when meow is in insert mode."
   (or (not (featurep 'meow))
-      meow-insert-mode))
+      meow-insert-mode
+      (minibufferp)))
 
 (defun lsp-bridge-not-in-multiple-cursors ()
   "If `multiple-cursors' mode is enable, hide completion menu."
