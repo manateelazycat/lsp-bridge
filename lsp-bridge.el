@@ -1443,9 +1443,9 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-signature-help-fetch ()
   (interactive)
-  (if lsp-bridge-code-action-notify
-      (setq-local lsp-bridge-code-action-notify nil)
-    (unless (eq last-command 'mwheel-scroll)
+  (if lsp-bridge-signature-help-prohibit
+      (setq-local lsp-bridge-signature-help-prohibit nil)
+    (unless (member (format "%s" last-command) '("mwheel-scroll" "eval-expression"))
       (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))))
 
 (defun lsp-bridge-pick-file-path (filename)
