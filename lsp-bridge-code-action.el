@@ -106,8 +106,6 @@ Set it `nil' to improve performance."
   :type 'cons
   :group 'lsp-bridge)
 
-(defvar-local lsp-bridge-signature-help-prohibit nil)
-
 (defvar lsp-bridge-code-action--current-buffer nil)
 (defvar lsp-bridge-code-action-popup-maybe-preview-timer nil)
 (defvar lsp-bridge-code-action--oldfile nil)
@@ -148,8 +146,6 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
                                 (lsp-bridge--point-position (car range))
                                 (lsp-bridge--point-position (cdr range))
                                 action-kind)
-
-      (setq-local lsp-bridge-signature-help-prohibit t)
       )))
 
 (defun lsp-bridge-code-action-popup-select ()

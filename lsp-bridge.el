@@ -907,7 +907,12 @@ So we build this macro to restore postion after code format."
 (defvar-local lsp-bridge-last-cursor-position 0)
 (defvar-local lsp-bridge-prohibit-completion nil)
 
+(defvar-local lsp-bridge-cursor-before-command 0)
+(defvar-local lsp-bridge-cursor-after-command 0)
+
 (defun lsp-bridge-monitor-pre-command ()
+  (setq-local lsp-bridge-cursor-before-command (point))
+
   (when acm-filter-overlay
     (let ((this-command-string (format "%s" this-command)))
       (cond ((member this-command-string '("self-insert-command" "org-self-insert-command"))
@@ -919,6 +924,8 @@ So we build this macro to restore postion after code format."
             ))))
 
 (defun lsp-bridge-monitor-post-command ()
+  (setq-local lsp-bridge-cursor-after-command (point))
+
   (let ((this-command-string (format "%s" this-command)))
     (when (and lsp-bridge-mode
                (member this-command-string '("self-insert-command" "org-self-insert-command")))
@@ -1443,10 +1450,8 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-signature-help-fetch ()
   (interactive)
-  (if lsp-bridge-signature-help-prohibit
-      (setq-local lsp-bridge-signature-help-prohibit nil)
-    (unless (member (format "%s" last-command) '("mwheel-scroll" "eval-expression"))
-      (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))))
+  (unless (equal lsp-bridge-cursor-before-command lsp-bridge-cursor-after-command)
+    (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position))))
 
 (defun lsp-bridge-pick-file-path (filename)
   ;; Remove `file://' and `:file://' prefix.
