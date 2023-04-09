@@ -349,6 +349,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (("wxml") . "wxml-language-server")
     (("html") . "vscode-html-language-server")
     (("astro") . "astro-ls")
+    (("typ") . "typst-lsp")
     )
   "The lang server rule for file extension."
   :type 'cons)
@@ -496,6 +497,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     markdown-mode-hook
     kotlin-mode-hook
     vhdl-mode-hook
+    typst-mode-hook
 
     c-ts-mode-hook
     c++-ts-mode-hook
@@ -586,9 +588,13 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (sh-mode . "\$\{")
     (bash-mode . "\$\{")
     (bash-ts-mode . "\$\{")
+    (typst--base-mode . "\$\{")
+    (typst--code-mode . "\$\{")
+    (typst--math-mode . "\$\{")
+    (typst--markup-mode . "\$\{")
+    ;; For #{}
     (elixir-mode . "\#\{")
     (elixir-ts-mode . "\#\{")
-    ;; For #{}
     (ruby-mode . "\#\{")
     ;; For {{}}
     (yaml-mode . "\{\{"))
