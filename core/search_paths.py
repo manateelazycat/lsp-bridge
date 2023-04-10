@@ -21,7 +21,6 @@
 
 import threading
 import os
-import re
 import functools
 
 from core.utils import eval_in_emacs, cmp
