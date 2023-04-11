@@ -258,15 +258,15 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
 (defun lsp-bridge-diagnostic-jump-prev ()
   (interactive)
   (if (zerop (length lsp-bridge-diagnostic-overlays))
-      (message "[LSP-Bridge] No diagnostics."))
-  (if-let ((diagnostic-overlay (cl-find-if
-                                (lambda (overlay)
-                                  (or (> (point) (overlay-end overlay))
-                                      ;; Show diagnostic information around cursor if diagnostic frame is not visiable.
-                                      (lsp-bridge-in-diagnostic-overlay-area-p overlay)))
-                                (reverse lsp-bridge-diagnostic-overlays))))
-      (lsp-bridge-diagnostic-show-tooltip diagnostic-overlay t)
-    (message "[LSP-Bridge] Reach first diagnostic.")))
+      (message "[LSP-Bridge] No diagnostics.")
+    (if-let ((diagnostic-overlay (cl-find-if
+                                  (lambda (overlay)
+                                    (or (> (point) (overlay-end overlay))
+                                        ;; Show diagnostic information around cursor if diagnostic frame is not visiable.
+                                        (lsp-bridge-in-diagnostic-overlay-area-p overlay)))
+                                  (reverse lsp-bridge-diagnostic-overlays))))
+        (lsp-bridge-diagnostic-show-tooltip diagnostic-overlay t)
+      (message "[LSP-Bridge] Reach first diagnostic."))))
 
 (defun lsp-bridge-diagnostic-overlay-at-point ()
   (cl-dolist (overlay lsp-bridge-diagnostic-overlays)
