@@ -130,6 +130,8 @@
                                                     lsp-bridge-is-evil-state
                                                     lsp-bridge-is-meow-state
 
+                                                    lsp-brige-not-in-chatgpt-response
+
                                                     lsp-bridge-not-complete-manually
                                                     )
   "A list of predicate functions with no argument to enable popup completion in callback."
@@ -1121,6 +1123,11 @@ So we build this macro to restore postion after code format."
   "If `multiple-cursors' mode is enable, hide completion menu."
   (not (and (featurep 'multiple-cursors)
             multiple-cursors-mode)))
+
+(defun lsp-brige-not-in-chatgpt-response ()
+  "Don't popup completion menu if ChatGPT is responsing."
+  (not (and (boundp 'mind-wave-is-response-p)
+        mind-wave-is-response-p)))
 
 (defun lsp-bridge-not-complete-manually ()
   "If `lsp-bridge-complete-manually' is non-nil, hide completion menu."
