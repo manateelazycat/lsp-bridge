@@ -1,0 +1,8 @@
+{
+    "name": "verible",
+    "languageId": "verilog",
+    "command": [
+        "verible-verilog-ls"
+    ],
+    "settings": {}
+}

@@ -398,43 +398,44 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defcustom lsp-bridge-single-lang-server-mode-list
   '(
-    ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode) . lsp-bridge-c-lsp-server)
-    ((cmake-mode cmake-ts-mode) . "cmake-language-server")
-    ((java-mode java-ts-mode) . "jdtls")
-    ((julia-mode) . "julials")
-    ((python-mode python-ts-mode) . lsp-bridge-python-lsp-server)
-    (ruby-mode . "solargraph")
-    ((rust-mode rustic-mode rust-ts-mode) . "rust-analyzer")
-    ((elixir-mode elixir-ts-mode heex-ts-mode) . "elixirLS")
-    ((go-mode go-ts-mode) . "gopls")
-    (groovy-mode . "groovy-language-server")
-    (haskell-mode . "hls")
-    (lua-mode . "sumneko")
-    (dart-mode . "dart-analysis-server")
-    (scala-mode . "metals")
-    ((js2-mode js-mode js-ts-mode rjsx-mode) . "javascript")
-    ((typescript-tsx-mode tsx-ts-mode) . "typescriptreact")
-    ((typescript-mode typescript-ts-mode) . "typescript")
-    (tuareg-mode . "ocamllsp")
-    (erlang-mode . "erlang-ls")
+    ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode) .                         lsp-bridge-c-lsp-server)
+    ((cmake-mode cmake-ts-mode) .                                                "cmake-language-server")
+    ((java-mode java-ts-mode) .                                                  "jdtls")
+    ((julia-mode) .                                                              "julials")
+    ((python-mode python-ts-mode) .                                              lsp-bridge-python-lsp-server)
+    (ruby-mode .                                                                 "solargraph")
+    ((rust-mode rustic-mode rust-ts-mode) .                                      "rust-analyzer")
+    ((elixir-mode elixir-ts-mode heex-ts-mode) .                                 "elixirLS")
+    ((go-mode go-ts-mode) .                                                      "gopls")
+    (groovy-mode .                                                               "groovy-language-server")
+    (haskell-mode .                                                              "hls")
+    (lua-mode .                                                                  "sumneko")
+    (dart-mode .                                                                 "dart-analysis-server")
+    (scala-mode .                                                                "metals")
+    ((js2-mode js-mode js-ts-mode rjsx-mode) .                                   "javascript")
+    ((typescript-tsx-mode tsx-ts-mode) .                                         "typescriptreact")
+    ((typescript-mode typescript-ts-mode) .                                      "typescript")
+    (tuareg-mode .                                                               "ocamllsp")
+    (erlang-mode .                                                               "erlang-ls")
     ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . lsp-bridge-tex-lsp-server)
-    ((clojure-mode clojurec-mode clojurescript-mode clojurex-mode) . "clojure-lsp")
-    ((sh-mode bash-mode bash-ts-mode) . "bash-language-server")
-    ((css-mode css-ts-mode) . "vscode-css-language-server")
-    (elm-mode . "elm-language-server")
-    (php-mode . lsp-bridge-php-lsp-server)
-    ((yaml-mode yaml-ts-mode) . "yaml-language-server")
-    (zig-mode . "zls")
-    (dockerfile-mode . "docker-langserver")
-    (d-mode . "serve-d")
-    ((fortran-mode f90-mode) . "fortls")
-    (nix-mode . "rnix-lsp")
-    (ess-r-mode . "rlanguageserver")
-    (graphql-mode . "graphql-lsp")
-    (swift-mode . "swift-sourcekit")
-    (csharp-mode . lsp-bridge-csharp-lsp-server)
-    (kotlin-mode . "kotlin-language-server")
-    (vhdl-mode . "vhdl-tool")
+    ((clojure-mode clojurec-mode clojurescript-mode clojurex-mode) .             "clojure-lsp")
+    ((sh-mode bash-mode bash-ts-mode) .                                          "bash-language-server")
+    ((css-mode css-ts-mode) .                                                    "vscode-css-language-server")
+    (elm-mode   .                                                                "elm-language-server")
+    (php-mode .                                                                  lsp-bridge-php-lsp-server)
+    ((yaml-mode yaml-ts-mode) .                                                  "yaml-language-server")
+    (zig-mode .                                                                  "zls")
+    (dockerfile-mode .                                                           "docker-langserver")
+    (d-mode .                                                                    "serve-d")
+    ((fortran-mode f90-mode) .                                                   "fortls")
+    (nix-mode .                                                                  "rnix-lsp")
+    (ess-r-mode .                                                                "rlanguageserver")
+    (graphql-mode .                                                              "graphql-lsp")
+    (swift-mode .                                                                "swift-sourcekit")
+    (csharp-mode .                                                               lsp-bridge-csharp-lsp-server)
+    (kotlin-mode .                                                               "kotlin-language-server")
+    (verilog-mode .                                                              "verible")
+    (vhdl-mode .                                                                 "vhdl-tool")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -500,7 +501,6 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     kotlin-mode-hook
     vhdl-mode-hook
     typst-mode-hook
-
     c-ts-mode-hook
     c++-ts-mode-hook
     cmake-ts-mode-hook
@@ -572,34 +572,35 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (yaml-mode                  . yaml-indent-offset) ; YAML
     (hack-mode                  . hack-indent-offset) ; Hack
     (kotlin-mode                . c-basic-offset)     ; Kotlin
+    (verilog-mode               . vhdl-indent-level)  ; Verilog
     (vhdl-mode                  . vhdl-basic-offset)  ; VHDL
     (default                    . standard-indent)) ; default fallback
   "A mapping from `major-mode' to its indent variable.")
 
 (defcustom lsp-bridge-string-interpolation-open-chars-alist
   '(;; For {}
-    (python-mode . "[^\$]\{")
-    (python-ts-mode . "[^\$]\{")
+    (python-mode .        "[^\$]\{")
+    (python-ts-mode .     "[^\$]\{")
     ;; For ${}
-    (js-mode . "\$\{")
-    (js-ts-mode . "\$\{")
-    (js2-mode . "\$\{")
-    (js3-mode . "\$\{")
-    (typescript-mode . "\$\{")
+    (js-mode .            "\$\{")
+    (js-ts-mode .         "\$\{")
+    (js2-mode .           "\$\{")
+    (js3-mode .           "\$\{")
+    (typescript-mode .    "\$\{")
     (typescript-ts-mode . "\$\{")
-    (sh-mode . "\$\{")
-    (bash-mode . "\$\{")
-    (bash-ts-mode . "\$\{")
-    (typst--base-mode . "\$\{")
-    (typst--code-mode . "\$\{")
-    (typst--math-mode . "\$\{")
+    (sh-mode .            "\$\{")
+    (bash-mode .          "\$\{")
+    (bash-ts-mode .       "\$\{")
+    (typst--base-mode .   "\$\{")
+    (typst--code-mode .   "\$\{")
+    (typst--math-mode .   "\$\{")
     (typst--markup-mode . "\$\{")
     ;; For #{}
-    (elixir-mode . "\#\{")
-    (elixir-ts-mode . "\#\{")
-    (ruby-mode . "\#\{")
+    (elixir-mode .        "\#\{")
+    (elixir-ts-mode .     "\#\{")
+    (ruby-mode .          "\#\{")
     ;; For {{}}
-    (yaml-mode . "\{\{"))
+    (yaml-mode .          "\{\{"))
   "Open characters for string interpolation. The elements are cons cell (major-mode . open-char-regexp)"
   :type 'cons)
 
