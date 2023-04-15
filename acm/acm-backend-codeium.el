@@ -33,6 +33,11 @@
   :type 'string
   :group 'acm-backend-codeium)
 
+(defcustom acm-backend-codeium-accept nil
+  "Send accept request."
+  :type 'boolean
+  :group 'acm-backend-codeium)
+
 (defvar-local acm-backend-codeium-items nil)
 
 (defun acm-backend-codeium-candidates (_)
@@ -41,7 +46,10 @@
 
 (defun acm-backend-codeium-candidate-expand (candidate-info _)
   (delete-region (- (point) (length (plist-get candidate-info :old_prefix))) (point))
-  (insert (plist-get candidate-info :label)))
+  (insert (plist-get candidate-info :label))
+  
+  (when acm-backend-codeium-accept
+    (lsp-bridge-call-async "codeium_completion_accept" (plist-get candidate-info :id))))
 
 (defun acm-backend-codeium-clean ()
   (setq-local acm-backend-codeium-items nil))

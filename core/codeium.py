@@ -56,7 +56,20 @@ class Codeium:
             }
         }
 
-        self.dispatch(self.send(data))
+        self.dispatch(self.send(data, 'GetCompletions'))
+
+    def accept(self, id):
+        data = {
+            'metadata': {
+                'api_key': CODEIUM_API_KEY,
+                'extension_version': CODEIUM_LANGUAGE_SERVER_VERSION,
+                'ide_name': 'emacs',
+                'ide_version': EMACS_VERSION
+            },
+            'completion_id': id
+        }
+
+        self.send(data, 'AcceptCompletion')
 
     def dispatch(self, data):
         completion_candidates = []
@@ -73,17 +86,18 @@ class Codeium:
                     'display-label': label.split('\n')[0].strip(),
                     'annotation': 'Codeium',
                     'backend': 'codeium',
-                    'old_prefix': completionParts['prefix'] if 'prefix' in completionParts else ''
+                    'old_prefix': completionParts['prefix'] if 'prefix' in completionParts else '',
+                    'id': completion['completion']['completionId']
                 }
 
                 completion_candidates.append(candidate)
 
         eval_in_emacs('lsp-bridge-search-backend--record-items', 'codeium', completion_candidates)
 
-    def send(self, data):
+    def send(self, data, api):
         json_data = json.dumps(data).encode('utf-8')
 
-        req = urllib.request.Request(url='http://localhost:42100/exa.language_server_pb.LanguageServerService/GetCompletions', method='POST')
+        req = urllib.request.Request(url=f'http://localhost:42100/exa.language_server_pb.LanguageServerService/{api}', method='POST')
         req.data = json_data
         req.add_header('Content-Type', 'application/json')
         req.add_header('Content-Length', len(json_data))

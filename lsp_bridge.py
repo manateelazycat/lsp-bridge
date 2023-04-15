@@ -709,6 +709,9 @@ class LspBridge:
     def codeium_complete(self, cursor_offset, editor_language, tab_size, text, max_num_results, insert_spaces):
         self.codeium.complete(cursor_offset, editor_language, tab_size, text, max_num_results, insert_spaces)
 
+    def codeium_completion_accept(self, id):
+        self.codeium.accept(id)
+
     def handle_server_process_exit(self, server_name):
         if server_name in LSP_SERVER_DICT:
             log_time("Exit server {}".format(server_name))
