@@ -16,10 +16,14 @@
 
 import json
 import os
+import random
+import re
+import string
 import subprocess
+import traceback
 import urllib.request
 
-from core.utils import eval_in_emacs, get_emacs_vars, get_os_name, message_emacs
+from core.utils import eval_in_emacs, get_emacs_vars, get_os_name, message_emacs, logger
 
 CODEIUM_EXECUTABLE = 'language_server.exe' if get_os_name() == 'windows' else 'language_server'
 
@@ -40,8 +44,8 @@ class Codeium:
 
         data = {
             'metadata': {
-                'api_key': CODEIUM_API_KEY,
-                'extension_version': CODEIUM_LANGUAGE_SERVER_VERSION,
+                'api_key': self.api_key,
+                'extension_version': self.version,
                 'ide_name': 'emacs',
                 'ide_version': EMACS_VERSION
             },
@@ -61,8 +65,8 @@ class Codeium:
     def accept(self, id):
         data = {
             'metadata': {
-                'api_key': CODEIUM_API_KEY,
-                'extension_version': CODEIUM_LANGUAGE_SERVER_VERSION,
+                'api_key': self.api_key,
+                'extension_version': self.version,
                 'ide_name': 'emacs',
                 'ide_version': EMACS_VERSION
             },
@@ -97,7 +101,14 @@ class Codeium:
     def send(self, data, api):
         json_data = json.dumps(data).encode('utf-8')
 
-        req = urllib.request.Request(url=f'http://localhost:42100/exa.language_server_pb.LanguageServerService/{api}', method='POST')
+        if self.server_port == '':
+            try:
+                pattern = re.compile("\d+")
+                self.server_port = [f for f in os.listdir(self.manager_dir) if pattern.match(f)][0]
+            except:
+                pass
+
+        req = urllib.request.Request(url=f'http://localhost:{self.server_port}/exa.language_server_pb.LanguageServerService/{api}', method='POST')
         req.data = json_data
         req.add_header('Content-Type', 'application/json')
         req.add_header('Content-Length', len(json_data))
@@ -108,26 +119,32 @@ class Codeium:
 
             return json.loads(response_data)
         except:
-            print('Request error')
+            logger.error(traceback.format_exc())
             return {}
 
     def run_local_server(self):
         try:
+            self.manager_dir = '/tmp/codeium_' + ''.join(random.choice(string.ascii_letters) for i in range(6))
+            self.server_port = ''
+
             subprocess.Popen([self.path,
-                              '--api_server_host', CODEIUM_API_SERVER_HOST,
-                              '--api_server_port', str(CODEIUM_API_SERVER_PORT)])
+                              '--api_server_host', self.api_server_host,
+                              '--api_server_port', str(self.api_server_port),
+                              '--manager_dir', self.manager_dir])
+
             self.is_run = True
+
         except:
             message_emacs('Cannot start codeium local server.')
 
     def get_info(self):
-        global CODEIUM_API_KEY, CODEIUM_API_SERVER_HOST, CODEIUM_API_SERVER_PORT, CODEIUM_LANGUAGE_SERVER_VERSION, CODEIUM_LOCAL_SERVER_DIR, EMACS_VERSION
+        global EMACS_VERSION
 
-        [CODEIUM_API_KEY] = get_emacs_vars(['acm-backend-codeium-api-key'])
-        [CODEIUM_API_SERVER_HOST] = get_emacs_vars(['acm-backend-codeium-api-server-host'])
-        [CODEIUM_API_SERVER_PORT] = get_emacs_vars(['acm-backend-codeium-api-server-port'])
-        CODEIUM_LANGUAGE_SERVER_VERSION = get_emacs_vars(['codeium-bridge-binary-version'])[0].replace("language-server-v", "")
-        [CODEIUM_LOCAL_SERVER_DIR] = get_emacs_vars(['codeium-bridge-folder'])
+        [self.api_key] = get_emacs_vars(['acm-backend-codeium-api-key'])
+        [self.api_server_host] = get_emacs_vars(['acm-backend-codeium-api-server-host'])
+        [self.api_server_port] = get_emacs_vars(['acm-backend-codeium-api-server-port'])
+        self.version = get_emacs_vars(['codeium-bridge-binary-version'])[0].replace("language-server-v", "")
+        [self.folder] = get_emacs_vars(['codeium-bridge-folder'])
         [EMACS_VERSION] = get_emacs_vars(['emacs-version'])
 
-        self.path = os.path.join(CODEIUM_LOCAL_SERVER_DIR, CODEIUM_EXECUTABLE)
+        self.path = os.path.join(self.folder, CODEIUM_EXECUTABLE)

@@ -231,6 +231,7 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
 
 (defun lsp-bridge-install-update-codeium ()
   "Install or update Codeium binary in `codeium-bridge-folder'."
+  (interactive)
   (let* ((system-arch (car (split-string system-configuration "-")))
          (arch (cond ((string= system-arch "x86_64")
                       "x64")

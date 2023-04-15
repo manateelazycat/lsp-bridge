@@ -47,7 +47,7 @@
 (defun acm-backend-codeium-candidate-expand (candidate-info _)
   (delete-region (- (point) (length (plist-get candidate-info :old_prefix))) (point))
   (insert (plist-get candidate-info :label))
-  
+
   (when acm-backend-codeium-accept
     (lsp-bridge-call-async "codeium_completion_accept" (plist-get candidate-info :id))))
 
