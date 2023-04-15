@@ -40,6 +40,7 @@ from core.search_list import SearchList
 from core.search_tailwindcss_keywords import SearchTailwindKeywords
 from core.search_paths import SearchPaths
 from core.tabnine import TabNine
+from core.codeium import Codeium
 from core.utils import *
 from core.handler import *
 from core.remote_file import RemoteFileClient, RemoteFileServer, save_ip
@@ -99,6 +100,9 @@ class LspBridge:
     def init_search_backends(self):
         # Init tabnine.
         self.tabnine = TabNine()
+
+        # Init codeium
+        self.codeium = Codeium()
 
         # Init search backends.
         self.search_file_words = SearchFileWords()
@@ -434,13 +438,13 @@ class LspBridge:
         try:
             while True:
                 message = self.event_queue.get(True)
-            
+
                 if message["name"] == "close_file":
                     self._close_file(message["content"])
                 elif message["name"] == "action_func":
                     (func_name, func_args) = message["content"]
                     getattr(self, func_name)(*func_args)
-            
+
                 self.event_queue.task_done()
         except:
             logger.error(traceback.format_exc())
@@ -453,7 +457,7 @@ class LspBridge:
                     self.handle_server_process_exit(message["content"])
                 else:
                     logger.error("Unhandled lsp-bridge message: %s" % message)
-            
+
                 self.message_queue.task_done()
         except:
             logger.error(traceback.format_exc())
@@ -461,11 +465,11 @@ class LspBridge:
     def rename_file(self, old_filepath, new_filepath):
         if is_in_path_dict(FILE_ACTION_DICT, old_filepath):
             get_from_path_dict(FILE_ACTION_DICT, old_filepath).rename_file(old_filepath, new_filepath)
-        
+
     def fetch_completion_item_info(self, filepath, item_key, server_name):
         if is_in_path_dict(FILE_ACTION_DICT, filepath):
             get_from_path_dict(FILE_ACTION_DICT, filepath).completion_item_resolve(item_key, server_name)
-    
+
     def open_file(self, filepath):
         project_path = get_project_path(filepath)
         multi_lang_server = get_emacs_func_result("get-multi-lang-server", project_path, filepath)
@@ -480,7 +484,7 @@ class LspBridge:
             # Try to load multi language server when get-multi-lang-server return match one.
             multi_lang_server_dir = Path(__file__).resolve().parent / "multiserver"
             multi_lang_server_path = multi_lang_server_dir / "{}.json".format(multi_lang_server)
-            
+
             user_multi_lang_server_dir = Path(str(get_emacs_vars(["lsp-bridge-user-multiserver-dir"])[0])).expanduser()
             user_multi_lang_server_path = user_multi_lang_server_dir / "{}.json".format(multi_lang_server)
             if user_multi_lang_server_path.exists():
@@ -489,7 +493,7 @@ class LspBridge:
             with open(multi_lang_server_path, encoding="utf-8", errors="ignore") as f:
                 multi_lang_server_info = json.load(f)
                 servers = self.pick_multi_server_names(multi_lang_server_info)
-                
+
                 # Load multi language server only when all language server commands exist.
                 if self.check_multi_server_command(servers, filepath):
                     multi_servers = {}
@@ -574,7 +578,7 @@ class LspBridge:
             create_file_action_with_single_server(filepath, lang_server_info, lsp_server)
         else:
             return False
-    
+
     def turn_off(self, filepath, message):
         message_emacs(message)
         eval_in_emacs("lsp-bridge--turn-off", filepath, get_lsp_file_host())
@@ -626,7 +630,7 @@ class LspBridge:
             return False
 
         lsp_server_name = "{}#{}".format(path_as_key(project_path), lang_server_info["name"])
-                                
+
         if lsp_server_name not in LSP_SERVER_DICT:
             LSP_SERVER_DICT[lsp_server_name] = LspServer(
                 message_queue=self.message_queue,
@@ -634,9 +638,9 @@ class LspBridge:
                 server_info=lang_server_info,
                 server_name=lsp_server_name,
                 enable_diagnostics=enable_diagnostics)
-            
+
         return LSP_SERVER_DICT[lsp_server_name]
-    
+
     def pick_multi_server_names(self, multi_lang_server_info):
         servers = []
         for info in multi_lang_server_info:
@@ -645,7 +649,7 @@ class LspBridge:
                 servers.append(info_value)
             else:
                 servers += info_value
-        
+
         return list(dict.fromkeys(servers))
 
     def maybe_create_org_babel_server(self, filepath):
@@ -692,21 +696,24 @@ class LspBridge:
             })
 
         setattr(self, name, _do_wrap)
-        
+
     def build_prefix_function(self, obj_name, prefix, name):
         def _do(*args, **kwargs):
             getattr(getattr(self, obj_name), name)(*args, **kwargs)
 
         setattr(self, "{}_{}".format(prefix, name), _do)
-        
+
     def tabnine_complete(self, before, after, filename, region_includes_beginning, region_includes_end, max_num_results):
         self.tabnine.complete(before, after, filename, region_includes_beginning, region_includes_end, max_num_results)
-            
+
+    def codeium_complete(self, cursor_offset, editor_language, tab_size, text, max_num_results, insert_spaces):
+        self.codeium.complete(cursor_offset, editor_language, tab_size, text, max_num_results, insert_spaces)
+
     def handle_server_process_exit(self, server_name):
         if server_name in LSP_SERVER_DICT:
             log_time("Exit server {}".format(server_name))
             del LSP_SERVER_DICT[server_name]
-            
+
     def cleanup(self):
         """Do some cleanup before exit python process."""
         close_epc_client()
@@ -715,7 +722,7 @@ class LspBridge:
         # Called from lsp-bridge-test.el to start test.
         from test.test import start_test
         start_test(self)
-        
+
     def profile_dump(self):
         try:
             global profiler
@@ -778,4 +785,3 @@ if __name__ == "__main__":
         profiler.run("LspBridge(sys.argv[1:])")
     else:
         LspBridge(sys.argv[1:])
-    
