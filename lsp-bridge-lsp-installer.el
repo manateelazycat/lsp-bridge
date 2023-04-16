@@ -229,19 +229,18 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
                        (buffer-string))
                    ""))))
 
+(defun lsp-bridge-codeium-get-api-key ()
+  "Get api key for Codeium."
+  (interactive)
+  (lsp-bridge-call-async "codeium_get_api_key"))
+
 (defun lsp-bridge-install-update-codeium ()
   "Install or update Codeium binary in `codeium-bridge-folder'."
   (interactive)
   (let* ((system-arch (car (split-string system-configuration "-")))
          (arch (cond ((string= system-arch "x86_64")
                       "x64")
-                     ((or (string= system-arch "arm")
-                          (string= system-arch "aarch64")
-                          (and (eq system-type 'darwin)
-                               (string= system-arch "x86_64")
-                               ;; Detect AArch64 running x86_64 Emacs
-                               (string= (shell-command-to-string "arch -arm64 uname -m") "arm64\n"))))
-                     "arm"))
+                     (t "arm")))
          (platform (cond ((eq system-type 'gnu/linux)
                         "linux")
                        ((or (eq system-type 'ms-dos)
@@ -260,7 +259,7 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
          (version (with-current-buffer (url-retrieve-synchronously "https://api.github.com/repos/Exafunction/codeium/releases/latest")
                     (re-search-forward "^{")
                     (goto-char (1- (point)))
-                    (gethash "name" (json-parse-buffer))))
+                    (substring (gethash "name" (json-parse-buffer)) (length "language-server-v"))))
          (file-name (format "language_server_%s_%s.%s"
                             platform
                             arch
@@ -269,7 +268,7 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
          (binary-file (string-trim-right compress-file "\\.gz"))
          ;; Binary file after rename
          (last-binary-file (concat binary-dir "language_server"))
-         (download-url (concat "https://github.com/Exafunction/codeium/releases/download/" version "/" file-name)))
+         (download-url (concat "https://github.com/Exafunction/codeium/releases/download/language-server-v" version "/" file-name)))
     (make-directory binary-dir t)
     (if (string= version codeium-bridge-binary-version)
         (message "Don't need update")

@@ -17,28 +17,45 @@
 import json
 import os
 import random
-import re
-import string
 import subprocess
 import traceback
 import urllib.request
 
-from core.utils import eval_in_emacs, get_emacs_vars, get_os_name, message_emacs, logger
+from core.utils import eval_in_emacs, get_emacs_vars, get_os_name, logger, message_emacs
 
 CODEIUM_EXECUTABLE = 'language_server.exe' if get_os_name() == 'windows' else 'language_server'
+
+
+def post_request(url, data):
+    json_data = json.dumps(data).encode('utf-8')
+
+    req = urllib.request.Request(url=url, method='POST')
+    req.data = json_data
+    req.add_header('Content-Type', 'application/json')
+    req.add_header('Content-Length', len(json_data))
+
+    try:
+        with urllib.request.urlopen(req) as response:
+            response_data = response.read().decode('utf-8')
+
+            return json.loads(response_data)
+    except:
+        logger.error(traceback.format_exc())
+        return {}
+
 
 class Codeium:
     def __init__(self):
         self.is_run = False
         self.is_get_info = False
 
-    def complete(self, cursor_offset, editor_language, tab_size, text, max_num_results, insert_spaces):
+        self.server_port = str(random.randint(40000, 49999))
+
+    def complete(self, cursor_offset, editor_language, tab_size, text, max_num_results, insert_spaces, language):
         eval_in_emacs('lsp-bridge-search-backend--record-items', 'codeium', False)
 
-        if not self.is_get_info:
-            self.get_info()
-        if not self.is_run:
-            self.run_local_server()
+        self.get_info()
+        self.run_local_server()
 
         self.max_num_results = max_num_results
 
@@ -52,7 +69,8 @@ class Codeium:
             'document': {
                 'cursor_offset': cursor_offset,
                 'editor_language': editor_language,
-                'text': text
+                'text': text,
+                'language': language
             },
             'editor_options': {
                 'insert_spaces': insert_spaces,
@@ -60,7 +78,7 @@ class Codeium:
             }
         }
 
-        self.dispatch(self.send(data, 'GetCompletions'))
+        self.dispatch(post_request(self.make_url('GetCompletions'), data))
 
     def accept(self, id):
         data = {
@@ -73,7 +91,30 @@ class Codeium:
             'completion_id': id
         }
 
-        self.send(data, 'AcceptCompletion')
+        post_request(self.make_url('AcceptCompletion'), data)
+
+    def get_api_key(self):
+        import uuid
+
+        self.get_info()
+        self.run_local_server()
+
+        url = 'https://codeium.com/profile?'                                 + \
+              'response_type=token&'                                         + \
+              'redirect_uri=http://localhost:' + self.server_port + '/auth&' + \
+              'state=' + str(uuid.uuid4()) + '&'                             + \
+              'scope=openid profile email&'                                  + \
+              'redirect_parameters_type=query'
+
+        eval_in_emacs('browse-url', url)
+
+        try:
+            auth_token = post_request(self.make_url('GetAuthToken'), {})['authToken']
+            api_key = post_request(self.make_url('RegisterUser'), {'firebase_id_token': auth_token})['api_key']
+
+            eval_in_emacs('customize-save-variable', "'acm-backend-codeium-api-key", api_key)
+        except:
+            pass
 
     def dispatch(self, data):
         completion_candidates = []
@@ -81,7 +122,7 @@ class Codeium:
         if 'completionItems' in data:
             for completion in data['completionItems'][:self.max_num_results - 1]:
                 label = completion['completion']['text']
-                completionParts = completion['completionParts'][0] if 'completionParts' in completion else {}
+                completionParts = completion.get('completionParts', [{}])[0]
 
                 candidate = {
                     'key': label,
@@ -90,7 +131,7 @@ class Codeium:
                     'display-label': label.split('\n')[0].strip(),
                     'annotation': 'Codeium',
                     'backend': 'codeium',
-                    'old_prefix': completionParts['prefix'] if 'prefix' in completionParts else '',
+                    'old_prefix': completionParts.get('prefix', ''),
                     'id': completion['completion']['completionId']
                 }
 
@@ -98,53 +139,39 @@ class Codeium:
 
         eval_in_emacs('lsp-bridge-search-backend--record-items', 'codeium', completion_candidates)
 
-    def send(self, data, api):
-        json_data = json.dumps(data).encode('utf-8')
-
-        if self.server_port == '':
-            try:
-                pattern = re.compile("\d+")
-                self.server_port = [f for f in os.listdir(self.manager_dir) if pattern.match(f)][0]
-            except:
-                pass
-
-        req = urllib.request.Request(url=f'http://localhost:{self.server_port}/exa.language_server_pb.LanguageServerService/{api}', method='POST')
-        req.data = json_data
-        req.add_header('Content-Type', 'application/json')
-        req.add_header('Content-Length', len(json_data))
-
-        try:
-            response = urllib.request.urlopen(req)
-            response_data = response.read().decode('utf-8')
-
-            return json.loads(response_data)
-        except:
-            logger.error(traceback.format_exc())
-            return {}
+    def make_url(self, api):
+        return f'http://localhost:{self.server_port}/exa.language_server_pb.LanguageServerService/{api}'
 
     def run_local_server(self):
-        try:
-            self.manager_dir = '/tmp/codeium_' + ''.join(random.choice(string.ascii_letters) for i in range(6))
-            self.server_port = ''
+        if self.is_run:
+            return
 
+        try:
             subprocess.Popen([self.path,
                               '--api_server_host', self.api_server_host,
                               '--api_server_port', str(self.api_server_port),
-                              '--manager_dir', self.manager_dir])
+                              '--server_port', self.server_port])
 
             self.is_run = True
-
         except:
             message_emacs('Cannot start codeium local server.')
 
     def get_info(self):
         global EMACS_VERSION
 
-        [self.api_key] = get_emacs_vars(['acm-backend-codeium-api-key'])
-        [self.api_server_host] = get_emacs_vars(['acm-backend-codeium-api-server-host'])
-        [self.api_server_port] = get_emacs_vars(['acm-backend-codeium-api-server-port'])
-        self.version = get_emacs_vars(['codeium-bridge-binary-version'])[0].replace("language-server-v", "")
-        [self.folder] = get_emacs_vars(['codeium-bridge-folder'])
-        [EMACS_VERSION] = get_emacs_vars(['emacs-version'])
+        if self.is_get_info:
+            return
+
+        [self.api_key,
+         self.api_server_host,
+         self.api_server_port,
+         self.folder,
+         self.version,
+         EMACS_VERSION] = get_emacs_vars(['acm-backend-codeium-api-key',
+                                          'acm-backend-codeium-api-server-host',
+                                          'acm-backend-codeium-api-server-port',
+                                          'codeium-bridge-folder',
+                                          'codeium-bridge-binary-version',
+                                          'emacs-version'])
 
         self.path = os.path.join(self.folder, CODEIUM_EXECUTABLE)
