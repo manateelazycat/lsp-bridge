@@ -33,13 +33,23 @@ class Completion(Handler):
         prefix = self.prefix.lower()
         x_label : str = x["label"].lower()
         y_label : str = y["label"].lower()
+        x_sort_text : str = x["sortText"]
+        y_sort_text : str = y["sortText"]
         x_include_prefix = x_label.startswith(prefix)
         y_include_prefix = y_label.startswith(prefix)
         
-        if x_include_prefix and not y_include_prefix:
+        # 1. Sort file by sortText, sortText is provided by LSP server.
+        if x_sort_text != "" and y_sort_text != "":
+            if x_sort_text < y_sort_text:
+                return -1
+            else:
+                return 1
+        # 2. Sort by prefix.
+        elif x_include_prefix and not y_include_prefix:
             return -1
         elif y_include_prefix and not x_include_prefix:
             return 1
+        # 3. Sort by length.
         elif len(x_label) < len(y_label):
             return -1
         elif len(x_label) > len(y_label):
@@ -106,6 +116,7 @@ class Completion(Handler):
                     "insertText": item.get('insertText', None),
                     "insertTextFormat": item.get("insertTextFormat", ''),
                     "textEdit": item.get("textEdit", None),
+                    "sortText": item.get("sortText", ""),
                     "server": self.method_server_name,
                     "backend": "lsp"
                 }
