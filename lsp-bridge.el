@@ -1128,7 +1128,7 @@ So we build this macro to restore postion after code format."
 (defun lsp-brige-not-in-chatgpt-response ()
   "Don't popup completion menu if ChatGPT is responsing."
   (not (and (boundp 'mind-wave-is-response-p)
-        mind-wave-is-response-p)))
+            mind-wave-is-response-p)))
 
 (defun lsp-bridge-not-complete-manually ()
   "If `lsp-bridge-complete-manually' is non-nil, hide completion menu."
@@ -1400,7 +1400,9 @@ So we build this macro to restore postion after code format."
                  (buffer-name buffer))))
     (goto-char position)
     (unless (equal buffer this-buffer)
-      (switch-to-buffer buffer))))
+      (switch-to-buffer buffer))
+    (recenter)
+    ))
 
 (defun lsp-bridge-find-type-def ()
   (interactive)
