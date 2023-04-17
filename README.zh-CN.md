@@ -339,8 +339,8 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 请先阅读下面的文章:
 
 - [LSP 协议规范](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
-- [lsp-bridge 架构设计](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html)
-- [为什么 lsp-bridge 不用 capf](https://manateelazycat.github.io/emacs/2022/06/26/why-lsp-bridge-not-use-capf.html)
+- [lsp-bridge 架构设计](https://manateelazycat.github.io/emacs/lsp/2022/05/12/lsp-bridge.html)
+- [为什么 lsp-bridge 不用 capf](https://manateelazycat.github.io/emacs/lsp/2022/06/26/why-lsp-bridge-not-use-capf.html)
 - [lsp-bridge Wiki](https://github.com/manateelazycat/lsp-bridge/wiki)
 
 接着打开开发选项 `lsp-bridge-enable-log` ， happy hacking! ;)
