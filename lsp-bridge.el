@@ -2022,9 +2022,9 @@ SymbolKind (defined in the LSP)."
                                               (not indent-tabs-mode)
                                               ;; https://github.com/Exafunction/codeium.el/blob/0240805690c685de9b75c953af2867b6fcc61208/codeium.el#L306
                                               (let ((mode major-mode))
-		                                        (while (not (alist-get mode codeium-language-alist))
-			                                      (setq mode (get mode 'derived-mode-parent)))
-		                                        (alist-get mode acm-backend-codeium-language-alist))))
+                                                (while (not (alist-get mode acm-backend-codeium-language-alist))
+                                                  (setq mode (get mode 'derived-mode-parent)))
+                                                (alist-get mode acm-backend-codeium-language-alist))))
       (lsp-bridge-call-async "codeium_complete"
                              (length (encode-coding-string before-text 'utf-8))
                              (symbol-name major-mode)
@@ -2034,9 +2034,9 @@ SymbolKind (defined in the LSP)."
                              (not indent-tabs-mode)
                              ;; https://github.com/Exafunction/codeium.el/blob/0240805690c685de9b75c953af2867b6fcc61208/codeium.el#L306
                              (let ((mode major-mode))
-		                       (while (not (alist-get mode codeium-language-alist))
-			                     (setq mode (get mode 'derived-mode-parent)))
-		                       (alist-get mode acm-backend-codeium-language-alist))))))
+                               (while (not (alist-get mode acm-backend-codeium-language-alist))
+                                 (setq mode (get mode 'derived-mode-parent)))
+                               (alist-get mode acm-backend-codeium-language-alist))))))
 
 (defun lsp-bridge-search-backend--record-items (backend-name items)
   (pcase backend-name

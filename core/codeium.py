@@ -17,7 +17,10 @@
 import json
 import os
 import random
+import re
+import string
 import subprocess
+import time
 import traceback
 import urllib.request
 
@@ -25,31 +28,12 @@ from core.utils import eval_in_emacs, get_emacs_vars, get_os_name, logger, messa
 
 CODEIUM_EXECUTABLE = 'language_server.exe' if get_os_name() == 'windows' else 'language_server'
 
-
-def post_request(url, data):
-    json_data = json.dumps(data).encode('utf-8')
-
-    req = urllib.request.Request(url=url, method='POST')
-    req.data = json_data
-    req.add_header('Content-Type', 'application/json')
-    req.add_header('Content-Length', len(json_data))
-
-    try:
-        with urllib.request.urlopen(req) as response:
-            response_data = response.read().decode('utf-8')
-
-            return json.loads(response_data)
-    except:
-        logger.error(traceback.format_exc())
-        return {}
-
-
 class Codeium:
     def __init__(self):
         self.is_run = False
         self.is_get_info = False
 
-        self.server_port = str(random.randint(40000, 49999))
+        self.server_port = ''
 
     def complete(self, cursor_offset, editor_language, tab_size, text, max_num_results, insert_spaces, language):
         eval_in_emacs('lsp-bridge-search-backend--record-items', 'codeium', False)
@@ -78,7 +62,7 @@ class Codeium:
             }
         }
 
-        self.dispatch(post_request(self.make_url('GetCompletions'), data))
+        self.dispatch(self.post_request(self.make_url('GetCompletions'), data))
 
     def accept(self, id):
         data = {
@@ -91,7 +75,7 @@ class Codeium:
             'completion_id': id
         }
 
-        post_request(self.make_url('AcceptCompletion'), data)
+        self.post_request(self.make_url('AcceptCompletion'), data)
 
     def get_api_key(self):
         import uuid
@@ -109,8 +93,8 @@ class Codeium:
         eval_in_emacs('browse-url', url)
 
         try:
-            auth_token = post_request(self.make_url('GetAuthToken'), {})['authToken']
-            api_key = post_request(self.make_url('RegisterUser'), {'firebase_id_token': auth_token})['api_key']
+            auth_token = self.post_request(self.make_url('GetAuthToken'), {})['authToken']
+            api_key = self.post_request(self.make_url('RegisterUser'), {'firebase_id_token': auth_token})['api_key']
 
             eval_in_emacs('customize-save-variable', "'acm-backend-codeium-api-key", api_key)
         except:
@@ -147,13 +131,20 @@ class Codeium:
             return
 
         try:
+            self.is_run = True
+
+            self.manager_dir = '/tmp/codeium_' + ''.join(random.choice(string.ascii_letters) for i in range(6))
+
             subprocess.Popen([self.path,
                               '--api_server_host', self.api_server_host,
                               '--api_server_port', str(self.api_server_port),
-                              '--server_port', self.server_port])
+                              '--manager_dir', self.manager_dir])
 
-            self.is_run = True
+            self.get_server_port()
         except:
+            self.is_run = False
+
+            logger.error(traceback.format_exc())
             message_emacs('Cannot start codeium local server.')
 
     def get_info(self):
@@ -175,3 +166,46 @@ class Codeium:
                                           'emacs-version'])
 
         self.path = os.path.join(self.folder, CODEIUM_EXECUTABLE)
+
+    def get_server_port(self):
+        pattern = re.compile('\\d{5}')
+        while True:
+            try:
+                files = [f for f in os.listdir(self.manager_dir) if pattern.match(f)]
+
+                time.sleep(0.1)
+
+                if len(files) == 0:
+                    continue
+                else:
+                    break
+            except:
+                pass
+
+        if len(files) > 0:
+            self.server_port = files[0]
+        else:
+            time.sleep(0.1)
+            self.get_server_port()
+
+    def post_request(self, url, data):
+        while True:
+            if self.server_port == '':
+                time.sleep(0.1)
+            else:
+                time.sleep(5)
+                break
+
+        json_data = json.dumps(data).encode('utf-8')
+
+        req = urllib.request.Request(url=url, method='POST')
+        req.data = json_data
+        req.add_header('Content-Type', 'application/json')
+        req.add_header('Content-Length', len(json_data))
+
+        try:
+            with urllib.request.urlopen(req) as response:
+                response_data = response.read().decode('utf-8')
+                return json.loads(response_data)
+        except:
+            return {}
