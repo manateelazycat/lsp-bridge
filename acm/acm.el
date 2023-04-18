@@ -1044,22 +1044,32 @@ The key of candidate will change between two LSP results."
     (setq acm-markdown-render-doc doc)))
 
 (defun acm-in-comment-p (&optional state)
-  (ignore-errors
-    (unless (or (bobp) (eobp))
-      (save-excursion
-        (or
-         (nth 4 (or state (acm-current-parse-state)))
-         (eq (get-text-property (point) 'face) 'font-lock-comment-face))
-        ))))
+  (if (featurep 'treesit)
+      ;; Avoid use `acm-current-parse-state' when treesit is enable.
+      ;; `beginning-of-defun' is very expensive function will slow down completion menu.
+      ;; We use `treesit-node-type' directly if treesit is enable.
+      (string-equal (treesit-node-type (treesit-node-at (point))) "comment")
+    (ignore-errors
+      (unless (or (bobp) (eobp))
+        (save-excursion
+          (or
+           (nth 4 (or state (acm-current-parse-state)))
+           (eq (get-text-property (point) 'face) 'font-lock-comment-face))
+          )))))
 
 (defun acm-in-string-p (&optional state)
-  (ignore-errors
-    (unless (or (bobp) (eobp))
-      (save-excursion
-        (and
-         (nth 3 (or state (acm-current-parse-state)))
-         (not (equal (point) (line-end-position))))
-        ))))
+  (if (featurep 'treesit)
+      ;; Avoid use `acm-current-parse-state' when treesit is enable.
+      ;; `beginning-of-defun' is very expensive function will slow down completion menu.
+      ;; We use `treesit-node-type' directly if treesit is enable.
+      (string-equal (treesit-node-type (treesit-node-at (point))) "string")
+    (ignore-errors
+      (unless (or (bobp) (eobp))
+        (save-excursion
+          (and
+           (nth 3 (or state (acm-current-parse-state)))
+           (not (equal (point) (line-end-position))))
+          )))))
 
 (defun acm-current-parse-state ()
   (let ((point (point)))
