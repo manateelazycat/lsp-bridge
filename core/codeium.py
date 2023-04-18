@@ -23,6 +23,7 @@ import subprocess
 import time
 import traceback
 import urllib.request
+import urllib.parse
 
 from core.utils import eval_in_emacs, get_emacs_vars, get_os_name, logger, message_emacs
 
@@ -83,12 +84,15 @@ class Codeium:
         self.get_info()
         self.run_local_server()
 
-        url = 'https://codeium.com/profile?'                                 + \
-              'response_type=token&'                                         + \
-              'redirect_uri=http://localhost:' + self.server_port + '/auth&' + \
-              'state=' + str(uuid.uuid4()) + '&'                             + \
-              'scope=openid profile email&'                                  + \
-              'redirect_parameters_type=query'
+        params = {
+            'response_type': 'token',
+            'redirect_uri': f'http://localhost:{self.server_port}/auth',
+            'state': str(uuid.uuid4()),
+            'scope': 'openid profile email',
+            'redirect_parameters_type': 'query'
+        }
+
+        url = 'https://codeium.com/profile?' + urllib.parse.urlencode(params)
 
         eval_in_emacs('browse-url', url)
 
@@ -97,6 +101,9 @@ class Codeium:
             api_key = self.post_request(self.make_url('RegisterUser'), {'firebase_id_token': auth_token})['api_key']
 
             eval_in_emacs('customize-save-variable', "'acm-backend-codeium-api-key", api_key)
+
+            self.is_get_info = False
+            self.get_info()
         except:
             pass
 
@@ -132,6 +139,8 @@ class Codeium:
 
         try:
             self.is_run = True
+
+            message_emacs('Waiting for Codeium local server to start...')
 
             self.manager_dir = '/tmp/codeium_' + ''.join(random.choice(string.ascii_letters) for i in range(6))
 
@@ -193,7 +202,6 @@ class Codeium:
             if self.server_port == '':
                 time.sleep(0.1)
             else:
-                time.sleep(5)
                 break
 
         json_data = json.dumps(data).encode('utf-8')

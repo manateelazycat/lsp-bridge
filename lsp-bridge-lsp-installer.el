@@ -230,7 +230,9 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
                    ""))))
 
 (defun lsp-bridge-codeium-get-api-key ()
-  "Get api key for Codeium."
+  "Get api key for Codeium.
+
+Please note that some browsers may not be able to obtain the API Key properly"
   (interactive)
   (lsp-bridge-call-async "codeium_get_api_key"))
 
