@@ -1058,7 +1058,7 @@ The key of candidate will change between two LSP results."
           )))))
 
 (defun acm-in-string-p (&optional state)
-  (if (featurep 'treesit)
+  (if (and (featurep 'treesit) (treesit-parser-list))
       ;; Avoid use `acm-current-parse-state' when treesit is enable.
       ;; `beginning-of-defun' is very expensive function will slow down completion menu.
       ;; We use `treesit-node-type' directly if treesit is enable.
