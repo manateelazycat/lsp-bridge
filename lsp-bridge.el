@@ -2061,13 +2061,12 @@ SymbolKind (defined in the LSP)."
 (defvar-local lsp-bridge-remote-file-host nil)
 (defvar-local lsp-bridge-remote-file-path nil)
 
-(when (version< emacs-version "30")
-  (defun file-name-concat (&rest parts)
-    (cl-reduce (lambda (a b) (expand-file-name b a)) parts)))
-
 (defun lsp-bridge-open-remote-file ()
   (interactive)
-  (let* ((ip-file (file-name-concat (lsp-bridge--user-emacs-directory) "lsp-bridge" "remote_file" "ip.txt"))
+  (let* ((ip-file (concat (lsp-bridge--user-emacs-directory)
+                          (file-name-as-directory "lsp-bridge")
+                          (file-name-as-directory "remote_file")
+                          "ip.txt"))
          (path (completing-read "Open remote file (ip:path): "
                                 (with-temp-buffer
                                   (insert-file-contents ip-file)
