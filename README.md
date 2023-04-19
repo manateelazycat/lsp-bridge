@@ -1,4 +1,5 @@
-English | [简体中文](./README.zh-CN.md)
+<p align="left">
+<a href="https://github.com/manateelazycat/lsp-bridge/actions/workflows/test.yml"><img src="https://github.com/manateelazycat/lsp-bridge/actions/workflows/test.yml/badge.svg"/></a> <a href ="https://github.com/manateelazycat/lsp-bridge/blob/master/README.zh-CN.md"><img src="https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-555555.svg"/></a>
 
 # lsp-bridge
 
