@@ -1048,7 +1048,8 @@ The key of candidate will change between two LSP results."
       ;; Avoid use `acm-current-parse-state' when treesit is enable.
       ;; `beginning-of-defun' is very expensive function will slow down completion menu.
       ;; We use `treesit-node-type' directly if treesit is enable.
-      (string-equal (treesit-node-type (treesit-node-at (point))) "comment")
+      (or (eq (get-text-property (point) 'face) 'font-lock-comment-face)
+          (string-equal (treesit-node-type (treesit-node-at (point))) "comment"))
     (ignore-errors
       (unless (or (bobp) (eobp))
         (save-excursion
@@ -1062,7 +1063,8 @@ The key of candidate will change between two LSP results."
       ;; Avoid use `acm-current-parse-state' when treesit is enable.
       ;; `beginning-of-defun' is very expensive function will slow down completion menu.
       ;; We use `treesit-node-type' directly if treesit is enable.
-      (string-equal (treesit-node-type (treesit-node-at (point))) "string")
+      (or (eq (get-text-property (point) 'face) 'font-lock-string-face)
+          (string-equal (treesit-node-type (treesit-node-at (point))) "string"))
     (ignore-errors
       (unless (or (bobp) (eobp))
         (save-excursion
