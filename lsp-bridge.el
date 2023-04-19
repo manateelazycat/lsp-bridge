@@ -321,7 +321,13 @@ Setting this to nil or 0 will turn off the indicator."
   "Name of LSP-Bridge buffer."
   :type 'string)
 
-(defcustom lsp-bridge-python-command (if (memq system-type '(cygwin windows-nt ms-dos)) "python.exe" "python3")
+(defcustom lsp-bridge-python-command (cond ((memq system-type '(cygwin windows-nt ms-dos))
+                                            (if (executable-find "pypy3.exe")
+                                                "pypy3.exe"
+                                              "python3.exe"))
+                                           (t (if (executable-find "pypy3")
+                                                  "pypy3"
+                                                "python3")))
   "The Python interpreter used to run lsp_bridge.py."
   :type 'string)
 

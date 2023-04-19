@@ -17,7 +17,11 @@ lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建�
 ## 安装
 
 1. 安装 Emacs 28 及以上版本
-2. 安装 Python 依赖: `pip3 install epc orjson sexpdata six paramiko` (orjson 是可选的， orjson 基于 Rust， 提供更快的 JSON 解析性能; paramiko 只有你需要远程编辑功能时才需要)
+2. 安装 Python 依赖: epc, orjson, sexpdata, six, paramiko, 请选择下面其中一种方式安装 Python 依赖
+- PyPy (我们强烈推荐用 PyPy 替代 CPython 以获得 5 倍的性能提升):
+`pypy3 -m pip install epc sexpdata six paramiko`
+- CPython:
+`pip3 install epc orjson sexpdata six paramiko` (orjson 是可选的， orjson 基于 Rust， 提供更快的 JSON 解析性能)
 3. 安装 Elisp 依赖:
 
 - [posframe](https://github.com/tumashu/posframe)
@@ -57,9 +61,9 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 
 lsp-bridge 也可以对远程服务器的文件进行代码语法补全，效果与 VSCode 类似。在处理要求较高资源或运行环境配置较为复杂的大型复杂软件时，提供远程代码补全功能将非常有用。以下是配置远程代码补全的步骤：
 
-1. 在远程服务器上安装 lsp-bridge 和对应的 LSP Server。
-2. 启动 lsp-bridge 服务：python3 lsp-bridge/lsp_bridge.py。
-3. 使用命令`lsp-bridge-open-remote-file`打开远程文件，输入用户名、服务器 IP、SSH 端口(默认为: 22) 和文件路径，比如`user@ip:[ssh_port]/path/file`。
+1. 在远程服务器上安装 lsp-bridge 和对应的 LSP Server
+2. 启动 lsp-bridge 服务： `pypy3 lsp-bridge/lsp_bridge.py` (如果你用 CPython， 请使用 `python3 lsp-bridge/lsp_bridge.py`)
+3. 使用命令`lsp-bridge-open-remote-file`打开远程文件，输入用户名、服务器 IP、SSH 端口(默认为: 22) 和文件路径，比如`user@ip:[ssh_port]/path/file`
 
 一旦打开远程文件，`lsp-bridge`将自动显示代码补全菜单。`lsp-bridge` 远程补全的原理如下：
 

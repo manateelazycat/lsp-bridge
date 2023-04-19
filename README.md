@@ -16,8 +16,12 @@ Using Python multithreading techniques, lsp-bridge builds a high-speed cache bet
 
 ## Installation
 
-1. Install Emacs version 28 or higher.
-2. Install Python dependencies: `pip3 install epc orjson sexpdata six paramiko` (orjson is optional, based on Rust, providing faster JSON parsing performance; paramiko is only needed when you need remote editing functionality)
+1. Install Emacs version 28 or above.
+2. Install Python dependencies: epc, orjson, sexpdata, six, paramiko. Please choose one of the following ways to install Python dependencies:
+- PyPy (We strongly recommend using PyPy instead of CPython to get a 5x performance boost):
+`pypy3 -m pip install epc sexpdata six paramiko`
+- CPython:
+`pip3 install epc orjson sexpdata six paramiko` (orjson is optional. It is based on Rust and provides faster JSON parsing performance)
 3. Install Elisp dependencies:
 
 - [posframe](https://github.com/tumashu/posframe)
@@ -58,7 +62,7 @@ It should be noted that lsp-bridge has three scanning modes:
 `lsp-bridge` can also provide code syntax completion for files on a remote server, similar to VSCode. Providing remote code completion is very useful when dealing with large and complex software that requires high resource demands or has complex environment configuration. The following are the steps to configure remote code completion:
 
 1. Install `lsp-bridge` and the corresponding LSP server on the remote server.
-2. Start `lsp-bridge` service: `python3 lsp-bridge/lsp_bridge.py`.
+2. Start the lsp-bridge service: `pypy3 lsp-bridge/lsp_bridge.py` (If you are using CPython, please use `python3 lsp-bridge/lsp_bridge.py`)
 3. Use the command `lsp-bridge-open-remote-file` to open the remote file and enter the username, server IP, ssh port (default: 22), and file path, such as `user@ip:[ssh_port]/path/file`.
 
 Once the remote file is opened, `lsp-bridge` will automatically display the code completion menu. The remote completion principle of `lsp-bridge` is as follows:
