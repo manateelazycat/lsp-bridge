@@ -1,0 +1,6 @@
+{
+  "name": "lexical",
+  "languageId": "elixir",
+  "command": ["start_lexical.sh"],
+  "settings": {}
+}
