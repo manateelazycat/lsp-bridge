@@ -78,15 +78,12 @@ class Codeium:
 
         self.post_request(self.make_url('AcceptCompletion'), data)
 
-    def get_api_key(self):
+    def auth(self):
         import uuid
-
-        self.get_info()
-        self.run_local_server()
 
         params = {
             'response_type': 'token',
-            'redirect_uri': f'http://localhost:{self.server_port}/auth',
+            'redirect_uri': 'vim-show-auth-token',
             'state': str(uuid.uuid4()),
             'scope': 'openid profile email',
             'redirect_parameters_type': 'query'
@@ -96,16 +93,17 @@ class Codeium:
 
         eval_in_emacs('browse-url', url)
 
-        try:
-            auth_token = self.post_request(self.make_url('GetAuthToken'), {})['authToken']
-            api_key = self.post_request(self.make_url('RegisterUser'), {'firebase_id_token': auth_token})['api_key']
+    def get_api_key(self, auth_token):
+        message_emacs('Getting api key...')
 
-            eval_in_emacs('customize-save-variable', "'acm-backend-codeium-api-key", api_key)
+        api_key = self.post_request('https://api.codeium.com/register_user/', {'firebase_id_token': auth_token})['api_key']
 
-            self.is_get_info = False
-            self.get_info()
-        except:
-            pass
+        eval_in_emacs('customize-save-variable', "'acm-backend-codeium-api-key", api_key)
+
+        message_emacs('Done.')
+
+        self.is_get_info = False
+        self.get_info()
 
     def dispatch(self, data):
         completion_candidates = []
@@ -178,6 +176,7 @@ class Codeium:
 
     def get_server_port(self):
         pattern = re.compile('\\d{5}')
+
         while True:
             try:
                 files = [f for f in os.listdir(self.manager_dir) if pattern.match(f)]
@@ -198,12 +197,6 @@ class Codeium:
             self.get_server_port()
 
     def post_request(self, url, data):
-        while True:
-            if self.server_port == '':
-                time.sleep(0.1)
-            else:
-                break
-
         json_data = json.dumps(data).encode('utf-8')
 
         req = urllib.request.Request(url=url, method='POST')

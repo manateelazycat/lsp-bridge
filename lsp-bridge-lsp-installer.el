@@ -229,12 +229,15 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
                        (buffer-string))
                    ""))))
 
-(defun lsp-bridge-codeium-get-api-key ()
-  "Get api key for Codeium.
-
-Please note that some browsers may not be able to obtain the API Key properly"
+(defun lsp-bridge-codeium-auth ()
+  "Getting auth token for Codeium."
   (interactive)
-  (lsp-bridge-call-async "codeium_get_api_key"))
+  (lsp-bridge-call-async "codeium_auth"))
+
+(defun lsp-bridge-codeium-input-auth-token (auth-token)
+  "Inputting auth token for Codeium."
+  (interactive "sAuth token: ")
+  (lsp-bridge-call-async "codeium_get_api_key" auth-token))
 
 (defun lsp-bridge-install-update-codeium ()
   "Install or update Codeium binary in `codeium-bridge-folder'."
@@ -273,7 +276,7 @@ Please note that some browsers may not be able to obtain the API Key properly"
          (download-url (concat "https://github.com/Exafunction/codeium/releases/download/language-server-v" version "/" file-name)))
     (make-directory binary-dir t)
     (if (string= version codeium-bridge-binary-version)
-        (message "Don't need update")
+        (message "Don't need update.")
       (url-copy-file download-url compress-file t)
       (shell-command (format "gzip -d %s" compress-file))
       (rename-file binary-file last-binary-file t)

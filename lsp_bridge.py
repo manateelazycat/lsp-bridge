@@ -712,8 +712,11 @@ class LspBridge:
     def codeium_completion_accept(self, id):
         self.codeium.accept(id)
 
-    def codeium_get_api_key(self):
-        self.codeium.get_api_key()
+    def codeium_auth(self):
+        self.codeium.auth()
+
+    def codeium_get_api_key(self, auth_token):
+        self.codeium.get_api_key(auth_token)
 
     def handle_server_process_exit(self, server_name):
         if server_name in LSP_SERVER_DICT:
