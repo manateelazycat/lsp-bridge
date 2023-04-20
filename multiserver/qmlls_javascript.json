@@ -13,5 +13,6 @@
   "signature_help": "qmlls",
   "prepare_rename": "qmlls",
   "rename": "qmlls",
-  "document_symbol": "qmalls"
+  "document_symbol": "qmalls",
+  "workspace_symbol": "qmalls"
 }

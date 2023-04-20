@@ -13,5 +13,6 @@
   "signature_help": "typescript",
   "prepare_rename": "typescript",
   "rename": "typescript",
-  "document_symbol": "typescript"
+  "document_symbol": "typescript",
+  "workspace_symbol": "typescript"
 }

@@ -13,5 +13,6 @@
   "signature_help": "vscode-html-language-server",
   "prepare_rename": "vscode-html-language-server",
   "rename": "vscode-html-language-server",
-  "document_symbol": "vscode-html-language-server"
+  "document_symbol": "vscode-html-language-server",
+  "workspace_symbol": "vscode-html-language-server"
 }

@@ -13,5 +13,6 @@
   "signature_help": "pyright",
   "prepare_rename": "pyright",
   "rename": "pyright",
-  "document_symbol": "pyright"
+  "document_symbol": "pyright",
+  "workspace_symbol": "pyright"
 }
