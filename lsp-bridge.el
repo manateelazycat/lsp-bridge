@@ -1245,6 +1245,10 @@ So we build this macro to restore postion after code format."
           (when acm-enable-tabnine
             (lsp-bridge-tabnine-complete))
 
+          ;; Codeium search.
+          (when acm-enable-codeium
+            (lsp-bridge-codeium-complete))
+
           ;; Search sdcv dictionary.
           (when acm-enable-search-sdcv-words
             ;; Search words if current prefix is not empty.
@@ -2011,8 +2015,40 @@ SymbolKind (defined in the LSP)."
                              (= after-point buffer-max)
                              max-num-results))))
 
+(defun lsp-bridge-codeium-complete ()
+  (interactive)
+  (let ((before-text (buffer-substring-no-properties (point-min) (point)))
+        (all-text (buffer-substring-no-properties (point-min) (point-max))))
+    (if (lsp-bridge-is-remote-file)
+        (lsp-bridge-remote-send-func-request "codeium_complete"
+                                             (list
+                                              (length (encode-coding-string before-text 'utf-8))
+                                              (symbol-name major-mode)
+                                              tab-width
+                                              all-text
+                                              acm-backend-codeium-candidates-number
+                                              (not indent-tabs-mode)
+                                              ;; https://github.com/Exafunction/codeium.el/blob/0240805690c685de9b75c953af2867b6fcc61208/codeium.el#L306
+                                              (let ((mode major-mode))
+                                                (while (not (alist-get mode acm-backend-codeium-language-alist))
+                                                  (setq mode (get mode 'derived-mode-parent)))
+                                                (alist-get mode acm-backend-codeium-language-alist))))
+      (lsp-bridge-call-async "codeium_complete"
+                             (length (encode-coding-string before-text 'utf-8))
+                             (symbol-name major-mode)
+                             tab-width
+                             all-text
+                             acm-backend-codeium-candidates-number
+                             (not indent-tabs-mode)
+                             ;; https://github.com/Exafunction/codeium.el/blob/0240805690c685de9b75c953af2867b6fcc61208/codeium.el#L306
+                             (let ((mode major-mode))
+                               (while (not (alist-get mode acm-backend-codeium-language-alist))
+                                 (setq mode (get mode 'derived-mode-parent)))
+                               (alist-get mode acm-backend-codeium-language-alist))))))
+
 (defun lsp-bridge-search-backend--record-items (backend-name items)
   (pcase backend-name
+    ("codeium" (setq-local acm-backend-codeium-items items))
     ("file-words" (setq-local acm-backend-search-file-words-items items))
     ("sdcv-words" (setq-local acm-backend-search-sdcv-words-items items))
     ("tabnine" (setq-local acm-backend-tabnine-items items))

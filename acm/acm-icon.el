@@ -163,6 +163,7 @@
     ("key" . ("material" "account-key" "#0085c3"))
     ("null" . ("material" "null" "##98c807"))
     ("typeparameter" . ("material" "format-list-bulleted-type" "#dc5034"))
+    ("codeium" . ("material" "code-braces" "#09b6a2"))
     (t . ("material" "file-find-outline" "#90cef1"))))
 
 (defvar acm-icon-cache (make-hash-table :test 'equal))

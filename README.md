@@ -168,6 +168,7 @@ If the completion menu does not appear, log in to the remote server and check th
 - `acm-enable-doc-markdown-render`: Richly render Markdown for completion popups, you can choose `'async`, `t` or `nil`. When set to `'async`, styles are applied asynchronously, choose `t`, styles are applied synchronously and will slow down the completion speed, default is `async`
 - `acm-enable-icon`: Whether the complete menu shows the icon, macOS users need to add option `--with-rsvg` to the brew command to install emacs to display SVG icon
 - `acm-enable-tabnine`: Enable tabnine support， enable by default，when enable need execute `lsp-bridge-install-tabnine` command to install TabNine, and it can be used. TabNine will consume huge CPUs, causing your entire computer to be slow. If the computer performance is not good, it is not recommended to enable this option
+- `acm-enable-codeium`: Enable Codeium support, when enable need execute `lsp-bridge-install-update-codeium` command to install Codeium, then execute `lsp-bridge-codeium-auth` command to get auth token and execute `lsp-bridge-codeium-input-auth-token` command to get API Key, and it can be used.
 - `acm-enable-search-file-words`: Whether the complete menu display the word of the file, enable by default
 - `acm-enable-quick-access`: Whether the index is displayed behind the icon, you can quickly select the candidate through Alt + Number, disable by default
 - `acm-enable-yas`: yasnippet completion, enable by default
@@ -314,7 +315,7 @@ The following is the framework of lsp-bridge:
 The following is the directory structure of the lsp-bridge project:
 
 | File Name                           | Purpose                                                                                                                                                                                                      |
-| :---------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|:------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | lsp-bridge.el                       | The Elisp main logic part of lsp-bridge provides custom options and Elisp functions for python sub-processes to call, such as code jumps, renaming, etc.                                                     |
 | lsp-bridge-epc.el                   | The code that communicates with the lsp-bridge python sub-process, which mainly implements Elisp IPC to interface with Python EPC, implementing data serialization, sending, receiving, and deserialization. |
 | lsp-bridge-call-hierarchy.el        | Displays the code's call order relationship in a pop-up frame.                                                                                                                                               |
@@ -332,6 +333,7 @@ The following is the directory structure of the lsp-bridge project:
 | core/mergedeep.py                   | JSON information merge, mainly used to send custom options to LSP servers.                                                                                                                                   |
 | core/hanlder/                       | Implementation of LSP message sending and receiving, where `__init__.py` is the base class.                                                                                                                  |
 | core/tabnine.py                     | The backend searches and completes with TabNine.                                                                                                                                                             |
+| core/codeium.py                     | The backend searches and completes with Codeium.                                                                                                                                                             |
 | core/search_file_words.py           | Asynchronous search backend for file words.                                                                                                                                                                  |
 | core/search_paths.py                | Asynchronous search backend for file paths.                                                                                                                                                                  |
 | core/search_sdcv_words.py           | English word search backend, interchangeable with other language's StarDict dictionaries.                                                                                                                    |
