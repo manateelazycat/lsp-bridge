@@ -24,6 +24,7 @@ import time
 import traceback
 import urllib.request
 import urllib.parse
+import tempfile
 
 from core.utils import eval_in_emacs, get_emacs_vars, get_os_name, logger, message_emacs
 
@@ -140,7 +141,7 @@ class Codeium:
 
             message_emacs('Waiting for Codeium local server to start...')
 
-            self.manager_dir = '/tmp/codeium_' + ''.join(random.choice(string.ascii_letters) for i in range(6))
+            self.manager_dir = tempfile.mkdtemp(prefix="codeium_")
 
             subprocess.Popen([self.path,
                               '--api_server_host', self.api_server_host,
