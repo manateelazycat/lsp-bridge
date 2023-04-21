@@ -143,7 +143,8 @@
     acm-backend-codeium-items))
 
 (defun acm-backend-codeium-candidate-expand (candidate-info _)
-  (delete-region (- (point) (length (plist-get candidate-info :old_prefix))) (point))
+  ;; We need replace whole line of current point with codeium label.
+  (delete-region (line-beginning-position) (line-end-position))
   (insert (plist-get candidate-info :label))
 
   (when acm-backend-codeium-accept
