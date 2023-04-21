@@ -366,6 +366,11 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Default LSP server for C language, you can choose `clangd' or `ccls'."
   :type 'string)
 
+(defcustom lsp-bridge-elixir-lsp-server "elixirLS"
+  "Default LSP server for Elixir language, you can choose `elixirLS' or `lexical'."
+  :type 'string
+  :safe #'stringp)
+
 (defcustom lsp-bridge-php-lsp-server "intelephense"
   "Default LSP server for PHP language, you can choose `intelephense' or `phpactor'."
   :type 'string
@@ -411,7 +416,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ((python-mode python-ts-mode) .                                              lsp-bridge-python-lsp-server)
     (ruby-mode .                                                                 "solargraph")
     ((rust-mode rustic-mode rust-ts-mode) .                                      "rust-analyzer")
-    ((elixir-mode elixir-ts-mode heex-ts-mode) .                                 "elixirLS")
+    ((elixir-mode elixir-ts-mode heex-ts-mode) .                                 lsp-bridge-elixir-lsp-server)
     ((go-mode go-ts-mode) .                                                      "gopls")
     (groovy-mode .                                                               "groovy-language-server")
     (haskell-mode .                                                              "hls")
