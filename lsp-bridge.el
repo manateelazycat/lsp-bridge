@@ -1251,7 +1251,9 @@ So we build this macro to restore postion after code format."
             (lsp-bridge-tabnine-complete))
 
           ;; Codeium search.
-          (when acm-enable-codeium
+          (when (and acm-enable-codeium
+                     ;; Don't enable codeium on Markdown mode, very disruptive to writing.
+                     (not (derived-mode-p 'markdown-mode)))
             (lsp-bridge-codeium-complete))
 
           ;; Search sdcv dictionary.
