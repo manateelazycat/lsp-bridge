@@ -37,21 +37,24 @@ class Codeium:
 
         self.server_port = ''
 
-    def complete(self, cursor_offset, editor_language, tab_size, text, max_num_results, insert_spaces, language):
-        eval_in_emacs('lsp-bridge-search-backend--record-items', 'codeium', False)
+        self.counter = 0
+        self.wait_request = []
 
+    def complete(self, cursor_offset, editor_language, tab_size, text, insert_spaces, language):
         self.get_info()
         self.run_local_server()
 
-        self.max_num_results = max_num_results
+        for _ in self.wait_request:
+            self.metadata['request_id'] = self.wait_request.pop()
+
+            self.post_request(self.make_url('CancelRequest'), {'metadata': self.metadata})
+
+        self.metadata['request_id'] = self.counter
+        self.wait_request.append(self.counter)
+        self.counter += 1
 
         data = {
-            'metadata': {
-                'api_key': self.api_key,
-                'extension_version': self.version,
-                'ide_name': 'emacs',
-                'ide_version': EMACS_VERSION
-            },
+            'metadata': self.metadata,
             'document': {
                 'cursor_offset': cursor_offset,
                 'editor_language': editor_language,
@@ -68,12 +71,7 @@ class Codeium:
 
     def accept(self, id):
         data = {
-            'metadata': {
-                'api_key': self.api_key,
-                'extension_version': self.version,
-                'ide_name': 'emacs',
-                'ide_version': EMACS_VERSION
-            },
+            'metadata': self.metadata,
             'completion_id': id
         }
 
@@ -156,23 +154,29 @@ class Codeium:
             message_emacs('Cannot start codeium local server.')
 
     def get_info(self):
-        global EMACS_VERSION
-
         if self.is_get_info:
             return
 
-        [self.api_key,
+        [API_KEY,
          self.api_server_host,
          self.api_server_port,
          self.folder,
-         self.version,
+         VERSION,
+         self.max_num_results,
          EMACS_VERSION] = get_emacs_vars(['acm-backend-codeium-api-key',
                                           'acm-backend-codeium-api-server-host',
                                           'acm-backend-codeium-api-server-port',
                                           'codeium-bridge-folder',
                                           'codeium-bridge-binary-version',
+                                          'acm-backend-codeium-candidates-number',
                                           'emacs-version'])
 
+        self.metadata = {
+            'api_key': API_KEY,
+            'extension_version': VERSION,
+            'ide_name': 'emacs',
+            'ide_version': EMACS_VERSION
+        }
         self.path = os.path.join(self.folder, CODEIUM_EXECUTABLE)
 
     def get_server_port(self):

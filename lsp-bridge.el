@@ -2033,7 +2033,6 @@ SymbolKind (defined in the LSP)."
                                               (symbol-name major-mode)
                                               tab-width
                                               all-text
-                                              acm-backend-codeium-candidates-number
                                               (not indent-tabs-mode)
                                               ;; https://github.com/Exafunction/codeium.el/blob/0240805690c685de9b75c953af2867b6fcc61208/codeium.el#L306
                                               (let ((mode major-mode))
@@ -2045,7 +2044,6 @@ SymbolKind (defined in the LSP)."
                              (symbol-name major-mode)
                              tab-width
                              all-text
-                             acm-backend-codeium-candidates-number
                              (not indent-tabs-mode)
                              ;; https://github.com/Exafunction/codeium.el/blob/0240805690c685de9b75c953af2867b6fcc61208/codeium.el#L306
                              (let ((mode major-mode))
