@@ -115,6 +115,7 @@
       (setq-local acm-backend-lsp-fetch-completion-item-ticker (list acm-backend-lsp-filepath key kind)))))
 
 (defcustom lsp-bridge-completion-popup-predicates '(
+                                                    lsp-bridge-not-delete-command
                                                     lsp-bridge-not-follow-complete
                                                     lsp-bridge-not-match-stop-commands
                                                     lsp-bridge-not-match-hide-characters
@@ -261,6 +262,7 @@ Setting this to nil or 0 will turn off the indicator."
 
 (defvar lsp-bridge-last-change-command nil)
 (defvar lsp-bridge-last-change-position nil)
+(defvar lsp-bridge-last-change-length nil)
 (defvar lsp-bridge-server nil
   "The LSP-Bridge Server.")
 
@@ -1100,6 +1102,10 @@ So we build this macro to restore postion after code format."
   (not (and (featurep 'markmacro)
             markmacro-overlays)))
 
+(defun lsp-bridge-not-delete-command ()
+  "Hide completion menu if last command is delete command."
+  (equal lsp-bridge-last-change-length 0))
+
 (defun lsp-bridge-not-follow-complete ()
   "Hide completion if last command is `acm-complete'."
   (or (not (member (format "%s" last-command) '("acm-complete" "acm-complete-quick-access")))
@@ -1220,91 +1226,89 @@ So we build this macro to restore postion after code format."
 
       ;; Record last change position to avoid popup outdate completions.
       (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
+      (setq lsp-bridge-last-change-length length)
 
       ;; Sync change for org babel if we enable it
       (lsp-bridge-org-babel-monitor-after-change begin end length)
 
-      (if (> length 0)
-          ;; Hide completion menu if this command is delete operation (`length' greater than zero).
-          (acm-hide)
-        ;; Send change_file request to trigger LSP completion.
-        (when (lsp-bridge-call-file-api-p)
-          (lsp-bridge-call-file-api "change_file"
-                                    lsp-bridge--before-change-begin-pos
-                                    lsp-bridge--before-change-end-pos
-                                    length
-                                    (buffer-substring-no-properties begin end)
-                                    (lsp-bridge--position)
-                                    (acm-char-before)
-                                    (buffer-name)
-                                    (acm-get-input-prefix)))
+      ;; Send change_file request to trigger LSP completion.
+      (when (lsp-bridge-call-file-api-p)
+        (lsp-bridge-call-file-api "change_file"
+                                  lsp-bridge--before-change-begin-pos
+                                  lsp-bridge--before-change-end-pos
+                                  length
+                                  (buffer-substring-no-properties begin end)
+                                  (lsp-bridge--position)
+                                  (acm-char-before)
+                                  (buffer-name)
+                                  (acm-get-input-prefix)))
 
-        (when (and (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-                   ;; NOTE:
-                   ;;
-                   ;; Most org-mode commands will make lsp-bridge failed that casue (thing-at-point 'symbol t).
-                   ;; We only allow `org-self-insert-command' trigger lsp-bridge action.
-                   (not (and (or (string-prefix-p "org-" this-command-string)
-                                 (string-prefix-p "+org/" this-command-string))
-                             (not (string-equal this-command-string "org-self-insert-command")))))
-          (let* ((current-word (thing-at-point 'word t))
-                 (current-symbol (thing-at-point 'symbol t)))
-            ;; TabNine search.
-            (when acm-enable-tabnine
-              (lsp-bridge-tabnine-complete))
+      (when (and (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+                 ;; NOTE:
+                 ;;
+                 ;; Most org-mode commands will make lsp-bridge failed that casue (thing-at-point 'symbol t).
+                 ;; We only allow `org-self-insert-command' trigger lsp-bridge action.
+                 (not (and (or (string-prefix-p "org-" this-command-string)
+                               (string-prefix-p "+org/" this-command-string))
+                           (not (string-equal this-command-string "org-self-insert-command")))))
+        (let* ((current-word (thing-at-point 'word t))
+               (current-symbol (thing-at-point 'symbol t)))
+          ;; TabNine search.
+          (when acm-enable-tabnine
+            (lsp-bridge-tabnine-complete))
 
-            ;; Codeium search.
-            (when (and acm-enable-codeium
-                       ;; Don't enable codeium on Markdown mode, very disruptive to writing.
-                       (not (derived-mode-p 'markdown-mode)))
-              (lsp-bridge-codeium-complete))
+          ;; Codeium search.
+          (when (and acm-enable-codeium
+                     ;; Don't enable codeium on Markdown mode, very disruptive to writing.
+                     (not (derived-mode-p 'markdown-mode)))
+            (lsp-bridge-codeium-complete))
 
-            ;; Search sdcv dictionary.
-            (when acm-enable-search-sdcv-words
-              ;; Search words if current prefix is not empty.
-              (unless (or (string-equal current-word "") (null current-word))
-                (lsp-bridge-call-async "search_sdcv_words_search" current-word)))
+          ;; Search sdcv dictionary.
+          (when acm-enable-search-sdcv-words
+            ;; Search words if current prefix is not empty.
+            (unless (or (string-equal current-word "") (null current-word))
+              (lsp-bridge-call-async "search_sdcv_words_search" current-word)))
 
-            ;; Search elisp symbol.
-            (lsp-bridge-elisp-symbols-search current-symbol)
+          ;; Search elisp symbol.
+          (lsp-bridge-elisp-symbols-search current-symbol)
 
-            ;; Send change file to search-words backend.
-            (unless lsp-bridge-prohibit-completion
-              (when (or buffer-file-name
-                        (lsp-bridge-is-remote-file))
-                (let ((current-word (acm-backend-search-file-words-get-point-string)))
-                  ;; Search words if current prefix is not empty.
-                  (unless (or (string-equal current-word "") (null current-word))
-                    (if (lsp-bridge-is-remote-file)
-                        (lsp-bridge-remote-send-func-request "search_file_words_search" (list current-word))
-                      (lsp-bridge-call-async "search_file_words_search" current-word))))))
-
-            ;; Send tailwind keyword search request just when cursor in class area.
-            (when (and (derived-mode-p 'web-mode)
-                       (acm-in-string-p)
-                       (save-excursion
-                         (search-backward-regexp "class=" (point-at-bol) t)))
-              (unless (or (string-equal current-symbol "") (null current-symbol))
-                (if (lsp-bridge-is-remote-file)
-                    (lsp-bridge-remote-send-func-request "search_tailwind_keywords_search" (list lsp-bridge-remote-file-path current-symbol))
-                  (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol))))
-
-            ;; Send path search request when detect path string.
-            (if (acm-in-string-p)
-                (when-let* ((filename (thing-at-point 'filename t))
-                            (dirname (ignore-errors (expand-file-name (file-name-directory filename)))))
+          ;; Send change file to search-words backend.
+          (unless lsp-bridge-prohibit-completion
+            (when (or buffer-file-name
+                      (lsp-bridge-is-remote-file))
+              (let ((current-word (acm-backend-search-file-words-get-point-string)))
+                ;; Search words if current prefix is not empty.
+                (unless (or (string-equal current-word "") (null current-word))
                   (if (lsp-bridge-is-remote-file)
-                      (lsp-bridge-remote-send-func-request "search_paths_search"
-                                                           (list dirname (file-name-base filename)))
-                    (when (file-exists-p dirname)
-                      (lsp-bridge-call-async "search_paths_search"
-                                             dirname
-                                             (file-name-base filename)
-                                             ))))
-              ;; We need cleanup `acm-backend-path-items' when cursor not in string.
-              ;; Otherwise, other completion backend won't show up.
-              (setq-local acm-backend-path-items nil))
-            )))
+                      (lsp-bridge-remote-send-func-request "search_file_words_search" (list current-word))
+                    (lsp-bridge-call-async "search_file_words_search" current-word))))))
+
+          ;; Send tailwind keyword search request just when cursor in class area.
+          (when (and (derived-mode-p 'web-mode)
+                     (acm-in-string-p)
+                     (save-excursion
+                       (search-backward-regexp "class=" (point-at-bol) t)))
+            (unless (or (string-equal current-symbol "") (null current-symbol))
+              (if (lsp-bridge-is-remote-file)
+                  (lsp-bridge-remote-send-func-request "search_tailwind_keywords_search" (list lsp-bridge-remote-file-path current-symbol))
+                (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol))))
+
+          ;; Send path search request when detect path string.
+          (if (acm-in-string-p)
+              (when-let* ((filename (thing-at-point 'filename t))
+                          (dirname (ignore-errors (expand-file-name (file-name-directory filename)))))
+                (if (lsp-bridge-is-remote-file)
+                    (lsp-bridge-remote-send-func-request "search_paths_search"
+                                                         (list dirname (file-name-base filename)))
+                  (when (file-exists-p dirname)
+                    (lsp-bridge-call-async "search_paths_search"
+                                           dirname
+                                           (file-name-base filename)
+                                           ))))
+            ;; We need cleanup `acm-backend-path-items' when cursor not in string.
+            ;; Otherwise, other completion backend won't show up.
+            (setq-local acm-backend-path-items nil))
+          ))
       )))
 
 (defun lsp-bridge-elisp-symbols-update ()
