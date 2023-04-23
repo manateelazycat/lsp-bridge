@@ -15,10 +15,27 @@ class FindImplementation(Handler):
             message_emacs("No implementation found.")
             return
 
-        file_info = response[0]
-        # volar return only LocationLink (using targetUri)
-        fileuri = file_info["uri"] if "uri" in file_info else file_info["targetUri"]
-        filepath = uri_to_path(fileuri)
-        range = file_info["range"] if "range" in file_info else file_info["targetRange"]
-        startpos = range["start"]
-        eval_in_emacs("lsp-bridge-define--jump", filepath, get_lsp_file_host(), startpos)
+        infos = []
+        for file_info in response:
+            # volar return only LocationLink (using targetUri)
+            fileuri = file_info["uri"] if "uri" in file_info else file_info["targetUri"]
+            filepath = uri_to_path(fileuri)
+
+            range = file_info["range"] if "range" in file_info else file_info["targetRange"]
+            pos = range["start"]
+            line = pos["line"]
+            character = pos["character"]
+
+            with open(filepath, 'r') as file:
+                content = file.readlines()[pos["line"]].rstrip()
+
+            if content[-1] in "({[":
+                content = content[:-1]
+
+            infos.append({
+                "filepath": filepath,
+                "position": pos,
+                "id": f"{filepath}:{content} [{line}:{character}]"
+            })
+
+        eval_in_emacs("lsp-bridge-impl--jump", get_lsp_file_host(), infos)
