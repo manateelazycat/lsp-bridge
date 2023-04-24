@@ -1551,13 +1551,6 @@ So we build this macro to restore postion after code format."
       (lsp-bridge-call-async "open_remote_file" (format "%s:%s" filehost filename) position))
     ))
 
-(defun lsp-bridge-impl--jump (filehost data)
-  (let ((info (if (> (length data) 1)
-                  (let ((id (completing-read "Jump to: " (mapcar (lambda (x) (plist-get x :id)) data))))
-                    (seq-find (lambda (x) (string= (plist-get x :id) id)) data))
-                (car data))))
-    (lsp-bridge-define--jump (plist-get info :filepath) filehost (plist-get info :position))))
-
 (defun lsp-bridge-define--jump-flash (position)
   ;; Jump to define postion.
   (goto-char (acm-backend-lsp-position-to-point position))
