@@ -28,13 +28,24 @@ class Completion(Handler):
         self.position = position
         self.prefix = prefix
         return dict(position=position, context=context)
+
+    def parse_sort_value(self, sort_text):
+        if sort_text == "":
+            return sort_text
+        else:
+            sort_text = ''.join(c for c in sort_text if c.isdigit() or c == '.')
+
+            if sort_text.endswith("."):
+                sort_text = sort_text[:-1]
+
+            return sort_text
     
     def compare_candidates(self, x, y):
         prefix = self.prefix.lower()
         x_label : str = x["label"].lower()
         y_label : str = y["label"].lower()
-        x_sort_text : str = x["sortText"]
-        y_sort_text : str = y["sortText"]
+        x_sort_text : str = self.parse_sort_value(x["sortText"])
+        y_sort_text : str = self.parse_sort_value(y["sortText"])
         x_include_prefix = x_label.startswith(prefix)
         y_include_prefix = y_label.startswith(prefix)
         
