@@ -88,6 +88,11 @@
   "Elisp backend for acm."
   :group 'acm)
 
+(defcustom acm-backend-elisp-candidate-min-length 0
+  "Minimal length of candidate."
+  :type 'integer
+  :group 'acm-backend-elisp)
+
 (defcustom acm-backend-elisp-search-max-number 300
   "The maximum number of search candidates."
   :type 'integer
@@ -106,7 +111,8 @@
 (defvar acm-backend-elisp-symbols-update-size 0)
 
 (defun acm-backend-elisp-candidates (keyword)
-  (when (and (acm-is-elisp-mode-p))
+  (when (and (acm-is-elisp-mode-p)
+             (>= (length keyword) acm-backend-elisp-candidate-min-length))
     (mapcar
      (lambda (elisp-symbol)
        (let ((symbol-type (acm-backend-elisp-symbol-type (intern elisp-symbol))))

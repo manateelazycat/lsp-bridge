@@ -177,7 +177,11 @@ If the completion menu does not appear, log in to the remote server and check th
 - `acm-doc-frame-max-lines`: Max line number of help documentation, default is 20
 - `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-\* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
 - `acm-completion-backend-merge-order`: Display order of completion backends. By default, multiple completion backends are merged in the order of LSP, Templates, and TabNine, and then the remaining templates and LSP completion options are displayed. You can adjust the order of completion back-end merging according to your needs
-- `acm-backend-lsp-candidate-min-length`: The minimum characters to trigger completion, default is 0
+- `acm-backend-lsp-candidate-min-length`: The minimum characters to trigger lsp completion, default is 0
+- `acm-backend-elisp-candidate-min-length`: The minimum characters to trigger elisp completion, default is 0
+- `acm-backend-yas-candidate-min-length`: The minimum characters to trigger yasnippet completion, default is 0
+- `acm-backend-search-file-words-candidate-min-length`: The minimum characters to trigger search file words completion, default is 0
+- `acm-backend-codeium-candidate-min-length`: The minimum characters to trigger codeium completion, default is 0
 - `acm-backend-lsp-enable-auto-import`: automatic insert import code, enable by default
 - `acm-backend-lsp-candidate-max-length`: Maximum length of LSP candidate, some language, such as Java, argument list is very long, you can increase the value of this option to see clear argument list
 - `acm-backend-yas-candidates-number`: yasnippet display number，2 by default

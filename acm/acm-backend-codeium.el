@@ -13,6 +13,11 @@
   :type 'boolean
   :group 'acm-backend-codeium)
 
+(defcustom acm-backend-codeium-candidate-min-length 0
+  "Minimal length of candidate."
+  :type 'integer
+  :group 'acm-backend-codeium)
+
 (defcustom acm-backend-codeium-candidates-number 10
   "Maximal number of codeium candidate of menu."
   :type 'integer
@@ -138,8 +143,9 @@
 	(fsharp-mode . 59)
 	(lisp-data-mode . 60)))
 
-(defun acm-backend-codeium-candidates (_)
-  (when acm-backend-codeium-items
+(defun acm-backend-codeium-candidates (keyword)
+  (when (and acm-backend-codeium-items
+             (>= (length keyword) acm-backend-codeium-candidate-min-length))
     acm-backend-codeium-items))
 
 (defun acm-backend-codeium-candidate-expand (candidate-info _)

@@ -94,6 +94,11 @@
   :type 'boolean
   :group 'acm-backend-yas)
 
+(defcustom acm-backend-yas-candidate-min-length 0
+  "Minimal length of candidate."
+  :type 'integer
+  :group 'acm-backend-yas)
+
 (defcustom acm-backend-yas-candidates-number 2
   "Maximal number of yas candidate of menu."
   :type 'integer
@@ -165,6 +170,7 @@ Default matching use snippet filename."
 
 (defun acm-backend-yas-candidates (keyword)
   (when (and acm-enable-yas
+             (>= (length keyword) acm-backend-yas-candidate-min-length)
              (not (string-empty-p keyword)))
     (when (or acm-backend-yas--cache-expire-p
               (null acm-backend-yas--cache)

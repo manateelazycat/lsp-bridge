@@ -177,6 +177,10 @@ lsp-bridge 也可以对远程服务器的文件进行代码语法补全，效果
 - `acm-candidate-match-function`: 补全菜单匹配算法， orderless-\* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
 - `acm-completion-backend-merge-order`: 补全后端的显示顺序， 默认是按照 LSP、 模板、 TabNine 顺序合并多个补全后端后， 再显示剩下的模板和 LSP 补全选项， 你可以根据你的需求调整补全后端合并顺序
 - `acm-backend-lsp-candidate-min-length`: LSP 补全最小的触发字符数, 默认是 0
+- `acm-backend-elisp-candidate-min-length`: Elisp 补全最小的触发字符数, 默认是 0
+- `acm-backend-yas-candidate-min-length`: YaSnippet 补全最小的触发字符数, 默认是 0
+- `acm-backend-search-file-words-candidate-min-length`: Search Words 补全最小的触发字符数, 默认是 0
+- `acm-backend-codeium-candidate-min-length`: Codeium 补全最小的触发字符数, 默认是 0
 - `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
 - `acm-backend-lsp-candidate-max-length`: LSP 候选词最大长度， 一些语言参数较长， 可以适当增加这个选项的值以看清楚参数列表
 - `acm-backend-yas-candidates-number`: yasnippet 显示个数，默认 2 个

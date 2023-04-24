@@ -88,6 +88,11 @@
   "Backend fo completion words in other buffer."
   :group 'acm)
 
+(defcustom acm-backend-search-file-words-candidate-min-length 0
+  "Minimal length of candidate."
+  :type 'integer
+  :group 'acm-backend-search-file-words)
+
 (defcustom acm-enable-search-file-words t
   "Popup search words completions when this option is turn on."
   :type 'boolean
@@ -96,7 +101,8 @@
 (defvar-local acm-backend-search-file-words-items nil)
 
 (defun acm-backend-search-file-words-candidates (keyword)
-  (when acm-enable-search-file-words
+  (when (and acm-enable-search-file-words
+             (>= (length keyword) acm-backend-search-file-words-candidate-min-length))
     (mapcar
      (lambda (candidate-label)
        (list :key candidate-label
