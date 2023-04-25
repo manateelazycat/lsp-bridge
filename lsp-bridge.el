@@ -262,7 +262,8 @@ Setting this to nil or 0 will turn off the indicator."
 
 (defvar lsp-bridge-last-change-command nil)
 (defvar lsp-bridge-last-change-position nil)
-(defvar lsp-bridge-last-change-length nil)
+(defvar lsp-bridge-last-change-is-delete-command-p nil)
+
 (defvar lsp-bridge-server nil
   "The LSP-Bridge Server.")
 
@@ -1104,7 +1105,7 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-not-delete-command ()
   "Hide completion menu if last command is delete command."
-  (equal lsp-bridge-last-change-length 0))
+  (not lsp-bridge-last-change-is-delete-command-p))
 
 (defun lsp-bridge-not-follow-complete ()
   "Hide completion if last command is `acm-complete'."
@@ -1226,7 +1227,9 @@ So we build this macro to restore postion after code format."
 
       ;; Record last change position to avoid popup outdate completions.
       (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
-      (setq lsp-bridge-last-change-length length)
+
+      ;; Set `lsp-bridge-last-change-is-delete-command-p'
+      (setq lsp-bridge-last-change-is-delete-command-p (> length 0))
 
       ;; Sync change for org babel if we enable it
       (lsp-bridge-org-babel-monitor-after-change begin end length)
