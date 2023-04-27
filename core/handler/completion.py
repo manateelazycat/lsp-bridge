@@ -44,23 +44,33 @@ class Completion(Handler):
         prefix = self.prefix.lower()
         x_label : str = x["label"].lower()
         y_label : str = y["label"].lower()
+        x_icon : str = x["icon"]
+        y_icon : str = y["icon"]
         x_sort_text : str = self.parse_sort_value(x["sortText"])
         y_sort_text : str = self.parse_sort_value(y["sortText"])
         x_include_prefix = x_label.startswith(prefix)
         y_include_prefix = y_label.startswith(prefix)
-        
+        x_method_name = x_label.split('(')[0]
+        y_method_name = y_label.split('(')[0]
+
         # 1. Sort file by sortText, sortText is provided by LSP server.
-        if x_sort_text != "" and y_sort_text != "":
+        if x_sort_text != "" and y_sort_text != "" and x_sort_text != y_sort_text:
             if x_sort_text < y_sort_text:
                 return -1
-            else:
+            elif x_sort_text > y_sort_text:
                 return 1
         # 2. Sort by prefix.
         elif x_include_prefix and not y_include_prefix:
             return -1
         elif y_include_prefix and not x_include_prefix:
             return 1
-        # 3. Sort by length.
+        # 3. Sort by method name if both candidates are method.
+        elif x_icon == "method" and y_icon == "method" and x_method_name != y_method_name:
+            if x_method_name < y_method_name:
+                return -1
+            elif x_method_name > y_method_name:
+                return 1
+        # 4. Sort by length.
         elif len(x_label) < len(y_label):
             return -1
         elif len(x_label) > len(y_label):
