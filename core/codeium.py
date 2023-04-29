@@ -16,17 +16,15 @@
 
 import json
 import os
-import random
 import re
-import string
 import subprocess
+import tempfile
 import time
 import traceback
-import urllib.request
 import urllib.parse
-import tempfile
+import urllib.request
 
-from core.utils import eval_in_emacs, get_emacs_vars, get_os_name, logger, message_emacs
+from core.utils import *
 
 CODEIUM_EXECUTABLE = 'language_server.exe' if get_os_name() == 'windows' else 'language_server'
 
@@ -37,21 +35,9 @@ class Codeium:
 
         self.server_port = ''
 
-        self.counter = 0
-        self.wait_request = []
-
     def complete(self, cursor_offset, editor_language, tab_size, text, insert_spaces, language):
         self.get_info()
         self.run_local_server()
-
-        for _ in self.wait_request:
-            self.metadata['request_id'] = self.wait_request.pop()
-
-            self.post_request(self.make_url('CancelRequest'), {'metadata': self.metadata})
-
-        self.metadata['request_id'] = self.counter
-        self.wait_request.append(self.counter)
-        self.counter += 1
 
         data = {
             'metadata': self.metadata,
@@ -107,19 +93,27 @@ class Codeium:
     def dispatch(self, data):
         completion_candidates = []
 
+        current_line = get_current_line()
+
         if 'completionItems' in data:
             for completion in data['completionItems'][:self.max_num_results - 1]:
                 label = completion['completion']['text']
+                display_label = label
                 completionParts = completion.get('completionParts', [{}])[0]
+
+                if label == current_line:
+                    continue
+
+                if 'type' in completionParts and completionParts['type'] == 'COMPLETION_PART_TYPE_BLOCK':
+                    display_label = completionParts['text']
 
                 candidate = {
                     'key': label,
                     'icon': 'codeium',
                     'label': label,
-                    'display-label': label.split('\n')[0].strip(),
+                    'display-label': display_label.split('\n')[0].strip(),
                     'annotation': 'Codeium',
                     'backend': 'codeium',
-                    'old_prefix': completionParts.get('prefix', ''),
                     'id': completion['completion']['completionId']
                 }
 
@@ -141,14 +135,16 @@ class Codeium:
 
             self.manager_dir = tempfile.mkdtemp(prefix="codeium_")
 
-            subprocess.Popen([self.path,
-                              '--api_server_host', self.api_server_host,
-                              '--api_server_port', str(self.api_server_port),
-                              '--manager_dir', self.manager_dir])
+            process = subprocess.Popen([self.path,
+                                        '--api_server_host', self.api_server_host,
+                                        '--api_server_port', str(self.api_server_port),
+                                        '--manager_dir', self.manager_dir])
 
             self.get_server_port()
         except:
             self.is_run = False
+
+            process.kill()
 
             logger.error(traceback.format_exc())
             message_emacs('Cannot start codeium local server.')

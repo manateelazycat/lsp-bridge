@@ -470,7 +470,7 @@ Only calculate template candidate when type last character."
 The key of candidate will change between two LSP results."
   (format "%s###%s" (plist-get candidate :label) (plist-get candidate :backend)))
 
-(defun acm-update ()
+(defun acm-update (&optional candidate)
   ;; Init quick mode map.
   (acm-quick-access-init)
 
@@ -480,7 +480,7 @@ The key of candidate will change between two LSP results."
          (keyword (acm-get-input-prefix))
          (previous-select-candidate-index (+ acm-menu-offset acm-menu-index))
          (previous-select-candidate (acm-menu-index-info (acm-menu-current-candidate)))
-         (candidates (acm-update-candidates))
+         (candidates (or candidate (acm-update-candidates)))
          (menu-candidates (cl-subseq candidates 0 (min (length candidates) acm-menu-length)))
          (current-select-candidate-index (cl-position previous-select-candidate (mapcar 'acm-menu-index-info menu-candidates) :test 'equal))
          (bounds (acm-get-input-prefix-bound)))
