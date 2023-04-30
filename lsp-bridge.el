@@ -140,23 +140,23 @@
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-completion-popup-predicates-codeium '(
-                                                                lsp-bridge-not-delete-command
-                                                                lsp-bridge-not-match-stop-commands
+                                                            lsp-bridge-not-delete-command
+                                                            lsp-bridge-not-match-stop-commands
 
-                                                                lsp-bridge-not-in-string
-                                                                lsp-bridge-not-in-org-table
+                                                            lsp-bridge-not-in-string
+                                                            lsp-bridge-not-in-org-table
 
-                                                                lsp-bridge-not-execute-macro
-                                                                lsp-bridge-not-in-multiple-cursors
-                                                                lsp-bridge-not-in-mark-macro
+                                                            lsp-bridge-not-execute-macro
+                                                            lsp-bridge-not-in-multiple-cursors
+                                                            lsp-bridge-not-in-mark-macro
 
-                                                                lsp-bridge-is-evil-state
-                                                                lsp-bridge-is-meow-state
+                                                            lsp-bridge-is-evil-state
+                                                            lsp-bridge-is-meow-state
 
-                                                                lsp-brige-not-in-chatgpt-response
+                                                            lsp-brige-not-in-chatgpt-response
 
-                                                                lsp-bridge-not-complete-manually
-                                                                )
+                                                            lsp-bridge-not-complete-manually
+                                                            )
   "A list of predicate functions for Codeium with no argument to enable popup completion in callback."
   :type '(repeat function)
   :group 'lsp-bridge)
@@ -314,6 +314,7 @@ Setting this to nil or 0 will turn off the indicator."
                (lsp-bridge-epc-define-method mngr 'get-user-emacs-directory 'lsp-bridge--user-emacs-directory-func)
                (lsp-bridge-epc-define-method mngr 'get-buffer-content 'lsp-bridge--get-buffer-content-func)
                (lsp-bridge-epc-define-method mngr 'get-current-line 'lsp-bridge--get-current-line-func)
+               (lsp-bridge-epc-define-method mngr 'get-ssh-password 'lsp-bridge--get-ssh-password-func)
                ))))
     (if lsp-bridge-server
         (setq lsp-bridge-server-port (process-contact lsp-bridge-server :service))
@@ -734,6 +735,13 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge--get-current-line-func ()
   (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
+
+(defun lsp-bridge--get-ssh-password-func (host)
+  (condition-case nil
+      (read-passwd (format "Password for %s: " host))
+    (quit (progn
+            (message "Cancelled password input.")
+            nil))))
 
 (defun lsp-bridge-get-lang-server-by-extension (filename extension-list)
   "Get lang server for file extension."

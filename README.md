@@ -17,12 +17,12 @@ Using Python multithreading techniques, lsp-bridge builds a high-speed cache bet
 
 ## Installation
 
-1. Install Emacs version 28 or above.
-2. Install Python dependencies: epc, orjson, sexpdata, six, paramiko. Please choose one of the following ways to install Python dependencies:
-- PyPy (We strongly recommend using PyPy instead of CPython to get a 5x performance boost):
+1. Install Emacs 28 or higher version
+2. Install Python dependencies: epc, orjson, sexpdata, six, paramiko, please choose one of the following methods to install Python dependencies
+- PyPy (On Linux, we strongly recommend using PyPy instead of CPython for a 5x performance boost):
 `pypy3 -m pip install epc sexpdata six paramiko`
-- CPython:
-`pip3 install epc orjson sexpdata six paramiko` (orjson is optional. It is based on Rust and provides faster JSON parsing performance)
+- CPython: (Windows and MacOS users please use CPython)
+`pip3 install epc orjson sexpdata six paramiko` (orjson is optional, orjson is based on Rust, providing faster JSON parsing performance)
 3. Install Elisp dependencies:
 
 - [posframe](https://github.com/tumashu/posframe)
@@ -73,6 +73,8 @@ Once the remote file is opened, `lsp-bridge` will automatically display the code
 3. After calculating the LSP completion menu items, `lsp-bridge` will send the completion data to the local computer and render the completion menu.
 
 If the completion menu does not appear, log in to the remote server and check the terminal output of `lsp_bridge.py`. Generally, incomplete installation of the service-side LSP server is the cause.
+
+lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` directory as the public key credential for logging into the remote server. If public key login fails, the user will be prompted to enter the login password. lsp-bridge does not store the server login password in a file. To avoid repeatedly entering the password, it is recommended that you use the public key method to log in to the remote server.
 
 ## Keymap
 

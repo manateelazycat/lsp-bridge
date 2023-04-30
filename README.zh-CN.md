@@ -18,9 +18,9 @@ lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建�
 
 1. 安装 Emacs 28 及以上版本
 2. 安装 Python 依赖: epc, orjson, sexpdata, six, paramiko, 请选择下面其中一种方式安装 Python 依赖
-- PyPy (我们强烈推荐用 PyPy 替代 CPython 以获得 5 倍的性能提升):
+- PyPy (Linux 下， 我们强烈推荐用 PyPy 替代 CPython 以获得 5 倍的性能提升):
 `pypy3 -m pip install epc sexpdata six paramiko`
-- CPython:
+- CPython: (Windows 和 MacOS 用户请用 CPython)
 `pip3 install epc orjson sexpdata six paramiko` (orjson 是可选的， orjson 基于 Rust， 提供更快的 JSON 解析性能)
 3. 安装 Elisp 依赖:
 
@@ -72,6 +72,8 @@ lsp-bridge 也可以对远程服务器的文件进行代码语法补全，效果
 3. 在进行 LSP 补全菜单项计算后，`lsp-bridge`将补全数据发送到本地，并进行补全菜单渲染
 
 如果补全菜单没有弹出，请登录远程服务器，查看`lsp_bridge.py`的终端输出。一般来说，是因为服务端的 LSP Server 安装不完整导致的。
+
+lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远程服务器登录的公钥凭证， 如果公钥登录失败会提示用户输入登录密码， lsp-bridge 不存储服务器登录密码到文件中， 为了避免反复输入密码， 建议你用公钥的方式登录远程服务器。
 
 ## 按键
 

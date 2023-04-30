@@ -122,6 +122,9 @@ def get_buffer_content(filename, buffer_name):
 def get_current_line():
     return get_emacs_func_result('get-current-line')
 
+def get_ssh_password(host):
+    return get_emacs_func_result('get-ssh-password', host)
+
 remote_eval_socket = None
 def set_remote_eval_socket(socket):
     global remote_eval_socket
