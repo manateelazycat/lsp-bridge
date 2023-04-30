@@ -311,7 +311,7 @@ Setting this to nil or 0 will turn off the indicator."
                (lsp-bridge-epc-define-method mngr 'get-workspace-folder 'lsp-bridge--get-workspace-folder-func)
                (lsp-bridge-epc-define-method mngr 'get-multi-lang-server 'lsp-bridge--get-multi-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-single-lang-server 'lsp-bridge--get-single-lang-server-func)
-               (lsp-bridge-epc-define-method mngr 'get-user-emacs-directory 'lsp-bridge--user-emacs-directory)
+               (lsp-bridge-epc-define-method mngr 'get-user-emacs-directory 'lsp-bridge--user-emacs-directory-func)
                (lsp-bridge-epc-define-method mngr 'get-buffer-content 'lsp-bridge--get-buffer-content-func)
                (lsp-bridge-epc-define-method mngr 'get-current-line 'lsp-bridge--get-current-line-func)
                ))))
@@ -719,7 +719,7 @@ So we build this macro to restore postion after code format."
       (lsp-bridge-get-single-lang-server-by-extension filename)
       (lsp-bridge-get-single-lang-server-by-file-mode filename)))
 
-(defun lsp-bridge--user-emacs-directory ()
+(defun lsp-bridge--user-emacs-directory-func ()
   "Get lang server with project path, file path or file extension."
   (expand-file-name user-emacs-directory))
 
@@ -2163,7 +2163,7 @@ SymbolKind (defined in the LSP)."
 
 (defun lsp-bridge-open-remote-file ()
   (interactive)
-  (let* ((ip-file (concat (lsp-bridge--user-emacs-directory)
+  (let* ((ip-file (concat (lsp-bridge--user-emacs-directory-func)
                           (file-name-as-directory "lsp-bridge")
                           (file-name-as-directory "remote_file")
                           "ip.txt"))
