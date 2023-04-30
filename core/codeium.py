@@ -98,23 +98,28 @@ class Codeium:
         if 'completionItems' in data:
             for completion in data['completionItems'][:self.max_num_results - 1]:
                 label = completion['completion']['text']
-                display_label = label
                 completionParts = completion.get('completionParts', [{}])[0]
+                annotation = 'Codeium'
+
+                if completionParts.get('type') == 'COMPLETION_PART_TYPE_INLINE':
+                    display_label = label
+                    annotation = 'Codeium' if 'prefix' in completionParts or current_line == '' else 'Replace'
+
+                if completionParts.get('type') == 'COMPLETION_PART_TYPE_BLOCK':
+                    display_label = completionParts['text']
 
                 if label == current_line:
                     continue
-
-                if 'type' in completionParts and completionParts['type'] == 'COMPLETION_PART_TYPE_BLOCK':
-                    display_label = completionParts['text']
 
                 candidate = {
                     'key': label,
                     'icon': 'codeium',
                     'label': label,
                     'display-label': display_label.split('\n')[0].strip(),
-                    'annotation': 'Codeium',
+                    'annotation': annotation,
                     'backend': 'codeium',
-                    'id': completion['completion']['completionId']
+                    'id': completion['completion']['completionId'],
+                    'line': int(completionParts.get('line', 0))
                 }
 
                 completion_candidates.append(candidate)

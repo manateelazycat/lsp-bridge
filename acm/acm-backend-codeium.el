@@ -4,6 +4,8 @@
 
 ;;; Code:
 
+(require 'array)
+
 (defgroup acm-backend-codeium nil
   "ACM codeium support."
   :group 'acm)
@@ -149,8 +151,10 @@
     acm-backend-codeium-items))
 
 (defun acm-backend-codeium-candidate-expand (candidate-info _)
-  ;; We need replace whole line of current point with codeium label.
-  (delete-region (line-beginning-position) (line-end-position))
+  ;; We need replace whole area with codeium label.
+  (let ((end-position (line-end-position)))
+    (forward-line (- (plist-get candidate-info :line) (array-current-line)))
+    (delete-region (point) end-position))
   (insert (plist-get candidate-info :label))
 
   (when acm-backend-codeium-accept

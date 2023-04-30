@@ -1085,11 +1085,9 @@ So we build this macro to restore postion after code format."
                            lsp-bridge-completion-popup-predicates))
                (progn
                  (acm-template-candidate-init)
-                 (if (member t (mapcar (lambda (func)
-                                         (not (funcall func)))
-                                       '(lsp-bridge-not-match-hide-characters
-                                         lsp-bridge-not-only-blank-before-cursor
-                                         lsp-bridge-not-follow-complete)))
+                 (if (or (not (lsp-bridge-not-match-hide-characters))
+                         (not (lsp-bridge-not-only-blank-before-cursor))
+                         (not (lsp-bridge-not-follow-complete)))
                      (when acm-backend-codeium-items
                        (acm-update acm-backend-codeium-items))
                    (acm-update)))
@@ -1300,8 +1298,11 @@ So we build this macro to restore postion after code format."
 
           ;; Codeium search.
           (when (and acm-enable-codeium
-                     ;; Don't enable codeium on Markdown mode, very disruptive to writing.
-                     (not (derived-mode-p 'markdown-mode)))
+                     ;; Don't enable codeium on Markdown mode, Org mode, ielm and minibuffer, very disruptive to writing.
+                     (not (or (derived-mode-p 'markdown-mode)
+                              (eq major-mode 'org-mode)
+                              (derived-mode-p 'inferior-emacs-lisp-mode)
+                              (minibufferp))))
             (lsp-bridge-codeium-complete))
 
           ;; Search sdcv dictionary.
