@@ -20,6 +20,11 @@
   :type 'integer
   :group 'acm-backend-codeium)
 
+(defcustom acm-backend-codeium-candidate-max-length 40
+  "Maximal length of candidate."
+  :type 'integer
+  :group 'acm-backend-lsp)
+
 (defcustom acm-backend-codeium-candidates-number 10
   "Maximal number of codeium candidate of menu."
   :type 'integer
@@ -158,7 +163,16 @@
   (insert (plist-get candidate-info :label))
 
   (when acm-backend-codeium-accept
-    (lsp-bridge-call-async "codeium_completion_accept" (plist-get candidate-info :id))))
+    (lsp-bridge-call-async
+     "codeium_completion_accept" (plist-get candidate-info :id))))
+
+(defun acm-backend-codeium-candidate-doc (candidate)
+  (let ((document (plist-get candidate :label))
+        (display (plist-get candidate :display-label)))
+    (if (not
+         (or (string-match "\\.\\.\\.$" display) (string-match "\\n" document)))
+        ""
+      document)))
 
 (defun acm-backend-codeium-clean ()
   (setq-local acm-backend-codeium-items nil))
