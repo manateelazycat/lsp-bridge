@@ -119,6 +119,9 @@ def get_buffer_content(filename, buffer_name):
     else:
         return get_emacs_func_result('get-buffer-content', buffer_name)
 
+def get_current_line():
+    return get_emacs_func_result('get-current-line')
+
 remote_eval_socket = None
 def set_remote_eval_socket(socket):
     global remote_eval_socket
@@ -252,7 +255,7 @@ def get_emacs_func_result(method_name, *args):
 
 def get_command_result(command_string, cwd):
     import subprocess
-    
+
     process = subprocess.Popen(command_string, cwd=cwd, shell=True, text=True,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                encoding="utf-8")
@@ -348,7 +351,7 @@ def get_from_path_dict(path_dict, filepath):
 
 def get_project_path(filepath):
     project_path = get_emacs_func_result("get-project-path", filepath)
-    
+
     if type(project_path) == str:
         return project_path
     else:
@@ -358,7 +361,7 @@ def get_project_path(filepath):
             return get_command_result("git rev-parse --show-toplevel", dir_path)
         else:
             return filepath
-        
+
 def log_time(message):
     import datetime
     logger.info("\n--- [{}] {}".format(datetime.datetime.now().time(), message))
@@ -435,23 +438,23 @@ def touch(path):
             os.utime(path)
 
 class MessageSender(Thread):
-    
+
     def __init__(self, process: subprocess.Popen):
         super().__init__()
-        
+
         self.process = process
         self.queue = queue.Queue()
-        
+
     def send_request(self, message):
         self.queue.put(message)
-        
+
 class MessageReceiver(Thread):
-    
+
     def __init__(self, process: subprocess.Popen):
         super().__init__()
-        
+
         self.process = process
         self.queue = queue.Queue()
-        
+
     def get_message(self):
         return self.queue.get(block=True)

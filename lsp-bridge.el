@@ -139,6 +139,28 @@
   :type '(repeat function)
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-completion-popup-predicates-codeium '(
+                                                                lsp-bridge-not-delete-command
+                                                                lsp-bridge-not-match-stop-commands
+
+                                                                lsp-bridge-not-in-string
+                                                                lsp-bridge-not-in-org-table
+
+                                                                lsp-bridge-not-execute-macro
+                                                                lsp-bridge-not-in-multiple-cursors
+                                                                lsp-bridge-not-in-mark-macro
+
+                                                                lsp-bridge-is-evil-state
+                                                                lsp-bridge-is-meow-state
+
+                                                                lsp-brige-not-in-chatgpt-response
+
+                                                                lsp-bridge-not-complete-manually
+                                                                )
+  "A list of predicate functions for Codeium with no argument to enable popup completion in callback."
+  :type '(repeat function)
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-flash-region-delay .3
   "How many seconds to flash `lsp-bridge-font-lock-flash' after navigation.
 
@@ -291,6 +313,7 @@ Setting this to nil or 0 will turn off the indicator."
                (lsp-bridge-epc-define-method mngr 'get-single-lang-server 'lsp-bridge--get-single-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-user-emacs-directory 'lsp-bridge--user-emacs-directory)
                (lsp-bridge-epc-define-method mngr 'get-buffer-content 'lsp-bridge--get-buffer-content-func)
+               (lsp-bridge-epc-define-method mngr 'get-current-line 'lsp-bridge--get-current-line-func)
                ))))
     (if lsp-bridge-server
         (setq lsp-bridge-server-port (process-contact lsp-bridge-server :service))
@@ -709,6 +732,9 @@ So we build this macro to restore postion after code format."
       (with-current-buffer buf
         (buffer-substring-no-properties (point-min) (point-max))))))
 
+(defun lsp-bridge--get-current-line-func ()
+  (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
+
 (defun lsp-bridge-get-lang-server-by-extension (filename extension-list)
   "Get lang server for file extension."
   (when-let* ((file-extension (file-name-extension filename))
@@ -1054,10 +1080,19 @@ So we build this macro to restore postion after code format."
                                  ;; (message "*** %s %s" pred result)
                                  result)
                              t))
-                         lsp-bridge-completion-popup-predicates)
+                         (if acm-enable-codeium
+                             lsp-bridge-completion-popup-predicates-codeium
+                           lsp-bridge-completion-popup-predicates))
                (progn
                  (acm-template-candidate-init)
-                 (acm-update))
+                 (if (member t (mapcar (lambda (func)
+                                         (not (funcall func)))
+                                       '(lsp-bridge-not-match-hide-characters
+                                         lsp-bridge-not-only-blank-before-cursor
+                                         lsp-bridge-not-follow-complete)))
+                     (when acm-backend-codeium-items
+                       (acm-update acm-backend-codeium-items))
+                   (acm-update)))
              (acm-hide))))))
 
 (defun lsp-bridge-popup-complete-menu ()
