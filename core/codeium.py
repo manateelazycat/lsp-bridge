@@ -101,11 +101,19 @@ class Codeium:
         if "completionItems" in data:
             for completion in data["completionItems"][: self.max_num_results - 1]:
                 label = completion["completion"]["text"]
-                display_label = (
-                    label[: self.display_label_max_length] + " ..."
-                    if len(label) > self.display_label_max_length
-                    else label
-                )
+                document = ""
+
+                if len(label.split("\n")) > 1:
+                    # Truncate label if label is multi-line code.
+                    display_label = (
+                        label[: self.display_label_max_length] + " ..."
+                        if len(label) > self.display_label_max_length
+                        else label)
+                    document = label
+                else:
+                    # Display label is same as label if only one line return from codeium.
+                    display_label = label
+
                 completionParts = completion.get("completionParts", [{}])[0]
                 annotation = (
                     "Codeium"
@@ -126,6 +134,7 @@ class Codeium:
                     "display-label": display_label.split("\n")[0].strip(),
                     "annotation": annotation,
                     "backend": "codeium",
+                    "documentation": document,
                     "id": completion["completion"]["completionId"],
                     "line": int(completionParts.get("line", 0)),
                 }

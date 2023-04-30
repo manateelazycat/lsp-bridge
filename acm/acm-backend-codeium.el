@@ -167,12 +167,7 @@
      "codeium_completion_accept" (plist-get candidate-info :id))))
 
 (defun acm-backend-codeium-candidate-doc (candidate)
-  (let ((document (plist-get candidate :label))
-        (display (plist-get candidate :display-label)))
-    (if (not
-         (or (string-match "\\.\\.\\.$" display) (string-match "\\n" document)))
-        ""
-      document)))
+  (plist-get candidate :documentation))
 
 (defun acm-backend-codeium-clean ()
   (setq-local acm-backend-codeium-items nil))
