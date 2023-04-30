@@ -419,6 +419,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     ((python-mode python-ts-mode) .                                              lsp-bridge-python-lsp-server)
     (ruby-mode .                                                                 "solargraph")
     ((rust-mode rustic-mode rust-ts-mode) .                                      "rust-analyzer")
+	(move-mode .                                                                 "move-analyzer")
     ((elixir-mode elixir-ts-mode heex-ts-mode) .                                 lsp-bridge-elixir-lsp-server)
     ((go-mode go-ts-mode) .                                                      "gopls")
     (groovy-mode .                                                               "groovy-language-server")
@@ -463,6 +464,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     python-mode-hook
     ruby-mode-hook
     lua-mode-hook
+	move-mode-hook
     rust-mode-hook
     rustic-mode-hook
     erlang-mode-hook
@@ -577,6 +579,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (enh-ruby-mode              . enh-ruby-indent-level) ; Ruby
     (crystal-mode               . crystal-indent-level) ; Crystal (Ruby)
     (css-mode                   . css-indent-offset)    ; CSS
+	(move-mode                  . move-indent-offset)   ; Move
     (rust-mode                  . rust-indent-offset)   ; Rust
     (rust-ts-mode               . rust-ts-mode-indent-offset) ; Rust
     (rustic-mode                . rustic-indent-offset)       ; Rust
