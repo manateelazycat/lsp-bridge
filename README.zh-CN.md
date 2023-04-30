@@ -308,6 +308,7 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 | [julials](https://github.com/julia-vscode/LanguageServer.jl)                                       | Julia                                   |                                                                                                                                                                                                                          |
 | [typst-lsp](https://github.com/nvarner/typst-lsp)                                                  | Typst                                   |                                                                                                                                                                                                                          |
 | [verible](https://github.com/chipalliance/verible)                                                 | Verilog                                 |                                                                                                                                                                                                                          |
+| [move-analyzer](https://github.com/move-language/move)                                             | Move                                    | `move-analyzer` 包含在 move 语言仓库里                                                                                                                                                                                   |
 
 ## 加入开发
 
