@@ -117,6 +117,10 @@ the standard glibc-linked dynamic binary.
 Only useful on GNU/Linux.  Automatically set if NixOS is detected."
   :type 'boolean)
 
+(defcustom codeium-download-url-prefix "https://github.com/Exafunction/codeium/releases/download/language-server-v"
+   "codeium download url prefix"
+   :type 'string)
+
 (defun tabnine-bridge--get-target ()
   "Return TabNine's system configuration.  Used for finding the correct binary."
   (let* ((system-architecture (car (split-string system-configuration "-")))
@@ -273,7 +277,7 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
          (binary-file (string-trim-right compress-file "\\.gz"))
          ;; Binary file after rename
          (last-binary-file (concat binary-dir "language_server"))
-         (download-url (concat "https://github.com/Exafunction/codeium/releases/download/language-server-v" version "/" file-name)))
+         (download-url (concat codeium-download-url-prefix version "/" file-name)))
     (make-directory binary-dir t)
     (if (string= version codeium-bridge-binary-version)
         (message "Don't need update.")
