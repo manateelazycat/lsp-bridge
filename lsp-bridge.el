@@ -118,7 +118,7 @@
                                                     lsp-bridge-not-delete-command
                                                     lsp-bridge-not-follow-complete
                                                     lsp-bridge-not-match-stop-commands
-                                                    lsp-bridge-not-match-hide-characters
+                                                    ;; lsp-bridge-not-match-hide-characters
 
                                                     lsp-bridge-not-only-blank-before-cursor
                                                     lsp-bridge-not-in-string
@@ -136,28 +136,6 @@
                                                     lsp-bridge-not-complete-manually
                                                     )
   "A list of predicate functions with no argument to enable popup completion in callback."
-  :type '(repeat function)
-  :group 'lsp-bridge)
-
-(defcustom lsp-bridge-completion-popup-predicates-codeium '(
-                                                            lsp-bridge-not-delete-command
-                                                            lsp-bridge-not-match-stop-commands
-
-                                                            lsp-bridge-not-in-string
-                                                            lsp-bridge-not-in-org-table
-
-                                                            lsp-bridge-not-execute-macro
-                                                            lsp-bridge-not-in-multiple-cursors
-                                                            lsp-bridge-not-in-mark-macro
-
-                                                            lsp-bridge-is-evil-state
-                                                            lsp-bridge-is-meow-state
-
-                                                            lsp-brige-not-in-chatgpt-response
-
-                                                            lsp-bridge-not-complete-manually
-                                                            )
-  "A list of predicate functions for Codeium with no argument to enable popup completion in callback."
   :type '(repeat function)
   :group 'lsp-bridge)
 
@@ -1085,7 +1063,6 @@ So we build this macro to restore postion after code format."
          ;; Don't popup completion menu when `lsp-bridge-last-change-position' (cursor before send completion request) is not equal current cursor position.
          (when (equal lsp-bridge-last-change-position
                       (list (current-buffer) (buffer-chars-modified-tick) (point)))
-
            ;; Try popup completion frame.
            (if (cl-every (lambda (pred)
                            (if (functionp pred)
@@ -1094,28 +1071,12 @@ So we build this macro to restore postion after code format."
                                  ;; (message "*** %s %s" pred result)
                                  result)
                              t))
-                         ;; Codeium backend not support remote file now, disable it temporary.
-                         (if (and acm-enable-codeium
-                                  (not (lsp-bridge-is-remote-file)))
-                             lsp-bridge-completion-popup-predicates-codeium
-                           lsp-bridge-completion-popup-predicates))
+                         lsp-bridge-completion-popup-predicates)
                (progn
                  (acm-template-candidate-init)
-                 (if (or (not (lsp-bridge-not-match-hide-characters))
-                         (not (lsp-bridge-not-only-blank-before-cursor))
-                         (not (lsp-bridge-not-follow-complete)))
-                     (when acm-backend-codeium-items
-                       ;; Continue popup codeium menu if `acm-complete-backend' is codeium.
-                       (if (string-equal acm-complete-backend "codeium")
-                           (acm-update acm-backend-codeium-items)
-                         ;; Otherwise, hide completion menu when `acm-complete-backend' is not codeium.
-                         (acm-hide)))
-
-                   ;; Show completion menu from all completion backends.
-                   (acm-update)))
-
-             ;; Hide completion menu when lsp-bridge predicates check failed.
-             (acm-hide))))))
+                 (acm-update))
+             (acm-hide)
+             )))))
 
 (defun lsp-bridge-popup-complete-menu ()
   (interactive)
@@ -1168,8 +1129,10 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-not-follow-complete ()
   "Hide completion if last command is `acm-complete'."
-  (or (not (member (format "%s" last-command) '("acm-complete" "acm-complete-quick-access")))
-      (member (format "%s" this-command) '("self-insert-command" "org-self-insert-command"))))
+  (or
+   (not (member (format "%s" last-command) '("acm-complete" "acm-complete-quick-access")))
+   (member (format "%s" this-command) '("self-insert-command" "org-self-insert-command"))
+   ))
 
 (defun lsp-bridge-not-only-blank-before-cursor ()
   "Hide completion if only blank before cursor."
