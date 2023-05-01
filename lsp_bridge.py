@@ -521,14 +521,16 @@ class LspBridge:
                     single_lang_server = get_emacs_func_result("get-single-lang-server", project_path, filepath)
 
                     if single_lang_server:
-                        self.load_single_lang_server(project_path, filepath)
+                        return self.load_single_lang_server(project_path, filepath)
                     else:
                         self.turn_off(
                             filepath,
-                            "ERROR: can't find all command of multi-server for {}, haven't found match single-server, disable lsp-bridge-mode.".format(filepath))
+                            "ERROR: can't find all command of multi-server for {}, haven't found match single-server".format(filepath))
+
+                        return False
         else:
             # Try to load single language server.
-            self.load_single_lang_server(project_path, filepath)
+            return self.load_single_lang_server(project_path, filepath)
 
         return True
 
@@ -555,7 +557,7 @@ class LspBridge:
         single_lang_server = get_emacs_func_result("get-single-lang-server", project_path, filepath)
 
         if not single_lang_server:
-            self.turn_off(filepath, "ERROR: can't find the corresponding server for {}, disable lsp-bridge-mode.".format(filepath))
+            self.turn_off(filepath, "ERROR: can't find the corresponding server for {}".format(filepath))
 
             return False
 
@@ -579,9 +581,12 @@ class LspBridge:
         else:
             return False
 
+        return True
+
     def turn_off(self, filepath, message):
-        message_emacs(message)
-        eval_in_emacs("lsp-bridge--turn-off", filepath, get_lsp_file_host())
+        if os.path.splitext(filepath)[1] != ".txt":
+            message_emacs(message + ", disable lsp-bridge-mode.")
+            eval_in_emacs("lsp-bridge--turn-off", filepath, get_lsp_file_host())
 
     def check_lang_server_command(self, lang_server_info, filepath, turn_off_on_error=True):
         if len(lang_server_info["command"]) > 0:
@@ -598,7 +603,7 @@ class LspBridge:
                     server_command, lang_server_info["name"], filepath)
 
                 if turn_off_on_error:
-                    self.turn_off(filepath, error_message + ", disable lsp-bridge-mode.")
+                    self.turn_off(filepath, error_message)
                 else:
                     message_emacs(error_message)
 
@@ -607,7 +612,7 @@ class LspBridge:
             error_message = "Error: {}'s command argument is empty".format(filepath)
 
             if turn_off_on_error:
-                self.turn_off(filepath, error_message + ", disable lsp-bridge-mode.")
+                self.turn_off(filepath, error_message)
             else:
                 message_emacs(error_message)
 

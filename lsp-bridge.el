@@ -842,9 +842,9 @@ So we build this macro to restore postion after code format."
        (lsp-bridge-epc-live-p lsp-bridge-epc-process)))
 
 (defun lsp-bridge-call-file-api (method &rest args)
-  (when (lsp-bridge-call-file-api-p)
-    (if (lsp-bridge-is-remote-file)
-        (lsp-bridge-remote-send-lsp-request method args)
+  (if (lsp-bridge-is-remote-file)
+      (lsp-bridge-remote-send-lsp-request method args)
+    (when (lsp-bridge-call-file-api-p)
       (if (and (boundp 'acm-backend-lsp-filepath)
                (file-exists-p acm-backend-lsp-filepath))
           (if lsp-bridge-buffer-file-deleted
@@ -1028,19 +1028,18 @@ So we build this macro to restore postion after code format."
       )))
 
 (defun lsp-bridge-close-buffer-file ()
-  (when (and (lsp-bridge-has-lsp-server-p)
-             (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-             (boundp 'acm-backend-lsp-filepath))
-    (if (lsp-bridge-is-remote-file)
-        (lsp-bridge-remote-send-func-request "close_file" (list acm-backend-lsp-filepath))
-      (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath)))
+  (if (lsp-bridge-is-remote-file)
+      (progn
+        (lsp-bridge-remote-send-func-request "close_file" (list lsp-bridge-remote-file-path))
+        (lsp-bridge-remote-send-func-request "search_file_words_close_file" (list lsp-bridge-remote-file-path)))
 
-  (when (and buffer-file-name
-             (lsp-bridge-epc-live-p lsp-bridge-epc-process))
-    (lsp-bridge-call-async "search_file_words_close_file" buffer-file-name))
+    (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+      (when (and (lsp-bridge-has-lsp-server-p)
+                 (boundp 'acm-backend-lsp-filepath))
+        (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath))
 
-  (when (lsp-bridge-is-remote-file)
-    (lsp-bridge-remote-send-func-request "search_file_words_close_file" (list lsp-bridge-remote-file-path))))
+      (when buffer-file-name
+        (lsp-bridge-call-async "search_file_words_close_file" buffer-file-name)))))
 
 (defun lsp-bridge-set-prefix-style (prefix-style)
   ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
@@ -1088,7 +1087,9 @@ So we build this macro to restore postion after code format."
                                  ;; (message "*** %s %s" pred result)
                                  result)
                              t))
-                         (if acm-enable-codeium
+                         ;; Codeium backend not support remote file now, disable it temporary.
+                         (if (and acm-enable-codeium
+                                  (not (lsp-bridge-is-remote-file)))
                              lsp-bridge-completion-popup-predicates-codeium
                            lsp-bridge-completion-popup-predicates))
                (progn
@@ -1135,8 +1136,7 @@ So we build this macro to restore postion after code format."
      (and (thing-at-point 'filename)
           (or (file-exists-p (file-name-directory (thing-at-point 'filename)))
               ;; Allow string in lsp-bridge-remote file.
-              (lsp-bridge-is-remote-file))))
-   ))
+              (lsp-bridge-is-remote-file))))))
 
 (defun lsp-bridge-not-execute-macro ()
   "Hide completion during executing macros."
@@ -1234,12 +1234,14 @@ So we build this macro to restore postion after code format."
                lsp-bridge-org-babel--update-file-before-change)
       (setq-local lsp-bridge-org-babel--update-file-before-change nil)
       (lsp-bridge-call-file-api "update_file" (buffer-name)
-                                (1- (line-number-at-pos lsp-bridge-org-babel--block-bop t))))
+                                (1- (line-number-at-pos lsp-bridge-org-babel--block-bop t)))))
 
+  ;; Set `lsp-bridge--before-change-begin-pos' and `lsp-bridge--before-change-end-pos'
+  ;; if `lsp-bridge-has-lsp-server-p' or `lsp-bridge-is-remote-file'
+  (when (or (lsp-bridge-has-lsp-server-p)
+            (lsp-bridge-is-remote-file))
     (setq-local lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
-    (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))
-
-    ))
+    (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))))
 
 (defun lsp-bridge-monitor-post-self-insert ()
   ;; Make sure this function be called after `electric-pair-mode'
@@ -1279,7 +1281,8 @@ So we build this macro to restore postion after code format."
       (lsp-bridge-org-babel-monitor-after-change begin end length)
 
       ;; Send change_file request to trigger LSP completion.
-      (when (lsp-bridge-call-file-api-p)
+      (when (or (lsp-bridge-call-file-api-p)
+                (lsp-bridge-is-remote-file))
         (lsp-bridge-call-file-api "change_file"
                                   lsp-bridge--before-change-begin-pos
                                   lsp-bridge--before-change-end-pos
@@ -1306,6 +1309,8 @@ So we build this macro to restore postion after code format."
 
           ;; Codeium search.
           (when (and acm-enable-codeium
+                     ;; Codeium backend not support remote file now, disable it temporary.
+                     (not (lsp-bridge-is-remote-file))
                      ;; Don't enable codeium on Markdown mode, Org mode, ielm and minibuffer, very disruptive to writing.
                      (not (or (derived-mode-p 'markdown-mode)
                               (eq major-mode 'org-mode)
@@ -1541,8 +1546,9 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-signature-help-fetch ()
   (interactive)
-  (unless (equal lsp-bridge-cursor-before-command lsp-bridge-cursor-after-command)
-    (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position))))
+  (when (lsp-bridge-has-lsp-server-p)
+    (unless (equal lsp-bridge-cursor-before-command lsp-bridge-cursor-after-command)
+      (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))))
 
 (defun lsp-bridge-pick-file-path (filename)
   ;; Remove `file://' and `:file://' prefix.
@@ -2172,7 +2178,7 @@ SymbolKind (defined in the LSP)."
 (defun lsp-bridge-open-remote-file ()
   (interactive)
   (unless lsp-bridge-is-starting
-      (lsp-bridge-start-process))
+    (lsp-bridge-start-process))
 
   (let* ((ip-file (concat (lsp-bridge--user-emacs-directory-func)
                           (file-name-as-directory "lsp-bridge")
@@ -2215,6 +2221,10 @@ SymbolKind (defined in the LSP)."
     (setq-local lsp-bridge-remote-file-flag t)
     (setq-local lsp-bridge-remote-file-host server)
     (setq-local lsp-bridge-remote-file-path path)
+
+    ;; Always enable lsp-bridge for remote file.
+    ;; Remote file can always edit and update content even some file haven't corresponding lsp server, such as *.txt
+    (lsp-bridge-mode 1)
     ))
 
 (defun lsp-bridge-remote-kill-buffer ()
