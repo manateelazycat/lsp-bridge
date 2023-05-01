@@ -541,6 +541,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     kotlin-mode-hook
     vhdl-mode-hook
     typst-mode-hook
+
     c-ts-mode-hook
     c++-ts-mode-hook
     cmake-ts-mode-hook
@@ -551,7 +552,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     json-ts-mode-hook
     python-ts-mode-hook
     bash-ts-mode-hook
-    typescript-ts-mode-hook)
+    typescript-ts-mode-hook
+    go-ts-mode-hook
+    yaml-ts-mode-hook
+    )
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
 
@@ -615,6 +619,8 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (kotlin-mode                . c-basic-offset)     ; Kotlin
     (verilog-mode               . vhdl-indent-level)  ; Verilog
     (vhdl-mode                  . vhdl-basic-offset)  ; VHDL
+    (go-mode                    . c-basic-offset)     ;Golang
+    (go-ts-mode                 . c-basic-offset)     ;Golang
     (default                    . standard-indent)) ; default fallback
   "A mapping from `major-mode' to its indent variable.")
 
