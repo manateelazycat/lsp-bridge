@@ -126,9 +126,6 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `lsp-bridge-popup-complete-menu`: Manually popup the completion menu, you only need this command when turn on option `lsp-bride-complete-manually`
 - `lsp-bridge-restart-process`: restart lsp-bridge process (only used for development)
 - `lsp-bridge-toggle-sdcv-helper`: Switch dictionary completion assistant
-- `acm-insert-common`: insert common prefix of candidates
-- `acm-doc-scroll-up`: API document window scroll up
-- `acm-doc-scroll-down`: API document window scroll down
 
 ## LSP server options
 

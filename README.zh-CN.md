@@ -125,9 +125,6 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 - `lsp-bridge-popup-complete-menu`: 手动弹出补全菜单， 只有当打开 `lsp-bridge-complete-manually` 选项才需要使用这个命令
 - `lsp-bridge-restart-process`: 重启 lsp-bridge 进程 (一般只有开发者才需要这个功能)
 - `lsp-bridge-toggle-sdcv-helper`: 切换字典助手补全
-- `acm-insert-common`: 插入补全候选词的公共前缀
-- `acm-doc-scroll-up`: API 文档窗口向上滚动
-- `acm-doc-scroll-down`: API 文档窗口向下滚动
 
 ## LSP 服务器选项
 
