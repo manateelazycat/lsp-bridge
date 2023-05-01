@@ -242,6 +242,8 @@
 (defvar-local acm-filter-overlay nil)
 (defvar-local acm-filter-string "")
 
+(defvar-local acm-complete-backend nil)
+
 (defvar acm-doc-frame nil)
 (defvar acm-doc-frame-hide-p nil)
 (defvar acm-doc-buffer " *acm-doc-buffer*")
@@ -638,6 +640,8 @@ The key of candidate will change between two LSP results."
          (bound-start acm-menu-frame-popup-point)
          (backend (plist-get candidate-info :backend))
          (candidate-expand (intern-soft (format "acm-backend-%s-candidate-expand" backend))))
+    (setq-local acm-complete-backend backend)
+
     (if (fboundp candidate-expand)
         (funcall candidate-expand candidate-info bound-start)
       (delete-region bound-start (point))

@@ -1079,6 +1079,7 @@ So we build this macro to restore postion after code format."
          ;; Don't popup completion menu when `lsp-bridge-last-change-position' (cursor before send completion request) is not equal current cursor position.
          (when (equal lsp-bridge-last-change-position
                       (list (current-buffer) (buffer-chars-modified-tick) (point)))
+
            ;; Try popup completion frame.
            (if (cl-every (lambda (pred)
                            (if (functionp pred)
@@ -1098,8 +1099,16 @@ So we build this macro to restore postion after code format."
                          (not (lsp-bridge-not-only-blank-before-cursor))
                          (not (lsp-bridge-not-follow-complete)))
                      (when acm-backend-codeium-items
-                       (acm-update acm-backend-codeium-items))
+                       ;; Continue popup codeium menu if `acm-complete-backend' is codeium.
+                       (if (string-equal acm-complete-backend "codeium")
+                           (acm-update acm-backend-codeium-items)
+                         ;; Otherwise, hide completion menu when `acm-complete-backend' is not codeium.
+                         (acm-hide)))
+
+                   ;; Show completion menu from all completion backends.
                    (acm-update)))
+
+             ;; Hide completion menu when lsp-bridge predicates check failed.
              (acm-hide))))))
 
 (defun lsp-bridge-popup-complete-menu ()
