@@ -78,28 +78,28 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 
 ## Keymap
 
-| Key          | Command                   | Description                                                                  |
-| :----------- | :------------------------ | :--------------------------------------------------------------------------- |
-| Alt + n      | acm-select-next           | Select next candidate                                                        |
-| Down         | acm-select-next           | Select next candidate                                                        |
-| Alt + p      | acm-select-prev           | Select previous candidate                                                    |
-| Up           | acm-select-prev           | Select previous candidate                                                    |
-| Alt + ,      | acm-select-last           | Select last candidate                                                        |
-| Alt + .      | acm-select-first          | Select first candidate                                                       |
-| Ctrl + v     | acm-select-next-page      | Select next page candidate                                                   |
-| Alt + v      | acm-select-prev-page      | Select previous page candidate                                               |
-| Ctrl + m     | acm-complete              | Complete completion                                                          |
-| Return       | acm-complete              | Complete completion                                                          |
-| Tab          | acm-complete              | Complete completion                                                          |
-| Alt + h      | acm-complete              | Complete completion                                                          |
-| Alt + H      | acm-insert-common         | Insert common part of candidates                                             |
-| Alt + u      | acm-filter                | Filter candidates with overlay string                                        |
-| Alt + d      | acm-doc-toggle            | Enable or disable candidate documentation                                    |
-| Alt + j      | acm-doc-scroll-up         | Scroll up candidate documentation                                            |
-| Alt + k      | acm-doc-scroll-down       | Scroll down candidate documentation                                          |
-| Alt + l      | acm-hide                  | Hide completion menu                                                         |
-| Ctrl + g     | acm-hide                  | Hide completion menu                                                         |
-| Alt + Number | acm-complete-quick-access | Selecting candidate quickly, you need enable `acm-enable-quick-access` first |
+| Key          | Command                   | Description                                                                                           |
+|:-------------|:--------------------------|:------------------------------------------------------------------------------------------------------|
+| Alt + n      | acm-select-next           | Select next candidate                                                                                 |
+| Down         | acm-select-next           | Select next candidate                                                                                 |
+| Alt + p      | acm-select-prev           | Select previous candidate                                                                             |
+| Up           | acm-select-prev           | Select previous candidate                                                                             |
+| Alt + ,      | acm-select-last           | Select last candidate                                                                                 |
+| Alt + .      | acm-select-first          | Select first candidate                                                                                |
+| Ctrl + v     | acm-select-next-page      | Select next page candidate                                                                            |
+| Alt + v      | acm-select-prev-page      | Select previous page candidate                                                                        |
+| Ctrl + m     | acm-complete              | Complete completion                                                                                   |
+| Return       | acm-complete              | Complete completion                                                                                   |
+| Tab          | acm-complete              | Complete completion                                                                                   |
+| Alt + h      | acm-complete              | Complete completion                                                                                   |
+| Alt + H      | acm-insert-common         | Insert common part of candidates                                                                      |
+| Alt + u      | acm-filter                | Perform secondary filtering on candidate words, improving the selection efficiency of candidate words |
+| Alt + d      | acm-doc-toggle            | Enable or disable candidate documentation                                                             |
+| Alt + j      | acm-doc-scroll-up         | Scroll up candidate documentation                                                                     |
+| Alt + k      | acm-doc-scroll-down       | Scroll down candidate documentation                                                                   |
+| Alt + l      | acm-hide                  | Hide completion menu                                                                                  |
+| Ctrl + g     | acm-hide                  | Hide completion menu                                                                                  |
+| Alt + Number | acm-complete-quick-access | Selecting candidate quickly, you need enable `acm-enable-quick-access` first                          |
 
 ## Commands
 

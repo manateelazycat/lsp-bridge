@@ -78,7 +78,7 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 ## 按键
 
 | 按键         | 命令                      | 备注                                                     |
-| :----------- | :------------------------ | :------------------------------------------------------- |
+|:-------------|:--------------------------|:---------------------------------------------------------|
 | Alt + n      | acm-select-next           | 选择下一个候选词                                         |
 | Down         | acm-select-next           | 选择下一个候选词                                         |
 | Alt + p      | acm-select-prev           | 选择上一个候选词                                         |
@@ -92,7 +92,7 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 | Tab          | acm-complete              | 完成补全                                                 |
 | Alt + h      | acm-complete              | 完成补全                                                 |
 | Alt + H      | acm-insert-common         | 插入候选词共有部分                                       |
-| Alt + u      | acm-filter                | 用 Overlay 进一步过滤候选词                              |
+| Alt + u      | acm-filter                | 对候选词做二次过滤， 提升候选词的选择效率                |
 | Alt + d      | acm-doc-toggle            | 开启或关闭候选词文档                                     |
 | Alt + j      | acm-doc-scroll-up         | 向下滚动候选词文档                                       |
 | Alt + k      | acm-doc-scroll-down       | 向上滚动候选词文档                                       |
