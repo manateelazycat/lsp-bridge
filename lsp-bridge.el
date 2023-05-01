@@ -2171,6 +2171,9 @@ SymbolKind (defined in the LSP)."
 
 (defun lsp-bridge-open-remote-file ()
   (interactive)
+  (unless lsp-bridge-is-starting
+      (lsp-bridge-start-process))
+
   (let* ((ip-file (concat (lsp-bridge--user-emacs-directory-func)
                           (file-name-as-directory "lsp-bridge")
                           (file-name-as-directory "remote_file")
