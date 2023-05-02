@@ -156,7 +156,7 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `lsp-bridge-signature-show-function`: The function used for displaying signature info, default show message in minibuffer, set `lsp-bridge-signature-posframe` to show signature info in frame
 - `lsp-bridge-completion-popup-predicates`: the predicate function for completion menu, completion menu popup after all the functions pass
 - `lsp-bridge-completion-stop-commands`: completion menu will not popup if these commands are executed
-- `lsp-bridge-completion-hide-characters`: completion menu will not popup when cursor after those characters
+- `lsp-bridge-completion-hide-characters`: The default value is `'(":" ";" "(" ")" "[" "]" "{" "}" "," "\"")`, the completion menu does not pop up when the cursor is behind these characters. You can customize this option to remove this restriction, or call the `lsp-bridge-popup-complete-menu` command to force the menu to pop up
 - `lsp-bridge-user-langserver-dir`: the dir where user place langserver configuration file, if the configuration file name in the dir is the same as that in [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) , lsp-bridge will use the configuration file in this dir
 - `lsp-bridge-user-multiserver-dir`: the dir where user place multiserver configuration file, if the configuration file name in the dir is the same as that in [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) , lsp-bridge will use the configuration file in this dir
 - `lsp-bridge-symbols-enable-which-func`: Using lsp backend for `which-func`, disable by default

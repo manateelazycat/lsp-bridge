@@ -118,7 +118,7 @@
                                                     lsp-bridge-not-delete-command
                                                     lsp-bridge-not-follow-complete
                                                     lsp-bridge-not-match-stop-commands
-                                                    ;; lsp-bridge-not-match-hide-characters
+                                                    lsp-bridge-not-match-hide-characters
 
                                                     lsp-bridge-not-only-blank-before-cursor
                                                     lsp-bridge-not-in-string
