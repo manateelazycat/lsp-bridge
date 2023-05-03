@@ -40,11 +40,6 @@
   :type 'integer
   :group 'acm-backend-codeium)
 
-(defcustom acm-backend-codeium-api-key ""
-  "Codeium api key."
-  :type 'string
-  :group 'acm-backend-codeium)
-
 (defcustom acm-backend-codeium-api-key-path (expand-file-name (concat user-emacs-directory (file-name-as-directory "lsp-bridge") "codeium_api_key.txt"))
   "The path to store Codeium API Key."
   :type 'string
