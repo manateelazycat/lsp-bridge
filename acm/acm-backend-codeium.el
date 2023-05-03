@@ -45,6 +45,11 @@
   :type 'string
   :group 'acm-backend-codeium)
 
+(defcustom acm-backend-codeium-api-key-path (expand-file-name (concat user-emacs-directory (file-name-as-directory "lsp-bridge") "codeium_api_key.txt"))
+  "The path to store Codeium API Key."
+  :type 'string
+  :group 'acm-backend-codeium)
+
 (defcustom acm-backend-codeium-accept nil
   "Send accept request."
   :type 'boolean

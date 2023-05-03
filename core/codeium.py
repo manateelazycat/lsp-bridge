@@ -36,6 +36,10 @@ class Codeium:
         self.is_run = False
         self.is_get_info = False
 
+        (self.api_key_path, ) = get_emacs_vars([
+            "acm-backend-codeium-api-key-path"
+        ])
+
         self.server_port = ""
 
     def complete(
@@ -84,11 +88,12 @@ class Codeium:
             "https://api.codeium.com/register_user/", {"firebase_id_token": auth_token}
         )["api_key"]
 
-        eval_in_emacs(
-            "customize-save-variable", "'acm-backend-codeium-api-key", api_key
-        )
+        # Save API key in configure file.
+        touch(self.api_key_path)
+        with open(self.api_key_path, "w") as f:
+            f.write(api_key)
 
-        message_emacs("Done.")
+        message_emacs(f"Has save codeium API Key at {self.api_key_path}.")
 
         self.is_get_info = False
         self.get_info()
@@ -184,27 +189,27 @@ class Codeium:
         if self.is_get_info:
             return
 
-        (
-            API_KEY,
-            EMACS_VERSION,
-            VERSION,
-            self.api_server_host,
-            self.api_server_port,
-            self.folder,
-            self.max_num_results,
-            self.display_label_max_length,
-        ) = get_emacs_vars(
-            [
-                "acm-backend-codeium-api-key",
-                "emacs-version",
-                "codeium-bridge-binary-version",
-                "acm-backend-codeium-api-server-host",
-                "acm-backend-codeium-api-server-port",
-                "codeium-bridge-folder",
-                "acm-backend-codeium-candidates-number",
-                "acm-backend-codeium-candidate-max-length",
-            ]
-        )
+        (EMACS_VERSION,
+         VERSION,
+         self.api_server_host,
+         self.api_server_port,
+         self.folder,
+         self.max_num_results,
+         self.display_label_max_length) = get_emacs_vars(
+            ["emacs-version",
+             "codeium-bridge-binary-version",
+             "acm-backend-codeium-api-server-host",
+             "acm-backend-codeium-api-server-port",
+             "codeium-bridge-folder",
+             "acm-backend-codeium-candidates-number",
+             "acm-backend-codeium-candidate-max-length"
+            ])
+
+        # Try read API_KEY from config file.
+        API_KEY = ""
+        if os.path.exists(self.api_key_path):
+            with open(self.api_key_path, "r") as f:
+                API_KEY = f.read().strip()
 
         self.metadata = {
             "api_key": API_KEY,
