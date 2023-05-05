@@ -46,12 +46,10 @@ class Codeium:
         self.counter = 1
         self.wait_request = []
 
-    def complete(
-        self, cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language
-    ):
+    def complete(self, cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language):
         self.get_info()
         self.run_local_server()
-        
+
         # utf-8 cursor offset
         cursor_offset = len(text[:cursor_offset].encode("utf-8", errors="ignore"))
         self.current_cussor_offset = cursor_offset
@@ -75,7 +73,7 @@ class Codeium:
             "editor_options": {"insert_spaces": insert_spaces, "tab_size": tab_size},
         }
 
-        self.dispatch(self.post_request(self.make_url("GetCompletions"), data), prefix, cursor_offset)
+        self.dispatch(self.post_request(self.make_url("GetCompletions"), data), editor_language, prefix, cursor_offset)
 
     def accept(self, id):
         data = {"metadata": self.metadata, "completion_id": id}
@@ -114,7 +112,7 @@ class Codeium:
         self.is_get_info = False
         self.get_info()
 
-    def dispatch(self, data, prefix, cursor_offset=None):
+    def dispatch(self, data, editor_language, prefix, cursor_offset=None):
         if self.current_cussor_offset != cursor_offset:
             # drop old completion items
             return
@@ -124,16 +122,17 @@ class Codeium:
         current_line = get_current_line()
 
         if "completionItems" in data:
+            language = editor_language.split("-")[0]
+
             for completion in data["completionItems"][: self.max_num_results - 1]:
                 label = completion["completion"]["text"]
-                document = ""
+                labels = label.strip().split("\n")
 
-                display_label = label.strip()
-                labels = display_label.split("\n")
+                document = f"```{language}\n{label}\n```" if len(labels) > 1 else ""
+
                 display_label = labels[0]
                 if len(display_label) > self.display_label_max_length:
                     if len(labels) > 1:
-                        document = label
                         display_label = display_label[self.display_label_max_length - 4:] + " ..."
                     elif display_label.startswith(prefix):
                         display_label = display_label.replace(prefix, "... ", 1)
