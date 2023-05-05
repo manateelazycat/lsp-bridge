@@ -42,11 +42,22 @@ class Codeium:
 
         self.server_port = ""
 
+        self.counter = 1
+        self.wait_request = []
+
     def complete(
         self, cursor_offset, editor_language, tab_size, text, insert_spaces, language
     ):
         self.get_info()
         self.run_local_server()
+
+        for _ in self.wait_request:
+            self.metadata['request_id'] = self.wait_request.pop()
+            self.post_request(self.make_url('CancelRequest'), {'metadata': self.metadata})
+
+        self.metadata['request_id'] = self.counter
+        self.wait_request.append(self.counter)
+        self.counter += 1
 
         data = {
             "metadata": self.metadata,
