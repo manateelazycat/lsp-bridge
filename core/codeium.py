@@ -138,14 +138,14 @@ class Codeium:
                     elif display_label.startswith(prefix):
                         display_label = display_label.replace(prefix, "... ", 1)
 
-                completionParts = completion.get("completionParts", [{}])[0]
+                completion_parts = completion.get("completionParts", [{}])[0]
                 annotation = (
                     "Codeium"
-                    if "prefix" in completionParts or current_line == ""
+                    if "prefix" in completion_parts or current_line == ""
                     else "Replace"
                 )
 
-                if completionParts.get("type") == "COMPLETION_PART_TYPE_BLOCK":
+                if completion_parts.get("type") == "COMPLETION_PART_TYPE_BLOCK":
                     annotation = "Replace"
 
                 if label == current_line:
@@ -160,7 +160,7 @@ class Codeium:
                     "backend": "codeium",
                     "documentation": document,
                     "id": completion["completion"]["completionId"],
-                    "line": int(completionParts.get("line", 0)),
+                    "line": int(completion_parts.get("line", 0)),
                 }
 
                 completion_candidates.append(candidate)
