@@ -41,15 +41,20 @@ class Codeium:
         ])
 
         self.server_port = ""
+        self.current_cussor_offset = 0
 
         self.counter = 1
         self.wait_request = []
 
     def complete(
-        self, cursor_offset, editor_language, tab_size, text, insert_spaces, language
+        self, cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language
     ):
         self.get_info()
         self.run_local_server()
+        
+        # utf-8 cursor offset
+        cursor_offset = len(text[:cursor_offset].encode("utf-8", errors="ignore"))
+        self.current_cussor_offset = cursor_offset
 
         for _ in self.wait_request:
             self.metadata['request_id'] = self.wait_request.pop()
@@ -70,7 +75,7 @@ class Codeium:
             "editor_options": {"insert_spaces": insert_spaces, "tab_size": tab_size},
         }
 
-        self.dispatch(self.post_request(self.make_url("GetCompletions"), data))
+        self.dispatch(self.post_request(self.make_url("GetCompletions"), data), prefix, cursor_offset)
 
     def accept(self, id):
         data = {"metadata": self.metadata, "completion_id": id}
@@ -109,7 +114,11 @@ class Codeium:
         self.is_get_info = False
         self.get_info()
 
-    def dispatch(self, data):
+    def dispatch(self, data, prefix, cursor_offset=None):
+        if self.current_cussor_offset != cursor_offset:
+            # drop old completion items
+            return
+
         completion_candidates = []
 
         current_line = get_current_line()
@@ -119,16 +128,15 @@ class Codeium:
                 label = completion["completion"]["text"]
                 document = ""
 
-                if len(label.split("\n")) > 1:
-                    # Truncate label if label is multi-line code.
-                    display_label = (
-                        label[: self.display_label_max_length] + " ..."
-                        if len(label) > self.display_label_max_length
-                        else label)
-                    document = label
-                else:
-                    # Display label is same as label if only one line return from codeium.
-                    display_label = label
+                display_label = label.strip()
+                labels = display_label.split("\n")
+                display_label = labels[0]
+                if len(display_label) > self.display_label_max_length:
+                    if len(labels) > 1:
+                        document = label
+                        display_label = display_label[self.display_label_max_length - 4:] + " ..."
+                    elif display_label.startswith(prefix):
+                        display_label = display_label.replace(prefix, "... ", 1)
 
                 completionParts = completion.get("completionParts", [{}])[0]
                 annotation = (
@@ -147,7 +155,7 @@ class Codeium:
                     "key": label,
                     "icon": "codeium",
                     "label": label,
-                    "display-label": display_label.split("\n")[0].strip(),
+                    "display-label": display_label,
                     "annotation": annotation,
                     "backend": "codeium",
                     "documentation": document,

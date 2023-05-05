@@ -20,7 +20,7 @@
   :type 'integer
   :group 'acm-backend-codeium)
 
-(defcustom acm-backend-codeium-candidate-max-length 40
+(defcustom acm-backend-codeium-candidate-max-length 100
   "Maximal length of candidate."
   :type 'integer
   :group 'acm-backend-lsp)

@@ -711,8 +711,8 @@ class LspBridge:
     def tabnine_complete(self, before, after, filename, region_includes_beginning, region_includes_end, max_num_results):
         self.tabnine.complete(before, after, filename, region_includes_beginning, region_includes_end, max_num_results)
 
-    def codeium_complete(self, cursor_offset, editor_language, tab_size, text, insert_spaces, language):
-        self.codeium.complete(cursor_offset, editor_language, tab_size, text, insert_spaces, language)
+    def codeium_complete(self, cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language):
+        self.codeium.complete(cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language)
 
     def codeium_completion_accept(self, id):
         self.codeium.accept(id)
