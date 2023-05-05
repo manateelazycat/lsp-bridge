@@ -1618,14 +1618,7 @@ So we build this macro to restore postion after code format."
                    :max-height lsp-bridge-lookup-doc-tooltip-max-height)))
 
 (defun lsp-bridge-hide-doc-tooltip ()
-  (posframe-hide lsp-bridge-lookup-doc-tooltip)
-
-  (when acm-markdown-render-background
-    (set-face-background 'markdown-code-face acm-markdown-render-background)
-    (setq acm-markdown-render-background nil))
-
-  (when acm-markdown-render-height
-    (set-face-attribute 'markdown-code-face nil :height acm-markdown-render-height)))
+  (posframe-hide lsp-bridge-lookup-doc-tooltip))
 
 (defvar lsp-bridge-signature-posframe-params
   (list :poshandler #'posframe-poshandler-point-bottom-left-corner-upward
