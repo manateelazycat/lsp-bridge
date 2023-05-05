@@ -43,9 +43,7 @@ class Codeium:
         self.server_port = ""
         self.current_cussor_offset = 0
 
-    def complete(
-        self, cursor_offset, editor_language, tab_size, text, insert_spaces, language
-    ):
+    def complete(self, cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language):
         self.get_info()
         self.run_local_server()
 
@@ -64,7 +62,7 @@ class Codeium:
             "editor_options": {"insert_spaces": insert_spaces, "tab_size": tab_size},
         }
 
-        self.dispatch(self.post_request(self.make_url("GetCompletions"), data), cursor_offset)
+        self.dispatch(self.post_request(self.make_url("GetCompletions"), data), prefix, cursor_offset)
 
     def accept(self, id):
         data = {"metadata": self.metadata, "completion_id": id}
@@ -103,7 +101,7 @@ class Codeium:
         self.is_get_info = False
         self.get_info()
 
-    def dispatch(self, data, cursor_offset=None):
+    def dispatch(self, data, prefix, cursor_offset=None):
         if self.current_cussor_offset != cursor_offset:
             # drop old completion items
             return
@@ -118,11 +116,14 @@ class Codeium:
                 document = ""
 
                 display_label = label.strip()
-                if len(display_label) > self.display_label_max_length or \
-                   len(display_label.split("\n")) > 1:
-                    document = label
-                    display_label = display_label.split("\n")[0]
-                    display_label = display_label[:self.display_label_max_length-4] + " ..."
+                labels = display_label.split("\n")
+                display_label = labels[0]
+                if len(display_label) > self.display_label_max_length:
+                    if len(labels) > 1:
+                        document = label
+                        display_label = display_label[self.display_label_max_length - 4:] + " ..."
+                    elif display_label.startswith(prefix):
+                        display_label = display_label.replace(prefix, "... ", 1)
 
                 completionParts = completion.get("completionParts", [{}])[0]
                 annotation = (

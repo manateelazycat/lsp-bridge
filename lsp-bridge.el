@@ -2084,6 +2084,7 @@ SymbolKind (defined in the LSP)."
                                               tab-width
                                               all-text
                                               (not indent-tabs-mode)
+                                              (acm-get-input-prefix)
                                               language))
       (lsp-bridge-call-async "codeium_complete"
                              (1- (point))
@@ -2091,6 +2092,7 @@ SymbolKind (defined in the LSP)."
                              tab-width
                              all-text
                              (not indent-tabs-mode)
+                             (acm-get-input-prefix)
                              language))))
 
 (defun lsp-bridge-search-backend--record-items (backend-name items)
