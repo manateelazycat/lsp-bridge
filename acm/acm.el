@@ -1054,9 +1054,11 @@ The key of candidate will change between two LSP results."
 
     (setq acm-markdown-render-doc doc)
 
-    ;; We need `acm-doc-frame-adjust' again, otherwise, `gfm-view-mode' will remove ``` line.
-    (acm-doc-frame-adjust)
-    ))
+    ;; We need `acm-doc-frame-adjust' again if `acm-enable-doc-markdown-render' is `async'.
+    ;; otherwise, `gfm-view-mode' will remove ``` line.
+    (cl-case acm-enable-doc-markdown-render
+      (async (acm-doc-frame-adjust))
+      )))
 
 (defun acm-in-comment-p (&optional state)
   (if (and (featurep 'treesit) (treesit-parser-list))
