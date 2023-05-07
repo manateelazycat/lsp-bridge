@@ -23,6 +23,7 @@ import time
 import traceback
 import urllib.parse
 import urllib.request
+from distutils.version import StrictVersion
 
 from core.utils import *
 
@@ -36,9 +37,7 @@ class Codeium:
         self.is_run = False
         self.is_get_info = False
 
-        (self.api_key_path, ) = get_emacs_vars([
-            "acm-backend-codeium-api-key-path"
-        ])
+        (self.api_key_path,) = get_emacs_vars(["acm-backend-codeium-api-key-path"])
 
         self.server_port = ""
         self.current_cussor_offset = 0
@@ -46,7 +45,16 @@ class Codeium:
         self.counter = 1
         self.wait_request = []
 
-    def complete(self, cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language):
+    def complete(
+        self,
+        cursor_offset,
+        editor_language,
+        tab_size,
+        text,
+        insert_spaces,
+        prefix,
+        language,
+    ):
         self.get_info()
         self.run_local_server()
 
@@ -55,10 +63,12 @@ class Codeium:
         self.current_cussor_offset = cursor_offset
 
         for _ in self.wait_request:
-            self.metadata['request_id'] = self.wait_request.pop()
-            self.post_request(self.make_url('CancelRequest'), {'metadata': self.metadata})
+            self.metadata["request_id"] = self.wait_request.pop()
+            self.post_request(
+                self.make_url("CancelRequest"), {"metadata": self.metadata}
+            )
 
-        self.metadata['request_id'] = self.counter
+        self.metadata["request_id"] = self.counter
         self.wait_request.append(self.counter)
         self.counter += 1
 
@@ -73,7 +83,12 @@ class Codeium:
             "editor_options": {"insert_spaces": insert_spaces, "tab_size": tab_size},
         }
 
-        self.dispatch(self.post_request(self.make_url("GetCompletions"), data), editor_language, prefix, cursor_offset)
+        self.dispatch(
+            self.post_request(self.make_url("GetCompletions"), data),
+            editor_language,
+            prefix,
+            cursor_offset,
+        )
 
     def accept(self, id):
         data = {"metadata": self.metadata, "completion_id": id}
@@ -133,7 +148,9 @@ class Codeium:
                 display_label = labels[0]
                 if len(display_label) > self.display_label_max_length:
                     if len(labels) > 1:
-                        display_label = display_label[self.display_label_max_length - 4:] + " ..."
+                        display_label = (
+                            display_label[self.display_label_max_length - 4 :] + " ..."
+                        )
                     elif display_label.startswith(prefix):
                         display_label = display_label.replace(prefix, "... ", 1)
 
@@ -181,18 +198,22 @@ class Codeium:
             message_emacs("Waiting for Codeium local server to start...")
 
             self.manager_dir = tempfile.mkdtemp(prefix="codeium_")
+            params = [self.path, "--manager_dir", self.manager_dir]
 
-            process = subprocess.Popen(
-                [
-                    self.path,
+            if StrictVersion(self.VERSION) > StrictVersion("1.2.13"):
+                params += [
+                    "--api_server_url",
+                    f"https://{self.api_server_host}:{str(self.api_server_port)}",
+                ]
+            else:
+                params += [
                     "--api_server_host",
                     self.api_server_host,
                     "--api_server_port",
                     str(self.api_server_port),
-                    "--manager_dir",
-                    self.manager_dir,
                 ]
-            )
+
+            process = subprocess.Popen(params)
 
             self.get_server_port()
         except:
@@ -207,21 +228,25 @@ class Codeium:
         if self.is_get_info:
             return
 
-        (EMACS_VERSION,
-         VERSION,
-         self.api_server_host,
-         self.api_server_port,
-         self.folder,
-         self.max_num_results,
-         self.display_label_max_length) = get_emacs_vars(
-            ["emacs-version",
-             "codeium-bridge-binary-version",
-             "acm-backend-codeium-api-server-host",
-             "acm-backend-codeium-api-server-port",
-             "codeium-bridge-folder",
-             "acm-backend-codeium-candidates-number",
-             "acm-backend-codeium-candidate-max-length"
-            ])
+        (
+            EMACS_VERSION,
+            self.VERSION,
+            self.api_server_host,
+            self.api_server_port,
+            self.folder,
+            self.max_num_results,
+            self.display_label_max_length,
+        ) = get_emacs_vars(
+            [
+                "emacs-version",
+                "codeium-bridge-binary-version",
+                "acm-backend-codeium-api-server-host",
+                "acm-backend-codeium-api-server-port",
+                "codeium-bridge-folder",
+                "acm-backend-codeium-candidates-number",
+                "acm-backend-codeium-candidate-max-length",
+            ]
+        )
 
         # Try read API_KEY from config file.
         API_KEY = ""
@@ -231,7 +256,7 @@ class Codeium:
 
         self.metadata = {
             "api_key": API_KEY,
-            "extension_version": VERSION,
+            "extension_version": self.VERSION,
             "ide_name": "emacs",
             "ide_version": EMACS_VERSION,
         }
