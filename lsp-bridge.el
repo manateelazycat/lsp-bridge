@@ -553,6 +553,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
 
 (defvar lsp-bridge-formatting-indent-alist
   '((c-mode                     . c-basic-offset) ; C
+    (c-ts-mode                  . c-basic-offset) ; C
     (c++-mode                   . c-basic-offset) ; C++
     (csharp-mode                . c-basic-offset) ; C#
     (csharp-tree-sitter-mode    . csharp-tree-sitter-indent-offset) ; C#
