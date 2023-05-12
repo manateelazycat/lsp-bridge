@@ -635,6 +635,7 @@ class LspServer:
                         self.handle_workspace_configuration_request(message["method"], message["id"], message["params"])
                     elif message["method"] == "workspace/applyEdit":
                         eval_in_emacs("lsp-bridge-workspace-apply-edit", message["params"]["edit"])
+                        self.sender.send_response(message["id"], { "applied", True })
 
     def close_file(self, filepath):
         # Send didClose notification when client close file.
