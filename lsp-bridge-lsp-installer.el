@@ -268,7 +268,7 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
          (version (with-current-buffer (url-retrieve-synchronously "https://api.github.com/repos/Exafunction/codeium/releases/latest")
                     (re-search-forward "^{")
                     (goto-char (1- (point)))
-                    (substring (gethash "name" (json-parse-buffer)) (length "language-server-v"))))
+                    (substring (car (last (split-string (gethash "name" (json-parse-buffer)) "-"))) 1)))
          (file-name (format "language_server_%s_%s.%s"
                             platform
                             arch
