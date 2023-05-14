@@ -254,7 +254,7 @@ class LspBridge:
 
     @threaded
     def handle_remote_file_message(self, message):
-        data = json.loads(message)
+        data = parse_json_content(message)
         command = data["command"]
 
         if command == "open_file":
@@ -268,7 +268,7 @@ class LspBridge:
 
     @threaded
     def handle_lsp_message(self, message):
-        data = json.loads(message)
+        data = parse_json_content(message)
         if data["command"] == "eval-in-emacs":
             # Execute emacs command from remote server.
             eval_sexp_in_emacs(data["sexp"])
@@ -368,7 +368,7 @@ class LspBridge:
             # Receive elisp RPC call from remote server.
             log_time(f"Receive remote message: {message}")
 
-            data = json.loads(message)
+            data = parse_json_content(message)
             host = data["host"]
 
             # Read elisp code from local Emacs, and sendback to remote server.
@@ -422,7 +422,7 @@ class LspBridge:
             if not message:
                 break
 
-            message = json.loads(message)
+            message = parse_json_content(message)
 
             if message["command"] == "lsp_request":
                 # Call LSP request.

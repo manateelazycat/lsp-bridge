@@ -1,6 +1,5 @@
 from core.handler import Handler
 from core.utils import *
-import json
 
 
 class JdtlsAddOverridableMethods(Handler):
@@ -9,8 +8,8 @@ class JdtlsAddOverridableMethods(Handler):
     cancel_on_change = True
     send_document_uri = False
 
-    def process_request(self, paramsStr) -> dict:
-        return json.loads(paramsStr)
+    def process_request(self, params) -> dict:
+        return parse_json_content(params)
 
     def process_response(self, response) -> None:
         if response is not None and len(response) > 0:

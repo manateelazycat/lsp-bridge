@@ -143,7 +143,7 @@ class RemoteFileServer:
         client_socket.close()
 
     def handle_message(self, message, client_socket):
-        data = json.loads(message)
+        data = parse_json_content(message)
         command = data["command"]
 
         if command == "open_file":

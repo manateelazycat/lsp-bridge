@@ -296,6 +296,6 @@ class Codeium:
         try:
             with urllib.request.urlopen(req) as response:
                 response_data = response.read().decode("utf-8")
-                return json.loads(response_data)
+                return parse_json_content(response_data)
         except:
             return {}

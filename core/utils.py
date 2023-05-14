@@ -235,8 +235,7 @@ def get_emacs_vars(args):
             "command": "get_emacs_vars",
             "args": args
         })
-        results = json.loads(results)
-        return results
+        return parse_json_content(results)
     else:
         results = epc_client.call_sync("get-emacs-vars", args)
         return list(map(lambda result: convert_emacs_bool(result[0], result[1]) if result != [] else False, results))
@@ -251,7 +250,7 @@ def get_emacs_func_result(method_name, *args):
             "method": method_name,
             "args": args
         })
-        return json.loads(result)
+        return parse_json_content(result)
     else:
         result = epc_client.call_sync(method_name, args)    # type: ignore
         return result
