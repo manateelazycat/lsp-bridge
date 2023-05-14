@@ -261,6 +261,7 @@ class Codeium:
             "ide_version": EMACS_VERSION,
         }
         self.path = os.path.join(self.folder, CODEIUM_EXECUTABLE)
+        self.is_get_info = True
 
     def get_server_port(self):
         pattern = re.compile("\\d{5}")

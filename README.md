@@ -28,7 +28,6 @@ Using Python multithreading techniques, lsp-bridge builds a high-speed cache bet
 - [posframe](https://github.com/tumashu/posframe)
 - [markdown-mode](https://github.com/jrblevin/markdown-mode)
 - [yasnippet](https://github.com/joaotavora/yasnippet)
-- [acm-terminal](https://github.com/twlz0ne/acm-terminal) (optional, only for terminal user)
 
 4. Download this repository using git clone, and replace the load-path path in the configuration below.
 5. Add the following code to your configuration file ~/.emacs:

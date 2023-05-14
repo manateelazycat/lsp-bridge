@@ -27,7 +27,6 @@ lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建�
 - [posframe](https://github.com/tumashu/posframe)
 - [markdown-mode](https://github.com/jrblevin/markdown-mode)
 - [yasnippet](https://github.com/joaotavora/yasnippet)
-- [acm-terminal](https://github.com/twlz0ne/acm-terminal) (可选， 只适合终端用户)
 
 4. 用 `git clone` 下载此仓库， 并替换下面配置中的 load-path 路径
 5. 把下面代码加入到你的配置文件 ~/.emacs 中：
