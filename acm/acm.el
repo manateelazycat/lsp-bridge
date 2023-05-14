@@ -581,7 +581,8 @@ The key of candidate will change between two LSP results."
 
 (defun acm-hide ()
   (interactive)
-  (let* ((candidate-info (acm-menu-current-candidate))
+  (let* ((completion-menu-is-show-p (frame-visible-p acm-menu-frame))
+         (candidate-info (acm-menu-current-candidate))
          (backend (plist-get candidate-info :backend)))
     ;; Turn off `acm-mode'.
     (acm-mode -1)
@@ -601,10 +602,12 @@ The key of candidate will change between two LSP results."
     ;; Remove hook of `acm--pre-command'.
     (remove-hook 'pre-command-hook #'acm--pre-command 'local)
 
-    ;; Clean backend cache.
-    (when-let* ((backend-clean (intern-soft (format "acm-backend-%s-clean" backend)))
-                (fp (fboundp backend-clean)))
-      (funcall backend-clean))))
+    ;; If completion menu is show, clean backend cache.
+    ;; Don't clean backend cache if menu is hide, to make sure completion menu have candidate when call command `lsp-bridge-popup-complete-menu'.
+    (when completion-menu-is-show-p
+      (when-let* ((backend-clean (intern-soft (format "acm-backend-%s-clean" backend)))
+                  (fp (fboundp backend-clean)))
+        (funcall backend-clean)))))
 
 (defun acm-running-in-wayland-native ()
   (and (eq window-system 'pgtk)
