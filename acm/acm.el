@@ -581,7 +581,7 @@ The key of candidate will change between two LSP results."
 
 (defun acm-hide ()
   (interactive)
-  (let* ((completion-menu-is-show-p (frame-visible-p acm-menu-frame))
+  (let* ((completion-menu-is-show-p (acm-frame-visible-p acm-menu-frame))
          (candidate-info (acm-menu-current-candidate))
          (backend (plist-get candidate-info :backend)))
     ;; Turn off `acm-mode'.

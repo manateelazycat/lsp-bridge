@@ -1095,7 +1095,7 @@ So we build this macro to restore postion after code format."
                             (acm-char-before)
                             (acm-get-input-prefix))
 
-  ;; Search other non-LSP backends.
+  ;; Complete other non-LSP backends.
   (lsp-bridge-complete-other-backends))
 
 (defun lsp-bridge-not-match-stop-commands ()
@@ -1191,11 +1191,12 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-not-complete-manually ()
   "If `lsp-bridge-complete-manually' is non-nil, hide completion menu."
   (or
-   ;; Always update candidate if completion menu is visible now.
+   ;; Don't hide completion menu if it has show up.
    (acm-frame-visible-p acm-menu-frame)
-   ;; Don't update candidate if `lsp-bridge-complete-manually' is non-nil.
+
+   ;; Show completion menu when `lsp-bridge-complete-manually' and `lsp-bridge-manual-complete-flag' are non-nil.
+   ;; If `lsp-bridge-complete-manually' is nil, not check `lsp-bridge-manual-complete-flag'.
    (not lsp-bridge-complete-manually)
-   ;; When `lsp-bridge-complete-manually' set, completion menu only popup when user call `lsp-bridge-popup-complete-menu'.
    lsp-bridge-manual-complete-flag
    ))
 
@@ -1292,7 +1293,7 @@ So we build this macro to restore postion after code format."
                                 (acm-get-input-prefix)))
 
 
-    ;; Search other non-LSP backends.
+    ;; Complete other non-LSP backends.
     (lsp-bridge-complete-other-backends)
     ))
 
