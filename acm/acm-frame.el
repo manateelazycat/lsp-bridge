@@ -212,7 +212,7 @@
          (y (+ (frame-parameter frame 'top) (/ (- parent-height frame-height) 2))))
     (acm-frame-set-frame-position frame x y)))
 
-(defun acm-frame-get-popup-position (frame-popup-point)
+(defun acm-frame-get-popup-position (frame-popup-point &optional line-bias)
   (let* ((edges (window-pixel-edges))
          (window-left (+ (nth 0 edges)
                          ;; We need adjust left margin for buffer centering module.
@@ -222,7 +222,7 @@
          (window-top (nth 1 edges))
          (pos (posn-x-y (posn-at-point frame-popup-point)))
          (x (car pos))
-         (y (cdr pos))
+         (y (+ (cdr pos) (* (or line-bias 0) (line-pixel-height))))
          (offset-y
           ;; We need move down to skip tab-line and header-line.
           (if (version< emacs-version "27.0")

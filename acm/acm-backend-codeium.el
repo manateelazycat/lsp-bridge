@@ -166,6 +166,20 @@
     (lsp-bridge-call-async
      "codeium_completion_accept" (plist-get candidate-info :id))))
 
+(defun acm-backend-codeium-candidate-preview (candidate-info _)
+  "preview candidate used by `acm-preview-current'"
+  (let* ((end (line-end-position))
+         (beg (and
+               (forward-line (- (plist-get candidate-info :line)
+                                (count-lines (point-min) (line-beginning-position))))
+               (point)))
+         (ov (make-overlay beg end nil)))
+    (overlay-put ov 'priority 1000)
+    (overlay-put ov 'window (selected-window))
+    (overlay-put ov 'display (plist-get candidate-info :label))
+    ov))
+
+
 (defun acm-backend-codeium-candidate-doc (candidate)
   (plist-get candidate :documentation))
 
