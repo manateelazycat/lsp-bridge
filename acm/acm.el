@@ -608,7 +608,11 @@ The key of candidate will change between two LSP results."
     (setq acm-menu-max-length-cache 0)
 
     (when acm-preview-overlay
-      (acm-complete t))
+      (if (not (eq this-command 'acm-hide))
+          ;; if `acm-hide' is called as command, not insert
+          (acm-complete t)
+        (delete-overlay acm-preview-overlay)
+        (setq acm-preview-overlay nil)))
 
     ;; Remove hook of `acm--pre-command'.
     (remove-hook 'pre-command-hook #'acm--pre-command 'local)
