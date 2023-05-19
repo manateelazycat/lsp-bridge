@@ -108,9 +108,11 @@ you need set this value to `/usr/share/stardict/dic/stardict-oxford-gb-formated-
 (defun acm-backend-search-sdcv-words-candidates (keyword)
   acm-backend-search-sdcv-words-items)
 
-(defun acm-backend-search-sdcv-words-candidate-expand (candidate-info bound-start)
-  (delete-region (beginning-of-thing 'word) (end-of-thing 'word))
-  (insert (plist-get candidate-info :display-label)))
+(defun acm-backend-search-sdcv-words-candidate-expand (candidate-info bound-start &optional preview)
+  (if preview
+      (acm-preview-create-overlay (beginning-of-thing 'word) (end-of-thing 'word) (plist-get candidate-info :display-label))
+    (delete-region (beginning-of-thing 'word) (end-of-thing 'word))
+    (insert (plist-get candidate-info :display-label))))
 
 (defun acm-backend-search-sdcv-words-clean ()
   (setq-local acm-backend-search-sdcv-words-items nil))

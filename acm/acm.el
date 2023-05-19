@@ -608,9 +608,7 @@ The key of candidate will change between two LSP results."
     (setq acm-menu-max-length-cache 0)
 
     (when acm-preview-overlay
-      (delete-overlay acm-preview-overlay)
-      (acm-complete t)
-      (setq acm-preview-overlay nil))
+      (acm-complete t))
 
     ;; Remove hook of `acm--pre-command'.
     (remove-hook 'pre-command-hook #'acm--pre-command 'local)
@@ -660,9 +658,21 @@ The key of candidate will change between two LSP results."
       (delete-region bound-start (point))
       (insert (plist-get candidate-info :label))))
 
+  (when (overlayp acm-preview-overlay)
+    (delete-overlay acm-preview-overlay))
+  (setq acm-preview-overlay nil)
+
   ;; Hide menu and doc frame after complete candidate.
   (unless not-hide
     (acm-hide)))
+
+(defun acm-preview-create-overlay (beg end display)
+  (let ((ov (make-overlay beg end nil)))
+    (overlay-put ov 'priority 1000)
+    (overlay-put ov 'window (selected-window))
+    (when (stringp display)
+      (overlay-put ov 'display display))
+    ov))
 
 (defun acm-preview-current ()
   "Show current candidate as overlay given BEG and END."
@@ -671,16 +681,14 @@ The key of candidate will change between two LSP results."
          (cand (plist-get candidate-info :label))
          (end (+ beg (length cand)))
          (backend (plist-get candidate-info :backend))
-         (candidate-expand (intern-soft (format "acm-backend-%s-candidate-preview" backend))))
+         (candidate-expand (intern-soft (format "acm-backend-%s-candidate-expand" backend))))
     (when acm-preview-overlay (delete-overlay acm-preview-overlay))
-    (if (fboundp candidate-expand)
-        ;; TODO support more backends.
+    (if (and (fboundp candidate-expand)
+             ;; check if candidate-expand support preview.
+             (member 'preview (help-function-arglist candidate-expand)))
         (save-excursion
-          (setq acm-preview-overlay (funcall candidate-expand candidate-info beg)))
-        (setq acm-preview-overlay (make-overlay beg (point) nil))
-        (overlay-put acm-preview-overlay 'priority 1000)
-        (overlay-put acm-preview-overlay 'window (selected-window))
-        (overlay-put acm-preview-overlay 'display cand))
+          (setq acm-preview-overlay (funcall candidate-expand candidate-info beg t)))
+      (setq acm-preview-overlay (acm-preview-create-overlay beg (point) cand)))
     ;; adjust pos of menu frame.
     (when-let ((popup-pos (acm-frame-get-popup-position
                            acm-menu-frame-popup-point

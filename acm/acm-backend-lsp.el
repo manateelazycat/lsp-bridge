@@ -132,7 +132,7 @@
     ;; please do not do secondary sorting here, elisp is very slow.
     candidates))
 
-(defun acm-backend-lsp-candidate-expand (candidate-info bound-start)
+(defun acm-backend-lsp-candidate-expand (candidate-info bound-start &optional preview)
   (let* ((label (plist-get candidate-info :label))
          (insert-text (plist-get candidate-info :insertText))
          (insert-text-format (plist-get candidate-info :insertTextFormat))
@@ -172,17 +172,23 @@
                    (not (string-prefix-p char-before-input insert-text)))
           (setq delete-start-pos (1+ delete-start-pos)))))
 
-    ;; Delete region.
-    (delete-region delete-start-pos delete-end-pos)
+    (if preview
+        ;; for candidate preview, we ignore `additional-text-edits' and `snippet'
+        (if snippet-fn
+            ;; for snippet, we only preview label
+            (acm-preview-create-overlay delete-start-pos delete-end-pos label)
+          (acm-preview-create-overlay delete-start-pos delete-end-pos
+                                      (or new-text insert-text label)))
 
-    ;; Insert candidate or expand snippet.
-    (funcall (or snippet-fn #'insert)
-             (or new-text insert-text label))
-
-    ;; Do `additional-text-edits' if return auto-imprt information.
-    (when (and acm-backend-lsp-enable-auto-import
-               (cl-plusp (length additional-text-edits)))
-      (acm-backend-lsp-apply-text-edits additional-text-edits))))
+      ;; Delete region.
+      (delete-region delete-start-pos delete-end-pos)
+      ;; Insert candidate or expand snippet.
+      (funcall (or snippet-fn #'insert)
+               (or new-text insert-text label))
+      ;; Do `additional-text-edits' if return auto-imprt information.
+      (when (and acm-backend-lsp-enable-auto-import
+                 (cl-plusp (length additional-text-edits)))
+        (acm-backend-lsp-apply-text-edits additional-text-edits)))))
 
 (defun acm-backend-lsp-candidate-doc (candidate)
   ;; NOTE:
