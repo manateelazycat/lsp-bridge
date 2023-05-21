@@ -23,7 +23,6 @@ import time
 import traceback
 import urllib.parse
 import urllib.request
-from distutils.version import StrictVersion
 
 from core.utils import *
 
@@ -200,18 +199,10 @@ class Codeium:
             self.manager_dir = tempfile.mkdtemp(prefix="codeium_")
             params = [self.path, "--manager_dir", self.manager_dir]
 
-            if StrictVersion(self.VERSION) > StrictVersion("1.2.13"):
-                params += [
-                    "--api_server_url",
-                    f"https://{self.api_server_host}:{str(self.api_server_port)}",
-                ]
-            else:
-                params += [
-                    "--api_server_host",
-                    self.api_server_host,
-                    "--api_server_port",
-                    str(self.api_server_port),
-                ]
+            params += [
+                "--api_server_url",
+                f"https://{self.api_server_host}:{str(self.api_server_port)}",
+            ]
 
             process = subprocess.Popen(params)
 
