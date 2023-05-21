@@ -192,6 +192,11 @@
   :type 'list
   :group 'acm)
 
+(defcustom acm-enable-preview nil
+  "Enable tab-and-go preview."
+  :type 'boolean
+  :group 'acm)
+
 (cl-defmacro acm-run-idle-func (timer idle func)
   `(unless ,timer
      (setq ,timer
@@ -245,6 +250,8 @@
 (defvar acm-doc-frame nil)
 (defvar acm-doc-frame-hide-p nil)
 (defvar acm-doc-buffer " *acm-doc-buffer*")
+
+(defvar acm-preview-overlay nil)
 
 (defface acm-deprecated-face
   '((t :inherit shadow :strike-through t))
@@ -538,7 +545,8 @@ The key of candidate will change between two LSP results."
         ;; `posn-at-point' will failed in CI, add checker make sure CI can pass.
         ;; CI don't need popup completion menu.
         (when (posn-at-point acm-menu-frame-popup-point)
-          (setq acm-menu-frame-popup-position (acm-frame-get-popup-position acm-menu-frame-popup-point))
+          (setq acm-menu-frame-popup-position
+                (acm-frame-get-popup-position acm-menu-frame-popup-point))
 
           ;; We need delete frame first when user switch to different frame.
           (when (and (frame-live-p acm-menu-frame)
@@ -599,6 +607,13 @@ The key of candidate will change between two LSP results."
     ;; Clean `acm-menu-max-length-cache'.
     (setq acm-menu-max-length-cache 0)
 
+    (when acm-preview-overlay
+      (if (not (eq this-command 'acm-hide))
+          ;; if `acm-hide' is called as command, not insert
+          (acm-complete t)
+        (delete-overlay acm-preview-overlay)
+        (setq acm-preview-overlay nil)))
+
     ;; Remove hook of `acm--pre-command'.
     (remove-hook 'pre-command-hook #'acm--pre-command 'local)
 
@@ -635,7 +650,7 @@ The key of candidate will change between two LSP results."
   (unless (acm-match-symbol-p acm-continue-commands this-command)
     (acm-hide)))
 
-(defun acm-complete ()
+(defun acm-complete (&optional not-hide)
   (interactive)
   (let* ((candidate-info (acm-menu-current-candidate))
          (bound-start acm-menu-frame-popup-point)
@@ -647,8 +662,44 @@ The key of candidate will change between two LSP results."
       (delete-region bound-start (point))
       (insert (plist-get candidate-info :label))))
 
+  (when (overlayp acm-preview-overlay)
+    (delete-overlay acm-preview-overlay))
+  (setq acm-preview-overlay nil)
+
   ;; Hide menu and doc frame after complete candidate.
-  (acm-hide))
+  (unless not-hide
+    (acm-hide)))
+
+(defun acm-preview-create-overlay (beg end display)
+  (let ((ov (make-overlay beg end nil)))
+    (overlay-put ov 'priority 1000)
+    (overlay-put ov 'window (selected-window))
+    (when (stringp display)
+      (overlay-put ov 'display display))
+    ov))
+
+(defun acm-preview-current ()
+  "Show current candidate as overlay given BEG and END."
+  (let* ((candidate-info (acm-menu-current-candidate))
+         (beg acm-menu-frame-popup-point)
+         (cand (plist-get candidate-info :label))
+         (end (+ beg (length cand)))
+         (backend (plist-get candidate-info :backend))
+         (candidate-expand (intern-soft (format "acm-backend-%s-candidate-expand" backend))))
+    (when acm-preview-overlay (delete-overlay acm-preview-overlay))
+    (if (and (fboundp candidate-expand)
+             ;; check if candidate-expand support preview.
+             (member 'preview (help-function-arglist candidate-expand)))
+        (save-excursion
+          (setq acm-preview-overlay (funcall candidate-expand candidate-info beg t)))
+      (setq acm-preview-overlay (acm-preview-create-overlay beg (point) cand)))
+    ;; adjust pos of menu frame.
+    (when-let ((popup-pos (acm-frame-get-popup-position
+                           acm-menu-frame-popup-point
+                           (1- (length (split-string (overlay-get acm-preview-overlay 'display) "\n")))))
+               ((not (eq (cdr popup-pos) (cdr acm-menu-frame-popup-position)))))
+      (setcdr acm-menu-frame-popup-position (cdr popup-pos))
+      (acm-menu-adjust-pos))))
 
 (defun acm-complete-or-expand-yas-snippet ()
   "Do complete or expand yasnippet, you need binding this funtion to `<tab>' in `yas-keymap'."
@@ -914,8 +965,10 @@ The key of candidate will change between two LSP results."
      (when (or (not (equal menu-old-index acm-menu-index))
                (not (equal menu-old-offset acm-menu-offset)))
        (acm-menu-update-candidates)
-       (acm-menu-render menu-old-cache)
-       )))
+       (acm-menu-render menu-old-cache))
+     (when acm-enable-preview
+       (acm-preview-current))
+     ))
 
 (defun acm-char-before ()
   (let ((prev-char (char-before)))

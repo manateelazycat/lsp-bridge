@@ -959,6 +959,11 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-monitor-pre-command ()
   (setq-local lsp-bridge-cursor-before-command (point))
 
+  ;; Tab-and-go
+  (when (and acm-preview-overlay
+             (not (string-prefix-p "acm" (format "%s" this-command))))
+    (acm-complete))
+
   (when acm-filter-overlay
     (let ((this-command-string (format "%s" this-command)))
       (cond ((member this-command-string '("self-insert-command" "org-self-insert-command"))

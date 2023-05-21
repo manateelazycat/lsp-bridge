@@ -99,7 +99,7 @@
   (when acm-enable-path
     acm-backend-path-items))
 
-(defun acm-backend-path-candidate-expand (candidate-info bound-start)
+(defun acm-backend-path-candidate-expand (candidate-info bound-start &optional preview)
   (let* ((keyword (acm-get-input-prefix))
          (file-name (plist-get candidate-info :label))
          (parent-dir (file-name-directory keyword)))
@@ -109,8 +109,10 @@
                (string-equal (substring file-name 0 1) "."))
       (setq bound-start (1- bound-start)))
 
-    (delete-region bound-start (point))
-    (insert (concat parent-dir file-name))))
+    (if preview
+        (acm-preview-create-overlay bound-start (point) (concat parent-dir file-name))
+      (delete-region bound-start (point))
+      (insert (concat parent-dir file-name)))))
 
 (provide 'acm-backend-path)
 
