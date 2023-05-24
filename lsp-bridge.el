@@ -466,7 +466,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     python-mode-hook
     ruby-mode-hook
     lua-mode-hook
- 	  move-mode-hook
+ 	move-mode-hook
     rust-mode-hook
     rust-ts-mode-hook
     rustic-mode-hook
@@ -1234,21 +1234,21 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-monitor-before-change (begin end)
   (save-match-data
-  (when (lsp-bridge-has-lsp-server-p)
-    ;; send whole org src block to lsp server
-    (when (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)
-               lsp-bridge-org-babel--block-bop
-               lsp-bridge-org-babel--update-file-before-change)
-      (setq-local lsp-bridge-org-babel--update-file-before-change nil)
-      (lsp-bridge-call-file-api "update_file" (buffer-name)
-                                (1- (line-number-at-pos lsp-bridge-org-babel--block-bop t)))))
+    (when (lsp-bridge-has-lsp-server-p)
+      ;; send whole org src block to lsp server
+      (when (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)
+                 lsp-bridge-org-babel--block-bop
+                 lsp-bridge-org-babel--update-file-before-change)
+        (setq-local lsp-bridge-org-babel--update-file-before-change nil)
+        (lsp-bridge-call-file-api "update_file" (buffer-name)
+                                  (1- (line-number-at-pos lsp-bridge-org-babel--block-bop t)))))
 
-  ;; Set `lsp-bridge--before-change-begin-pos' and `lsp-bridge--before-change-end-pos'
-  ;; if `lsp-bridge-has-lsp-server-p' or `lsp-bridge-is-remote-file'
-  (when (or (lsp-bridge-has-lsp-server-p)
-            (lsp-bridge-is-remote-file))
-    (setq-local lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
-    (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end)))))
+    ;; Set `lsp-bridge--before-change-begin-pos' and `lsp-bridge--before-change-end-pos'
+    ;; if `lsp-bridge-has-lsp-server-p' or `lsp-bridge-is-remote-file'
+    (when (or (lsp-bridge-has-lsp-server-p)
+              (lsp-bridge-is-remote-file))
+      (setq-local lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
+      (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end)))))
 
 (defun lsp-bridge-monitor-post-self-insert ()
   ;; Make sure this function be called after `electric-pair-mode'
@@ -1274,36 +1274,36 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-monitor-after-change (begin end length)
   (save-match-data
-  (unless lsp-bridge-revert-buffer-flag
-    ;; Record last command to `lsp-bridge-last-change-command'.
-    (setq lsp-bridge-last-change-command (format "%s" this-command))
+    (unless lsp-bridge-revert-buffer-flag
+      ;; Record last command to `lsp-bridge-last-change-command'.
+      (setq lsp-bridge-last-change-command (format "%s" this-command))
 
-    ;; Record last change position to avoid popup outdate completions.
-    (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
+      ;; Record last change position to avoid popup outdate completions.
+      (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
 
-    ;; Set `lsp-bridge-last-change-is-delete-command-p'
-    (setq lsp-bridge-last-change-is-delete-command-p (> length 0))
+      ;; Set `lsp-bridge-last-change-is-delete-command-p'
+      (setq lsp-bridge-last-change-is-delete-command-p (> length 0))
 
-    ;; Sync change for org babel if we enable it
-    (lsp-bridge-org-babel-monitor-after-change begin end length)
+      ;; Sync change for org babel if we enable it
+      (lsp-bridge-org-babel-monitor-after-change begin end length)
 
-    ;; Send change_file request to trigger LSP completion.
-    (when (or (lsp-bridge-call-file-api-p)
-              (lsp-bridge-is-remote-file))
-      (lsp-bridge-call-file-api "change_file"
-                                lsp-bridge--before-change-begin-pos
-                                lsp-bridge--before-change-end-pos
-                                length
-                                (buffer-substring-no-properties begin end)
-                                (lsp-bridge--position)
-                                (acm-char-before)
-                                (buffer-name)
-                                (acm-get-input-prefix)))
+      ;; Send change_file request to trigger LSP completion.
+      (when (or (lsp-bridge-call-file-api-p)
+                (lsp-bridge-is-remote-file))
+        (lsp-bridge-call-file-api "change_file"
+                                  lsp-bridge--before-change-begin-pos
+                                  lsp-bridge--before-change-end-pos
+                                  length
+                                  (buffer-substring-no-properties begin end)
+                                  (lsp-bridge--position)
+                                  (acm-char-before)
+                                  (buffer-name)
+                                  (acm-get-input-prefix)))
 
 
-    ;; Complete other non-LSP backends.
-    (lsp-bridge-complete-other-backends)
-    )))
+      ;; Complete other non-LSP backends.
+      (lsp-bridge-complete-other-backends)
+      )))
 
 (defun lsp-bridge-complete-other-backends ()
   (let ((this-command-string (format "%s" this-command)))
