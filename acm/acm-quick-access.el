@@ -61,6 +61,32 @@ See `acm-quick-access-keys' for more details."
     (setq-local acm-menu-index row)
     (acm-complete)))
 
+(defun acm-insert-number-or-complete-candiate ()
+  (interactive)
+  (let ((current-char (key-description (this-command-keys-vector)))
+        complete-index)
+    ;; Only complete candidate when match below rules:
+    ;;
+    ;; 1. User type number character
+    ;; 2. User type number is equal or bigger than candidate length
+    ;; 3. First character of rest candidate is not same with user type number
+    ;; 4. Character before cursor is not number
+    (when (string-match-p "[0-9]" current-char)
+      (let* ((current-number (string-to-number current-char)))
+        (when (>= (length acm-candidates) current-number)
+          (let* (;; Decrease index if user type 1~9, adjust index to 9 if user type 0.
+                 (index (if (equal current-number 0) 9 (1- current-number)))
+                 (current-candiate (plist-get (nth (+ acm-menu-offset index) acm-candidates) :display-label))
+                 (prefix (acm-get-input-prefix))
+                 (rest (cadr (split-string current-candiate prefix))))
+            (unless (or (string-prefix-p current-char rest)
+                        (string-match-p "[0-9]" (string (char-before))))
+              (setq complete-index index))))))
+
+    (if complete-index
+        (acm-complete-quick-access complete-index)
+      (insert current-char))))
+
 (provide 'acm-quick-access)
 
 ;;; acm-quick-access.el ends here

@@ -154,7 +154,7 @@ Setting this to nil or 0 will turn off the indicator."
 (defcustom lsp-bridge-completion-stop-commands
   '("undo-tree-undo" "undo-tree-redo"
     "kill-region" "delete-block-backward"
-    "python-black-buffer" "acm-complete-or-expand-yas-snippet"
+    "python-black-buffer" "acm-complete-or-expand-yas-snippet" "acm-insert-number-or-complete-candiate"
     "yank" "string-rectangle" "query-replace" "grammatical-edit-unwrap")
   "If last command is match this option, stop popup completion ui."
   :type 'cons

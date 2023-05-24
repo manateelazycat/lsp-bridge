@@ -169,7 +169,7 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 - `acm-enable-tabnine`: 是否打开 tabnine 补全支持， 默认打开， 打开后需要运行命令 `lsp-bridge-install-tabnine` 来安装 tabnine 后就可以使用了。 TabNine 会消耗巨大的 CPU， 导致你整个电脑都卡顿， 如果电脑性能不好， 不建议开启此选项
 - `acm-enable-codeium`: 是否打开 Codeium 补全支持， 打开后需要运行命令 `lsp-bridge-install-update-codeium` 来安装 Codeium， 再运行命令 `lsp-bridge-codeium-auth` 来获取 auth token 再运行命令 `lsp-bridge-codeium-input-auth-token` 获取 API Key 后就可以使用了。
 - `acm-enable-search-file-words`: 补全菜单是否显示打开文件的单词， 默认打开
-- `acm-enable-quick-access`: 是否在图标后面显示索引， 可以通过 Alt + Number 来快速选择候选词， 默认关闭
+- `acm-enable-quick-access`: 是否在图标后面显示索引， 通过数字符号快速选择候选词 (后续补全是数字或者光标前是数字时， 数字选择候选词功能不可用), 也可以通过 Alt + Number 来快速选择候选词， 默认关闭
 - `acm-enable-yas`: yasnippet 补全， 默认打开
 - `acm-enable-citre`: [citre(ctags)](https://github.com/universal-ctags/citre) 补全， 默认关闭
 - `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是 20
@@ -185,7 +185,7 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 - `acm-backend-yas-candidates-number`: yasnippet 显示个数， 默认 2 个
 - `acm-backend-citre-keyword-complete`: 根据`acm-backend-citre-keywords-alist`定义的各个模式的关键字进行补全， 需要使能 citre 后才生效
 - `acm-backend-search-sdcv-words-dictionary`: 用于单词补全的 StarDict 词典， 默认是 `kdic-ec-11w`, 可以自定义为其他 StarDict 词典， 如果你的系统存在词典 `/usr/share/stardict/dic/stardict-oxford-gb-formated-2.4.2/oxford-gb-formated.ifo`, 你需要设置这个选项为 `/usr/share/stardict/dic/stardict-oxford-gb-formated-2.4.2/oxford-gb-formated`, 不需要包括 `.ifo` 扩展
-- `acm-enable-preview`: 开启Tab-and-Go completion，当改变当前候选时，可以预览候选，并且后续输入会选择预览候选，默认关闭
+- `acm-enable-preview`: 开启 Tab-and-Go completion， 当改变当前候选时， 可以预览候选， 并且后续输入会选择预览候选， 默认关闭
 
 ## 自定义语言服务器配置
 
@@ -364,7 +364,7 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 
 请用命令 `emacs -q` 并只添加 lsp-bridge 配置做一个对比测试， 如果 `emacs -q` 可以正常工作， 请检查你个人的配置文件。
 
-如果`emacs -q`环境下问题依旧， 请到[这里](https://github.com/manateelazycat/lsp-bridge/issues/new)反馈, 并附带 `*lsp-bridge*` 窗口的内容给我们提交 issue， 那里面有很多线索可以帮助我们排查问题。 。
+如果`emacs -q`环境下问题依旧， 请到[这里](https://github.com/manateelazycat/lsp-bridge/issues/new) 反馈, 并附带 `*lsp-bridge*` 窗口的内容给我们提交 issue， 那里面有很多线索可以帮助我们排查问题。 。
 
 - 如果你遇到崩溃的问题, 请用下面的方式来收集崩溃信息:
 
