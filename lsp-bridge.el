@@ -1112,8 +1112,8 @@ So we build this macro to restore postion after code format."
   "Check if the cursor position is subject to string interpolation"
   (when-let* ((search-char (cdr (assoc (buffer-local-value 'major-mode (current-buffer))
                                        string-interpolation-open-chars-alist)))
-              (open-pos (save-excursion (search-backward-regexp search-char nil t))))
-    (not (save-excursion (search-backward-regexp "\}" open-pos t)))))
+              (open-pos (save-excursion (save-match-data (search-backward-regexp search-char nil t)))))
+    (not (save-excursion (save-match-data (search-backward-regexp "\}" open-pos t))))))
 
 (defun lsp-bridge-not-in-string ()
   "Hide completion if cursor in string area."
@@ -1271,6 +1271,7 @@ So we build this macro to restore postion after code format."
         (list (current-buffer) (buffer-chars-modified-tick) (point))))
 
 (defun lsp-bridge-monitor-after-change (begin end length)
+
   (unless lsp-bridge-revert-buffer-flag
     ;; Record last command to `lsp-bridge-last-change-command'.
     (setq lsp-bridge-last-change-command (format "%s" this-command))
@@ -1352,8 +1353,8 @@ So we build this macro to restore postion after code format."
         ;; Send tailwind keyword search request just when cursor in class area.
         (when (and (derived-mode-p 'web-mode)
                    (acm-in-string-p)
-                   (save-excursion
-                     (search-backward-regexp "class=" (point-at-bol) t)))
+                   (save-excursion (save-match-data
+                     (search-backward-regexp "class=" (point-at-bol) t))))
           (unless (or (string-equal current-symbol "") (null current-symbol))
             (if (lsp-bridge-is-remote-file)
                 (lsp-bridge-remote-send-func-request "search_tailwind_keywords_search" (list lsp-bridge-remote-file-path current-symbol))

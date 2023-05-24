@@ -285,12 +285,12 @@
      (bounds-of-thing-at-point 'symbol))
     ("string"
      (cons (point)
-           (save-excursion
+           (save-excursion (save-match-data
              (if (search-backward-regexp "\\s-" (point-at-bol) t)
                  (progn
                    (forward-char)
                    (point))
-               (point-at-bol)))))
+               (point-at-bol))))))
     ("ascii"
      (when-let ((bound (bounds-of-thing-at-point 'symbol)))
        (let* ((keyword (buffer-substring-no-properties (car bound) (cdr bound)))
