@@ -1233,6 +1233,7 @@ So we build this macro to restore postion after code format."
 (defvar-local lsp-bridge--before-change-end-pos nil)
 
 (defun lsp-bridge-monitor-before-change (begin end)
+  (save-match-data
   (when (lsp-bridge-has-lsp-server-p)
     ;; send whole org src block to lsp server
     (when (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)
@@ -1247,7 +1248,7 @@ So we build this macro to restore postion after code format."
   (when (or (lsp-bridge-has-lsp-server-p)
             (lsp-bridge-is-remote-file))
     (setq-local lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
-    (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))))
+    (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end)))))
 
 (defun lsp-bridge-monitor-post-self-insert ()
   ;; Make sure this function be called after `electric-pair-mode'
@@ -1272,6 +1273,7 @@ So we build this macro to restore postion after code format."
         (list (current-buffer) (buffer-chars-modified-tick) (point))))
 
 (defun lsp-bridge-monitor-after-change (begin end length)
+  (save-match-data
   (unless lsp-bridge-revert-buffer-flag
     ;; Record last command to `lsp-bridge-last-change-command'.
     (setq lsp-bridge-last-change-command (format "%s" this-command))
@@ -1301,7 +1303,7 @@ So we build this macro to restore postion after code format."
 
     ;; Complete other non-LSP backends.
     (lsp-bridge-complete-other-backends)
-    ))
+    )))
 
 (defun lsp-bridge-complete-other-backends ()
   (let ((this-command-string (format "%s" this-command)))
