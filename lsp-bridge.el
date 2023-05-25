@@ -1233,6 +1233,7 @@ So we build this macro to restore postion after code format."
 (defvar-local lsp-bridge--before-change-end-pos nil)
 
 (defun lsp-bridge-monitor-before-change (begin end)
+  ;; Use `save-match-data' protect match data, avoid conflict with command call `search-regexp'.
   (save-match-data
     (when (lsp-bridge-has-lsp-server-p)
       ;; send whole org src block to lsp server
@@ -1273,6 +1274,7 @@ So we build this macro to restore postion after code format."
         (list (current-buffer) (buffer-chars-modified-tick) (point))))
 
 (defun lsp-bridge-monitor-after-change (begin end length)
+  ;; Use `save-match-data' protect match data, avoid conflict with command call `search-regexp'.
   (save-match-data
     (unless lsp-bridge-revert-buffer-flag
       ;; Record last command to `lsp-bridge-last-change-command'.
@@ -1307,14 +1309,7 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-complete-other-backends ()
   (let ((this-command-string (format "%s" this-command)))
-    (when (and (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-               ;; NOTE:
-               ;;
-               ;; Most org-mode commands will make lsp-bridge failed that casue (thing-at-point 'symbol t).
-               ;; We only allow `org-self-insert-command' trigger lsp-bridge action.
-               (not (and (or (string-prefix-p "org-" this-command-string)
-                             (string-prefix-p "+org/" this-command-string))
-                         (not (string-equal this-command-string "org-self-insert-command")))))
+    (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       (let* ((current-word (thing-at-point 'word t))
              (current-symbol (thing-at-point 'symbol t)))
         ;; TabNine search.
