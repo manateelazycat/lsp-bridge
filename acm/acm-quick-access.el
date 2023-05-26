@@ -76,9 +76,10 @@ See `acm-quick-access-keys' for more details."
         (when (>= (length acm-candidates) current-number)
           (let* (;; Decrease index if user type 1~9, adjust index to 9 if user type 0.
                  (index (if (equal current-number 0) 9 (1- current-number)))
-                 (current-candiate (plist-get (nth (+ acm-menu-offset index) acm-candidates) :display-label))
+                 (candiate (nth (+ acm-menu-offset index) acm-candidates))
+                 (candidate-label (or (plist-get candiate :display-label) ""))
                  (prefix (acm-get-input-prefix))
-                 (rest (cadr (split-string current-candiate prefix))))
+                 (rest (cadr (split-string candidate-label prefix))))
             (unless (or (string-prefix-p current-char rest)
                         (string-match-p "[0-9]" (string (char-before))))
               (setq complete-index index))))))
