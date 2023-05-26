@@ -206,7 +206,7 @@ If you are writing JavaScript code, you may need to customize multiple server co
 For example, we can enable the Deno LSP server for Deno scripts with the following configuration:
 
 ```elisp
-(setq lsp-bridge-get-single-lang-server-by-project
+(setq lsp-bridge-get-multi-lang-server-by-project
       (lambda (project-path filepath)
         ;; If typescript file include deno.land url, then use Deno LSP server.
         (save-excursion
