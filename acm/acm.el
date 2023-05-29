@@ -699,7 +699,7 @@ The key of candidate will change between two LSP results."
     (when acm-preview-overlay (delete-overlay acm-preview-overlay))
     (if (and (fboundp candidate-expand)
              ;; check if candidate-expand support preview.
-             (member 'preview (help-function-arglist candidate-expand)))
+             (string-match " PREVIEW" (documentation candidate-expand t)))
         (save-excursion
           (setq acm-preview-overlay (funcall candidate-expand candidate-info beg t)))
       (setq acm-preview-overlay (acm-preview-create-overlay beg (point) cand)))
