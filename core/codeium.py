@@ -141,17 +141,18 @@ class Codeium:
             for completion in data["completionItems"][: self.max_num_results - 1]:
                 label = completion["completion"]["text"]
                 labels = label.strip().split("\n")
+                first_line = labels[0]
 
-                document = f"```{language}\n{label}\n```" if len(labels) > 1 else ""
+                document = f"```{language}\n{label}\n```"
 
-                display_label = labels[0]
-                if len(display_label) > self.display_label_max_length:
-                    if len(labels) > 1:
-                        display_label = (
-                            display_label[self.display_label_max_length - 4 :] + " ..."
-                        )
-                    elif display_label.startswith(prefix):
-                        display_label = display_label.replace(prefix, "... ", 1)
+                # Don't make display label bigger than max length.
+                display_label = first_line
+                if len(first_line) > self.display_label_max_length:
+                    display_label = "... " + display_label[len(first_line) - self.display_label_max_length:]
+
+                # Only hide documentation when label smaller than max length and only 1 line
+                if len(labels) <= 1 and len(first_line) <= self.display_label_max_length:
+                        document = ""
 
                 completion_parts = completion.get("completionParts", [{}])[0]
                 annotation = (
