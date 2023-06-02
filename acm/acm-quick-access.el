@@ -70,7 +70,7 @@ See `acm-quick-access-keys' for more details."
     ;; 1. User type number character
     ;; 2. User type number is equal or bigger than candidate length
     ;; 3. First character of rest candidate is not same with user type number
-    ;; 4. Character before cursor is not number
+    ;; 4. Character before cursor is not number and equal-sign
     (when (string-match-p "[0-9]" current-char)
       (let* ((current-number (string-to-number current-char)))
         (when (>= (length acm-candidates) current-number)
@@ -81,7 +81,7 @@ See `acm-quick-access-keys' for more details."
                  (prefix (acm-get-input-prefix))
                  (rest (cadr (split-string candidate-label prefix))))
             (unless (or (string-prefix-p current-char rest)
-                        (string-match-p "[0-9]" (string (char-before))))
+                        (string-match-p "[0-9=]" (string (char-before))))
               (setq complete-index index))))))
 
     (if complete-index
