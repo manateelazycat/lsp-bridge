@@ -1936,7 +1936,13 @@ SymbolKind (defined in the LSP)."
          ;; Tempel not active.
          (or (not (boundp 'tempel--active))
              (not tempel--active)))
-    (lsp-bridge-call-file-api "formatting" (symbol-value (lsp-bridge--get-indent-width major-mode)))))
+    (let ((indent (symbol-value (lsp-bridge--get-indent-width major-mode))))
+      (lsp-bridge-call-file-api "formatting"
+                                ;; Sometimes `c-basic-offset' return string `set-from-style', make some lsp server broken, such as, gopls,
+                                ;; so we need convert indent to integer `4' to make sure code format works expectantly.
+                                (if (eq indent 'set-from-style)
+                                    4
+                                  indent)))))
 
 (defun lsp-bridge-format--update (filename edits)
   ;; We need set `inhibit-modification-hooks' to t to avoid GC freeze Emacs.
