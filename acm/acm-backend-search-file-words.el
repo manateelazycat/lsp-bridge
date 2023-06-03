@@ -117,7 +117,7 @@
   (let ((beg (if (acm-is-elisp-mode-p)
                  (car (bounds-of-thing-at-point 'symbol))
                (save-excursion
-                 (skip-syntax-backward "^ " (line-beginning-position))
+                 (skip-syntax-backward "^[\"' ]" (line-beginning-position))
                  (point))))
         (end (point))
         (cand (plist-get candidate-info :label)))
@@ -132,10 +132,10 @@
       (or (thing-at-point 'symbol t) "")
     (buffer-substring-no-properties
      (save-excursion
-       (skip-syntax-backward "^ " (line-beginning-position))
+       (skip-syntax-backward "^[\"' ]" (line-beginning-position))
        (point))
      (save-excursion
-       (skip-syntax-forward "^ " (line-end-position))
+       (skip-syntax-forward "^[\"' ]" (line-end-position))
        (point))
      )))
 
