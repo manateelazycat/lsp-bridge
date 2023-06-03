@@ -100,6 +100,8 @@
 
 (defvar-local acm-backend-search-file-words-items nil)
 
+(defvar acm-backend-search-file-words-bound-regex "^[\"' ]")
+
 (defun acm-backend-search-file-words-candidates (keyword)
   (when (and acm-enable-search-file-words
              (>= (length keyword) acm-backend-search-file-words-candidate-min-length))
@@ -117,7 +119,7 @@
   (let ((beg (if (acm-is-elisp-mode-p)
                  (car (bounds-of-thing-at-point 'symbol))
                (save-excursion
-                 (skip-syntax-backward "^[\"' ]" (line-beginning-position))
+                 (skip-syntax-backward acm-backend-search-file-words-bound-regex (line-beginning-position))
                  (point))))
         (end (point))
         (cand (plist-get candidate-info :label)))
@@ -132,10 +134,10 @@
       (or (thing-at-point 'symbol t) "")
     (buffer-substring-no-properties
      (save-excursion
-       (skip-syntax-backward "^[\"' ]" (line-beginning-position))
+       (skip-syntax-backward acm-backend-search-file-words-bound-regex (line-beginning-position))
        (point))
      (save-excursion
-       (skip-syntax-forward "^[\"' ]" (line-end-position))
+       (skip-syntax-forward acm-backend-search-file-words-bound-regex (line-end-position))
        (point))
      )))
 
