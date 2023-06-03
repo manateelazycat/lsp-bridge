@@ -255,6 +255,11 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'boolean
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-enable-completion-in-string nil
+  "Whether to enable completion in string, default is disable."
+  :type 'boolean
+  :group 'lsp-bridge)
+
 (defface lsp-bridge-font-lock-flash
   '((t (:inherit highlight)))
   "Face to flash the current line."
@@ -1119,6 +1124,8 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-not-in-string ()
   "Hide completion if cursor in string area."
   (or
+   ;; Allow completion in string.
+   lsp-bridge-enable-completion-in-string
    ;; Allow sdcv completion in string area
    acm-enable-search-sdcv-words
    ;; Allow volar popup completion menu in string.
