@@ -79,17 +79,7 @@ class SearchFileWords:
             return
 
         if buffer_name in self.search_content_dict:
-            content = self.search_content_dict[buffer_name]
-
-            start_line = start_pos['line']
-            start_char = start_pos['character']
-            end_line = end_pos['line']
-            end_char = end_pos['character']
-
-            start_pos = get_position(content, start_line, start_char)
-            end_pos = get_position(content, end_line, end_char)
-
-            content = content[:start_pos] + change_text + content[end_pos:]
+            content = rebuild_content_from_diff(self.search_content_dict[buffer_name], start_pos, end_pos, change_text)
         else:
             content = get_emacs_func_result('get-buffer-content', buffer_name)
 

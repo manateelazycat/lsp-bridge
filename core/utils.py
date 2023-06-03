@@ -439,6 +439,17 @@ def touch(path):
         with open(path, 'a'):
             os.utime(path)
 
+def rebuild_content_from_diff(content, start_pos, end_pos, change_text):
+    start_line = start_pos['line']
+    start_char = start_pos['character']
+    end_line = end_pos['line']
+    end_char = end_pos['character']
+
+    start_pos = get_position(content, start_line, start_char)
+    end_pos = get_position(content, end_line, end_char)
+
+    return content[:start_pos] + change_text + content[end_pos:]
+
 class MessageSender(Thread):
 
     def __init__(self, process: subprocess.Popen):
