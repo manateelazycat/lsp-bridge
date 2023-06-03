@@ -210,11 +210,6 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'boolean
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-search-words-rebuild-cache-idle 1
-  "The idle seconds to rebuild words cache."
-  :type 'float
-  :group 'lsp-bridge)
-
 (defcustom lsp-bridge-search-words-prohibit-file-extensions '("png" "jpg" "jpeg" "gif" "pdf")
   "The file extensions to prohibit search words."
   :type 'list
@@ -1312,6 +1307,9 @@ So we build this macro to restore postion after code format."
 
       ;; Complete other non-LSP backends.
       (lsp-bridge-complete-other-backends)
+
+      ;; Update search words backend.
+      (lsp-bridge-search-words-update)
       )))
 
 (defun lsp-bridge-complete-other-backends ()
@@ -1427,7 +1425,7 @@ So we build this macro to restore postion after code format."
                                (mapcar #'buffer-file-name (buffer-list)))))
       (lsp-bridge-call-async "search_file_words_index_files" files))))
 
-(defun lsp-bridge-search-words-update ()
+(defun lsp-bridge-search-words-update-file ()
   (if (lsp-bridge-is-remote-file)
       (progn
         (lsp-bridge-remote-save-buffer)
@@ -1445,16 +1443,20 @@ So we build this macro to restore postion after code format."
   "Rebuild words cache when idle."
   (if (lsp-bridge-is-remote-file)
       (progn
-        (lsp-bridge-search-words-update)
+        (lsp-bridge-search-words-update-file)
 
         (unless (eq last-command 'mwheel-scroll)
           (lsp-bridge-remote-send-func-request "search_file_words_rebuild_cache" (list))))
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       ;; Update file search words when idle.
-      (lsp-bridge-search-words-update)
+      (lsp-bridge-search-words-update-file)
 
       (unless (eq last-command 'mwheel-scroll)
         (lsp-bridge-call-async "search_file_words_rebuild_cache")))))
+
+(defun lsp-bridge-search-words-update ()
+  (unless (eq last-command 'mwheel-scroll)
+    (lsp-bridge-search-words-update-file)))
 
 (defun lsp-bridge-completion-ui-visible-p ()
   (acm-frame-visible-p acm-menu-frame))
@@ -1735,7 +1737,7 @@ So we build this macro to restore postion after code format."
     (post-command-hook lsp-bridge-monitor-post-command nil t)
     (after-save-hook lsp-bridge-monitor-after-save nil t)
     (kill-buffer-hook lsp-bridge-close-buffer-file nil t)
-    (find-file-hook lsp-bridge-search-words-update nil t)
+    (find-file-hook lsp-bridge-search-words-update-file nil t)
     (before-revert-hook lsp-bridge-close-buffer-file nil t)
     (post-self-insert-hook lsp-bridge-monitor-post-self-insert 90 t)
     ))
@@ -1798,8 +1800,6 @@ So we build this macro to restore postion after code format."
 
       (when lsp-bridge-enable-signature-help
         (acm-run-idle-func lsp-bridge-signature-help-timer lsp-bridge-signature-help-fetch-idle 'lsp-bridge-signature-help-fetch))
-      (when lsp-bridge-enable-search-words
-        (acm-run-idle-func lsp-bridge-search-words-timer lsp-bridge-search-words-rebuild-cache-idle 'lsp-bridge-search-words-rebuild-cache))
       (when lsp-bridge-enable-auto-format-code
         (acm-run-idle-func lsp-bridge-auto-format-code-timer lsp-bridge-auto-format-code-idle 'lsp-bridge-auto-format-code)))
 

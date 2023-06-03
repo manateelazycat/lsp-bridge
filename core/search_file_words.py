@@ -50,7 +50,16 @@ class SearchFileWords:
                 
         if add_queue:
             self.search_words_queue.put("search_words")
-            
+
+    def index_file(self, filepath, content):
+        self.search_files.add(filepath)
+        self.search_content_dict[filepath] = content
+
+        if filepath not in self.files:
+            self.files[filepath] = set()
+
+        self.search_words_queue.put("search_words")
+
     def load_file(self, filepath):
         try:
             with open(filepath) as f:
@@ -58,12 +67,7 @@ class SearchFileWords:
         except:
             return
 
-        self.search_files.add(filepath)
-        self.search_content_dict[filepath] = content
-
-        if filepath not in self.files:
-            self.files[filepath] = set()
-            self.search_words_queue.put("search_words")
+        self.index_file(filepath, content)
 
     def change_file(self, filepath, base64_string):
         import base64
@@ -73,13 +77,8 @@ class SearchFileWords:
             print('ignore non utf-8 file: %s' % filepath)
             return
 
-        self.search_files.add(filepath)
-        self.search_content_dict[filepath] = content
-        
-        if filepath not in self.files:
-            self.files[filepath] = set()
-            self.search_words_queue.put("search_words")
-    
+        self.index_file(filepath, content)
+
     def close_file(self, filepath):
         if filepath in self.files:
             if filepath in self.search_files:
@@ -99,7 +98,7 @@ class SearchFileWords:
             all_words = set()
             for file, words in self.files.items():
                 all_words = all_words | words
-                
+
             search_candidates = self.search_word(prefix, all_words)
             candidates = []
             if len(search_candidates) > 0:
