@@ -121,7 +121,7 @@ class LspBridge:
             self.build_file_action_function(name)
 
         search_backend_export_functions = {
-            "search_file_words": ["index_files", "change_file", "load_file", "close_file", "rebuild_cache", "search"],
+            "search_file_words": ["index_files", "change_buffer", "load_file", "close_file", "search"],
             "search_sdcv_words": ["search"],
             "search_list": ["search", "update"],
             "search_tailwind_keywords": ["search"],

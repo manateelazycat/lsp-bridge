@@ -71,15 +71,29 @@ class SearchFileWords:
 
         self.index_file(filepath, content)
 
-    def change_file(self, filepath, base64_string):
-        import base64
-        try:
-            content = base64.b64decode(base64_string).decode("utf-8")
-        except UnicodeDecodeError:
-            print('ignore non utf-8 file: %s' % filepath)
+    def change_buffer(self, buffer_name, start_pos, end_pos, change_text):
+        start_pos = epc_arg_transformer(start_pos)
+        end_pos = epc_arg_transformer(end_pos)
+
+        if len(start_pos) == 0 or len(end_pos) == 0:
             return
 
-        self.index_file(filepath, content)
+        if buffer_name in self.search_content_dict:
+            content = self.search_content_dict[buffer_name]
+
+            start_line = start_pos['line']
+            start_char = start_pos['character']
+            end_line = end_pos['line']
+            end_char = end_pos['character']
+
+            start_pos = get_position(content, start_line, start_char)
+            end_pos = get_position(content, end_line, end_char)
+
+            content = content[:start_pos] + change_text + content[end_pos:]
+        else:
+            content = get_emacs_func_result('get-buffer-content', buffer_name)
+
+        self.index_file(buffer_name, content)
 
     def close_file(self, filepath):
         if filepath in self.files:
@@ -132,10 +146,6 @@ class SearchFileWords:
         
         return candidates
             
-    def rebuild_cache(self):
-        if len(self.search_files) > 0:
-            self.search_words_queue.put("search_words")
-    
     def search_dispatcher(self):
         try:
             while True:

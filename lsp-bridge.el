@@ -1309,8 +1309,10 @@ So we build this macro to restore postion after code format."
       (lsp-bridge-complete-other-backends)
 
       ;; Update search words backend.
-      (lsp-bridge-search-words-update)
-      )))
+      (lsp-bridge-search-words-update
+       lsp-bridge--before-change-begin-pos
+       lsp-bridge--before-change-end-pos
+       (buffer-substring-no-properties begin end)))))
 
 (defun lsp-bridge-complete-other-backends ()
   (let ((this-command-string (format "%s" this-command)))
@@ -1425,38 +1427,18 @@ So we build this macro to restore postion after code format."
                                (mapcar #'buffer-file-name (buffer-list)))))
       (lsp-bridge-call-async "search_file_words_index_files" files))))
 
-(defun lsp-bridge-search-words-update-file ()
+(defun lsp-bridge-search-words-update (begin-pos end-pos change-text)
   (if (lsp-bridge-is-remote-file)
       (progn
         (lsp-bridge-remote-save-buffer)
         (lsp-bridge-remote-send-func-request "search_file_words_load_file" (list lsp-bridge-remote-file-path)))
-    (when (and buffer-file-name
-               (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-               (not (member (file-name-extension buffer-file-name)
-                            lsp-bridge-search-words-prohibit-file-extensions)))
-      (lsp-bridge-call-async "search_file_words_change_file"
-                             buffer-file-name
-                             (base64-encode-string (encode-coding-string (buffer-string) 'utf-8))
-                             ))))
-
-(defun lsp-bridge-search-words-rebuild-cache ()
-  "Rebuild words cache when idle."
-  (if (lsp-bridge-is-remote-file)
-      (progn
-        (lsp-bridge-search-words-update-file)
-
-        (unless (eq last-command 'mwheel-scroll)
-          (lsp-bridge-remote-send-func-request "search_file_words_rebuild_cache" (list))))
     (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-      ;; Update file search words when idle.
-      (lsp-bridge-search-words-update-file)
-
-      (unless (eq last-command 'mwheel-scroll)
-        (lsp-bridge-call-async "search_file_words_rebuild_cache")))))
-
-(defun lsp-bridge-search-words-update ()
-  (unless (eq last-command 'mwheel-scroll)
-    (lsp-bridge-search-words-update-file)))
+      (lsp-bridge-call-async "search_file_words_change_buffer"
+                             (buffer-name)
+                             begin-pos
+                             end-pos
+                             change-text
+                             ))))
 
 (defun lsp-bridge-completion-ui-visible-p ()
   (acm-frame-visible-p acm-menu-frame))
@@ -1737,7 +1719,6 @@ So we build this macro to restore postion after code format."
     (post-command-hook lsp-bridge-monitor-post-command nil t)
     (after-save-hook lsp-bridge-monitor-after-save nil t)
     (kill-buffer-hook lsp-bridge-close-buffer-file nil t)
-    (find-file-hook lsp-bridge-search-words-update-file nil t)
     (before-revert-hook lsp-bridge-close-buffer-file nil t)
     (post-self-insert-hook lsp-bridge-monitor-post-self-insert 90 t)
     ))
