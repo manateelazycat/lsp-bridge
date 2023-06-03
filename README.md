@@ -160,7 +160,7 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `lsp-bridge-user-langserver-dir`: the dir where user place langserver configuration file, if the configuration file name in the dir is the same as that in [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) , lsp-bridge will use the configuration file in this dir
 - `lsp-bridge-user-multiserver-dir`: the dir where user place multiserver configuration file, if the configuration file name in the dir is the same as that in [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) , lsp-bridge will use the configuration file in this dir
 - `lsp-bridge-symbols-enable-which-func`: Using lsp backend for `which-func`, disable by default
-- `lsp-bridge-enable-org-babel`: Using lsp backend for org babel, disable by default
+- `lsp-bridge-enable-org-babel`: Use lsp completion in org babel, enabled by default, if unable to complete, please make sure the string after begin_src exists in the `org-src-lang-modes` variable
 - `acm-frame-background-dark-color`: Menu background color in dark theme
 - `acm-frame-background-light-color`: Menu background color in light theme
 - `acm-markdown-render-font-height`: The font height of function documentation, default is 130
