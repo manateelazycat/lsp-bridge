@@ -33,7 +33,9 @@ class SearchFileWords:
         self.search_files = set()
         self.search_content_dict = {}
         self.search_words_thread = None
-        
+
+        (self.max_number, ) = get_emacs_vars(["acm-backend-search-file-words-max-number"])
+
         self.search_words_queue = queue.Queue()
         self.search_words_dispatcher_thread = threading.Thread(target=self.search_dispatcher)
         self.search_words_dispatcher_thread.start()
@@ -114,8 +116,7 @@ class SearchFileWords:
                 
                 candidates = list(map(lambda word: prefix[:-len(search_prefix)] + word, candidates))
                 
-
-            eval_in_emacs("lsp-bridge-search-backend--record-items", "file-words", candidates[:min(3, len(candidates))])
+            eval_in_emacs("lsp-bridge-search-backend--record-items", "file-words", candidates[:min(self.max_number, len(candidates))])
         except:
             logger.error(traceback.format_exc())
             

@@ -93,6 +93,11 @@
   :type 'integer
   :group 'acm-backend-search-file-words)
 
+(defcustom acm-backend-search-file-words-max-number 10
+  "Max number of candidate number."
+  :type 'integer
+  :group 'acm-backend-search-file-words)
+
 (defcustom acm-enable-search-file-words t
   "Popup search words completions when this option is turn on."
   :type 'boolean

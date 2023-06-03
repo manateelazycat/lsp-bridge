@@ -180,6 +180,7 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `acm-backend-elisp-candidate-min-length`: The minimum characters to trigger elisp completion, default is 0
 - `acm-backend-yas-candidate-min-length`: The minimum characters to trigger yasnippet completion, default is 0
 - `acm-backend-search-file-words-candidate-min-length`: The minimum characters to trigger search file words completion, default is 0
+- `acm-backend-search-file-words-max-number`: Search Words completion candidate limit, default is 10
 - `acm-backend-codeium-candidate-min-length`: The minimum characters to trigger codeium completion, default is 0
 - `acm-backend-lsp-enable-auto-import`: automatic insert import code, enable by default
 - `acm-backend-lsp-candidate-max-length`: Maximum length of LSP candidate, some language, such as Java, argument list is very long, you can increase the value of this option to see clear argument list
