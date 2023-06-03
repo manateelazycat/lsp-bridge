@@ -19,7 +19,7 @@
 ;;
 ;;; Code:
 
-(defcustom lsp-bridge-enable-org-babel t
+(defcustom lsp-bridge-enable-org-babel nil
   "Use `lsp-bridge' in org-babel, default is disable.")
 
 (defcustom lsp-bridge-org-babel-lang-list nil
