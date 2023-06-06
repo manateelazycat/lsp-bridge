@@ -711,12 +711,13 @@ So we build this macro to restore postion after code format."
   "Get lang server with project path, file path or file extension."
   (expand-file-name user-emacs-directory))
 
-(defun lsp-bridge--get-buffer-content-func (buffer-name)
+(defun lsp-bridge--get-buffer-content-func (buffer-name &optional no-org-babel)
   "Get buffer content for lsp. BUFFER-NAME is name eval from (buffer-name)."
   (when-let* ((buf (get-buffer buffer-name)))
     (if (and lsp-bridge-enable-org-babel
-             (eq major-mode 'org-mode))
-        (and lsp-bridge-org-babel--info-cache (org-element-property :value lsp-bridge-org-babel--info-cache))
+             (eq major-mode 'org-mode) (not no-org-babel))
+        (and lsp-bridge-org-babel--info-cache
+             (org-element-property :value lsp-bridge-org-babel--info-cache))
       (with-current-buffer buf
         (buffer-substring-no-properties (point-min) (point-max))))))
 

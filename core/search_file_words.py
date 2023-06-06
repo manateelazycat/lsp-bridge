@@ -81,7 +81,7 @@ class SearchFileWords:
         if buffer_name in self.search_content_dict:
             content = rebuild_content_from_diff(self.search_content_dict[buffer_name], start_pos, end_pos, change_text)
         else:
-            content = get_emacs_func_result('get-buffer-content', buffer_name)
+            content = get_emacs_func_result('get-buffer-content', buffer_name, True)
 
         self.index_file(buffer_name, content)
 
