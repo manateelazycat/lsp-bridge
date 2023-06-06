@@ -171,6 +171,7 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `acm-enable-codeium`: Enable Codeium support, when enable need execute `lsp-bridge-install-update-codeium` command to install Codeium, then execute `lsp-bridge-codeium-auth` command to get auth token and execute `lsp-bridge-codeium-input-auth-token` command to get API Key, and it can be used.
 - `acm-enable-search-file-words`: Whether the complete menu display the word of the file, enable by default
 - `acm-enable-quick-access`: Whether to display an index after the icon, quickly select candidate words through numeric symbols (when the subsequent completion is a number or the cursor is before a number, the number selection candidate word function is not available), you can also use Alt + Number to quickly select candidate words, default is off
+- `acm-quick-access-use-number-select`: Whether to use number keys for quick selection of candidate words, default is off, turning on this option may sometimes interfere with number input or accidentally select candidate words
 - `acm-enable-yas`: yasnippet completion, enable by default
 - `acm-enable-citre`: Integration with [citre(ctags)](https://github.com/universal-ctags/citre). Enable this to add citre (ctags) backend (disabled by default)
 - `acm-doc-frame-max-lines`: Max line number of help documentation, default is 20

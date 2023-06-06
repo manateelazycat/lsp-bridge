@@ -171,6 +171,7 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 - `acm-enable-codeium`: 是否打开 Codeium 补全支持， 打开后需要运行命令 `lsp-bridge-install-update-codeium` 来安装 Codeium， 再运行命令 `lsp-bridge-codeium-auth` 来获取 auth token 再运行命令 `lsp-bridge-codeium-input-auth-token` 获取 API Key 后就可以使用了。
 - `acm-enable-search-file-words`: 补全菜单是否显示打开文件的单词， 默认打开
 - `acm-enable-quick-access`: 是否在图标后面显示索引， 通过数字符号快速选择候选词 (后续补全是数字或者光标前是数字时， 数字选择候选词功能不可用), 也可以通过 Alt + Number 来快速选择候选词， 默认关闭
+- `acm-quick-access-use-number-select`: 是否用数字键快速选择候选词， 默认关闭， 打开这个选项会导致有时候干扰数字输入或误选候选词
 - `acm-enable-yas`: yasnippet 补全， 默认打开
 - `acm-enable-citre`: [citre(ctags)](https://github.com/universal-ctags/citre) 补全， 默认关闭
 - `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是 20
