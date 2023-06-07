@@ -77,28 +77,29 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 
 ## Keymap
 
-| Key          | Command                   | Description                                                                                           |
-|:-------------|:--------------------------|:------------------------------------------------------------------------------------------------------|
-| Alt + n      | acm-select-next           | Select next candidate                                                                                 |
-| Down         | acm-select-next           | Select next candidate                                                                                 |
-| Alt + p      | acm-select-prev           | Select previous candidate                                                                             |
-| Up           | acm-select-prev           | Select previous candidate                                                                             |
-| Alt + ,      | acm-select-last           | Select last candidate                                                                                 |
-| Alt + .      | acm-select-first          | Select first candidate                                                                                |
-| Ctrl + v     | acm-select-next-page      | Select next page candidate                                                                            |
-| Alt + v      | acm-select-prev-page      | Select previous page candidate                                                                        |
-| Ctrl + m     | acm-complete              | Complete completion                                                                                   |
-| Return       | acm-complete              | Complete completion                                                                                   |
-| Tab          | acm-complete              | Complete completion                                                                                   |
-| Alt + h      | acm-complete              | Complete completion                                                                                   |
-| Alt + H      | acm-insert-common         | Insert common part of candidates                                                                      |
-| Alt + u      | acm-filter                | Perform secondary filtering on candidate words, improving the selection efficiency of candidate words |
-| Alt + d      | acm-doc-toggle            | Enable or disable candidate documentation                                                             |
-| Alt + j      | acm-doc-scroll-up         | Scroll up candidate documentation                                                                     |
-| Alt + k      | acm-doc-scroll-down       | Scroll down candidate documentation                                                                   |
-| Alt + l      | acm-hide                  | Hide completion menu                                                                                  |
-| Ctrl + g     | acm-hide                  | Hide completion menu                                                                                  |
-| Alt + Number | acm-complete-quick-access | Selecting candidate quickly, you need enable `acm-enable-quick-access` first                          |
+| Key          | Command                   | Description                                                                                                                   |
+|:-------------|:--------------------------|:------------------------------------------------------------------------------------------------------------------------------|
+| Alt + n      | acm-select-next           | Select next candidate                                                                                                         |
+| Down         | acm-select-next           | Select next candidate                                                                                                         |
+| Alt + p      | acm-select-prev           | Select previous candidate                                                                                                     |
+| Up           | acm-select-prev           | Select previous candidate                                                                                                     |
+| Alt + ,      | acm-select-last           | Select last candidate                                                                                                         |
+| Alt + .      | acm-select-first          | Select first candidate                                                                                                        |
+| Ctrl + v     | acm-select-next-page      | Select next page candidate                                                                                                    |
+| Alt + v      | acm-select-prev-page      | Select previous page candidate                                                                                                |
+| Ctrl + m     | acm-complete              | Complete completion                                                                                                           |
+| Return       | acm-complete              | Complete completion                                                                                                           |
+| Tab          | acm-complete              | Complete completion                                                                                                           |
+| Alt + h      | acm-complete              | Complete completion                                                                                                           |
+| Alt + H      | acm-insert-common         | Insert common part of candidates                                                                                              |
+| Alt + u      | acm-filter                | Perform secondary filtering on candidate words, improving the selection efficiency of candidate words                         |
+| Alt + d      | acm-doc-toggle            | Enable or disable candidate documentation                                                                                     |
+| Alt + j      | acm-doc-scroll-up         | Scroll up candidate documentation                                                                                             |
+| Alt + k      | acm-doc-scroll-down       | Scroll down candidate documentation                                                                                           |
+| Alt + l      | acm-hide                  | Hide completion menu                                                                                                          |
+| Ctrl + g     | acm-hide                  | Hide completion menu                                                                                                          |
+| Alt + Number | acm-complete-quick-access | Selecting candidate quickly, need to enable `acm-enable-quick-access` first                                                   |
+| Number       | acm-complete-quick-access | Selecting candidate (even more) quickly, need both `acm-enable-quick-access` and `acm-quick-access-use-number-select` enabled |
 
 ## Commands
 
@@ -170,7 +171,7 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `acm-enable-tabnine`: Enable tabnine support， enable by default， when enable need execute `lsp-bridge-install-tabnine` command to install TabNine, and it can be used. TabNine will consume huge CPUs, causing your entire computer to be slow. If the computer performance is not good, it is not recommended to enable this option
 - `acm-enable-codeium`: Enable Codeium support, when enable need execute `lsp-bridge-install-update-codeium` command to install Codeium, then execute `lsp-bridge-codeium-auth` command to get auth token and execute `lsp-bridge-codeium-input-auth-token` command to get API Key, and it can be used.
 - `acm-enable-search-file-words`: Whether the complete menu display the word of the file, enable by default
-- `acm-enable-quick-access`: Whether to display an index after the icon, quickly select candidate words through numeric symbols (when the subsequent completion is a number or the cursor is before a number, the number selection candidate word function is not available), you can also use Alt + Number to quickly select candidate words, default is off
+- `acm-enable-quick-access`: Whether to display an index after the icon, quickly select candidate words using Alt + Number, default is off
 - `acm-quick-access-use-number-select`: Whether to use number keys for quick selection of candidate words, default is off, turning on this option may sometimes interfere with number input or accidentally select candidate words
 - `acm-enable-yas`: yasnippet completion, enable by default
 - `acm-enable-citre`: Integration with [citre(ctags)](https://github.com/universal-ctags/citre). Enable this to add citre (ctags) backend (disabled by default)
