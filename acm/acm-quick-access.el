@@ -45,12 +45,11 @@ Enable this option will cause interfering digital insertion sometimes."
     "M"))
 
 (defun acm-keymap--bind-quick-access (keymap)
-  (when acm-enable-quick-access
-    (let ((modifier (acm-keymap--quick-access-modifier)))
-      (dolist (key acm-quick-access-keys)
-        (let ((key-seq (acm-keymap--kbd-quick-access modifier key)))
-          (unless (lookup-key keymap key-seq)
-            (define-key keymap key-seq #'acm-complete-quick-access)))))))
+  (let ((modifier (acm-keymap--quick-access-modifier)))
+    (dolist (key acm-quick-access-keys)
+      (let ((key-seq (acm-keymap--kbd-quick-access modifier key)))
+        (unless (lookup-key keymap key-seq)
+          (define-key keymap key-seq #'acm-complete-quick-access))))))
 
 (defun acm-keymap--kbd-quick-access (modifier key)
   (kbd (format "%s-%s" modifier key)))
