@@ -349,6 +349,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Enable this option to output performance data to ~/lsp-bridge.prof."
   :type 'boolean)
 
+(defcustom lsp-bridge-enable-completion-in-minibuffer nil
+  "Enable this option to completion in minibuffer."
+  :type 'boolean)
+
 (defcustom lsp-bridge-multi-lang-server-extension-list
   '(
     (("vue")        . "volar_emmet")
@@ -1707,7 +1711,8 @@ So we build this macro to restore postion after code format."
 (add-hook 'post-command-hook 'lsp-bridge-monitor-window-buffer-change)
 
 (defun lsp-bridge-enable-in-minibuffer ()
-  (when (where-is-internal #'completion-at-point (list (current-local-map)))
+  (when (and lsp-bridge-enable-completion-in-minibuffer
+             (where-is-internal #'completion-at-point (list (current-local-map))))
     (lsp-bridge-mode 1)
     ))
 
