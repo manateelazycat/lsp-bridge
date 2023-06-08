@@ -1,5 +1,5 @@
-<p align=“left”>
-<a href=“https://github.com/manateelazycat/lsp-bridge/actions/workflows/test.yml”><img src=“https://github.com/manateelazycat/lsp-bridge/actions/workflows/test.yml/badge.svg”/></a> <a href =“https://github.com/manateelazycat/lsp-bridge/blob/master/README.zh-CN.md”><img src=“https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-555555.svg”/></a>
+<p align=“left">
+<a href=“https://github.com/manateelazycat/lsp-bridge/actions/workflows/test.yml"><img src=“https://github.com/manateelazycat/lsp-bridge/actions/workflows/test.yml/badge.svg"/></a> <a href =“https://github.com/manateelazycat/lsp-bridge/blob/master/README.zh-CN.md"><img src=“https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-555555.svg"/></a>
 
 # lsp-bridge
 
@@ -7,13 +7,13 @@ The goal of lsp-bridge is to implement the fastest LSP client in the Emacs ecosy
 
 Using Python multithreading techniques, lsp-bridge builds a high-speed cache between Emacs and the LSP server, ensuring that Emacs never gets stuck while providing a smooth and seamless code completion experience.
 
-<img src=“./screenshot.png”>
+<img src="./screenshot.png">
 
 ### The video explains the principle of lsp-bridge
 
-| <a href=“https://emacsconf.org/2022/talks/lspbridge/”>EmacsConf 2022 talk page</a> |
+| <a href="https://emacsconf.org/2022/talks/lspbridge/">EmacsConf 2022 talk page</a> |
 | :--------:
-| [<img src=“https://i.ytimg.com/vi/vLdqcYafY8w/hqdefault.jpg” width=600>](https://www.youtube.com/watch?v=vLdqcYafY8w) |
+| [<img src="https://i.ytimg.com/vi/vLdqcYafY8w/hqdefault.jpg" width=600>](https://www.youtube.com/watch?v=vLdqcYafY8w) |
 
 ## Installation
 
@@ -33,7 +33,7 @@ Using Python multithreading techniques, lsp-bridge builds a high-speed cache bet
 5. Add the following code to your configuration file ~/.emacs:
 
 ```elisp
-(add-to-list ‘load-path “<path-to-lsp-bridge>”)
+(add-to-list ‘load-path "<path-to-lsp-bridge>")
 
 (require ’yasnippet)
 (yas-global-mode 1)
@@ -120,7 +120,7 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `lsp-bridge-diagnostic-list`: List all diagnostic information
 - `lsp-bridge-diagnostic-copy`: Copy the current diagnostic information to the clipboard
 - `lsp-bridge-diagnostic-ignore`: Insert comment to ignore the current diagnosis
-- `lsp-bridge-code-action`: Popup code action menu, you can pass special `actin-kind` to fix, `action-kind` can use one of “quickfix”, “refactor”, “refactor.extract”, “refactor.inline”, “refactor.rewrite”, “source”, “source.organizeImports”, “source.fixAll”
+- `lsp-bridge-code-action`: Popup code action menu, you can pass special `actin-kind` to fix, `action-kind` can use one of "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports", "source.fixAll"
 - `lsp-bridge-workspace-list-symbols`: List all symbols in workspace and jump to the symbol definition
 - `lsp-bridge-signature-help-fetch`: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)
 - `lsp-bridge-popup-complete-menu`: Manually popup the completion menu, you only need this command when turn on option `lsp-bride-complete-manually`
@@ -157,7 +157,7 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `lsp-bridge-signature-show-function`: The function used for displaying signature info, default show message in minibuffer, set `lsp-bridge-signature-posframe` to show signature info in frame
 - `lsp-bridge-completion-popup-predicates`: the predicate function for completion menu, completion menu popup after all the functions pass
 - `lsp-bridge-completion-stop-commands`: completion menu will not popup if these commands are executed
-- `lsp-bridge-completion-hide-characters`: The default value is `‘(“:” “;” “(” “)” “[” “]” “{” “}” “, ” “\”“)`, the completion menu does not pop up when the cursor is behind these characters. You can customize this option to remove this restriction, or call the `lsp-bridge-popup-complete-menu` command to force the menu to pop up
+- `lsp-bridge-completion-hide-characters`: The default value is `‘(":" ";" "(" ")" "[" "]" "{" "}" ", " "\"")`, the completion menu does not pop up when the cursor is behind these characters. You can customize this option to remove this restriction, or call the `lsp-bridge-popup-complete-menu` command to force the menu to pop up
 - `lsp-bridge-user-langserver-dir`: the dir where user place langserver configuration file, if the configuration file name in the dir is the same as that in [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) , lsp-bridge will use the configuration file in this dir
 - `lsp-bridge-user-multiserver-dir`: the dir where user place multiserver configuration file, if the configuration file name in the dir is the same as that in [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) , lsp-bridge will use the configuration file in this dir
 - `lsp-bridge-symbols-enable-which-func`: Using lsp backend for `which-func`, disable by default
@@ -214,13 +214,13 @@ For example, we can enable the Deno LSP server for Deno scripts with the followi
       (lambda (project-path filepath)
         ;; If typescript file include deno.land url, then use Deno LSP server.
         (save-excursion
-          (when (string-equal (file-name-extension filepath) ”ts“)
+          (when (string-equal (file-name-extension filepath) "ts")
             (dolist (buf (buffer-list))
               (when (string-equal (buffer-file-name buf) filepath)
                 (with-current-buffer buf
                   (goto-char (point-min))
-                  (when (search-forward-regexp (regexp-quote ”from \“https://deno.land”) nil t)
-                    (return “deno”)))))))))
+                  (when (search-forward-regexp (regexp-quote "from \"https://deno.land") nil t)
+                    (return "deno")))))))))
 ```
 
 ## Customize language server configuration file
@@ -241,7 +241,7 @@ We can set the value of lsp-bridge-user-langserver-dir or lsp-bridge-user-multis
 ## Add support for new language?
 
 1. Create a configuration file in the lsp-bridge/langserver directory. For example, `pyright.json` is the configuration file for the pyright server (use `pyright_windows.json` for Windows and `pyright_darwin.json` for macOS).
-2. Add `(mode . server_name)` to the `lsp-bridge-single-lang-server-mode-list` option in the lsp-bridge.el file, for example, `(python-mode . “pyright”)`.
+2. Add `(mode . server_name)` to the `lsp-bridge-single-lang-server-mode-list` option in the lsp-bridge.el file, for example, `(python-mode . "pyright")`.
 3. Add a new mode-hook to the `lsp-bridge-default-mode-hooks` option in the lsp-bridge.el file.
 4. Add a new indentation variable to the `lsp-bridge-formatting-indent-alist` option in the lsp-bridge.el file.
 
@@ -287,7 +287,7 @@ You need to install the LSP server corresponding to each programming language, t
 | [Phpactor](https://github.com/phpactor/phpactor)                                                   | PHP                                     | lsp-brige-php-lsp-server set to `phpactor`                                                                                                                                                                                                                         |
 | [yaml-language-server](https://github.com/redhat-developer/yaml-language-server)                   | Yaml                                    | `npm install -g yaml-language-server`                                                                                                                                                                                                                              |
 | [zls](https://github.com/zigtools/zls)                                                             | Zig                                     | Execute `zls config` to generate configuration for zls. see [Configuration Options](https://github.com/zigtools/zls#configuration-options)                                                                                                                         |
-| [groovy-language-server](https://github.com/GroovyLanguageServer/groovy-language-server)           | Groovy                                  | Create a script “groovy-language-server” in PATH, with `$JAVA_HOME/bin/java -jar <path>/groovy-language-server-all.jar`                                                                                                                                            |
+| [groovy-language-server](https://github.com/GroovyLanguageServer/groovy-language-server)           | Groovy                                  | Create a script "groovy-language-server" in PATH, with `$JAVA_HOME/bin/java -jar <path>/groovy-language-server-all.jar`                                                                                                                                            |
 | [docker-language-server](https://github.com/rcjsuen/dockerfile-language-server-nodejs)             | Dockerfiles                             |                                                                                                                                                                                                                                                                    |
 | [serve-d](https://github.com/Pure-D/serve-d)                                                       | D                                       | serve-d does not support single file mode, please init .git repository under project root at first or custom `lsp-bridge-get-project-path-by-filepath` function                                                                                                    |
 | [fortls](https://github.com/gnikit/fortls)                                                         | Fortran                                 |                                                                                                                                                                                                                                                                    |
@@ -303,8 +303,8 @@ You need to install the LSP server corresponding to each programming language, t
 | [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)                                            | Swift                                   | The SourceKit-LSP server is included with the Swift toolchain.                                                                                                                                                                                                     |
 | [omnisharp-mono](https://github.com/OmniSharp/omnisharp-roslyn)                                    | C#                                      | OmniSharp is a .NET development platform based on Roslyn workspaces. use `M-x lsp-bridge-install-omnisharp` to install it. `lsp-bridge-csharp-lsp-server` set to `omnisharp-mono`                                                                                  |
 | [omnisharp-dotnet](https://github.com/OmniSharp/omnisharp-roslyn)                                  | C#                                      | OmniSharp is a .NET development platform based on Roslyn workspaces. use `M-x lsp-bridge-install-omnisharp` to install it. `lsp-bridge-csharp-lsp-server` set to `omnisharp-dotnet` (6.0)                                                                          |
-| [deno](https://deno.land)                                                                          | Deno                                    | Deno runtime use TypeScript as source code, you need customize option `lsp-bridge-get-single-lang-server-by-project` that return result “deno” when `project-path` match Deno project.                                                                             |
-| [ansible-language-server](https://github.com/ansible/ansible-language-server)                      | Ansible                                 | Ansible uses YAML as source code, you’ll need to customize `lsp-bridge-get-single-lang-server-by-project` to return “ansible-language-server”.                                                                                                                     |
+| [deno](https://deno.land)                                                                          | Deno                                    | Deno runtime use TypeScript as source code, you need customize option `lsp-bridge-get-single-lang-server-by-project` that return result "deno" when `project-path` match Deno project.                                                                             |
+| [ansible-language-server](https://github.com/ansible/ansible-language-server)                      | Ansible                                 | Ansible uses YAML as source code, you’ll need to customize `lsp-bridge-get-single-lang-server-by-project` to return "ansible-language-server".                                                                                                                     |
 | [astro](https://github.com/withastro/language-tools/tree/main/packages/language-server)            | Astro                                   | `npm i -g @astrojs/language-server`                                                                                                                                                                                                                                |
 | [qmlls](https://github.com/qt/qtdeclarative/tree/dev/tools/qmlls)                                  | QML                                     | The `qmlls` binary should be part of the normal Qt packages since Qt 6.3.0 Ensure that the directory of `qmlls` binary file is in PATH                                                                                                                             |
 | [kotlin-language-server](https://github.com/fwcd/kotlin-language-server)                           | Kotlin                                  |                                                                                                                                                                                                                                                                    |
@@ -318,9 +318,9 @@ You need to install the LSP server corresponding to each programming language, t
 
 The following is the framework of lsp-bridge:
 
-<img src=“./framework.png”>
+<img src="./framework.png">
 
-<img src=“./remote_file_framework.png”>
+<img src="./remote_file_framework.png">
 
 The following is the directory structure of the lsp-bridge project:
 
@@ -383,6 +383,6 @@ If the problem still exists, please report it [here](https://github.com/manateel
 
 ## Contributor
 
-<a href = “https://github.com/manateelazycat/lsp-bridge/graphs/contributors”>
-  <img src = “https://contrib.rocks/image?repo=manateelazycat/lsp-bridge”/>
+<a href = "https://github.com/manateelazycat/lsp-bridge/graphs/contributors">
+  <img src = "https://contrib.rocks/image?repo=manateelazycat/lsp-bridge"/>
 </a>
