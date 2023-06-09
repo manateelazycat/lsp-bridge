@@ -137,6 +137,7 @@ class Codeium:
 
         if "completionItems" in data:
             language = editor_language.split("-")[0]
+            language = language.replace("emacs", "elisp")
 
             for completion in data["completionItems"][: self.max_num_results - 1]:
                 label = completion["completion"]["text"]
