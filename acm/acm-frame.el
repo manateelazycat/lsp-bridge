@@ -323,5 +323,10 @@ influence of C1 on the result."
                             frame-x
                             (- frame-y frame-height (line-pixel-height))))))
 
+(defun acm-frame-can-display-p ()
+  (not (or noninteractive
+           emacs-basic-display
+           (not (display-graphic-p)))))
+
 (provide 'acm-frame)
 ;;; acm-frame.el ends here

@@ -216,10 +216,7 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
       (setq-local lsp-bridge-diagnostic-message diagnostic-message))
 
     (cond
-     ((not (or noninteractive
-               emacs-basic-display
-               (not (display-graphic-p))))
-
+     ((acm-frame-can-display-p)
       (acm-frame-new lsp-bridge-diagnostic-frame
                      lsp-bridge-diagnostic-buffer
                      "lsp bridge diagnostic frame"))
