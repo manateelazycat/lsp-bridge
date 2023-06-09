@@ -379,7 +379,10 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
      (action
       (lsp-bridge-code-action--fix-do action))
      ;; Popup menu if `lsp-bridge-code-action-enable-popup-menu' option is non-nil.
-     ((and lsp-bridge-code-action-enable-popup-menu (posframe-workable-p))
+     ((and lsp-bridge-code-action-enable-popup-menu
+           (not (or noninteractive
+                emacs-basic-display
+                (not (display-graphic-p)))))
       (lsp-bridge-code-action-popup-menu menu-items default-action))
      (t
       ;; Choose action from minibuffer.

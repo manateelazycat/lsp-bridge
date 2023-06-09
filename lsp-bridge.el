@@ -12,7 +12,7 @@
 ;; URL: https://github.com/manateelazycat/lsp-bridge
 ;; Keywords:
 ;; Compatibility: emacs-version >= 28
-;; Package-Requires: ((emacs "28") (posframe "1.1.7") (markdown-mode "2.6"))
+;; Package-Requires: ((emacs "28") (markdown-mode "2.6"))
 ;;
 ;; Features that might be required by this library:
 ;;
@@ -76,7 +76,6 @@
 (require 'map)
 (require 'seq)
 (require 'subr-x)
-(require 'posframe)
 (require 'markdown-mode)
 (require 'diff)
 
@@ -170,7 +169,7 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'boolean
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-lookup-doc-tooltip " *lsp-bridge-hover*"
+(defcustom lsp-bridge-popup-documentation-buffer " *lsp-bridge-hover*"
   "Buffer for display hover information."
   :type 'string
   :group 'lsp-bridge)
@@ -1619,42 +1618,51 @@ So we build this macro to restore postion after code format."
   ;; Flash define line.
   (lsp-bridge-flash-line))
 
+(defvar lsp-bridge-popup-documentation-frame nil)
+
 (defun lsp-bridge-popup-documentation-scroll-up (&optional arg)
   (interactive)
-  (posframe-funcall lsp-bridge-lookup-doc-tooltip
-                    #'scroll-up-command arg))
+  (when (frame-live-p lsp-bridge-popup-documentation-frame)
+    (with-selected-frame lsp-bridge-popup-documentation-frame
+      (apply #'scroll-up-command arg))))
 
 (defun lsp-bridge-popup-documentation-scroll-down (&optional arg)
   (interactive)
-  (posframe-funcall lsp-bridge-lookup-doc-tooltip
-                    #'scroll-down-command arg))
+  (when (frame-live-p lsp-bridge-popup-documentation-frame)
+    (with-selected-frame lsp-bridge-popup-documentation-frame
+      (apply #'scroll-down-command arg))))
 
 (defun lsp-bridge-popup-documentation--show (value)
-  (with-current-buffer (get-buffer-create lsp-bridge-lookup-doc-tooltip)
+  (with-current-buffer (get-buffer-create lsp-bridge-popup-documentation-buffer)
     (read-only-mode -1)
     (erase-buffer)
     (insert value)
     (acm-markdown-render-content))
-  (when (posframe-workable-p)
-    (posframe-show lsp-bridge-lookup-doc-tooltip
-                   :position (point)
-                   :internal-border-width lsp-bridge-lookup-doc-tooltip-border-width
-                   :background-color (acm-frame-background-color)
-                   :max-width lsp-bridge-lookup-doc-tooltip-max-width
-                   :max-height lsp-bridge-lookup-doc-tooltip-max-height)))
+
+  (when (and (frame-live-p lsp-bridge-popup-documentation-frame)
+             (not (eq (frame-parent lsp-bridge-popup-documentation-frame) (selected-frame))))
+    (acm-frame-delete-frame lsp-bridge-popup-documentation-frame))
+
+  (acm-frame-create-frame-if-not-exist lsp-bridge-popup-documentation-frame
+                                       lsp-bridge-popup-documentation-buffer
+                                       "lsp bridge popup documentation frame"
+                                       1
+                                       t)
+
+  (acm-frame-set-frame-max-size lsp-bridge-popup-documentation-frame
+                                lsp-bridge-lookup-doc-tooltip-max-width
+                                lsp-bridge-lookup-doc-tooltip-max-height)
+
+  (let ((pos (acm-frame-get-popup-position (point) 1)))
+    (acm-frame-set-frame-position lsp-bridge-popup-documentation-frame (car pos) (cdr pos)))
+
+  (acm-frame-adjust-frame-pos lsp-bridge-popup-documentation-frame))
 
 (defun lsp-bridge-hide-doc-tooltip ()
-  (posframe-hide lsp-bridge-lookup-doc-tooltip))
-
-(defvar lsp-bridge-signature-posframe-params
-  (list :poshandler #'posframe-poshandler-point-bottom-left-corner-upward
-        :internal-border-width 20
-        :max-width 60
-        :max-height 12)
-  "Params for signature and `posframe-show'.")
+  (acm-frame-hide-frame lsp-bridge-popup-documentation-frame))
 
 (defcustom lsp-bridge-signature-show-function 'message
-  "Function to render signature help. Set to `lsp-bridge-signature-posframe' to use the posframe."
+  "Function to render signature help. Set to `lsp-bridge-signature-show-with-frame' to use the popup frame."
   :type 'function
   :group 'lsp-bridge)
 
@@ -1663,22 +1671,37 @@ So we build this macro to restore postion after code format."
   :type 'string
   :group 'lsp-bridge)
 
-(defun lsp-bridge-hide-signature-tooltip ()
-  (posframe-hide lsp-bridge-signature-tooltip))
+(defvar lsp-bridge-signature-frame nil)
 
-(defun lsp-bridge-signature-posframe (str)
-  "Use posframe to show the STR signatureHelp string."
+(defun lsp-bridge-hide-signature-tooltip ()
+  (acm-frame-hide-frame lsp-bridge-signature-frame))
+
+(defun lsp-bridge-signature-show-with-frame (str)
+  "Use popup frame to show the STR signatureHelp string."
   (if (not (string-empty-p str))
-      (apply #'posframe-show
-             (with-current-buffer (get-buffer-create lsp-bridge-signature-tooltip)
-               (erase-buffer)
-               (insert str)
-               (visual-line-mode 1)
-               (current-buffer))
-             (append
-              lsp-bridge-signature-posframe-params
-              (list :position (point)
-                    :background-color (acm-frame-background-color))))
+      (progn
+        (with-current-buffer (get-buffer-create lsp-bridge-signature-tooltip)
+          (erase-buffer)
+          (insert str)
+          (visual-line-mode 1)
+          (current-buffer))
+
+        (when (and (frame-live-p lsp-bridge-signature-frame)
+                   (not (eq (frame-parent lsp-bridge-signature-frame) (selected-frame))))
+          (acm-frame-delete-frame lsp-bridge-signature-frame))
+
+        (acm-frame-create-frame-if-not-exist lsp-bridge-signature-frame
+                                             lsp-bridge-signature-tooltip
+                                             "lsp bridge signature frame"
+                                             1
+                                             t)
+
+        (acm-frame-set-frame-max-size lsp-bridge-signature-frame nil nil)
+
+        (let ((pos (acm-frame-get-popup-position (point) 1)))
+          (acm-frame-set-frame-position lsp-bridge-signature-frame (car pos) (cdr pos)))
+
+        (acm-frame-adjust-frame-pos lsp-bridge-signature-frame))
     (lsp-bridge-hide-signature-tooltip)))
 
 (defun lsp-bridge-signature-help--update (help-infos help-index)

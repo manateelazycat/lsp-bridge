@@ -110,7 +110,7 @@
   "Face hint diagnostic."
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-diagnostic-tooltip " *lsp-bridge-diagnostic*"
+(defcustom lsp-bridge-diagnostic-buffer " *lsp-bridge-diagnostic*"
   "Buffer for display diagnostic information."
   :type 'string
   :group 'lsp-bridge)
@@ -158,7 +158,7 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
 (autoload 'lsp-bridge--with-file-buffer "lsp-bridge")
 
 (defun lsp-bridge-diagnostic-hide-tooltip ()
-  (posframe-hide lsp-bridge-diagnostic-tooltip))
+  (acm-frame-hide-frame lsp-bridge-diagnostic-frame))
 
 (defun lsp-bridge-diagnostic-hide-overlays ()
   (when lsp-bridge-diagnostic-overlays
@@ -169,36 +169,38 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
 
 (defun lsp-bridge-diagnostic--render (filepath filehost diagnostics)
   (lsp-bridge--with-file-buffer filepath filehost
-    (lsp-bridge-diagnostic-hide-overlays)
+                                (lsp-bridge-diagnostic-hide-overlays)
 
-    (let ((diagnostic-index 0)
-          (diagnostic-number (length diagnostics)))
-      (dolist (diagnostic diagnostics)
-        (let ((severity (plist-get diagnostic :severity)))
-          (unless (member severity lsp-bridge-diagnostic-hide-severities)
-            (let* ((diagnostic-start (acm-backend-lsp-position-to-point (plist-get (plist-get diagnostic :range) :start)))
-                   (diagnostic-end (acm-backend-lsp-position-to-point (plist-get (plist-get diagnostic :range) :end)))
-                   (overlay (if (eq diagnostic-start diagnostic-end)
-                                ;; Adjust diagnostic end position if start and end is same position.
-                                (make-overlay diagnostic-start (1+ diagnostic-start))
-                              (make-overlay diagnostic-start diagnostic-end)))
-                   (message (plist-get diagnostic :message))
-                   (overlay-face (cl-case severity
-                                   (1 'lsp-bridge-diagnostics-error-face)
-                                   (2 'lsp-bridge-diagnostics-warning-face)
-                                   (3 'lsp-bridge-diagnostics-info-face)
-                                   (4 'lsp-bridge-diagnostics-hint-face))))
-              (overlay-put overlay 'face overlay-face)
-              (overlay-put overlay 'message message)
-              (overlay-put overlay
-                           'display-message
-                           (if (> diagnostic-number 1)
-                               (format "[%s:%s] %s" (1+ diagnostic-index) diagnostic-number message)
-                             message))
-              (push overlay lsp-bridge-diagnostic-overlays))))
+                                (let ((diagnostic-index 0)
+                                      (diagnostic-number (length diagnostics)))
+                                  (dolist (diagnostic diagnostics)
+                                    (let ((severity (plist-get diagnostic :severity)))
+                                      (unless (member severity lsp-bridge-diagnostic-hide-severities)
+                                        (let* ((diagnostic-start (acm-backend-lsp-position-to-point (plist-get (plist-get diagnostic :range) :start)))
+                                               (diagnostic-end (acm-backend-lsp-position-to-point (plist-get (plist-get diagnostic :range) :end)))
+                                               (overlay (if (eq diagnostic-start diagnostic-end)
+                                                            ;; Adjust diagnostic end position if start and end is same position.
+                                                            (make-overlay diagnostic-start (1+ diagnostic-start))
+                                                          (make-overlay diagnostic-start diagnostic-end)))
+                                               (message (plist-get diagnostic :message))
+                                               (overlay-face (cl-case severity
+                                                               (1 'lsp-bridge-diagnostics-error-face)
+                                                               (2 'lsp-bridge-diagnostics-warning-face)
+                                                               (3 'lsp-bridge-diagnostics-info-face)
+                                                               (4 'lsp-bridge-diagnostics-hint-face))))
+                                          (overlay-put overlay 'face overlay-face)
+                                          (overlay-put overlay 'message message)
+                                          (overlay-put overlay
+                                                       'display-message
+                                                       (if (> diagnostic-number 1)
+                                                           (format "[%s:%s] %s" (1+ diagnostic-index) diagnostic-number message)
+                                                         message))
+                                          (push overlay lsp-bridge-diagnostic-overlays))))
 
-        (setq diagnostic-index (1+ diagnostic-index))))
-    (setq-local lsp-bridge-diagnostic-overlays (reverse lsp-bridge-diagnostic-overlays))))
+                                    (setq diagnostic-index (1+ diagnostic-index))))
+                                (setq-local lsp-bridge-diagnostic-overlays (reverse lsp-bridge-diagnostic-overlays))))
+
+(defvar lsp-bridge-diagnostic-frame nil)
 
 (defun lsp-bridge-diagnostic-show-tooltip (diagnostic-overlay &optional goto-beginning)
   (let* ((diagnostic-display-message (overlay-get diagnostic-overlay 'display-message))
@@ -208,23 +210,32 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
     (when goto-beginning
       (goto-char (overlay-start diagnostic-overlay)))
 
-    (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-tooltip)
+    (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-buffer)
       (erase-buffer)
       (insert diagnostic-display-message)
       (setq-local lsp-bridge-diagnostic-message diagnostic-message))
 
     (cond
-     ((posframe-workable-p) ;; Perform redisplay make sure posframe can poup to
-      ;; Perform redisplay make sure posframe can poup to
-      (redisplay 'force)
-      (sleep-for 0.01)
-      (setq lsp-bridge-diagnostic-frame
-            (posframe-show lsp-bridge-diagnostic-tooltip
-                           :position (point)
-                           :internal-border-width lsp-bridge-diagnostic-tooltip-border-width
-                           :background-color (acm-frame-background-color)
-                           :foreground-color foreground-color
-                           )))
+     ((not (or noninteractive
+               emacs-basic-display
+               (not (display-graphic-p))))
+
+      (when (and (frame-live-p lsp-bridge-diagnostic-frame)
+                 (not (eq (frame-parent lsp-bridge-diagnostic-frame) (selected-frame))))
+        (acm-frame-delete-frame lsp-bridge-diagnostic-frame))
+
+      (acm-frame-create-frame-if-not-exist lsp-bridge-diagnostic-frame
+                                           lsp-bridge-diagnostic-buffer
+                                           "lsp bridge diagnostic frame"
+                                           1
+                                           t)
+
+      (acm-frame-set-frame-max-size lsp-bridge-diagnostic-frame nil nil)
+
+      (let ((pos (acm-frame-get-popup-position (point) 1)))
+        (acm-frame-set-frame-position lsp-bridge-diagnostic-frame (car pos) (cdr pos)))
+
+      (acm-frame-adjust-frame-pos lsp-bridge-diagnostic-frame))
      (t (message diagnostic-message)))))
 
 (defun lsp-bridge-diagnostic-maybe-display-error-at-point ()

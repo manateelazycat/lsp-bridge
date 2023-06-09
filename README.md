@@ -25,7 +25,6 @@ Using Python multithreading techniques, lsp-bridge builds a high-speed cache bet
 `pip3 install epc orjson sexpdata six paramiko` (orjson is optional, orjson is based on Rust, providing faster JSON parsing performance)
 3. Install Elisp dependencies:
 
-- [posframe](https://github.com/tumashu/posframe)
 - [markdown-mode](https://github.com/jrblevin/markdown-mode)
 - [yasnippet](https://github.com/joaotavora/yasnippet)
 
@@ -153,9 +152,9 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `lsp-bridge-enable-log`: enable LSP message log, disable by default, only enable this option for development purposes, usually do not turn on this option to avoid affecting performance
 - `lsp-bridge-enable-debug`: enable program debugging, disable by default
 - `lsp-bridge-disable-backup`: forbidden version manage of emacs, enable by default
-- `lsp-bridge-code-action-enable-popup-menu`: enable code action posframe popup menu, enable by default
+- `lsp-bridge-code-action-enable-popup-menu`: enable code action popup menu, enable by default
 - `lsp-bridge-diagnostic-fetch-idle`: diagnostic delay, start pulling diagnostic information 0.5 second after stopping typing
-- `lsp-bridge-signature-show-function`: The function used for displaying signature info, default show message in minibuffer, set `lsp-bridge-signature-posframe` to show signature info in frame
+- `lsp-bridge-signature-show-function`: The function used for displaying signature info, default show message in minibuffer, set `lsp-bridge-signature-show-with-frame` to show signature info in frame
 - `lsp-bridge-completion-popup-predicates`: the predicate function for completion menu, completion menu popup after all the functions pass
 - `lsp-bridge-completion-stop-commands`: completion menu will not popup if these commands are executed
 - `lsp-bridge-completion-hide-characters`: The default value is `‘(":" ";" "(" ")" "[" "]" "{" "}" ", " "\"")`, the completion menu does not pop up when the cursor is behind these characters. You can customize this option to remove this restriction, or call the `lsp-bridge-popup-complete-menu` command to force the menu to pop up
@@ -165,7 +164,6 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `lsp-bridge-enable-org-babel`: Use lsp completion in org babel, disable by default, if unable to complete, please make sure the string after begin_src exists in the `org-src-lang-modes` variable
 - `acm-frame-background-dark-color`: Menu background color in dark theme
 - `acm-frame-background-light-color`: Menu background color in light theme
-- `acm-markdown-render-font-height`: The font height of function documentation, default is 130
 - `acm-enable-doc`: Whether the complete menu display the help document
 - `acm-enable-doc-markdown-render`: Richly render Markdown for completion popups, you can choose `’async`, `t` or `nil`. When set to `‘async`, styles are applied asynchronously, choose `t`, styles are applied synchronously and will slow down the completion speed, default is `async`
 - `acm-enable-icon`: Whether the completion menu displays icons (Many macOS users have reported that emacs-plus28 cannot display icons properly, showing colored squares instead. There are two ways to solve this: install Emacs Mac Port or add the `--with-rsvg` option to the brew command when compiling Emacs yourself)
