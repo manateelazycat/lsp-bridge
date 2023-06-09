@@ -1639,24 +1639,11 @@ So we build this macro to restore postion after code format."
     (insert value)
     (acm-markdown-render-content))
 
-  (when (and (frame-live-p lsp-bridge-popup-documentation-frame)
-             (not (eq (frame-parent lsp-bridge-popup-documentation-frame) (selected-frame))))
-    (acm-frame-delete-frame lsp-bridge-popup-documentation-frame))
-
-  (acm-frame-create-frame-if-not-exist lsp-bridge-popup-documentation-frame
-                                       lsp-bridge-popup-documentation-buffer
-                                       "lsp bridge popup documentation frame"
-                                       1
-                                       t)
-
-  (acm-frame-set-frame-max-size lsp-bridge-popup-documentation-frame
-                                lsp-bridge-lookup-doc-tooltip-max-width
-                                lsp-bridge-lookup-doc-tooltip-max-height)
-
-  (let ((pos (acm-frame-get-popup-position (point) 1)))
-    (acm-frame-set-frame-position lsp-bridge-popup-documentation-frame (car pos) (cdr pos)))
-
-  (acm-frame-adjust-frame-pos lsp-bridge-popup-documentation-frame))
+  (acm-frame-new lsp-bridge-popup-documentation-frame
+                 lsp-bridge-popup-documentation-buffer
+                 "lsp bridge popup documentation frame"
+                 lsp-bridge-lookup-doc-tooltip-max-width
+                 lsp-bridge-lookup-doc-tooltip-max-height))
 
 (defun lsp-bridge-hide-doc-tooltip ()
   (acm-frame-hide-frame lsp-bridge-popup-documentation-frame))
@@ -1666,7 +1653,7 @@ So we build this macro to restore postion after code format."
   :type 'function
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-signature-tooltip " *lsp-bridge-signature*"
+(defcustom lsp-bridge-signature-buffer " *lsp-bridge-signature*"
   "Buffer for display signature information."
   :type 'string
   :group 'lsp-bridge)
@@ -1680,28 +1667,15 @@ So we build this macro to restore postion after code format."
   "Use popup frame to show the STR signatureHelp string."
   (if (not (string-empty-p str))
       (progn
-        (with-current-buffer (get-buffer-create lsp-bridge-signature-tooltip)
+        (with-current-buffer (get-buffer-create lsp-bridge-signature-buffer)
           (erase-buffer)
           (insert str)
           (visual-line-mode 1)
           (current-buffer))
 
-        (when (and (frame-live-p lsp-bridge-signature-frame)
-                   (not (eq (frame-parent lsp-bridge-signature-frame) (selected-frame))))
-          (acm-frame-delete-frame lsp-bridge-signature-frame))
-
-        (acm-frame-create-frame-if-not-exist lsp-bridge-signature-frame
-                                             lsp-bridge-signature-tooltip
-                                             "lsp bridge signature frame"
-                                             1
-                                             t)
-
-        (acm-frame-set-frame-max-size lsp-bridge-signature-frame nil nil)
-
-        (let ((pos (acm-frame-get-popup-position (point) 1)))
-          (acm-frame-set-frame-position lsp-bridge-signature-frame (car pos) (cdr pos)))
-
-        (acm-frame-adjust-frame-pos lsp-bridge-signature-frame))
+        (acm-frame-new lsp-bridge-signature-frame
+                       lsp-bridge-signature-buffer
+                       "lsp bridge signature frame"))
     (lsp-bridge-hide-signature-tooltip)))
 
 (defun lsp-bridge-signature-help--update (help-infos help-index)

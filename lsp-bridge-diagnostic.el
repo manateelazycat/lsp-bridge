@@ -220,22 +220,9 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
                emacs-basic-display
                (not (display-graphic-p))))
 
-      (when (and (frame-live-p lsp-bridge-diagnostic-frame)
-                 (not (eq (frame-parent lsp-bridge-diagnostic-frame) (selected-frame))))
-        (acm-frame-delete-frame lsp-bridge-diagnostic-frame))
-
-      (acm-frame-create-frame-if-not-exist lsp-bridge-diagnostic-frame
-                                           lsp-bridge-diagnostic-buffer
-                                           "lsp bridge diagnostic frame"
-                                           1
-                                           t)
-
-      (acm-frame-set-frame-max-size lsp-bridge-diagnostic-frame nil nil)
-
-      (let ((pos (acm-frame-get-popup-position (point) 1)))
-        (acm-frame-set-frame-position lsp-bridge-diagnostic-frame (car pos) (cdr pos)))
-
-      (acm-frame-adjust-frame-pos lsp-bridge-diagnostic-frame))
+      (acm-frame-new lsp-bridge-diagnostic-frame
+                     lsp-bridge-diagnostic-buffer
+                     "lsp bridge diagnostic frame"))
      (t (message diagnostic-message)))))
 
 (defun lsp-bridge-diagnostic-maybe-display-error-at-point ()
