@@ -206,9 +206,18 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
   (let* ((diagnostic-display-message (overlay-get diagnostic-overlay 'display-message))
          (diagnostic-message (overlay-get diagnostic-overlay 'message))
          (foreground-color (plist-get (face-attribute (overlay-get diagnostic-overlay 'face) :underline) :color)))
-    ;; weather goto beginning of diagnostic
+    ;; Weather goto beginning of diagnostic.
     (when goto-beginning
       (goto-char (overlay-start diagnostic-overlay)))
+
+    ;; When point not in visiable area, `posn-at-point' in `acm-frame-get-popup-position' will return nil.
+    ;; We need scroll window to make sure point in visiable area before call `acm-frame-get-popup-position'.
+    (let* ((pos (window-point))
+           (start (window-start))
+           (end (window-end)))
+      (cond
+       ((< pos start) (scroll-down-line (count-lines pos start)))
+       ((> pos end) (scroll-up-line (count-lines end pos)))))
 
     (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-buffer)
       (erase-buffer)
