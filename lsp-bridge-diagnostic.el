@@ -188,6 +188,7 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
                                                                (2 'lsp-bridge-diagnostics-warning-face)
                                                                (3 'lsp-bridge-diagnostics-info-face)
                                                                (4 'lsp-bridge-diagnostics-hint-face))))
+                                          (overlay-put overlay 'color (plist-get (face-attribute overlay-face :underline) :color))
                                           (overlay-put overlay 'face overlay-face)
                                           (overlay-put overlay 'message message)
                                           (overlay-put overlay
@@ -201,6 +202,11 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
                                 (setq-local lsp-bridge-diagnostic-overlays (reverse lsp-bridge-diagnostic-overlays))))
 
 (defvar lsp-bridge-diagnostic-frame nil)
+
+(defun lsp-bridge-diagnostic-insert-colored-string (color text)
+  "Insert a colored string at point in the current buffer."
+  (let ((colored-text (propertize text 'face `(:foreground ,color))))
+    (insert colored-text)))
 
 (defun lsp-bridge-diagnostic-show-tooltip (diagnostic-overlay &optional goto-beginning)
   (let* ((diagnostic-display-message (overlay-get diagnostic-overlay 'display-message))
@@ -221,7 +227,7 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
 
     (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-buffer)
       (erase-buffer)
-      (insert diagnostic-display-message)
+      (lsp-bridge-diagnostic-insert-colored-string (overlay-get diagnostic-overlay 'color) diagnostic-display-message)
       (setq-local lsp-bridge-diagnostic-message diagnostic-message))
 
     (cond

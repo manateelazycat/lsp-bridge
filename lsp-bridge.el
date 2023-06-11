@@ -174,21 +174,6 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'string
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-lookup-doc-tooltip-border-width 20
-  "The border width of lsp-bridge hover tooltip, in pixels."
-  :type 'integer
-  :group 'lsp-bridge)
-
-(defcustom lsp-bridge-lookup-doc-tooltip-max-width 150
-  "The max width of lsp-bridge hover tooltip."
-  :type 'integer
-  :group 'lsp-bridge)
-
-(defcustom lsp-bridge-lookup-doc-tooltip-max-height 20
-  "The max width of lsp-bridge hover tooltip."
-  :type 'integer
-  :group 'lsp-bridge)
-
 (defcustom lsp-bridge-disable-backup t
   "Default disable backup feature, include `make-backup-files' `auto-save-default' and `create-lockfiles'."
   :type 'boolean
@@ -1641,9 +1626,7 @@ So we build this macro to restore postion after code format."
 
   (acm-frame-new lsp-bridge-popup-documentation-frame
                  lsp-bridge-popup-documentation-buffer
-                 "lsp bridge popup documentation frame"
-                 lsp-bridge-lookup-doc-tooltip-max-width
-                 lsp-bridge-lookup-doc-tooltip-max-height))
+                 "lsp bridge popup documentation frame"))
 
 (defun lsp-bridge-hide-doc-tooltip ()
   (acm-frame-hide-frame lsp-bridge-popup-documentation-frame))
