@@ -1640,6 +1640,13 @@ So we build this macro to restore postion after code format."
   :type 'function
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-signature-show-with-frame-position "bottom-right"
+  "The popup position of signature frame.
+
+Default is `bottom-right', you can choose other value: `top-left', `top-right', `bottom-left', 'point'."
+  :type 'string
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-signature-buffer " *lsp-bridge-signature*"
   "Buffer for display signature information."
   :type 'string
@@ -1662,7 +1669,11 @@ So we build this macro to restore postion after code format."
 
         (acm-frame-new lsp-bridge-signature-frame
                        lsp-bridge-signature-buffer
-                       "lsp bridge signature frame"))
+                       "lsp bridge signature frame"
+                       nil
+                       nil
+                       lsp-bridge-signature-show-with-frame-position
+                       ))
     (lsp-bridge-hide-signature-tooltip)))
 
 (defun lsp-bridge-signature-help--update (help-infos help-index)

@@ -155,6 +155,7 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 - `lsp-bridge-code-action-enable-popup-menu`: 启用 code action 菜单， 默认打开
 - `lsp-bridge-diagnostic-fetch-idle`： 诊断延迟， 默认是停止敲键盘后 0.5 秒开始拉取诊断信息
 - `lsp-bridge-signature-show-function`: 用于显示签名信息的函数, 默认是在 minibuffer 显示， 设置成 `lsp-bridge-signature-show-with-frame` 后可以用 frame 来显示函数的签名信息
+- `lsp-bridge-signature-show-with-frame-position`: 当使用 `lsp-bridge-signature-show-with-frame` 来显示签名信息时， 这个选项定义弹出签名信息的位置， 默认是 `"bottom-right"`, 你还可以选择 `"top-left"`, `"top-right"`, `"bottom-left"`, `"point"`
 - `lsp-bridge-completion-popup-predicates`: 补全菜单显示的检查函数， 这个选项包括的所有函数都检查过以后， 补全菜单才能显示
 - `lsp-bridge-completion-stop-commands`: 这些命令执行以后， 不再弹出补全菜单
 - `lsp-bridge-completion-hide-characters`: 默认值为 `'(":" ";" "(" ")" "[" "]" "{" "}" ", " "\"")` , 光标在这些字符的后面时不弹出补全菜单， 你可以定制这个选项以解除这个限制， 或者调用 `lsp-bridge-popup-complete-menu` 命令强制弹出菜单

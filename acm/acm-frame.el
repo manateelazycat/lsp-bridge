@@ -152,7 +152,7 @@
                 ))
   (add-function :after after-focus-change-function #'acm-frame-restore-font))
 
-(cl-defmacro acm-frame-new (frame frame-buffer buffer-name &optional max-width max-height)
+(cl-defmacro acm-frame-new (frame frame-buffer buffer-name &optional max-width max-height popup-pos)
   `(progn
      (when (and (frame-live-p ,frame)
                 (not (eq (frame-parent ,frame) (selected-frame))))
@@ -165,7 +165,7 @@
      (let ((pos (acm-frame-get-popup-position (point) 1)))
        (acm-frame-set-frame-position ,frame (car pos) (cdr pos)))
 
-     (acm-frame-adjust-frame-pos ,frame)))
+     (acm-frame-adjust-frame-pos ,frame ,popup-pos)))
 
 (cl-defmacro acm-frame-create-frame-if-not-exist (frame frame-buffer frame-name margin no-accept-focus)
   `(unless (frame-live-p ,frame)
@@ -297,10 +297,12 @@ influence of C1 on the result."
   (when (acm-frame-visible-p frame)
     (make-frame-invisible frame)))
 
-(defun acm-frame-adjust-frame-pos (frame &optional margin)
+(defun acm-frame-adjust-frame-pos (frame &optional popup-pos margin)
   "Adjust position to avoid out of screen."
   (let* ((frame-pos (frame-position frame))
          (main-frame-pos (frame-position acm-frame--emacs-frame))
+         (main-window-edges (with-selected-frame acm-frame--emacs-frame
+                              (window-edges nil t t t)))
          (frame-x (car frame-pos))
          (frame-y (cdr frame-pos))
          (frame-width (frame-pixel-width frame))
@@ -314,14 +316,29 @@ influence of C1 on the result."
          (emacs-frame-bottom-coordinate (- (+ (cdr main-frame-pos)
                                               (frame-pixel-height acm-frame--emacs-frame))
                                            margin)))
-    (if (> frame-right-coordinate emacs-frame-right-coordinate)
-        (set-frame-position frame
-                            (- frame-x (- frame-right-coordinate emacs-frame-right-coordinate))
-                            frame-y))
-    (if (> frame-bottom-coordinate emacs-frame-bottom-coordinate)
-        (set-frame-position frame
-                            frame-x
-                            (- frame-y frame-height (line-pixel-height))))))
+    (if (or (string-equal popup-pos "point")
+            (not popup-pos))
+        (progn
+          (if (> frame-right-coordinate emacs-frame-right-coordinate)
+              (set-frame-position frame
+                                  (- frame-x (- frame-right-coordinate emacs-frame-right-coordinate))
+                                  frame-y))
+          (if (> frame-bottom-coordinate emacs-frame-bottom-coordinate)
+              (set-frame-position frame
+                                  frame-x
+                                  (- frame-y frame-height (line-pixel-height)))))
+      (pcase popup-pos
+        ("top-left"
+         (set-frame-position frame (nth 0 main-window-edges) (nth 1 main-window-edges)))
+        ("top-right"
+         (set-frame-position frame (- (nth 2 main-window-edges) frame-width) (nth 1 main-window-edges)))
+        ("bottom-left"
+         (set-frame-position frame (nth 0 main-window-edges) (- (nth 3 main-window-edges) (frame-height))))
+        ("bottom-right"
+         (set-frame-position frame
+                             (- (nth 2 main-window-edges) frame-width)
+                             (- (nth 3 main-window-edges) (frame-height)))
+         )))))
 
 (defun acm-frame-can-display-p ()
   (not (or noninteractive
