@@ -303,6 +303,10 @@ influence of C1 on the result."
          (main-frame-pos (frame-position acm-frame--emacs-frame))
          (main-window-edges (with-selected-frame acm-frame--emacs-frame
                               (window-edges nil t t t)))
+         (main-window-x (nth 0 main-window-edges))
+         (main-window-y (nth 1 main-window-edges))
+         (main-window-width (nth 2 main-window-edges))
+         (main-window-height (nth 3 main-window-edges))
          (frame-x (car frame-pos))
          (frame-y (cdr frame-pos))
          (frame-width (frame-pixel-width frame))
@@ -329,15 +333,13 @@ influence of C1 on the result."
                                   (- frame-y frame-height (line-pixel-height)))))
       (pcase popup-pos
         ("top-left"
-         (set-frame-position frame (nth 0 main-window-edges) (nth 1 main-window-edges)))
+         (set-frame-position frame main-window-x main-window-y))
         ("top-right"
-         (set-frame-position frame (- (nth 2 main-window-edges) frame-width) (nth 1 main-window-edges)))
+         (set-frame-position frame (- main-window-width frame-width) main-window-y))
         ("bottom-left"
-         (set-frame-position frame (nth 0 main-window-edges) (- (nth 3 main-window-edges) (frame-height))))
+         (set-frame-position frame main-window-x (- main-window-height frame-height)))
         ("bottom-right"
-         (set-frame-position frame
-                             (- (nth 2 main-window-edges) frame-width)
-                             (- (nth 3 main-window-edges) (frame-height)))
+         (set-frame-position frame (- main-window-width frame-width) (- main-window-height frame-height))
          )))))
 
 (defun acm-frame-can-display-p ()
