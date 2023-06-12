@@ -520,6 +520,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     elixir-ts-mode-hook
     toml-ts-mode-hook
     css-ts-mode-hook
+    java-ts-mode-hook
     js-ts-mode-hook
     json-ts-mode-hook
     python-ts-mode-hook
