@@ -1,0 +1,6 @@
+{
+  "name": "nil",
+  "languageId": "nix",
+  "command": [ "nil" ],
+  "settings": { }
+}

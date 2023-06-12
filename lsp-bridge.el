@@ -385,6 +385,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   "Default LSP server for C#, you can choose `omnisharp-mono' or `omnisharp-dotnet'."
   :type 'string)
 
+(defcustom lsp-bridge-nix-lsp-server "rnix-lsp"
+  "Default LSP server for nix, you can choose `rnix-lsp' or `nil'."
+  :type 'string)
+
 (defcustom lsp-bridge-use-wenls-in-org-mode nil
   "Use `wen' lsp server in org-mode, default is disable.")
 
@@ -433,7 +437,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (dockerfile-mode .                                                           "docker-langserver")
     (d-mode .                                                                    "serve-d")
     ((fortran-mode f90-mode) .                                                   "fortls")
-    (nix-mode .                                                                  "rnix-lsp")
+    (nix-mode .                                                                  lsp-bridge-nix-lsp-server)
     (ess-r-mode .                                                                "rlanguageserver")
     (graphql-mode .                                                              "graphql-lsp")
     (swift-mode .                                                                "swift-sourcekit")
