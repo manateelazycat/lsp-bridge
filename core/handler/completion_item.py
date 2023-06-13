@@ -25,6 +25,9 @@ class CompletionItem(Handler):
                     else:
                         response_doc = ""
 
+            if len(response_doc) == 0 and "detail" in response:
+                response_doc = response["detail"]
+
             if "additionalTextEdits" in response:
                 additional_text_edits = response["additionalTextEdits"]
 
