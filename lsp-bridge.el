@@ -458,7 +458,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     python-mode-hook
     ruby-mode-hook
     lua-mode-hook
- 	move-mode-hook
+ 	  move-mode-hook
     rust-mode-hook
     rust-ts-mode-hook
     rustic-mode-hook
@@ -513,7 +513,6 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     vhdl-mode-hook
     typst-mode-hook
     graphql-mode-hook
-
     c-ts-mode-hook
     c++-ts-mode-hook
     cmake-ts-mode-hook
@@ -526,6 +525,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     python-ts-mode-hook
     bash-ts-mode-hook
     typescript-ts-mode-hook
+    tsx-ts-mode-hook
     go-ts-mode-hook
     yaml-ts-mode-hook
     )

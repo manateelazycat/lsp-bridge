@@ -84,8 +84,10 @@ E.g. Use `-javaagent:/home/user/.emacs.d/plugin/lombok.jar` to add lombok suppor
   "Determine whether it is a single file mode?"
   (string-equal project-path filepath))
 
-(add-hook 'java-mode-hook (lambda ()
-                            (setq-local lsp-bridge-get-single-lang-server-by-project 'lsp-bridge-get-jdtls-server-by-project)))
+(dolist (hook (list
+               'java-mode-hook
+               'java-ts-mode-hook))
+  (add-hook hook (lambda () (setq-local lsp-bridge-get-single-lang-server-by-project 'lsp-bridge-get-jdtls-server-by-project))))
 
 (defun lsp-bridge-jdtls-apply-workspace-edit (action &optional temp-buffer)
   "Command java.apply.workspaceEdit handler."
