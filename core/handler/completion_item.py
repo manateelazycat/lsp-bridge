@@ -23,8 +23,8 @@ class CompletionItem(Handler):
                     response_doc = response_doc["value"]
                 else:
                     response_doc = ""
-                    
-            if "additionalTextEdits" in response:
-                additional_text_edits = response["additionalTextEdits"]
-                
+
+        if "additionalTextEdits" in response:
+            additional_text_edits = response["additionalTextEdits"]
+
         self.file_action.completion_item_update(self.item_key, self.server_name, response_doc.strip(), additional_text_edits)
