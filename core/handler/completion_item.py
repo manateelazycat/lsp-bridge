@@ -16,15 +16,16 @@ class CompletionItem(Handler):
         response_doc = ""
         additional_text_edits = []
         
-        if response is not None and "documentation" in response:
-            response_doc = response["documentation"]
-            if type(response_doc) == dict:
-                if "value" in response_doc:
-                    response_doc = response_doc["value"]
-                else:
-                    response_doc = ""
+        if response is not None:
+            if "documentation" in response:
+                response_doc = response["documentation"]
+                if type(response_doc) == dict:
+                    if "value" in response_doc:
+                        response_doc = response_doc["value"]
+                    else:
+                        response_doc = ""
 
-        if "additionalTextEdits" in response:
-            additional_text_edits = response["additionalTextEdits"]
+            if "additionalTextEdits" in response:
+                additional_text_edits = response["additionalTextEdits"]
 
         self.file_action.completion_item_update(self.item_key, self.server_name, response_doc.strip(), additional_text_edits)
