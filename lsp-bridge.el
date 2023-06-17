@@ -458,7 +458,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     python-mode-hook
     ruby-mode-hook
     lua-mode-hook
- 	  move-mode-hook
+ 	move-mode-hook
     rust-mode-hook
     rust-ts-mode-hook
     rustic-mode-hook
@@ -1771,8 +1771,9 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
               (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)))
       ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
       ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
-      (unless (lsp-bridge-is-remote-file)
-        (unless (file-exists-p (buffer-file-name))
+      (when (not (lsp-bridge-is-remote-file))
+        (when (and (buffer-file-name)
+                   (not (file-exists-p (buffer-file-name))))
           (save-buffer)))
 
       (setq-local acm-backend-lsp-completion-trigger-characters nil)
