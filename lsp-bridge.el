@@ -1787,10 +1787,10 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
     (acm-run-idle-func acm-backend-elisp-symbols-update-timer lsp-bridge-elisp-symbols-update-idle 'lsp-bridge-elisp-symbols-update)
 
     (when (or (lsp-bridge-has-lsp-server-p)
-              ;; Init acm backend for org babel, and need elimination `*Capture*' buffer.
+              ;; Init acm backend for org babel, and need elimination org temp buffer.
               (and lsp-bridge-enable-org-babel 
                    (eq major-mode 'org-mode)
-                   (not (string-equal (buffer-name) "*Capture*"))))
+                   (not (lsp-bridge-is-org-temp-buffer-p))))
       ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
       ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
       (when (not (lsp-bridge-is-remote-file))
@@ -1817,6 +1817,12 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
     ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
     (unless lsp-bridge-is-starting
       (lsp-bridge-start-process))))
+
+(defun lsp-bridge-is-org-temp-buffer-p ()
+  (or (string-match "\*org-src-fontification:" (buffer-name))
+      (string-match "\*Org Src" (buffer-name))
+      (string-match ".org-src-babel" (buffer-name))
+      (equal "*Capture*" (buffer-name))))
 
 (defun lsp-bridge--disable ()
   "Disable LSP Bridge mode."
