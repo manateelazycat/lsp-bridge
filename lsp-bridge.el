@@ -1440,6 +1440,16 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-monitor-after-save ()
   (lsp-bridge-call-file-api "save_file" (buffer-name)))
 
+(defcustom lsp-bridge-find-def-fallback-function nil
+  "Fallback for find definition failure."
+  :type 'function
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-find-ref-fallback-function nil
+  "Fallback for find referecences failure."
+  :type 'function
+  :group 'lsp-bridge)
+
 (defvar-local lsp-bridge-jump-to-def-in-other-window nil)
 
 (defun lsp-bridge-find-def ()
@@ -1501,12 +1511,22 @@ So we build this macro to restore postion after code format."
   (interactive)
   (lsp-bridge-call-file-api "find_references" (lsp-bridge--position)))
 
-(defun lsp-bridge-references--popup (references-content references-counter)
+(defun lsp-bridge-find-def-fallback (position)
+  (message "[LSP-Bridge] No definition found.")
+  (if (functionp lsp-bridge-find-def-fallback-function)
+      (funcall lsp-bridge-find-def-fallback-function position)))
+
+(defun lsp-bridge-find-ref-fallback (position)
+  (message "[LSP-Bridge] No references found.")
+  (if (functionp lsp-bridge-find-ref-fallback-function)
+      (funcall lsp-bridge-find-ref-fallback-function position)))
+
+(defun lsp-bridge-references--popup (references-content references-counter position)
   (if (> references-counter 0)
       (progn
         (lsp-bridge-ref-popup references-content references-counter)
         (message "[LSP-Bridge] Found %s references" references-counter))
-    (message "[LSP-Bridge] No references found.")))
+    (lsp-bridge-find-ref-fallback position)))
 
 (defun lsp-bridge-rename ()
   (interactive)

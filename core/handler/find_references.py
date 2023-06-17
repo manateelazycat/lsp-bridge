@@ -12,6 +12,7 @@ class FindReferences(Handler):
     method = "textDocument/references"
 
     def process_request(self, position) -> dict:
+        self.pos = position
         return dict(
             position=position,
             context=dict(includeDeclaration=False)
@@ -19,7 +20,7 @@ class FindReferences(Handler):
 
     def process_response(self, response: dict) -> None:
         if response is None:
-            message_emacs("No references found")
+            eval_in_emacs("lsp-bridge-find-ref-fallback", self.pos)
         else:
             references_dict = {}
             for uri_info in response:
@@ -49,4 +50,4 @@ class FindReferences(Handler):
 
             linecache.clearcache()  # clear line cache
 
-            eval_in_emacs("lsp-bridge-references--popup", references_content, references_counter)
+            eval_in_emacs("lsp-bridge-references--popup", references_content, references_counter, self.pos)
