@@ -9,11 +9,12 @@ class FindDefine(Handler):
     cancel_on_change = True
 
     def process_request(self, position) -> dict:
+        self.pos = position
         return dict(position=position)
 
     def process_response(self, response: Union[dict, list]) -> None:
         if not response:
-            message_emacs("No definition found.")
+            eval_in_emacs("lsp-bridge-find-def-fallback", self.pos)
             return
 
         file_info = response[0] if isinstance(response, list) else response
