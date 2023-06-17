@@ -1767,8 +1767,10 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
     (acm-run-idle-func acm-backend-elisp-symbols-update-timer lsp-bridge-elisp-symbols-update-idle 'lsp-bridge-elisp-symbols-update)
 
     (when (or (lsp-bridge-has-lsp-server-p)
-              ;; init acm backend for org babel
-              (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)))
+              ;; Init acm backend for org babel, and need elimination `*Capture*' buffer.
+              (and lsp-bridge-enable-org-babel 
+                   (eq major-mode 'org-mode)
+                   (not (string-equal (buffer-name) "*Capture*"))))
       ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
       ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
       (when (not (lsp-bridge-is-remote-file))
