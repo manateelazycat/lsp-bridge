@@ -815,7 +815,7 @@ The key of candidate will change between two LSP results."
          (offset-x (* (window-font-width) acm-icon-width))
          (offset-y (line-pixel-height))
          (acm-frame-x (if (> (+ cursor-x acm-frame-width) emacs-width)
-                          (max  (- cursor-x acm-frame-width) offset-x)
+                          (max (- cursor-x acm-frame-width) offset-x)
                         (max (- cursor-x offset-x) 0)))
          (acm-frame-y (if (> (+ cursor-y acm-frame-height) emacs-height)
                           (- cursor-y acm-frame-height)
@@ -891,7 +891,7 @@ The key of candidate will change between two LSP results."
 
     ;; Adjust doc frame with it's size.
     (let* ((acm-doc-frame-width (frame-pixel-width acm-doc-frame))
-           (acm-doc-frame-x (if (> acm-frame-left-distance acm-frame-right-distance)
+           (acm-doc-frame-x (if (> (+ acm-frame-x acm-frame-width acm-doc-frame-max-width) emacs-width)
                                 (- acm-frame-x acm-doc-frame-width)
                               (+ acm-frame-x acm-frame-width)))
            (acm-doc-frame-y acm-frame-y))
@@ -917,6 +917,9 @@ The key of candidate will change between two LSP results."
       (erase-buffer)
       (acm-menu-render-items items menu-index))
 
+    ;; Adjust menu frame position.
+    (acm-menu-adjust-pos)
+
     ;; Not adjust menu frame size if not necessary,
     ;; such as select candidate just change index,
     ;; or menu width not change when switch to next page.
@@ -927,9 +930,6 @@ The key of candidate will change between two LSP results."
       ;; Adjust doc frame with menu frame position.
       (when (acm-frame-visible-p acm-doc-frame)
         (acm-doc-frame-adjust)))
-
-    ;; Adjust menu frame position.
-    (acm-menu-adjust-pos)
 
     ;; Fetch `documentation' and `additionalTextEdits' information.
     (acm-doc-try-show)

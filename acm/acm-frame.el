@@ -299,48 +299,41 @@ influence of C1 on the result."
 
 (defun acm-frame-adjust-frame-pos (frame &optional popup-pos margin)
   "Adjust position to avoid out of screen."
-  (let* ((frame-pos (frame-position frame))
-         (main-frame-pos (frame-position acm-frame--emacs-frame))
-         (main-window-edges (with-selected-frame acm-frame--emacs-frame
-                              (window-edges nil t t t)))
-         (main-window-x (nth 0 main-window-edges))
-         (main-window-y (nth 1 main-window-edges))
-         (main-window-width (nth 2 main-window-edges))
-         (main-window-height (nth 3 main-window-edges))
-         (frame-x (car frame-pos))
-         (frame-y (cdr frame-pos))
+  (let* ((margin (or margin 50))
+         (popup-pos (or popup-pos "point"))
+         (main-window-x (car (frame-position acm-frame--emacs-frame)))
+         (main-window-y (cdr (frame-position acm-frame--emacs-frame)))
+         (main-window-width (frame-pixel-width acm-frame--emacs-frame))
+         (main-window-height (frame-pixel-height acm-frame--emacs-frame))
+         (main-window-right-limit (- (+ main-window-x main-window-width) margin))
+         (main-window-bottom-limit (- (+ main-window-y main-window-height) margin))
+         (frame-x (car (frame-position frame)))
+         (frame-y (cdr (frame-position frame)))
          (frame-width (frame-pixel-width frame))
          (frame-height (frame-pixel-height frame))
-         (frame-right-coordinate (+ frame-x frame-width))
-         (frame-bottom-coordinate (+ frame-y frame-height))
-         (margin (or margin 50))
-         (emacs-frame-right-coordinate (- (+ (car main-frame-pos)
-                                             (frame-pixel-width acm-frame--emacs-frame))
-                                          margin))
-         (emacs-frame-bottom-coordinate (- (+ (cdr main-frame-pos)
-                                              (frame-pixel-height acm-frame--emacs-frame))
-                                           margin)))
-    (if (or (string-equal popup-pos "point")
-            (not popup-pos))
-        (progn
-          (if (> frame-right-coordinate emacs-frame-right-coordinate)
-              (set-frame-position frame
-                                  (- frame-x (- frame-right-coordinate emacs-frame-right-coordinate))
-                                  frame-y))
-          (if (> frame-bottom-coordinate emacs-frame-bottom-coordinate)
-              (set-frame-position frame
-                                  frame-x
-                                  (- frame-y frame-height (line-pixel-height)))))
-      (pcase popup-pos
-        ("top-left"
-         (set-frame-position frame main-window-x main-window-y))
-        ("top-right"
-         (set-frame-position frame (- main-window-width frame-width) main-window-y))
-        ("bottom-left"
-         (set-frame-position frame main-window-x (- main-window-height frame-height)))
-        ("bottom-right"
-         (set-frame-position frame (- main-window-width frame-width) (- main-window-height frame-height))
-         )))))
+         (frame-right-edge (+ frame-x frame-width))
+         (frame-bottom-edge (+ frame-y frame-height)))
+    (pcase popup-pos
+      ("top-left"
+       (set-frame-position frame main-window-x main-window-y))
+      ("top-right"
+       (set-frame-position frame (- main-window-width frame-width) main-window-y))
+      ("bottom-left"
+       (set-frame-position frame main-window-x (- main-window-height frame-height)))
+      ("bottom-right"
+       (set-frame-position frame (- main-window-width frame-width) (- main-window-height frame-height)))
+      ("point"
+       (when (and (> frame-right-edge main-window-right-limit)
+                  (> (- main-window-x main-window-width) 0))
+         (set-frame-position frame
+                             (- (+ main-window-x main-window-width) frame-width margin)
+                             frame-y))
+       (when (and (> frame-bottom-edge main-window-bottom-limit)
+                  (> (- main-window-y main-window-height) 0))
+         (set-frame-position frame
+                             frame-x
+                             (- (+ main-window-y main-window-height) frame-height margin)
+                             ))))))
 
 (defun acm-frame-can-display-p ()
   (not (or noninteractive
