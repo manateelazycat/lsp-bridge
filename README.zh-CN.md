@@ -252,6 +252,8 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 
 你需要安装每个编程语言对应的 LSP 服务器， lsp-bridge 才能提供代码补全服务。
 
+如果你的语言支持混合多语言服务器, 建议查看 [multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) 下的多语言服务器定义， 安装多个 LSP 服务器以获取更完整的体验， 比如 Python 语言， 按照默认的 [pyright-background-analysis_ruff.json](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver/pyright-background-analysis_ruff.json) 定义， 就应该安装 `pyright` 和 `ruff`。
+
 | LSP 服务器                                                                                         | 语言                                    | 备注                                                                                                                                                                                                                     |
 |:---------------------------------------------------------------------------------------------------|:----------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [clangd](https://github.com/clangd/clangd)                                                         | C, C++, Object-C                        | 需要在项目根目录配置好 compile_commands.json                                                                                                                                                                             |
