@@ -2066,9 +2066,11 @@ SymbolKind (defined in the LSP)."
   (evil-add-command-properties #'lsp-bridge-find-impl :jump t))
 
 (defun lsp-bridge--rename-file-advisor (orig-fun &optional arg &rest args)
-  (when (and lsp-bridge-mode
-             (boundp 'acm-backend-lsp-filepath))
-    (let ((new-name (expand-file-name (nth 0 args))))
+  (let ((current-file-name (expand-file-name (buffer-file-name)))
+        (new-name (expand-file-name (nth 0 args))))
+    (when (and lsp-bridge-mode
+               (boundp 'acm-backend-lsp-filepath)
+               (file-equal-p current-file-name new-name))
       (lsp-bridge-call-file-api "rename_file" new-name)
       (if (lsp-bridge-is-remote-file)
           (lsp-bridge-remote-send-func-request "close_file" (list acm-backend-lsp-filepath))
