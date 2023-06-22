@@ -234,7 +234,11 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
      ((acm-frame-can-display-p)
       (acm-frame-new lsp-bridge-diagnostic-frame
                      lsp-bridge-diagnostic-buffer
-                     "lsp bridge diagnostic frame"))
+                     "lsp bridge diagnostic frame")
+
+      (set-face-background (acm-frame-border-face)
+                           foreground-color
+                           lsp-bridge-diagnostic-frame))
      (t (message diagnostic-message)))))
 
 (defun lsp-bridge-diagnostic-maybe-display-error-at-point ()

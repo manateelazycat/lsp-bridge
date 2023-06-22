@@ -50,9 +50,12 @@
     'fit-frame-to-buffer)
   "Function used to fit frame to buffer.")
 
+(defun acm-frame-border-face ()
+  (if (facep 'child-frame-border) 'child-frame-border 'internal-border))
+
 (defun acm-frame-set-frame-colors (frame)
   ;; Set frame border color.
-  (let* ((face (if (facep 'child-frame-border) 'child-frame-border 'internal-border))
+  (let* ((face (acm-frame-border-face))
          (new (face-attribute 'acm-frame-border-face :background nil 'default)))
     (unless (equal (face-attribute face :background frame 'default) new)
       (set-face-background face new frame)))
