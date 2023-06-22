@@ -12,6 +12,7 @@ class FindImplementation(Handler):
     cancel_on_change = True
 
     def process_request(self, position) -> dict:
+        self.pos = position
         return dict(position=position)
 
     def process_response(self, response: dict) -> None:
@@ -53,4 +54,4 @@ class FindImplementation(Handler):
 
             linecache.clearcache()  # clear line cache
 
-            eval_in_emacs("lsp-bridge-references--popup", references_content, references_counter)
+            eval_in_emacs("lsp-bridge-references--popup", references_content, references_counter, self.pos)
