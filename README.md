@@ -19,9 +19,9 @@ Using Python multithreading techniques, lsp-bridge builds a high-speed cache bet
 
 1. Install Emacs 28 or higher version
 2. Install Python dependencies: epc, orjson, sexpdata, six, paramiko, please choose one of the following methods to install Python dependencies
-- PyPy (On Linux, we strongly recommend using PyPy instead of CPython for a 5x performance boost):
+- PyPy
 `pypy3 -m pip install epc sexpdata six paramiko`
-- CPython: (Windows and MacOS users please use CPython)
+- CPython
 `pip3 install epc orjson sexpdata six paramiko` (orjson is optional, orjson is based on Rust, providing faster JSON parsing performance)
 3. Install Elisp dependencies:
 

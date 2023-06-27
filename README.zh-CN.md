@@ -18,9 +18,9 @@ lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建�
 
 1. 安装 Emacs 28 及以上版本
 2. 安装 Python 依赖: epc, orjson, sexpdata, six, paramiko, 请选择下面其中一种方式安装 Python 依赖
-- PyPy (Linux 下， 我们强烈推荐用 PyPy 替代 CPython 以获得 5 倍的性能提升):
+- PyPy
 `pypy3 -m pip install epc sexpdata six paramiko`
-- CPython: (Windows 和 MacOS 用户请用 CPython)
+- CPython
 `pip3 install epc orjson sexpdata six paramiko` (orjson 是可选的， orjson 基于 Rust， 提供更快的 JSON 解析性能)
 3. 安装 Elisp 依赖:
 
