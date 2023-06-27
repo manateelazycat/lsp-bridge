@@ -326,13 +326,11 @@ influence of C1 on the result."
       ("bottom-right"
        (set-frame-position frame (- main-window-width frame-width) (- main-window-height frame-height)))
       ("point"
-       (when (and (> frame-right-edge main-window-right-limit)
-                  (> (- main-window-x main-window-width) 0))
+       (when (> frame-right-edge main-window-right-limit)
          (set-frame-position frame
                              (- (+ main-window-x main-window-width) frame-width margin)
                              frame-y))
-       (when (and (> frame-bottom-edge main-window-bottom-limit)
-                  (> (- main-window-y main-window-height) 0))
+       (when (> frame-bottom-edge main-window-bottom-limit)
          (set-frame-position frame
                              frame-x
                              (- (+ main-window-y main-window-height) frame-height margin)
