@@ -141,6 +141,7 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 - `lsp-bridge-python-command`: Python 命令的路径, 如果你用 `conda`， 你也许会定制这个选项。 Windows 平台用的是 `python.exe` 而不是 `python3`, 如果 lsp-bridge 不能工作， 可以尝试改成 `python3`
 - `lsp-bridge-complete-manually`: 只有当用户手动调用 `lsp-bridge-popup-complete-menu` 命令的时候才弹出补全菜单， 默认关闭
 - `lsp-bridge-get-workspace-folder`: 在 Java 中需要把多个项目放到一个 Workspace 目录下， 才能正常进行定义跳转， 可以自定义这个函数， 函数输入是项目路径， 返回对应的 Workspace 目录
+- `lsp-bridge-default-mode-hooks`: 自动开启 lsp-bridge 的模式列表， 你可以定制这个选项来控制开启 lsp-bridge 的范围
 - `lsp-bridge-org-babel-lang-list`: 支持 org-mode 代码块补全的语言列表， 默认 nil 对于所有语言使用
 - `lsp-bridge-enable-completion-in-string`: 支持在字符串中弹出补全， 默认关闭
 - `lsp-bridge-enable-completion-in-minibuffer`: 支持在 Minibuffer 中弹出补全， 默认关闭
