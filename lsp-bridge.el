@@ -1657,15 +1657,20 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
       (apply #'scroll-down-command arg))))
 
 (defun lsp-bridge-popup-documentation--show (value)
-  (with-current-buffer (get-buffer-create lsp-bridge-popup-documentation-buffer)
-    (read-only-mode -1)
-    (erase-buffer)
-    (insert value)
-    (acm-markdown-render-content))
+  (let ((emacs-frame (or acm-frame--emacs-frame (selected-frame))))
+    (with-current-buffer (get-buffer-create lsp-bridge-popup-documentation-buffer)
+      (read-only-mode -1)
+      (erase-buffer)
+      (insert value)
+      (setq-local truncate-lines nil)
+      (acm-markdown-render-content))
 
-  (acm-frame-new lsp-bridge-popup-documentation-frame
-                 lsp-bridge-popup-documentation-buffer
-                 "lsp bridge popup documentation frame"))
+    (acm-frame-new lsp-bridge-popup-documentation-frame
+                   lsp-bridge-popup-documentation-buffer
+                   "lsp bridge popup documentation frame"
+                   (/ (frame-width emacs-frame) 2)
+                   (/ (frame-height emacs-frame) 2)
+                   )))
 
 (defun lsp-bridge-hide-doc-tooltip ()
   (acm-frame-hide-frame lsp-bridge-popup-documentation-frame))
