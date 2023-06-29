@@ -273,17 +273,8 @@ class FileAction:
         else:
             return 0
 
-    def fix_diagnostic(self, diagnostics):
-        if self.single_server_info and self.single_server_info["name"] == "rust-analyzer":
-            diagnostics = list(filter(lambda d: d["source"] == "rustc", diagnostics))
-
-        return diagnostics
-
     def record_diagnostics(self, diagnostics, server_name):
         log_time("Record diagnostics from '{}' for file {}".format(server_name, os.path.basename(self.filepath)))
-
-        # Fix some LSP server return wrong diagnostics, such as rust-analyzer.
-        diagnostics = self.fix_diagnostic(diagnostics)
 
         # Record diagnostics data that push from LSP server.
         import functools
