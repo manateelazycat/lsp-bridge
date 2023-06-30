@@ -1235,8 +1235,8 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
   (not (string-prefix-p " markdown-code-fontification:" (buffer-name (current-buffer)))))
 
 (defun lsp-bridge-monitor-before-change (begin end)
-  ;; Use `save-match-data' protect match data, avoid conflict with command call `search-regexp'.
   (when (lsp-bridge--not-acm-doc-markdown-buffer)
+    ;; Use `save-match-data' protect match data, avoid conflict with command call `search-regexp'.
     (save-match-data
       (when (lsp-bridge-has-lsp-server-p)
         ;; send whole org src block to lsp server
@@ -1278,13 +1278,13 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
         (list (current-buffer) (buffer-chars-modified-tick) (point))))
 
 (defun lsp-bridge-monitor-after-change (begin end length)
-  ;; Use `save-match-data' protect match data, avoid conflict with command call `search-regexp'.
   (when (lsp-bridge--not-acm-doc-markdown-buffer)
     ;; When user do `delete' operation, `length' is bigger than 0,
     ;; and the string between `begin' and `end' must be empty.
     ;; if string is not empty, something wrong, we should not send any request to completion backend.
     (unless (and (> length 0)
                  (> (length (buffer-substring-no-properties begin end)) 0))
+      ;; Use `save-match-data' protect match data, avoid conflict with command call `search-regexp'.
       (save-match-data
         (unless lsp-bridge-revert-buffer-flag
           ;; Record last command to `lsp-bridge-last-change-command'.
