@@ -1294,6 +1294,17 @@ So we build this macro to restore postion after code format."
         ;; Send change_file request to trigger LSP completion.
         (when (or (lsp-bridge-call-file-api-p)
                   (lsp-bridge-is-remote-file))
+
+          ;; Uncomment below code to debug `change_file' protocol.
+          ;; (message (format "change_file: '%s' '%s' '%s' '%s' '%s' '%s'"
+          ;;                  length
+          ;;                  lsp-bridge--before-change-begin-pos
+          ;;                  lsp-bridge--before-change-end-pos
+          ;;                  (lsp-bridge--position)
+          ;;                  (buffer-substring-no-properties begin end)
+          ;;                  (buffer-substring-no-properties (line-beginning-position) (point))
+          ;;                  ))
+
           (lsp-bridge-call-file-api "change_file"
                                     lsp-bridge--before-change-begin-pos
                                     lsp-bridge--before-change-end-pos
