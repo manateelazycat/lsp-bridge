@@ -2,7 +2,8 @@
   "name": "jdtls",
   "languageId": "java",
   "command": [
-    "python jdtls"
+    "python",
+    "D:\\tools\\jdt-language-server-1.25.0-202306291518\\bin\\jdtls"
   ],
   "settings": {},
   "initializationOptions": {
