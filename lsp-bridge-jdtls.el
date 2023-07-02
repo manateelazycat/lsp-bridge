@@ -11,8 +11,11 @@
   "LSP-Bridge jdtls workspace directory.")
 
 (defvar lsp-bridge-jdtls-default-file
-  (expand-file-name "langserver/jdtls.json"
-                    (file-name-directory load-file-name)))
+  (expand-file-name
+   (if (memq system-type '(cygwin windows-nt ms-dos))
+       "langserver/jdtls_windows.json"
+     "langserver/jdtls.json")
+   (file-name-directory load-file-name)))
 
 (defcustom lsp-bridge-jdtls-jvm-args '()
   "Specifies additional VM parameters for starting the Java language server.
