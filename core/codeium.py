@@ -187,7 +187,7 @@ class Codeium:
         )
 
     def make_url(self, api):
-        return f"http://localhost:{self.server_port}/exa.language_server_pb.LanguageServerService/{api}"
+        return f"http://127.0.0.1:{self.server_port}/exa.language_server_pb.LanguageServerService/{api}"
 
     def run_local_server(self):
         if self.is_run:

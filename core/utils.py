@@ -68,7 +68,7 @@ def init_epc_client(emacs_server_port):
 
     if epc_client is None:
         try:
-            epc_client = EPCClient(("localhost", emacs_server_port), log_traceback=True)
+            epc_client = EPCClient(("127.0.0.1", emacs_server_port), log_traceback=True)
         except ConnectionRefusedError:
             import traceback
             logger.error(traceback.format_exc())

@@ -934,7 +934,7 @@ So we build this macro to restore postion after code format."
                                 :commands (cons lsp-bridge-internal-process-prog lsp-bridge-internal-process-args)
                                 :title (mapconcat 'identity (cons lsp-bridge-internal-process-prog lsp-bridge-internal-process-args) " ")
                                 :port lsp-bridge-epc-port
-                                :connection (lsp-bridge-epc-connect "localhost" lsp-bridge-epc-port)
+                                :connection (lsp-bridge-epc-connect "127.0.0.1" lsp-bridge-epc-port)
                                 ))
   (lsp-bridge-epc-init-epc-layer lsp-bridge-epc-process)
   (setq lsp-bridge-is-starting nil)

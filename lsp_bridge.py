@@ -66,7 +66,7 @@ class LspBridge:
             set_running_in_server()
 
         # Build EPC server.
-        self.server = ThreadingEPCServer(('localhost', 0), log_traceback=True)
+        self.server = ThreadingEPCServer(('127.0.0.1', 0), log_traceback=True)
         self.server.allow_reuse_address = True
         self.server.register_instance(self)  # register instance functions let elisp side call
 
