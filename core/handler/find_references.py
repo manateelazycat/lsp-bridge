@@ -18,10 +18,12 @@ class FindReferences(Handler):
             context=dict(includeDeclaration=False)
         )
 
-    def process_response(self, response: dict) -> None:
+    def process_response(self, response) -> None:
         if response is None:
             eval_in_emacs("lsp-bridge-find-ref-fallback", self.pos)
         else:
+            response = self.remove_duplicate_references(response)
+
             references_dict = {}
             for uri_info in response:
                 path = uri_to_path(uri_info["uri"])
@@ -51,3 +53,13 @@ class FindReferences(Handler):
             linecache.clearcache()  # clear line cache
 
             eval_in_emacs("lsp-bridge-references--popup", references_content, references_counter, self.pos)
+
+    def remove_duplicate_references(self, data):
+        seen = set()
+        result = []
+        for item in data:
+            t_item = (item["uri"], tuple(item["range"]["start"].items()), tuple(item["range"]["end"].items()))
+            if t_item not in seen:
+                seen.add(t_item)
+                result.append(item)
+        return result
