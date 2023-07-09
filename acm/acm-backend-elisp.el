@@ -152,6 +152,26 @@
         (t
          "variable")))
 
+(defun acm-backend-elisp-open-feature-file (feature-string)
+  "Open the file that defines the given FEATURE-STRING."
+  (let ((library-path (locate-library feature-string)))
+    (if library-path
+        (find-file library-path)
+      (message "Feature not found: %s" feature-string))))
+
+(defun acm-backend-elisp-find-def ()
+  (let* ((symbol-string (thing-at-point 'symbol t))
+         (symbol (intern symbol-string)))
+    (pcase (acm-backend-elisp-symbol-type symbol)
+      ("feature" (acm-backend-elisp-open-feature-file symbol-string))
+      ("special form" (find-variable symbol))
+      ("function" (find-function symbol))
+      ("macro" (find-function symbol))
+      ("face" (find-face-definition symbol))
+      ("custom" (find-variable symbol))
+      ("constant" (find-variable symbol))
+      ("variable" (find-variable symbol)))))
+
 (defun acm-backend-elisp-global-symbols ()
   (all-completions ""
                    obarray

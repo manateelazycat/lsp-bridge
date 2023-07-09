@@ -1471,13 +1471,21 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-find-def ()
   (interactive)
-  (setq-local lsp-bridge-jump-to-def-in-other-window nil)
-  (lsp-bridge-call-file-api "find_define" (lsp-bridge--position)))
+  (cond
+   ((acm-is-elisp-mode-p)
+    (acm-backend-elisp-find-def))
+   (t
+    (setq-local lsp-bridge-jump-to-def-in-other-window nil)
+    (lsp-bridge-call-file-api "find_define" (lsp-bridge--position)))))
 
 (defun lsp-bridge-find-def-other-window ()
   (interactive)
-  (setq-local lsp-bridge-jump-to-def-in-other-window t)
-  (lsp-bridge-call-file-api "find_define" (lsp-bridge--position)))
+  (cond
+   ((acm-is-elisp-mode-p)
+    (acm-backend-elisp-find-def))
+   (t
+    (setq-local lsp-bridge-jump-to-def-in-other-window t)
+    (lsp-bridge-call-file-api "find_define" (lsp-bridge--position)))))
 
 (defun lsp-bridge-find-def-return ()
   "Pop off lsp-bridge-mark-ring and jump to the top location."
