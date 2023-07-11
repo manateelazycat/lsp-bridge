@@ -817,9 +817,16 @@ The key of candidate will change between two LSP results."
          (acm-frame-x (if (> (+ cursor-x acm-frame-width) emacs-width)
                           (max (- cursor-x acm-frame-width) offset-x)
                         (max (- cursor-x offset-x) 0)))
-         (acm-frame-y (if (> (+ cursor-y acm-frame-height) emacs-height)
-                          (- cursor-y acm-frame-height)
-                        (+ cursor-y offset-y))))
+         (acm-frame-y (cond
+                       ;; Always popup up when cursor in minibuffer.
+                       ((minibufferp)
+                        (- (nth 1 (window-pixel-edges (minibuffer-window))) acm-frame-height))
+                       ;; Popup up when acm menu bottom below at Emacs bottom edge.
+                       ((> (+ cursor-y acm-frame-height) emacs-height)
+                        (- cursor-y acm-frame-height))
+                       ;; Otherwise, popup down.
+                       (t
+                        (+ cursor-y offset-y)))))
     (acm-frame-set-frame-position acm-menu-frame acm-frame-x acm-frame-y)))
 
 (defun acm-doc-try-show (&optional update-completion-item)
@@ -917,9 +924,6 @@ The key of candidate will change between two LSP results."
       (erase-buffer)
       (acm-menu-render-items items menu-index))
 
-    ;; Adjust menu frame position.
-    (acm-menu-adjust-pos)
-
     ;; Not adjust menu frame size if not necessary,
     ;; such as select candidate just change index,
     ;; or menu width not change when switch to next page.
@@ -930,6 +934,10 @@ The key of candidate will change between two LSP results."
       ;; Adjust doc frame with menu frame position.
       (when (acm-frame-visible-p acm-doc-frame)
         (acm-doc-frame-adjust)))
+
+    ;; Adjust menu frame position.
+    ;; We need adjust acm menu position after set it size, avoid coordinate shifts due to resizing.
+    (acm-menu-adjust-pos)
 
     ;; Fetch `documentation' and `additionalTextEdits' information.
     (acm-doc-try-show)
