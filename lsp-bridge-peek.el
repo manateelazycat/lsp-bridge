@@ -72,7 +72,6 @@
 
 ;;; Require:
 
-(require 'lsp-bridge)
 (require 'color)
 
 ;;; Code:
