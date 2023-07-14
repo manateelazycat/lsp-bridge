@@ -570,10 +570,10 @@ When FORCE if non-nil, the content of the peek window is recalculated."
 
 (defun lsp-bridge-peek-list-move-line (num)
   (lsp-bridge-peek--error-if-not-peeking)
-  (symbol-macrolet ((first-displayed-id (nth 0 lsp-bridge-peek-chosen-displaying-list))
-		    (selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
-		    (last-displayed-id (nth 2 lsp-bridge-peek-chosen-displaying-list))
-		    (next (> num 0)))
+  (cl-symbol-macrolet ((first-displayed-id (nth 0 lsp-bridge-peek-chosen-displaying-list))
+		       (selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
+		       (last-displayed-id (nth 2 lsp-bridge-peek-chosen-displaying-list))
+		       (next (> num 0)))
     (unless (or (and
 		 (= selected-id (1- (length (nth 1 (nth lsp-bridge-peek-selected-symbol
 							lsp-bridge-peek-symbol-tree)))))
@@ -601,10 +601,10 @@ When FORCE if non-nil, the content of the peek window is recalculated."
 
 (defun lsp-bridge-peek-file-content-move (num)
   (lsp-bridge-peek--error-if-not-peeking)
-  (symbol-macrolet ((selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
-		    (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
-		    (pos-list (nth 2 selected-symbol))
-		    (line (plist-get (nth selected-id pos-list) :line)))
+  (cl-symbol-macrolet ((selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
+		       (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
+		       (pos-list (nth 2 selected-symbol))
+		       (line (plist-get (nth selected-id pos-list) :line)))
     (setf line (+ line num))
     (setq lsp-bridge-peek--content-update t)))
 
@@ -804,26 +804,29 @@ The buffer and the point is returned in a cons cell."
 
 (defun lsp-bridge-peek-tree-change-branch (num)
   (lsp-bridge-peek--error-if-not-peeking)
-  (symbol-macrolet ((selected-symbol
-		     (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
-		    (parent-symbol (nth (nth 3 selected-symbol) lsp-bridge-peek-symbol-tree))
-		    (brother-list (nth 4 parent-symbol))
-		    (selected-brother (nth 5 parent-symbol)))
-    (setq already-changed nil)
-    (unless (or (< (+ num selected-brother) 0)
-		(> (+ num selected-brother) (1- (length brother-list))))
-      (setq selected-brother (+ num selected-brother))
-      (setq already-changed t))
-    (unless already-changed
-      (if (< (+ num selected-brother) 0)
-	  (progn
-	    (setq selected-brother (1- (length brother-list)))
-	    (setq already-changed t))))
-    (unless already-changed
-      (if (> (+ num selected-brother) (1- (length brother-list)))
-	  (setq selected-brother 0)))
-    (setq lsp-bridge-peek-selected-symbol (nth selected-brother brother-list))
-    (setq lsp-bridge-peek--content-update t)))
+  (cl-symbol-macrolet ((selected-symbol
+			 (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree)))
+    (if (nth 3 selected-symbol)
+	(cl-symbol-macrolet ((parent-symbol (nth (nth 3 selected-symbol) lsp-bridge-peek-symbol-tree))
+			     (brother-list (nth 4 parent-symbol))
+			     (selected-brother (nth 5 parent-symbol)))
+	  (if selected-brother
+	      (progn
+		(setq already-changed nil)
+		(unless (or (< (+ num selected-brother) 0)
+			    (> (+ num selected-brother) (1- (length brother-list))))
+		  (setq selected-brother (+ num selected-brother))
+		  (setq already-changed t))
+		(unless already-changed
+		  (if (< (+ num selected-brother) 0)
+		      (progn
+			(setq selected-brother (1- (length brother-list)))
+			(setq already-changed t))))
+		(unless already-changed
+		  (if (> (+ num selected-brother) (1- (length brother-list)))
+		      (setq selected-brother 0)))
+		(setq lsp-bridge-peek-selected-symbol (nth selected-brother brother-list))
+		(setq lsp-bridge-peek--content-update t)))))))
 
 (defun lsp-bridge-peek-tree-previous-branch ()
   "Select the previous brach in the tree history."
