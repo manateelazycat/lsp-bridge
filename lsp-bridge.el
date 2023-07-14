@@ -88,6 +88,7 @@
 (require 'lsp-bridge-epc)
 (require 'lsp-bridge-ref)
 (require 'lsp-bridge-jdtls)
+(require 'lsp-bridge-peek)
 (require 'lsp-bridge-call-hierarchy)
 (require 'lsp-bridge-code-action)
 (require 'lsp-bridge-diagnostic)
