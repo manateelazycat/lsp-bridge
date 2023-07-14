@@ -10,7 +10,7 @@ class Handler(abc.ABC):
     method: str  # Method name defined by LSP
     cancel_on_change = False  # Whether to cancel request on file change or cursor change
     send_document_uri = True
-    
+
     def __init__(self, file_action: "FileAction"):
         self.latest_request_id = -1  # Latest request id
         self.last_change: tuple = file_action.last_change  # Last change information
@@ -49,6 +49,7 @@ from core.handler.find_define import FindDefine
 from core.handler.find_type_define import FindTypeDefine
 from core.handler.find_implementation import FindImplementation
 from core.handler.find_references import FindReferences
+from core.handler.peek import PeekFindDefine, PeekFindReferences
 from core.handler.hover import Hover
 from core.handler.signature_help import SignatureHelp
 from core.handler.prepare_rename import PrepareRename

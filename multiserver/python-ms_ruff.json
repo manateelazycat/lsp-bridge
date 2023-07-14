@@ -8,6 +8,8 @@
   "find_type_define": "python-ms",
   "find_implementation": "python-ms",
   "find_references": "python-ms",
+  "peek_find_definition": "python-ms",
+  "peek_find_references": "python-ms",
   "formatting": "python-ms",
   "hover": "python-ms",
   "signature_help": "python-ms",

@@ -8,6 +8,8 @@
   "find_type_define": "volar",
   "find_implementation": "volar",
   "find_references": "volar",
+  "peek_find_definition": "volar",
+  "peek_find_references": "volar",
   "formatting": "volar",
   "hover": "volar",
   "signature_help": "volar",

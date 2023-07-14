@@ -8,6 +8,8 @@
   "find_type_define": "vscode-html-language-server",
   "find_implementation": "vscode-html-language-server",
   "find_references": "vscode-html-language-server",
+  "peek_find_definition": "vscode-html-language-server",
+  "peek_find_references": "vscode-html-language-server",
   "formatting": "vscode-html-language-server",
   "hover": "vscode-html-language-server",
   "signature_help": "vscode-html-language-server",

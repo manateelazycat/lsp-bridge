@@ -1537,6 +1537,12 @@ So we build this macro to restore postion after code format."
   (lsp-bridge-call-file-api "find_references" (lsp-bridge--position)))
 
 (defun lsp-bridge-find-def-fallback (position)
+  (if (not (= (length lsp-bridge-peek-ace-list) 0))
+      (progn
+	(if (nth 0 lsp-bridge-peek-ace-list)
+	    (kill-buffer (nth 0 lsp-bridge-peek-ace-list)))
+	(switch-to-buffer (nth 2 lsp-bridge-peek-ace-list))
+	(goto-char (nth 1 lsp-bridge-peek-ace-list))))
   (message "[LSP-Bridge] No definition found.")
   (if (functionp lsp-bridge-find-def-fallback-function)
       (funcall lsp-bridge-find-def-fallback-function position)))
@@ -1818,7 +1824,7 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
 
     (when (or (lsp-bridge-has-lsp-server-p)
               ;; Init acm backend for org babel, and need elimination org temp buffer.
-              (and lsp-bridge-enable-org-babel 
+              (and lsp-bridge-enable-org-babel
                    (eq major-mode 'org-mode)
                    (not (lsp-bridge-is-org-temp-buffer-p))))
       ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.

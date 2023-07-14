@@ -8,6 +8,8 @@
   "find_type_define": "pyright-background-analysis",
   "find_implementation": "pyright-background-analysis",
   "find_references": "pyright-background-analysis",
+  "peek_find_definition": "pyright",
+  "peek_find_references": "pyright",
   "formatting": "pyright-background-analysis",
   "hover": "pyright-background-analysis",
   "signature_help": "pyright-background-analysis",

@@ -34,7 +34,7 @@ class FindDefine(Handler):
             raise NotImplementedError()
         elif file_uri.startswith("deno:"):
             # for deno
-            # Deno will return targetUri like "deno:asset/lib.deno.ns.d.ts", 
+            # Deno will return targetUri like "deno:asset/lib.deno.ns.d.ts",
             # so we need send server deno/virtualTextDocument to request virtual text document from Deno.
             self.file_action.send_server_request(self.file_action.single_server, "deno_uri_resolver", file_uri, start_pos)
         else:

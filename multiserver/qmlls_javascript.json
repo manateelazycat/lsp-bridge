@@ -8,6 +8,8 @@
   "find_type_define": "qmlls",
   "find_implementation": "qmlls",
   "find_references": "qmlls",
+  "peek_find_definition": "qmlls",
+  "peek_find_references": "qmlls",
   "formatting": "qmlls",
   "hover": "qmlls",
   "signature_help": "qmlls",

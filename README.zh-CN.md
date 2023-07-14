@@ -124,6 +124,18 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 - `lsp-bridge-popup-complete-menu`: 手动弹出补全菜单， 只有当打开 `lsp-bridge-complete-manually` 选项才需要使用这个命令
 - `lsp-bridge-restart-process`: 重启 lsp-bridge 进程 (一般只有开发者才需要这个功能)
 - `lsp-bridge-toggle-sdcv-helper`: 切换字典助手补全
+- `lsp-bridge-peek`: 在 peek window 中展示光标处的定义和引用
+- `lsp-bridge-peek-abort`: 关闭 peek window (默认绑定到 `C-g`)
+- `lsp-bridge-peek-list-next-line`: 选择下一个定义或引用 (默认绑定到 `M-S-n` )
+- `lsp-bridge-peek-list-prev-line`: 选择上一个定义或引用 (默认绑定到 `M-S-p` )
+- `lsp-bridge-peek-file-content-next-line`: 将 peek window 中的文件内容向下滚动一行 (默认绑定到 `M-n` )
+- `lsp-bridge-peek-file-content-prev-line`: 将 peek window 中的文件内容向上滚动一行 (默认绑定到 `M-p` )
+- `lsp-bridge-peek-jump`: 跳转到定义或引用所在处 (默认绑定到 `M-l j` )
+- `lsp-bridge-peek-through`: 选择 peek window 中的一个符号进行查看
+- `lsp-bridge-peek-tree-previous-branch`: 选择上一个浏览历史上同级的分支 (默认绑定到 `<up>` )
+- `lsp-bridge-peek-tree-next-branch`: 选择下一个浏览历史上同级的分支 (默认绑定到 `<down>` )
+- `lsp-bridge-peek-tree-previous-node`: 选择浏览历史上一级节点 (默认绑定到 `<left>` )
+- `lsp-bridge-peek-tree-next-node`: 选择浏览历史上下一级节点 (默认绑定到 `<right>` )
 
 ## LSP 服务器选项
 
@@ -166,6 +178,10 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 - `lsp-bridge-user-multiserver-dir`: 用户 multiserver 配置文件目录， 如果目录下的配置文件和 [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) 里的配置文件同名， lsp-bridge 会使用这个目录下的配置文件
 - `lsp-bridge-symbols-enable-which-func`: 在`which-func`使用 lsp 后端, 默认关闭
 - `lsp-bridge-enable-org-babel`: 在 Org Babel 里使用 LSP 补全， 默认关闭, 如果没法补全， 请确保 begin_src 后面的字符串存在于 `org-src-lang-modes` 变量中
+- `lsp-bridge-peek-file-content-height`: 在 peek windows 中显示多少行的文件内容
+- `lsp-bridge-peek-list-height`: 选择下一个定义和引用的备选项
+- `lsp-bridge-peek-ace-keys`: 进行 `lsp-bridge-peek-through` 时待按的按键
+- `lsp-bridge-peek-ace-cancel-keys`: 退出 `lsp-bridge-peek-through` 的按键
 - `acm-frame-background-dark-color`: 暗色主题下的菜单背景颜色
 - `acm-frame-background-light-color`: 亮色主题下的菜单背景颜色
 - `acm-enable-doc`: 补全菜单是否显示帮助文档
