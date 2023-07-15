@@ -125,6 +125,18 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `lsp-bridge-popup-complete-menu`: Manually popup the completion menu, you only need this command when turn on option `lsp-bride-complete-manually`
 - `lsp-bridge-restart-process`: restart lsp-bridge process (only used for development)
 - `lsp-bridge-toggle-sdcv-helper`: Switch dictionary completion assistant
+- `lsp-bridge-peek-abort`: Close peek window (default binding to `C-g`)
+- `lsp-bridge-peek-list-next-line`: Select the next definition or reference (default binding to `M-S-n`)
+- `lsp-bridge-peek-list-prev-line`: Select the previous definition or reference (default binding to `M-S-p`)
+- `lsp-bridge-peek-file-content-next-line`: Scroll down one line in the peek window file content (default binding to `M-n`)
+- `lsp-bridge-peek-file-content-prev-line`: Scroll up one line in the peek window file content (default binding to `M-p`)
+- `lsp-bridge-peek-jump`: Jump to the location of the definition or reference (default binding to `M-l j`)
+- `lsp-bridge-peek-jump-back`: Jump back to the original position (default bound to `M-l b`)
+- `lsp-bridge-peek-through`: View one symbol in the peek window
+- `lsp-bridge-peek-tree-previous-branch`: Select the previous branch at the same level in the browsing history (default binding to `<up>`)
+- `lsp-bridge-peek-tree-next-branch`: Select the next branch at the same level in the browsing history (default binding to `<down>`)
+- `lsp-bridge-peek-tree-previous-node`: Select the previous higher-level node in the browsing history (default binding to `<left>`)
+- `lsp-bridge-peek-tree-next-node`: Select the next lower-level node in the browsing history (default binding to `<right>`)
 
 ## LSP server options
 
@@ -167,6 +179,10 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `lsp-bridge-user-multiserver-dir`: the dir where user place multiserver configuration file, if the configuration file name in the dir is the same as that in [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) , lsp-bridge will use the configuration file in this dir
 - `lsp-bridge-symbols-enable-which-func`: Using lsp backend for `which-func`, disable by default
 - `lsp-bridge-enable-org-babel`: Use lsp completion in org babel, disable by default, if unable to complete, please make sure the string after begin_src exists in the `org-src-lang-modes` variable
+- `lsp-bridge-peek-file-content-height`: Display how many lines of file content in peek windows
+- `lsp-bridge-peek-list-height`: Select the next option for definition and reference
+- `lsp-bridge-peek-ace-keys`: Keys to press when performing `lsp-bridge-peek-through`
+- `lsp-bridge-peek-ace-cancel-keys`: Keys to exit `lsp-bridge-peek-through`
 - `acm-frame-background-dark-color`: Menu background color in dark theme
 - `acm-frame-background-light-color`: Menu background color in light theme
 - `acm-enable-doc`: Whether the complete menu display the help document
@@ -335,11 +351,12 @@ The following is the directory structure of the lsp-bridge project:
 |:------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | lsp-bridge.el                       | The Elisp main logic part of lsp-bridge provides custom options and Elisp functions for python sub-processes to call, such as code jumps, renaming, etc.                                                     |
 | lsp-bridge-epc.el                   | The code that communicates with the lsp-bridge python sub-process, which mainly implements Elisp IPC to interface with Python EPC, implementing data serialization, sending, receiving, and deserialization. |
-| lsp-bridge-call-hierarchy.el        | Displays the code‘s call order relationship in a pop-up frame.                                                                                                                                               |
+| lsp-bridge-call-hierarchy.el        | Displays the code‘s call order relationship in a pop-up frame.                                                                                                                                              |
 | lsp-bridge-code-action.el           | Code repair related code.                                                                                                                                                                                    |
 | lsp-bridge-diagnostic.el            | Diagnostic information related code.                                                                                                                                                                         |
 | lsp-bridge-ref.el                   | A code reference viewing framework that provides reference viewing, batch renaming, and reference result regular filtering. The core code is forked from color-rg.el.                                        |
 | lsp-bridge-jdtls.el                 | Provides third-party library jump functions for the Java Language.                                                                                                                                           |
+| lsp-bridge-peek.el                  | Use peek windows to view definitions and references                                                                                                                                                          |
 | lsp-bridge-lsp-installer.el         | Installs TabNine and Omnisharp.                                                                                                                                                                              |
 | lsp-bridge.py                       | The Python main logic part of lsp-bridge provides event loops, message scheduling, and state management.                                                                                                     |
 | acm/acm.el                          | An asynchronous completion menu designed specifically for lsp-bridge backend, supporting lsp, elisp, words, TabNine, and other backends.                                                                     |
@@ -353,10 +370,10 @@ The following is the directory structure of the lsp-bridge project:
 | core/codeium.py                     | The backend searches and completes with Codeium.                                                                                                                                                             |
 | core/search_file_words.py           | Asynchronous search backend for file words.                                                                                                                                                                  |
 | core/search_paths.py                | Asynchronous search backend for file paths.                                                                                                                                                                  |
-| core/search_sdcv_words.py           | English word search backend, interchangeable with other language’s StarDict dictionaries.                                                                                                                    |
+| core/search_sdcv_words.py           | English word search backend, interchangeable with other language’s StarDict dictionaries.                                                                                                                   |
 | core/search_tailwindcss_keywords.py | TailwindCSS keyword search backend.                                                                                                                                                                          |
 | core/search_list.py                 | Asynchronous search framework that can be used to write your own asynchronous search backends.                                                                                                               |
-| langserver                          | Mainly places the configuration of LSP servers, with a json file for each server, defining the server‘s name, language ID, startup command, and settings options.                                            |
+| langserver                          | Mainly places the configuration of LSP servers, with a json file for each server, defining the server‘s name, language ID, startup command, and settings options.                                           |
 | multiserver                         | Mainly places the configuration of multiple LSP servers.                                                                                                                                                     |
 | resources                           | English dictionary data, mainly for serving Chinese users.                                                                                                                                                   |
 

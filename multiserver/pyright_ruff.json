@@ -8,6 +8,8 @@
   "find_type_define": "pyright",
   "find_implementation": "pyright",
   "find_references": "pyright",
+  "peek_find_definition": "pyright",
+  "peek_find_references": "pyright",
   "formatting": "pyright",
   "hover": "pyright",
   "signature_help": "pyright",

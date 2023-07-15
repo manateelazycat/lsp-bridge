@@ -8,6 +8,8 @@
   "find_type_define": "typescript",
   "find_implementation": "typescript",
   "find_references": "typescript",
+  "peek_find_definition": "typescript",
+  "peek_find_references": "typescript",
   "formatting": "typescript",
   "hover": "typescript",
   "signature_help": "typescript",

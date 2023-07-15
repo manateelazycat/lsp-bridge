@@ -8,6 +8,8 @@
   "find_type_define": "jedi",
   "find_implementation": "jedi",
   "find_references": "jedi",
+  "peek_find_definition": "jedi",
+  "peek_find_references": "jedi",
   "formatting": "jedi",
   "hover": "jedi",
   "signature_help": "jedi",

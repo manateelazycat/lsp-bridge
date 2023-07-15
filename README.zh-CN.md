@@ -124,6 +124,19 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 - `lsp-bridge-popup-complete-menu`: 手动弹出补全菜单， 只有当打开 `lsp-bridge-complete-manually` 选项才需要使用这个命令
 - `lsp-bridge-restart-process`: 重启 lsp-bridge 进程 (一般只有开发者才需要这个功能)
 - `lsp-bridge-toggle-sdcv-helper`: 切换字典助手补全
+- `lsp-bridge-peek`: 在 peek window 中展示光标处的定义和引用
+- `lsp-bridge-peek-abort`: 关闭 peek window (默认绑定到 `C-g`)
+- `lsp-bridge-peek-list-next-line`: 选择下一个定义或引用 (默认绑定到 `M-S-n` )
+- `lsp-bridge-peek-list-prev-line`: 选择上一个定义或引用 (默认绑定到 `M-S-p` )
+- `lsp-bridge-peek-file-content-next-line`: 将 peek window 中的文件内容向下滚动一行 (默认绑定到 `M-n` )
+- `lsp-bridge-peek-file-content-prev-line`: 将 peek window 中的文件内容向上滚动一行 (默认绑定到 `M-p` )
+- `lsp-bridge-peek-jump`: 跳转到定义或引用所在处 (默认绑定到 `M-l j` )
+- `lsp-bridge-peek-jump-back`: 跳转到原来的位置 (默认绑定到 `M-l b` )
+- `lsp-bridge-peek-through`: 选择 peek window 中的一个符号进行查看
+- `lsp-bridge-peek-tree-previous-branch`: 选择上一个浏览历史上同级的分支 (默认绑定到 `<up>` )
+- `lsp-bridge-peek-tree-next-branch`: 选择下一个浏览历史上同级的分支 (默认绑定到 `<down>` )
+- `lsp-bridge-peek-tree-previous-node`: 选择浏览历史上一级节点 (默认绑定到 `<left>` )
+- `lsp-bridge-peek-tree-next-node`: 选择浏览历史上下一级节点 (默认绑定到 `<right>` )
 
 ## LSP 服务器选项
 
@@ -166,6 +179,10 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 - `lsp-bridge-user-multiserver-dir`: 用户 multiserver 配置文件目录， 如果目录下的配置文件和 [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) 里的配置文件同名， lsp-bridge 会使用这个目录下的配置文件
 - `lsp-bridge-symbols-enable-which-func`: 在`which-func`使用 lsp 后端, 默认关闭
 - `lsp-bridge-enable-org-babel`: 在 Org Babel 里使用 LSP 补全， 默认关闭, 如果没法补全， 请确保 begin_src 后面的字符串存在于 `org-src-lang-modes` 变量中
+- `lsp-bridge-peek-file-content-height`: 在 peek windows 中显示多少行的文件内容
+- `lsp-bridge-peek-list-height`: 选择下一个定义和引用的备选项
+- `lsp-bridge-peek-ace-keys`: 进行 `lsp-bridge-peek-through` 时待按的按键
+- `lsp-bridge-peek-ace-cancel-keys`: 退出 `lsp-bridge-peek-through` 的按键
 - `acm-frame-background-dark-color`: 暗色主题下的菜单背景颜色
 - `acm-frame-background-light-color`: 亮色主题下的菜单背景颜色
 - `acm-enable-doc`: 补全菜单是否显示帮助文档
@@ -331,34 +348,35 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 
 下面是 lsp-bridge 项目的目录结构：
 
-| 文件名                              | 作用                                                                                                              |
-|:------------------------------------|:------------------------------------------------------------------------------------------------------------------|
+| 文件名                              | 作用                                                                                                                 |
+|:------------------------------------|:---------------------------------------------------------------------------------------------------------------------|
 | lsp-bridge.el                       | lsp-bridge 的 Elisp 主逻辑部分， 提供自定义选项和 Elisp 函数供 python 子进程调用， 比如代码跳转、 重命名等           |
 | lsp-bridge-epc.el                   | 和 lsp-bridge python 子进程通讯的代码， 主要实现 Elisp IPC 来对接 Python EPC, 实现数据序列化、 发送、 接收和反序列化 |
-| lsp-bridge-call-hierarchy.el        | 在弹出 Frame 中显示代码的调用顺序关系                                                                             |
-| lsp-bridge-code-action.el           | 代码修复相关代码                                                                                                  |
-| lsp-bridge-diagnostic.el            | 诊断信息相关代码                                                                                                  |
-| lsp-bridge-ref.el                   | 代码引用查看框架， 提供引用查看、 批量重命名、 引用结果正则过滤等， 核心代码 fork 自 color-rg.el                      |
-| lsp-bridge-jdtls.el                 | 提供 Java 语言第三方库跳转功能                                                                                    |
-| lsp-bridge-lsp-installer.el         | 安装 TabNine 和 Omnisharp                                                                                         |
-| lsp-bridge.py                       | lsp-bridge 的 Python 主逻辑部分， 提供事件循环、 消息调度和状态管理                                                 |
-| acm/acm.el                          | 异步补全菜单， 专门为 lsp-bridge 后端而设计， 支持 lsp, elisp, words, TabNine 等后端                              |
-| core/fileaction.py                  | 主要记录每个文件状态， 处理 LSP 响应消息， 调用 Emacs Elisp 函数                                                    |
+| lsp-bridge-call-hierarchy.el        | 在弹出 Frame 中显示代码的调用顺序关系                                                                                |
+| lsp-bridge-code-action.el           | 代码修复相关代码                                                                                                     |
+| lsp-bridge-diagnostic.el            | 诊断信息相关代码                                                                                                     |
+| lsp-bridge-ref.el                   | 代码引用查看框架， 提供引用查看、 批量重命名、 引用结果正则过滤等， 核心代码 fork 自 color-rg.el                     |
+| lsp-bridge-jdtls.el                 | 提供 Java 语言第三方库跳转功能                                                                                       |
+| lsp-bridge-lsp-installer.el         | 安装 TabNine 和 Omnisharp                                                                                            |
+| lsp-bridge-peek.el                  | 用 peek windows 来查看定义和引用                                                                                     |
+| lsp-bridge.py                       | lsp-bridge 的 Python 主逻辑部分， 提供事件循环、 消息调度和状态管理                                                  |
+| acm/acm.el                          | 异步补全菜单， 专门为 lsp-bridge 后端而设计， 支持 lsp, elisp, words, TabNine 等后端                                 |
+| core/fileaction.py                  | 主要记录每个文件状态， 处理 LSP 响应消息， 调用 Emacs Elisp 函数                                                     |
 | core/lspserver.py                   | LSP 消息处理模块， 主要是解析、 发送和接受 LSP 消息， 并保证 LSP 请求顺序符合 LSP 协议规范                           |
-| core/remote_file.py                 | 用于处理远程服务器文件访问和同步                                                                                  |
-| core/utils.py                       | 一些全局工具函数， 方便各模块调用                                                                                  |
-| core/mergedeep.py                   | JSON 信息合并， 主要用于发送自定义选项给 LSP 服务器                                                               |
-| core/hanlder/                       | LSP 消息发送和接受的实现， 其中 `__init__.py` 是基类                                                               |
-| core/tabnine.py                     | TabNine 后端搜索和补全                                                                                            |
-| core/codeium.py                     | Codeium 后端搜索和补全                                                                                            |
-| core/search_file_words.py           | 文件单词异步搜索后端                                                                                              |
-| core/search_paths.py                | 文件路径异步搜索后端                                                                                              |
-| core/search_sdcv_words.py           | 英文单词搜索后端， 可更换为其他语言的 StarDict 词典                                                                |
-| core/search_tailwindcss_keywords.py | TailwindCSS 关键词搜索后端                                                                                        |
-| core/search_list.py                 | 异步搜索框架， 可用于编写自己的异步搜索后端                                                                       |
-| langserver                          | 主要放置 LSP 服务器的配置， 每一个服务器一个 json 文件， 分别定义服务器的名称、 语言 ID、 启动命令和设置选项等        |
-| multiserver                         | 主要放置多 LSP 服务器的配置                                                                                       |
-| resources                           | 英文词典数据， 主要是服务中国用户                                                                                 |
+| core/remote_file.py                 | 用于处理远程服务器文件访问和同步                                                                                     |
+| core/utils.py                       | 一些全局工具函数， 方便各模块调用                                                                                    |
+| core/mergedeep.py                   | JSON 信息合并， 主要用于发送自定义选项给 LSP 服务器                                                                  |
+| core/hanlder/                       | LSP 消息发送和接受的实现， 其中 `__init__.py` 是基类                                                                 |
+| core/tabnine.py                     | TabNine 后端搜索和补全                                                                                               |
+| core/codeium.py                     | Codeium 后端搜索和补全                                                                                               |
+| core/search_file_words.py           | 文件单词异步搜索后端                                                                                                 |
+| core/search_paths.py                | 文件路径异步搜索后端                                                                                                 |
+| core/search_sdcv_words.py           | 英文单词搜索后端， 可更换为其他语言的 StarDict 词典                                                                  |
+| core/search_tailwindcss_keywords.py | TailwindCSS 关键词搜索后端                                                                                           |
+| core/search_list.py                 | 异步搜索框架， 可用于编写自己的异步搜索后端                                                                          |
+| langserver                          | 主要放置 LSP 服务器的配置， 每一个服务器一个 json 文件， 分别定义服务器的名称、 语言 ID、 启动命令和设置选项等       |
+| multiserver                         | 主要放置多 LSP 服务器的配置                                                                                          |
+| resources                           | 英文词典数据， 主要是服务中国用户                                                                                    |
 
 请先阅读下面的文章:
 

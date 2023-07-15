@@ -8,6 +8,8 @@
   "find_type_define": "pylsp",
   "find_implementation": "pylsp",
   "find_references": "pylsp",
+  "peek_find_definition": "pylsp",
+  "peek_find_references": "pylsp",
   "formatting": "pylsp",
   "hover": "pylsp",
   "signature_help": "pylsp",
