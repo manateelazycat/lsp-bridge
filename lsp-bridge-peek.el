@@ -224,11 +224,21 @@ which take care of setting up other things."
        ((eq bg-mode 'dark)
 	(setq lsp-bridge-peek--bg (lsp-bridge--color-blend "#ffffff" bg 0.03)
 	      lsp-bridge-peek--bg-alt (lsp-bridge--color-blend "#ffffff" bg 0.2)
-	      lsp-bridge-peek--bg-selected (lsp-bridge--color-blend "#ffffff" bg 0.4)))
+	      lsp-bridge-peek--bg-selected (lsp-bridge--color-blend "#ffffff" bg 0.4)
+	      lsp-bridge-peek--method-fg "gray"
+	      lsp-bridge-peek--path-fg "#6aaf50"
+	      lsp-bridge-peek--pos-fg "#f57e00"
+	      lsp-bridge-peek--symbol-selected "orange"
+	      lsp-bridge-peek--symbol-alt "#dedede"))
        (t
 	(setq lsp-bridge-peek--bg (lsp-bridge--color-blend "#000000" bg 0.02)
 	      lsp-bridge-peek--bg-alt (lsp-bridge--color-blend "#000000" bg 0.12)
-	      lsp-bridge-peek--bg-selected (lsp-bridge--color-blend "#000000" bg 0.06)))))
+	      lsp-bridge-peek--bg-selected (lsp-bridge--color-blend "#000000" bg 0.06)
+	      lsp-bridge-peek--method-fg "dark"
+	      lsp-bridge-peek--path-fg "#477a33"
+	      lsp-bridge-peek--pos-fg "#b06515"
+	      lsp-bridge-peek--symbol-selected "#ff6200"
+	      lsp-bridge-peek--symbol-alt "#212121"))))
     (setq lsp-bridge-peek--content-update t)
     (setq lsp-bridge-peek-chosen-displaying-list (make-list 3 0))
     (setf (nth 2 lsp-bridge-peek-chosen-displaying-list) (1- lsp-bridge-peek-list-height))
@@ -414,10 +424,14 @@ The beginnings of each symbol are replaced by ace strings with
 	     (method (if (= (+ first-displayed-id n) 0) "definition" "reference"))
 	     (bg-selected (list :background lsp-bridge-peek--bg-selected :extend t))
 	     (bg-alt (list :background lsp-bridge-peek--bg-alt :extend t)))
-	(lsp-bridge--add-face method (list :foreground "gray" :extend t))
-	(lsp-bridge--add-face filename (list :foreground "#6aaf50" :extend t))
-	(lsp-bridge--add-face line (list :foreground "#f57e00" :extend t))
-	(lsp-bridge--add-face char (list :foreground "#f57e00" :extend t))
+	(lsp-bridge--add-face method (list :foreground  lsp-bridge-peek--method-fg
+					   :extend t))
+	(lsp-bridge--add-face filename (list :foreground lsp-bridge-peek--path-fg
+					     :extend t))
+	(lsp-bridge--add-face line (list :foreground lsp-bridge-peek--pos-fg
+					 :extend t))
+	(lsp-bridge--add-face char (list :foreground lsp-bridge-peek--pos-fg
+					 :extend t))
 	(if (= (+ first-displayed-id n) selected-id)
 	    (setf (nth n displaying-list)
 		  (lsp-bridge--add-face
@@ -436,12 +450,13 @@ The beginnings of each symbol are replaced by ace strings with
 	 (selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
 	 (history-string (format "[%s]" (lsp-bridge--add-face
 					 (format "%s" (nth 0 selected-symbol))
-					 (list :foreground "orange" :extend t)))))
+					 (list :foreground lsp-bridge-peek--symbol-selected :extend t)))))
     (while (nth 3 selected-symbol)
       (setq selected-symbol (nth (nth 3 selected-symbol) lsp-bridge-peek-symbol-tree))
       (setq history-string (concat (format "%s %s " (lsp-bridge--add-face
 						     (format "%s" (nth 0 selected-symbol))
-						     (list :foreground "#dedede" :extend t))
+						     (list :foreground lsp-bridge-peek--symbol-alt
+							   :extend t))
 					   (if (> (length (nth 4 selected-symbol)) 1)
 					       "<" "->"))
 				   history-string)))
@@ -459,7 +474,7 @@ The beginnings of each symbol are replaced by ace strings with
 					       "<" "->")
 					   (lsp-bridge--add-face
 					    (format "%s" (nth 0 selected-symbol))
-					    (list :foreground "#dedede" :extend t))))))
+					    (list :foreground lsp-bridge-peek--symbol-alt :extend t))))))
     (setq history-string (concat
 			  (format "(%s/%s) " (1+ selected-id) total-n)
 			  history-string "\n"))
@@ -641,7 +656,7 @@ start/end position of each symbol.  Point will not be moved."
 		 (line-end-position)))
 	(symbol-list))
     (save-excursion
-      (loop
+      (cl-loop
        while
        (forward-symbol 1)
        do
@@ -660,8 +675,8 @@ N can be the length of the list returned by
 `lsp-bridge-peek--search-symbols'.  The keys used are
 `lsp-bridge-peek-ace-keys'."
   (unless (and (listp lsp-bridge-peek-ace-keys)
-	       (null (remove-if #'integerp lsp-bridge-peek-ace-keys))
-	       (eq (remove-duplicates lsp-bridge-peek-ace-keys)
+	       (null (cl-remove-if #'integerp lsp-bridge-peek-ace-keys))
+	       (eq (cl-remove-duplicates lsp-bridge-peek-ace-keys)
 		   lsp-bridge-peek-ace-keys))
     (user-error "Invalid `lsp-bridge-peek-ace-keys'"))
   (let* ((key-num (length lsp-bridge-peek-ace-keys))
@@ -700,7 +715,7 @@ list."
               (pop (nth n seqs))
               (setq last-poped-idx n))
           (setf (nth n seqs) nil)))
-      (if (null (remove-if #'null seqs))
+      (if (null (cl-remove-if #'null seqs))
           last-poped-idx
         seqs))))
 
