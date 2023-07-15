@@ -450,6 +450,16 @@ def rebuild_content_from_diff(content, start_pos, end_pos, change_text):
 
     return content[:start_pos] + change_text + content[end_pos:]
 
+def remove_duplicate_references(data):
+    seen = set()
+    result = []
+    for item in data:
+        t_item = (item["uri"], tuple(item["range"]["start"].items()), tuple(item["range"]["end"].items()))
+        if t_item not in seen:
+            seen.add(t_item)
+            result.append(item)
+    return result
+
 class MessageSender(Thread):
 
     def __init__(self, process: subprocess.Popen):

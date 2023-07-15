@@ -60,7 +60,7 @@ class PeekFindReferences(Handler):
         if response is None:
             eval_in_emacs("lsp-bridge-find-ref-fallback", self.pos)
         else:
-            response = self.remove_duplicate_references(response)
+            response = remove_duplicate_references(response)
 
             references_dict = {}
             for uri_info in response:
@@ -88,12 +88,3 @@ class PeekFindReferences(Handler):
             eval_in_emacs("lsp-bridge-peek-references--return", references_content, references_counter)
 
 
-    def remove_duplicate_references(self, data):
-        seen = set()
-        result = []
-        for item in data:
-            t_item = (item["uri"], tuple(item["range"]["start"].items()), tuple(item["range"]["end"].items()))
-            if t_item not in seen:
-                seen.add(t_item)
-                result.append(item)
-        return result
