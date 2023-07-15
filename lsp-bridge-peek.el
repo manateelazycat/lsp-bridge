@@ -7,7 +7,7 @@
 ;; Copyright (C) 2023, AllTheLife
 ;; Created: 2023-7-1 19:28 +0800
 ;; Version: 0.1
-;; Last-Updated: 2023-7-14 18:09:34 +0800
+;; Last-Updated: 2023-7-15 20:23:54 +0800
 ;;           By: AllTheLife
 ;; URL: https://github.com/manateelazycat/lsp-bridge
 ;; Keywords:
@@ -92,6 +92,21 @@
 (defvar lsp-bridge-peek--bg-selected nil
   "Background color for selected tags when peeking.")
 
+(defvar lsp-bridge-peek--method-fg nil
+  "Foreground color for methods when peeking.")
+
+(defvar lsp-bridge-peek--path-fg nil
+  "Foreground color for file paths when peeking.")
+
+(defvar lsp-bridge-peek--pos-fg nil
+  "Foreground color for postions when peeking.")
+
+(defvar lsp-bridge-peek--symbol-selected nil
+  "Foreground color for symbols are selected when peeking.")
+
+(defvar lsp-bridge-peek--symbol-alt nil
+  "Foreground color for alt symbols when peeking.")
+
 (defvar lsp-bridge-peek--ace-seqs nil
   "Ace key sequences for ace jump.")
 
@@ -114,6 +129,8 @@ killed after disabling `lsp-bridge-peek--mode'.")
 The first item in the list is the first definition or reference displayed,
 the second item is the definition or reference that will be selected, and
 the third item is the last definition or reference displayed.")
+
+(defvar lsp-bridge-peek-file-and-pos-before-jump nil)
 
 (defvar lsp-bridge-peek-symbol-tree nil
   "A tree structure for storing symbols, each element is a list. The first
@@ -192,6 +209,7 @@ height and background properties of the face."
     (define-key map (kbd "<down>") 'lsp-bridge-peek-tree-next-branch)
     ;; Jump
     (define-key map (kbd "M-l j") 'lsp-bridge-peek-jump)
+    (define-key map (kbd "M-l b") 'lsp-bridge-peek-jump-back)
     ;; Abort
     (define-key map [remap keyboard-quit] 'lsp-bridge-peek-abort)
     map)
@@ -253,10 +271,16 @@ which take care of setting up other things."
 	  lsp-bridge-peek--bg nil
 	  lsp-bridge-peek--bg-alt nil
 	  lsp-bridge-peek--bg-selected nil
+	  lsp-bridge-peek--method-fg nil
+	  lsp-bridge-peek--path-fg nil
+	  lsp-bridge-peek--pos-fg nil
+	  lsp-bridge-peek--symbol-selected nil
+	  lsp-bridge-peek--symbol-alt nil
 	  lsp-bridge-peek-ace-list nil
 	  lsp-bridge-peek-symbol-tree nil
 	  lsp-bridge-peek-selected-symbol nil
 	  lsp-bridge-peek-chosen-displaying-list (make-list 3 nil)
+	  lsp-bridge-peek-file-and-pos-before-jump nil
 	  lsp-bridge-peek--ace-seqs nil
 	  lsp-bridge-peek--symbol-bounds nil)
     (remove-hook 'post-command-hook #'lsp-bridge-peek--show 'local))))
@@ -636,6 +660,9 @@ When FORCE if non-nil, the content of the peek window is recalculated."
   "Jump to where the definition/reference is."
   (interactive)
   (lsp-bridge-peek--error-if-not-peeking)
+  (setq lsp-bridge-peek-file-and-pos-before-jump (list))
+  (push (point) lsp-bridge-peek-file-and-pos-before-jump)
+  (push (buffer-file-name) lsp-bridge-peek-file-and-pos-before-jump)
   (let* ((selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
 	 (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
 	 (path-list (nth 1 selected-symbol))
@@ -644,6 +671,14 @@ When FORCE if non-nil, the content of the peek window is recalculated."
 	 (pos (nth selected-id pos-list)))
     (find-file file)
     (goto-char (acm-backend-lsp-position-to-point pos))))
+
+(defun lsp-bridge-peek-jump-back ()
+  "Jump to the file and position before jump."
+  (interactive)
+  (if lsp-bridge-peek-file-and-pos-before-jump
+      (progn
+	(find-file (nth 0 lsp-bridge-peek-file-and-pos-before-jump))
+	(goto-char (nth 1 lsp-bridge-peek-file-and-pos-before-jump)))))
 
 (defun lsp-bridge-peek--search-symbols (line)
   "Search for symbols from current position to LINEs after.
@@ -797,6 +832,8 @@ The buffer and the point is returned in a cons cell."
   "Select the previous node in the tree history."
   (interactive)
   (lsp-bridge-peek--error-if-not-peeking)
+  (setq lsp-bridge-peek-chosen-displaying-list (make-list 3 0))
+  (setf (nth 2 lsp-bridge-peek-chosen-displaying-list) (1- lsp-bridge-peek-list-height))
   (let* ((selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
 	 (parent-symbol (nth 3 selected-symbol)))
     (if parent-symbol
@@ -808,6 +845,8 @@ The buffer and the point is returned in a cons cell."
   "Select the next node in the tree history."
   (interactive)
   (lsp-bridge-peek--error-if-not-peeking)
+  (setq lsp-bridge-peek-chosen-displaying-list (make-list 3 0))
+  (setf (nth 2 lsp-bridge-peek-chosen-displaying-list) (1- lsp-bridge-peek-list-height))
   (let* ((selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
 	 (child-list (nth 4 selected-symbol))
 	 (selected-child (nth 5 selected-symbol)))
@@ -818,6 +857,8 @@ The buffer and the point is returned in a cons cell."
 
 (defun lsp-bridge-peek-tree-change-branch (num)
   (lsp-bridge-peek--error-if-not-peeking)
+  (setq lsp-bridge-peek-chosen-displaying-list (make-list 3 0))
+  (setf (nth 2 lsp-bridge-peek-chosen-displaying-list) (1- lsp-bridge-peek-list-height))
   (cl-symbol-macrolet ((selected-symbol
 			 (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree)))
     (if (nth 3 selected-symbol)

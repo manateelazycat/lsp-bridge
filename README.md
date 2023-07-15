@@ -131,6 +131,7 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `lsp-bridge-peek-file-content-next-line`: Scroll down one line in the peek window file content (default binding to `M-n`)
 - `lsp-bridge-peek-file-content-prev-line`: Scroll up one line in the peek window file content (default binding to `M-p`)
 - `lsp-bridge-peek-jump`: Jump to the location of the definition or reference (default binding to `M-l j`)
+- `lsp-bridge-peek-jump-back`: Jump back to the original position (default bound to `M-l b`)
 - `lsp-bridge-peek-through`: View one symbol in the peek window
 - `lsp-bridge-peek-tree-previous-branch`: Select the previous branch at the same level in the browsing history (default binding to `<up>`)
 - `lsp-bridge-peek-tree-next-branch`: Select the next branch at the same level in the browsing history (default binding to `<down>`)
