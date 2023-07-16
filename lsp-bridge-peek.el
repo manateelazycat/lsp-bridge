@@ -193,17 +193,35 @@ height and background properties of the face."
     ;; Browse file
     (define-key map (kbd "M-n") 'lsp-bridge-peek-file-content-next-line)
     (define-key map (kbd "M-p") 'lsp-bridge-peek-file-content-prev-line)
+
+    (define-key map (kbd "n") 'lsp-bridge-peek-file-content-next-line)
+    (define-key map (kbd "p") 'lsp-bridge-peek-file-content-prev-line)
+
     ;; Browse in the definition/reference list
     (define-key map (kbd "M-N") 'lsp-bridge-peek-list-next-line)
     (define-key map (kbd "M-P") 'lsp-bridge-peek-list-prev-line)
+
+    (define-key map (kbd "N") 'lsp-bridge-peek-list-next-line)
+    (define-key map (kbd "P") 'lsp-bridge-peek-list-prev-line)
+
     ;; Browse in the tree history
     (define-key map (kbd "<right>") 'lsp-bridge-peek-tree-next-node)
     (define-key map (kbd "<left>") 'lsp-bridge-peek-tree-previous-node)
     (define-key map (kbd "<up>") 'lsp-bridge-peek-tree-previous-branch)
     (define-key map (kbd "<down>") 'lsp-bridge-peek-tree-next-branch)
+
+    (define-key map (kbd "l") 'lsp-bridge-peek-tree-next-node)
+    (define-key map (kbd "h") 'lsp-bridge-peek-tree-previous-node)
+    (define-key map (kbd "k") 'lsp-bridge-peek-tree-previous-branch)
+    (define-key map (kbd "j") 'lsp-bridge-peek-tree-next-branch)
+
     ;; Jump
     (define-key map (kbd "M-l j") 'lsp-bridge-peek-jump)
     (define-key map (kbd "M-l b") 'lsp-bridge-peek-jump-back)
+
+    (define-key map (kbd "8") 'lsp-bridge-peek-jump)
+    (define-key map (kbd "7") 'lsp-bridge-peek-jump-back)
+
     ;; Abort
     (define-key map [remap keyboard-quit] 'lsp-bridge-peek-abort)
     map)
