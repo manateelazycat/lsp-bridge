@@ -230,10 +230,10 @@ If optional MARKER, return a marker instead"
                           (line-end-position)))))
       (if marker (copy-marker (point-marker)) (point)))))
 
-(defun acm-backend-lsp-apply-text-edits (edits)
+(defun acm-backend-lsp-apply-text-edits (edits &optional is-decreasing)
   ;; NOTE:
   ;; We need reverse edits before apply, otherwise the row inserted before will affect the position of the row inserted later.
-  (dolist (edit (reverse edits))
+  (dolist (edit (if is-decreasing edits (reverse edits)))
     (let* ((range (plist-get edit :range)))
       (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get edit :newText)))))
 

@@ -17,10 +17,14 @@ class Formatting(Handler):
             "insertFinalNewline": False,
             "trimFinalNewlines": True,
         }
-        
+
         return dict(options=options)
 
     def process_response(self, response) -> None:
         if response and len(response) > 0:
-            eval_in_emacs("lsp-bridge-format--update", self.file_action.filepath, response)
-        
+            eval_in_emacs("lsp-bridge-format--update", self.file_action.filepath, response, self.is_decreasing(response))
+
+    def is_decreasing(self, data):
+        start_values = [(item['range']['start']['line'], item['range']['start']['character']) for item in data ]
+
+        return start_values != sorted(start_values)
