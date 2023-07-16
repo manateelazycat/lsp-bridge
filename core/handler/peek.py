@@ -49,8 +49,10 @@ class PeekFindReferences(Handler):
     name = "peek_find_references"
     method = "textDocument/references"
 
-    def process_request(self, position) -> dict:
+    def process_request(self, position, define_position) -> dict:
         self.pos = position
+        self.define_pos = define_position
+
         return dict(
             position=position,
             context=dict(includeDeclaration=False)
@@ -77,6 +79,10 @@ class PeekFindReferences(Handler):
                     line = rg["start"]["line"]
                     start_column = rg["start"]["character"]
 
+                    # Don't return reference postion if it same as d
+                    if line == self.define_pos["line"] and start_column == self.define_pos["character"]:
+                        continue
+
                     references_content += "{}\n{}\n{}\n".format(
                         line,
                         start_column,
@@ -85,6 +91,5 @@ class PeekFindReferences(Handler):
                     references_counter += 1
 
             linecache.clearcache()  # clear line cache
+
             eval_in_emacs("lsp-bridge-peek-references--return", references_content, references_counter)
-
-

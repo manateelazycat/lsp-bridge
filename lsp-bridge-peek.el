@@ -487,8 +487,8 @@ The beginnings of each symbol are replaced by ace strings with
   (if (not (= (length lsp-bridge-peek-ace-list) 0))
       (with-current-buffer (nth 3 lsp-bridge-peek-ace-list)
 	    (goto-char (nth 4 lsp-bridge-peek-ace-list))
-	    (lsp-bridge-call-file-api "peek_find_references" (lsp-bridge--position)))
-    (lsp-bridge-call-file-api "peek_find_references" (lsp-bridge--position))))
+	    (lsp-bridge-call-file-api "peek_find_references" (lsp-bridge--position) position))
+    (lsp-bridge-call-file-api "peek_find_references" (lsp-bridge--position) position)))
 
 (defun lsp-bridge-peek-references--return (references-content references-counter)
   (if references-content
