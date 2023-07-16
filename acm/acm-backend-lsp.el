@@ -230,12 +230,25 @@ If optional MARKER, return a marker instead"
                           (line-end-position)))))
       (if marker (copy-marker (point-marker)) (point)))))
 
-(defun acm-backend-lsp-apply-text-edits (edits &optional is-decreasing)
-  ;; NOTE:
-  ;; We need reverse edits before apply, otherwise the row inserted before will affect the position of the row inserted later.
-  (dolist (edit (if is-decreasing edits (reverse edits)))
+(defun acm-backend-lsp-apply-text-edits (edits)
+  (dolist (edit (acm-backend-lsp-make-sure-descending edits))
     (let* ((range (plist-get edit :range)))
       (acm-backend-lsp-insert-new-text (plist-get range :start) (plist-get range :end) (plist-get edit :newText)))))
+
+(defun acm-backend-lsp-make-sure-descending (edits)
+  "If `edits' is increasing, reverse `edits', otherwise the row inserted before will affect the position of the row inserted later."
+  (if (<= (length edits) 1)
+      ;; Return origin value of `edits' if length 0 or 1.
+      edits
+    (let* ((first-element-range (plist-get (nth 0 edits) :range))
+           (second-element-range (plist-get (nth 1 edits) :range))
+           (first-element-pos (acm-backend-lsp-position-to-point (plist-get first-element-range :start)))
+           (second-element-pos (acm-backend-lsp-position-to-point (plist-get first-element-range :start))))
+      (if (< first-element-pos second-element-pos)
+          ;; Only reverse edits if `edits' is increasing.
+          (reverse edits)
+        ;; Otherwise return origin value of `edits'.
+        edits))))
 
 (defun acm-backend-lsp-snippet-expansion-fn ()
   "Compute a function to expand snippets.

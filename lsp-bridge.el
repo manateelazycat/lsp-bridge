@@ -1611,7 +1611,7 @@ So we build this macro to restore postion after code format."
 
   filename)
 
-(defun lsp-bridge-file-apply-edits (filename edits &optional temp-buffer is-decreasing)
+(defun lsp-bridge-file-apply-edits (filename edits &optional temp-buffer)
   (if temp-buffer
       ;; Apply edits to temp buffer.
       (with-current-buffer temp-buffer
@@ -1623,7 +1623,7 @@ So we build this macro to restore postion after code format."
     (find-file-noselect filename)
     (save-excursion
       (find-file filename)
-      (acm-backend-lsp-apply-text-edits edits is-decreasing)))
+      (acm-backend-lsp-apply-text-edits edits)))
 
   (setq-local lsp-bridge-prohibit-completion t))
 
@@ -2000,12 +2000,12 @@ SymbolKind (defined in the LSP)."
                                     4
                                   indent)))))
 
-(defun lsp-bridge-format--update (filename edits is-decreasing)
+(defun lsp-bridge-format--update (filename edits)
   ;; We need set `inhibit-modification-hooks' to t to avoid GC freeze Emacs.
   (lsp-bridge-save-position
    (let ((inhibit-modification-hooks t))
      ;; Apply code format edits, not sort, just reverse order.
-     (lsp-bridge-file-apply-edits filename edits nil is-decreasing)
+     (lsp-bridge-file-apply-edits filename edits)
      ;; Make LSP server update full content.
      (lsp-bridge-call-file-api "update_file" (buffer-name))
      ;; Notify format complete.
