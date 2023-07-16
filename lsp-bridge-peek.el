@@ -154,10 +154,7 @@ The third is the buffer before ace peek. The fourth is the buffer where the symb
 The fifth is the position where the symbol is.")
 
 (defface lsp-bridge-peek-border-face
-  '((((background light))
-     :height 15 :background "#ffcbd3" :extend t)
-    (t
-     :height 15 :background "#db8e93" :extend t))
+  `((t :height 15 :background ,(face-attribute 'default :foreground) :extend t))
   "Face used for borders of peek windows.
 You can customize the appearance of the borders by setting the
 height and background properties of the face."
