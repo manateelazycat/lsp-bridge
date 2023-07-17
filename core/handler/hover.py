@@ -22,7 +22,8 @@ class Hover(Handler):
                 render_strings.append(make_code_block("text", contents))
         elif content_type == dict:
             if "kind" in contents:
-                if contents["kind"] == "markdown":
+                # Some language servers will return plaintext as the kind with the markdown format as value, such as erlang_ls
+                if contents["kind"] == "markdown" or contents["kind"] == "plaintext":
                     render_strings.append(contents["value"])
                 else:
                     render_strings.append(make_code_block(
