@@ -1228,6 +1228,8 @@ So we build this macro to restore postion after code format."
 
 (defvar-local lsp-bridge--before-change-begin-pos nil)
 (defvar-local lsp-bridge--before-change-end-pos nil)
+(defvar-local lsp-bridge--before-change-begin-point nil)
+(defvar-local lsp-bridge--before-change-end-point nil)
 
 (defun lsp-bridge-monitor-before-change (begin end)
   ;; Use `save-match-data' protect match data, avoid conflict with command call `search-regexp'.
@@ -1245,6 +1247,9 @@ So we build this macro to restore postion after code format."
     ;; if `lsp-bridge-has-lsp-server-p' or `lsp-bridge-is-remote-file'
     (when (or (lsp-bridge-has-lsp-server-p)
               (lsp-bridge-is-remote-file))
+      (setq-local lsp-bridge--before-change-begin-point begin)
+      (setq-local lsp-bridge--before-change-end-point end)
+      
       (setq-local lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
       (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))
       )))
@@ -1271,12 +1276,20 @@ So we build this macro to restore postion after code format."
   (setq lsp-bridge-last-change-position
         (list (current-buffer) (buffer-chars-modified-tick) (point))))
 
+(defun lsp-bridge-is-invalid-delete-operation (begin end length)
+  ;; The delete operation is valid if it match below rules:
+  ;; 1. `length' is bigger than 0, it mean current operation is `delete' operation
+  ;; 2. the string between `begin' and `end' not empty
+  ;; 3. `begin' same as `lsp-bridge--before-change-begin-point'
+  ;; 4. `end' same as `lsp-bridge--before-change-end-point'
+  (and (> length 0)
+       (> (length (buffer-substring-no-properties begin end)) 0)
+       (equal begin lsp-bridge--before-change-begin-point)
+       (equal end lsp-bridge--before-change-end-point)))
+
 (defun lsp-bridge-monitor-after-change (begin end length)
-  ;; When user do `delete' operation, `length' is bigger than 0,
-  ;; and the string between `begin' and `end' must be empty.
-  ;; if string is not empty, something wrong, we should not send any request to completion backend.
-  (unless (and (> length 0)
-               (> (length (buffer-substring-no-properties begin end)) 0))
+  ;; Only send LSP request `change_file' only when `lsp-bridge-is-invalid-delete-operation' is nil.
+  (unless (lsp-bridge-is-invalid-delete-operation begin end length)
     ;; Use `save-match-data' protect match data, avoid conflict with command call `search-regexp'.
     (save-match-data
       (unless lsp-bridge-revert-buffer-flag
@@ -1540,10 +1553,10 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-find-def-fallback (position)
   (if (not (= (length lsp-bridge-peek-ace-list) 0))
       (progn
-	(if (nth 0 lsp-bridge-peek-ace-list)
-	    (kill-buffer (nth 0 lsp-bridge-peek-ace-list)))
-	(switch-to-buffer (nth 2 lsp-bridge-peek-ace-list))
-	(goto-char (nth 1 lsp-bridge-peek-ace-list))))
+	    (if (nth 0 lsp-bridge-peek-ace-list)
+	        (kill-buffer (nth 0 lsp-bridge-peek-ace-list)))
+	    (switch-to-buffer (nth 2 lsp-bridge-peek-ace-list))
+	    (goto-char (nth 1 lsp-bridge-peek-ace-list))))
   (message "[LSP-Bridge] No definition found.")
   (if (functionp lsp-bridge-find-def-fallback-function)
       (funcall lsp-bridge-find-def-fallback-function position)))

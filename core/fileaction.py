@@ -173,7 +173,9 @@ class FileAction:
 
     def change_file(self, start, end, range_length, change_text, position, before_char, buffer_name, prefix):
         if self.org_file:
-            if self.org_line_bias is None: return
+            if self.org_line_bias is None:
+                return
+
             line_bias = self.org_line_bias
             start['line'] -= line_bias
             end['line'] -= line_bias
