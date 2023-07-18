@@ -1284,6 +1284,8 @@ So we build this macro to restore postion after code format."
   ;; 4. `end' same as `lsp-bridge--before-change-end-point'
   (and (> length 0)
        (> (length (buffer-substring-no-properties begin end)) 0)
+       ;; Add below code to support `comment' or `uncomment' operation,
+       ;; below values is not equal when user trigger `comment' or `uncomment' operation.
        (equal begin lsp-bridge--before-change-begin-point)
        (equal end lsp-bridge--before-change-end-point)))
 
