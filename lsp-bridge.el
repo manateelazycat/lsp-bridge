@@ -1276,22 +1276,11 @@ So we build this macro to restore postion after code format."
   (setq lsp-bridge-last-change-position
         (list (current-buffer) (buffer-chars-modified-tick) (point))))
 
-(defun lsp-bridge-is-invalid-delete-operation (begin end length)
-  ;; The delete operation is valid if it match below rules:
-  ;; 1. `length' is bigger than 0, it mean current operation is `delete' operation
-  ;; 2. the string between `begin' and `end' not empty
-  ;; 3. `begin' same as `lsp-bridge--before-change-begin-point'
-  ;; 4. `end' same as `lsp-bridge--before-change-end-point'
-  (and (> length 0)
-       (> (length (buffer-substring-no-properties begin end)) 0)
-       ;; Add below code to support `comment' or `uncomment' operation,
-       ;; below values is not equal when user trigger `comment' or `uncomment' operation.
-       (equal begin lsp-bridge--before-change-begin-point)
-       (equal end lsp-bridge--before-change-end-point)))
-
 (defun lsp-bridge-monitor-after-change (begin end length)
-  ;; Only send LSP request `change_file' only when `lsp-bridge-is-invalid-delete-operation' is nil.
-  (unless (lsp-bridge-is-invalid-delete-operation begin end length)
+  ;; Nothing change actual if `begin' and `end' equal `lsp-bridge--before-change-begin-point' and `lsp-bridge--before-change-end-point'
+  ;; Then we should not send any request to search backend.
+  (unless (and (equal begin lsp-bridge--before-change-begin-point)
+               (equal end lsp-bridge--before-change-end-point))
     ;; Use `save-match-data' protect match data, avoid conflict with command call `search-regexp'.
     (save-match-data
       (unless lsp-bridge-revert-buffer-flag
