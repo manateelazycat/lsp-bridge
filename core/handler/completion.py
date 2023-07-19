@@ -87,18 +87,11 @@ class Completion(Handler):
         if response is not None:
             item_index = 0
             
-            try:
-                # If LSP Sever return `isIncomplete` is False, we need pick value of option `incomplete-fuzzy-match`.
-                filter = self.prefix if not response.get("isIncomplete") else None
-            except:
-                filter = None
-                
             fuzzy = False
-            if filter:
-                for server in self.file_action.get_match_lsp_servers("completion"):
-                    if server.server_name.endswith("#" + self.method_server_name):
-                        fuzzy = server.server_info.get("incomplete-fuzzy-match")
-                        break
+            for server in self.file_action.get_match_lsp_servers("completion"):
+                if server.server_name.endswith("#" + self.method_server_name):
+                    fuzzy = server.server_info.get("incomplete-fuzzy-match")
+                    break
                     
             # Some LSP server, such as Wen, need assign textEdit/newText to display-label.
             display_new_text = False
@@ -112,8 +105,9 @@ class Completion(Handler):
                 label = item["label"]
                 detail = item.get("detail", "")
                 
-                # If LSP Sever return `isIncomplete` is False, need filter some candidate.
-                if filter and not string_match(label.lower(), filter.lower(), fuzzy=fuzzy):
+                # We always need filter label with input prefix and don't care isIncomplete whether is True or False.
+                # If some LSP server's `incomplete-fuzzy-match` option is True, we filter label with fuzzy algorithm.
+                if not string_match(label.lower(), self.prefix.lower(), fuzzy=fuzzy):
                     continue
                 
                 annotation = kind if kind != "" else detail
