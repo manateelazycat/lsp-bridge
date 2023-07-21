@@ -53,7 +53,7 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 
 1. 检测到 `.git` 目录时(通过命令 `git rev-parse --is-inside-work-tree` 来判断)， lsp-bridge 会扫描整个目录文件来提供补全
 2. 没有检测到 `.git` 目录时， lsp-bridge 只会对打开的文件提供单文件补全
-3. 自定义 `lsp-bridge-get-project-path-by-filepath` 函数， 输入参数是打开文件的路径字符串， 输出参数是项目目录路径， lsp-bridge 会根据输出目录路径来提供补全
+3. 通过 setq 自定义的 `lsp-bridge-get-project-path-by-filepath` 函数， 输入参数是打开文件的路径字符串， 输出参数是项目目录路径， lsp-bridge 会根据输出目录路径来提供补全
 
 ## 远程使用
 

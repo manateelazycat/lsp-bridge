@@ -54,7 +54,7 @@ It should be noted that lsp-bridge has three scanning modes:
 
 1. When the `.git` directory is detected (determined by the command `git rev-parse --is-inside-work-tree`), lsp-bridge will scan the entire directory to provide completion.
 2. When the `.git` directory is not detected, lsp-bridge only provides single-file completion for the opened file.
-3. Custom `lsp-bridge-get-project-path-by-filepath` function, where the input parameter is the path string of the opened file and the output parameter is the project directory path. Lsp-bridge will provide completion based on the output directory path.
+3. Through the `lsp-bridge-get-project-path-by-filepath` function customized by setq, the input parameter is the path string of the opened file, the output parameter is the project directory path, lsp-bridge will provide completion based on the output directory path.
 
 ## Remote Usage
 
