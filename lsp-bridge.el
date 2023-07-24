@@ -477,6 +477,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     rjsx-mode-hook
     tuareg-mode-hook
     latex-mode-hook
+    LaTeX-mode-hook
     Tex-latex-mode-hook
     texmode-hook
     context-mode-hook
