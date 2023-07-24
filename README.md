@@ -32,12 +32,12 @@ Using Python multithreading techniques, lsp-bridge builds a high-speed cache bet
 5. Add the following code to your configuration file ~/.emacs:
 
 ```elisp
-(add-to-list ‘load-path "<path-to-lsp-bridge>")
+(add-to-list 'load-path "<path-to-lsp-bridge>")
 
-(require ’yasnippet)
+(require 'yasnippet)
 (yas-global-mode 1)
 
-(require ‘lsp-bridge)
+(require 'lsp-bridge)
 (global-lsp-bridge-mode)
 ```
 
