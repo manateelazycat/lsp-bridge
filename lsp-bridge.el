@@ -1341,6 +1341,17 @@ So we build this macro to restore postion after code format."
         (when acm-enable-tabnine
           (lsp-bridge-tabnine-complete))
 
+        ;; Copilot search.
+        (when (and acm-enable-copilot
+                   ;; Copilot backend not support remote file now, disable it temporary.
+                   (not (lsp-bridge-is-remote-file))
+                   ;; Don't enable copilot on Markdown mode, Org mode, ielm and minibuffer, very disruptive to writing.
+                   (not (or (derived-mode-p 'markdown-mode)
+                            (eq major-mode 'org-mode)
+                            (derived-mode-p 'inferior-emacs-lisp-mode)
+                            (minibufferp))))
+          (lsp-bridge-copilot-complete))
+
         ;; Codeium search.
         (when (and acm-enable-codeium
                    ;; Codeium backend not support remote file now, disable it temporary.
@@ -1351,6 +1362,7 @@ So we build this macro to restore postion after code format."
                             (derived-mode-p 'inferior-emacs-lisp-mode)
                             (minibufferp))))
           (lsp-bridge-codeium-complete))
+
 
         ;; Search sdcv dictionary.
         (when acm-enable-search-sdcv-words
@@ -2201,9 +2213,44 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
                              (acm-get-input-prefix)
                              language))))
 
+(defun lsp-bridge-copilot-complete ()
+  (interactive)
+  (setq-local acm-backend-lsp-fetch-completion-item-ticker nil)
+  (let ((all-text (buffer-substring-no-properties (point-min) (point-max)))
+        (relative-path
+         ;; from copilot.el
+         (cond
+          ((not buffer-file-name)
+           "")
+          ((fboundp 'projectile-project-root)
+           (file-relative-name buffer-file-name (projectile-project-root)))
+          ((boundp 'vc-root-dir)
+           (file-relative-name buffer-file-name (vc-root-dir)))
+          (t
+           (file-name-nondirectory buffer-file-name)))))
+    (if (lsp-bridge-is-remote-file)
+        (lsp-bridge-remote-send-func-request "copilot_complete"
+                                             (list
+                                              (lsp-bridge--position)
+                                              (symbol-name major-mode)
+                                              (buffer-file-name)
+                                              relative-path
+                                              tab-width
+                                              all-text
+                                              (not indent-tabs-mode)))
+      (lsp-bridge-call-async "copilot_complete"
+                             (lsp-bridge--position)
+                             (symbol-name major-mode)
+                             (buffer-file-name)
+                             relative-path
+                             tab-width
+                             all-text
+                             (not indent-tabs-mode)))))
+
 (defun lsp-bridge-search-backend--record-items (backend-name items)
   (pcase backend-name
     ("codeium" (setq-local acm-backend-codeium-items items))
+    ("copilot" (setq-local acm-backend-copilot-items items))
     ("file-words" (setq-local acm-backend-search-file-words-items items))
     ("sdcv-words" (setq-local acm-backend-search-sdcv-words-items items))
     ("tabnine" (setq-local acm-backend-tabnine-items items))

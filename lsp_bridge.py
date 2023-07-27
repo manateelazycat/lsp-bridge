@@ -41,6 +41,7 @@ from core.search_tailwindcss_keywords import SearchTailwindKeywords
 from core.search_paths import SearchPaths
 from core.tabnine import TabNine
 from core.codeium import Codeium
+from core.copilot import Copilot
 from core.utils import *
 from core.handler import *
 from core.remote_file import RemoteFileClient, RemoteFileServer, save_ip
@@ -103,6 +104,9 @@ class LspBridge:
 
         # Init codeium
         self.codeium = Codeium()
+
+        # Init copilot
+        self.copilot = Copilot()
 
         # Init search backends.
         self.search_file_words = SearchFileWords()
@@ -711,6 +715,9 @@ class LspBridge:
     def tabnine_complete(self, before, after, filename, region_includes_beginning, region_includes_end, max_num_results):
         self.tabnine.complete(before, after, filename, region_includes_beginning, region_includes_end, max_num_results)
 
+    def copilot_complete(self, position, editor_mode, file_path, relative_path, tab_size, text, insert_spaces):
+        self.copilot.complete(position, editor_mode, file_path, relative_path, tab_size, text, insert_spaces)
+
     def codeium_complete(self, cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language):
         self.codeium.complete(cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language)
 
@@ -719,6 +726,15 @@ class LspBridge:
 
     def codeium_auth(self):
         self.codeium.auth()
+
+    def copilot_login(self):
+        self.copilot.login()
+
+    def copilot_logout(self):
+        self.copilot.logout()
+
+    def copilot_completion_accept(self, id):
+        self.copilot.accept(id)
 
     def codeium_get_api_key(self, auth_token):
         self.codeium.get_api_key(auth_token)

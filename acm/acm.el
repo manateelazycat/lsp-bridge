@@ -104,6 +104,7 @@
 (require 'acm-backend-tailwind)
 (require 'acm-backend-citre)
 (require 'acm-backend-codeium)
+(require 'acm-backend-copilot)
 (require 'acm-quick-access)
 
 ;;; Code:
@@ -180,6 +181,7 @@
 (defcustom acm-completion-backend-merge-order '("mode-first-part-candidates"
                                                 "template-first-part-candidates"
                                                 "tabnine-candidates"
+                                                "copilot-candidates"
                                                 "codeium-candidates"
                                                 "template-second-part-candidates"
                                                 "mode-second-part-candidates")
@@ -370,6 +372,7 @@ Only calculate template candidate when type last character."
          yas-candidates
          tabnine-candidates
          codeium-candidates
+         copilot-candidates
          tempel-candidates
          mode-candidates
          mode-first-part-candidates
@@ -384,6 +387,9 @@ Only calculate template candidate when type last character."
 
     (when acm-enable-codeium
       (setq codeium-candidates (acm-backend-codeium-candidates keyword)))
+
+    (when acm-enable-copilot
+      (setq copilot-candidates (acm-backend-copilot-candidates keyword)))
 
     (if acm-enable-search-sdcv-words
         ;; Completion SDCV if option `acm-enable-search-sdcv-words' is enable.
@@ -462,6 +468,7 @@ Only calculate template candidate when type last character."
                                                      ("template-first-part-candidates" template-first-part-candidates)
                                                      ("tabnine-candidates" tabnine-candidates)
                                                      ("codeium-candidates" codeium-candidates)
+                                                     ("copilot-candidates" copilot-candidates)
                                                      ("template-second-part-candidates" template-second-part-candidates)
                                                      ("mode-second-part-candidates" mode-second-part-candidates)
                                                      ))
@@ -694,7 +701,10 @@ The key of candidate will change between two LSP results."
     (when acm-preview-overlay (delete-overlay acm-preview-overlay))
     (if (and (fboundp candidate-expand)
              ;; check if candidate-expand support preview.
-             (string-match " PREVIEW" (documentation candidate-expand t)))
+             (let ((doc (documentation candidate-expand t)))
+               (if doc
+                   (string-match " PREVIEW" doc)
+                 (member 'preview (help-function-arglist candidate-expand)))))
         (save-excursion
           (setq acm-preview-overlay (funcall candidate-expand candidate-info beg t)))
       (setq acm-preview-overlay (acm-preview-create-overlay beg (point) cand)))
@@ -854,7 +864,7 @@ The key of candidate will change between two LSP results."
               (visual-line-mode 1))
 
             ;; Only render markdown styling when idle 200ms, because markdown render is expensive.
-            (when (member backend '("lsp" "codeium"))
+            (when (member backend '("lsp" "codeium" "copilot"))
               (acm-cancel-timer acm-markdown-render-timer)
               (cl-case acm-enable-doc-markdown-render
                 (async (setq acm-markdown-render-timer

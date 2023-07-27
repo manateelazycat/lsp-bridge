@@ -291,6 +291,15 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
       (setq codeium-bridge-binary-version version)
       (message "Done."))))
 
+(defun lsp-bridge-copilot-login ()
+  (interactive)
+  (lsp-bridge-call-async "copilot_login"))
+
+(defun lsp-bridge-copilot-logout ()
+  (interactive)
+  (lsp-bridge-call-async "copilot_logout"))
+
+
 (provide 'lsp-bridge-lsp-installer)
 
 ;;; lsp-bridge-lsp-installer.el ends here
