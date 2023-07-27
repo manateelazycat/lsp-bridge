@@ -1,6 +1,5 @@
 import time
 import subprocess
-from typing_extensions import Required
 from core.utils import *
 from subprocess import PIPE
 from core.lspserver import LspServerSender, LspServerReceiver
@@ -95,6 +94,8 @@ class Copilot:
                     self.wait_response = message
                     self.wait_id = None
                 elif 'result' in message and 'completions' in message['result']:
+                    completion_candidates = []
+
                     for completion in message['result']['completions']:
                         label = completion['text']
                         labels = label.strip().split("\n")
@@ -124,11 +125,7 @@ class Copilot:
 
                         completion_candidates.append(candidate)
 
-                    eval_in_emacs(
-                        "lsp-bridge-search-backend--record-items", "copilot", completion_candidates
-                    )
-
-                completion_candidates = []
+                    eval_in_emacs("lsp-bridge-search-backend--record-items", "copilot", completion_candidates)
         except:
             logger.error(traceback.format_exc())
 
