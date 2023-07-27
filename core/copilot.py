@@ -227,8 +227,8 @@ class Copilot:
         if result['status'] == 'AlreadySignedIn':
             message_emacs(f'Already signed in as {result["user"]}')
             return
-        message_emacs(f'Please enter user-code {result["userCode"]}')
         eval_in_emacs("browse-url", result['verificationUri'])
+        message_emacs(f'Please enter user-code {result["userCode"]}')
 
     def logout(self):
         self.start_copilot()
