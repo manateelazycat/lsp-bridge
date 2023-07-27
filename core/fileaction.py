@@ -204,7 +204,7 @@ class FileAction:
 
         # Send textDocument/completion 100ms later.
         delay = 0 if is_running_in_server() else 0.1
-        self.try_completion_timer = threading.Timer(delay, lambda : self.try_completion(position, before_char, prefix))
+        self.try_completion_timer = threading.Timer(delay, lambda : self.try_completion(position, before_char, prefix, self.version))
         self.try_completion_timer.start()
 
     def update_file(self, buffer_name, org_line_bias=None):
@@ -214,13 +214,13 @@ class FileAction:
             lsp_server.send_whole_change_notification(self.filepath, self.version, buffer_content)
         self.version += 1
 
-    def try_completion(self, position, before_char, prefix):
+    def try_completion(self, position, before_char, prefix, version):
         if self.multi_servers:
             for lsp_server in self.multi_servers.values():
                 if lsp_server.server_info["name"] in self.multi_servers_info["completion"]:
-                    self.send_server_request(lsp_server, "completion", lsp_server, position, before_char, prefix)
+                    self.send_server_request(lsp_server, "completion", lsp_server, position, before_char, prefix, version)
         else:
-            self.send_server_request(self.single_server, "completion", self.single_server, position, before_char, prefix)
+            self.send_server_request(self.single_server, "completion", self.single_server, position, before_char, prefix, version)
 
     def change_cursor(self, position):
         # Record change cursor time.

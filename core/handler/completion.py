@@ -16,7 +16,7 @@ class Completion(Handler):
     method = "textDocument/completion"
     cancel_on_change = True
 
-    def process_request(self, lsp_server, position, char, prefix) -> dict:
+    def process_request(self, lsp_server, position, char, prefix, version) -> dict:
         self.method_server = lsp_server
         self.method_server_name = self.method_server.server_info["name"]
         
@@ -27,6 +27,7 @@ class Completion(Handler):
             context = dict(triggerKind=CompletionTriggerKind.Invoked.value)
         self.position = position
         self.prefix = prefix
+        self.version = version
         return dict(position=position, context=context)
 
     def parse_sort_value(self, sort_text):
@@ -159,16 +160,18 @@ class Completion(Handler):
         # Avoid returning too many items to cause Emacs to do GC operation.
         completion_candidates = completion_candidates[:min(len(completion_candidates), self.file_action.completion_items_limit)]
 
-        log_time("Record completion candidates ({}) from '{}' for file {}".format(
-            len(completion_candidates),
-            self.method_server_name,
-            os.path.basename(self.file_action.filepath)))
+        # Just call lsp-bridge-completion--record-items method when 'version' is newest version of file action.
+        if self.version == self.file_action.version:
+            log_time("Record completion candidates ({}) from '{}' for file {}".format(
+                len(completion_candidates),
+                self.method_server_name,
+                os.path.basename(self.file_action.filepath)))
 
-        eval_in_emacs("lsp-bridge-completion--record-items",
-                      self.file_action.filepath,
-                      get_lsp_file_host(),
-                      completion_candidates,
-                      self.position,
-                      self.method_server_name,
-                      self.method_server.completion_trigger_characters,
-                      self.file_action.get_lsp_server_names())
+            eval_in_emacs("lsp-bridge-completion--record-items",
+                          self.file_action.filepath,
+                          get_lsp_file_host(),
+                          completion_candidates,
+                          self.position,
+                          self.method_server_name,
+                          self.method_server.completion_trigger_characters,
+                          self.file_action.get_lsp_server_names())
