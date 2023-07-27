@@ -243,7 +243,7 @@ If optional MARKER, return a marker instead"
     (let* ((first-element-range (plist-get (nth 0 edits) :range))
            (second-element-range (plist-get (nth 1 edits) :range))
            (first-element-pos (acm-backend-lsp-position-to-point (plist-get first-element-range :start)))
-           (second-element-pos (acm-backend-lsp-position-to-point (plist-get first-element-range :start))))
+           (second-element-pos (acm-backend-lsp-position-to-point (plist-get second-element-range :start))))
       (if (< first-element-pos second-element-pos)
           ;; Only reverse edits if `edits' is increasing.
           (reverse edits)
