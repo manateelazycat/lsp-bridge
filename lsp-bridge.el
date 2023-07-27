@@ -2215,38 +2215,37 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 
 (defun lsp-bridge-copilot-complete ()
   (interactive)
-  (with-current-buffer lsp-bridge--buffer
-    (setq-local acm-backend-lsp-fetch-completion-item-ticker nil)
-    (let ((all-text (buffer-substring-no-properties (point-min) (point-max)))
-          (relative-path
-           ;; from copilot.el
-           (cond
-            ((not buffer-file-name)
-             "")
-            ((fboundp 'projectile-project-root)
-             (file-relative-name buffer-file-name (projectile-project-root)))
-            ((boundp 'vc-root-dir)
-             (file-relative-name buffer-file-name (vc-root-dir)))
-            (t
-             (file-name-nondirectory buffer-file-name)))))
-      (if (lsp-bridge-is-remote-file)
-          (lsp-bridge-remote-send-func-request "copilot_complete"
-                                               (list
-                                                (lsp-bridge--position)
-                                                (symbol-name major-mode)
-                                                (buffer-file-name)
-                                                relative-path
-                                                tab-width
-                                                all-text
-                                                (not indent-tabs-mode)))
-        (lsp-bridge-call-async "copilot_complete"
-                               (lsp-bridge--position)
-                               (symbol-name major-mode)
-                               (buffer-file-name)
-                               relative-path
-                               tab-width
-                               all-text
-                               (not indent-tabs-mode)))))
+  (setq-local acm-backend-lsp-fetch-completion-item-ticker nil)
+  (let ((all-text (buffer-substring-no-properties (point-min) (point-max)))
+        (relative-path
+         ;; from copilot.el
+         (cond
+          ((not buffer-file-name)
+           "")
+          ((fboundp 'projectile-project-root)
+           (file-relative-name buffer-file-name (projectile-project-root)))
+          ((boundp 'vc-root-dir)
+           (file-relative-name buffer-file-name (vc-root-dir)))
+          (t
+           (file-name-nondirectory buffer-file-name)))))
+    (if (lsp-bridge-is-remote-file)
+        (lsp-bridge-remote-send-func-request "copilot_complete"
+                                             (list
+                                              (lsp-bridge--position)
+                                              (symbol-name major-mode)
+                                              (buffer-file-name)
+                                              relative-path
+                                              tab-width
+                                              all-text
+                                              (not indent-tabs-mode)))
+      (lsp-bridge-call-async "copilot_complete"
+                             (lsp-bridge--position)
+                             (symbol-name major-mode)
+                             (buffer-file-name)
+                             relative-path
+                             tab-width
+                             all-text
+                             (not indent-tabs-mode)))))
 
 (defun lsp-bridge-search-backend--record-items (backend-name items)
   (pcase backend-name

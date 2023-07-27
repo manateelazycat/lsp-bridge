@@ -181,8 +181,8 @@
 (defcustom acm-completion-backend-merge-order '("mode-first-part-candidates"
                                                 "template-first-part-candidates"
                                                 "tabnine-candidates"
-                                                "codeium-candidates"
                                                 "copilot-candidates"
+                                                "codeium-candidates"
                                                 "template-second-part-candidates"
                                                 "mode-second-part-candidates")
   "The merge order for completion backend."

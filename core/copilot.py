@@ -37,7 +37,9 @@ class Copilot:
 
         (self.node_path, ) = get_emacs_vars(["acm-backend-copilot-node-path"])
 
-        self.agent_path =  os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", "copilot/dist/agent.js")
+        npm_prefix = subprocess.check_output(['npm', 'config', 'get', 'prefix'], universal_newlines=True).strip()
+        self.agent_path =  os.path.join(f'{npm_prefix}/lib/node_modules', "copilot-node-server", "copilot/dist/agent.js")
+
         self.try_completion_timer = None
         self.file_versions = {}
         self.counter = 1
@@ -72,7 +74,6 @@ class Copilot:
         self.sender.initialized.set()
 
         editor_info = {'editorInfo': {'name': 'Emacs', 'version': '28.0'},
-
                        'editorPluginInfo': {'name': 'lsp-bridge', 'version': '0.0.1'},
                        'networkProxy': epc_arg_transformer(self.proxy)}
         self.sender.send_request('setEditorInfo', editor_info, generate_request_id())
@@ -186,7 +187,7 @@ class Copilot:
         }
         self.file_versions[file_path] += 1
 
-        self.try_completion_timer = threading.Timer(0.5, self.do_complete)
+        self.try_completion_timer = threading.Timer(0.0, self.do_complete)
         self.try_completion_timer.start()
 
     def do_complete(self):
