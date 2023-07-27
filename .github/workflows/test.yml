@@ -3,7 +3,7 @@ on: [ push, pull_request, workflow_dispatch ]
 jobs:
   test:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 360
+    timeout-minutes: 15
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
