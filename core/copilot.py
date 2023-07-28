@@ -32,12 +32,10 @@ COPILOT_MAJOR_MODES_MAP = {
 class Copilot:
     def __init__(self):
         self.is_run = False
+        self.is_initialized = False
         self.is_get_info = False
 
         (self.node_path, ) = get_emacs_vars(["acm-backend-copilot-node-path"])
-
-        npm_prefix = subprocess.check_output(['npm', 'config', 'get', 'prefix'], universal_newlines=True).strip()
-        self.agent_path =  os.path.join(f'{npm_prefix}/lib/node_modules', "copilot-node-server", "copilot/dist/agent.js")
 
         self.try_completion_timer = None
         self.file_versions = {}
@@ -46,15 +44,26 @@ class Copilot:
         self.is_get_info = False
         self.wait_id = None
 
+    def check_node_version(self):
+        version = subprocess.check_output([self.node_path, '-v'], stderr=subprocess.STDOUT, universal_newlines=True).strip()
+        major_version = int(version.split('.')[0].lstrip('v'))
+        return major_version >= 16
+
     def start_copilot(self):
         self.get_info()
 
         if self.is_run:
             return
-
         self.is_run = True
 
-        self.copilot_subprocess = subprocess.Popen([self.node_path, self.agent_path],
+        if not self.check_node_version():
+            message_emacs('To use copilot, Please install node version >= 16')
+            return
+
+        npm_package_path = subprocess.check_output(['npm', 'root', '-g'], universal_newlines=True).strip()
+        agent_path =  os.path.join(npm_package_path, "copilot-node-server", "copilot/dist/agent.js")
+
+        self.copilot_subprocess = subprocess.Popen([self.node_path, agent_path],
                                                    stdin=PIPE,
                                                    stdout=PIPE,
                                                    stderr=None)
@@ -77,6 +86,8 @@ class Copilot:
                        'networkProxy': epc_arg_transformer(self.proxy)}
         self.sender.send_request('setEditorInfo', editor_info, generate_request_id())
 
+        self.is_initialized = True
+
     def get_language_id(self, editor_mode):
         language_id = editor_mode.replace('-mode', '')
         return COPILOT_MAJOR_MODES_MAP[language_id] if language_id in COPILOT_MAJOR_MODES_MAP else language_id
@@ -90,7 +101,10 @@ class Copilot:
                 message = self.receiver.get_message()
                 message = message['content']
 
-                if 'id' in message and message['id'] == self.wait_id:
+                if 'method' in message and message['method'] == 'LogMessage':
+                    if message['params']['level'] > 1:
+                        print('Copilot: ', message['params']['message'])
+                elif 'id' in message and message['id'] == self.wait_id:
                     self.wait_response = message
                     self.wait_id = None
                 elif 'result' in message and 'completions' in message['result']:
@@ -159,6 +173,9 @@ class Copilot:
 
         self.start_copilot()
 
+        if not self.is_initialized:
+            return
+
         if self.try_completion_timer is not None and self.try_completion_timer.is_alive():
             self.try_completion_timer.cancel()
 
@@ -213,6 +230,15 @@ class Copilot:
 
         self.is_get_info = True
 
+    def check_status(self):
+        self.start_copilot()
+        self.wait_id = generate_request_id()
+        self.sender.send_request('checkStatus', {"dummy": "checkStatus"}, self.wait_id)
+        while self.wait_id is not None:
+            time.sleep(0.1)
+        result = self.wait_response['result']
+        message_emacs(f'Copilot status: {result["status"]}' + \
+                      f' as user {result["user"]}' if 'user' in result else '')
 
     def login(self):
         self.start_copilot()
