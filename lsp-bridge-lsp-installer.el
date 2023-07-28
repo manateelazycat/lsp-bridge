@@ -299,6 +299,9 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
   (interactive)
   (lsp-bridge-call-async "copilot_logout"))
 
+(defun lsp-bridge-copilot-status ()
+  (interactive)
+  (lsp-bridge-call-async "copilot_status"))
 
 (provide 'lsp-bridge-lsp-installer)
 

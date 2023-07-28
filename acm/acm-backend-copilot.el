@@ -25,7 +25,7 @@
   :group 'acm-backend-copilot)
 
 (defcustom acm-backend-copilot-node-path "node"
-  "The path to store Codeium API Key."
+  "The path to node for copilot."
   :type 'string
   :group 'acm-backend-copilot)
 
@@ -53,18 +53,8 @@ in the proxy plist. For example:
 
 (defvar-local acm-backend-copilot-items nil)
 
-(defun acm-backend-copilot-check-node-version ()
-  (and (locate-file acm-backend-copilot-node-path exec-path)
-       ;; following copilot.el to check node version only >= 16
-       (>= (->> (with-output-to-string
-                  (call-process acm-backend-copilot-node-path nil standard-output nil "--version"))
-                (s-trim)
-                (s-chop-prefix "v")
-                (string-to-number)) 16)))
-
 (defun acm-backend-copilot-candidates (keyword)
   acm-backend-copilot-items)
-
 
 (defun acm-backend-copilot-candidate-expand (candidate-info bound-start &optional preview)
   ;; We need replace whole area with copilot label.

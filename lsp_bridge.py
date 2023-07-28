@@ -733,6 +733,9 @@ class LspBridge:
     def copilot_logout(self):
         self.copilot.logout()
 
+    def copilot_status(self):
+        self.copilot.check_status()
+
     def copilot_completion_accept(self, id):
         self.copilot.accept(id)
 
