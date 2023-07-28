@@ -37,9 +37,6 @@ class Copilot:
 
         (self.node_path, ) = get_emacs_vars(["acm-backend-copilot-node-path"])
 
-        npm_package_path = subprocess.check_output(['npm', 'root', '-g'], universal_newlines=True).strip()
-        self.agent_path =  os.path.join(npm_package_path, "copilot-node-server", "copilot/dist/agent.js")
-
         self.try_completion_timer = None
         self.file_versions = {}
         self.counter = 1
@@ -63,7 +60,10 @@ class Copilot:
             message_emacs('To use copilot, Please install node version >= 16')
             return
 
-        self.copilot_subprocess = subprocess.Popen([self.node_path, self.agent_path],
+        npm_package_path = subprocess.check_output(['npm', 'root', '-g'], universal_newlines=True).strip()
+        agent_path =  os.path.join(npm_package_path, "copilot-node-server", "copilot/dist/agent.js")
+
+        self.copilot_subprocess = subprocess.Popen([self.node_path, agent_path],
                                                    stdin=PIPE,
                                                    stdout=PIPE,
                                                    stderr=None)
