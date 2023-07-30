@@ -369,7 +369,7 @@ not affected by its surroundings."
 			  (forward-symbol 1)
 			  (point))))
     (font-lock-fontify-region beg end)
-    (put-text-property highlight-begin highlight-end 'face '(:background "#5180b3"))
+    (put-text-property highlight-begin highlight-end 'face '(:background "#623d73" :foreground "white"))
     (setq file-content (concat (buffer-substring beg end) "\n"))
     (put-text-property highlight-begin highlight-end 'face '(:background (background-color-at-point))))
   file-content)
