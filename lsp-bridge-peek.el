@@ -139,7 +139,8 @@ to files where definitions and references are, the third item stores the
 positions where definitions and references are in the file, the fourth item
 is the index of the parent node of the symbol in the list, and the fifth
 item is a list, storing the index of the node's child nodes in the list.
-The sixth item stores which child node is selected next.")
+The sixth item stores which child node is selected next. The seventh item
+stores how many lines the file content was moved.")
 
 (defvar lsp-bridge-peek-symbol-at-point nil
   "A variable that stores the current symbol to be added.")
@@ -240,35 +241,35 @@ which take care of setting up other things."
    (lsp-bridge-peek-mode
     (when lsp-bridge-peek--ov (delete-overlay lsp-bridge-peek--ov))
     (setq lsp-bridge-peek--ov
-	  (let ((ov-pos (line-end-position)))
-	    (make-overlay ov-pos ov-pos)))
+	      (let ((ov-pos (line-end-position)))
+	        (make-overlay ov-pos ov-pos)))
     (overlay-put lsp-bridge-peek--ov 'window (selected-window))
     (let* ((bg-mode (frame-parameter nil 'background-mode))
-	   (bg-unspecified-p (string= (face-background 'default)
+	       (bg-unspecified-p (string= (face-background 'default)
                                       "unspecified-bg"))
-	   (bg (cond
-		((and bg-unspecified-p (eq bg-mode 'dark)) "#333333")
-		((and bg-unspecified-p (eq bg-mode 'light)) "#dddddd")
-		(t (face-background 'default)))))
+	       (bg (cond
+		        ((and bg-unspecified-p (eq bg-mode 'dark)) "#333333")
+		        ((and bg-unspecified-p (eq bg-mode 'light)) "#dddddd")
+		        (t (face-background 'default)))))
       (cond
        ((eq bg-mode 'dark)
-	(setq lsp-bridge-peek--bg (lsp-bridge--color-blend "#ffffff" bg 0.03)
-	      lsp-bridge-peek--bg-alt (lsp-bridge--color-blend "#ffffff" bg 0.2)
-	      lsp-bridge-peek--bg-selected (lsp-bridge--color-blend "#ffffff" bg 0.4)
-	      lsp-bridge-peek--method-fg "gray"
-	      lsp-bridge-peek--path-fg "#6aaf50"
-	      lsp-bridge-peek--pos-fg "#f57e00"
-	      lsp-bridge-peek--symbol-selected "orange"
-	      lsp-bridge-peek--symbol-alt "#dedede"))
+	    (setq lsp-bridge-peek--bg (lsp-bridge--color-blend "#ffffff" bg 0.03)
+	          lsp-bridge-peek--bg-alt (lsp-bridge--color-blend "#ffffff" bg 0.2)
+	          lsp-bridge-peek--bg-selected (lsp-bridge--color-blend "#ffffff" bg 0.4)
+	          lsp-bridge-peek--method-fg "gray"
+	          lsp-bridge-peek--path-fg "#6aaf50"
+	          lsp-bridge-peek--pos-fg "#f57e00"
+	          lsp-bridge-peek--symbol-selected "orange"
+	          lsp-bridge-peek--symbol-alt "#dedede"))
        (t
-	(setq lsp-bridge-peek--bg (lsp-bridge--color-blend "#000000" bg 0.02)
-	      lsp-bridge-peek--bg-alt (lsp-bridge--color-blend "#000000" bg 0.12)
-	      lsp-bridge-peek--bg-selected (lsp-bridge--color-blend "#000000" bg 0.06)
-	      lsp-bridge-peek--method-fg "dark"
-	      lsp-bridge-peek--path-fg "#477a33"
-	      lsp-bridge-peek--pos-fg "#b06515"
-	      lsp-bridge-peek--symbol-selected "#ff6200"
-	      lsp-bridge-peek--symbol-alt "#212121"))))
+	    (setq lsp-bridge-peek--bg (lsp-bridge--color-blend "#000000" bg 0.02)
+	          lsp-bridge-peek--bg-alt (lsp-bridge--color-blend "#000000" bg 0.12)
+	          lsp-bridge-peek--bg-selected (lsp-bridge--color-blend "#000000" bg 0.06)
+	          lsp-bridge-peek--method-fg "dark"
+	          lsp-bridge-peek--path-fg "#477a33"
+	          lsp-bridge-peek--pos-fg "#b06515"
+	          lsp-bridge-peek--symbol-selected "#ff6200"
+	          lsp-bridge-peek--symbol-alt "#212121"))))
     (setq lsp-bridge-peek--content-update t)
     (setq lsp-bridge-peek-chosen-displaying-list (make-list 3 0))
     (setf (nth 2 lsp-bridge-peek-chosen-displaying-list) (1- lsp-bridge-peek-list-height))
@@ -276,25 +277,25 @@ which take care of setting up other things."
    (t
     (when lsp-bridge-peek--ov (delete-overlay lsp-bridge-peek--ov))
     (mapc (lambda (pair)
-	    (kill-buffer pair))
-	  lsp-bridge-peek--temp-buffer-alist)
+	        (kill-buffer pair))
+	      lsp-bridge-peek--temp-buffer-alist)
     (setq lsp-bridge-peek--temp-buffer-alist nil
-	  lsp-bridge-peek--ov nil
-	  lsp-bridge-peek--bg nil
-	  lsp-bridge-peek--bg-alt nil
-	  lsp-bridge-peek--bg-selected nil
-	  lsp-bridge-peek--method-fg nil
-	  lsp-bridge-peek--path-fg nil
-	  lsp-bridge-peek--pos-fg nil
-	  lsp-bridge-peek--symbol-selected nil
-	  lsp-bridge-peek--symbol-alt nil
-	  lsp-bridge-peek-ace-list nil
-	  lsp-bridge-peek-symbol-tree nil
-	  lsp-bridge-peek-selected-symbol nil
-	  lsp-bridge-peek-chosen-displaying-list (make-list 3 nil)
-	  lsp-bridge-peek-file-and-pos-before-jump nil
-	  lsp-bridge-peek--ace-seqs nil
-	  lsp-bridge-peek--symbol-bounds nil)
+	      lsp-bridge-peek--ov nil
+	      lsp-bridge-peek--bg nil
+	      lsp-bridge-peek--bg-alt nil
+	      lsp-bridge-peek--bg-selected nil
+	      lsp-bridge-peek--method-fg nil
+	      lsp-bridge-peek--path-fg nil
+	      lsp-bridge-peek--pos-fg nil
+	      lsp-bridge-peek--symbol-selected nil
+	      lsp-bridge-peek--symbol-alt nil
+	      lsp-bridge-peek-ace-list nil
+	      lsp-bridge-peek-symbol-tree nil
+	      lsp-bridge-peek-selected-symbol nil
+	      lsp-bridge-peek-chosen-displaying-list (make-list 3 nil)
+	      lsp-bridge-peek-file-and-pos-before-jump nil
+	      lsp-bridge-peek--ace-seqs nil
+	      lsp-bridge-peek--symbol-bounds nil)
     (remove-hook 'post-command-hook #'lsp-bridge-peek--show 'local))))
 
 ;; Ref: https://www.w3.org/TR/WCAG20/#relativeluminancedef
@@ -355,13 +356,16 @@ not affected by its surroundings."
 (defun lsp-bridge-peek--make-border ()
   "Return the border to be used in peek windows."
   (propertize "\n"
-	      'face 'lsp-bridge-peek-border-face))
+	          'face 'lsp-bridge-peek-border-face))
 
-(defun lsp-bridge-peek--get-content (pos)
+(defun lsp-bridge-peek--get-content (pos content-move)
   (setq file-content nil)
   (goto-char (acm-backend-lsp-position-to-point pos))
-  (let* ((beg (line-beginning-position))
+  (let* ((beg (save-excursion
+		(forward-line content-move)
+		(line-beginning-position)))
 	 (end (save-excursion
+		(forward-line content-move)
 		(forward-line (1- lsp-bridge-peek-file-content-height))
 		(line-end-position)))
 	 (highlight-begin (point))
@@ -399,156 +403,160 @@ The beginnings of each symbol are replaced by ace strings with
 (defun lsp-bridge-peek--file-content ()
   "Return a string for displaying file content."
   (let* ((n (nth 1 lsp-bridge-peek-chosen-displaying-list))
-	 (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
-	 (path-list (nth 1 selected-symbol))
-	 (pos-list (nth 2 selected-symbol))
-	 (file (nth n path-list))
-	 (pos (nth n pos-list))
-	 (buf-name (format "*lsp-bridge-peek-%s*" file))
-	 (file-content nil))
+	     (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
+	     (path-list (nth 1 selected-symbol))
+	     (pos-list (nth 2 selected-symbol))
+	     (content-move-list (nth 6 selected-symbol))
+	     (file (nth n path-list))
+	     (pos (nth n pos-list))
+	     (content-move (nth n content-move-list))
+	     (buf-name (format "*lsp-bridge-peek-%s*" file))
+	     (file-content nil))
     (if (not (member buf-name lsp-bridge-peek--temp-buffer-alist))
-	(let ((buf (generate-new-buffer buf-name)))
-	  (with-current-buffer buf
-	    (insert-file-contents file)
-	    (let ((buffer-file-name file))
-	      (delay-mode-hooks
-		(set-auto-mode)))
-	    (setq file-content (lsp-bridge-peek--get-content pos))
-	    (add-to-list 'lsp-bridge-peek--temp-buffer-alist buf-name)))
+	    (let ((buf (generate-new-buffer buf-name)))
+	      (with-current-buffer buf
+	        (insert-file-contents file)
+	        (let ((buffer-file-name file))
+	          (delay-mode-hooks
+		        (set-auto-mode)))
+	        (setq file-content (lsp-bridge-peek--get-content pos content-move))
+	        (add-to-list 'lsp-bridge-peek--temp-buffer-alist buf-name)))
       (with-current-buffer buf-name
-	(setq file-content (lsp-bridge-peek--get-content pos))))
+	    (setq file-content (lsp-bridge-peek--get-content pos content-move))))
     (when (and lsp-bridge-peek--symbol-bounds lsp-bridge-peek--ace-seqs)
       (setq file-content
-	    (lsp-bridge--attach-ace-str file-content
-					(cdr lsp-bridge-peek--symbol-bounds)
-					(car lsp-bridge-peek--symbol-bounds)
-					lsp-bridge-peek--ace-seqs)))
+	        (lsp-bridge--attach-ace-str file-content
+					                    (cdr lsp-bridge-peek--symbol-bounds)
+					                    (car lsp-bridge-peek--symbol-bounds)
+					                    lsp-bridge-peek--ace-seqs)))
     file-content))
 
 (defun lsp-bridge-peek--displaying-list ()
   "Return a string for displayed definition/reference list."
   (let* ((selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
-	 (path-list (nth 1 selected-symbol))
-	 (pos-list (nth 2 selected-symbol))
-	 (total-n (min lsp-bridge-peek-list-height (length path-list)))
-	 (first-displayed-id (nth 0 lsp-bridge-peek-chosen-displaying-list))
-	 (selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
-	 (last-displayed-id (nth 2 lsp-bridge-peek-chosen-displaying-list))
-	 (displaying-list (make-list total-n nil)))
+	     (path-list (nth 1 selected-symbol))
+	     (pos-list (nth 2 selected-symbol))
+	     (total-n (min lsp-bridge-peek-list-height (length path-list)))
+	     (first-displayed-id (nth 0 lsp-bridge-peek-chosen-displaying-list))
+	     (selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
+	     (last-displayed-id (nth 2 lsp-bridge-peek-chosen-displaying-list))
+	     (displaying-list (make-list total-n nil)))
     (dotimes (n total-n)
       (let* ((filename (nth (+ first-displayed-id n) path-list))
-	     (pos (nth (+ first-displayed-id n) pos-list))
-	     (line (number-to-string (1+ (plist-get pos :line))))
-	     (char (number-to-string (1+ (plist-get pos :character))))
-	     (method (if (= (+ first-displayed-id n) 0) "definition" "reference"))
-	     (bg-selected (list :background lsp-bridge-peek--bg-selected :extend t))
-	     (bg-alt (list :background lsp-bridge-peek--bg-alt :extend t)))
-	(lsp-bridge--add-face method (list :foreground  lsp-bridge-peek--method-fg
-					   :extend t))
-	(lsp-bridge--add-face filename (list :foreground lsp-bridge-peek--path-fg
-					     :extend t))
-	(lsp-bridge--add-face line (list :foreground lsp-bridge-peek--pos-fg
-					 :extend t))
-	(lsp-bridge--add-face char (list :foreground lsp-bridge-peek--pos-fg
-					 :extend t))
-	(if (= (+ first-displayed-id n) selected-id)
-	    (setf (nth n displaying-list)
-		  (lsp-bridge--add-face
-		   (concat "(" method ") " filename " " line ":" char "\n")
-		   bg-selected))
-	  (setf (nth n displaying-list)
-		(lsp-bridge--add-face
-		 (concat "(" method ") " filename " " line ":" char "\n")
-		 bg-alt)))))
+	         (pos (nth (+ first-displayed-id n) pos-list))
+	         (line (number-to-string (1+ (plist-get pos :line))))
+	         (char (number-to-string (1+ (plist-get pos :character))))
+	         (method (if (= (+ first-displayed-id n) 0) "definition" "reference"))
+	         (bg-selected (list :background lsp-bridge-peek--bg-selected :extend t))
+	         (bg-alt (list :background lsp-bridge-peek--bg-alt :extend t)))
+	    (lsp-bridge--add-face method (list :foreground  lsp-bridge-peek--method-fg
+					                       :extend t))
+	    (lsp-bridge--add-face filename (list :foreground lsp-bridge-peek--path-fg
+					                         :extend t))
+	    (lsp-bridge--add-face line (list :foreground lsp-bridge-peek--pos-fg
+					                     :extend t))
+	    (lsp-bridge--add-face char (list :foreground lsp-bridge-peek--pos-fg
+					                     :extend t))
+	    (if (= (+ first-displayed-id n) selected-id)
+	        (setf (nth n displaying-list)
+		          (lsp-bridge--add-face
+		           (concat "(" method ") " filename " " line ":" char "\n")
+		           bg-selected))
+	      (setf (nth n displaying-list)
+		        (lsp-bridge--add-face
+		         (concat "(" method ") " filename " " line ":" char "\n")
+		         bg-alt)))))
     (string-join displaying-list)))
 
 (defun lsp-bridge-peek--tree-history ()
   "Return a string for displaying the tree history of symbols were peeked."
   (let* ((selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
-	 (total-n (length (nth 1 selected-symbol)))
-	 (selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
-	 (history-string (format "[%s]" (lsp-bridge--add-face
-					 (format "%s" (nth 0 selected-symbol))
-					 (list :foreground lsp-bridge-peek--symbol-selected :extend t)))))
+	     (total-n (length (nth 1 selected-symbol)))
+	     (selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
+	     (history-string (format "[%s]" (lsp-bridge--add-face
+					                     (format "%s" (nth 0 selected-symbol))
+					                     (list :foreground lsp-bridge-peek--symbol-selected :extend t)))))
     (while (nth 3 selected-symbol)
       (setq selected-symbol (nth (nth 3 selected-symbol) lsp-bridge-peek-symbol-tree))
       (setq history-string (concat (format "%s %s " (lsp-bridge--add-face
-						     (format "%s" (nth 0 selected-symbol))
-						     (list :foreground lsp-bridge-peek--symbol-alt
-							   :extend t))
-					   (if (> (length (nth 4 selected-symbol)) 1)
-					       "<" "->"))
-				   history-string)))
+						                             (format "%s" (nth 0 selected-symbol))
+						                             (list :foreground lsp-bridge-peek--symbol-alt
+							                               :extend t))
+					                       (if (> (length (nth 4 selected-symbol)) 1)
+					                           "<" "->"))
+				                   history-string)))
     (setq selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
     (while (nth 4 selected-symbol)
       (setq child-list (nth 4 selected-symbol))
       (setq selected-symbol (nth
-			     (nth
-			      (nth 5 selected-symbol)
-			      (nth 4 selected-symbol))
-			     lsp-bridge-peek-symbol-tree))
+			                 (nth
+			                  (nth 5 selected-symbol)
+			                  (nth 4 selected-symbol))
+			                 lsp-bridge-peek-symbol-tree))
       (setq history-string (concat history-string
-				   (format " %s %s"
-					   (if (> (length child-list) 1)
-					       "<" "->")
-					   (lsp-bridge--add-face
-					    (format "%s" (nth 0 selected-symbol))
-					    (list :foreground lsp-bridge-peek--symbol-alt :extend t))))))
+				                   (format " %s %s"
+					                       (if (> (length child-list) 1)
+					                           "<" "->")
+					                       (lsp-bridge--add-face
+					                        (format "%s" (nth 0 selected-symbol))
+					                        (list :foreground lsp-bridge-peek--symbol-alt :extend t))))))
     (setq history-string (concat
-			  (format "(%s/%s) " (1+ selected-id) total-n)
-			  history-string "\n"))
+			              (format "(%s/%s) " (1+ selected-id) total-n)
+			              history-string "\n"))
     (lsp-bridge--add-face history-string (list :background lsp-bridge-peek--bg-alt
-					       :extend t))
+					                           :extend t))
     history-string))
 
 (defun lsp-bridge-peek-define--return (filename position)
   (push filename (nth 1 lsp-bridge-peek-symbol-at-point))
   (push position (nth 2 lsp-bridge-peek-symbol-at-point))
+  (push 0 (nth 6 lsp-bridge-peek-symbol-at-point))
   (if (not (= (length lsp-bridge-peek-ace-list) 0))
       (with-current-buffer (nth 3 lsp-bridge-peek-ace-list)
-	(goto-char (nth 4 lsp-bridge-peek-ace-list))
-	(lsp-bridge-call-file-api "peek_find_references" (lsp-bridge--position) position))
+	    (goto-char (nth 4 lsp-bridge-peek-ace-list))
+	    (lsp-bridge-call-file-api "peek_find_references" (lsp-bridge--position) position))
     (lsp-bridge-call-file-api "peek_find_references" (lsp-bridge--position) position)))
 
 (defun lsp-bridge-peek-references--return (references-content references-counter)
   (if references-content
       (let ((buf (generate-new-buffer "*lsp-bridge-peek--temp-buffer*")))
-	(with-current-buffer buf
-	  (insert references-content)
-	  (goto-char (point-min))
-	  (dotimes (n references-counter)
-	    (let ((beg (point))
-		  (end nil)
-		  (filename nil)
-		  (pos nil))
-	      (move-end-of-line 1)
-	      (setq end (point))
-	      (setq line (buffer-substring beg end))
-	      (forward-line 1)
-	      (setq beg (point))
-	      (move-end-of-line 1)
-	      (setq end (point))
-	      (setq char (buffer-substring beg end))
-	      (forward-line 1)
-	      (setq beg (point))
-	      (move-end-of-line 1)
-	      (setq end (point))
-	      (forward-line 1)
-	      (setq filename (buffer-substring beg end))
-	      (setq pos (list :line (string-to-number line) :character (string-to-number char)))
-	      (push filename (nth 1 lsp-bridge-peek-symbol-at-point))
-	      (push pos (nth 2 lsp-bridge-peek-symbol-at-point)))))
-	(setf (nth 1 lsp-bridge-peek-symbol-at-point)
-	      (nreverse (nth 1 lsp-bridge-peek-symbol-at-point))
-	      (nth 2 lsp-bridge-peek-symbol-at-point)
-	      (nreverse (nth 2 lsp-bridge-peek-symbol-at-point)))
-	(kill-buffer buf)))
+	    (with-current-buffer buf
+	      (insert references-content)
+	      (goto-char (point-min))
+	      (dotimes (n references-counter)
+	        (let ((beg (point))
+		          (end nil)
+		          (filename nil)
+		          (pos nil))
+	          (move-end-of-line 1)
+	          (setq end (point))
+	          (setq line (buffer-substring beg end))
+	          (forward-line 1)
+	          (setq beg (point))
+	          (move-end-of-line 1)
+	          (setq end (point))
+	          (setq char (buffer-substring beg end))
+	          (forward-line 1)
+	          (setq beg (point))
+	          (move-end-of-line 1)
+	          (setq end (point))
+	          (forward-line 1)
+	          (setq filename (buffer-substring beg end))
+	          (setq pos (list :line (string-to-number line) :character (string-to-number char)))
+	          (push filename (nth 1 lsp-bridge-peek-symbol-at-point))
+	          (push pos (nth 2 lsp-bridge-peek-symbol-at-point))
+		  (push 0 (nth 6 lsp-bridge-peek-symbol-at-point)))))
+	    (setf (nth 1 lsp-bridge-peek-symbol-at-point)
+	          (nreverse (nth 1 lsp-bridge-peek-symbol-at-point))
+	          (nth 2 lsp-bridge-peek-symbol-at-point)
+	          (nreverse (nth 2 lsp-bridge-peek-symbol-at-point)))
+	    (kill-buffer buf)))
   (if lsp-bridge-peek-selected-symbol
       (progn
-	(push (length lsp-bridge-peek-symbol-tree)
-	      (nth 4 (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree)))
-	(unless (nth 5 (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
-	  (setf (nth 5 (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree)) 0))))
+	    (push (length lsp-bridge-peek-symbol-tree)
+	          (nth 4 (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree)))
+	    (unless (nth 5 (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
+	      (setf (nth 5 (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree)) 0))))
   (setf (nth 3 lsp-bridge-peek-symbol-at-point) lsp-bridge-peek-selected-symbol)
   (setf (nth 5 lsp-bridge-peek-symbol-at-point) 0)
   (setq lsp-bridge-peek-selected-symbol (length lsp-bridge-peek-symbol-tree))
@@ -558,14 +566,14 @@ The beginnings of each symbol are replaced by ace strings with
   (setq lsp-bridge-peek-symbol-tree (nreverse lsp-bridge-peek-symbol-tree))
   (if (not (= (length lsp-bridge-peek-ace-list) 0))
       (progn
-	(if (nth 0 lsp-bridge-peek-ace-list)
-	    (kill-buffer (nth 0 lsp-bridge-peek-ace-list)))
-	(switch-to-buffer (nth 2 lsp-bridge-peek-ace-list))
-	(goto-char (nth 1 lsp-bridge-peek-ace-list))))
+	    (if (nth 0 lsp-bridge-peek-ace-list)
+	        (kill-buffer (nth 0 lsp-bridge-peek-ace-list)))
+	    (switch-to-buffer (nth 2 lsp-bridge-peek-ace-list))
+	    (goto-char (nth 1 lsp-bridge-peek-ace-list))))
   (if (not lsp-bridge-peek-mode)
       (progn
-	(lsp-bridge-peek-mode 1)
-	(lsp-bridge-peek--show))
+	    (lsp-bridge-peek-mode 1)
+	    (lsp-bridge-peek--show))
     (lsp-bridge-peek--show 'force)))
 
 (defun lsp-bridge-peek--show (&optional force)
@@ -576,21 +584,21 @@ When FORCE if non-nil, the content of the peek window is recalculated."
       (move-overlay lsp-bridge-peek--ov overlay-pos overlay-pos))
     (when (or lsp-bridge-peek--content-update force)
       (let* ((initial-newline (if (eq (line-end-position) (point-max)) "\n" ""))
-	     (border (lsp-bridge-peek--make-border)))
-	(overlay-put lsp-bridge-peek--ov 'after-string
-		     (concat initial-newline
-			     border
-			     (concat
-			      (lsp-bridge-peek--file-content)
-			      (lsp-bridge-peek--displaying-list)
-			      (lsp-bridge-peek--tree-history))
-			     border)))
+	         (border (lsp-bridge-peek--make-border)))
+	    (overlay-put lsp-bridge-peek--ov 'after-string
+		             (concat initial-newline
+			                 border
+			                 (concat
+			                  (lsp-bridge-peek--file-content)
+			                  (lsp-bridge-peek--displaying-list)
+			                  (lsp-bridge-peek--tree-history))
+			                 border)))
       (setq lsp-bridge-peek--content-update nil))))
 
 (defun lsp-bridge-peek ()
   "Peek the definition of the symbol at point."
   (interactive)
-  (setq lsp-bridge-peek-symbol-at-point (make-list 6 nil))
+  (setq lsp-bridge-peek-symbol-at-point (make-list 7 nil))
   (setf (nth 0 lsp-bridge-peek-symbol-at-point) (symbol-at-point))
   (lsp-bridge-call-file-api "peek_find_definition" (lsp-bridge--position)))
 
@@ -602,21 +610,21 @@ When FORCE if non-nil, the content of the peek window is recalculated."
 (defun lsp-bridge-peek-list-move-line (num)
   (lsp-bridge-peek--error-if-not-peeking)
   (cl-symbol-macrolet ((first-displayed-id (nth 0 lsp-bridge-peek-chosen-displaying-list))
-		       (selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
-		       (last-displayed-id (nth 2 lsp-bridge-peek-chosen-displaying-list))
-		       (next (> num 0)))
+		               (selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
+		               (last-displayed-id (nth 2 lsp-bridge-peek-chosen-displaying-list))
+		               (next (> num 0)))
     (unless (or (and
-		 (= selected-id (1- (length (nth 1 (nth lsp-bridge-peek-selected-symbol
-							lsp-bridge-peek-symbol-tree)))))
-		 next)
-		(and (= selected-id 0) (not next)))
+		         (= selected-id (1- (length (nth 1 (nth lsp-bridge-peek-selected-symbol
+							                            lsp-bridge-peek-symbol-tree)))))
+		         next)
+		        (and (= selected-id 0) (not next)))
       (if (or (and (= selected-id last-displayed-id) next)
-	      (and (= selected-id first-displayed-id) (not next)))
-	  (progn
-	    (setf first-displayed-id
-		  (+ num first-displayed-id))
-	    (setf last-displayed-id
-		  (+ num last-displayed-id))))
+	          (and (= selected-id first-displayed-id) (not next)))
+	      (progn
+	        (setf first-displayed-id
+		          (+ num first-displayed-id))
+	        (setf last-displayed-id
+		          (+ num last-displayed-id))))
       (setf selected-id (+ selected-id num))))
   (setq lsp-bridge-peek--content-update t))
 
@@ -634,9 +642,9 @@ When FORCE if non-nil, the content of the peek window is recalculated."
   (lsp-bridge-peek--error-if-not-peeking)
   (cl-symbol-macrolet ((selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
 		       (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
-		       (pos-list (nth 2 selected-symbol))
-		       (line (plist-get (nth selected-id pos-list) :line)))
-    (setf line (+ line num))
+		       (content-move-list (nth 6 selected-symbol))
+		       (content-move (nth selected-id content-move-list)))
+    (setf content-move (+ content-move num))
     (setq lsp-bridge-peek--content-update t)))
 
 (defun lsp-bridge-peek-file-content-next-line ()
@@ -657,11 +665,11 @@ When FORCE if non-nil, the content of the peek window is recalculated."
   (push (point) lsp-bridge-peek-file-and-pos-before-jump)
   (push (buffer-file-name) lsp-bridge-peek-file-and-pos-before-jump)
   (let* ((selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
-	 (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
-	 (path-list (nth 1 selected-symbol))
-	 (pos-list (nth 2 selected-symbol))
-	 (file (nth selected-id path-list))
-	 (pos (nth selected-id pos-list)))
+	     (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
+	     (path-list (nth 1 selected-symbol))
+	     (pos-list (nth 2 selected-symbol))
+	     (file (nth selected-id path-list))
+	     (pos (nth selected-id pos-list)))
     (find-file file)
     (goto-char (acm-backend-lsp-position-to-point pos))))
 
@@ -670,8 +678,8 @@ When FORCE if non-nil, the content of the peek window is recalculated."
   (interactive)
   (if lsp-bridge-peek-file-and-pos-before-jump
       (progn
-	(find-file (nth 0 lsp-bridge-peek-file-and-pos-before-jump))
-	(goto-char (nth 1 lsp-bridge-peek-file-and-pos-before-jump)))))
+	    (find-file (nth 0 lsp-bridge-peek-file-and-pos-before-jump))
+	    (goto-char (nth 1 lsp-bridge-peek-file-and-pos-before-jump)))))
 
 (defun lsp-bridge-peek--search-symbols (line)
   "Search for symbols from current position to LINEs after.
@@ -680,21 +688,21 @@ The search jumps over comments/strings.
 The returned value is a list of cons pairs (START . END), the
 start/end position of each symbol.  Point will not be moved."
   (let ((bound (save-excursion
-		 (forward-line (1- line))
-		 (line-end-position)))
-	(symbol-list))
+		         (forward-line (1- line))
+		         (line-end-position)))
+	    (symbol-list))
     (save-excursion
       (cl-loop
        while
        (forward-symbol 1)
        do
        (when (> (point) bound)
-	 (cl-return))
+	     (cl-return))
        (push (cons (save-excursion
-		     (forward-symbol -1)
-		     (point))
-		   (point))
-	     symbol-list)))
+		             (forward-symbol -1)
+		             (point))
+		           (point))
+	         symbol-list)))
     (nreverse symbol-list)))
 
 (defun lsp-bridge-peek--ace-key-seqs (n)
@@ -703,25 +711,25 @@ N can be the length of the list returned by
 `lsp-bridge-peek--search-symbols'.  The keys used are
 `lsp-bridge-peek-ace-keys'."
   (unless (and (listp lsp-bridge-peek-ace-keys)
-	       (null (cl-remove-if #'integerp lsp-bridge-peek-ace-keys))
-	       (eq (cl-remove-duplicates lsp-bridge-peek-ace-keys)
-		   lsp-bridge-peek-ace-keys))
+	           (null (cl-remove-if #'integerp lsp-bridge-peek-ace-keys))
+	           (eq (cl-remove-duplicates lsp-bridge-peek-ace-keys)
+		           lsp-bridge-peek-ace-keys))
     (user-error "Invalid `lsp-bridge-peek-ace-keys'"))
   (let* ((key-num (length lsp-bridge-peek-ace-keys))
-	 (key-seq-length (pcase n
-			   (0 0)
-			   (1 1)
-			   ;; Though `log' is a float-point operation, this is
+	     (key-seq-length (pcase n
+			               (0 0)
+			               (1 1)
+			               ;; Though `log' is a float-point operation, this is
                            ;; accurate for sym-num in a huge range.
-			   (_ (ceiling (log n key-num)))))
-	 (key-seq (make-list n nil))
-	 nth-ace-key)
+			               (_ (ceiling (log n key-num)))))
+	     (key-seq (make-list n nil))
+	     nth-ace-key)
     (dotimes (nkey key-seq-length)
       (setq nth-ace-key -1)
       (dotimes (nsym n)
-	(when (eq (% nsym (expt key-num nkey)) 0)
-	  (setq nth-ace-key (% (1+ nth-ace-key) key-num)))
-	(push (nth nth-ace-key lsp-bridge-peek-ace-keys) (nth nsym key-seq))))
+	    (when (eq (% nsym (expt key-num nkey)) 0)
+	      (setq nth-ace-key (% (1+ nth-ace-key) key-num)))
+	    (push (nth nth-ace-key lsp-bridge-peek-ace-keys) (nth nsym key-seq))))
     key-seq))
 
 (defun lsp-bridge-peek--pop-ace-key-seqs (seqs char)
@@ -751,38 +759,38 @@ list."
   "Pick a point in the buffer shown in peek window using \"ace\" operation.
 The buffer and the point is returned in a cons cell."
   (let* ((selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
-	 (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
-	 (path-list (nth 1 selected-symbol))
-	 (pos-list (nth 2 selected-symbol))
-	 (file (nth selected-id path-list))
-	 (buf (format "*lsp-bridge-peek-%s*" file))
-	 (pos (nth selected-id pos-list)))
+	     (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
+	     (path-list (nth 1 selected-symbol))
+	     (pos-list (nth 2 selected-symbol))
+	     (file (nth selected-id path-list))
+	     (buf (format "*lsp-bridge-peek-%s*" file))
+	     (pos (nth selected-id pos-list)))
     (setq lsp-bridge-peek--symbol-bounds
-	  (with-current-buffer buf
-	    (save-excursion
-	      (goto-char (acm-backend-lsp-position-to-point pos))
-	      (beginning-of-line 1)
-	      (cons (point)
-		    (lsp-bridge-peek--search-symbols
-		     lsp-bridge-peek-file-content-height)))))
+	      (with-current-buffer buf
+	        (save-excursion
+	          (goto-char (acm-backend-lsp-position-to-point pos))
+	          (beginning-of-line 1)
+	          (cons (point)
+		            (lsp-bridge-peek--search-symbols
+		             lsp-bridge-peek-file-content-height)))))
     (setq lsp-bridge-peek--ace-seqs (lsp-bridge-peek--ace-key-seqs
-				     (length (cdr lsp-bridge-peek--symbol-bounds))))
+				                     (length (cdr lsp-bridge-peek--symbol-bounds))))
     (lsp-bridge-peek--show 'force)
     (cl-block nil
       (while (setq key (read-key "Ace char:"))
-	(when (memq key lsp-bridge-peek-ace-cancel-keys)
-	  (setq lsp-bridge-peek--symbol-bounds nil)
-	  (setq lsp-bridge-peek--ace-seqs nil)
-	  (lsp-bridge-peek--show 'force)
-	  (cl-return))
-	(pcase (lsp-bridge-peek--pop-ace-key-seqs lsp-bridge-peek--ace-seqs key)
-	  ((and (pred integerp) i)
-	   (let ((pos (car (nth i (cdr lsp-bridge-peek--symbol-bounds)))))
-	     (setq lsp-bridge-peek--symbol-bounds nil)
-	     (setq lsp-bridge-peek--ace-seqs nil)
-	     (lsp-bridge-peek--show 'force)
-	     (cl-return (cons file pos))))
-	  (_ (lsp-bridge-peek--show 'force)))))))
+	    (when (memq key lsp-bridge-peek-ace-cancel-keys)
+	      (setq lsp-bridge-peek--symbol-bounds nil)
+	      (setq lsp-bridge-peek--ace-seqs nil)
+	      (lsp-bridge-peek--show 'force)
+	      (cl-return))
+	    (pcase (lsp-bridge-peek--pop-ace-key-seqs lsp-bridge-peek--ace-seqs key)
+	      ((and (pred integerp) i)
+	       (let ((pos (car (nth i (cdr lsp-bridge-peek--symbol-bounds)))))
+	         (setq lsp-bridge-peek--symbol-bounds nil)
+	         (setq lsp-bridge-peek--ace-seqs nil)
+	         (lsp-bridge-peek--show 'force)
+	         (cl-return (cons file pos))))
+	      (_ (lsp-bridge-peek--show 'force)))))))
 
 (defun lsp-bridge-peek-through ()
   "Peek through a symbol in current peek window."
@@ -791,33 +799,33 @@ The buffer and the point is returned in a cons cell."
   (setq lsp-bridge-peek-ace-list nil)
   (setq lsp-bridge-peek-ace-list (make-list 5 nil))
   (setf (nth 1 lsp-bridge-peek-ace-list)
-	(point))
+	    (point))
   (setf (nth 2 lsp-bridge-peek-ace-list)
-	(buffer-name))
+	    (buffer-name))
   (with-temp-message ""
     (let* ((file-pos (lsp-bridge-ace-pick-point-in-peek-window))
-	   (file (car file-pos))
-	   (pos (cdr file-pos)))
+	       (file (car file-pos))
+	       (pos (cdr file-pos)))
       (setq temp-buf (find-buffer-visiting file))
       (find-file file)
       (save-excursion
-	(goto-char pos)
-	(setq lsp-bridge-peek-chosen-displaying-list (make-list 3 0))
-	(setf (nth 2 lsp-bridge-peek-chosen-displaying-list) (1- lsp-bridge-peek-list-height))
-	(lsp-bridge-peek)
-	(setq single-character (eq
-				(- (save-excursion
-				     (forward-symbol 1)
-				     (point))
-				   (point))
-				1))
-	(setf (nth 4 lsp-bridge-peek-ace-list)
-	      (if single-character
-		  (point)
-		(1+ (point)))))
+	    (goto-char pos)
+	    (setq lsp-bridge-peek-chosen-displaying-list (make-list 3 0))
+	    (setf (nth 2 lsp-bridge-peek-chosen-displaying-list) (1- lsp-bridge-peek-list-height))
+	    (lsp-bridge-peek)
+	    (setq single-character (eq
+				                (- (save-excursion
+				                     (forward-symbol 1)
+				                     (point))
+				                   (point))
+				                1))
+	    (setf (nth 4 lsp-bridge-peek-ace-list)
+	          (if single-character
+		          (point)
+		        (1+ (point)))))
       (if (not temp-buf)
-	  (setf (nth 0 lsp-bridge-peek-ace-list)
-		(buffer-name)))
+	      (setf (nth 0 lsp-bridge-peek-ace-list)
+		        (buffer-name)))
       (setf (nth 3 lsp-bridge-peek-ace-list) (buffer-name))))
   (switch-to-buffer (nth 2 lsp-bridge-peek-ace-list)))
 
@@ -828,11 +836,11 @@ The buffer and the point is returned in a cons cell."
   (setq lsp-bridge-peek-chosen-displaying-list (make-list 3 0))
   (setf (nth 2 lsp-bridge-peek-chosen-displaying-list) (1- lsp-bridge-peek-list-height))
   (let* ((selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
-	 (parent-symbol (nth 3 selected-symbol)))
+	     (parent-symbol (nth 3 selected-symbol)))
     (if parent-symbol
-	(progn
-	  (setq lsp-bridge-peek-selected-symbol parent-symbol)
-	  (setq lsp-bridge-peek--content-update t)))))
+	    (progn
+	      (setq lsp-bridge-peek-selected-symbol parent-symbol)
+	      (setq lsp-bridge-peek--content-update t)))))
 
 (defun lsp-bridge-peek-tree-next-node ()
   "Select the next node in the tree history."
@@ -841,40 +849,40 @@ The buffer and the point is returned in a cons cell."
   (setq lsp-bridge-peek-chosen-displaying-list (make-list 3 0))
   (setf (nth 2 lsp-bridge-peek-chosen-displaying-list) (1- lsp-bridge-peek-list-height))
   (let* ((selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
-	 (child-list (nth 4 selected-symbol))
-	 (selected-child (nth 5 selected-symbol)))
+	     (child-list (nth 4 selected-symbol))
+	     (selected-child (nth 5 selected-symbol)))
     (if child-list
-	(progn
-	  (setq lsp-bridge-peek-selected-symbol (nth selected-child child-list))
-	  (setq lsp-bridge-peek--content-update t)))))
+	    (progn
+	      (setq lsp-bridge-peek-selected-symbol (nth selected-child child-list))
+	      (setq lsp-bridge-peek--content-update t)))))
 
 (defun lsp-bridge-peek-tree-change-branch (num)
   (lsp-bridge-peek--error-if-not-peeking)
   (setq lsp-bridge-peek-chosen-displaying-list (make-list 3 0))
   (setf (nth 2 lsp-bridge-peek-chosen-displaying-list) (1- lsp-bridge-peek-list-height))
   (cl-symbol-macrolet ((selected-symbol
-			 (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree)))
+			             (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree)))
     (if (nth 3 selected-symbol)
-	(cl-symbol-macrolet ((parent-symbol (nth (nth 3 selected-symbol) lsp-bridge-peek-symbol-tree))
-			     (brother-list (nth 4 parent-symbol))
-			     (selected-brother (nth 5 parent-symbol)))
-	  (if selected-brother
-	      (progn
-		(setq already-changed nil)
-		(unless (or (< (+ num selected-brother) 0)
-			    (> (+ num selected-brother) (1- (length brother-list))))
-		  (setq selected-brother (+ num selected-brother))
-		  (setq already-changed t))
-		(unless already-changed
-		  (if (< (+ num selected-brother) 0)
-		      (progn
-			(setq selected-brother (1- (length brother-list)))
-			(setq already-changed t))))
-		(unless already-changed
-		  (if (> (+ num selected-brother) (1- (length brother-list)))
-		      (setq selected-brother 0)))
-		(setq lsp-bridge-peek-selected-symbol (nth selected-brother brother-list))
-		(setq lsp-bridge-peek--content-update t)))))))
+	    (cl-symbol-macrolet ((parent-symbol (nth (nth 3 selected-symbol) lsp-bridge-peek-symbol-tree))
+			                 (brother-list (nth 4 parent-symbol))
+			                 (selected-brother (nth 5 parent-symbol)))
+	      (if selected-brother
+	          (progn
+		        (setq already-changed nil)
+		        (unless (or (< (+ num selected-brother) 0)
+			                (> (+ num selected-brother) (1- (length brother-list))))
+		          (setq selected-brother (+ num selected-brother))
+		          (setq already-changed t))
+		        (unless already-changed
+		          (if (< (+ num selected-brother) 0)
+		              (progn
+			            (setq selected-brother (1- (length brother-list)))
+			            (setq already-changed t))))
+		        (unless already-changed
+		          (if (> (+ num selected-brother) (1- (length brother-list)))
+		              (setq selected-brother 0)))
+		        (setq lsp-bridge-peek-selected-symbol (nth selected-brother brother-list))
+		        (setq lsp-bridge-peek--content-update t)))))))
 
 (defun lsp-bridge-peek-tree-previous-branch ()
   "Select the previous brach in the tree history."
