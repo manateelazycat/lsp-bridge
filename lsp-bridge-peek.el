@@ -154,6 +154,11 @@ The first is the buffer which need killing. The second is the position before ac
 The third is the buffer before ace peek. The fourth is the buffer where the symbol is.
 The fifth is the position where the symbol is.")
 
+(defface lsp-bridge-peek--highlight-symbol-face
+  `((t :foreground "white" :background "#623d73"))
+  "Face for highlighting the symbol you want to look through."
+  :group 'lsp-bridge-peek)
+
 (defface lsp-bridge-peek-border-face
   `((t :height 15 :background ,(face-attribute 'default :foreground) :extend t))
   "Face used for borders of peek windows.
@@ -373,9 +378,9 @@ not affected by its surroundings."
 			  (forward-symbol 1)
 			  (point))))
     (font-lock-fontify-region beg end)
-    (put-text-property highlight-begin highlight-end 'face '(:background "#623d73" :foreground "white"))
+    (put-text-property highlight-begin highlight-end 'face 'lsp-bridge-peek--highlight-symbol-face)
     (setq file-content (concat (buffer-substring beg end) "\n"))
-    (put-text-property highlight-begin highlight-end 'face '(:background (background-color-at-point))))
+    (remove-text-properties highlight-begin highlight-end 'face))
   file-content)
 
 (defun lsp-bridge--attach-ace-str (str sym-bounds bound-offset ace-seqs)
