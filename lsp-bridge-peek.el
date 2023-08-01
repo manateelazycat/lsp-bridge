@@ -139,7 +139,8 @@ to files where definitions and references are, the third item stores the
 positions where definitions and references are in the file, the fourth item
 is the index of the parent node of the symbol in the list, and the fifth
 item is a list, storing the index of the node's child nodes in the list.
-The sixth item stores which child node is selected next.")
+The sixth item stores which child node is selected next. The seventh item
+stores how many lines the file content was moved.")
 
 (defvar lsp-bridge-peek-symbol-at-point nil
   "A variable that stores the current symbol to be added.")
@@ -152,6 +153,11 @@ The sixth item stores which child node is selected next.")
 The first is the buffer which need killing. The second is the position before ace peek.
 The third is the buffer before ace peek. The fourth is the buffer where the symbol is.
 The fifth is the position where the symbol is.")
+
+(defface lsp-bridge-peek--highlight-symbol-face
+  `((t :foreground "white" :background "#623d73"))
+  "Face for highlighting the symbol you want to look through."
+  :group 'lsp-bridge-peek)
 
 (defface lsp-bridge-peek-border-face
   `((t :height 15 :background ,(face-attribute 'default :foreground) :extend t))
@@ -357,19 +363,24 @@ not affected by its surroundings."
   (propertize "\n"
 	          'face 'lsp-bridge-peek-border-face))
 
-(defun lsp-bridge-peek--get-content (pos)
+(defun lsp-bridge-peek--get-content (pos content-move)
   (setq file-content nil)
   (goto-char (acm-backend-lsp-position-to-point pos))
-  (let ((beg nil)
-	    (end nil))
-    (setq beg (line-beginning-position))
-    (forward-line (1- lsp-bridge-peek-file-content-height))
-    (setq end (line-end-position))
+  (let* ((beg (save-excursion
+		(forward-line content-move)
+		(line-beginning-position)))
+	 (end (save-excursion
+		(forward-line content-move)
+		(forward-line (1- lsp-bridge-peek-file-content-height))
+		(line-end-position)))
+	 (highlight-begin (point))
+	 (highlight-end (save-excursion
+			  (forward-symbol 1)
+			  (point))))
     (font-lock-fontify-region beg end)
-    (setq file-content (concat (buffer-substring beg end) "\n")))
-  (lsp-bridge--add-face file-content
-			            (list :background lsp-bridge-peek--bg
-			                  :extend t))
+    (put-text-property highlight-begin highlight-end 'face 'lsp-bridge-peek--highlight-symbol-face)
+    (setq file-content (concat (buffer-substring beg end) "\n"))
+    (remove-text-properties highlight-begin highlight-end 'face))
   file-content)
 
 (defun lsp-bridge--attach-ace-str (str sym-bounds bound-offset ace-seqs)
@@ -400,8 +411,10 @@ The beginnings of each symbol are replaced by ace strings with
 	     (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
 	     (path-list (nth 1 selected-symbol))
 	     (pos-list (nth 2 selected-symbol))
+	     (content-move-list (nth 6 selected-symbol))
 	     (file (nth n path-list))
 	     (pos (nth n pos-list))
+	     (content-move (nth n content-move-list))
 	     (buf-name (format "*lsp-bridge-peek-%s*" file))
 	     (file-content nil))
     (if (not (member buf-name lsp-bridge-peek--temp-buffer-alist))
@@ -411,10 +424,10 @@ The beginnings of each symbol are replaced by ace strings with
 	        (let ((buffer-file-name file))
 	          (delay-mode-hooks
 		        (set-auto-mode)))
-	        (setq file-content (lsp-bridge-peek--get-content pos))
+	        (setq file-content (lsp-bridge-peek--get-content pos content-move))
 	        (add-to-list 'lsp-bridge-peek--temp-buffer-alist buf-name)))
       (with-current-buffer buf-name
-	    (setq file-content (lsp-bridge-peek--get-content pos))))
+	    (setq file-content (lsp-bridge-peek--get-content pos content-move))))
     (when (and lsp-bridge-peek--symbol-bounds lsp-bridge-peek--ace-seqs)
       (setq file-content
 	        (lsp-bridge--attach-ace-str file-content
@@ -502,6 +515,7 @@ The beginnings of each symbol are replaced by ace strings with
 (defun lsp-bridge-peek-define--return (filename position)
   (push filename (nth 1 lsp-bridge-peek-symbol-at-point))
   (push position (nth 2 lsp-bridge-peek-symbol-at-point))
+  (push 0 (nth 6 lsp-bridge-peek-symbol-at-point))
   (if (not (= (length lsp-bridge-peek-ace-list) 0))
       (with-current-buffer (nth 3 lsp-bridge-peek-ace-list)
 	    (goto-char (nth 4 lsp-bridge-peek-ace-list))
@@ -535,7 +549,8 @@ The beginnings of each symbol are replaced by ace strings with
 	          (setq filename (buffer-substring beg end))
 	          (setq pos (list :line (string-to-number line) :character (string-to-number char)))
 	          (push filename (nth 1 lsp-bridge-peek-symbol-at-point))
-	          (push pos (nth 2 lsp-bridge-peek-symbol-at-point)))))
+	          (push pos (nth 2 lsp-bridge-peek-symbol-at-point))
+		  (push 0 (nth 6 lsp-bridge-peek-symbol-at-point)))))
 	    (setf (nth 1 lsp-bridge-peek-symbol-at-point)
 	          (nreverse (nth 1 lsp-bridge-peek-symbol-at-point))
 	          (nth 2 lsp-bridge-peek-symbol-at-point)
@@ -588,7 +603,7 @@ When FORCE if non-nil, the content of the peek window is recalculated."
 (defun lsp-bridge-peek ()
   "Peek the definition of the symbol at point."
   (interactive)
-  (setq lsp-bridge-peek-symbol-at-point (make-list 6 nil))
+  (setq lsp-bridge-peek-symbol-at-point (make-list 7 nil))
   (setf (nth 0 lsp-bridge-peek-symbol-at-point) (symbol-at-point))
   (lsp-bridge-call-file-api "peek_find_definition" (lsp-bridge--position)))
 
@@ -631,10 +646,10 @@ When FORCE if non-nil, the content of the peek window is recalculated."
 (defun lsp-bridge-peek-file-content-move (num)
   (lsp-bridge-peek--error-if-not-peeking)
   (cl-symbol-macrolet ((selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
-		               (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
-		               (pos-list (nth 2 selected-symbol))
-		               (line (plist-get (nth selected-id pos-list) :line)))
-    (setf line (+ line num))
+		       (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
+		       (content-move-list (nth 6 selected-symbol))
+		       (content-move (nth selected-id content-move-list)))
+    (setf content-move (+ content-move num))
     (setq lsp-bridge-peek--content-update t)))
 
 (defun lsp-bridge-peek-file-content-next-line ()
