@@ -1812,7 +1812,7 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
 (define-minor-mode lsp-bridge-mode
   "LSP Bridge mode."
   :keymap lsp-bridge-mode-map
-  :lighter " 橋"
+  :lighter " LSPB"
   :init-value nil
   (if lsp-bridge-mode
       (lsp-bridge--enable)
