@@ -112,29 +112,38 @@
 (defvar-local acm-backend-lsp-fetch-completion-item-ticker nil)
 
 (defun acm-backend-lsp-candidates (keyword)
-  (if (and (boundp 'acm-backend-lsp-cache-candidates)
-           acm-backend-lsp-cache-candidates)
-      acm-backend-lsp-cache-candidates
-    (let* ((candidates (list)))
-      (when (and
-             (>= (length keyword) acm-backend-lsp-candidate-min-length)
-             (boundp 'acm-backend-lsp-items)
-             acm-backend-lsp-items
-             (boundp 'acm-backend-lsp-server-names)
-             acm-backend-lsp-server-names
-             (hash-table-p acm-backend-lsp-items))
-        (dolist (server-name acm-backend-lsp-server-names)
-          (when-let* ((server-items (gethash server-name acm-backend-lsp-items)))
-            (maphash (lambda (k v)
-                       (add-to-list 'candidates v t))
-                     server-items))))
+  (let ((match-candidates
+         (if (and (boundp 'acm-backend-lsp-cache-candidates)
+                  acm-backend-lsp-cache-candidates)
+             acm-backend-lsp-cache-candidates
+           (let* ((candidates (list)))
+             (when (and
+                    (>= (length keyword) acm-backend-lsp-candidate-min-length)
+                    (boundp 'acm-backend-lsp-items)
+                    acm-backend-lsp-items
+                    (boundp 'acm-backend-lsp-server-names)
+                    acm-backend-lsp-server-names
+                    (hash-table-p acm-backend-lsp-items))
+               (dolist (server-name acm-backend-lsp-server-names)
+                 (when-let* ((server-items (gethash server-name acm-backend-lsp-items)))
+                   (maphash (lambda (k v)
+                              (add-to-list 'candidates v t))
+                            server-items))))
 
-      (setq-local acm-backend-lsp-cache-candidates candidates)
+             (setq-local acm-backend-lsp-cache-candidates candidates)
 
-      ;; NOTE:
-      ;; lsp-bridge has sort candidate at Python side,
-      ;; please do not do secondary sorting here, elisp is very slow.
-      candidates)))
+             ;; NOTE:
+             ;; lsp-bridge has sort candidate at Python side,
+             ;; please do not do secondary sorting here, elisp is very slow.
+             candidates))))
+
+    ;; When some LSP server very slow and other completion backend is fast,
+    ;; acm menu will render all backend candidates.
+    ;; Then old LSP candidates won't match `prefix' if new candidates haven't return.
+    ;; So we need filter old LSP candidates with `prefix' if `prefix' is not empty.
+    (if (string-equal keyword "")
+        match-candidates
+      (seq-filter (lambda (c) (acm-candidate-fuzzy-search keyword (plist-get c :label))) match-candidates))))
 
 (defun acm-backend-lsp-candidate-expand (candidate-info bound-start &optional preview)
   (let* ((label (plist-get candidate-info :label))
