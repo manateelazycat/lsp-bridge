@@ -106,7 +106,12 @@ you need set this value to `/usr/share/stardict/dic/stardict-oxford-gb-formated-
 (defvar-local acm-backend-search-sdcv-words-items nil)
 
 (defun acm-backend-search-sdcv-words-candidates (keyword)
-  acm-backend-search-sdcv-words-items)
+  (if (and (boundp 'acm-backend-search-sdcv-words-cache-candiates)
+           acm-backend-search-sdcv-words-cache-candiates)
+      acm-backend-search-sdcv-words-cache-candiates
+    (setq-local acm-backend-search-sdcv-words-cache-candiates acm-backend-search-sdcv-words-items)
+
+    acm-backend-search-sdcv-words-items))
 
 (defun acm-backend-search-sdcv-words-candidate-expand (candidate-info bound-start &optional preview)
   (if preview
@@ -115,7 +120,8 @@ you need set this value to `/usr/share/stardict/dic/stardict-oxford-gb-formated-
     (insert (plist-get candidate-info :display-label))))
 
 (defun acm-backend-search-sdcv-words-clean ()
-  (setq-local acm-backend-search-sdcv-words-items nil))
+  (setq-local acm-backend-search-sdcv-words-items nil)
+  (setq-local acm-backend-search-sdcv-words-cache-candiates nil))
 
 (provide 'acm-backend-search-sdcv-words)
 

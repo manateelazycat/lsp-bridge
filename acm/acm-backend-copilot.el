@@ -54,7 +54,12 @@ in the proxy plist. For example:
 (defvar-local acm-backend-copilot-items nil)
 
 (defun acm-backend-copilot-candidates (keyword)
-  acm-backend-copilot-items)
+  (if (and (boundp 'acm-backend-copilot-cache-candiates)
+           acm-backend-copilot-cache-candiates)
+      acm-backend-copilot-cache-candiates
+    (setq-local acm-backend-copilot-cache-candiates acm-backend-copilot-items)
+
+    acm-backend-copilot-items))
 
 (defun acm-backend-copilot-candidate-expand (candidate-info bound-start &optional preview)
   ;; We need replace whole area with copilot label.
@@ -70,6 +75,10 @@ in the proxy plist. For example:
 
 (defun acm-backend-copilot-candidate-doc (candidate)
   (plist-get candidate :documentation))
+
+(defun acm-backend-copilot-clean ()
+  (setq-local acm-backend-copilot-items nil)
+  (setq-local acm-backend-copilot-cache-candiates nil))
 
 (provide 'acm-backend-copilot)
 ;;; acm-backend-copilot.el ends here

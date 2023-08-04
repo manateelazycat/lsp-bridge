@@ -91,15 +91,25 @@
 (defvar-local acm-backend-tailwind-items nil)
 
 (defun acm-backend-tailwind-candidates (keyword)
-  (mapcar
-   (lambda (tailwind-symbol)
-     (list :key tailwind-symbol
-           :icon "tailwind"
-           :label tailwind-symbol
-           :display-label tailwind-symbol
-           :annotation "Tailwind"
-           :backend "tailwind"))
-   acm-backend-tailwind-items))
+  (if (and (boundp 'acm-backend-tailwind-cache-candiates)
+           acm-backend-tailwind-cache-candiates)
+      acm-backend-tailwind-cache-candiates
+    (setq-local acm-backend-tailwind-cache-candiates
+                (mapcar
+                 (lambda (tailwind-symbol)
+                   (list :key tailwind-symbol
+                         :icon "tailwind"
+                         :label tailwind-symbol
+                         :display-label tailwind-symbol
+                         :annotation "Tailwind"
+                         :backend "tailwind"))
+                 acm-backend-tailwind-items))
+
+    acm-backend-tailwind-cache-candiates))
+
+(defun acm-backend-tailwind-clean ()
+  (setq-local acm-backend-tailwind-items nil)
+  (setq-local acm-backend-tailwind-cache-candiates nil))
 
 (provide 'acm-backend-tailwind)
 

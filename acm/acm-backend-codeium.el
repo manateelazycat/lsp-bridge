@@ -151,9 +151,14 @@
 	(lisp-data-mode . 60)))
 
 (defun acm-backend-codeium-candidates (keyword)
-  (when (and acm-backend-codeium-items
-             (>= (length keyword) acm-backend-codeium-candidate-min-length))
-    acm-backend-codeium-items))
+  (if (and (boundp 'acm-backend-codeium-cache-candiates)
+           acm-backend-codeium-cache-candiates)
+      acm-backend-codeium-cache-candiates
+    (when (and acm-backend-codeium-items
+               (>= (length keyword) acm-backend-codeium-candidate-min-length))
+      (setq-local acm-backend-codeium-cache-candiates acm-backend-codeium-items)
+
+      acm-backend-codeium-items)))
 
 (defun acm-backend-codeium-candidate-expand (candidate-info bound-start &optional preview)
   ;; We need replace whole area with codeium label.
@@ -172,7 +177,8 @@
   (plist-get candidate :documentation))
 
 (defun acm-backend-codeium-clean ()
-  (setq-local acm-backend-codeium-items nil))
+  (setq-local acm-backend-codeium-items nil)
+  (setq-local acm-backend-codeium-cache-candiates nil))
 
 (provide 'acm-backend-codeium)
 ;;; acm-backend-codeium.el ends here

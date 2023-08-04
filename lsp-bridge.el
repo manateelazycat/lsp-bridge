@@ -1040,12 +1040,14 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-completion--record-items (filename
                                             filehost
-                                            candidates position
+                                            candidates
+                                            position
                                             server-name
                                             completion-trigger-characters
                                             server-names)
   (lsp-bridge--with-file-buffer filename filehost
                                 ;; Save completion items.
+                                (setq-local acm-backend-lsp-cache-candidates nil)
                                 (setq-local acm-backend-lsp-completion-position position)
                                 (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
                                 (setq-local acm-backend-lsp-server-names server-names)
@@ -1434,6 +1436,7 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-elisp-symbols-record (candidates)
   (setq-local acm-backend-elisp-items candidates)
+  (setq-local acm-backend-elisp-cache-candiates nil)
   (lsp-bridge-try-completion))
 
 (defun lsp-bridge-search-words-index-files ()
@@ -1853,11 +1856,12 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
                    (not (file-exists-p (buffer-file-name))))
           (save-buffer)))
 
-      (setq-local acm-backend-lsp-completion-trigger-characters nil)
+      (setq-local acm-backend-lsp-cache-candidates nil)
       (setq-local acm-backend-lsp-completion-position nil)
+      (setq-local acm-backend-lsp-completion-trigger-characters nil)
+      (setq-local acm-backend-lsp-server-names nil)
       (setq-local acm-backend-lsp-filepath (lsp-bridge-get-buffer-truename))
       (setq-local acm-backend-lsp-items (make-hash-table :test 'equal))
-      (setq-local acm-backend-lsp-server-names nil)
 
       (when lsp-bridge-enable-signature-help
         (acm-run-idle-func lsp-bridge-signature-help-timer lsp-bridge-signature-help-fetch-idle 'lsp-bridge-signature-help-fetch))
@@ -2249,13 +2253,27 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 
 (defun lsp-bridge-search-backend--record-items (backend-name items)
   (pcase backend-name
-    ("codeium" (setq-local acm-backend-codeium-items items))
-    ("copilot" (setq-local acm-backend-copilot-items items))
-    ("file-words" (setq-local acm-backend-search-file-words-items items))
-    ("sdcv-words" (setq-local acm-backend-search-sdcv-words-items items))
-    ("tabnine" (setq-local acm-backend-tabnine-items items))
-    ("tailwind-keywords" (setq-local acm-backend-tailwind-items items))
-    ("paths" (setq-local acm-backend-path-items items)))
+    ("codeium"
+     (setq-local acm-backend-codeium-items items)
+     (setq-local acm-backend-codeium-cache-candiates nil))
+    ("copilot"
+     (setq-local acm-backend-copilot-items items)
+     (setq-local acm-backend-copilot-cache-candiates nil))
+    ("file-words"
+     (setq-local acm-backend-search-file-words-items items)
+     (setq-local acm-backend-search-file-words-cache-candiates nil))
+    ("sdcv-words"
+     (setq-local acm-backend-search-sdcv-words-items items)
+     (setq-local acm-backend-search-sdcv-words-cache-candiates nil))
+    ("tabnine"
+     (setq-local acm-backend-tabnine-items items)
+     (setq-local acm-backend-tabnine-cache-candiates nil))
+    ("tailwind-keywords" 
+     (setq-local acm-backend-tailwind-items items)
+     (setq-local acm-backend-tailwind-cache-candiates nil))
+    ("paths" 
+     (setq-local acm-backend-path-items items)
+     (setq-local acm-backend-path-cache-candiates nil)))
   (lsp-bridge-try-completion))
 
 

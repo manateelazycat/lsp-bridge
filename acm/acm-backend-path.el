@@ -96,8 +96,13 @@
 (defvar-local acm-backend-path-items nil)
 
 (defun acm-backend-path-candidates (keyword)
-  (when acm-enable-path
-    acm-backend-path-items))
+  (if (and (boundp 'acm-backend-path-cache-candiates)
+           acm-backend-path-cache-candiates)
+      acm-backend-path-cache-candiates
+    (when acm-enable-path
+      (setq-local acm-backend-path-cache-candiates acm-backend-path-items)
+
+      acm-backend-path-items)))
 
 (defun acm-backend-path-candidate-expand (candidate-info bound-start &optional preview)
   (let* ((keyword (acm-get-input-prefix))
@@ -113,6 +118,10 @@
         (acm-preview-create-overlay bound-start (point) (concat parent-dir file-name))
       (delete-region bound-start (point))
       (insert (concat parent-dir file-name)))))
+
+(defun acm-backend-path-clean ()
+  (setq-local acm-backend-path-items nil)
+  (setq-local acm-backend-path-cache-candiates nil))
 
 (provide 'acm-backend-path)
 
