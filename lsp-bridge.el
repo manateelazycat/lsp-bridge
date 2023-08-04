@@ -2268,7 +2268,7 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
     ("tabnine"
      (setq-local acm-backend-tabnine-items items)
      (setq-local acm-backend-tabnine-cache-candiates nil))
-    ("tailwind-keywords" 
+    ("tailwind"
      (setq-local acm-backend-tailwind-items items)
      (setq-local acm-backend-tailwind-cache-candiates nil))
     ("paths" 

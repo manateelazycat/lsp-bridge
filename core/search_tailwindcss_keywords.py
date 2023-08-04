@@ -65,4 +65,4 @@ class SearchTailwindKeywords:
                     break
                 
         if ticker == self.search_ticker:
-            eval_in_emacs("lsp-bridge-search-backend--record-items", "tailwind-keywords", candidates)
+            eval_in_emacs("lsp-bridge-search-backend--record-items", "tailwind", candidates)
