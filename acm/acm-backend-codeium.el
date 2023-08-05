@@ -151,14 +151,11 @@
 	(lisp-data-mode . 60)))
 
 (defun acm-backend-codeium-candidates (keyword)
-  (if (and (boundp 'acm-backend-codeium-cache-candiates)
-           acm-backend-codeium-cache-candiates)
-      acm-backend-codeium-cache-candiates
-    (when (and acm-backend-codeium-items
-               (>= (length keyword) acm-backend-codeium-candidate-min-length))
-      (setq-local acm-backend-codeium-cache-candiates acm-backend-codeium-items)
-
-      acm-backend-codeium-items)))
+  (acm-with-cache-candidates
+   acm-backend-codeium-cache-candiates
+   (when (and acm-backend-codeium-items
+              (>= (length keyword) acm-backend-codeium-candidate-min-length))
+     acm-backend-codeium-items)))
 
 (defun acm-backend-codeium-candidate-expand (candidate-info bound-start &optional preview)
   ;; We need replace whole area with codeium label.

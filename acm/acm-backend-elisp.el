@@ -111,24 +111,18 @@
 (defvar acm-backend-elisp-symbols-update-size 0)
 
 (defun acm-backend-elisp-candidates (keyword)
-  (if (and (boundp 'acm-backend-elisp-cache-candiates)
-           acm-backend-elisp-cache-candiates)
-      acm-backend-elisp-cache-candiates
-    (when (and (acm-is-elisp-mode-p)
-               (>= (length keyword) acm-backend-elisp-candidate-min-length))
-      (setq-local acm-backend-elisp-cache-candiates
-                  (mapcar
-                   (lambda (elisp-symbol)
-                     (let ((symbol-type (acm-backend-elisp-symbol-type (intern elisp-symbol))))
-                       (list :key elisp-symbol
-                             :icon symbol-type
-                             :label elisp-symbol
-                             :display-label elisp-symbol
-                             :annotation (capitalize symbol-type)
-                             :backend "elisp")))
-                   acm-backend-elisp-items))
-
-      acm-backend-elisp-cache-candiates)))
+  (acm-with-cache-candidates
+   acm-backend-elisp-cache-candiates
+   (mapcar
+    (lambda (elisp-symbol)
+      (let ((symbol-type (acm-backend-elisp-symbol-type (intern elisp-symbol))))
+        (list :key elisp-symbol
+              :icon symbol-type
+              :label elisp-symbol
+              :display-label elisp-symbol
+              :annotation (capitalize symbol-type)
+              :backend "elisp")))
+    acm-backend-elisp-items)))
 
 (defun acm-backend-elisp-candidate-doc (candidate)
   (let* ((symbol (intern (plist-get candidate :label)))

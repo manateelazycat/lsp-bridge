@@ -14,13 +14,10 @@
 (defvar-local acm-backend-tabnine-items nil)
 
 (defun acm-backend-tabnine-candidates (keyword)
-  (if (and (boundp 'acm-backend-tabnine-cache-candiates)
-           acm-backend-tabnine-cache-candiates)
-      acm-backend-tabnine-cache-candiates
-    (when acm-backend-tabnine-items
-      (setq-local acm-backend-tabnine-cache-candiates acm-backend-tabnine-items)
-
-      acm-backend-tabnine-items)))
+  (acm-with-cache-candidates
+   acm-backend-tabnine-cache-candiates
+   (when acm-backend-tabnine-items
+     acm-backend-tabnine-items)))
 
 (defun acm-backend-tabnine-candidate-expand (candidate-info bound-start &optional preview)
   ;; Insert TabNine suggestion.

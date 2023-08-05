@@ -113,29 +113,26 @@
 
 (defun acm-backend-lsp-candidates (keyword)
   (let ((match-candidates
-         (if (and (boundp 'acm-backend-lsp-cache-candidates)
-                  acm-backend-lsp-cache-candidates)
-             acm-backend-lsp-cache-candidates
-           (let* ((candidates (list)))
-             (when (and
-                    (>= (length keyword) acm-backend-lsp-candidate-min-length)
-                    (boundp 'acm-backend-lsp-items)
-                    acm-backend-lsp-items
-                    (boundp 'acm-backend-lsp-server-names)
-                    acm-backend-lsp-server-names
-                    (hash-table-p acm-backend-lsp-items))
-               (dolist (server-name acm-backend-lsp-server-names)
-                 (when-let* ((server-items (gethash server-name acm-backend-lsp-items)))
-                   (maphash (lambda (k v)
-                              (add-to-list 'candidates v t))
-                            server-items))))
+         (acm-with-cache-candidates
+          acm-backend-lsp-cache-candidates
+          (let* ((candidates (list)))
+            (when (and
+                   (>= (length keyword) acm-backend-lsp-candidate-min-length)
+                   (boundp 'acm-backend-lsp-items)
+                   acm-backend-lsp-items
+                   (boundp 'acm-backend-lsp-server-names)
+                   acm-backend-lsp-server-names
+                   (hash-table-p acm-backend-lsp-items))
+              (dolist (server-name acm-backend-lsp-server-names)
+                (when-let* ((server-items (gethash server-name acm-backend-lsp-items)))
+                  (maphash (lambda (k v)
+                             (add-to-list 'candidates v t))
+                           server-items))))
 
-             (setq-local acm-backend-lsp-cache-candidates candidates)
-
-             ;; NOTE:
-             ;; lsp-bridge has sort candidate at Python side,
-             ;; please do not do secondary sorting here, elisp is very slow.
-             candidates))))
+            ;; NOTE:
+            ;; lsp-bridge has sort candidate at Python side,
+            ;; please do not do secondary sorting here, elisp is very slow.
+            candidates))))
 
     ;; When some LSP server very slow and other completion backend is fast,
     ;; acm menu will render all backend candidates.

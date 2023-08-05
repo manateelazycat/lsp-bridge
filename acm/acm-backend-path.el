@@ -96,13 +96,10 @@
 (defvar-local acm-backend-path-items nil)
 
 (defun acm-backend-path-candidates (keyword)
-  (if (and (boundp 'acm-backend-path-cache-candiates)
-           acm-backend-path-cache-candiates)
-      acm-backend-path-cache-candiates
-    (when acm-enable-path
-      (setq-local acm-backend-path-cache-candiates acm-backend-path-items)
-
-      acm-backend-path-items)))
+  (acm-with-cache-candidates
+   acm-backend-path-cache-candiates
+   (when acm-enable-path
+     acm-backend-path-items)))
 
 (defun acm-backend-path-candidate-expand (candidate-info bound-start &optional preview)
   (let* ((keyword (acm-get-input-prefix))

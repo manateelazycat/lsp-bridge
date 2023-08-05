@@ -199,6 +199,13 @@
      (setq ,timer
            (run-with-idle-timer ,idle t #'(lambda () (funcall ,func))))))
 
+(cl-defmacro acm-with-cache-candidates (cache-candidates &rest body)
+  `(if (and (boundp ',cache-candidates)
+            ,cache-candidates)
+       ,cache-candidates
+     (setq-local ,cache-candidates ,@body)
+     ,cache-candidates))
+
 (defvar acm-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [remap next-line] #'acm-select-next)
