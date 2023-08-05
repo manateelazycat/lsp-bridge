@@ -550,7 +550,11 @@ The beginnings of each symbol are replaced by ace strings with
 	          (setq pos (list :line (string-to-number line) :character (string-to-number char)))
 	          (push filename (nth 1 lsp-bridge-peek-symbol-at-point))
 	          (push pos (nth 2 lsp-bridge-peek-symbol-at-point))
-		  (push 0 (nth 6 lsp-bridge-peek-symbol-at-point)))))
+		  (setf (nth 6 lsp-bridge-peek-symbol-at-point)
+			(nreverse (nth 6 lsp-bridge-peek-symbol-at-point)))
+		  (push (- (/ lsp-bridge-peek-file-content-height 2)) (nth 6 lsp-bridge-peek-symbol-at-point))
+		  (setf (nth 6 lsp-bridge-peek-symbol-at-point)
+			(nreverse (nth 6 lsp-bridge-peek-symbol-at-point))))))
 	    (setf (nth 1 lsp-bridge-peek-symbol-at-point)
 	          (nreverse (nth 1 lsp-bridge-peek-symbol-at-point))
 	          (nth 2 lsp-bridge-peek-symbol-at-point)
@@ -767,13 +771,16 @@ The buffer and the point is returned in a cons cell."
 	     (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
 	     (path-list (nth 1 selected-symbol))
 	     (pos-list (nth 2 selected-symbol))
+	     (content-move-list (nth 6 selected-symbol))
 	     (file (nth selected-id path-list))
 	     (buf (format "*lsp-bridge-peek-%s*" file))
-	     (pos (nth selected-id pos-list)))
+	     (pos (nth selected-id pos-list))
+	     (content-move (nth selected-id content-move-list)))
     (setq lsp-bridge-peek--symbol-bounds
 	      (with-current-buffer buf
 	        (save-excursion
 	          (goto-char (acm-backend-lsp-position-to-point pos))
+		  (forward-line content-move)
 	          (beginning-of-line 1)
 	          (cons (point)
 		            (lsp-bridge-peek--search-symbols
