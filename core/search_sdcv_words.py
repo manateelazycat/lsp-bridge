@@ -140,5 +140,5 @@ class SearchSdcvWords:
                     break
                 
         if ticker == self.search_ticker:
-            eval_in_emacs("lsp-bridge-search-backend--record-items", "sdcv-words", 
+            eval_in_emacs("lsp-bridge-search-backend--record-items", "search-sdcv-words",
                           sorted(candidates, key=functools.cmp_to_key(lambda a, b: self.sort_words(prefix, a, b))))

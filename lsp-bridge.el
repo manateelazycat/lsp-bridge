@@ -2259,10 +2259,10 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
     ("copilot"
      (setq-local acm-backend-copilot-items items)
      (setq-local acm-backend-copilot-cache-candiates nil))
-    ("file-words"
+    ("search-file-words"
      (setq-local acm-backend-search-file-words-items items)
      (setq-local acm-backend-search-file-words-cache-candiates nil))
-    ("sdcv-words"
+    ("search-sdcv-words"
      (setq-local acm-backend-search-sdcv-words-items items)
      (setq-local acm-backend-search-sdcv-words-cache-candiates nil))
     ("tabnine"
@@ -2271,11 +2271,10 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
     ("tailwind"
      (setq-local acm-backend-tailwind-items items)
      (setq-local acm-backend-tailwind-cache-candiates nil))
-    ("paths" 
+    ("path"
      (setq-local acm-backend-path-items items)
      (setq-local acm-backend-path-cache-candiates nil)))
   (lsp-bridge-try-completion))
-
 
 ;;; support which-func-mode
 ;;;
