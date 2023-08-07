@@ -32,7 +32,7 @@ class SearchList:
         self.backend_dict = {}
         self.search_thread_queue = []
         
-    def update(self, backend_name, symbols, max_number, callback_name):
+    def update(self, backend_name, symbols, max_number):
         symbols = sorted(list(map(str, symbols)), key=len)
         
         if backend_name in self.backend_dict:
@@ -41,7 +41,6 @@ class SearchList:
             self.backend_dict[backend_name] = {
                 "symbols": symbols,
                 "max_number": max_number,
-                "callback_name": callback_name,
                 "ticker": 0
             }
         
@@ -67,7 +66,8 @@ class SearchList:
                     break
                 
         if ticker == self.backend_dict[backend_name]["ticker"]:
-            eval_in_emacs(self.backend_dict[backend_name]["callback_name"],
+            eval_in_emacs("lsp-bridge-search-backend--record-items",
+                          backend_name,
                           sorted(candidates, key=functools.cmp_to_key(lambda a, b: self.sort_symbols(prefix, a, b))))
             
     def match_symbol(self, prefix, prefix_regexp, symbol):

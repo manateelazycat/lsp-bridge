@@ -1423,8 +1423,7 @@ So we build this macro to restore postion after code format."
         (lsp-bridge-call-async "search_list_update"
                                "elisp"
                                symbols
-                               acm-backend-elisp-search-max-number
-                               "lsp-bridge-elisp-symbols-record")
+                               acm-backend-elisp-search-max-number)
         (setq acm-backend-elisp-symbols-update-size symbols-size)))))
 
 (defun lsp-bridge-elisp-symbols-search (current-symbol)
@@ -1433,11 +1432,6 @@ So we build this macro to restore postion after code format."
     ;; Search words if current prefix is not empty.
     (unless (or (string-equal current-symbol "") (null current-symbol))
       (lsp-bridge-call-async "search_list_search" "elisp" current-symbol))))
-
-(defun lsp-bridge-elisp-symbols-record (candidates)
-  (setq-local acm-backend-elisp-items candidates)
-  (setq-local acm-backend-elisp-cache-candiates nil)
-  (lsp-bridge-try-completion))
 
 (defun lsp-bridge-search-words-index-files ()
   "Index files when lsp-bridge python process finish."
