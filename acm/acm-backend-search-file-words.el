@@ -112,15 +112,7 @@
    acm-backend-search-file-words-cache-candiates
    (when (and acm-enable-search-file-words
               (>= (length keyword) acm-backend-search-file-words-candidate-min-length))
-     (mapcar
-      (lambda (candidate-label)
-        (list :key candidate-label
-              :icon "search"
-              :label candidate-label
-              :display-label candidate-label
-              :annotation "Search Word"
-              :backend "search-file-words"))
-      acm-backend-search-file-words-items))))
+     acm-backend-search-file-words-items)))
 
 (defun acm-backend-search-file-words-candidate-expand (candidate-info bound-start &optional preview)
   (let ((beg (if (acm-is-elisp-mode-p)

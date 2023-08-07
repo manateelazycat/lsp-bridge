@@ -120,7 +120,15 @@ class SearchFileWords:
                 
                 candidates = list(map(lambda word: prefix[:-len(search_prefix)] + word, candidates))
                 
-            eval_in_emacs("lsp-bridge-search-backend--record-items", "search-file-words", candidates[:min(self.max_number, len(candidates))])
+            eval_in_emacs("lsp-bridge-search-backend--record-items", "search-file-words",
+                          list(map(lambda word: {
+                              "key": word,
+                              "icon": "search",
+                              "label": word,
+                              "display-label": word,
+                              "annotation": "Search Word",
+                              "backend": "search-file-words"
+                          }, candidates[:min(self.max_number, len(candidates))])))
         except:
             logger.error(traceback.format_exc())
             
