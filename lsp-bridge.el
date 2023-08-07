@@ -2252,28 +2252,9 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
                              (not indent-tabs-mode)))))
 
 (defun lsp-bridge-search-backend--record-items (backend-name items)
-  (pcase backend-name
-    ("codeium"
-     (setq-local acm-backend-codeium-items items)
-     (setq-local acm-backend-codeium-cache-candiates nil))
-    ("copilot"
-     (setq-local acm-backend-copilot-items items)
-     (setq-local acm-backend-copilot-cache-candiates nil))
-    ("search-file-words"
-     (setq-local acm-backend-search-file-words-items items)
-     (setq-local acm-backend-search-file-words-cache-candiates nil))
-    ("search-sdcv-words"
-     (setq-local acm-backend-search-sdcv-words-items items)
-     (setq-local acm-backend-search-sdcv-words-cache-candiates nil))
-    ("tabnine"
-     (setq-local acm-backend-tabnine-items items)
-     (setq-local acm-backend-tabnine-cache-candiates nil))
-    ("tailwind"
-     (setq-local acm-backend-tailwind-items items)
-     (setq-local acm-backend-tailwind-cache-candiates nil))
-    ("path"
-     (setq-local acm-backend-path-items items)
-     (setq-local acm-backend-path-cache-candiates nil)))
+  (set (make-local-variable (intern (format "acm-backend-%s-items" backend-name))) items)
+  (set (make-local-variable (intern (format "acm-backend-%s-cache-candiates" backend-name))) nil)
+
   (lsp-bridge-try-completion))
 
 ;;; support which-func-mode
