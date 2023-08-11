@@ -96,6 +96,20 @@ def is_running_in_server():
 
     return running_in_server
 
+is_merge_emacs_exec_path = False
+def merge_emacs_exec_path():
+    global is_merge_emacs_exec_path
+
+    # Only merge once.
+    if not is_merge_emacs_exec_path:
+        paths = os.environ["PATH"].split(":")
+        [emacs_paths, ] = get_emacs_vars(["exec-path"])
+        new_paths = list(dict.fromkeys(paths + emacs_paths))
+
+        os.environ["PATH"] = ":".join(new_paths)
+
+        is_merge_emacs_exec_path = True
+
 lsp_file_host = ""
 def set_lsp_file_host(host):
     global lsp_file_host

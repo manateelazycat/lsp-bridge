@@ -593,6 +593,9 @@ class LspBridge:
             eval_in_emacs("lsp-bridge--turn-off", filepath, get_lsp_file_host())
 
     def check_lang_server_command(self, lang_server_info, filepath, turn_off_on_error=True):
+        # We merge PATH from `exec-path` variable, to make sure lsp-bridge find LSP server command if it can find by Emacs.
+        merge_emacs_exec_path()
+
         if len(lang_server_info["command"]) > 0:
             server_command = lang_server_info["command"][0]
             server_command_path = shutil.which(server_command)
