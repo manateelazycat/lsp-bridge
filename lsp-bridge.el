@@ -870,7 +870,8 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-start-process ()
   "Start LSP-Bridge process if it isn't started."
   (setq lsp-bridge-is-starting t)
-  (unless (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+  (if (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+      (remove-hook 'post-command-hook #'lsp-bridge-start-process)
     ;; start epc server and set `lsp-bridge-server-port'
     (lsp-bridge--start-epc-server)
     (let* ((lsp-bridge-args (append
@@ -1817,6 +1818,8 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
 
 (defun lsp-bridge--enable ()
   "Enable LSP Bridge mode."
+
+  (add-hook 'post-command-hook #'lsp-bridge-start-process)
 
   ;; Don't enable lsp-bridge when current buffer is acm buffer.
   (unless (or (equal (buffer-name (current-buffer)) acm-buffer)
