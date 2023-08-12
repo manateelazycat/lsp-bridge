@@ -850,14 +850,10 @@ So we build this macro to restore postion after code format."
           (setq-local lsp-bridge-buffer-file-deleted t)
           (message "[LSP-Bridge] %s is not exist, stop send the %s LSP request until file create again." acm-backend-lsp-filepath method))))))
 
-(defvar lsp-bridge-is-starting nil)
-
 (defun lsp-bridge-restart-process ()
   "Stop and restart LSP-Bridge process."
   (interactive)
   (lsp-bridge-diagnostic-hide-overlays)
-
-  (setq lsp-bridge-is-starting nil)
 
   (lsp-bridge-kill-process)
   (lsp-bridge-start-process)
@@ -869,7 +865,6 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-start-process ()
   "Start LSP-Bridge process if it isn't started."
-  (setq lsp-bridge-is-starting t)
   (if (lsp-bridge-epc-live-p lsp-bridge-epc-process)
       (remove-hook 'post-command-hook #'lsp-bridge-start-process)
     ;; start epc server and set `lsp-bridge-server-port'
@@ -940,7 +935,6 @@ So we build this macro to restore postion after code format."
                                 :connection (lsp-bridge-epc-connect "127.0.0.1" lsp-bridge-epc-port)
                                 ))
   (lsp-bridge-epc-init-epc-layer lsp-bridge-epc-process)
-  (setq lsp-bridge-is-starting nil)
 
   ;; Search words from opened files.
   (lsp-bridge-search-words-index-files)
@@ -1868,11 +1862,7 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
     (dolist (hook lsp-bridge--internal-hooks)
       (apply #'add-hook hook))
 
-    (advice-add #'acm-hide :after #'lsp-bridge--completion-hide-advisor)
-
-    ;; Flag `lsp-bridge-is-starting' make sure only call `lsp-bridge-start-process' once.
-    (unless lsp-bridge-is-starting
-      (lsp-bridge-start-process))))
+    (advice-add #'acm-hide :after #'lsp-bridge--completion-hide-advisor)))
 
 (defun lsp-bridge-is-org-temp-buffer-p ()
   (or (string-match "\*org-src-fontification:" (buffer-name))
@@ -2302,9 +2292,6 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 
 (defun lsp-bridge-open-remote-file ()
   (interactive)
-  (unless lsp-bridge-is-starting
-    (lsp-bridge-start-process))
-
   (let* ((ip-file (concat (lsp-bridge--user-emacs-directory-func)
                           (file-name-as-directory "lsp-bridge")
                           (file-name-as-directory "remote_file")
