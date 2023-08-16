@@ -2290,6 +2290,16 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 (defvar-local lsp-bridge-remote-file-host nil)
 (defvar-local lsp-bridge-remote-file-path nil)
 
+(defun lsp-bridge-open-or-create-file (filepath)
+  "Open FILEPATH, if it exists. If not, create it and its parent directories."
+  (if (file-exists-p filepath)
+      (with-temp-buffer
+        (insert-file-contents filepath)
+        (buffer-string))
+    (make-directory (file-name-directory filepath) t)
+    (with-temp-file filepath)
+    ""))
+
 (defun lsp-bridge-open-remote-file ()
   (interactive)
   (let* ((ip-file (concat (lsp-bridge--user-emacs-directory-func)
@@ -2298,7 +2308,7 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
                           "ip.txt"))
          (path (completing-read "Open remote file (ip:path): "
                                 (with-temp-buffer
-                                  (insert-file-contents ip-file)
+                                  (insert (lsp-bridge-open-or-create-file ip-file))
                                   (split-string (buffer-string) "\n" t)))))
     (lsp-bridge-call-async "open_remote_file" path (list :line 0 :character 0))))
 
