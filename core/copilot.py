@@ -191,7 +191,7 @@ class Copilot:
                 "version": self.file_versions[file_path],
                 "tabSize": tab_size,
                 "indentSize": tab_size,
-                "insertSpaces": insert_spaces,
+                "insertSpaces": bool(insert_spaces),
                 "path": file_path,
                 "uri": path_to_uri(file_path),
                 "relativePath": relative_path,
