@@ -58,7 +58,7 @@ It should be noted that lsp-bridge has three scanning modes:
 
 1. Install `lsp-bridge` and the corresponding LSP server on the remote server.
 2. Start the lsp-bridge service: `python3 lsp-bridge/lsp_bridge.py`
-3. Use the command `lsp-bridge-open-remote-file` to open the remote file and enter the username, server IP, ssh port (default: 22), and file path, such as `user@ip:[ssh_port]/path/file`.
+3. Use the command `lsp-bridge-open-remote-file` to open the remote file and enter the username, server IP, ssh port (default: 22), and file path, such as `user@ip:[ssh_port]:/path/file`.
 
 Once the remote file is opened, `lsp-bridge` will automatically display the code completion menu. The remote completion principle of `lsp-bridge` is as follows:
 

@@ -18,21 +18,21 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import json
+import logging
+import os
+import pathlib
+import platform
+import queue
+import re
+import subprocess
+import sys
+from threading import Thread
 from typing import Optional
 from urllib.parse import urlparse
 
 import sexpdata
-import logging
-import pathlib
-import platform
-import sys
-import subprocess
-import queue
-import os
-import json
-
 from epc.client import EPCClient
-from threading import Thread
 
 try:
     import orjson as json_parser
@@ -403,10 +403,25 @@ def cmp(x, y):
     else:
         return 0
 
-def is_valid_ip_path(string):
-    import re
-    pattern = re.compile(r'^(\w+@)?([\w\.\:]+):([0-9]+)?(/.*)$')
-    return pattern.match(string)
+def is_valid_ip_path(ssh_path):
+    """Check if SSH-PATH is a valid ssh path."""
+    pattern = r"^(?:([a-z_][a-z0-9_-]*)@)?((?:[0-9]{1,3}\.){3}[0-9]{1,3})(?::(\d+))?:~?(.*)$"
+    match = re.match(pattern, ssh_path)
+    return match is not None
+
+def split_ssh_path(ssh_path):
+    """Split SSH-PATH into username, host, port and path."""
+    pattern = r"^(?:([a-z_][a-z0-9_-]*)@)?((?:[0-9]{1,3}\.){3}[0-9]{1,3})(?::(\d+))?:?(.*)$"
+    match = re.match(pattern, ssh_path)
+    if match:
+        username, host, port, path = match.groups()
+        if not username:
+            username = None
+        if not port:
+            port = None
+        return (username, host, port, path)
+    else:
+        return None
 
 def eval_sexp_in_emacs(sexp):
     epc_client.call("eval-in-emacs", [sexp])

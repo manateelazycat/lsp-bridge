@@ -194,48 +194,44 @@ class LspBridge:
     def open_remote_file(self, path, jump_define_pos):
         if is_valid_ip_path(path):
             import paramiko
-            from urllib.parse import urlparse
 
-            parsed_url = urlparse('ssh://' + path)
+            path_info = split_ssh_path(path)
+            if path_info:
+                (server_username, server_host, ssh_port, server_path) = path_info
 
-            server_host = parsed_url.hostname
-            server_path = parsed_url.path
-            ssh_port = parsed_url.port
-            server_username = parsed_url.username
+                if not server_username:
+                    if server_host in self.host_names:
+                        server_username = self.host_names[server_host]["username"]
+                    else:
+                        server_username = "root"
 
-            if not server_username:
-                if server_host in self.host_names:
-                    server_username = self.host_names[server_host]["username"]
-                else:
-                    server_username = "root"
+                if not ssh_port:
+                    if server_host in self.host_names:
+                        ssh_port = self.host_names[server_host]["ssh_port"]
+                    else:
+                        ssh_port = 22
 
-            if not ssh_port:
-                if server_host in self.host_names:
-                    ssh_port = self.host_names[server_host]["ssh_port"]
-                else:
-                    ssh_port = 22
+                if server_username and ssh_port:
+                    self.host_names[server_host] = {"username": server_username, "ssh_port": ssh_port}
 
-            if server_username and ssh_port:
-                self.host_names[server_host] = {"username": server_username, "ssh_port": ssh_port}
+                try:
+                    client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
+                    if client_id not in self.client_dict:
+                        client = self.get_socket_client(server_host, REMOTE_FILE_ELISP_CHANNEL)
+                        client.send_message("Connect")
 
-            try:
-                client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
-                if client_id not in self.client_dict:
-                    client = self.get_socket_client(server_host, REMOTE_FILE_ELISP_CHANNEL)
-                    client.send_message("Connect")
+                    message_emacs(f"Open {server_username}@{server_host}#{ssh_port}:{server_path}...")
 
-                message_emacs(f"Open {server_username}@{server_host}#{ssh_port}:{server_path}...")
+                    self.send_remote_file_message(server_host, {
+                        "command": "open_file",
+                        "server": server_host,
+                        "path": server_path,
+                        "jump_define_pos": epc_arg_transformer(jump_define_pos)
+                    })
 
-                self.send_remote_file_message(server_host, {
-                    "command": "open_file",
-                    "server": server_host,
-                    "path": server_path,
-                    "jump_define_pos": epc_arg_transformer(jump_define_pos)
-                })
-
-                save_ip(f"{server_username}@{server_host}:{ssh_port}")
-            except paramiko.ssh_exception.ChannelException:
-                message_emacs(f"Connect {server_username}@{server_host}:{ssh_port} failed, please make sure `lsp_bridge.py` has start at server.")
+                    save_ip(f"{server_username}@{server_host}:{ssh_port}")
+                except paramiko.ssh_exception.ChannelException:
+                    message_emacs(f"Connect {server_username}@{server_host}:{ssh_port} failed, please make sure `lsp_bridge.py` has start at server.")
 
         else:
             message_emacs("Please input valid path match rule: 'ip:/path/file'.")

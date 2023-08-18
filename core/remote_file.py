@@ -156,7 +156,7 @@ class RemoteFileServer:
             self.handle_change_file(data, client_socket)
 
     def handle_open_file(self, data, client_socket):
-        path = data["path"]
+        path = os.path.expanduser(data["path"])
         server = data["server"]
         jump_define_pos = data["jump_define_pos"]
 
