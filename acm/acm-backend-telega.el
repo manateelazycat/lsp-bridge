@@ -47,7 +47,7 @@ Sets `acm-backend-telega-items' for the current chatbuf."
                 (cl-remove-if-not #'telega-msg-sender-username members)))
   (message "Fetch telega userlist... done."))
 
-(defun acm-backend-telega-update-items (&optional _args)
+(defun acm-backend-telega-update-items (&rest _args)
   "Update the optional items."
   ;; Scoped by current line: the @ character must be present before the cursor
   (when (acm-backend-telega-enabled-p)
