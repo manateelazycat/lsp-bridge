@@ -593,7 +593,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (yaml-mode                  . yaml-indent-offset) ; YAML
     (hack-mode                  . hack-indent-offset) ; Hack
     (kotlin-mode                . c-basic-offset)     ; Kotlin
-    (verilog-mode               . vhdl-indent-level)  ; Verilog
+    (verilog-mode               . verilog-indent-level)  ; Verilog
     (vhdl-mode                  . vhdl-basic-offset)  ; VHDL
     (go-mode                    . c-basic-offset)     ;Golang
     (go-ts-mode                 . c-basic-offset)     ;Golang
