@@ -26,7 +26,6 @@ import traceback
 import re
 
 from core.utils import *
-from rapidfuzz import fuzz
 
 class SearchFileWords:
     def __init__(self):
@@ -34,11 +33,7 @@ class SearchFileWords:
         self.search_files = set()
         self.search_content_dict = {}
         self.search_words_thread = None
-
-        (self.max_number, ) = get_emacs_vars(["acm-backend-search-file-words-max-number"])
-        (self.fuzzy_match, ) = get_emacs_vars(["acm-backend-search-file-words-enable-fuzzy-match"])
-        (self.fuzzy_match_threshold, ) = get_emacs_vars(["acm-backend-search-file-words-enable-fuzzy-match-threshold"])
-
+        (self.max_number, self.fuzzy_match, self.fuzzy_match_threshold) = get_emacs_vars(["acm-backend-search-file-words-max-number", "acm-backend-search-file-words-enable-fuzzy-match", "acm-backend-search-file-words-enable-fuzzy-match-threshold"])
         self.search_words_queue = queue.Queue()
         self.search_words_dispatcher_thread = threading.Thread(target=self.search_dispatcher)
         self.search_words_dispatcher_thread.start()
@@ -138,6 +133,7 @@ class SearchFileWords:
     def search_word(self, prefix, all_words):
         candidates = []
         if self.fuzzy_match:
+            from rapidfuzz import fuzz
             match_words = list(map(lambda word: {'word':word, 'ratio':fuzz.ratio(prefix.lower(), word.lower())}, all_words))
             match_words.sort(key=lambda x:x['ratio'], reverse=True)
             for word in match_words:
