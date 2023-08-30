@@ -33,9 +33,7 @@ class SearchFileWords:
         self.search_files = set()
         self.search_content_dict = {}
         self.search_words_thread = None
-
-        (self.max_number, ) = get_emacs_vars(["acm-backend-search-file-words-max-number"])
-
+        (self.max_number, self.fuzzy_match, self.fuzzy_match_threshold) = get_emacs_vars(["acm-backend-search-file-words-max-number", "acm-backend-search-file-words-enable-fuzzy-match", "acm-backend-search-file-words-enable-fuzzy-match-threshold"])
         self.search_words_queue = queue.Queue()
         self.search_words_dispatcher_thread = threading.Thread(target=self.search_dispatcher)
         self.search_words_dispatcher_thread.start()
@@ -133,15 +131,23 @@ class SearchFileWords:
             logger.error(traceback.format_exc())
             
     def search_word(self, prefix, all_words):
-        match_words = list(filter(lambda word: word.lower().startswith(prefix.lower()), all_words))
         candidates = []
-        if prefix.isupper():
-            candidates = list(map(lambda word: word.upper(), match_words))
+        if self.fuzzy_match:
+            from rapidfuzz import fuzz
+            match_words = list(map(lambda word: {'word':word, 'ratio':fuzz.ratio(prefix.lower(), word.lower())}, all_words))
+            match_words.sort(key=lambda x:x['ratio'], reverse=True)
+            for word in match_words:
+                if word['ratio'] >= self.fuzzy_match_threshold:
+                    candidates.append(word['word'])
+                else:
+                    break
         else:
-            candidates = list(map(lambda word: prefix + word[len(prefix):], match_words))
-            
-        candidates.sort(key=len, reverse=False)
-        
+            match_words = list(filter(lambda word: word.lower().startswith(prefix.lower()), all_words))
+            if prefix.isupper():
+                candidates = list(map(lambda word: word.upper(), match_words))
+            else:
+                candidates = list(map(lambda word: prefix + word[len(prefix):], match_words))
+            candidates.sort(key=len, reverse=False)
         return candidates
             
     def search_dispatcher(self):
