@@ -98,6 +98,16 @@
   :type 'integer
   :group 'acm-backend-search-file-words)
 
+(defcustom acm-backend-search-file-words-enable-fuzzy-match nil
+  "enable fuzzy match candidate."
+  :type 'boolean
+  :group 'acm-backend-search-file-words)
+
+(defcustom acm-backend-search-file-words-enable-fuzzy-match-threshold 50
+  "Filter out words with a ratio lower than the threshold."
+  :type 'integer
+  :group 'acm-backend-search-file-words)
+
 (defcustom acm-enable-search-file-words t
   "Popup search words completions when this option is turn on."
   :type 'boolean

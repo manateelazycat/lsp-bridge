@@ -18,7 +18,7 @@ Using Python multithreading techniques, lsp-bridge builds a high-speed cache bet
 ## Installation
 
 1. Install Emacs 28 or higher version
-2. Install Python dependencies: `pip3 install epc orjson sexpdata six paramiko` (orjson is optional, orjson is based on Rust, providing faster JSON parsing performance)
+2. Install Python dependencies: `pip3 install epc orjson sexpdata six paramiko rapidfuzz` (orjson is optional, orjson is based on Rust, providing faster JSON parsing performance)
 3. Install Elisp dependencies:
 
 - [markdown-mode](https://github.com/jrblevin/markdown-mode)
@@ -200,6 +200,8 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `acm-backend-yas-candidate-min-length`: The minimum characters to trigger yasnippet completion, default is 0
 - `acm-backend-search-file-words-candidate-min-length`: The minimum characters to trigger search file words completion, default is 0
 - `acm-backend-search-file-words-max-number`: Search Words completion candidate limit, default is 10
+- `acm-backend-search-file-words-enable-fuzzy-match`: Search Words completion candidate fuzzy match, disable by default
+- `acm-backend-search-file-words-enable-fuzzy-match-threshold`: Search Words completion candidate fuzzy match threshold, Filter out words with a ratio lower than the threshold, default is 50 
 - `acm-backend-codeium-candidate-min-length`: The minimum characters to trigger codeium completion, default is 0
 - `acm-backend-lsp-enable-auto-import`: automatic insert import code, enable by default
 - `acm-backend-lsp-candidate-max-length`: Maximum length of LSP candidate, some language, such as Java, argument list is very long, you can increase the value of this option to see clear argument list

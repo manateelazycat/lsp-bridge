@@ -17,7 +17,7 @@ lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建�
 ## 安装
 
 1. 安装 Emacs 28 及以上版本
-2. 安装 Python 依赖: `pip3 install epc orjson sexpdata six paramiko` (orjson 是可选的， orjson 基于 Rust， 提供更快的 JSON 解析性能)
+2. 安装 Python 依赖: `pip3 install epc orjson sexpdata six paramiko rapidfuzz` (orjson 是可选的， orjson 基于 Rust， 提供更快的 JSON 解析性能)
 3. 安装 Elisp 依赖:
 
 - [markdown-mode](https://github.com/jrblevin/markdown-mode)
@@ -201,6 +201,8 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 - `acm-backend-yas-candidate-min-length`: YaSnippet 补全最小的触发字符数, 默认是 0
 - `acm-backend-search-file-words-candidate-min-length`: Search Words 补全最小的触发字符数, 默认是 0
 - `acm-backend-search-file-words-max-number`: Search Words 补全候选词限制， 默认是 10
+- `acm-backend-search-file-words-enable-fuzzy-match`: Search Words 补全候选词启用模糊匹配, 默认不使能
+- `acm-backend-search-file-words-enable-fuzzy-match-threshold`: Search Words 补全候选词过滤, 过滤掉相似度小于阈值的候选词, 默认是50
 - `acm-backend-codeium-candidate-min-length`: Codeium 补全最小的触发字符数, 默认是 0
 - `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
 - `acm-backend-lsp-candidate-max-length`: LSP 候选词最大长度， 一些语言参数较长， 可以适当增加这个选项的值以看清楚参数列表
