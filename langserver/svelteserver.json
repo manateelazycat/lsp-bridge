@@ -1,0 +1,6 @@
+{
+  "name": "svelteserver",
+  "languageId": "svelte",
+  "command": ["svelteserver"],
+  "settings": {}
+}
