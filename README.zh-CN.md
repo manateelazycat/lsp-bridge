@@ -36,6 +36,15 @@ lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建�
 (global-lsp-bridge-mode)
 ```
 
+* 如果你使用 straight 来安装， 应该用下面的配置来安装：
+
+```elisp
+(use-package lsp-bridge
+  :straight '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge" :files (:defaults "*.py" "acm/*" "core/*") :build (:not compile))
+  :init
+  (global-lsp-bridge-mode))
+```
+
 请注意:
 
 1. 使用 lsp-bridge 时， 请先关闭其他补全插件， 比如 lsp-mode, eglot, company, corfu 等等， lsp-bridge 提供从补全后端、 补全前端到多后端融合的全套解决方案。

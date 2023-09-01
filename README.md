@@ -37,6 +37,16 @@ Using Python multithreading techniques, lsp-bridge builds a high-speed cache bet
 (global-lsp-bridge-mode)
 ```
 
+* If you are using straight to install, you should use the following configuration to install:
+
+```elisp
+(use-package lsp-bridge
+  :straight '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge" :files (:defaults "*.py" "acm/*" "core/*") :build (:not compile))
+  :init
+  (global-lsp-bridge-mode))
+```
+
+
 Please note that:
 
 1. When using lsp-bridge, please first disable other completion plugins such as lsp-mode, eglot, company, corfu, etc. Lsp-bridge provides a complete solution from completion backend, frontend to multi-backend fusion.
