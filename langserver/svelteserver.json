@@ -1,0 +1,53 @@
+{
+  "name": "svelteserver",
+  "languageId": "svelte",
+  "command": ["svelteserver", "--stdio"],
+  "settings": {
+    "svelte.plugin": {
+      "svelte": {
+        "rename.enable": true,
+        "selectionRange.enable": true,
+        "codeActions.enable": true,
+        "hover.enable": true,
+        "completions.enable": true,
+        "format.enable": true,
+        "compilerWarnings": true,
+        "diagnostics.enable": true,
+        "enable": true        
+      },
+      "html": {
+        "documentSymbols.enable": true,
+        "tagComplete.enable": true,
+        "completions.emmet": true,
+        "completions.enable": true,
+        "hover.enable": true,
+        "enable": true
+      },
+      "css": {
+        "selectionRange.enable": true,
+        "documentSymbols.enable": true,
+        "colorPresentations.enable": true,
+        "documentColors.enable": true,
+        "completions.emmet": true,
+        "completions.enable": true,
+        "hover.enable": true,
+        "diagnostics.enable": true,
+        "globals": true,
+        "enable": true
+      },
+      "typescript": {
+        "rename.enable": true,
+        "signatureHelp.enable": true,
+        "selectionRange.enable": true,
+        "codeActions.enable": true,
+        "definitions.enable": true,
+        "findReferences.enable": true,
+        "completions.enable": true,
+        "documentSymbols.enable": true,
+        "hover.enable": true,
+        "diagnostics.enable": true,
+        "enable": true
+      }
+    }
+  }
+}

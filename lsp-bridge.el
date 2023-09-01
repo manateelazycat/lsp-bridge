@@ -446,6 +446,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (kotlin-mode .                                                               "kotlin-language-server")
     (verilog-mode .                                                              "verible")
     (vhdl-mode .                                                                 "vhdl-tool")
+    (svelte-mode .                                                               "svelteserver")    
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -530,6 +531,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     tsx-ts-mode-hook
     go-ts-mode-hook
     yaml-ts-mode-hook
+    svelte-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
@@ -597,6 +599,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (vhdl-mode                  . vhdl-basic-offset)  ; VHDL
     (go-mode                    . c-basic-offset)     ;Golang
     (go-ts-mode                 . c-basic-offset)     ;Golang
+    (svelte-mode                . js-indent-level)     ;Svelte
     (default                    . standard-indent)) ; default fallback
   "A mapping from `major-mode' to its indent variable.")
 
