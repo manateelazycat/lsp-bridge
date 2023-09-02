@@ -41,7 +41,9 @@ Using Python multithreading techniques, lsp-bridge builds a high-speed cache bet
 
 ```elisp
 (use-package lsp-bridge
-  :straight '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge" :files (:defaults "*.py" "acm/*" "core/*") :build (:not compile))
+  :straight '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
+            :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+            :build (:not compile))
   :init
   (global-lsp-bridge-mode))
 ```
