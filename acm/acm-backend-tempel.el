@@ -1,4 +1,4 @@
-;;; acm-backend-tempel.el -*- lexical-binding: t -*-
+;;; acm-backend-tempel.el -*- lexical-binding: t; no-byte-compile: t; -*-
 
 (defgroup acm-backend-tempel nil
   "Tempel backend for acm."

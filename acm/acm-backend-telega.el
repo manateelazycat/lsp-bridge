@@ -1,4 +1,4 @@
-;;; acm-backend-telega.el --- telega backend for acm -*- lexical-binding: t -*-
+;;; acm-backend-telega.el --- telega backend for acm -*- lexical-binding: t; no-byte-compile: t; -*-
 ;;; Commentary:
 ;;; Code:
 

@@ -1,4 +1,4 @@
-;;; acm-backend-tabnine.el --- acm tabnine support -*- lexical-binding: t -*-
+;;; acm-backend-tabnine.el --- acm tabnine support -*- lexical-binding: t; no-byte-compile: t; -*-
 ;;; Commentary:
 ;;; Code:
 
