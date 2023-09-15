@@ -150,7 +150,7 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 
 - `lsp-bridge-c-lsp-server`: C language server, you can choose `clangd` or`ccls`
 - `lsp-bridge-elixir-lsp-server`: Elixir language server, you can choose `elixirLS`(default) or`lexical`
-- `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright`, `jedi`, `python-ms`, `pylsp`, `ruff`
+- `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright`, `jedi`, `python-ms`, `pylsp`, `ruff`, it's important to note that lsp-bridge-multi-lang-server-mode-list has a higher priority than lsp-bridge-single-lang-server-mode-list. If you only want to use a single server, please first remove the python-mode setting from lsp-bridge-multi-lang-server-mode-list.
 - `lsp-bridge-php-lsp-server`: PHP language server, you can choose `intelephense` or `phpactor`
 - `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `texlab` or`digestif`
 - `lsp-bridge-csharp-lsp-server`: C# language server, you can choose `omnisharp-mono` or`omnisharp-dotnet`, note that you need to give **execute permissions** to the OmniSharp file
