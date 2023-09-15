@@ -1,4 +1,4 @@
-;;; acm-backend-path.el --- Path backend for acm  -*- lexical-binding: t -*-
+;;; acm-backend-path.el --- Path backend for acm  -*- lexical-binding: t; no-byte-compile: t; -*-
 
 ;; Filename: acm-backend-path.el
 ;; Description: Path backend for acm

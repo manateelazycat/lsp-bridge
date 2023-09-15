@@ -1,4 +1,4 @@
-;;; acm-backend-elisp.el --- Elisp backend for acm  -*- lexical-binding: t -*-
+;;; acm-backend-elisp.el --- Elisp backend for acm  -*- lexical-binding: t; no-byte-compile: t; -*-
 
 ;; Filename: acm-backend-elisp.el
 ;; Description: Elisp backend for acm

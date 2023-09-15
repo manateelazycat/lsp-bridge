@@ -1,4 +1,4 @@
-;;; acm-backend-yas.el --- Yasnippet backend for acm  -*- lexical-binding: t -*-
+;;; acm-backend-yas.el --- Yasnippet backend for acm  -*- lexical-binding: t; no-byte-compile: t; -*-
 
 ;; Filename: acm-backend-yas.el
 ;; Description: Yasnippet backend for acm

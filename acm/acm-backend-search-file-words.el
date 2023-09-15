@@ -1,4 +1,4 @@
-;;; acm-backend-search-file-words.el --- Path backend for acm  -*- lexical-binding: t -*-
+;;; acm-backend-search-file-words.el --- Path backend for acm  -*- lexical-binding: t; no-byte-compile: t; -*-
 
 ;; Filename: acm-backend-search-file-words.el
 ;; Description: Path backend for acm

@@ -1,4 +1,4 @@
-;;; acm-backend-codeium.el --- acm codeium support -*- lexical-binding: t -*-
+;;; acm-backend-codeium.el --- acm codeium support -*- lexical-binding: t; no-byte-compile: t; -*-
 
 ;;; Commentary:
 

@@ -1,4 +1,4 @@
-;;; acm-backend-copilot.el --- Description -*- lexical-binding: t; -*-
+;;; acm-backend-copilot.el --- Description -*- lexical-binding: t; no-byte-compile: t; -*-
 ;;
 ;; Copyright (C) 2023 royokong
 ;;
