@@ -428,7 +428,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (tuareg-mode .                                                               "ocamllsp")
     (erlang-mode .                                                               "erlang-ls")
     ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . lsp-bridge-tex-lsp-server)
-    ((clojure-mode clojurec-mode clojurescript-mode clojurex-mode) .             "clojure-lsp")
+    ((clojure-mode clojurec-mode clojurescript-mode clojurex-mode clojure-ts-mode clojurec-ts-mode clojurescript-ts-mode clojure-dart-ts-mode) . "clojure-lsp")
     ((sh-mode bash-mode bash-ts-mode) .                                          "bash-language-server")
     ((css-mode css-ts-mode) .                                                    "vscode-css-language-server")
     (elm-mode   .                                                                "elm-language-server")
@@ -488,6 +488,10 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     clojurec-mode-hook
     clojurescript-mode-hook
     clojurex-mode-hook
+    clojure-ts-mode-hook
+    clojurec-ts-mode-hook
+    clojurescript-ts-mode-hook
+    clojure-dart-ts-mode-hook
     sh-mode-hook
     bash-mode-hook
     web-mode-hook
