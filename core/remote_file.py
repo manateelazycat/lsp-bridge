@@ -205,7 +205,7 @@ class RemoteFileServer:
         path = data["path"]
 
         if path in self.file_dict:
-            self.file_dict[path] = ""
+            del self.file_dict[path]
 
 def save_ip_to_file(ip, filename):
     with open(filename, 'r') as f:
