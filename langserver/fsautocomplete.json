@@ -1,0 +1,83 @@
+{
+    "name": "fsautocomplete",
+    "languageId": "f#",
+    "command": [
+        "fsautocomplete",
+        "--adaptive-lsp-server-enabled"
+    ],
+    "initializationOptions": {
+        "automaticWorkspaceInit": true,
+        "abstractClassStubGeneration": true,
+        "abstractClassStubGenerationMethodBody": "failwith \"Not Implemented\"",
+        "abstractClassStubGenerationObjectIdentifier": "this",
+        "addFsiWatcher": null,
+        "codeLenses": {
+            "references": {
+                "enabled": "true"
+            },
+            "signature": {
+                "enabled": "true"
+            }
+        },
+        "disableFailedProjectNotifications": null,
+        "dotnetRoot": "",
+        "enableAdaptiveLspServer": true,
+        "enableAnalyzers": null,
+        "enableMSBuildProjectGraph": null,
+        "enableReferenceCodeLens": true,
+        "excludeProjectDirectories": [".git", "paket-files", ".fable", "packages", "node_modules"],
+        "externalAutocomplete": null,
+        "fsac": {
+            "attachDebugger": "null",
+            "cachedTypeCheckCount": 200,
+            "conserveMemory": null,
+            "dotnetArgs": null,
+            "netCoreDllPath": "",
+            "parallelReferenceResolution": null,
+            "silencedLogs": null
+        },
+        "fsiExtraParameters": null,
+        "fsiSdkFilePath": "",
+        "generateBinlog": null,
+        "indentationSize": 4,
+        "inlayHints": {
+            "disableLongTooltip": null,
+            "enabled": true,
+            "parameterNames": true,
+            "typeAnnotations": true
+        },
+        "inlineValues": {
+            "enabled": null,
+            "prefix": "//"
+        },
+        "interfaceStubGeneration": true,
+        "interfaceStubGenerationMethodBody": "failwith \"Not Implemented\"",
+        "interfaceStubGenerationObjectIdentifier": "this",
+        "keywordsAutocomplete": true,
+        "lineLens": {
+            "enabled": "replaceCodeLens",
+            "prefix": " // "
+        },
+        "inter": true,
+        "pipelineHints": {
+            "enabled": true,
+            "prefix": " // "
+        },
+        "recordStubGeneration": true,
+        "recordStubGenerationBody": "failwith \"Not Implemented\"",
+        "resolveNamespaces": true,
+        "saveOnSendLastSelection": null,
+        "simplifyNameAnalyzer": true,
+        "smartIndent": null,
+        "suggestGitignore": true,
+        "suggestSdkScripts": true,
+        "unionCaseStubGeneration": true,
+        "unionCaseStubGenerationBody": "failwith \"Not Implemented\"",
+        "unusedDeclarationsAnalyzer": true,
+        "unusedOpensAnalyzer": true,
+        "verboseLogging": null,
+        "workspaceModePeekDeepLevel": 4,
+        "workspacePath": ""
+    },
+    "support-single-file": false
+}
