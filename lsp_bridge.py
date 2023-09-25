@@ -25,6 +25,8 @@ import threading
 import traceback
 import json
 import socket
+import paramiko
+
 from functools import wraps
 from pathlib import Path
 
@@ -238,15 +240,13 @@ class LspBridge:
 
     @threaded
     def sync_tramp_remote(self, server_username, server_host, ssh_port, alias):
-        if alias:
+        print(server_username, server_host, ssh_port, alias)
+        if alias and not server_host:
             if alias in self.host_names:
                 server_host = self.host_names[alias]["server_host"]
                 server_username = self.host_names[alias]["username"]
                 ssh_port = self.host_names[alias]["ssh_port"]
             else:
-                import os
-                import paramiko
-
                 ssh_config = paramiko.SSHConfig()
                 ssh_config.parse(open(os.path.expanduser('~/.ssh/config')))
                 conf = ssh_config.lookup(alias)

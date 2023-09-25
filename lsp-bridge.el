@@ -1372,7 +1372,7 @@ So we build this macro to restore postion after code format."
         ;; Codeium search.
         (when (and acm-enable-codeium
                    ;; Codeium backend not support remote file now, disable it temporary.
-                   (or (not (lsp-bridge-is-remote-file) (lsp-bridge-use-local-codeium)))
+                   (or (not (lsp-bridge-is-remote-file)) lsp-bridge-use-local-codeium)
                    ;; Don't enable codeium on Markdown mode, Org mode, ielm and minibuffer, very disruptive to writing.
                    (not (or (derived-mode-p 'markdown-mode)
                             (eq major-mode 'org-mode)
@@ -2337,9 +2337,6 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 
 (defun lsp-bridge-sync-tramp-remote ()
   (interactive)
-  (unless lsp-bridge-is-starting
-    (lsp-bridge-start-process))
-
   (let* ((tramp-file-name (tramp-dissect-file-name (buffer-file-name)))
          (username (tramp-file-name-user tramp-file-name))
          (host (tramp-file-name-domain tramp-file-name))
