@@ -2339,12 +2339,16 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
   (interactive)
   (let* ((tramp-file-name (tramp-dissect-file-name (buffer-file-name)))
          (username (tramp-file-name-user tramp-file-name))
-         (host (tramp-file-name-domain tramp-file-name))
+         (domain (tramp-file-name-domain tramp-file-name))
          (port (tramp-file-name-port tramp-file-name))
-         (alias (tramp-file-name-host tramp-file-name))
-         (path (tramp-file-name-localname tramp-file-name)))
+         (host (tramp-file-name-host tramp-file-name))
+         (path (tramp-file-name-localname tramp-file-name))
+         alias)
 
-    (unless host
+    (unless (network-lookup-address-info host 'ipv4 'numeric)
+      (setq alias host))
+
+    (if alias
       (if-let (alias-host (assoc alias lsp-bridge-tramp-alias-alist))
           (setq host (cdr alias-host))
         (let ((default-directory "~/"))
