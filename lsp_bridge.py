@@ -240,8 +240,7 @@ class LspBridge:
 
     @threaded
     def sync_tramp_remote(self, server_username, server_host, ssh_port, alias):
-        print(server_username, server_host, ssh_port, alias)
-        if alias and not server_host:
+        if alias:
             if alias in self.host_names:
                 server_host = self.host_names[alias]["server_host"]
                 server_username = self.host_names[alias]["username"]
