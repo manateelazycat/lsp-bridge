@@ -447,6 +447,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (verilog-mode .                                                              "verible")
     (vhdl-mode .                                                                 "vhdl-tool")
     (svelte-mode .                                                               "svelteserver")    
+    (fsharp-mode .                                                               "fsautocomplete")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -536,6 +537,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     go-ts-mode-hook
     yaml-ts-mode-hook
     svelte-mode-hook
+    fsharp-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
@@ -604,6 +606,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (go-mode                    . c-basic-offset)     ;Golang
     (go-ts-mode                 . c-basic-offset)     ;Golang
     (svelte-mode                . js-indent-level)     ;Svelte
+    (fsharp-mode                . fsharp-indent-offset) ; F#
     (default                    . standard-indent)) ; default fallback
   "A mapping from `major-mode' to its indent variable.")
 
@@ -1254,7 +1257,7 @@ So we build this macro to restore postion after code format."
               (lsp-bridge-is-remote-file))
       (setq-local lsp-bridge--before-change-begin-point begin)
       (setq-local lsp-bridge--before-change-end-point end)
-      
+
       (setq-local lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
       (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))
       )))
