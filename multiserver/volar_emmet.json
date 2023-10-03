@@ -16,5 +16,6 @@
   "prepare_rename": "volar",
   "rename": "volar",
   "document_symbol": "volar",
-  "workspace_symbol": "volar"
+  "workspace_symbol": "volar",
+  "inlay_hint": "volar"
 }

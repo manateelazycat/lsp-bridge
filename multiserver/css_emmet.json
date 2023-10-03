@@ -16,5 +16,6 @@
   "prepare_rename": "vscode-css-language-server",
   "rename": "vscode-css-language-server",
   "document_symbol": "vscode-css-language-server",
-  "workspace_symbol": "vscode-css-language-server"
+  "workspace_symbol": "vscode-css-language-server",
+  "inlay_hint": "vscode-css-language-server"
 }

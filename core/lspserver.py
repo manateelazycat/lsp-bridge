@@ -220,6 +220,7 @@ class LspServer:
         self.code_format_provider = False
         self.signature_help_provider = False
         self.workspace_symbol_provider = False
+        self.inlay_hint_provider = False
         
         self.code_action_kinds = [
             "quickfix",
@@ -525,6 +526,8 @@ class LspServer:
                 self.signature_help_provider = False
             elif error_message == "Unhandled method workspace/symbol":
                 self.workspace_symbol_provider = False
+            elif error_message == "Unhandled method textDocument/inlayHint":
+                self.inlay_hint_provider = False
             else:
                 message_emacs(error_message)
 
@@ -597,6 +600,11 @@ class LspServer:
 
                 try:
                     self.workspace_symbol_provider = message["result"]["capabilities"]["workspaceSymbolProvider"]
+                except Exception:
+                    pass
+
+                try:
+                    self.inlay_hint_provider = message["result"]["capabilities"]["inlayHintProvider"]["resolveProvider"]
                 except Exception:
                     pass
 

@@ -94,6 +94,7 @@
 (require 'lsp-bridge-diagnostic)
 (require 'lsp-bridge-lsp-installer)
 (require 'lsp-bridge-org-babel)
+(require 'lsp-bridge-inlay-hint)
 
 (defgroup lsp-bridge nil
   "LSP-Bridge group."
@@ -596,16 +597,16 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (rust-ts-mode               . rust-ts-mode-indent-offset) ; Rust
     (rustic-mode                . rustic-indent-offset)       ; Rust
     (scala-mode                 . scala-indent:step)          ; Scala
-    (powershell-mode            . powershell-indent)  ; PowerShell
-    (ess-mode                   . ess-indent-offset)  ; ESS (R)
-    (yaml-mode                  . yaml-indent-offset) ; YAML
-    (hack-mode                  . hack-indent-offset) ; Hack
-    (kotlin-mode                . c-basic-offset)     ; Kotlin
-    (verilog-mode               . verilog-indent-level)  ; Verilog
-    (vhdl-mode                  . vhdl-basic-offset)  ; VHDL
-    (go-mode                    . c-basic-offset)     ;Golang
-    (go-ts-mode                 . c-basic-offset)     ;Golang
-    (svelte-mode                . js-indent-level)     ;Svelte
+    (powershell-mode            . powershell-indent)    ; PowerShell
+    (ess-mode                   . ess-indent-offset)    ; ESS (R)
+    (yaml-mode                  . yaml-indent-offset)   ; YAML
+    (hack-mode                  . hack-indent-offset)   ; Hack
+    (kotlin-mode                . c-basic-offset)       ; Kotlin
+    (verilog-mode               . verilog-indent-level) ; Verilog
+    (vhdl-mode                  . vhdl-basic-offset)    ; VHDL
+    (go-mode                    . c-basic-offset)       ;Golang
+    (go-ts-mode                 . c-basic-offset)       ;Golang
+    (svelte-mode                . js-indent-level)      ;Svelte
     (fsharp-mode                . fsharp-indent-offset) ; F#
     (default                    . standard-indent)) ; default fallback
   "A mapping from `major-mode' to its indent variable.")
@@ -1328,7 +1329,6 @@ So we build this macro to restore postion after code format."
                                       (acm-char-before)
                                       (buffer-name)
                                       (acm-get-input-prefix)))
-
 
           ;; Complete other non-LSP backends.
           (lsp-bridge-complete-other-backends)

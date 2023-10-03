@@ -63,6 +63,8 @@ class FileAction:
         self.diagnostics = {}
         self.diagnostics_ticker = 0
 
+        self.inlay_hints = {}
+
         self.external_file_link = external_file_link
         self.filepath = filepath
 
@@ -339,6 +341,23 @@ class FileAction:
             lsp_server_name,
             self.diagnostics[lsp_server_name] if lsp_server_name in self.diagnostics else [],
             range_start, range_end, action_kind)
+
+    def push_inlay_hints(self, response, range_start, range_end):
+        for hint in response:
+            key = "{}-{}".format(hint["position"]["line"], hint["position"]["character"])
+            self.inlay_hints[key] = hint
+
+        self.inlay_hints = {k: self.inlay_hints[k] for k in sorted(self.inlay_hints, key=lambda x: [int(i) for i in x.split('-')])}
+
+        range_start_line = range_start['line']
+        range_end_line = range_end['line']
+
+        inlay_hints = list(reversed([v for k, v in self.inlay_hints.items() if range_start_line <= int(k.split('-')[0]) <= range_end_line]))
+
+        eval_in_emacs("lsp-bridge-inlay-hint--render",
+                      self.filepath,
+                      get_lsp_file_host(),
+                      inlay_hints)
 
     def save_file(self, buffer_name):
         for lsp_server in self.get_lsp_servers():

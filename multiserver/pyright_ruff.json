@@ -16,5 +16,6 @@
   "prepare_rename": "pyright",
   "rename": "pyright",
   "document_symbol": "pyright",
-  "workspace_symbol": "pyright"
+  "workspace_symbol": "pyright",
+  "inlay_hint": "pyright"
 }
