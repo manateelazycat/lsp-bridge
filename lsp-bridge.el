@@ -216,6 +216,11 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'boolean
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-enable-inlay-hint t
+  "Whether to enable inlay hint."
+  :type 'boolean
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-elisp-symbols-update-idle 3
   "The idle seconds to update elisp symbols."
   :type 'float
@@ -959,6 +964,8 @@ So we build this macro to restore postion after code format."
 (defvar-local lsp-bridge-cursor-before-command 0)
 (defvar-local lsp-bridge-cursor-after-command 0)
 
+(defvar-local lsp-bridge-inlay-hint-last-update-pos nil)
+
 (defun lsp-bridge-monitor-pre-command ()
   (setq-local lsp-bridge-cursor-before-command (point))
 
@@ -1019,6 +1026,13 @@ So we build this macro to restore postion after code format."
         (unless (member this-command-string '("handle-switch-frame"))
           (ignore-errors
             (lsp-bridge-code-action-popup-quit))))
+
+      ;; Try send inlay hint if window scroll.
+      (redisplay t) ; NOTE: we need call `redisplay' to force `window-start' return RIGHT line number.
+      (let ((window-pos (window-start)))
+        (when (not (equal lsp-bridge-inlay-hint-last-update-pos window-pos))
+          (lsp-bridge-inlay-hint)
+          (setq-local lsp-bridge-inlay-hint-last-update-pos window-pos)))
       )))
 
 (defun lsp-bridge-close-buffer-file ()
@@ -1330,6 +1344,9 @@ So we build this macro to restore postion after code format."
                                       (buffer-name)
                                       (acm-get-input-prefix)))
 
+          ;; Send inlay hint request.
+          (lsp-bridge-try-send-inlay-hint-request)
+
           ;; Complete other non-LSP backends.
           (lsp-bridge-complete-other-backends)
 
@@ -1338,6 +1355,10 @@ So we build this macro to restore postion after code format."
            lsp-bridge--before-change-begin-pos
            lsp-bridge--before-change-end-pos
            change-text))))))
+
+(defun lsp-bridge-try-send-inlay-hint-request ()
+  (when lsp-bridge-enable-inlay-hint
+    (lsp-bridge-inlay-hint)))
 
 (defun lsp-bridge-complete-other-backends ()
   (let ((this-command-string (format "%s" this-command)))

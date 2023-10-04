@@ -87,7 +87,8 @@
 (defun lsp-bridge-inlay-hint ()
   (lsp-bridge-call-file-api "inlay_hint"
                             (lsp-bridge--point-position (window-start))
-                            (lsp-bridge--point-position (window-end))))
+                            ;; We need pass UPDATE argument to `window-end', to make sure it's value is update, not cache.
+                            (lsp-bridge--point-position (window-end nil t))))
 
 (defvar-local lsp-bridge-inlay-hint-overlays '())
 
