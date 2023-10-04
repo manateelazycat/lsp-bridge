@@ -102,31 +102,46 @@
   (lsp-bridge--with-file-buffer filepath filehost
                                 (lsp-bridge-inlay-hint-hide-overlays)
 
-                                (dolist (hint inlay-hints)
-                                  (let* ((hint-start-pos (acm-backend-lsp-position-to-point (plist-get hint :position)))
-                                         (hint-at-end-of-line-p (save-excursion
-                                                                  (goto-char hint-start-pos)
-                                                                  (eolp)))
-                                         (hint-text (format "%s"
-                                                            (cond ((listp (plist-get hint :label))
-                                                                   (apply 'concat
-                                                                          (mapcar (lambda (label)
-                                                                                    (concat (plist-get label :value) " "))
-                                                                                  (plist-get hint :label)
-                                                                                  )))
-                                                                  (t (plist-get hint :label)))))
-                                         (hint-insert-text (if hint-at-end-of-line-p
-                                                               (format "%s\n" hint-text)
-                                                             hint-text))
-                                         (overlay (make-overlay
-                                                   hint-start-pos
-                                                   (1+ hint-start-pos)
-                                                   nil t t)))
-                                    (overlay-put overlay 'display hint-insert-text)
-                                    (overlay-put overlay 'face `(:foreground "#aaaaaa"))
-                                    (overlay-put overlay 'read-only t)
-                                    (push overlay lsp-bridge-inlay-hint-overlays)
-                                    ))))
+                                (save-excursion
+                                  (save-restriction
+                                    (let ((hint-index 0))
+                                      (dolist (hint inlay-hints)
+                                        (goto-char (acm-backend-lsp-position-to-point (plist-get hint :position)))
+                                        (let* ((hint-kind (plist-get hint :kind))
+                                               (hint-peg-after-p (eql hint-kind 1))
+                                               (hint-text (format "%s"
+                                                                  (cond ((listp (plist-get hint :label))
+                                                                         (apply 'concat
+                                                                                (mapcar (lambda (label)
+                                                                                          (concat (plist-get label :value) " "))
+                                                                                        (plist-get hint :label)
+                                                                                        )))
+                                                                        (t (plist-get hint :label)))))
+                                               (hint-padding-left (plist-get hint :paddingLeft))
+                                               (hint-padding-right (plist-get hint :paddingRight))
+                                               (hint-padding-left-text (and hint-padding-left
+                                                                            (not (eq hint-padding-left :json-false))
+                                                                            (not (memq (char-before) '(32 9)))
+                                                                            " "))
+                                               (hint-padding-right-text (and hint-padding-right
+                                                                             (not (eq hint-padding-right :json-false))
+                                                                             (not (memq (char-after) '(32 9)))
+                                                                             " "))
+                                               (hint-insert-text (concat hint-padding-left-text hint-text hint-padding-right-text))
+                                               (overlay (if hint-peg-after-p
+                                                            (make-overlay (point) (1+ (point)) nil t)
+                                                          (make-overlay (1- (point)) (point) nil nil nil))))
+                                          (when (and (equal hint-index 0)
+                                                     hint-peg-after-p)
+                                            (put-text-property 0 1 'cursor 1 hint-insert-text))
+                                          (overlay-put overlay
+                                                       (if hint-peg-after-p 'before-string 'after-string)
+                                                       (propertize hint-insert-text 'face  `(:foreground "#aaaaaa")))
+                                          (overlay-put overlay 'evaporate t)
+                                          (push overlay lsp-bridge-inlay-hint-overlays)
+
+                                          (setq hint-index (1+ hint-index))
+                                          )))))))
 
 (provide 'lsp-bridge-inlay-hint)
 
