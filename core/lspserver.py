@@ -559,6 +559,14 @@ class LspServer:
             if self.enable_diagnostics and is_in_path_dict(self.files, filepath):
                 get_from_path_dict(self.files, filepath).record_diagnostics(message["params"]["diagnostics"], self.server_info["name"])
 
+        # Notice user if got error message from lsp server.
+        if "method" in message and message["method"] == "window/logMessage":
+            try:
+                if "error" in message["params"]["message"].lower():
+                    message_emacs("{} ({}): {}".format(self.project_name, self.server_info["name"], message["params"]["message"]))
+            except:
+                pass
+
         logger.debug(json.dumps(message, indent=3))
 
         if "id" in message:
