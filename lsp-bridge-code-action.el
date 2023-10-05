@@ -183,9 +183,11 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
         (insert buffer-content))
        (t
         (goto-char (point-min))
-        ;; delete info lines
+
+        ;; Delete info lines.
         (kill-line 3)
-        ;; delete finish
+
+        ;; Delete finish.
         (goto-char (point-min))
         (when (search-forward "Diff finished." nil t)
           (beginning-of-line)
@@ -193,7 +195,7 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
         (push (cons lsp-bridge-code-action--preview-index (buffer-string))
               lsp-bridge-code-action--preview-alist)))
 
-      ;; get width and height
+      ;; Get width and height.
       (goto-char (point-min))
       (while (not (eobp))
         (cl-incf height)
@@ -202,12 +204,17 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
                          width))
         (forward-line))
       (setq width (min width 80))
-      ;; show top
+
+      ;; Show top.
       (goto-char (point-min))
-      ;; truncate lines
+
+      ;; Truncate lines.
       (setq-local cursor-type nil)
       (setq-local mode-line-format nil)
-      (setq-local truncate-lines t))
+      (setq-local truncate-lines t)
+
+      ;; Render ANSI string.
+      (ansi-color-apply-on-region (point-min) (point-max)))
 
     (acm-frame-set-frame-size lsp-bridge-call-hierarchy--frame
                               (max width call-frame-width)
