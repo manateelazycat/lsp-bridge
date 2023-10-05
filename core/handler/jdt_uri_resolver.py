@@ -28,7 +28,7 @@ class JDTUriResolver(Handler):
             message_emacs("No definition found.")
             return
 
-        if type(response) == str:
+        if isinstance(response, str):
             # Save the analysis content to the file.
 
             external_file_dir = ''

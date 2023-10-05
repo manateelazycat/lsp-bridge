@@ -29,7 +29,7 @@ from core.utils import *
 from core.handler import *
 
 if TYPE_CHECKING:
-    from lsp_bridge import LspBridge
+    from lsp_bridge import LspBridge  # noqa: F401
 
 def create_file_action_with_single_server(filepath, single_server_info, single_server, external_file_link=None):
     if is_in_path_dict(FILE_ACTION_DICT, filepath):
@@ -371,7 +371,7 @@ class FileAction:
 
     def completion_item_update(self, item_key, server_name, documentation, additional_text_edits):
         if self.completion_item_resolve_key == item_key:
-           if type(documentation) == dict:
+           if isinstance(documentation, dict):
                if "kind" in documentation:
                    documentation = documentation["value"]
 
@@ -428,7 +428,7 @@ class FileAction:
     def get_match_lsp_servers(self, method):
         if self.multi_servers:
             server_names = self.multi_servers_info[method]    # type: ignore
-            if type(server_names) == str:
+            if isinstance(server_names, str):
                 server_names = [server_names]
 
             return list(map(lambda server_name: self.multi_servers[server_name], server_names))    # type: ignore

@@ -653,7 +653,7 @@ class LspBridge:
         servers = []
         for info in multi_lang_server_info:
             info_value = multi_lang_server_info[info]
-            if type(info_value) == str:
+            if isinstance(info_value, str):
                 servers.append(info_value)
             else:
                 servers += info_value
@@ -665,7 +665,7 @@ class LspBridge:
         current_lang_server = get_emacs_func_result("get-single-lang-server",
                                                     action.single_server.project_path, filepath)
         lsp_server_name = "{}#{}".format(action.single_server.project_path, current_lang_server)
-        if lsp_server_name != action.single_server.server_name and type(current_lang_server) is str:
+        if lsp_server_name != action.single_server.server_name and isinstance(current_lang_server, str):
             if lsp_server_name not in action.org_lang_servers:
                 lang_server_info = load_single_server_info(current_lang_server)
                 server = self.create_lsp_server(filepath, action.single_server.project_path,
@@ -776,7 +776,7 @@ def read_lang_server_info(lang_server_path):
     if "initializationOptions" in lang_server_info:
         initialization_options_args = lang_server_info["initializationOptions"]
         for i, arg in enumerate(initialization_options_args):
-            if type(initialization_options_args[arg]) == str:
+            if isinstance(initialization_options_args[arg], str):
                 initialization_options_args[arg] = replace_template(initialization_options_args[arg])
         lang_server_info["initializationOptions"] = initialization_options_args
 

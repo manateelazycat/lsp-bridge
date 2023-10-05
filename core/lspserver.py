@@ -618,9 +618,9 @@ class LspServer:
 
                 try:
                     text_document_sync = message["result"]["capabilities"]["textDocumentSync"]
-                    if type(text_document_sync) is int:
+                    if isinstance(text_document_sync, int):
                         self.text_document_sync = text_document_sync
-                    elif type(text_document_sync) is dict:
+                    elif isinstance(text_document_sync, dict):
                         self.text_document_sync = text_document_sync["change"]
                 except Exception:
                     pass

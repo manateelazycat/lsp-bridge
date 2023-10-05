@@ -368,7 +368,7 @@ def get_from_path_dict(path_dict, filepath):
 def get_project_path(filepath):
     project_path = get_emacs_func_result("get-project-path", filepath)
 
-    if type(project_path) == str:
+    if isinstance(project_path, str):
         return project_path
     else:
         import os
