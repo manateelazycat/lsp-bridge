@@ -119,7 +119,7 @@ class LspBridge:
         handler_subclasses = list(map(lambda cls: cls.name, Handler.__subclasses__()))
         for name in ["change_file", "update_file",  "save_file",
                      "try_completion", "change_cursor",
-                     "ignore_diagnostic", "list_diagnostics",
+                     "list_diagnostics",
                      "try_code_action",
                      "workspace_symbol"] + handler_subclasses:
             self.build_file_action_function(name)

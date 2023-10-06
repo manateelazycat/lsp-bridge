@@ -6,7 +6,6 @@
     "--stdio",
     "--cancellationReceive=file:%FILEHASH%"
   ],
-  "ignore-diagnostic": "# type: ignore",
   "settings": {
     "python.analysis": {
       "autoImportCompletions": true,

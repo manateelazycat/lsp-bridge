@@ -126,7 +126,6 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `lsp-bridge-diagnostic-jump-prev`: Jump to the previous diagnostic position
 - `lsp-bridge-diagnostic-list`: List all diagnostic information
 - `lsp-bridge-diagnostic-copy`: Copy the current diagnostic information to the clipboard
-- `lsp-bridge-diagnostic-ignore`: Insert comment to ignore the current diagnosis
 - `lsp-bridge-code-action`: Popup code action menu, you can pass special `actin-kind` to fix, `action-kind` can use one of "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports", "source.fixAll"
 - `lsp-bridge-workspace-list-symbols`: List all symbols in workspace and jump to the symbol definition
 - `lsp-bridge-signature-help-fetch`: show signature help in minibuffer manually (move cursor to parameters area will show signature help automatically)

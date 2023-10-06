@@ -226,13 +226,6 @@ class FileAction:
         # Record change cursor time.
         self.last_change_cursor_time = time.time()
 
-    def ignore_diagnostic(self):
-        lsp_server = self.get_match_lsp_servers("completion")[0]
-        if "ignore-diagnostic" in lsp_server.server_info:
-            eval_in_emacs("lsp-bridge-diagnostic--ignore", lsp_server.server_info["ignore-diagnostic"])
-        else:
-            message_emacs("Not found 'ignore_diagnostic' field in LSP server configure file.")
-
     def get_diagnostics(self):
         diagnostics = []
         diagnostic_count = 0

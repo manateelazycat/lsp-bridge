@@ -4,7 +4,6 @@
   "command": [
     "kotlin-language-server"
   ],
-  "ignore-diagnostic": "# type: ignore",
   "settings": {
     "kotlin.externalSources": {
       "autoConvertToKotlin": true,

@@ -320,15 +320,6 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
   (interactive)
   (lsp-bridge-call-file-api "list_diagnostics"))
 
-(defun lsp-bridge-diagnostic-ignore()
-  (interactive)
-  (lsp-bridge-call-file-api "ignore_diagnostic"))
-
-(defun lsp-bridge-diagnostic--ignore (comment-string)
-  (setq-local lsp-bridge-prohibit-completion t)
-  (move-end-of-line 1)
-  (insert (format "    %s" comment-string)))
-
 (defun lsp-bridge-diagnostic--list (diagnostics)
   (let ((filepath acm-backend-lsp-filepath)
         (current-buffer (current-buffer))
