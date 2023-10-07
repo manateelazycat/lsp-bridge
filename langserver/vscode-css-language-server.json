@@ -5,5 +5,10 @@
     "vscode-css-language-server",
     "--stdio"
   ],
-  "settings": {}
+  "settings": {
+    "validate": true,
+    "lint": {
+      "validProperties": []
+    }
+  }
 }
