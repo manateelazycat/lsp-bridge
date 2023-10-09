@@ -94,6 +94,7 @@
 (require 'lsp-bridge-diagnostic)
 (require 'lsp-bridge-lsp-installer)
 (require 'lsp-bridge-org-babel)
+(require 'lsp-bridge-inlay-hint)
 
 (defgroup lsp-bridge nil
   "LSP-Bridge group."
@@ -214,6 +215,11 @@ Setting this to nil or 0 will turn off the indicator."
 
 (defcustom lsp-bridge-enable-diagnostics t
   "Whether to enable diagnostics."
+  :type 'boolean
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-enable-inlay-hint t
+  "Whether to enable inlay hint."
   :type 'boolean
   :group 'lsp-bridge)
 
@@ -449,6 +455,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (verilog-mode .                                                              "verible")
     (vhdl-mode .                                                                 "vhdl-tool")
     (svelte-mode .                                                               "svelteserver")    
+    (fsharp-mode .                                                               "fsautocomplete")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -538,6 +545,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     go-ts-mode-hook
     yaml-ts-mode-hook
     svelte-mode-hook
+    fsharp-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
@@ -596,16 +604,17 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (rust-ts-mode               . rust-ts-mode-indent-offset) ; Rust
     (rustic-mode                . rustic-indent-offset)       ; Rust
     (scala-mode                 . scala-indent:step)          ; Scala
-    (powershell-mode            . powershell-indent)  ; PowerShell
-    (ess-mode                   . ess-indent-offset)  ; ESS (R)
-    (yaml-mode                  . yaml-indent-offset) ; YAML
-    (hack-mode                  . hack-indent-offset) ; Hack
-    (kotlin-mode                . c-basic-offset)     ; Kotlin
-    (verilog-mode               . verilog-indent-level)  ; Verilog
-    (vhdl-mode                  . vhdl-basic-offset)  ; VHDL
-    (go-mode                    . c-basic-offset)     ;Golang
-    (go-ts-mode                 . c-basic-offset)     ;Golang
-    (svelte-mode                . js-indent-level)     ;Svelte
+    (powershell-mode            . powershell-indent)    ; PowerShell
+    (ess-mode                   . ess-indent-offset)    ; ESS (R)
+    (yaml-mode                  . yaml-indent-offset)   ; YAML
+    (hack-mode                  . hack-indent-offset)   ; Hack
+    (kotlin-mode                . c-basic-offset)       ; Kotlin
+    (verilog-mode               . verilog-indent-level) ; Verilog
+    (vhdl-mode                  . vhdl-basic-offset)    ; VHDL
+    (go-mode                    . c-basic-offset)       ;Golang
+    (go-ts-mode                 . c-basic-offset)       ;Golang
+    (svelte-mode                . js-indent-level)      ;Svelte
+    (fsharp-mode                . fsharp-indent-offset) ; F#
     (default                    . standard-indent)) ; default fallback
   "A mapping from `major-mode' to its indent variable.")
 
@@ -968,6 +977,8 @@ So we build this macro to restore postion after code format."
 (defvar-local lsp-bridge-cursor-before-command 0)
 (defvar-local lsp-bridge-cursor-after-command 0)
 
+(defvar-local lsp-bridge-inlay-hint-last-update-pos nil)
+
 (defun lsp-bridge-monitor-pre-command ()
   (setq-local lsp-bridge-cursor-before-command (point))
 
@@ -1028,6 +1039,13 @@ So we build this macro to restore postion after code format."
         (unless (member this-command-string '("handle-switch-frame"))
           (ignore-errors
             (lsp-bridge-code-action-popup-quit))))
+
+      ;; Try send inlay hint if window scroll.
+      (redisplay t) ; NOTE: we need call `redisplay' to force `window-start' return RIGHT line number.
+      (let ((window-pos (window-start)))
+        (when (not (equal lsp-bridge-inlay-hint-last-update-pos window-pos))
+          (lsp-bridge-inlay-hint)
+          (setq-local lsp-bridge-inlay-hint-last-update-pos window-pos)))
       )))
 
 (defun lsp-bridge-close-buffer-file ()
@@ -1267,7 +1285,7 @@ So we build this macro to restore postion after code format."
               (lsp-bridge-is-remote-file))
       (setq-local lsp-bridge--before-change-begin-point begin)
       (setq-local lsp-bridge--before-change-end-point end)
-      
+
       (setq-local lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
       (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))
       )))
@@ -1339,6 +1357,8 @@ So we build this macro to restore postion after code format."
                                       (buffer-name)
                                       (acm-get-input-prefix)))
 
+          ;; Send inlay hint request.
+          (lsp-bridge-try-send-inlay-hint-request)
 
           ;; Complete other non-LSP backends.
           (lsp-bridge-complete-other-backends)
@@ -1348,6 +1368,10 @@ So we build this macro to restore postion after code format."
            lsp-bridge--before-change-begin-pos
            lsp-bridge--before-change-end-pos
            change-text))))))
+
+(defun lsp-bridge-try-send-inlay-hint-request ()
+  (when lsp-bridge-enable-inlay-hint
+    (lsp-bridge-inlay-hint)))
 
 (defun lsp-bridge-complete-other-backends ()
   (let ((this-command-string (format "%s" this-command)))

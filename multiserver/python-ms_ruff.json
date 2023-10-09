@@ -16,5 +16,6 @@
   "prepare_rename": "python-ms",
   "rename": "python-ms",
   "document_symbol": "python-ms",
-  "workspace_symbol": "python-ms"
+  "workspace_symbol": "python-ms",
+  "inlay_hint": "python-ms"
 }

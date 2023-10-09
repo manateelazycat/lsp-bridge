@@ -5,7 +5,6 @@
     "pyright-langserver",
     "--stdio"
   ],
-  "ignore-diagnostic": "# type: ignore",
   "settings": {
     "python.analysis": {
       "autoImportCompletions": true,

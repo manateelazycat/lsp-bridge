@@ -19,7 +19,7 @@ class CompletionItem(Handler):
         if response is not None:
             if "documentation" in response:
                 response_doc = response["documentation"]
-                if type(response_doc) == dict:
+                if isinstance(response_doc, dict):
                     if "value" in response_doc:
                         response_doc = response_doc["value"]
                     else:

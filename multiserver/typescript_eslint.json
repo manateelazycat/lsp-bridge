@@ -16,5 +16,6 @@
   "prepare_rename": "typescript",
   "rename": "typescript",
   "document_symbol": "typescript",
-  "workspace_symbol": "typescript"
+  "workspace_symbol": "typescript",
+  "inlay_hint": "typescript"
 }

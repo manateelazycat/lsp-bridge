@@ -49,7 +49,7 @@ class TabNine:
         [self.tabnine_binaries_folder] = get_emacs_vars(["tabnine-bridge-binaries-folder"])
         
     def complete(self, before, after, filename, region_includes_beginning, region_includes_end, max_num_results):
-        if self.is_tabnine_exist() and type(filename) == str:
+        if self.is_tabnine_exist() and isinstance(filename, str):
             if self.try_completion_timer is not None and self.try_completion_timer.is_alive():
                 self.try_completion_timer.cancel()
             

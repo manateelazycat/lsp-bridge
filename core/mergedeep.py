@@ -48,7 +48,7 @@ def _handle_merge_additive(destination, source, key):
 
 def _handle_merge_typesafe(destination, source, key, strategy):
     # Raise a TypeError if the destination and source types differ.
-    if type(destination[key]) is not type(source[key]):
+    if type(destination[key]) is not type(source[key]):  # noqa: E721
         raise TypeError(
             f'destination type: {type(destination[key])} differs from source type: {type(source[key])} for key: "{key}"'
         )

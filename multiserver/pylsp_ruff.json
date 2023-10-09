@@ -16,5 +16,6 @@
   "prepare_rename": "pylsp",
   "rename": "pylsp",
   "document_symbol": "pylsp",
-  "workspace_symbol": "pylsp"
+  "workspace_symbol": "pylsp",
+  "inlay_hint": "pylsp"
 }

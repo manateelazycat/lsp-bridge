@@ -8,13 +8,14 @@
   "find_type_define": "pyright-background-analysis",
   "find_implementation": "pyright-background-analysis",
   "find_references": "pyright-background-analysis",
-  "peek_find_definition": "pyright",
-  "peek_find_references": "pyright",
+  "peek_find_definition": "pyright-background-analysis",
+  "peek_find_references": "pyright-background-analysis",
   "formatting": "pyright-background-analysis",
   "hover": "pyright-background-analysis",
   "signature_help": "pyright-background-analysis",
   "prepare_rename": "pyright-background-analysis",
   "rename": "pyright-background-analysis",
   "document_symbol": "pyright-background-analysis",
-  "workspace_symbol": "pyright-background-analysis"
+  "workspace_symbol": "pyright-background-analysis",
+  "inlay_hint": "pyright-background-analysis"
 }

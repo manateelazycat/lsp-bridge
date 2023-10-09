@@ -127,9 +127,7 @@
 (defun acm-backend-search-file-words-candidate-expand (candidate-info bound-start &optional preview)
   (let ((beg (if (acm-is-elisp-mode-p)
                  (car (bounds-of-thing-at-point 'symbol))
-               (save-excursion
-                 (skip-syntax-backward acm-backend-search-file-words-bound-regex (line-beginning-position))
-                 (point))))
+               (- (point) (length (acm-get-input-prefix)))))
         (end (point))
         (cand (plist-get candidate-info :label)))
     (if preview

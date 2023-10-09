@@ -16,5 +16,6 @@
   "prepare_rename": "jedi",
   "rename": "jedi",
   "document_symbol": "jedi",
-  "workspace_symbol": "jedi"
+  "workspace_symbol": "jedi",
+  "inlay_hint": "jedi"
 }

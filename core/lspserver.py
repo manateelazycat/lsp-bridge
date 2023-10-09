@@ -220,6 +220,7 @@ class LspServer:
         self.code_format_provider = False
         self.signature_help_provider = False
         self.workspace_symbol_provider = False
+        self.inlay_hint_provider = False
         
         self.code_action_kinds = [
             "quickfix",
@@ -525,6 +526,8 @@ class LspServer:
                 self.signature_help_provider = False
             elif error_message == "Unhandled method workspace/symbol":
                 self.workspace_symbol_provider = False
+            elif error_message == "Unhandled method textDocument/inlayHint":
+                self.inlay_hint_provider = False
             else:
                 message_emacs(error_message)
 
@@ -555,6 +558,14 @@ class LspServer:
             filepath = uri_to_path(message["params"]["uri"])
             if self.enable_diagnostics and is_in_path_dict(self.files, filepath):
                 get_from_path_dict(self.files, filepath).record_diagnostics(message["params"]["diagnostics"], self.server_info["name"])
+
+        # Notice user if got error message from lsp server.
+        if "method" in message and message["method"] == "window/logMessage":
+            try:
+                if "error" in message["params"]["message"].lower():
+                    message_emacs("{} ({}): {}".format(self.project_name, self.server_info["name"], message["params"]["message"]))
+            except:
+                pass
 
         logger.debug(json.dumps(message, indent=3))
 
@@ -601,10 +612,15 @@ class LspServer:
                     pass
 
                 try:
+                    self.inlay_hint_provider = message["result"]["capabilities"]["inlayHintProvider"]["resolveProvider"]
+                except Exception:
+                    pass
+
+                try:
                     text_document_sync = message["result"]["capabilities"]["textDocumentSync"]
-                    if type(text_document_sync) is int:
+                    if isinstance(text_document_sync, int):
                         self.text_document_sync = text_document_sync
-                    elif type(text_document_sync) is dict:
+                    elif isinstance(text_document_sync, dict):
                         self.text_document_sync = text_document_sync["change"]
                 except Exception:
                     pass

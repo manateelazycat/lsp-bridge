@@ -6,44 +6,42 @@
     "--stdio"
   ],
   "settings": {
-    "": {
-      "probe": [
-        "javascript",
-        "javascriptreact",
-        "typescript",
-        "typescriptreact",
-        "html",
-        "vue",
-        "markdown"
-      ],
-      "validate": "probe",
-      "packageManager": "npm",
-      "useESLintClass": false,
-      "experimental": {
-        "useFlatConfig": false
+    "probe": [
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact",
+      "html",
+      "vue",
+      "markdown"
+    ],
+    "validate": "probe",
+    "packageManager": "npm",
+    "useESLintClass": false,
+    "experimental": {
+      "useFlatConfig": false
+    },
+    "codeActionOnSave": {
+      "mode": "all"
+    },
+    "format": false,
+    "quiet": false,
+    "onIgnoredFiles": "off",
+    "options": {},
+    "rulesCustomizations": [],
+    "run": "onType",
+    "problems": {
+      "shortenToSingleLine": false
+    },
+    "nodePath": null,
+    "codeAction": {
+      "disableRuleComment": {
+        "enable": true,
+        "location": "separateLine",
+        "commentStyle": "line"
       },
-      "codeActionOnSave": {
-        "mode": "all"
-      },
-      "format": false,
-      "quiet": false,
-      "onIgnoredFiles": "off",
-      "options": {},
-      "rulesCustomizations": [],
-      "run": "onType",
-      "problems": {
-        "shortenToSingleLine": false
-      },
-      "nodePath": null,
-      "codeAction": {
-        "disableRuleComment": {
-          "enable": true,
-          "location": "separateLine",
-          "commentStyle": "line"
-        },
-        "showDocumentation": {
-          "enable": true
-        }
+      "showDocumentation": {
+        "enable": true
       }
     }
   }
