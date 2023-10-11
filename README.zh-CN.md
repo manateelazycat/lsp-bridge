@@ -164,6 +164,7 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 - `lsp-bridge-org-babel-lang-list`: 支持 org-mode 代码块补全的语言列表， 默认 nil 对于所有语言使用
 - `lsp-bridge-find-def-fallback-function`: 当 LSP 没有找到定义时， 可以通过定制这个函数来进行候选跳转， 比如绑定 citre 或者 dumb-jump 定义跳转函数
 - `lsp-bridge-find-ref-fallback-function`: 当 LSP 没有找到引用时， 可以通过定制这个函数来进行候选跳转， 比如绑定 citre 或者 dumb-jump 定义跳转函数
+- `lsp-bridge-find-def-select-in-open-windows`: 当打开这个选项时， 查找定义命令会尽量选择已经打开窗口去跳转定义， 而不是在当前窗口切换 Buffer， 默认关闭
 - `lsp-bridge-enable-completion-in-string`: 支持在字符串中弹出补全， 默认关闭
 - `lsp-bridge-enable-completion-in-minibuffer`: 支持在 Minibuffer 中弹出补全， 默认关闭
 - `lsp-bridge-enable-diagnostics`: 代码诊断， 默认打开

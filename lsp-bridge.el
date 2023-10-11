@@ -320,12 +320,18 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'string)
 
 (defcustom lsp-bridge-python-command (cond ((memq system-type '(cygwin windows-nt ms-dos))
-                                            (if (executable-find "pypy3.exe")
-                                                "pypy3.exe"
-                                              "python3.exe"))
-                                           (t (if (executable-find "pypy3")
-                                                  "pypy3"
-                                                "python3")))
+                                            (cond ((executable-find "pypy3.exe")
+                                                   "pypy3.exe")
+                                                  ((executable-find "python3.exe")
+                                                   "python3.exe")
+                                                  ((executable-find "python.exe")
+                                                   "python.exe")))
+                                           (t (cond ((executable-find "pypy3")
+                                                     "pypy3")
+                                                    ((executable-find "python3")
+                                                     "python3")
+                                                    ((executable-find "python")
+                                                     "python"))))
   "The Python interpreter used to run lsp_bridge.py."
   :type 'string)
 
@@ -1521,6 +1527,14 @@ So we build this macro to restore postion after code format."
   :type 'function
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-find-def-select-in-open-windows nil
+  "If this option is turned on, when searching for function definitions,
+already open windows will be selected instead of switching buffers.
+
+Off by default."
+  :type 'boolean
+  :group 'lsp-bridge)
+
 (defvar-local lsp-bridge-jump-to-def-in-other-window nil)
 
 (defun lsp-bridge-find-def ()
@@ -1686,6 +1700,11 @@ So we build this macro to restore postion after code format."
     (setq position-before-jump (copy-marker marker)))
   (setq mark-ring lsp-bridge-mark-ring))
 
+(defun lsp-bridge-find-window-match-filename (filename)
+  (dolist (window (window-list))
+    (when (string-equal filename (buffer-file-name (window-buffer window)))
+      (return window))))
+
 (defun lsp-bridge-define--jump (filename filehost position)
   (let (position-before-jump)
     (lsp-bridge-define--jump-record-postion)
@@ -1693,11 +1712,17 @@ So we build this macro to restore postion after code format."
     (if (or (string-equal filehost "") lsp-bridge-enable-with-tramp)
         (progn
           (setq filename (concat (cdr (assoc filehost lsp-bridge-tramp-alias-alist) filename)))
-          ;; Jump to define.
-          ;; Show define in other window if `lsp-bridge-jump-to-def-in-other-window' is non-nil.
-          (if lsp-bridge-jump-to-def-in-other-window
-              (find-file-other-window filename)
-            (find-file filename))
+          (let ((match-window (lsp-bridge-find-window-match-filename filename)))
+            (if (and lsp-bridge-find-def-select-in-open-windows
+                     match-window)
+                ;; Try select to window if `lsp-bridge-find-def-select-in-open-windows' is non-nil.
+                (select-window match-window)
+              ;; Jump to define.
+              ;; Show define in other window if `lsp-bridge-jump-to-def-in-other-window' is non-nil.
+              (if lsp-bridge-jump-to-def-in-other-window
+                  (find-file-other-window filename)
+                (find-file filename))
+              ))
 
           ;; Init jump history in new buffer.
           (setq-local lsp-bridge-mark-ring (append (list position-before-jump) mark-ring))

@@ -165,6 +165,7 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `lsp-bridge-org-babel-lang-list`: list of language to support org-mode code block completion, nil enable all languages, default is nil
 - `lsp-bridge-find-def-fallback-function`: When LSP cannot find a definition, you can customize this function for candidate jumping, such as binding the citre or dumb-jump definition jump function
 - `lsp-bridge-find-ref-fallback-function`: When LSP cannot find a reference, you can customize this function for candidate jumping, such as binding the citre or dumb-jump definition jump function
+- `lsp-bridge-find-def-select-in-open-windows`: If this option is turned on, when searching for function definitions, already open windows will be selected instead of switching buffers. disable by default
 - `lsp-bridge-enable-completion-in-string`: Enable completion pop-up within strings, default is off
 - `lsp-bridge-enable-completion-in-minibuffer`: Enable pop-completion up in Minibuffer, disabled by default
 - `lsp-bridge-enable-diagnostics`: code diagnostic, enable by default
