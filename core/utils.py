@@ -432,9 +432,8 @@ def split_ssh_path(ssh_path):
         return None
 
 def is_remote_path(filepath):
-    for method in ["/ssh:"]:
-        if filepath.startswith(method):
-            return True
+    if filepath.startswith("/ssh:"):
+        return True
 
     return False
 
