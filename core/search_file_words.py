@@ -60,10 +60,13 @@ class SearchFileWords:
 
         self.search_words_queue.put("search_words")
 
-    def load_file(self, filepath):
+    def load_file(self, filepath, from_file_server=False):
         try:
-            with open(filepath) as f:
-                content = f.read()
+            if from_file_server:
+                content = get_file_content_from_file_server(filepath)
+            else:
+                with open(filepath) as f:
+                    content = f.read()
         except:
             return
 

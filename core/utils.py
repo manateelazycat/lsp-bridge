@@ -133,6 +133,14 @@ def get_buffer_content(filename, buffer_name):
     else:
         return get_emacs_func_result('get-buffer-content', buffer_name)
 
+def get_file_content_from_file_server(filename):
+    global remote_file_server
+
+    if filename in remote_file_server.file_dict:
+        return remote_file_server.file_dict[filename]
+    else:
+        return ""
+
 def get_current_line():
     return get_emacs_func_result('get-current-line')
 
@@ -422,6 +430,9 @@ def split_ssh_path(ssh_path):
         return (username, host, port, path)
     else:
         return None
+
+def is_remote_path(filepath):
+    return filepath.startswith("/ssh:")
 
 def eval_sexp_in_emacs(sexp):
     epc_client.call("eval-in-emacs", [sexp])

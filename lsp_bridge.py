@@ -25,6 +25,7 @@ import threading
 import traceback
 import json
 import socket
+
 from functools import wraps
 from pathlib import Path
 
@@ -235,6 +236,49 @@ class LspBridge:
 
         else:
             message_emacs("Please input valid path match rule: 'ip:/path/file'.")
+
+    @threaded
+    def sync_tramp_remote(self, server_username, server_host, ssh_port, alias):
+        import paramiko
+        if alias:
+            if alias in self.host_names:
+                server_host = self.host_names[alias]["server_host"]
+                server_username = self.host_names[alias]["username"]
+                ssh_port = self.host_names[alias]["ssh_port"]
+            else:
+                ssh_config = paramiko.SSHConfig()
+                ssh_config.parse(open(os.path.expanduser('~/.ssh/config')))
+                conf = ssh_config.lookup(alias)
+
+                server_host = conf.get('hostname', server_host)
+                server_username = conf.get('user', server_username)
+                ssh_port = conf.get('port', ssh_port)
+
+                self.host_names[alias] = {"server_host": server_host, "username": server_username, "ssh_port": ssh_port}
+
+        if not server_username:
+            if server_host in self.host_names:
+                server_username = self.host_names[server_host]["username"]
+            else:
+                server_username = "root"
+
+        if not ssh_port:
+            if server_host in self.host_names:
+                ssh_port = self.host_names[server_host]["ssh_port"]
+            else:
+                ssh_port = 22
+
+        self.host_names[server_host] = {"username": server_username, "ssh_port": ssh_port}
+
+        try:
+            client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
+            if client_id not in self.client_dict:
+                client = self.get_socket_client(server_host, REMOTE_FILE_ELISP_CHANNEL)
+                client.send_message("Connect")
+                message_emacs(f"Connect {server_username}@{server_host}#{ssh_port}...")
+
+        except paramiko.ssh_exception.ChannelException:
+                message_emacs(f"Connect {server_username}@{server_host}:{ssh_port} failed, please make sure `lsp_bridge.py` has start at server.")
 
     @threaded
     def save_remote_file(self, remote_file_host, remote_file_path):
@@ -682,6 +726,8 @@ class LspBridge:
 
     def build_file_action_function(self, name):
         def _do(filepath, *args):
+            if is_remote_path(filepath):
+                return
             open_file_success = True
 
             if not is_in_path_dict(FILE_ACTION_DICT, filepath):
