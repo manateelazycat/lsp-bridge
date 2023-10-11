@@ -432,10 +432,7 @@ def split_ssh_path(ssh_path):
         return None
 
 def is_remote_path(filepath):
-    if filepath.startswith("/ssh:"):
-        return True
-
-    return False
+    return filepath.startswith("/ssh:")
 
 def eval_sexp_in_emacs(sexp):
     epc_client.call("eval-in-emacs", [sexp])
