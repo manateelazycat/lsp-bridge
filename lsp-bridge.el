@@ -318,12 +318,18 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'string)
 
 (defcustom lsp-bridge-python-command (cond ((memq system-type '(cygwin windows-nt ms-dos))
-                                            (if (executable-find "pypy3.exe")
-                                                "pypy3.exe"
-                                              "python3.exe"))
-                                           (t (if (executable-find "pypy3")
-                                                  "pypy3"
-                                                "python3")))
+                                            (cond ((executable-find "pypy3.exe")
+                                                   "pypy3.exe")
+                                                  ((executable-find "python3.exe")
+                                                   "python3.exe")
+                                                  ((executable-find "python.exe")
+                                                   "python.exe")))
+                                           (t (cond ((executable-find "pypy3")
+                                                     "pypy3")
+                                                    ((executable-find "python3")
+                                                     "python3")
+                                                    ((executable-find "python")
+                                                     "python"))))
   "The Python interpreter used to run lsp_bridge.py."
   :type 'string)
 
