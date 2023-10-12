@@ -1711,7 +1711,7 @@ Off by default."
 
     (if (or (string-equal filehost "") lsp-bridge-enable-with-tramp)
         (progn
-          (setq filename (concat (cdr (assoc filehost lsp-bridge-tramp-alias-alist) filename)))
+          (setq filename (concat (cdr (assoc filehost lsp-bridge-tramp-alias-alist)) filename))
           (let ((match-window (lsp-bridge-find-window-match-filename filename)))
             (if (and lsp-bridge-find-def-select-in-open-windows
                      match-window)
