@@ -144,8 +144,8 @@ def get_file_content_from_file_server(filename):
 def get_current_line():
     return get_emacs_func_result('get-current-line')
 
-def get_ssh_password(host):
-    return get_emacs_func_result('get-ssh-password', host)
+def get_ssh_password(user, host, ports):
+    return get_emacs_func_result('get-ssh-password', user, host, ports)
 
 remote_eval_socket = None
 def set_remote_eval_socket(socket):

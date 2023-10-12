@@ -239,13 +239,14 @@ class LspBridge:
 
     @threaded
     def sync_tramp_remote(self, server_username, server_host, ssh_port, alias):
-        import paramiko
+        use_gssapi = False
         if alias:
             if alias in self.host_names:
                 server_host = self.host_names[alias]["server_host"]
                 server_username = self.host_names[alias]["username"]
                 ssh_port = self.host_names[alias]["ssh_port"]
             else:
+                import paramiko
                 ssh_config = paramiko.SSHConfig()
                 ssh_config.parse(open(os.path.expanduser('~/.ssh/config')))
                 conf = ssh_config.lookup(alias)
@@ -253,8 +254,9 @@ class LspBridge:
                 server_host = conf.get('hostname', server_host)
                 server_username = conf.get('user', server_username)
                 ssh_port = conf.get('port', ssh_port)
+                use_gssapi = conf.get('gssapiauthentication', 'no') in ('yes')
 
-                self.host_names[alias] = {"server_host": server_host, "username": server_username, "ssh_port": ssh_port}
+                self.host_names[alias] = {"server_host": server_host, "username": server_username, "ssh_port": ssh_port, "use_gssapi": use_gssapi}
 
         if not server_username:
             if server_host in self.host_names:
@@ -268,7 +270,7 @@ class LspBridge:
             else:
                 ssh_port = 22
 
-        self.host_names[server_host] = {"username": server_username, "ssh_port": ssh_port}
+        self.host_names[server_host] = {"username": server_username, "ssh_port": ssh_port, "use_gssapi": use_gssapi}
 
         try:
             client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
@@ -396,7 +398,9 @@ class LspBridge:
                 self.host_names[server_host]["username"],
                 self.host_names[server_host]["ssh_port"],
                 server_port,
-                lambda message: self.receive_socket_message(message, server_port))
+                lambda message: self.receive_socket_message(message, server_port),
+                self.host_names[server_host]["use_gssapi"]
+            )
             client.start()
 
             self.client_dict[client_id] = client

@@ -754,9 +754,19 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge--get-current-line-func ()
   (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
 
-(defun lsp-bridge--get-ssh-password-func (host)
+(defun lsp-bridge--get-ssh-password-func (user host ports)
   (condition-case nil
-      (read-passwd (format "Password for %s: " host))
+      (let* ((auth-source-creation-prompts
+              '((secret . "password for %u@%h: ")))
+             (found (nth 0 (auth-source-search :max 1
+                                               :host host
+                                               :user user
+                                               :port ports
+                                               :require '(:secret)
+                                               :create t))))
+        (if found
+            (auth-info-password found)
+          nil))
     (quit (progn
             (message "Cancelled password input.")
             nil))))
