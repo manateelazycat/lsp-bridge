@@ -1701,9 +1701,9 @@ Off by default."
   (setq mark-ring lsp-bridge-mark-ring))
 
 (defun lsp-bridge-find-window-match-filename (filename)
-  (dolist (window (window-list))
+  (cl-dolist (window (window-list))
     (when (string-equal filename (buffer-file-name (window-buffer window)))
-      (return window))))
+      (cl-return window))))
 
 (defun lsp-bridge-define--jump (filename filehost position)
   (let (position-before-jump)
