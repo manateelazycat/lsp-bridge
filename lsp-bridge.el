@@ -421,7 +421,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defcustom lsp-bridge-single-lang-server-mode-list
   '(
-    ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode) .                         lsp-bridge-c-lsp-server)
+    ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode c-or-c++-ts-mode) .        lsp-bridge-c-lsp-server)
     ((cmake-mode cmake-ts-mode) .                                                "cmake-language-server")
     ((java-mode java-ts-mode) .                                                  "jdtls")
     ((julia-mode) .                                                              "julials")
