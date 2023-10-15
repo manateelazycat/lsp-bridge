@@ -112,8 +112,12 @@
                    (range (plist-get closing-label :range))
                    (end (plist-get range :end)))
               (goto-char (acm-backend-lsp-position-to-point end))
+
+              ;; Looks dart's closing label always at end of line.
+              (end-of-line)
+
               (let* ((overlay (make-overlay (point) (1+ (point)) nil t)))
-                (overlay-put overlay 'before-string (propertize label 'face 'lsp-bridge-dart-closing-label-face))
+                (overlay-put overlay 'before-string (propertize (concat " " label) 'face 'lsp-bridge-dart-closing-label-face))
                 (overlay-put overlay 'evaporate t) ; NOTE, `evaporate' is import
                 (push overlay lsp-bridge-dart-closing-label-overlays)
                 )))))))
