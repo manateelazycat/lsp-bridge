@@ -95,6 +95,7 @@
 (require 'lsp-bridge-lsp-installer)
 (require 'lsp-bridge-org-babel)
 (require 'lsp-bridge-inlay-hint)
+(require 'lsp-bridge-dart)
 
 (defgroup lsp-bridge nil
   "LSP-Bridge group."

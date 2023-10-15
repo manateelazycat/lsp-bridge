@@ -559,6 +559,11 @@ class LspServer:
             if self.enable_diagnostics and is_in_path_dict(self.files, filepath):
                 get_from_path_dict(self.files, filepath).record_diagnostics(message["params"]["diagnostics"], self.server_info["name"])
 
+        if "method" in message and message["method"] == "dart/textDocument/publishClosingLabels":
+            filepath = uri_to_path(message["params"]["uri"])
+            if is_in_path_dict(self.files, filepath):
+                get_from_path_dict(self.files, filepath).record_dart_closing_lables(message["params"]["labels"])
+
         # Notice user if got error message from lsp server.
         if "method" in message and message["method"] == "window/logMessage":
             try:

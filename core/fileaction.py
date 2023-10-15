@@ -288,6 +288,9 @@ class FileAction:
         if ticker == self.diagnostics_ticker:
             eval_in_emacs("lsp-bridge-diagnostic--render", self.filepath, get_lsp_file_host(), self.get_diagnostics())
 
+    def record_dart_closing_lables(self, labels):
+        eval_in_emacs("lsp-bridge-dart-closing-labels--render", self.filepath, get_lsp_file_host(), labels)
+
     def push_code_actions(self, actions, server_name, action_kind):
         log_time("Record actions from '{}' for file {}".format(server_name, os.path.basename(self.filepath)))
         self.code_actions[server_name] = actions
