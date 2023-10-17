@@ -213,7 +213,7 @@ class LspBridge:
                         ssh_port = 22
 
                 if server_username and ssh_port:
-                    self.host_names[server_host] = {"username": server_username, "ssh_port": ssh_port}
+                    self.host_names[server_host] = {"username": server_username, "ssh_port": ssh_port, "use_gssapi": False}
 
                 try:
                     client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
