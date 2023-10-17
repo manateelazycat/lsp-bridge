@@ -411,6 +411,10 @@ def cmp(x, y):
     else:
         return 0
 
+def is_valid_ip(ip):
+    m = re.match(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$", ip)
+    return bool(m) and all(map(lambda n: 0 <= int(n) <= 255, m.groups()))
+
 def is_valid_ip_path(ssh_path):
     """Check if SSH-PATH is a valid ssh path."""
     pattern = r"^(?:([a-z_][a-z0-9_-]*)@)?((?:[0-9]{1,3}\.){3}[0-9]{1,3})(?::(\d+))?:~?(.*)$"

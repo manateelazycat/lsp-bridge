@@ -2394,38 +2394,28 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
                                   (split-string (buffer-string) "\n" t)))))
     (lsp-bridge-call-async "open_remote_file" path (list :line 0 :character 0))))
 
-(defun lsp-bridge-sync-tramp-remote ()
-  (interactive)
-  (let* ((tramp-file-name (tramp-dissect-file-name (buffer-file-name)))
-         (username (tramp-file-name-user tramp-file-name))
-         (domain (tramp-file-name-domain tramp-file-name))
-         (port (tramp-file-name-port tramp-file-name))
-         (host (tramp-file-name-host tramp-file-name))
-         (path (tramp-file-name-localname tramp-file-name))
-         alias)
+(defun lsp-bridge-update-tramp-file-info (file-name host path tramp-method)
+  (unless (assoc host lsp-bridge-tramp-alias-alist)
+    (push `(,host . ,tramp-method) lsp-bridge-tramp-alias-alist))
 
-    (unless (network-lookup-address-info host 'ipv4 'numeric)
-      (setq alias host))
-
-    (if alias
-      (if-let (alias-host (assoc alias lsp-bridge-tramp-alias-alist))
-          (setq host (cdr alias-host))
-        (let ((default-directory "~/"))
-          (setq host (string-trim (shell-command-to-string
-                                   (format "ssh -G -T %s | grep '^hostname' | cut -d ' ' -f 2" alias)))))
-        (push `(,alias . ,host) lsp-bridge-tramp-alias-alist)))
-
-    (unless (assoc host lsp-bridge-tramp-alias-alist)
-      (push `(,host . ,(concat (string-join (butlast (string-split (buffer-file-name) ":" t)) ":") ":"))
-              lsp-bridge-tramp-alias-alist))
-
-    (lsp-bridge-call-async "sync_tramp_remote" username host port alias)
-
+  (with-current-buffer (get-file-buffer file-name)
     (setq-local lsp-bridge-remote-file-flag t)
     (setq-local lsp-bridge-remote-file-host host)
     (setq-local lsp-bridge-remote-file-path path)
 
     (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)))
+
+(defun lsp-bridge-sync-tramp-remote ()
+  (interactive)
+  (let* ((file-name (buffer-file-name))
+         (tramp-file-name (tramp-dissect-file-name file-name))
+         (username (tramp-file-name-user tramp-file-name))
+         (domain (tramp-file-name-domain tramp-file-name))
+         (port (tramp-file-name-port tramp-file-name))
+         (host (tramp-file-name-host tramp-file-name))
+         (path (tramp-file-name-localname tramp-file-name)))
+
+    (lsp-bridge-call-async "sync_tramp_remote" username host port file-name)))
 
 (defun lsp-bridge-open-remote-file--response(server path content position)
   (let ((buf-name (format "[LBR] %s" (file-name-nondirectory path))))

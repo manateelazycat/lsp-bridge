@@ -238,9 +238,11 @@ class LspBridge:
             message_emacs("Please input valid path match rule: 'ip:/path/file'.")
 
     @threaded
-    def sync_tramp_remote(self, server_username, server_host, ssh_port, alias):
+    def sync_tramp_remote(self, server_username, server_host, ssh_port, filename):
         use_gssapi = False
-        if alias:
+        alias = None
+        if not is_valid_ip(server_host):
+            alias = server_host
             if alias in self.host_names:
                 server_host = self.host_names[alias]["server_host"]
                 server_username = self.host_names[alias]["username"]
@@ -257,6 +259,10 @@ class LspBridge:
                 use_gssapi = conf.get('gssapiauthentication', 'no') in ('yes')
 
                 self.host_names[alias] = {"server_host": server_host, "username": server_username, "ssh_port": ssh_port, "use_gssapi": use_gssapi}
+
+        tramp_file_split = filename.rsplit(":", 1)
+        tramp_method = tramp_file_split[0] + ":"
+        file_path = tramp_file_split[1]
 
         if not server_username:
             if server_host in self.host_names:
@@ -278,6 +284,8 @@ class LspBridge:
                 client = self.get_socket_client(server_host, REMOTE_FILE_ELISP_CHANNEL)
                 client.send_message("Connect")
                 message_emacs(f"Connect {server_username}@{server_host}#{ssh_port}...")
+
+            eval_in_emacs("lsp-bridge-update-tramp-file-info", filename, server_host, file_path, tramp_method)
 
         except paramiko.ssh_exception.ChannelException:
                 message_emacs(f"Connect {server_username}@{server_host}:{ssh_port} failed, please make sure `lsp_bridge.py` has start at server.")
