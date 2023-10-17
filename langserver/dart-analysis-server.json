@@ -7,5 +7,8 @@
     "--client-id",
     "emacs.lsp-bridge"
   ],
-  "settings": {}
+  "settings": {},
+  "initializationOptions": {
+    "closingLabels": true
+  }
 }
