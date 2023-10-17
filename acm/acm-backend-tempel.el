@@ -30,8 +30,7 @@
                 :display-label snippet
                 :annotation "Tempel"
                 :backend "tempel"))
-        (cl-subseq match-snippets 0 (min (length match-snippets) acm-backend-tempel-candidates-number)))
-       candidates))))
+        (cl-subseq match-snippets 0 (min (length match-snippets) acm-backend-tempel-candidates-number)))))))
 
 (defun acm-backend-tempel-candidate-expand (candidate-info bound-start)
   (delete-region bound-start (point))
@@ -41,7 +40,7 @@
   (let ((snippet
          (alist-get (intern-soft (plist-get candidate :label))
                     (tempel--templates))))
-    (mapconcat #'tempel--print-element snippet " ")))
+    (mapconcat #'tempel--print-template snippet " ")))
 
 (provide 'acm-backend-tempel)
 
