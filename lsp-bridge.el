@@ -714,10 +714,15 @@ So we build this macro to restore postion after code format."
   (and (boundp 'lsp-bridge-remote-file-flag)
        lsp-bridge-remote-file-flag))
 
+(defun lsp-bridge-get-buffer-file-name-text ()
+  ;; `buffer-file-name' may contain face property, we need use `substring-no-properties' remove those face from buffer name.
+  (substring-no-properties buffer-file-name))
+
 (defun lsp-bridge-get-buffer-truename (&optional filename)
   (if (lsp-bridge-is-remote-file)
       lsp-bridge-remote-file-path
-    (file-truename (or filename buffer-file-name))))
+    (file-truename (or filename 
+                       (lsp-bridge-get-buffer-file-name-text)))))
 
 (defun lsp-bridge-get-match-buffer-by-remote-file (host path)
   (cl-dolist (buffer (buffer-list))
@@ -856,7 +861,8 @@ So we build this macro to restore postion after code format."
          (setq-local acm-is-elisp-mode-in-org nil)
          (lsp-bridge-org-babel-check-lsp-server))
         (t
-         (when-let* ((filename (or (ignore-errors (file-truename buffer-file-name))
+         (when-let* ((filename (or (ignore-errors (file-truename
+                                                   (lsp-bridge-get-buffer-file-name-text)))
                                    (when (lsp-bridge-is-remote-file)
                                      lsp-bridge-remote-file-path))))
            (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension filename)
@@ -1087,7 +1093,7 @@ So we build this macro to restore postion after code format."
         (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath))
 
       (when buffer-file-name
-        (lsp-bridge-call-async "search_file_words_close_file" buffer-file-name)))))
+        (lsp-bridge-call-async "search_file_words_close_file" (lsp-bridge-get-buffer-file-name-text))))))
 
 (defun lsp-bridge-set-prefix-style (prefix-style)
   ;; Wen LSP server need `acm-get-input-prefix-bound' return ASCII keyword prefix,
@@ -1460,7 +1466,9 @@ So we build this macro to restore postion after code format."
           (unless (or (string-equal current-symbol "") (null current-symbol))
             (if (lsp-bridge-is-remote-file)
                 (lsp-bridge-remote-send-func-request "search_tailwind_keywords_search" (list lsp-bridge-remote-file-path current-symbol))
-              (lsp-bridge-call-async "search_tailwind_keywords_search" buffer-file-name current-symbol))))
+              (lsp-bridge-call-async "search_tailwind_keywords_search"
+                                     (lsp-bridge-get-buffer-file-name-text)
+                                     current-symbol))))
 
         ;; Send path search request when detect path string.
         (if (acm-in-string-p)
@@ -2307,9 +2315,13 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
           ((not buffer-file-name)
            "")
           ((fboundp 'projectile-project-root)
-           (file-relative-name buffer-file-name (projectile-project-root)))
+           (file-relative-name
+            (lsp-bridge-get-buffer-file-name-text)
+            (projectile-project-root)))
           ((boundp 'vc-root-dir)
-           (file-relative-name buffer-file-name (vc-root-dir)))
+           (file-relative-name
+            (lsp-bridge-get-buffer-file-name-text)
+            (vc-root-dir)))
           (t
            (file-name-nondirectory buffer-file-name)))))
     (if (lsp-bridge-is-remote-file)
