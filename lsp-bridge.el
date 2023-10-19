@@ -161,92 +161,112 @@ Setting this to nil or 0 will turn off the indicator."
     "python-black-buffer" "acm-complete-or-expand-yas-snippet" "acm-insert-number-or-complete-candiate"
     "yank" "string-rectangle" "query-replace" "grammatical-edit-unwrap")
   "If last command is match this option, stop popup completion ui."
-  :type 'cons
+  :type '(repeat string)
+  :safe #'listp
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-completion-hide-characters '(":" ";" "(" ")" "[" "]" "{" "}" "," "\"")
   "If character before match this option, stop popup completion ui."
-  :type 'cons
+  :type '(repeat string)
+  :safe #'listp
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-completion-obey-trigger-characters-p nil
   "If non-nil makes trigger characters a higher priority than `lsp-bridge-completion-hide-characters'."
   :type 'boolean
+  :safe #'booleanp
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-popup-documentation-buffer " *lsp-bridge-hover*"
   "Buffer for display hover information."
   :type 'string
+  :safe #'stringp
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-disable-backup t
   "Default disable backup feature, include `make-backup-files' `auto-save-default' and `create-lockfiles'."
   :type 'boolean
+  :safe #'booleanp
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-enable-signature-help t
   "Whether to enable signature-help."
   :type 'boolean
+  :safe #'booleanp
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-signature-help-fetch-idle 0.5
   "The idle seconds to fetch signature help.."
   :type 'float
+  :safe #'floatp
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-enable-search-words t
   "Whether to enable search words of files."
   :type 'boolean
+  :safe #'booleanp
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-search-words-prohibit-file-extensions '("png" "jpg" "jpeg" "gif" "pdf")
   "The file extensions to prohibit search words."
-  :type 'list
+  :type '(repeat string)
+  :safe #'listp
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-enable-auto-format-code nil
   "Whether to auto format code."
   :type 'boolean
+  :safe #'booleanp
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-auto-format-code-idle 1
   "The idle seconds to auto format code."
   :type 'float
+  :safe #'floatp
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-enable-diagnostics t
   "Whether to enable diagnostics."
   :type 'boolean
+  :safe #'booleanp
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-enable-inlay-hint t
   "Whether to enable inlay hint."
   :type 'boolean
+  :safe #'booleanp
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-elisp-symbols-update-idle 3
   "The idle seconds to update elisp symbols."
   :type 'float
+  :safe #'floatp
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-user-langserver-dir nil
   "The directory where the user place langserver configuration."
-  :type 'string
+  :type '(choice (const nil)
+                 (string))
+  :safe (lambda (v) (or (null v) (stringp v)))
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-user-multiserver-dir nil
   "The directory where the user place multiserver configuration."
-  :type 'string
+  :type '(choice (const nil)
+                 (string))
+  :safe (lambda (v) (or (null v) (stringp v)))
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-symbols-enable-which-func nil
-  "Wether use lsp-bridge in which-func"
+  "Wether use lsp-bridge in which-func."
   :type 'boolean
+  :safe #'booleanp
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-enable-completion-in-string nil
   "Whether to enable completion in string, default is disable."
   :type 'boolean
+  :safe #'booleanp
   :group 'lsp-bridge)
 
 (defface lsp-bridge-font-lock-flash
