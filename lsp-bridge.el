@@ -655,6 +655,9 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
 (defvar lsp-bridge-enable-with-tramp nil
   "Whether enable lsp-bridge when editing tramp file.")
 
+(defvar lsp-bridge-remote-save-password nil
+  "Whether save password in netrc file.")
+
 (defun lsp-bridge-find-file-hook-function ()
   (when (and lsp-bridge-enable-with-tramp (file-remote-p (buffer-file-name)))
       (lsp-bridge-sync-tramp-remote)))
@@ -755,6 +758,8 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge--get-current-line-func ()
   (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
 
+(defvar-local lsp-bridge-tramp-sync-var nil)
+
 (defun lsp-bridge--get-ssh-password-func (user host port)
   (condition-case nil
       (let* ((auth-source-creation-prompts
@@ -765,6 +770,8 @@ So we build this macro to restore postion after code format."
                                                :port port
                                                :require '(:secret)
                                                :create t))))
+        (when (and lsp-bridge-remote-save-password (plist-get found :save-function))
+          (funcall (plist-get found :save-function)))
         (if found
             (auth-info-password found)
           nil))
@@ -2404,7 +2411,8 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
     (setq-local lsp-bridge-remote-file-host host)
     (setq-local lsp-bridge-remote-file-path path)
 
-    (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)))
+    (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)
+    (setq lsp-bridge-tramp-sync-var t)))
 
 (defun lsp-bridge-sync-tramp-remote ()
   (interactive)
@@ -2416,7 +2424,10 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
          (host (tramp-file-name-host tramp-file-name))
          (path (tramp-file-name-localname tramp-file-name)))
 
-    (lsp-bridge-call-async "sync_tramp_remote" username host port file-name)))
+    (lsp-bridge-call-async "sync_tramp_remote" username host port file-name))
+
+  (while (not lsp-bridge-tramp-sync-var)
+    (accept-process-output nil 0.001)))
 
 (defun lsp-bridge-open-remote-file--response(server path content position)
   (let ((buf-name (format "[LBR] %s" (file-name-nondirectory path))))
