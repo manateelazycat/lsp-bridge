@@ -247,6 +247,7 @@ class LspBridge:
                 server_host = self.host_names[alias]["server_host"]
                 server_username = self.host_names[alias]["username"]
                 ssh_port = self.host_names[alias]["ssh_port"]
+                use_gssapi = self.host_names[alias]["use_gssapi"]
             else:
                 import paramiko
                 ssh_config = paramiko.SSHConfig()
