@@ -629,8 +629,8 @@ class LspBridge:
 
     def turn_off(self, filepath, message):
         if os.path.splitext(filepath)[1] != ".txt":
-            message_emacs(message + ", disable lsp-bridge-mode.")
-            eval_in_emacs("lsp-bridge--turn-off", filepath, get_lsp_file_host())
+            message_emacs(message + ", disable LSP feature.")
+            eval_in_emacs("lsp-bridge--turn-off-lsp-feature", filepath, get_lsp_file_host())
 
     def check_lang_server_command(self, lang_server_info, filepath, turn_off_on_error=True):
         # We merge PATH from `exec-path` variable, to make sure lsp-bridge find LSP server command if it can find by Emacs.
