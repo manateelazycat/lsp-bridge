@@ -50,7 +50,7 @@ lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建�
 请注意:
 
 1. 使用 lsp-bridge 时， 请先关闭其他补全插件， 比如 lsp-mode, eglot, company, corfu 等等， lsp-bridge 提供从补全后端、 补全前端到多后端融合的全套解决方案。
-2. 在补全菜单弹出时， `acm-mode`会自动启用， 补全菜单消失时, `acm-mode` 会自动禁用， 请不要手动把 `acm-mode` 加到任何 mode-hook 中， 也不要手动执行 `acm-mode`
+2. lsp-bridge 除了提供 LSP 补全以外， 也提供了很多非 LSP 的补全后端， 包括文件单词、 路径、 模板、 TabNine、 Codeium、 Copilot、 Citre 等补全后端， 如果你期望在某个模式提供这些补全， 请把对应的模式添加到 `lsp-bridge-default-mode-hooks` 
 
 ## 本地使用
 
@@ -60,25 +60,25 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 
 1. 检测到 `.git` 目录时(通过命令 `git rev-parse --is-inside-work-tree` 来判断)， lsp-bridge 会扫描整个目录文件来提供补全
 2. 没有检测到 `.git` 目录时， lsp-bridge 只会对打开的文件提供单文件补全
-3. 通过 setq 自定义的 `lsp-bridge-get-project-path-by-filepath` 函数， 输入参数是打开文件的路径字符串， 输出参数是项目目录路径， lsp-bridge 会根据输出目录路径来提供补全
+3. 通过 setq 自定义的 `lsp-bridge-get-project-path-by-filepath` 函数， 输入参数是打开文件的路径字符串， 输出参数是项目目录路径， lsp-bridge 会根据输出目录路径来提供补全, 第三种情况一般用于一个 git 项目中包含多个前后端模块的场景
 
 ## 远程使用
 
-lsp-bridge 也可以对远程服务器的文件进行代码语法补全， 效果与 VSCode 类似。 在处理要求较高资源或运行环境配置较为复杂的大型复杂软件时， 提供远程代码补全功能将非常有用。 以下是配置远程代码补全的步骤：
+lsp-bridge 也可以对远程服务器的文件进行代码语法补全， 效果与 VSCode 类似。 以下是配置远程代码补全的步骤：
 
 1. 在远程服务器上安装 lsp-bridge 和对应的 LSP Server
 2. 启动 lsp-bridge 服务： `python3 lsp-bridge/lsp_bridge.py`
-3. 使用命令`lsp-bridge-open-remote-file`打开远程文件， 输入用户名、 服务器 IP、 SSH 端口(默认为: 22) 和文件路径， 比如`user@ip:[ssh_port]:/path/file`
+3. 使用命令`lsp-bridge-open-remote-file`打开远程文件， 输入用户名、 服务器 IP、 SSH 端口(默认为: 22) 和文件路径， 比如`user@ip:[ssh_port]:/path/file`, 如果希望通过 tramp 打开文件， 需要先开启选项 `lsp-bridge-enable-with-tramp`, lsp-bridge 会用内置的高效补全算法替代 tramp 的文件同步算法， 以实现完全不卡顿的补全体验
 
-一旦打开远程文件， `lsp-bridge`将自动显示代码补全菜单。 `lsp-bridge` 远程补全的原理如下：
+`lsp-bridge` 远程补全的原理如下：
 
 1. 以 SSH 认证方式登录远程服务器， 并访问和编辑远程文件
-2. 当本地编辑远程文件时， 会实时发送增量 diff 序列给 lsp-bridge 服务端。 服务端将根据增量 diff 序列重建文件的最新内容， 并调用 LSP Server 进行语法补全计算
-3. 在进行 LSP 补全菜单项计算后， `lsp-bridge`将补全数据发送到本地， 并进行补全菜单渲染
+2. 当本地编辑远程文件副本时， 会实时发送增量 diff 序列给 lsp-bridge 服务端。 服务端将根据增量 diff 序列重建文件的最新内容， 并调用部署在服务端的 LSP Server 进行语法补全计算
+3. 服务端完成 LSP 补全菜单项计算后， `lsp-bridge`将补全菜单项数据回传到本地， 再由本地 Emacs 绘制补全菜单
 
-如果补全菜单没有弹出， 请登录远程服务器， 查看`lsp_bridge.py`的终端输出。 一般来说， 是因为服务端的 LSP Server 安装不完整导致的。
-
-lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远程服务器登录的公钥凭证， 如果公钥登录失败会提示用户输入登录密码， lsp-bridge 不存储服务器登录密码到文件中， 为了避免反复输入密码， 建议你用公钥的方式登录远程服务器。
+请注意：
+1.  如果补全菜单没有弹出， 请登录远程服务器， 查看`lsp_bridge.py`的终端输出。 一般来说， 是因为服务端的 LSP Server 安装不完整导致的。
+2. lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远程服务器登录的公钥凭证， 如果公钥登录失败会提示用户输入登录密码， lsp-bridge 不存储服务器登录密码到文件中， 为了避免反复输入密码， 建议你用公钥的方式登录远程服务器。
 
 ## 按键
 
@@ -106,7 +106,7 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 | Alt + 数字键 | acm-complete-quick-access | 快速选择候选词， 需要开启 `acm-enable-quick-access` 选项 |
 | 数字键       | acm-complete-quick-access | (更加)快速选择候选词， 需要同时开启 `acm-enable-quick-access` 和 `acm-quick-access-use-number-select` |
 
-## 命令列表
+## 命令
 
 - `lsp-bridge-find-def`: 跳转到定义位置
 - `lsp-bridge-find-def-other-window`: 在其他窗口跳转到定义位置
@@ -145,6 +145,7 @@ lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远
 - `lsp-bridge-peek-tree-next-node`: 选择浏览历史上下一级节点 (默认绑定到 `<right>` )
 
 ## LSP 服务器选项
+lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， 您可以通过定制下面的选项来选择你喜欢的语言服务器:
 
 - `lsp-bridge-c-lsp-server`: C 语言的服务器， 可以选择`clangd`或者`ccls`
 - `lsp-bridge-elixir-lsp-server`: Elixir 语言的服务器， 可以选择`elixirLS`或者`lexical`
@@ -370,7 +371,9 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 | lsp-bridge-code-action.el           | 代码修复相关代码                                                                                                     |
 | lsp-bridge-diagnostic.el            | 诊断信息相关代码                                                                                                     |
 | lsp-bridge-ref.el                   | 代码引用查看框架， 提供引用查看、 批量重命名、 引用结果正则过滤等， 核心代码 fork 自 color-rg.el                     |
+| lsp-bridge-inlay-hint.el                   | 提供代码类型提示， 对于静态语言， 比如 Rust 或 Haskell 比较有用                     |
 | lsp-bridge-jdtls.el                 | 提供 Java 语言第三方库跳转功能                                                                                       |
+| lsp-bridge-dart.el                 | 提供对 Dart 私有协议的支持， 比如 Dart 的 Closing Labels 协议                                                                                       |
 | lsp-bridge-lsp-installer.el         | 安装 TabNine 和 Omnisharp                                                                                            |
 | lsp-bridge-peek.el                  | 用 peek windows 来查看定义和引用                                                                                     |
 | lsp-bridge.py                       | lsp-bridge 的 Python 主逻辑部分， 提供事件循环、 消息调度和状态管理                                                  |
@@ -404,7 +407,7 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 
 ## 反馈问题
 
-关于一些常用问题， 请先阅读 [Wiki](https://github.com/manateelazycat/lsp-bridge/wiki)
+**关于一些常用问题， 请先阅读 [Wiki](https://github.com/manateelazycat/lsp-bridge/wiki)**
 
 请用命令 `emacs -q` 并只添加 lsp-bridge 配置做一个对比测试， 如果 `emacs -q` 可以正常工作， 请检查你个人的配置文件。
 
@@ -422,6 +425,7 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
   3. 发送`*lsp-bridge*`中的内容
 
 ## 贡献者
+lsp-bridge 的快速发展离不开社区各位大佬的鼎力支持和无私风险， 没有社区的支持， lsp-bridge 不可能发展到今天， 感谢世界上最可爱的你们, happy hacking ;)
 
 <a href = "https://github.com/manateelazycat/lsp-bridge/graphs/contributors">
   <img src = "https://contrib.rocks/image?repo=manateelazycat/lsp-bridge"/>

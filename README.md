@@ -49,10 +49,10 @@ Using Python multithreading techniques, lsp-bridge builds a high-speed cache bet
 ```
 
 
-Please note that:
+Please note:
 
-1. When using lsp-bridge, please first disable other completion plugins such as lsp-mode, eglot, company, corfu, etc. Lsp-bridge provides a complete solution from completion backend, frontend to multi-backend fusion.
-2. When the completion menu pops up, `acm-mode` will be automatically enabled, and when the completion menu disappears, `acm-mode` will be automatically disabled. Please do not manually add `acm-mode` to any mode-hook or manually execute `acm-mode`.
+1. When using lsp-bridge, please first disable other completion plugins, such as lsp-mode, eglot, company, corfu, etc. lsp-bridge provides a complete solution from the completion backend, completion frontend to multi-backend integration.
+2. In addition to providing LSP completion, lsp-bridge also provides many non-LSP completion backends, including file words, paths, templates, TabNine, Codeium, Copilot, Citre and other completion backends. If you expect to provide these completions in a certain mode, please add the corresponding mode to `lsp-bridge-default-mode-hooks`.
 
 ## Local Usage
 
@@ -66,21 +66,21 @@ It should be noted that lsp-bridge has three scanning modes:
 
 ## Remote Usage
 
-`lsp-bridge` can also provide code syntax completion for files on a remote server, similar to VSCode. Providing remote code completion is very useful when dealing with large and complex software that requires high resource demands or has complex environment configuration. The following are the steps to configure remote code completion:
+lsp-bridge can also perform code syntax completion for files on remote servers, similar to the effect in VSCode. Below are the steps to configure remote code completion:
 
-1. Install `lsp-bridge` and the corresponding LSP server on the remote server.
+1. Install lsp-bridge and the corresponding LSP Server on the remote server
 2. Start the lsp-bridge service: `python3 lsp-bridge/lsp_bridge.py`
-3. Use the command `lsp-bridge-open-remote-file` to open the remote file and enter the username, server IP, ssh port (default: 22), and file path, such as `user@ip:[ssh_port]:/path/file`.
+3. Use the command `lsp-bridge-open-remote-file` to open a remote file, enter the username, server IP, SSH port (default is: 22) and file path, such as `user@ip:[ssh_port]:/path/file`. If you wish to open files through tramp, you need to first enable the option `lsp-bridge-enable-with-tramp`. lsp-bridge will replace the tramp file synchronization algorithm with its built-in efficient completion algorithm, to achieve a completely non-stuttering completion experience.
 
-Once the remote file is opened, `lsp-bridge` will automatically display the code completion menu. The remote completion principle of `lsp-bridge` is as follows:
+The principle of `lsp-bridge` remote completion is as follows:
 
-1. Login to the remote server with SSH authentication and access and edit the remote file.
-2. When editing the remote file locally, incremental diff sequences are sent to the `lsp-bridge` server in real-time. The server will rebuild the latest content of the file based on the incremental diff sequence and call the LSP server to complete the syntax calculation.
-3. After calculating the LSP completion menu items, `lsp-bridge` will send the completion data to the local computer and render the completion menu.
+1. Log in to the remote server with SSH authentication and access and edit remote files
+2. When editing a local copy of a remote file, it will send incremental diff sequences to the lsp-bridge server in real-time. The server will rebuild the latest content of the file based on the incremental diff sequence and call the LSP Server deployed on the server for syntax completion calculation.
+3. After the server completes the LSP completion menu item calculation, `lsp-bridge` will send the completion menu item data back to the local side, and then the local Emacs will draw the completion menu.
 
-If the completion menu does not appear, log in to the remote server and check the terminal output of `lsp_bridge.py`. Generally, incomplete installation of the service-side LSP server is the cause.
-
-lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` directory as the public key credential for logging into the remote server. If public key login fails, the user will be prompted to enter the login password. lsp-bridge does not store the server login password in a file. To avoid repeatedly entering the password, it is recommended that you use the public key method to log in to the remote server.
+Please note:
+1. If the completion menu does not pop up, please log in to the remote server and view the terminal output of `lsp_bridge.py`. Generally speaking, it is because the installation of the server's LSP Server is incomplete.
+2. lsp-bridge prefers to find the content of the first *.pub file in the `~/.ssh` directory as the public key credential for logging in to the remote server. If public key login fails, it will prompt the user to enter the login password. lsp-bridge does not store the server login password in a file. To avoid repeatedly entering passwords, it is recommended that you log in to the remote server using a public key.
 
 ## Keymap
 
@@ -146,6 +146,7 @@ lsp-bridge first looks for the content of the first *.pub file in the `~/.ssh` d
 - `lsp-bridge-peek-tree-next-node`: Select the next lower-level node in the browsing history (default binding to `<right>`)
 
 ## LSP server options
+lsp-bridge provides support for more than two language servers for many languages. You can customize the following options to choose the language server you prefer:
 
 - `lsp-bridge-c-lsp-server`: C language server, you can choose `clangd` or`ccls`
 - `lsp-bridge-elixir-lsp-server`: Elixir language server, you can choose `elixirLS`(default) or`lexical`
@@ -362,36 +363,38 @@ The following is the framework of lsp-bridge:
 
 The following is the directory structure of the lsp-bridge project:
 
-| File Name                           | Purpose                                                                                                                                                                                                      |
-|:------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| lsp-bridge.el                       | The Elisp main logic part of lsp-bridge provides custom options and Elisp functions for python sub-processes to call, such as code jumps, renaming, etc.                                                     |
-| lsp-bridge-epc.el                   | The code that communicates with the lsp-bridge python sub-process, which mainly implements Elisp IPC to interface with Python EPC, implementing data serialization, sending, receiving, and deserialization. |
-| lsp-bridge-call-hierarchy.el        | Displays the code’s call order relationship in a pop-up frame.                                                                                                                                              |
-| lsp-bridge-code-action.el           | Code repair related code.                                                                                                                                                                                    |
-| lsp-bridge-diagnostic.el            | Diagnostic information related code.                                                                                                                                                                         |
-| lsp-bridge-ref.el                   | A code reference viewing framework that provides reference viewing, batch renaming, and reference result regular filtering. The core code is forked from color-rg.el.                                        |
-| lsp-bridge-jdtls.el                 | Provides third-party library jump functions for the Java Language.                                                                                                                                           |
-| lsp-bridge-peek.el                  | Use peek windows to view definitions and references                                                                                                                                                          |
-| lsp-bridge-lsp-installer.el         | Installs TabNine and Omnisharp.                                                                                                                                                                              |
-| lsp-bridge.py                       | The Python main logic part of lsp-bridge provides event loops, message scheduling, and state management.                                                                                                     |
-| acm/acm.el                          | An asynchronous completion menu designed specifically for lsp-bridge backend, supporting lsp, elisp, words, TabNine, and other backends.                                                                     |
-| core/fileaction.py                  | Mainly records the status of each file, processes LSP response messages, and calls Emacs Elisp functions.                                                                                                    |
-| core/lspserver.py                   | The LSP message processing module mainly parses, sends, and receives LSP messages, ensuring that LSP request order conforms to LSP protocol specifications.                                                  |
-| core/remote_file.py                 | Used to handle remote server file access and synchronization.                                                                                                                                                |
-| core/utils.py                       | Some global utility functions that facilitate the calling of various modules.                                                                                                                                |
-| core/mergedeep.py                   | JSON information merge, mainly used to send custom options to LSP servers.                                                                                                                                   |
-| core/hanlder/                       | Implementation of LSP message sending and receiving, where `__init__.py` is the base class.                                                                                                                  |
-| core/tabnine.py                     | The backend searches and completes with TabNine.                                                                                                                                                             |
-| core/codeium.py                     | The backend searches and completes with Codeium.                                                                                                                                                             |
-| core/copilot.py                     | The backend searches and completes with Copilot.                                                                                                                                                             |
-| core/search_file_words.py           | Asynchronous search backend for file words.                                                                                                                                                                  |
-| core/search_paths.py                | Asynchronous search backend for file paths.                                                                                                                                                                  |
-| core/search_sdcv_words.py           | English word search backend, interchangeable with other language’s StarDict dictionaries.                                                                                                                   |
-| core/search_tailwindcss_keywords.py | TailwindCSS keyword search backend.                                                                                                                                                                          |
-| core/search_list.py                 | Asynchronous search framework that can be used to write your own asynchronous search backends.                                                                                                               |
-| langserver                          | Mainly places the configuration of LSP servers, with a json file for each server, defining the server’s name, language ID, startup command, and settings options.                                           |
-| multiserver                         | Mainly places the configuration of multiple LSP servers.                                                                                                                                                     |
-| resources                           | English dictionary data, mainly for serving Chinese users.                                                                                                                                                   |
+| Filename                              | Purpose                                                                                                             |
+|:--------------------------------------|:--------------------------------------------------------------------------------------------------------------------|
+| lsp-bridge.el                         | The main Elisp logic part of lsp-bridge, providing custom options and Elisp functions for the python subprocess, such as code jump, rename, etc. |
+| lsp-bridge-epc.el                     | Code for communicating with the lsp-bridge python subprocess, mainly implementing Elisp IPC to dock with Python EPC, realizing data serialization, sending, receiving, and deserialization |
+| lsp-bridge-call-hierarchy.el          | Display the call order relationship of the code in the pop-up Frame                                                 |
+| lsp-bridge-code-action.el             | Code related to code correction                                                                                     |
+| lsp-bridge-diagnostic.el              | Diagnostic information related code                                                                                 |
+| lsp-bridge-ref.el                     | Code reference viewing framework, providing reference viewing, batch renaming, reference result regular filtering, etc., core code forked from color-rg.el |
+| lsp-bridge-inlay-hint.el              | Provides code type hints, more useful for static languages, such as Rust or Haskell                                 |
+| lsp-bridge-jdtls.el                   | Provides third-party library jump function for Java language                                                         |
+| lsp-bridge-dart.el                    | Provides support for Dart's private protocols, such as Dart's Closing Labels protocol                                |
+| lsp-bridge-lsp-installer.el           | Install TabNine and Omnisharp                                                                                       |
+| lsp-bridge-peek.el                    | Use peek windows to view definitions and references                                                                 |
+| lsp-bridge.py                         | The main Python logic part of lsp-bridge, providing event loops, message scheduling, and status management          |
+| acm/acm.el                            | Asynchronous completion menu, designed specifically for the lsp-bridge backend, supporting lsp, elisp, words, TabNine and other backends |
+| core/fileaction.py                    | Mainly records the status of each file, processes LSP response messages, and calls Emacs Elisp functions            |
+| core/lspserver.py                     | LSP message processing module, mainly for parsing, sending and receiving LSP messages, and ensuring that LSP requests are in order according to LSP protocol specifications |
+| core/remote_file.py                   | Used to handle remote server file access and synchronization                                                        |
+| core/utils.py                         | Some global utility functions, convenient for various modules to call                                               |
+| core/mergedeep.py                     | JSON information merging, mainly used to send custom options to the LSP server                                      |
+| core/handler/                         | Implementation of LSP message sending and receiving, where `__init__.py` is the base class                           |
+| core/tabnine.py                       | TabNine backend search and completion                                                                               |
+| core/codeium.py                       | Codeium backend search and completion                                                                               |
+| core/copilot.py                       | Copilot backend search and completion                                                                               |
+| core/search_file_words.py             | Asynchronous backend for file word search                                                                           |
+| core/search_paths.py                  | Asynchronous backend for file path search                                                                           |
+| core/search_sdcv_words.py             | English word search backend, can be replaced with StarDict dictionaries of other languages                          |
+| core/search_tailwindcss_keywords.py   | TailwindCSS keyword search backend                                                                                  |
+| core/search_list.py                   | Asynchronous search framework, can be used to write your own asynchronous search backend                             |
+| langserver                            | Mainly places the configuration of the LSP server, each server has a json file, defining the server's name, language ID, startup command, and setting options, etc. |
+| multiserver                           | Mainly places the configuration of multiple LSP servers                                                             |
+| resources                             | English dictionary data, mainly serving Chinese users                                                               |
 
 Please read below articles first:
 
@@ -404,7 +407,7 @@ Then turn on develop option `lsp-bridge-enable-log` and happy hacking! ;)
 
 ## Report bug
 
-For some common problems, please read [Wiki](https://github.com/manateelazycat/lsp-bridge/wiki) first.
+**For some common problems, please read [Wiki](https://github.com/manateelazycat/lsp-bridge/wiki) first.**
 
 Please use `emacs -q` and load a minimal setup with only lsp-bridge to verify that the bug is reproducible. If `emacs -q` works fine, probably something is wrong with your Emacs config.
 
@@ -422,6 +425,7 @@ If the problem still exists, please report it [here](https://github.com/manateel
   3. Send issue with `*lsp-bridge*` buffer content
 
 ## Contributor
+lsp-bridge's rapid development couldn't have been possible without the strong support and selfless contributions from the community's experts. Without the community’s support, lsp-bridge wouldn’t be where it is today. Thank you to the loveliest people in the world, happy hacking ;)
 
 <a href = "https://github.com/manateelazycat/lsp-bridge/graphs/contributors">
   <img src = "https://contrib.rocks/image?repo=manateelazycat/lsp-bridge"/>
