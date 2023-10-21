@@ -52,7 +52,7 @@ Using Python multithreading techniques, lsp-bridge builds a high-speed cache bet
 Please note:
 
 1. When using lsp-bridge, please first disable other completion plugins, such as lsp-mode, eglot, company, corfu, etc. lsp-bridge provides a complete solution from the completion backend, completion frontend to multi-backend integration.
-2. In addition to providing LSP completion, lsp-bridge also provides many non-LSP completion backends, including file words, paths, templates, TabNine, Codeium, Copilot, Citre and other completion backends. If you expect to provide these completions in a certain mode, please add the corresponding mode to `lsp-bridge-default-mode-hooks`.
+2. In addition to providing LSP completion, lsp-bridge also provides many non-LSP completion backends, including file words, paths, Yas/Tempel, TabNine, Codeium, Copilot, Citre, Tailwind and other completion backends. If you expect to provide these completions in a certain mode, please add the corresponding mode to `lsp-bridge-default-mode-hooks`.
 
 ## Local Usage
 
