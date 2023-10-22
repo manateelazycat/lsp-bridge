@@ -351,13 +351,19 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
       ;; Execute command with temp-buffer.
       (lsp-bridge-call-file-api "execute_command" server_name command))
      ;; Parse command argument if command is plist, and call `lsp-bridge-code-action--fix-do' again.
-     ((plistp command)
+     ((lsp-bridge-plistp command)
       ;; We need add server-name in `command', otherwise `lsp-bridge-code-action--fix-do' will send empty server name to Python.
       (let ((server-command command))
         (plist-put server-command :server-name server_name)
         (lsp-bridge-code-action--fix-do command temp-buffer))))
     (unless temp-buffer
       (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
+
+(defun lsp-bridge-plistp (object)
+  "Non-nil if and only if OBJECT is a valid plist."
+  (declare (pure t) (side-effect-free error-free))
+  (let ((len (proper-list-p object)))
+    (and len (zerop (% len 2)))))
 
 (defun lsp-bridge-code-action--filter (action action-kind)
   (when (or (not action-kind)
