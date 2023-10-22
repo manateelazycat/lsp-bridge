@@ -214,7 +214,12 @@ class FileAction:
             lsp_server.send_whole_change_notification(self.filepath, self.version, buffer_content)
         self.version += 1
 
-    def try_completion(self, position, before_char, prefix, version):
+    def try_completion(self, position, before_char, prefix, version=None):
+        # If we call try_completion from Elisp side, Emacs don't know the version of FileAction.
+        # So we need fill version if it is None.
+        if version is None:
+            version = self.version
+
         if self.multi_servers:
             for lsp_server in self.multi_servers.values():
                 if lsp_server.server_info["name"] in self.multi_servers_info["completion"]:
