@@ -411,18 +411,16 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 
 请用命令 `emacs -q` 并只添加 lsp-bridge 配置做一个对比测试， 如果 `emacs -q` 可以正常工作， 请检查你个人的配置文件。
 
-如果`emacs -q`环境下问题依旧， 请到[这里](https://github.com/manateelazycat/lsp-bridge/issues/new) 反馈, 并附带 `*lsp-bridge*` 窗口的内容给我们提交 issue， 那里面有很多线索可以帮助我们排查问题。 。
+如果`emacs -q`环境下问题依旧
+  1. 打开选项 `(setq lsp-bridge-enable-log t)`
+  2. 使用命令 `lsp-bridge-restart-process` 重启 LSP-BRIDGE 进程
+  3. 在 issue 中发送`*lsp-bridge*`中的内容, 那里面有很多线索可以帮助我们排查问题
 
-- 如果你遇到崩溃的问题, 请用下面的方式来收集崩溃信息:
+如果你遇到崩溃的问题, 请用下面的方式来收集崩溃信息:
 
   1. 先安装 gdb 并打开选项 `(setq lsp-bridge-enable-debug t)`
   2. 使用命令 `lsp-bridge-restart-process` 重启 LSP-BRIDGE 进程
   3. 在下次崩溃时发送 `*lsp-bridge*` 的内容
-
-- 如果你遇到其他问题， 请用下面的方式来收集信息
-  1. 打开选项 `(setq lsp-bridge-enable-log t)`
-  2. 使用命令 `lsp-bridge-restart-process` 重启 LSP-BRIDGE 进程
-  3. 发送`*lsp-bridge*`中的内容
 
 ## 贡献者
 lsp-bridge 的快速发展离不开社区各位大佬的鼎力支持和无私风险， 没有社区的支持， lsp-bridge 不可能发展到今天， 感谢世界上最可爱的你们, happy hacking ;)

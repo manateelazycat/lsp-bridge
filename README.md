@@ -411,19 +411,17 @@ Then turn on develop option `lsp-bridge-enable-log` and happy hacking! ;)
 
 Please use `emacs -q` and load a minimal setup with only lsp-bridge to verify that the bug is reproducible. If `emacs -q` works fine, probably something is wrong with your Emacs config.
 
-If the problem still exists, please report it [here](https://github.com/manateelazycat/lsp-bridge/issues/new) with `*lsp-bridge*` buffer content, it contains many clues that can help us locate the problem faster.
+If the problem still exists:
+1. Turn on option `lsp-bridge-enable-log`
+2. Use `lsp-bridge-restart-process` to restart the `LSP-BRIDGE` process
+3. Report issue with `*lsp-bridge*` buffer content, it contains many clues that can help us locate the problem faster
 
-- If you get a segfault error, please use the following way to collect crash information:
+If you get a segfault error, please use the following way to collect crash information:
 
   1. Install gdb and turn on option `lsp-bridge-enable-debug`
   2. Use the command `lsp-bridge-restart-process` to restart the `LSP-BRIDGE` process
   3. Send issue with `*lsp-bridge*` buffer content when next crash
-
-- If you get other errors, please use the following way to collection information:
-  1. turn on option `lsp-bridge-enable-log`
-  2. Use the command `lsp-bridge-restart-process` to restart the `LSP-BRIDGE` process
-  3. Send issue with `*lsp-bridge*` buffer content
-
+  
 ## Contributor
 lsp-bridge's rapid development couldn't have been possible without the strong support and selfless contributions from the community's experts. Without the community’s support, lsp-bridge wouldn’t be where it is today. Thank you to the loveliest people in the world, happy hacking ;)
 
