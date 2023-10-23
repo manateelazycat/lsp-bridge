@@ -3,7 +3,8 @@
   "languageId": "haskell",
   "command": [
     "haskell-language-server-wrapper",
-    "lsp"
+    "--lsp"
   ],
-  "settings": {}
+  "settings": {},
+  "support-single-file": false
 }
