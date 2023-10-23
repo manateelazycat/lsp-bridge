@@ -423,7 +423,7 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
   3. 在下次崩溃时发送 `*lsp-bridge*` 的内容
 
 ## 贡献者
-lsp-bridge 的快速发展离不开社区各位大佬的鼎力支持和无私风险， 没有社区的支持， lsp-bridge 不可能发展到今天， 感谢世界上最可爱的你们, happy hacking ;)
+lsp-bridge 的快速发展离不开社区各位大佬的鼎力支持和无私奉献， 没有社区的支持， lsp-bridge 不可能发展到今天， 感谢世界上最可爱的你们, happy hacking ;)
 
 <a href = "https://github.com/manateelazycat/lsp-bridge/graphs/contributors">
   <img src = "https://contrib.rocks/image?repo=manateelazycat/lsp-bridge"/>
