@@ -179,6 +179,12 @@ height and background properties of the face."
   :type 'integer
   :group 'lsp-bridge-peek)
 
+
+(defcustom lsp-bridge-peek-file-content-scroll-margin 1
+  "Set how much lsp-bridge-peek-file-content-next-line/-prev-line should scroll up and down."
+  :type 'integer
+  :group 'lsp-bridge-peek)
+
 (defcustom lsp-bridge-peek-list-height 3
   "Number of definitions/references displayed in the peek window."
   :type 'integer
@@ -659,12 +665,12 @@ When FORCE if non-nil, the content of the peek window is recalculated."
 (defun lsp-bridge-peek-file-content-next-line ()
   "Step through the next line of file content."
   (interactive)
-  (lsp-bridge-peek-file-content-move 1))
+  (lsp-bridge-peek-file-content-move lsp-bridge-peek-file-content-scroll-margin))
 
 (defun lsp-bridge-peek-file-content-prev-line ()
   "Step through the next line of file content."
   (interactive)
-  (lsp-bridge-peek-file-content-move -1))
+  (lsp-bridge-peek-file-content-move (* lsp-bridge-peek-file-content-scroll-margin -1)))
 
 (defun lsp-bridge-peek-jump ()
   "Jump to where the definition/reference is."
