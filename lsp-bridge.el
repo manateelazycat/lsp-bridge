@@ -1899,11 +1899,16 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
 
 (defvar lsp-bridge-auto-format-code-timer nil)
 
+(defcustom lsp-bridge-mode-lighter " LSPB"
+  "Mode line lighter for LSP Bridge Mode."
+  :type 'string
+  :group 'lsp-bridge)
+
 ;;;###autoload
 (define-minor-mode lsp-bridge-mode
   "LSP Bridge mode."
   :keymap lsp-bridge-mode-map
-  :lighter " LSPB"
+  :lighter lsp-bridge-mode-lighter
   :init-value nil
   (if lsp-bridge-mode
       (lsp-bridge--enable)
