@@ -770,7 +770,8 @@ The key of candidate will change between two LSP results."
              (display-icon (if icon icon icon-default))
              (candidate (plist-get v :display-label))
              (annotation (plist-get v :annotation))
-             (annotation-text (if annotation annotation ""))
+             (annotation-text (format "%s " (capitalize (if annotation annotation ""))))
+             (annotation-face (if (equal item-index menu-index) 'acm-frame-select-face 'font-lock-doc-face))
              (item-length (funcall acm-string-width-function annotation-text))
              (icon-text (acm-icon-build (nth 0 display-icon) (nth 1 display-icon) (nth 2 display-icon)))
              (quick-access-key (nth item-index acm-quick-access-keys))
@@ -783,9 +784,11 @@ The key of candidate will change between two LSP results."
         ;; Build candidate line.
         (setq candidate-line
               (concat
+               ;; Icon text.
                icon-text
                (when acm-enable-quick-access
                  (if quick-access-key (concat quick-access-key ". ") "   "))
+               ;; Candidate.
                candidate
                ;; Fill in the blank according to the maximum width, make sure marks align right of menu.
                (unless annotation-not-exits
@@ -796,10 +799,9 @@ The key of candidate will change between two LSP results."
                                   (- (+ acm-menu-max-length-cache (* 20 (string-pixel-width " "))) item-length)
                                 (ceiling (* (window-font-width) (- (+ acm-menu-max-length-cache 20) item-length)))))))
                ;; Render annotation color.
-               (propertize (format "%s \n" (capitalize annotation-text))
-                           'face
-                           (if (equal item-index menu-index) 'acm-frame-select-face 'font-lock-doc-face))
-               ))
+               (propertize annotation-text 'face annotation-face)
+               ;; Return char.
+               "\n"))
 
         ;; Render current candidate.
         (when (equal item-index menu-index)
