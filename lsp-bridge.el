@@ -2449,6 +2449,8 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
     (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)
     (setq lsp-bridge-tramp-sync-var t)))
 
+(defvar lsp-bridge-tramp-blacklist nil)
+
 (defun lsp-bridge-sync-tramp-remote ()
   (interactive)
   (let* ((file-name (buffer-file-name))
@@ -2459,10 +2461,11 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
          (host (tramp-file-name-host tramp-file-name))
          (path (tramp-file-name-localname tramp-file-name)))
 
-    (lsp-bridge-call-async "sync_tramp_remote" username host port file-name))
-
-  (while (not lsp-bridge-tramp-sync-var)
-    (accept-process-output nil 0.001)))
+    (when (not (member host lsp-bridge-tramp-blacklist))
+      (lsp-bridge-call-async "sync_tramp_remote" username host port file-name)
+      (while (not lsp-bridge-tramp-sync-var)
+        (accept-process-output nil 0.001))
+      )))
 
 (defun lsp-bridge-open-remote-file--response(server path content position)
   (let ((buf-name (format "[LBR] %s" (file-name-nondirectory path))))
