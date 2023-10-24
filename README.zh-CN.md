@@ -64,21 +64,22 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 
 ## 远程使用
 
-lsp-bridge 也可以对远程服务器的文件进行代码语法补全， 效果与 VSCode 类似。 以下是配置远程代码补全的步骤：
+`lsp-bridge`能像 VSCode 一样在远程服务器文件上进行代码语法补全。 配置步骤如下：
 
-1. 在远程服务器上安装 lsp-bridge 和对应的 LSP Server
-2. 启动 lsp-bridge 服务： `python3 lsp-bridge/lsp_bridge.py`
-3. 使用命令`lsp-bridge-open-remote-file`打开远程文件， 输入用户名、 服务器 IP、 SSH 端口(默认为: 22) 和文件路径， 比如`user@ip:[ssh_port]:/path/file`, 如果希望通过 tramp 打开文件， 需要先开启选项 `lsp-bridge-enable-with-tramp`, lsp-bridge 会用内置的高效补全算法替代 tramp 的文件同步算法， 以实现完全不卡顿的补全体验
+1. 在远程服务器安装 lsp-bridge 和相应的 LSP Server。
+2. 启动 lsp-bridge： `python3 lsp-bridge/lsp_bridge.py`。
+3. 用`lsp-bridge-open-remote-file`命令打开文件， 输入用户名、 IP、 SSH 端口(默认 22) 和路径， 例如`user@ip:[ssh_port]:/path/file`。 启用`lsp-bridge-enable-with-tramp`选项可以直接打开 tramp 文件， 并用 lsp-bridge 的高效算法代替 tramp， 实现流畅补全。
 
-`lsp-bridge` 远程补全的原理如下：
+远程补全原理：
 
-1. 以 SSH 认证方式登录远程服务器， 并访问和编辑远程文件
-2. 当本地编辑远程文件副本时， 会实时发送增量 diff 序列给 lsp-bridge 服务端。 服务端将根据增量 diff 序列重建文件的最新内容， 并调用部署在服务端的 LSP Server 进行语法补全计算
-3. 服务端完成 LSP 补全菜单项计算后， `lsp-bridge`将补全菜单项数据回传到本地， 再由本地 Emacs 绘制补全菜单
+1. 通过 SSH 认证登录服务器， 访问和编辑文件
+2. 编辑远程文件副本时， 会实时发送 diff 序列到 lsp-bridge， 服务端用这些序列重建文件， 并由远端的 LSP Server 计算补全数据
+3. 远端 LSP Server 将补全数据回传本地由 Emacs 显示补全菜单
 
-请注意：
-1.  如果补全菜单没有弹出， 请登录远程服务器， 查看`lsp_bridge.py`的终端输出。 一般来说， 是因为服务端的 LSP Server 安装不完整导致的。
-2. lsp-bridge 优先从`~/.ssh`目录下找第一个 *.pub 文件的内容作为远程服务器登录的公钥凭证， 如果公钥登录失败会提示用户输入登录密码， lsp-bridge 不存储服务器登录密码到文件中， 为了避免反复输入密码， 建议你用公钥的方式登录远程服务器。
+注意：
+
+1. 若补全菜单未显示， 检查远程服务器的`lsp_bridge.py`输出， 可能是 LSP Server 未完全安装
+2. lsp-bridge 会用`~/.ssh`的第一个 *.pub 文件作为登录凭证。 如果公钥登录失败， 会要求输入密码。 lsp-bridge 不会存储密码， 建议用公钥登录以避免重复输入密码
 
 ## 按键
 
