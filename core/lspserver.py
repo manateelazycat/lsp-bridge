@@ -28,11 +28,11 @@ import threading
 import traceback
 from subprocess import PIPE
 from sys import stderr
+from typing import TYPE_CHECKING, Dict
 from urllib.parse import urlparse
-from typing import Dict, TYPE_CHECKING
-from core.mergedeep import merge
 
 from core.handler import Handler
+from core.mergedeep import merge
 
 if TYPE_CHECKING:
     from core.fileaction import FileAction
@@ -213,7 +213,7 @@ class LspServer:
 
         # LSP server information.
         self.completion_trigger_characters = list()
-        
+
         self.completion_resolve_provider = False
         self.rename_prepare_provider = False
         self.code_action_provider = False
@@ -221,7 +221,7 @@ class LspServer:
         self.signature_help_provider = False
         self.workspace_symbol_provider = False
         self.inlay_hint_provider = False
-        
+
         self.code_action_kinds = [
             "quickfix",
             "refactor",
@@ -346,7 +346,7 @@ class LspServer:
             }
         })
 
-        if type(self.worksplace_folder) == str:
+        if isinstance(self.worksplace_folder, str):
             merge_capabilites = merge(merge_capabilites, {
                 "workspace": {
                      "workspaceFolders": True
@@ -365,7 +365,7 @@ class LspServer:
     def get_initialization_options(self):
         initialization_options = self.server_info.get("initializationOptions", {})
 
-        if type(self.worksplace_folder) == str:
+        if isinstance(self.worksplace_folder, str):
             initialization_options = merge(initialization_options, {
                 "workspaceFolders": [
                     self.worksplace_folder
@@ -421,7 +421,7 @@ class LspServer:
                 "uri": path_to_uri(filepath)
             }
         }
-        
+
         # Fetch buffer whole content to LSP server if server capability 'includeText' is True.
         if self.save_include_text:
             args = merge(args, {
@@ -429,7 +429,7 @@ class LspServer:
                     "text": get_buffer_content(filepath, buffer_name)
                 }
             })
-        
+
         self.sender.send_notification("textDocument/didSave", args)
 
     def send_did_change_notification(self, filepath, version, start, end, range_length, text):
