@@ -881,11 +881,14 @@ So we build this macro to restore postion after code format."
 
 (defvar-local lsp-bridge-buffer-file-deleted nil)
 
+(defun lsp-bridge-process-live-p ()
+  (lsp-bridge-epc-live-p lsp-bridge-epc-process))
+
 (defun lsp-bridge-call-file-api-p ()
   (and lsp-bridge-mode
        (lsp-bridge-has-lsp-server-p)
        acm-backend-lsp-server-command-exist
-       (lsp-bridge-epc-live-p lsp-bridge-epc-process)))
+       (lsp-bridge-process-live-p)))
 
 (defun lsp-bridge-call-file-api (method &rest args)
   (if (lsp-bridge-is-remote-file)
@@ -928,7 +931,7 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-start-process ()
   "Start LSP-Bridge process if it isn't started."
-  (if (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+  (if (lsp-bridge-process-live-p)
       (remove-hook 'post-command-hook #'lsp-bridge-start-process)
     ;; start epc server and set `lsp-bridge-server-port'
     (lsp-bridge--start-epc-server)
@@ -976,7 +979,7 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge--kill-python-process ()
   "Kill LSP-Bridge background python process."
-  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+  (when (lsp-bridge-process-live-p)
     ;; Cleanup before exit LSP-Bridge server process.
     (lsp-bridge-call-async "cleanup")
     ;; Delete LSP-Bridge server process.
@@ -1088,7 +1091,7 @@ So we build this macro to restore postion after code format."
         (lsp-bridge-remote-send-func-request "close_file" (list lsp-bridge-remote-file-path))
         (lsp-bridge-remote-send-func-request "search_file_words_close_file" (list lsp-bridge-remote-file-path)))
 
-    (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+    (when (lsp-bridge-process-live-p)
       (when (and (lsp-bridge-has-lsp-server-p)
                  (boundp 'acm-backend-lsp-filepath))
         (lsp-bridge-call-async "close_file" acm-backend-lsp-filepath))
@@ -1415,12 +1418,12 @@ So we build this macro to restore postion after code format."
          (current-symbol (thing-at-point 'symbol t)))
     ;; TabNine search.
     (when (and acm-enable-tabnine
-               (lsp-bridge-epc-live-p lsp-bridge-epc-process))
+               (lsp-bridge-process-live-p))
       (lsp-bridge-tabnine-complete))
 
     ;; Copilot search.
     (when (and acm-enable-copilot
-               (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+               (lsp-bridge-process-live-p)
                ;; Copilot backend not support remote file now, disable it temporary.
                (not (lsp-bridge-is-remote-file))
                ;; Don't enable copilot on Markdown mode, Org mode, ielm and minibuffer, very disruptive to writing.
@@ -1432,7 +1435,7 @@ So we build this macro to restore postion after code format."
 
     ;; Codeium search.
     (when (and acm-enable-codeium
-               (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+               (lsp-bridge-process-live-p)
                ;; Codeium backend not support remote file now, disable it temporary.
                (or (not (lsp-bridge-is-remote-file)) lsp-bridge-use-local-codeium)
                ;; Don't enable codeium on Markdown mode, Org mode, ielm and minibuffer, very disruptive to writing.
@@ -1493,7 +1496,7 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-elisp-symbols-update ()
   "We need synchronize elisp symbols to Python side when idle."
-  (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+  (when (lsp-bridge-process-live-p)
     (let* ((symbols (acm-backend-elisp-get-symbols))
            (symbols-size (length symbols)))
       ;; Only synchronize when new symbol created.
@@ -1536,7 +1539,7 @@ So we build this macro to restore postion after code format."
   (if (lsp-bridge-is-remote-file)
       (progn
         (lsp-bridge-remote-send-func-request "search_file_words_load_file" (list lsp-bridge-remote-file-path t)))
-    (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+    (when (lsp-bridge-process-live-p)
       (lsp-bridge-call-async "search_file_words_change_buffer"
                              (buffer-name)
                              begin-pos
@@ -2391,7 +2394,7 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 (defun lsp-bridge--mode-line-format ()
   "Compose the LSP-bridge's mode-line."
   (setq-local mode-face
-              (if (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+              (if (lsp-bridge-process-live-p)
                   'lsp-bridge-alive-mode-line
                 'lsp-bridge-kill-mode-line))
 
