@@ -767,7 +767,7 @@ The key of candidate will change between two LSP results."
     (dolist (v items)
       (let* ((icon (cdr (assoc (downcase (plist-get v :icon)) acm-icon-alist)))
              (icon-default (cdr (assoc t acm-icon-alist)))
-             (display-icon (if icon icon icon-default))
+             (display-icon (or icon icon-default))
              (candidate (plist-get v :display-label))
              (annotation (plist-get v :annotation))
              (annotation-text (format "%s " (capitalize (if annotation annotation ""))))

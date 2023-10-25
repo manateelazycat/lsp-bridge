@@ -197,7 +197,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
         (apply #'color-rgb-to-hex (append rgb-color '(2)))
       color-name)))
 
-(defun acm-icon (collection name &optional fg-color bg-color zoom)
+(defun acm-icon (collection name &optional fg-color bg-color)
   (let* ((root (acm-icon-parse collection name))
 
          ;; Read original viewbox
@@ -211,11 +211,6 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          ;; Set icon size (in pixels) to 4x1 characters
          (svg-width  (* (window-font-width)  acm-icon-width))
          (svg-height (* (window-font-height) 1))
-
-         ;; Zoom the icon by using integer factor only
-         (zoom (max 1 (truncate (or zoom 1))))
-         (svg-width  (* svg-width zoom))
-         (svg-height (* svg-height zoom))
 
          (svg-viewbox (format "%f %f %f %f" view-x view-y view-width view-height))
          (fg-color (acm-icon-convert-to-svg-color
