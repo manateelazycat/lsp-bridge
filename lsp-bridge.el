@@ -1414,11 +1414,13 @@ So we build this macro to restore postion after code format."
          (current-word (thing-at-point 'word t))
          (current-symbol (thing-at-point 'symbol t)))
     ;; TabNine search.
-    (when acm-enable-tabnine
+    (when (and acm-enable-tabnine
+               (lsp-bridge-epc-live-p lsp-bridge-epc-process))
       (lsp-bridge-tabnine-complete))
 
     ;; Copilot search.
     (when (and acm-enable-copilot
+               (lsp-bridge-epc-live-p lsp-bridge-epc-process)
                ;; Copilot backend not support remote file now, disable it temporary.
                (not (lsp-bridge-is-remote-file))
                ;; Don't enable copilot on Markdown mode, Org mode, ielm and minibuffer, very disruptive to writing.
@@ -1430,6 +1432,7 @@ So we build this macro to restore postion after code format."
 
     ;; Codeium search.
     (when (and acm-enable-codeium
+               (lsp-bridge-epc-live-p lsp-bridge-epc-process)
                ;; Codeium backend not support remote file now, disable it temporary.
                (or (not (lsp-bridge-is-remote-file)) lsp-bridge-use-local-codeium)
                ;; Don't enable codeium on Markdown mode, Org mode, ielm and minibuffer, very disruptive to writing.
