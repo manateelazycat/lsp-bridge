@@ -2462,10 +2462,7 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
          (path (tramp-file-name-localname tramp-file-name)))
 
     (when (not (member host lsp-bridge-tramp-blacklist))
-      (lsp-bridge-call-async "sync_tramp_remote" username host port file-name)
-      (while (not lsp-bridge-tramp-sync-var)
-        (accept-process-output nil 0.001))
-      )))
+      (lsp-bridge-call-async "sync_tramp_remote" username host port file-name))))
 
 (defun lsp-bridge-open-remote-file--response(server path content position)
   (let ((buf-name (format "[LBR] %s" (file-name-nondirectory path))))
