@@ -2449,7 +2449,7 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
     (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)
     (setq lsp-bridge-tramp-sync-var t)))
 
-(defvar lsp-bridge-tramp-blacklist nil)
+(defcustom lsp-bridge-tramp-blacklist nil "tramp-hosts that disable lsp-bridge")
 
 (defun lsp-bridge-sync-tramp-remote ()
   (interactive)
