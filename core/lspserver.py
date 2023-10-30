@@ -26,6 +26,7 @@ import re
 import subprocess
 import threading
 import traceback
+import copy
 from subprocess import PIPE
 from sys import stderr
 from typing import TYPE_CHECKING, Dict
@@ -510,6 +511,7 @@ class LspServer:
             sessionSettings = settings.get(section, {})
 
             if self.server_info["name"] == "vscode-eslint-language-server":
+                sessionSettings = copy.copy(settings)
                 sessionSettings["workspaceFolder"] = {
                     "name": self.project_name,
                     "uri": path_to_uri(self.project_path),
