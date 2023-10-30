@@ -26,8 +26,9 @@ class Hover(Handler):
                 if contents["kind"] == "markdown" or contents["kind"] == "plaintext":
                     render_strings.append(contents["value"])
                 else:
+                    lsp_server = self.file_action.get_match_lsp_servers("hover")[0]
                     render_strings.append(make_code_block(
-                        self.file_action.get_match_lsp_servers("hover")[0].server_info["languageId"],
+                        lsp_server.get_language_id(self.file_action),
                         contents["value"]
                     ))
             elif "language" in contents:

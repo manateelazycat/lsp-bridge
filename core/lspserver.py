@@ -390,11 +390,20 @@ class LspServer:
 
         return uri
 
+    def get_language_id(self, fa):
+        if "languageIds" in self.server_info:
+            _, extension = os.path.splitext(fa.filepath)
+            extension_name = extension.split(os.path.extsep)[-1]
+            if extension_name in self.server_info["languageIds"]:
+                return self.server_info["languageIds"][extension_name]
+
+        return self.server_info["languageId"]
+
     def send_did_open_notification(self, fa: "FileAction"):
         self.sender.send_notification("textDocument/didOpen", {
             "textDocument": {
                 "uri": self.parse_document_uri(fa.filepath, fa.external_file_link),
-                "languageId": self.server_info["languageId"],
+                "languageId": self.get_language_id(fa),
                 "version": 0,
                 "text": fa.read_file()
             }
