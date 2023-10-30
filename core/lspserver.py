@@ -509,6 +509,7 @@ class LspServer:
             sessionSettings = settings.get(section, {})
 
             if self.server_info["name"] == "vscode-eslint-language-server":
+                sessionSettings = settings
                 sessionSettings["workspaceFolder"] = {
                     "name": self.project_name,
                     "uri": path_to_uri(self.project_path),
