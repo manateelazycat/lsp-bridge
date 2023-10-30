@@ -190,7 +190,7 @@ lsp-bridge provides support for more than two language servers for many language
 - `lsp-bridge-user-langserver-dir`: the dir where user place langserver configuration file, if the configuration file name in the dir is the same as that in [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) , lsp-bridge will use the configuration file in this dir
 - `lsp-bridge-user-multiserver-dir`: the dir where user place multiserver configuration file, if the configuration file name in the dir is the same as that in [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) , lsp-bridge will use the configuration file in this dir
 - `lsp-bridge-symbols-enable-which-func`: Using lsp backend for `which-func`, disable by default
-- `lsp-bridge-enable-org-babel`: Use lsp completion in org babel, disable by default, if unable to complete, please make sure the string after begin_src exists in the `org-src-lang-modes` variable
+- `lsp-bridge-enable-org-babel`: Use lsp completion in org babel, disable by default
 - `lsp-bridge-peek-file-content-height`: Display how many lines of file content in peek windows
 - `lsp-bridge-peek-file-content-scroll-margin`: Set how many lines of file content should be scroll up and down.
 - `lsp-bridge-peek-list-height`: Select the next option for definition and reference

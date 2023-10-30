@@ -66,8 +66,11 @@
 
 (defun lsp-bridge-org-babel-get-single-lang-server ()
   "Get single lang server for org block."
-  (let* ((lang (org-element-property :language lsp-bridge-org-babel--info-cache))
-         (lang-name (symbol-name (cdr (assoc lang org-src-lang-modes))))
+  (let* ((lang (org-element-property :language lsp-bridge-org-babel--info-cache)) ;get language name in src block
+         (org-src-lang (cdr (assoc lang org-src-lang-modes))) ;find match language name from `org-src-lang-modes'
+         (lang-name (if org-src-lang
+                        (symbol-name org-src-lang) ;convert to symbol name if found in `org-src-lang-modes'
+                      (format "%s" lang)))         ;otherwise use src block name
          (mode-name (concat lang-name "-mode"))
          (major-mode (intern mode-name))
          (langserver-info
