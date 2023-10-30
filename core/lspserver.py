@@ -391,6 +391,16 @@ class LspServer:
         return uri
 
     def send_did_open_notification(self, fa: "FileAction"):
+        # vscode-css-language-server uses languageId to initialize from different entry points
+        if self.server_info["name"] == "vscode-css-language-server":
+            _, extension = os.path.splitext(fa.filepath)
+            if extension == ".less":
+                self.server_info["languageId"] = "less"
+            elif extension == ".scss" or extension == ".sass":
+                self.server_info["languageId"] = "scss"
+            else:
+                self.server_info["languageId"] = "css"
+
         self.sender.send_notification("textDocument/didOpen", {
             "textDocument": {
                 "uri": self.parse_document_uri(fa.filepath, fa.external_file_link),
