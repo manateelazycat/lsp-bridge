@@ -331,13 +331,15 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
                (message (plist-get diagnostic :message))
                (start (plist-get range :start))
                (end (plist-get range :end))
-               (line (1+ (plist-get start :line)))
+               (start-line (1+ (plist-get start :line)))
                (start-column (plist-get start :character))
+               (end-line (1+ (plist-get end :line)))
                (end-column (plist-get end :character))
                (line-content (with-current-buffer current-buffer
                                (save-excursion
-                                 (goto-line line)
-                                 (buffer-substring-no-properties (line-beginning-position) (line-end-position))))))
+                                 (goto-line start-line)
+                                 (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))
+               (content-end-column (if (eq start-line end-line) end-column (string-width line-content))))
           (insert (concat "\033[93m" (format "%s %s" (1+ diagnostic-counter) message) "\033[0m" "\n"))
 
           ;; `start' point and `end' point will same if the diagnostic message is for a location rather than region.
@@ -346,13 +348,16 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
             (setq end-column (1+ end-column)))
 
           (insert (format "%s:%s:%s\n\n"
-                          line
+                          start-line
                           start-column
                           (concat (substring line-content 0 start-column)
                                   "\033[94m"
-                                  (substring line-content start-column end-column)
+                                  (substring line-content start-column content-end-column)
+                                  (let ((line-difference (- end-line start-line)))
+                                    (unless (eq line-difference 0)
+                                      (format "... (+%d line%s)" line-difference (when (> line-difference 1) "s"))))
                                   "\033[0m"
-                                  (substring line-content end-column))))
+                                  (substring line-content content-end-column))))
 
           (setq diagnostic-counter (1+ diagnostic-counter))))
       (lsp-bridge-ref-popup (buffer-string) diagnostic-counter))))
