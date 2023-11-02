@@ -166,12 +166,16 @@ Setting this to nil or 0 will turn off the indicator."
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-completion-hide-characters '(":" ";" "(" ")" "[" "]" "{" "}" "," "\"")
-  "If character before match this option, stop popup completion ui."
+  "If character before match this option, stop popup completion ui.
+
+To make this option works, you need set option `lsp-bridge-completion-obey-trigger-characters-p' with nil first.
+
+After set `lsp-bridge-completion-obey-trigger-characters-p' to nil, you need use `setq' set this value, don't use `custom-set-variables'."
   :type '(repeat string)
   :safe #'listp
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-completion-obey-trigger-characters-p nil
+(defcustom lsp-bridge-completion-obey-trigger-characters-p t
   "If non-nil makes trigger characters a higher priority than `lsp-bridge-completion-hide-characters'."
   :type 'boolean
   :safe #'booleanp
@@ -1143,6 +1147,7 @@ So we build this macro to restore postion after code format."
            (if (cl-every (lambda (pred)
                            (if (functionp pred)
                                (let ((result (funcall pred)))
+                                 ;; DEBUG:
                                  ;; Uncomment below code when you want to know why `lsp-bridge-try-completion' failed.
                                  ;; (message "*** %s %s" pred result)
                                  result)
