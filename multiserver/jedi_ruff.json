@@ -10,7 +10,7 @@
   "find_references": "jedi",
   "peek_find_definition": "jedi",
   "peek_find_references": "jedi",
-  "formatting": "jedi",
+  "formatting": "ruff",
   "hover": "jedi",
   "signature_help": "jedi",
   "prepare_rename": "jedi",

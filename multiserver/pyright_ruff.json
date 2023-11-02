@@ -10,7 +10,7 @@
   "find_references": "pyright",
   "peek_find_definition": "pyright",
   "peek_find_references": "pyright",
-  "formatting": "pyright",
+  "formatting": "ruff",
   "hover": "pyright",
   "signature_help": "pyright",
   "prepare_rename": "pyright",

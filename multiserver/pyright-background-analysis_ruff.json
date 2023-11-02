@@ -10,7 +10,7 @@
   "find_references": "pyright-background-analysis",
   "peek_find_definition": "pyright-background-analysis",
   "peek_find_references": "pyright-background-analysis",
-  "formatting": "pyright-background-analysis",
+  "formatting": "ruff",
   "hover": "pyright-background-analysis",
   "signature_help": "pyright-background-analysis",
   "prepare_rename": "pyright-background-analysis",

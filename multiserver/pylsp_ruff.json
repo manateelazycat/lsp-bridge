@@ -10,7 +10,7 @@
   "find_references": "pylsp",
   "peek_find_definition": "pylsp",
   "peek_find_references": "pylsp",
-  "formatting": "pylsp",
+  "formatting": "ruff",
   "hover": "pylsp",
   "signature_help": "pylsp",
   "prepare_rename": "pylsp",
