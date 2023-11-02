@@ -209,8 +209,8 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
          (view-height (nth 3 viewbox))
 
          ;; Set icon size (in pixels) to 4x1 characters
-         (svg-width  (* (window-font-width)  acm-icon-width))
-         (svg-height (* (window-font-height) 1))
+         (svg-width  (* (frame-char-width)  acm-icon-width))
+         (svg-height (* (frame-char-height) 1))
 
          (svg-viewbox (format "%f %f %f %f" view-x view-y view-width view-height))
          (fg-color (acm-icon-convert-to-svg-color
@@ -221,6 +221,7 @@ If COLOR-NAME is unknown to Emacs, then return COLOR-NAME as-is."
                           :viewBox svg-viewbox
                           :stroke-width 0
                           :fill fg-color)))
+
     (dolist (item (xml-get-children (car root) 'path))
       (let* ((attrs (xml-node-attributes item))
              (path (cdr (assoc 'd attrs)))

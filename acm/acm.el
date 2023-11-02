@@ -818,7 +818,7 @@ The key of candidate will change between two LSP results."
                              (acm-indent-pixel
                               (if (equal acm-string-width-function 'string-pixel-width)
                                   (- (+ acm-menu-max-length-cache (* 20 (string-pixel-width " "))) item-length)
-                                (ceiling (* (window-font-width) (- (+ acm-menu-max-length-cache 20) item-length)))))))
+                                (ceiling (* (frame-char-width) (- (+ acm-menu-max-length-cache 20) item-length)))))))
                ;; Render annotation color.
                (propertize annotation-text 'face annotation-face)
                ;; Return char.
@@ -852,7 +852,7 @@ The key of candidate will change between two LSP results."
          (acm-frame-height (frame-pixel-height acm-menu-frame))
          (cursor-x (car acm-menu-frame-popup-position))
          (cursor-y (cdr acm-menu-frame-popup-position))
-         (offset-x (* (window-font-width) acm-icon-width))
+         (offset-x (* (frame-char-width) acm-icon-width))
          (offset-y (line-pixel-height))
          (acm-frame-x (if (> (+ cursor-x acm-frame-width) emacs-width)
                           (max (- cursor-x acm-frame-width) offset-x)
