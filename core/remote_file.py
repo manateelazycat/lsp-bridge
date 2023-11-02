@@ -62,6 +62,8 @@ class RemoteFileClient(threading.Thread):
             pub_key = self.ssh_pub_key()
             ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, key_filename=pub_key)
         except:
+            print(traceback.format_exc())
+
             # Try login server with password if public key is not available.
             password = RemoteFileClient.remote_password_dict[self.ssh_host] if self.ssh_host in RemoteFileClient.remote_password_dict else get_ssh_password(self.ssh_host)
             try:
@@ -71,7 +73,7 @@ class RemoteFileClient(threading.Thread):
                 # Password only record in memory for session login, not save in file.
                 RemoteFileClient.remote_password_dict[self.ssh_host] = password
             except:
-                pass
+                print(traceback.format_exc())
 
         return ssh
 
