@@ -136,15 +136,12 @@ class Completion(Handler):
                 # to handle different libraries provide the same function.
                 key = f"{label}_{detail}"
 
-                # Get display label.
-                display_label = self.get_display_label(item, display_new_text)
-
                 # Build candidate.
                 candidate = {
                     "key": key,
                     "icon": annotation,
                     "label": label,
-                    "display-label": display_label,
+                    "display-label": self.get_display_label(item, display_new_text),
                     "deprecated": 1 in item.get("tags", []),
                     "insertText": item.get('insertText', None),
                     "insertTextFormat": item.get("insertTextFormat", ''),
