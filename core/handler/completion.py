@@ -113,8 +113,6 @@ class Completion(Handler):
         items = {}
 
         if response is not None:
-            item_index = 0
-
             # Get value of 'incomplete-fuzzy-match' from lsp server config file.
             fuzzy = self.get_fuzzy_option()
 
@@ -163,8 +161,6 @@ class Completion(Handler):
                 completion_candidates.append(candidate)
 
                 items[key] = item
-
-                item_index += 1
 
             self.file_action.completion_items[self.method_server_name] = items
 
