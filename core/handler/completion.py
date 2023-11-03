@@ -68,29 +68,66 @@ class Completion(Handler):
         # Sort by length.
         return -1 if len(x_label) < len(y_label) else (1 if len(x_label) > len(y_label) else 0)
 
+    def get_fuzzy_option(self):
+        for server in self.file_action.get_match_lsp_servers("completion"):
+            if server.server_name.endswith("#" + self.method_server_name):
+                return server.server_info.get("incomplete-fuzzy-match")
+
+        return False
+
+    def get_display_new_text(self):
+        for server in self.file_action.get_match_lsp_servers("completion"):
+            if server.server_info.get("displayNewText", False):
+                return True
+
+        return False
+
+    def get_display_label(self, item, display_new_text):
+        label = item["label"]
+        detail = item.get("detail", "")
+
+        # Get display label.
+        if detail.strip() != "":
+            detail_label = f"{label} => {detail}"
+        else:
+            detail_label = label
+
+        try:
+            if "\u2026" in label and "(" in label:
+                # Optimizing for Rust
+                # When finding an ellipsis in 'label'
+                # replace 'fn' with function name in 'label'
+                function_name = label.split('(')[0]
+                detail_label = re.sub(r'\bfn\b', function_name, detail)
+        except:
+            pass
+
+        if len(detail_label) > self.file_action.display_label_max_length:
+            display_label = detail_label[:self.file_action.display_label_max_length] + " ..."
+        else:
+            display_label = detail_label
+
+        if display_new_text:
+            text_edit = item.get("textEdit", None)
+            if text_edit is not None:
+                display_label = text_edit.get("newText", None)
+
+        return display_label
+
     def process_response(self, response: dict) -> None:
         # Get completion items.
         completion_candidates = []
-        self.sort_dict = {}
         items = {}
 
         if response is not None:
             item_index = 0
             
             # Get value of 'incomplete-fuzzy-match' from lsp server config file.
-            fuzzy = False
-            for server in self.file_action.get_match_lsp_servers("completion"):
-                if server.server_name.endswith("#" + self.method_server_name):
-                    fuzzy = server.server_info.get("incomplete-fuzzy-match")
-                    break
-                    
+            fuzzy = self.get_fuzzy_option()
+
             # Some LSP server, such as Wen, need assign textEdit/newText to display-label.
-            display_new_text = False
-            for server in self.file_action.get_match_lsp_servers("completion"):
-                if server.server_info.get("displayNewText", False):
-                    display_new_text = True
-                    break
-            
+            display_new_text = self.get_display_new_text()
+
             for item in response["items"] if "items" in response else response:
                 kind = KIND_MAP[item.get("kind", 0)].lower()
                 label = item["label"]
@@ -109,31 +146,9 @@ class Completion(Handler):
                 key = f"{label}_{detail}"
 
                 # Get display label.
-                if detail.strip() != "":
-                    detail_label = f"{label} => {detail}"
-                else:
-                    detail_label = label
+                display_label = self.get_display_label(item, display_new_text)
 
-                try:
-                    if "\u2026" in label and "(" in label:
-                        # Optimizing for Rust
-                        # When finding an ellipsis in 'label'
-                        # replace 'fn' with function name in 'label'
-                        function_name = label.split('(')[0]
-                        detail_label = re.sub(r'\bfn\b', function_name, detail)
-                except:
-                    pass
-
-                if len(detail_label) > self.file_action.display_label_max_length:
-                    display_label = detail_label[:self.file_action.display_label_max_length] + " ..."
-                else:
-                    display_label = detail_label
-
-                if display_new_text:
-                    text_edit = item.get("textEdit", None)
-                    if text_edit is not None:
-                        display_label = text_edit.get("newText", None)
-
+                # Build candidate.
                 candidate = {
                     "key": key,
                     "icon": annotation,
@@ -148,8 +163,6 @@ class Completion(Handler):
                     "server": self.method_server_name,
                     "backend": "lsp"
                 }
-
-                self.sort_dict[key] = item.get("sortText", "")
 
                 if self.file_action.enable_auto_import:
                     candidate["additionalTextEdits"] = item.get("additionalTextEdits", [])
