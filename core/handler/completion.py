@@ -5,6 +5,7 @@ from functools import cmp_to_key
 from core.handler import Handler
 from core.utils import *
 
+
 class CompletionTriggerKind(Enum):
     Invoked = 1
     TriggerCharacter = 2
@@ -19,7 +20,7 @@ class Completion(Handler):
     def process_request(self, lsp_server, position, char, prefix, version) -> dict:
         self.method_server = lsp_server
         self.method_server_name = self.method_server.server_info["name"]
-        
+
         if char in self.method_server.completion_trigger_characters:
             context = dict(triggerCharacter=char,
                            triggerKind=CompletionTriggerKind.TriggerCharacter.value)
@@ -31,16 +32,8 @@ class Completion(Handler):
         return dict(position=position, context=context)
 
     def parse_sort_value(self, sort_text):
-        if sort_text == "":
-            return sort_text
-        else:
-            sort_text = ''.join(c for c in sort_text if c.isdigit() or c == '.')
+        return ''.join(c for c in sort_text if c.isdigit() or c == '.').rstrip('.')
 
-            if sort_text.endswith("."):
-                sort_text = sort_text[:-1]
-
-            return sort_text
-    
     def compare_candidates(self, x, y):
         prefix = self.prefix.lower()
         x_label, y_label = x["label"].lower(), y["label"].lower()
@@ -121,7 +114,7 @@ class Completion(Handler):
 
         if response is not None:
             item_index = 0
-            
+
             # Get value of 'incomplete-fuzzy-match' from lsp server config file.
             fuzzy = self.get_fuzzy_option()
 
@@ -132,7 +125,7 @@ class Completion(Handler):
                 kind = KIND_MAP[item.get("kind", 0)].lower()
                 label = item["label"]
                 detail = item.get("detail", "")
-                
+
                 # NOTE:
                 # If lsp server contain 'incomplete-fuzzy-match' option and it's True, we filter 'label' with fuzzy algorithm.
                 # Otherwise, don't filter 'label' with 'prefix', such as we input "std::" in c++, all candidate's prefix is not "::"
