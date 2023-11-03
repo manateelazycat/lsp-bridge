@@ -619,10 +619,10 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (perl-mode                  . perl-indent-level)  ; Perl
     (cperl-mode                 . cperl-indent-level) ; Perl
     (raku-mode                  . raku-indent-offset) ; Perl6/Raku
-    (erlang-mode                . erlang-indent-level)     ; Erlang
-    (ada-mode                   . ada-indent)              ; Ada
-    (sgml-mode                  . sgml-basic-offset)       ; SGML
-    (nxml-mode                  . nxml-child-indent)       ; XML
+    (erlang-mode                . erlang-indent-level) ; Erlang
+    (ada-mode                   . ada-indent)          ; Ada
+    (sgml-mode                  . sgml-basic-offset)   ; SGML
+    (nxml-mode                  . nxml-child-indent)   ; XML
     (nickel-mode                . c-basic-offset)
     (pascal-mode                . pascal-indent-level)     ; Pascal
     (typescript-mode            . typescript-indent-level) ; Typescript
@@ -2536,6 +2536,16 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
   (if lsp-bridge-remote-file-flag
       (lsp-bridge-call-async "save_remote_file" lsp-bridge-remote-file-host lsp-bridge-remote-file-path)
     (message "lsp-bridge-remote-save-buffer only for lsp-bridge-remote file.")))
+
+(defun lsp-bridge-indent-left (start end)
+  (interactive "r")
+  (let ((indent (symbol-value (lsp-bridge--get-indent-width major-mode))))
+    (indent-rigidly start end (- indent))))
+
+(defun lsp-bridge-indent-right (start end)
+  (interactive "r")
+  (let ((indent (symbol-value (lsp-bridge--get-indent-width major-mode))))
+    (indent-rigidly start end indent)))
 
 (provide 'lsp-bridge)
 
