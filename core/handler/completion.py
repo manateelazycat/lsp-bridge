@@ -43,50 +43,31 @@ class Completion(Handler):
     
     def compare_candidates(self, x, y):
         prefix = self.prefix.lower()
-        x_label : str = x["label"].lower()
-        y_label : str = y["label"].lower()
-        x_icon : str = x["icon"]
-        y_icon : str = y["icon"]
-        x_score : float = x["score"]
-        y_score : float = y["score"]
-        x_sort_text : str = self.parse_sort_value(x["sortText"])
-        y_sort_text : str = self.parse_sort_value(y["sortText"])
-        x_include_prefix = x_label.startswith(prefix)
-        y_include_prefix = y_label.startswith(prefix)
-        x_method_name = x_label.split('(')[0]
-        y_method_name = y_label.split('(')[0]
+        x_label, y_label = x["label"].lower(), y["label"].lower()
+        x_icon, y_icon = x["icon"], y["icon"]
+        x_sort_text, y_sort_text = map(self.parse_sort_value, (x["sortText"], y["sortText"]))
+        x_include_prefix, y_include_prefix = x_label.startswith(prefix), y_label.startswith(prefix)
+        x_method_name, y_method_name = x_label.split('(')[0], y_label.split('(')[0]
 
         # Sort file by score, score is provided by LSP server.
-        if x_score != y_score:
-            if x_score < y_score:
-                return 1
-            elif x_score > y_score:
-                return -1
+        if (x_score := x["score"]) != (y_score := y["score"]):
+            return 1 if x_score < y_score else -1
+
         # Sort file by sortText, sortText is provided by LSP server.
-        elif x_sort_text != "" and y_sort_text != "" and x_sort_text != y_sort_text:
-            if x_sort_text < y_sort_text:
-                return -1
-            elif x_sort_text > y_sort_text:
-                return 1
+        if x_sort_text and y_sort_text and x_sort_text != y_sort_text:
+            return -1 if x_sort_text < y_sort_text else 1
+
         # Sort by prefix.
-        elif x_include_prefix and not y_include_prefix:
-            return -1
-        elif y_include_prefix and not x_include_prefix:
-            return 1
+        if x_include_prefix != y_include_prefix:
+            return -1 if x_include_prefix else 1
+
         # Sort by method name if both candidates are method.
-        elif x_icon == "method" and y_icon == "method" and x_method_name != y_method_name:
-            if x_method_name < y_method_name:
-                return -1
-            elif x_method_name > y_method_name:
-                return 1
+        if x_icon == y_icon == "method" and x_method_name != y_method_name:
+            return -1 if x_method_name < y_method_name else 1
+
         # Sort by length.
-        elif len(x_label) < len(y_label):
-            return -1
-        elif len(x_label) > len(y_label):
-            return 1
-        else:
-            return 0
-    
+        return -1 if len(x_label) < len(y_label) else (1 if len(x_label) > len(y_label) else 0)
+
     def process_response(self, response: dict) -> None:
         # Get completion items.
         completion_candidates = []
