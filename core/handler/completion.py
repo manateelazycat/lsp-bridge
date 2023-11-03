@@ -102,7 +102,6 @@ class Completion(Handler):
                     display_new_text = True
                     break
             
-            print("!!!! ", response)
             for item in response["items"] if "items" in response else response:
                 kind = KIND_MAP[item.get("kind", 0)].lower()
                 label = item["label"]
@@ -121,7 +120,11 @@ class Completion(Handler):
                 key = f"{label}_{detail}"
 
                 # Get display label.
-                detail_label = f"{label} {detail}" # some language need show "detail" content, such as, rust
+                if detail.strip() != "":
+                    detail_label = f"{label} => {detail}"
+                else:
+                    detail_label = label
+
                 try:
                     if "\u2026" in label and "(" in label:
                         # Optimizing for Rust
