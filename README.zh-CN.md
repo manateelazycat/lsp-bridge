@@ -354,6 +354,7 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 | [typst-lsp](https://github.com/nvarner/typst-lsp)                                                  | Typst                                   |                                                                                                                                                                                                                          |
 | [verible](https://github.com/chipalliance/verible)                                                 | Verilog                                 |                                                                                                                                                                                                                          |
 | [move-analyzer](https://github.com/move-language/move)                                             | Move                                    | `move-analyzer` 包含在 move 语言仓库里                                                                                                                                                                                   |
+| [nls](https://crates.io/crates/nickel-lang-lsp/)                                             | Nickel                                    | cargo add nickel-lang-lsp                                                                                                                                               |
 
 ## 加入开发
 
