@@ -478,6 +478,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (d-mode .                                                                    "serve-d")
     ((fortran-mode f90-mode) .                                                   "fortls")
     (nix-mode .                                                                  lsp-bridge-nix-lsp-server)
+    (nickel-mode .                                                                  "nls")
     (ess-r-mode .                                                                "rlanguageserver")
     (graphql-mode .                                                              "graphql-lsp")
     (swift-mode .                                                                "swift-sourcekit")
@@ -550,6 +551,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     f90-mode-hook
     fortran-mode-hook
     nix-mode-hook
+    nickel-mode-hook
     ess-r-mode-hook
     verilog-mode-hook
     swift-mode-hook
@@ -621,6 +623,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (ada-mode                   . ada-indent)              ; Ada
     (sgml-mode                  . sgml-basic-offset)       ; SGML
     (nxml-mode                  . nxml-child-indent)       ; XML
+    (nickel-mode                . c-basic-offset)
     (pascal-mode                . pascal-indent-level)     ; Pascal
     (typescript-mode            . typescript-indent-level) ; Typescript
     (typescript-ts-mode         . typescript-ts-mode-indent-offset) ; Typescript
