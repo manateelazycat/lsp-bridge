@@ -88,6 +88,7 @@ class Completion(Handler):
         if response is not None:
             item_index = 0
             
+            # Get value of 'incomplete-fuzzy-match' from lsp server config file.
             fuzzy = False
             for server in self.file_action.get_match_lsp_servers("completion"):
                 if server.server_name.endswith("#" + self.method_server_name):
@@ -101,16 +102,18 @@ class Completion(Handler):
                     display_new_text = True
                     break
             
+            print("!!!! ", response)
             for item in response["items"] if "items" in response else response:
                 kind = KIND_MAP[item.get("kind", 0)].lower()
                 label = item["label"]
                 detail = item.get("detail", "")
                 
-                # We always need filter label with input prefix and don't care isIncomplete whether is True or False.
-                # If some LSP server's `incomplete-fuzzy-match` option is True, we filter label with fuzzy algorithm.
-                if not string_match(label.lower(), self.prefix.lower(), fuzzy=fuzzy):
+                # NOTE:
+                # If lsp server contain 'incomplete-fuzzy-match' option and it's True, we filter 'label' with fuzzy algorithm.
+                # Otherwise, don't filter 'label' with 'prefix', such as we input "std::" in c++, all candidate's prefix is not "::"
+                if fuzzy and not string_match(label.lower(), self.prefix.lower(), fuzzy=fuzzy):
                     continue
-                
+
                 annotation = kind if kind != "" else detail
 
                 # The key keyword combines the values ​​of 'label' and 'detail'
