@@ -119,6 +119,16 @@ class Completion(Handler):
 
                 # Get display label.
                 detail_label = f"{label} {detail}" # some language need show "detail" content, such as, rust
+                try:
+                    if "\u2026" in label and "(" in label:
+                        # Optimizing for Rust
+                        # When finding an ellipsis in 'label'
+                        # replace 'fn' with function name in 'label'
+                        function_name = label.split('(')[0]
+                        detail_label = re.sub(r'\bfn\b', function_name, detail)
+                except:
+                    pass
+
                 if len(detail_label) > self.file_action.display_label_max_length:
                     display_label = detail_label[:self.file_action.display_label_max_length] + " ..."
                 else:
