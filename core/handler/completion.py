@@ -38,12 +38,13 @@ class Completion(Handler):
         prefix = self.prefix.lower()
         x_label, y_label = x["label"].lower(), y["label"].lower()
         x_icon, y_icon = x["icon"], y["icon"]
+        x_score, y_score = x["score"], y["score"]
         x_sort_text, y_sort_text = map(self.parse_sort_value, (x["sortText"], y["sortText"]))
         x_include_prefix, y_include_prefix = x_label.startswith(prefix), y_label.startswith(prefix)
         x_method_name, y_method_name = x_label.split('(')[0], y_label.split('(')[0]
 
         # Sort file by score, score is provided by LSP server.
-        if (x_score := x["score"]) != (y_score := y["score"]):
+        if x_score != y_score:
             return 1 if x_score < y_score else -1
 
         # Sort file by sortText, sortText is provided by LSP server.
