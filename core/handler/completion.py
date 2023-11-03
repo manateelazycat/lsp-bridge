@@ -116,7 +116,13 @@ class Completion(Handler):
                 # The key keyword combines the values ​​of 'label' and 'detail'
                 # to handle different libraries provide the same function.
                 key = f"{label}_{detail}"
-                display_label = label[:self.file_action.display_label_max_length] + " ..." if len(label) > self.file_action.display_label_max_length else label
+
+                # Get display label.
+                detail_label = f"{label} {detail}" # some language need show "detail" content, such as, rust
+                if len(detail_label) > self.file_action.display_label_max_length:
+                    display_label = detail_label[:self.file_action.display_label_max_length] + " ..."
+                else:
+                    display_label = detail_label
 
                 if display_new_text:
                     text_edit = item.get("textEdit", None)
