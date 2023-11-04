@@ -518,29 +518,29 @@ class LspServer:
             items.append(sessionSettings)
         self.sender.send_response(request_id, items)
 
+    def handle_error_message(self, message):
+        logger.error("Recv message (error):")
+        logger.error(json.dumps(message, indent=3))
+
+        error_message = message["error"]["message"]
+        provider_attributes = {
+            "Unhandled method completionItem/resolve": "completion_resolve_provider",
+            "Unhandled method textDocument/prepareRename": "rename_prepare_provider",
+            "Unhandled method textDocument/codeAction": "code_action_provider",
+            "Unhandled method textDocument/formatting": "code_format_provider",
+            "Unhandled method textDocument/signatureHelp": "signature_help_provider",
+            "Unhandled method workspace/symbol": "workspace_symbol_provider",
+            "Unhandled method textDocument/inlayHint": "inlay_hint_provider",
+        }
+
+        if error_message in provider_attributes:
+            setattr(self, provider_attributes[error_message], False)
+        else:
+            message_emacs(error_message)
+
     def handle_recv_message(self, message: dict):
         if "error" in message:
-            logger.error("Recv message (error):")
-            logger.error(json.dumps(message, indent=3))
-
-            error_message = message["error"]["message"]
-            if error_message == "Unhandled method completionItem/resolve":
-                self.completion_resolve_provider = False
-            elif error_message == "Unhandled method textDocument/prepareRename":
-                self.rename_prepare_provider = False
-            elif error_message == "Unhandled method textDocument/codeAction":
-                self.code_action_provider = False
-            elif error_message == "Unhandled method textDocument/formatting":
-                self.code_format_provider = False
-            elif error_message == "Unhandled method textDocument/signatureHelp":
-                self.signature_help_provider = False
-            elif error_message == "Unhandled method workspace/symbol":
-                self.workspace_symbol_provider = False
-            elif error_message == "Unhandled method textDocument/inlayHint":
-                self.inlay_hint_provider = False
-            else:
-                message_emacs(error_message)
-
+            self.handle_error_message(message)
             return
 
         if "id" in message:
