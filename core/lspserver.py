@@ -538,6 +538,27 @@ class LspServer:
         else:
             message_emacs(error_message)
 
+    def handle_publish_diagnostics(self, message):
+        if "method" in message and message["method"] == "textDocument/publishDiagnostics":
+            filepath = uri_to_path(message["params"]["uri"])
+            if self.enable_diagnostics and is_in_path_dict(self.files, filepath):
+                get_from_path_dict(self.files, filepath).record_diagnostics(message["params"]["diagnostics"], self.server_info["name"])
+
+    def handle_dart_publish_closing_labels(self, message):
+        if "method" in message and message["method"] == "dart/textDocument/publishClosingLabels":
+            filepath = uri_to_path(message["params"]["uri"])
+            if is_in_path_dict(self.files, filepath):
+                get_from_path_dict(self.files, filepath).record_dart_closing_lables(message["params"]["labels"])
+
+    def handle_log_message(self, message):
+        # Notice user if got error message from lsp server.
+        if "method" in message and message["method"] == "window/logMessage":
+            try:
+                if "error" in message["params"]["message"].lower():
+                    message_emacs("{} ({}): {}".format(self.project_name, self.server_info["name"], message["params"]["message"]))
+            except:
+                pass
+
     def handle_recv_message(self, message: dict):
         if "error" in message:
             self.handle_error_message(message)
@@ -564,23 +585,11 @@ class LspServer:
                 # others
                 log_time("Recv message {} from '{}' for project {}".format(message, self.server_info["name"], self.project_name))
 
-        if "method" in message and message["method"] == "textDocument/publishDiagnostics":
-            filepath = uri_to_path(message["params"]["uri"])
-            if self.enable_diagnostics and is_in_path_dict(self.files, filepath):
-                get_from_path_dict(self.files, filepath).record_diagnostics(message["params"]["diagnostics"], self.server_info["name"])
+        self.handle_publish_diagnostics(message)
 
-        if "method" in message and message["method"] == "dart/textDocument/publishClosingLabels":
-            filepath = uri_to_path(message["params"]["uri"])
-            if is_in_path_dict(self.files, filepath):
-                get_from_path_dict(self.files, filepath).record_dart_closing_lables(message["params"]["labels"])
+        self.handle_dart_publish_closing_labels(message)
 
-        # Notice user if got error message from lsp server.
-        if "method" in message and message["method"] == "window/logMessage":
-            try:
-                if "error" in message["params"]["message"].lower():
-                    message_emacs("{} ({}): {}".format(self.project_name, self.server_info["name"], message["params"]["message"]))
-            except:
-                pass
+        self.handle_log_message(message)
 
         logger.debug(json.dumps(message, indent=3))
 
