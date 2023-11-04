@@ -538,6 +538,28 @@ class LspServer:
         else:
             message_emacs(error_message)
 
+    def record_message(self, message):
+        if "id" in message:
+            if "method" in message:
+                # server request
+                log_time("Recv {} request ({}) from '{}' for project {}".format(message["method"], message["id"], self.server_info["name"], self.project_name))
+            else:
+                # server response
+                if message["id"] in self.request_dict:
+                    method = self.request_dict[message["id"]].method
+                    if method != 'textDocument/documentSymbol':
+                        # not log for textDocument/documentSymbol
+                        log_time("Recv {} response ({}) from '{}' for project {}".format(method, message["id"], self.server_info["name"], self.project_name))
+                else:
+                    log_time("Recv response ({}) from '{}' for project {}".format(message["id"], self.server_info["name"], self.project_name))
+        else:
+            if "method" in message:
+                # server notification
+                log_time("Recv {} notification from '{}' for project {}".format(message["method"], self.server_info["name"], self.project_name))
+            else:
+                # others
+                log_time("Recv message {} from '{}' for project {}".format(message, self.server_info["name"], self.project_name))
+
     def handle_publish_diagnostics(self, message):
         if "method" in message and message["method"] == "textDocument/publishDiagnostics":
             filepath = uri_to_path(message["params"]["uri"])
@@ -564,26 +586,7 @@ class LspServer:
             self.handle_error_message(message)
             return
 
-        if "id" in message:
-            if "method" in message:
-                # server request
-                log_time("Recv {} request ({}) from '{}' for project {}".format(message["method"], message["id"], self.server_info["name"], self.project_name))
-            else:
-                # server response
-                if message["id"] in self.request_dict:
-                    method = self.request_dict[message["id"]].method
-                    if method != 'textDocument/documentSymbol':
-                        # not log for textDocument/documentSymbol
-                        log_time("Recv {} response ({}) from '{}' for project {}".format(method, message["id"], self.server_info["name"], self.project_name))
-                else:
-                    log_time("Recv response ({}) from '{}' for project {}".format(message["id"], self.server_info["name"], self.project_name))
-        else:
-            if "method" in message:
-                # server notification
-                log_time("Recv {} notification from '{}' for project {}".format(message["method"], self.server_info["name"], self.project_name))
-            else:
-                # others
-                log_time("Recv message {} from '{}' for project {}".format(message, self.server_info["name"], self.project_name))
+        self.record_message(message)
 
         self.handle_publish_diagnostics(message)
 
