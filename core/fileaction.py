@@ -231,6 +231,9 @@ class FileAction:
         # Record change cursor time.
         self.last_change_cursor_time = time.time()
 
+    def get_diagnostics_count(self):
+        return sum(len(diags) for diags in self.diagnostics.values())
+
     def get_diagnostics(self):
         diagnostics = []
         diagnostic_count = 0
@@ -291,7 +294,11 @@ class FileAction:
         # Only push diagnostics to Emacs when ticker is newest.
         # Drop all temporarily diagnostics when typing.
         if ticker == self.diagnostics_ticker:
-            eval_in_emacs("lsp-bridge-diagnostic--render", self.filepath, get_lsp_file_host(), self.get_diagnostics())
+            eval_in_emacs("lsp-bridge-diagnostic--render",
+                          self.filepath,
+                          get_lsp_file_host(),
+                          self.get_diagnostics(),
+                          self.get_diagnostics_count())
 
     def record_dart_closing_lables(self, labels):
         eval_in_emacs("lsp-bridge-dart-closing-labels--render", self.filepath, get_lsp_file_host(), labels)

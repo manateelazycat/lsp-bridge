@@ -162,6 +162,8 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
 
 (defvar-local lsp-bridge-diagnostic-records nil)
 
+(defvar-local lsp-bridge-diagnostic-count nil)
+
 (defvar-local lsp-bridge-diagnostic-overlays '())
 
 (defvar lsp-bridge-diagnostic-frame nil)
@@ -180,8 +182,10 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
 
   (setq-local lsp-bridge-diagnostic-overlays nil))
 
-(defun lsp-bridge-diagnostic--render (filepath filehost diagnostics)
+(defun lsp-bridge-diagnostic--render (filepath filehost diagnostics diagnostic-count)
   (lsp-bridge--with-file-buffer filepath filehost
+                                (setq-local lsp-bridge-diagnostic-count diagnostic-count)
+
                                 (unless lsp-bridge-diagnostic-enable-overlays
                                   (setq-local lsp-bridge-diagnostic-records diagnostics))
 
