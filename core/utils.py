@@ -80,7 +80,7 @@ def close_epc_client():
 
 
 def handle_arg_types(arg):
-    if type(arg) is str and arg.startswith("'"):
+    if isinstance(arg, str) and arg.startswith("'"):
         arg = sexpdata.Symbol(arg.partition("'")[2])
 
     return sexpdata.Quoted(arg)
@@ -218,7 +218,7 @@ def epc_arg_transformer(arg):
     (list 1 2 3)               => [1 2 3]
     (list 1 2 (list 3 4))      => [1 2 [3 4]]
     """
-    if type(arg) != list:
+    if not isinstance(arg, list):
         return arg
 
     # NOTE: Empty list elisp can be treated as both empty python dict/list

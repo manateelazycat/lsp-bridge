@@ -240,9 +240,6 @@ class LspServer:
                                                stdout=PIPE,
                                                stderr=stderr)
 
-        # Notify user server is start.
-        message_emacs("Start LSP server ({}) for {}...".format(self.server_info["name"], self.root_path))
-
         # Two separate thread (read/write) to communicate with LSP server.
         self.receiver = LspServerReceiver(self.lsp_subprocess, self.server_info["name"])
         self.receiver.start()
