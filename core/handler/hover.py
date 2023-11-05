@@ -9,6 +9,7 @@ def make_code_block(language, string):
 class Hover(Handler):
     name = "hover"
     method = "textDocument/hover"
+    callback = "lsp-bridge-popup-documentation--show"
 
     def process_request(self, position) -> dict:
         return dict(position=position)
@@ -47,4 +48,9 @@ class Hover(Handler):
         contents = response["contents"]
         render_string = self.parse_hover_contents(contents, [])
 
-        eval_in_emacs("lsp-bridge-popup-documentation--show", render_string)
+        eval_in_emacs(self.callback, render_string)
+
+class Documentation(Hover, Handler):
+    name = "documentation"
+    method = "textDocument/hover"
+    callback = "lsp-bridge-documentation-at-point--show"

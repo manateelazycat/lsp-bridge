@@ -1128,7 +1128,7 @@ The key of candidate will change between two LSP results."
     ("dark" acm-frame-background-dark-color)
     ("light" acm-frame-background-light-color)))
 
-(defun acm-markdown-render-content ()
+(defun acm-markdown-render-content (&optional enable-decorations)
   (when (fboundp 'gfm-view-mode)
     (let ((inhibit-message t))
       ;; Enable `gfm-view-mode' first, otherwise `gfm-view-mode' will change attribute of face `markdown-code-face'.
@@ -1145,14 +1145,14 @@ The key of candidate will change between two LSP results."
   (setq prettify-symbols-compose-predicate (lambda (_start _end _match) t))
   (prettify-symbols-mode 1)
 
-  ;; Disable line number.
-  (display-line-numbers-mode -1)
-
   ;; Syntax Highlight.
   (font-lock-ensure)
 
-  ;; Disable mode line.
-  (setq-local mode-line-format nil))
+  (unless enable-decorations
+    ;; Disable line number.
+    (display-line-numbers-mode -1)
+    ;; Disable mode line.
+    (setq-local mode-line-format nil)))
 
 (defun acm-doc-markdown-render-content (doc)
   (when (and (acm-frame-visible-p acm-doc-frame)

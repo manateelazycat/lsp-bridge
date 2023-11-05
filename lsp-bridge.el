@@ -187,6 +187,12 @@ After set `lsp-bridge-completion-obey-trigger-characters-p' to nil, you need use
   :safe #'stringp
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-buffer-documentation-buffer "*lsp-bridge-doc*"
+  "Buffer for display documentation information."
+  :type 'string
+  :safe #'stringp
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-disable-backup t
   "Default disable backup feature, include `make-backup-files' `auto-save-default' and `create-lockfiles'."
   :type 'boolean
@@ -1696,6 +1702,10 @@ Off by default."
                                  (acm-backend-lsp-position-to-point bound-start)
                                  (acm-backend-lsp-position-to-point bound-end))))
 
+(defun lsp-bridge-documentation-at-point ()
+  (interactive)
+  (lsp-bridge-call-file-api "documentation" (lsp-bridge--position)))
+
 (defun lsp-bridge-popup-documentation ()
   (interactive)
   (lsp-bridge-call-file-api "hover" (lsp-bridge--position)))
@@ -1782,6 +1792,22 @@ Off by default."
 
   ;; Flash define line.
   (lsp-bridge-flash-line))
+
+(defun lsp-bridge-switch-to-documentation-buffer (norecord)
+  (interactive)
+  (switch-to-buffer-other-window
+   (get-buffer-create lsp-bridge-buffer-documentation-buffer) norecord))
+
+(defun lsp-bridge-documentation-at-point--show (value)
+  (let ((buffer (get-buffer-create lsp-bridge-buffer-documentation-buffer)))
+    (with-current-buffer buffer
+      (read-only-mode -1)
+      (erase-buffer)
+      (insert value)
+      (setq-local truncate-lines nil)
+      (acm-markdown-render-content t)
+      (read-only-mode 1))
+    (display-buffer buffer 'display-buffer-reuse-window)))
 
 (defvar lsp-bridge-popup-documentation-frame nil)
 
