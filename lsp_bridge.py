@@ -595,7 +595,7 @@ class LspBridge:
 
         message_emacs("Active {} '{}', enjoy hacking!".format(
             "project" if os.path.isdir(project_path) else "file",
-            os.path.basename(project_path)))
+            os.path.basename(project_path.rstrip(os.path.sep))))
 
     def load_single_lang_server(self, project_path, filepath):
         single_lang_server = get_emacs_func_result("get-single-lang-server", project_path, filepath)
