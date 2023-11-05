@@ -238,15 +238,25 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
     (when goto-beginning
       (goto-char (overlay-start diagnostic-overlay)))
 
-    ;; When point not in visiable area, `posn-at-point' in `acm-frame-get-popup-position' will return nil.
-    ;; We need scroll window to make sure point in visiable area before call `acm-frame-get-popup-position'.
-    (let* ((pos (window-point))
-           (start (window-start))
-           (end (window-end)))
-      (cond
-       ((< pos start) (scroll-down-line (count-lines pos start)))
-       ((> pos end) (scroll-up-line (count-lines end pos)))))
+    ;; NOTE:
+    ;; We need use redisplay function to make sure diagnostic show in visible area.
+    ;; `redisplay' causes a slight flicker on the screen but currently there is no better solution.
+    (redisplay t)
 
+    ;; Adjusting the cursor position when it is too close to the edge of the window.
+    (let* ((window-start-line (save-excursion
+                                (goto-char (window-start))
+                                (current-line)))
+           (window-end-line (save-excursion
+                              (goto-char (window-end))
+                              (current-line)))
+           (adjust-line-number 5))
+      (cond ((< (abs (- (current-line) window-start-line)) adjust-line-number)
+             (scroll-down-line adjust-line-number))
+            ((< (abs (- (current-line) window-end-line)) adjust-line-number)
+             (scroll-up-line adjust-line-number))))
+
+    ;; Show diagnostic tooltip.
     (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-buffer)
       (erase-buffer)
       (lsp-bridge-diagnostic-insert-colored-string (overlay-get diagnostic-overlay 'color) diagnostic-display-message)
