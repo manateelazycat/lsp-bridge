@@ -221,6 +221,7 @@ class LspServer:
         self.signature_help_provider = False
         self.workspace_symbol_provider = False
         self.inlay_hint_provider = False
+        self.semantic_tokens_provider = False
 
         self.code_action_kinds = [
             "quickfix",
@@ -608,7 +609,8 @@ class LspServer:
             ("workspace_symbol_provider", ["result", "capabilities", "workspaceSymbolProvider"]),
             ("inlay_hint_provider", ["result", "capabilities", "inlayHintProvider", "resolveProvider"]),
             ("save_include_text", ["result", "capabilities", "textDocumentSync", "save", "includeText"]),
-            ("text_document_sync", ["result", "capabilities", "textDocumentSync"])]
+            ("text_document_sync", ["result", "capabilities", "textDocumentSync"]),
+            ("semantic_tokens_provider", ["result", "capabilities", "semanticTokensProvider"])]
 
         for attr, path in attributes_to_set:
             self.set_attribute_from_message(message, attr, path)

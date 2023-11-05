@@ -96,6 +96,7 @@
 (require 'lsp-bridge-org-babel)
 (require 'lsp-bridge-inlay-hint)
 (require 'lsp-bridge-dart)
+(require 'lsp-bridge-semantic-tokens)
 
 (defgroup lsp-bridge nil
   "LSP-Bridge group."
