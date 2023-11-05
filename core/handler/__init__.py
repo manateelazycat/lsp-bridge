@@ -50,7 +50,7 @@ from core.handler.find_type_define import FindTypeDefine
 from core.handler.find_implementation import FindImplementation
 from core.handler.find_references import FindReferences
 from core.handler.peek import PeekFindDefine, PeekFindReferences
-from core.handler.hover import Hover, Documentation
+from core.handler.hover import Hover
 from core.handler.signature_help import SignatureHelp
 from core.handler.prepare_rename import PrepareRename
 from core.handler.rename import Rename

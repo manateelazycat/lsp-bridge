@@ -1703,13 +1703,13 @@ Off by default."
                                  (acm-backend-lsp-position-to-point bound-start)
                                  (acm-backend-lsp-position-to-point bound-end))))
 
-(defun lsp-bridge-documentation-at-point ()
+(defun lsp-bridge-show-documentation ()
   (interactive)
-  (lsp-bridge-call-file-api "documentation" (lsp-bridge--position)))
+  (lsp-bridge-call-file-api "hover" (lsp-bridge--position) "buffer"))
 
 (defun lsp-bridge-popup-documentation ()
   (interactive)
-  (lsp-bridge-call-file-api "hover" (lsp-bridge--position)))
+  (lsp-bridge-call-file-api "hover" (lsp-bridge--position) "popup"))
 
 (defun lsp-bridge-signature-help-fetch ()
   (interactive)
@@ -1799,7 +1799,7 @@ Off by default."
   (switch-to-buffer-other-window
    (get-buffer-create lsp-bridge-buffer-documentation-buffer) norecord))
 
-(defun lsp-bridge-documentation-at-point--show (value)
+(defun lsp-bridge-show-documentation--callback (value)
   (let ((buffer (get-buffer-create lsp-bridge-buffer-documentation-buffer)))
     (with-current-buffer buffer
       (read-only-mode -1)
@@ -1824,7 +1824,7 @@ Off by default."
     (with-selected-frame lsp-bridge-popup-documentation-frame
       (apply #'scroll-down-command arg))))
 
-(defun lsp-bridge-popup-documentation--show (value)
+(defun lsp-bridge-popup-documentation--callback (value)
   (let ((emacs-frame (or acm-frame--emacs-frame (selected-frame))))
     (with-current-buffer (get-buffer-create lsp-bridge-popup-documentation-buffer)
       (read-only-mode -1)

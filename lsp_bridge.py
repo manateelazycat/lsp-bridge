@@ -166,8 +166,9 @@ class LspBridge:
 
         # Build loop to send elisp command from remote server to local Emacs.
         self.remote_file_command_receiver_queue = queue.Queue()
-        self.remote_file_command_receiver_thread = threading.Thread(target=self.receive_message_dispatcher,
-                                                           args=(self.remote_file_command_receiver_queue, self.handle_lsp_message))
+        self.remote_file_command_receiver_thread = threading.Thread(
+            target=self.receive_message_dispatcher,
+            args=(self.remote_file_command_receiver_queue, self.handle_lsp_message))
         self.remote_file_command_receiver_thread.start()
 
     def send_message_dispatcher(self, queue, port):

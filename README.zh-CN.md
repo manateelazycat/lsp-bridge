@@ -120,6 +120,7 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 - `lsp-bridge-popup-documentation`: 查看光标处的文档
 - `lsp-bridge-popup-documentation-scroll-up`: 文档窗口向上滚动
 - `lsp-bridge-popup-documentation-scroll-down`: 文档窗口向下滚动
+- `lsp-bridge-show-documentation`: 查看光标处的文档, 但是是用 Buffer 来显示
 - `lsp-bridge-rename`: 重命名
 - `lsp-bridge-diagnostic-jump-next`: 跳转到下一个诊断位置
 - `lsp-bridge-diagnostic-jump-prev`: 跳转到上一个诊断位置
@@ -146,7 +147,7 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 - `lsp-bridge-peek-tree-next-node`: 选择浏览历史上下一级节点 (默认绑定到 `<right>` )
 - `lsp-bridge-indent-left`: 根据 `lsp-bridge-formatting-indent-alist` 定义的缩进值, 向左缩进刚刚粘贴的文本
 - `lsp-bridge-indent-right`: 根据 `lsp-bridge-formatting-indent-alist` 定义的缩进值, 向右缩进刚刚粘贴的文本
-- `lsp-bridge-semantic-tokens-mode`: 开启或者关闭语义符号高亮，详细用法请看 [Semantic Tokens Wiki](https://github.com/manateelazycat/lsp-bridge/wiki/Semantic-Tokens-%5B%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%5D)
+- `lsp-bridge-semantic-tokens-mode`: 开启或者关闭语义符号高亮， 详细用法请看 [Semantic Tokens Wiki](https://github.com/manateelazycat/lsp-bridge/wiki/Semantic-Tokens-%5B%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%5D)
 
 ## LSP 服务器选项
 lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， 您可以通过定制下面的选项来选择你喜欢的语言服务器:

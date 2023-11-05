@@ -122,6 +122,7 @@ Note:
 - `lsp-bridge-popup-documentation`: lookup documentation of symbol under the cursor
 - `lsp-bridge-popup-documentation-scroll-up`: scroll up popup document.
 - `lsp-bridge-popup-documentation-scroll-down`: scroll down popup document.
+- `lsp-bridge-show-documentation`: lookup documentation of symbol under the cursor, but using a buffer instead
 - `lsp-bridge-rename`: rename symbol under the cursor
 - `lsp-bridge-diagnostic-jump-next`: Jump to the next diagnostic position
 - `lsp-bridge-diagnostic-jump-prev`: Jump to the previous diagnostic position
