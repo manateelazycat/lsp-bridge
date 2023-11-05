@@ -146,6 +146,7 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 - `lsp-bridge-peek-tree-next-node`: 选择浏览历史上下一级节点 (默认绑定到 `<right>` )
 - `lsp-bridge-indent-left`: 根据 `lsp-bridge-formatting-indent-alist` 定义的缩进值, 向左缩进刚刚粘贴的文本
 - `lsp-bridge-indent-right`: 根据 `lsp-bridge-formatting-indent-alist` 定义的缩进值, 向右缩进刚刚粘贴的文本
+- `lsp-bridge-semantic-tokens-mode`: 开启或者关闭语义符号高亮，详细用法请看 [Semantic Tokens Wiki](https://github.com/manateelazycat/lsp-bridge/wiki/Semantic-Tokens-%5B%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%5D)
 
 ## LSP 服务器选项
 lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， 您可以通过定制下面的选项来选择你喜欢的语言服务器:
@@ -376,9 +377,10 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 | lsp-bridge-code-action.el           | 代码修复相关代码                                                                                                     |
 | lsp-bridge-diagnostic.el            | 诊断信息相关代码                                                                                                     |
 | lsp-bridge-ref.el                   | 代码引用查看框架， 提供引用查看、 批量重命名、 引用结果正则过滤等， 核心代码 fork 自 color-rg.el                     |
-| lsp-bridge-inlay-hint.el                   | 提供代码类型提示， 对于静态语言， 比如 Rust 或 Haskell 比较有用                     |
+| lsp-bridge-inlay-hint.el            | 提供代码类型提示， 对于静态语言， 比如 Rust 或 Haskell 比较有用                                                      |
 | lsp-bridge-jdtls.el                 | 提供 Java 语言第三方库跳转功能                                                                                       |
-| lsp-bridge-dart.el                 | 提供对 Dart 私有协议的支持， 比如 Dart 的 Closing Labels 协议                                                                                       |
+| lsp-bridge-dart.el                  | 提供对 Dart 私有协议的支持， 比如 Dart 的 Closing Labels 协议                                                        |
+| lsp-bridge-semantic-tokens.el       | 灵活显示某些语义符号， 对于静态语言， 比如 C 或 C++ 比较有用                                                         |
 | lsp-bridge-lsp-installer.el         | 安装 TabNine 和 Omnisharp                                                                                            |
 | lsp-bridge-peek.el                  | 用 peek windows 来查看定义和引用                                                                                     |
 | lsp-bridge.py                       | lsp-bridge 的 Python 主逻辑部分， 提供事件循环、 消息调度和状态管理                                                  |
