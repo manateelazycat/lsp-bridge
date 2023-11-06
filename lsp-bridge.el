@@ -1960,6 +1960,16 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
 
   (add-hook 'post-command-hook #'lsp-bridge-start-process)
 
+  ;; NOTE:
+  ;; Don't enable `electric-indent-mode' in lsp-bridge, `electric-indent-post-self-insert-function'
+  ;;
+  ;; It will try adjust line indentation *AFTER* user insert character,
+  ;; this additional indent action send excessive `change_file' request to lsp server.
+  ;; LSP server will confused those indent action and return wrong completion candidates.
+  ;;
+  ;; Example, when you enable `electric-indent-mode', when you type `std::', you will got wrong completion candidates from LSP server.
+  (electric-indent-mode -1)
+
   ;; Don't enable lsp-bridge when current buffer is acm buffer.
   (unless (or (equal (buffer-name (current-buffer)) acm-buffer)
               (equal (buffer-name (current-buffer)) acm-doc-buffer))
