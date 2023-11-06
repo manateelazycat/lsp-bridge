@@ -134,7 +134,7 @@ class TabNine:
                             "key": label,
                             "icon": "tabnine",
                             "label": label,
-                            "display-label": label,
+                            "displayLabel": label,
                             "annotation": result["detail"] if "detail" in result else "",
                             "backend": "tabnine",
                             "new_suffix": result["new_suffix"],

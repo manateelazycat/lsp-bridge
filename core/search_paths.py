@@ -54,7 +54,7 @@ class SearchPaths:
                     "key": file,
                     "icon": file_type,
                     "label": file,
-                    "display-label": file,
+                    "displayLabel": file,
                     "annotation": file_type.upper(),
                     "backend": "path"
                 })

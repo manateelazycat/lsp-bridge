@@ -779,7 +779,7 @@ The key of candidate will change between two LSP results."
   (cl-reduce #'max
              (mapcar (lambda (v)
                        (funcall acm-string-width-function
-                                (format "%s %s" (plist-get v :display-label) (plist-get v :annotation))))
+                                (format "%s %s" (plist-get v :displayLabel) (plist-get v :annotation))))
                      acm-menu-candidates)))
 
 (defun acm-menu-render-items (items menu-index)
@@ -789,7 +789,7 @@ The key of candidate will change between two LSP results."
       (let* ((icon (cdr (assoc (downcase (plist-get v :icon)) acm-icon-alist)))
              (icon-default (cdr (assoc t acm-icon-alist)))
              (display-icon (or icon icon-default))
-             (candidate (plist-get v :display-label))
+             (candidate (plist-get v :displayLabel))
              (annotation (plist-get v :annotation))
              (annotation-text (format "%s " (capitalize (if annotation annotation ""))))
              (annotation-face (if (equal item-index menu-index) 'acm-frame-select-face 'font-lock-doc-face))

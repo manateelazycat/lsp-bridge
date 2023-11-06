@@ -126,7 +126,7 @@ class SearchFileWords:
                               "key": word,
                               "icon": "search",
                               "label": word,
-                              "display-label": word,
+                              "displayLabel": word,
                               "annotation": "Search Word",
                               "backend": "search-file-words"
                           }, candidates[:min(self.max_number, len(candidates))])))

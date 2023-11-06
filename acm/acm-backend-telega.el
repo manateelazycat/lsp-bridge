@@ -37,7 +37,7 @@ Sets `acm-backend-telega-items' for the current chatbuf."
                     (list :key username
                           :icon "at"
                           :label username
-                          :display-label username
+                          :displayLabel username
                           :annotation title
                           :backend "telega")))
                 ;; NOTE: only members having username are

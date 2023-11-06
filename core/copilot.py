@@ -129,7 +129,7 @@ class Copilot:
                             "key": label,
                             "icon": "copilot",
                             "label": label,
-                            "display-label": first_line,
+                            "displayLabel": first_line,
                             "annotation": "Copilot",
                             "backend": "copilot",
                             "documentation": document,

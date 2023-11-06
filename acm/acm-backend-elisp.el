@@ -119,7 +119,7 @@
         (list :key elisp-symbol
               :icon symbol-type
               :label elisp-symbol
-              :display-label elisp-symbol
+              :displayLabel elisp-symbol
               :annotation (capitalize symbol-type)
               :backend "elisp")))
     acm-backend-elisp-items)))

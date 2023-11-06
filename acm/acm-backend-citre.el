@@ -201,7 +201,7 @@
                   :key candidate-fix
                   :icon (downcase annotation)
                   :label candidate-fix
-                  :display-label candidate-fix
+                  :displayLabel candidate-fix
                   :annotation annotation
                   :backend "citre")))))
           collection))))))

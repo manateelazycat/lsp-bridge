@@ -98,7 +98,7 @@
       (list :key tailwind-symbol
             :icon "tailwind"
             :label tailwind-symbol
-            :display-label tailwind-symbol
+            :displayLabel tailwind-symbol
             :annotation "Tailwind"
             :backend "tailwind"))
     acm-backend-tailwind-items)))

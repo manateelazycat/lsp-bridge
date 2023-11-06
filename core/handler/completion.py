@@ -117,7 +117,7 @@ class Completion(Handler):
             # Get value of 'incomplete-fuzzy-match' from lsp server config file.
             fuzzy = self.get_fuzzy_option()
 
-            # Some LSP server, such as Wen, need assign textEdit/newText to display-label.
+            # Some LSP server, such as Wen, need assign textEdit/newText to displayLabel.
             display_new_text = self.get_display_new_text()
 
             for item in response["items"] if "items" in response else response:
@@ -142,7 +142,7 @@ class Completion(Handler):
                     "key": key,
                     "icon": annotation,
                     "label": label,
-                    "display-label": self.get_display_label(item, display_new_text),
+                    "displayLabel": self.get_display_label(item, display_new_text),
                     "deprecated": 1 in item.get("tags", []),
                     "insertText": item.get('insertText', None),
                     "insertTextFormat": item.get("insertTextFormat", ''),

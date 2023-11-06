@@ -27,7 +27,7 @@
           (list :key snippet
                 :icon "snippet"
                 :label snippet
-                :display-label snippet
+                :displayLabel snippet
                 :annotation "Tempel"
                 :backend "tempel"))
         (cl-subseq match-snippets 0 (min (length match-snippets) acm-backend-tempel-candidates-number)))))))

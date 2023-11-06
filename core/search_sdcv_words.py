@@ -116,7 +116,7 @@ class SearchSdcvWords:
                     "key": word,
                     "icon": "translation",
                     "label": word,
-                    "display-label": self.adjust_word_case(prefix, word),
+                    "displayLabel": self.adjust_word_case(prefix, word),
                     "annotation": translation,
                     "backend": "search-sdcv-words"
                 }
@@ -130,7 +130,7 @@ class SearchSdcvWords:
                     "key": word,
                     "icon": "translation",
                     "label": word,
-                    "display-label": self.adjust_word_case(prefix, word),
+                    "displayLabel": self.adjust_word_case(prefix, word),
                     "annotation": translation,
                     "backend": "search-sdcv-words"
                 }

@@ -172,7 +172,7 @@ class Codeium:
                     "key": label,
                     "icon": "codeium",
                     "label": label,
-                    "display-label": display_label,
+                    "displayLabel": display_label,
                     "annotation": annotation,
                     "backend": "codeium",
                     "documentation": document,

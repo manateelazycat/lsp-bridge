@@ -202,7 +202,7 @@ Default matching use snippet filename."
            (list :key match
                  :icon "snippet"
                  :label match
-                 :display-label display
+                 :displayLabel display
                  :content content
                  :annotation "Yas-Snippet"
                  :backend "yas")))
