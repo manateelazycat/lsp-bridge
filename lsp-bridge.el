@@ -2159,7 +2159,7 @@ SymbolKind (defined in the LSP)."
          (or (not (boundp 'tempel--active))
              (not tempel--active)))
     (let ((indent (symbol-value (lsp-bridge--get-indent-width major-mode))))
-      (lsp-bridge-call-file-api "formatting"
+      (lsp-bridge-call-file-api "try_formatting"
                                 ;; Sometimes `c-basic-offset' return string `set-from-style', make some lsp server broken, such as, gopls,
                                 ;; so we need convert indent to integer `4' to make sure code format works expectantly.
                                 (if (eq indent 'set-from-style)
