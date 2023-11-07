@@ -373,7 +373,11 @@ class FileAction:
                     method_server = self.single_server
 
                 if method_server.completion_resolve_provider:
-                    self.send_server_request(method_server, "completion_item_resolve", item_key, server_name, self.completion_items[server_name][item_key])
+                    self.send_server_request(method_server,
+                                             "completion_item_resolve",
+                                             item_key,
+                                             server_name,
+                                             self.completion_items[server_name][item_key])
                 else:
                     item = self.completion_items[server_name][item_key]
 
@@ -400,8 +404,7 @@ class FileAction:
                              "additionalTextEdits": additional_text_edits,
                              "documentation": documentation
                          },
-                         get_lsp_file_host()
-                         )
+                         get_lsp_file_host())
 
 
     def rename_file(self, old_filepath, new_filepath):
