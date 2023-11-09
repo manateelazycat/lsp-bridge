@@ -84,6 +84,8 @@ Note:
 
 1. If the completion menu is not displayed, check the output of `lsp_bridge.py` on the remote server, it may be that the LSP Server is not fully installed.
 2. lsp-bridge will use the first *.pub file in `~/.ssh` as a login credential. If public key login fails, you will be asked to enter a password. lsp-bridge will not store the password, it is recommended to use public key login to avoid repeated password entry.
+3. To run lsp_bridge.py successfully you need to completely download the entire git repository of lsp-bridge on a remote server, and switch into its directory, lsp_bridge.py requires other files to function properly, so copying only the lsp_bridge.py file can't work
+
 
 ## Keymap
 

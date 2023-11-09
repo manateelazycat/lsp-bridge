@@ -68,9 +68,9 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 
 `lsp-bridge`能像 VSCode 一样在远程服务器文件上进行代码语法补全。 配置步骤如下：
 
-1. 在远程服务器安装 lsp-bridge 和相应的 LSP Server。
-2. 启动 lsp-bridge： `python3 lsp-bridge/lsp_bridge.py`。
-3. 用`lsp-bridge-open-remote-file`命令打开文件， 输入用户名、 IP、 SSH 端口(默认 22) 和路径， 例如`user@ip:[ssh_port]:/path/file`。 启用`lsp-bridge-enable-with-tramp`选项可以直接打开 tramp 文件， 并用 lsp-bridge 的高效算法代替 tramp， 实现流畅补全。
+1. 在远程服务器安装 lsp-bridge 和相应的 LSP Server
+2. 启动 lsp-bridge： `python3 lsp-bridge/lsp_bridge.py`
+3. 用`lsp-bridge-open-remote-file`命令打开文件， 输入用户名、 IP、 SSH 端口(默认 22) 和路径， 例如`user@ip:[ssh_port]:/path/file`。 启用`lsp-bridge-enable-with-tramp`选项可以直接打开 tramp 文件， 并用 lsp-bridge 的高效算法代替 tramp， 实现流畅补全
 
 远程补全原理：
 
@@ -82,6 +82,7 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 
 1. 若补全菜单未显示， 检查远程服务器的`lsp_bridge.py`输出， 可能是 LSP Server 未完全安装
 2. lsp-bridge 会用`~/.ssh`的第一个 *.pub 文件作为登录凭证。 如果公钥登录失败， 会要求输入密码。 lsp-bridge 不会存储密码， 建议用公钥登录以避免重复输入密码
+3. 你需要在远程服务器完整的下载整个 lsp-bridge git 仓库， 并切换到 lsp-bridge 目录来启动 `lsp_bridge.py`， `lsp_bridge.py` 需要其他文件来保证正常工作， 不能只把 `lsp_bridge.py` 文件拷贝到其他目录来启动
 
 ## 按键
 
