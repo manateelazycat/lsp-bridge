@@ -263,7 +263,6 @@ class LspBridge:
                 ssh_port = conf.get('port', ssh_port)
                 use_gssapi = conf.get('gssapiauthentication', 'no') in ('yes')
                 proxy_command = conf.get('proxycommand', None)
-                print(proxy_command)
 
                 self.host_names[alias] = {"server_host": server_host, "username": server_username, "ssh_port": ssh_port, "use_gssapi": use_gssapi,
                                           "proxy_command": proxy_command}

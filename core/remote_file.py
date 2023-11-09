@@ -58,7 +58,6 @@ class RemoteFileClient(threading.Thread):
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         proxy = None
-        print("connecting" ,proxy_command)
         if proxy_command:
             proxy = paramiko.ProxyCommand(proxy_command)
 
