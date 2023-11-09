@@ -215,7 +215,7 @@ class LspBridge:
                         ssh_port = 22
 
                 if server_username and ssh_port:
-                    self.host_names[server_host] = {"username": server_username, "ssh_port": ssh_port, "use_gssapi": False}
+                    self.host_names[server_host] = {"username": server_username, "ssh_port": ssh_port, "use_gssapi": False, "proxy_command": None}
 
                 try:
                     client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
@@ -242,6 +242,7 @@ class LspBridge:
     @threaded
     def sync_tramp_remote(self, server_username, server_host, ssh_port, filename):
         use_gssapi = False
+        proxy_command = None
         alias = None
         if not is_valid_ip(server_host):
             alias = server_host
@@ -250,6 +251,7 @@ class LspBridge:
                 server_username = self.host_names[alias]["username"]
                 ssh_port = self.host_names[alias]["ssh_port"]
                 use_gssapi = self.host_names[alias]["use_gssapi"]
+                proxy_command = self.host_names[alias]["proxy_command"]
             else:
                 import paramiko
                 ssh_config = paramiko.SSHConfig()
@@ -260,8 +262,10 @@ class LspBridge:
                 server_username = conf.get('user', server_username)
                 ssh_port = conf.get('port', ssh_port)
                 use_gssapi = conf.get('gssapiauthentication', 'no') in ('yes')
+                proxy_command = conf.get('proxycommand', None)
 
-                self.host_names[alias] = {"server_host": server_host, "username": server_username, "ssh_port": ssh_port, "use_gssapi": use_gssapi}
+                self.host_names[alias] = {"server_host": server_host, "username": server_username, "ssh_port": ssh_port, "use_gssapi": use_gssapi,
+                                          "proxy_command": proxy_command}
 
         tramp_file_split = filename.rsplit(":", 1)
         tramp_method = tramp_file_split[0] + ":"
@@ -279,7 +283,7 @@ class LspBridge:
             else:
                 ssh_port = 22
 
-        self.host_names[server_host] = {"username": server_username, "ssh_port": ssh_port, "use_gssapi": use_gssapi}
+        self.host_names[server_host] = {"username": server_username, "ssh_port": ssh_port, "use_gssapi": use_gssapi, "proxy_command": proxy_command}
 
         try:
             client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
@@ -410,7 +414,8 @@ class LspBridge:
                 self.host_names[server_host]["ssh_port"],
                 server_port,
                 lambda message: self.receive_socket_message(message, server_port),
-                self.host_names[server_host]["use_gssapi"]
+                self.host_names[server_host]["use_gssapi"],
+                self.host_names[server_host]["proxy_command"]
             )
             client.start()
 
