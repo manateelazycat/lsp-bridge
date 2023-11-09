@@ -63,7 +63,6 @@ class RemoteFileClient(threading.Thread):
 
         try:
             if use_gssapi:
-                import gssapi
                 ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, gss_auth=True, gss_kex=True, sock=proxy)
             else:
                 # Login server with ssh public key.
