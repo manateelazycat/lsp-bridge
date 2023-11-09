@@ -24,10 +24,7 @@ Advantages of lsp-bridge:
 
 1. Install Emacs 28 or higher version
 2. Install Python dependencies: `pip3 install epc orjson sexpdata six paramiko rapidfuzz` (orjson is optional, orjson is based on Rust, providing faster JSON parsing performance)
-3. Install Elisp dependencies:
-
-- [markdown-mode](https://github.com/jrblevin/markdown-mode)
-- [yasnippet](https://github.com/joaotavora/yasnippet)
+3. Install Elisp dependencies: [markdown-mode](https://github.com/jrblevin/markdown-mode), [yasnippet](https://github.com/joaotavora/yasnippet)
 
 4. Download this repository using git clone, and replace the load-path path in the configuration below.
 5. Add the following code to your configuration file ~/.emacs:
