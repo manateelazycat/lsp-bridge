@@ -686,7 +686,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
   "Open characters for string interpolation. The elements are cons cell (major-mode . open-char-regexp)"
   :type 'cons)
 
-(defvar lsp-bridge-enable-with-tramp nil
+(defvar lsp-bridge-enable-with-tramp t
   "Whether enable lsp-bridge when editing tramp file.")
 
 (defvar lsp-bridge-remote-save-password nil
