@@ -30,7 +30,7 @@ class RemoteFileClient(threading.Thread):
 
     remote_password_dict = {}
 
-    def __init__(self, ssh_host, ssh_user, ssh_port, server_port, callback, use_gssapi=False):
+    def __init__(self, ssh_host, ssh_user, ssh_port, server_port, callback, use_gssapi=False, proxy_command=None):
         threading.Thread.__init__(self)
 
         # Init.
@@ -42,7 +42,7 @@ class RemoteFileClient(threading.Thread):
 
 
         # Build SSH channel between local client and remote server.
-        self.ssh = self.connect_ssh(use_gssapi)
+        self.ssh = self.connect_ssh(use_gssapi, proxy_command)
         self.transport = self.ssh.get_transport()
         self.chan = self.transport.open_channel("direct-tcpip", (self.ssh_host, self.server_port), ('0.0.0.0', 0))
 
@@ -52,20 +52,24 @@ class RemoteFileClient(threading.Thread):
         pub_keys = glob.glob(os.path.join(ssh_dir, '*.pub'))
         return pub_keys[0]
 
-    def connect_ssh(self, use_gssapi):
+    def connect_ssh(self, use_gssapi, proxy_command):
         import paramiko
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
+        proxy = None
+        print("connecting" ,proxy_command)
+        if proxy_command:
+            proxy = paramiko.ProxyCommand(proxy_command)
+
         try:
             if use_gssapi:
                 import gssapi
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, gss_auth=True, gss_kex=True)
+                ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, gss_auth=True, gss_kex=True, sock=proxy)
             else:
                 # Login server with ssh public key.
                 pub_key = self.ssh_pub_key()
-                ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, key_filename=pub_key)
+                ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, key_filename=pub_key, sock=proxy)
         except:
             print(traceback.format_exc())
 
