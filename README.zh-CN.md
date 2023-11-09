@@ -2,9 +2,14 @@
 
 # lsp-bridge
 
-lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端。
+lsp-bridge 的目标是使用多线程技术实现 Emacs 生态中性能最快的 LSP 客户端。
 
-lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建高速缓存， 在提供行云流水的代码补全体验的前提下， 保证永远不会卡住 Emacs。
+lsp-bridge 的优势：
+1. 速度超快： 把 LSP 的请求等待和数据分析都隔离到外部进程， 不会因为 LSP Server 返回延迟或大量数据触发 GC 而卡住 Emacs
+2. 远程补全： 内置远程服务器代码补全， 支持密码、 公钥等多种登录方式， 支持 tramp 协议， 支持 SSH 多级堡垒机跳转
+3. 开箱即用： 安装后立即可以使用， 不需要额外的配置， 不需要自己折腾补全前端、 补全前端以及多后端融合等配置
+4. 多服务器融合： 可以同时使用多个 LSP Server 为同一个文件提供服务， 例如 Python， Pyright 提供代码补全， Ruff 提供诊断和格式化
+5. 灵活的自定义： 自定义 LSP Server 选项只需要一个 JSON 文件即可， 简单的几行规则就可以让不同的项目使用不同 JSON 配置
 
 <img src="./screenshot.png">
 
@@ -408,8 +413,9 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 请先阅读下面的文章:
 
 - [LSP 协议规范](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
-- [lsp-bridge 架构设计](https://manateelazycat.github.io/emacs/lsp/2022/05/12/lsp-bridge.html)
-- [为什么 lsp-bridge 不用 capf](https://manateelazycat.github.io/emacs/lsp/2022/06/26/why-lsp-bridge-not-use-capf.html)
+- [lsp-bridge 架构设计](https://manateelazycat.github.io/2022/05/12/lsp-bridge/)
+- [lsp-bridge 远程补全架构设计](https://manateelazycat.github.io/2023/03/31/lsp-bridge-remote-file/)
+- [为什么 lsp-bridge 不用 capf](https://manateelazycat.github.io/2022/06/26/why-lsp-bridge-not-use-capf/)
 - [lsp-bridge Wiki](https://github.com/manateelazycat/lsp-bridge/wiki)
 
 接着打开开发选项 `lsp-bridge-enable-log` ， happy hacking! ;)

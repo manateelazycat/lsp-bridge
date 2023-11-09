@@ -3,9 +3,14 @@
 
 # lsp-bridge
 
-The goal of lsp-bridge is to implement the fastest LSP client in the Emacs ecosystem.
+The goal of lsp-bridge is use multi-thread technology to implement the fastest LSP client in the Emacs ecosystem.
 
-Using Python multithreading techniques, lsp-bridge builds a high-speed cache between Emacs and the LSP server, ensuring that Emacs never gets stuck while providing a smooth and seamless code completion experience.
+Advantages of lsp-bridge:
+1. Blazingly Speed: Isolates LSP request waiting and data analysis to an external process, preventing Emacs from getting stuck due to delays or large data triggering garbage collection
+2. Remote Completion: Built-in support for remote server code completion, with various login methods such as passwords and public keys. Supports tramp protocol and SSH multi-level bastion host jumping
+3. Out-of-the-box Experience: Ready to use immediately after installation, no additional configuration required. No need to tinker with frontend completion or backend integration for multiple configurations
+4. Multiple Server Integration: Can simultaneously use multiple LSP servers to serve the same file. For example, Python can have Pyright for code completion and Ruff for diagnostics and formatting
+5. Flexible Customization: Customizing LSP server options is as simple as using a JSON file, allowing different projects to have different JSON configurations with just a few lines of rules
 
 <img src="./screenshot.png">
 
@@ -407,9 +412,10 @@ The following is the directory structure of the lsp-bridge project:
 
 Please read below articles first:
 
-- [LSP Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
-- [The Design of lsp-bridge](https://manateelazycat.github.io/emacs/lsp/2022/05/12/lsp-bridge.html)
-- [Why lsp-bridge not use capf](https://manateelazycat.github.io/emacs/lsp/2022/06/26/why-lsp-bridge-not-use-capf.html)
+- [LSP Protocol Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
+- [lsp-bridge Architecture Design](https://manateelazycat.github.io/2022/05/12/lsp-bridge/)
+- [lsp-bridge Remote Completion Architecture Design](https://manateelazycat.github.io/2023/03/31/lsp-bridge-remote-file/)
+- [Why lsp-bridge doesn't use capf](https://manateelazycat.github.io/2022/06/26/why-lsp-bridge-not-use-capf/)
 - [lsp-bridge Wiki](https://github.com/manateelazycat/lsp-bridge/wiki)
 
 Then turn on develop option `lsp-bridge-enable-log` and happy hacking! ;)
