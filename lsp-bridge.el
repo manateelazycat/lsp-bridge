@@ -453,7 +453,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
 
 (defcustom lsp-bridge-single-lang-server-mode-list
   '(
-    ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode) .                         lsp-bridge-c-lsp-server)
+    ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode c-or-c++-ts-mode) .        lsp-bridge-c-lsp-server)
     ((cmake-mode cmake-ts-mode) .                                                "cmake-language-server")
     ((java-mode java-ts-mode) .                                                  "jdtls")
     ((julia-mode) .                                                              "julials")
@@ -689,6 +689,9 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
 (defvar lsp-bridge-enable-with-tramp nil
   "Whether enable lsp-bridge when editing tramp file.")
 
+(defvar lsp-bridge-remote-save-password nil
+  "Whether save password in netrc file.")
+
 (defun lsp-bridge-find-file-hook-function ()
   (when (and lsp-bridge-enable-with-tramp (file-remote-p (buffer-file-name)))
     (lsp-bridge-sync-tramp-remote)))
@@ -794,9 +797,23 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge--get-current-line-func ()
   (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
 
-(defun lsp-bridge--get-ssh-password-func (host)
+(defvar-local lsp-bridge-tramp-sync-var nil)
+
+(defun lsp-bridge--get-ssh-password-func (user host port)
   (condition-case nil
-      (read-passwd (format "Password for %s: " host))
+      (let* ((auth-source-creation-prompts
+              '((secret . "password for %u@%h: ")))
+             (found (nth 0 (auth-source-search :max 1
+                                               :host host
+                                               :user user
+                                               :port port
+                                               :require '(:secret)
+                                               :create t))))
+        (when (and lsp-bridge-remote-save-password (plist-get found :save-function))
+          (funcall (plist-get found :save-function)))
+        (if found
+            (auth-info-password found)
+          nil))
     (quit (progn
             (message "Cancelled password input.")
             nil))))
@@ -2476,38 +2493,32 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
                                   (split-string (buffer-string) "\n" t)))))
     (lsp-bridge-call-async "open_remote_file" path (list :line 0 :character 0))))
 
-(defun lsp-bridge-sync-tramp-remote ()
-  (interactive)
-  (let* ((tramp-file-name (tramp-dissect-file-name (buffer-file-name)))
-         (username (tramp-file-name-user tramp-file-name))
-         (domain (tramp-file-name-domain tramp-file-name))
-         (port (tramp-file-name-port tramp-file-name))
-         (host (tramp-file-name-host tramp-file-name))
-         (path (tramp-file-name-localname tramp-file-name))
-         alias)
+(defun lsp-bridge-update-tramp-file-info (file-name host path tramp-method)
+  (unless (assoc host lsp-bridge-tramp-alias-alist)
+    (push `(,host . ,tramp-method) lsp-bridge-tramp-alias-alist))
 
-    (unless (network-lookup-address-info host 'ipv4 'numeric)
-      (setq alias host))
-
-    (if alias
-        (if-let (alias-host (assoc alias lsp-bridge-tramp-alias-alist))
-            (setq host (cdr alias-host))
-          (let ((default-directory "~/"))
-            (setq host (string-trim (shell-command-to-string
-                                     (format "ssh -G -T %s | grep '^hostname' | cut -d ' ' -f 2" alias)))))
-          (push `(,alias . ,host) lsp-bridge-tramp-alias-alist)))
-
-    (unless (assoc host lsp-bridge-tramp-alias-alist)
-      (push `(,host . ,(concat (string-join (butlast (string-split (buffer-file-name) ":" t)) ":") ":"))
-            lsp-bridge-tramp-alias-alist))
-
-    (lsp-bridge-call-async "sync_tramp_remote" username host port alias)
-
+  (with-current-buffer (get-file-buffer file-name)
     (setq-local lsp-bridge-remote-file-flag t)
     (setq-local lsp-bridge-remote-file-host host)
     (setq-local lsp-bridge-remote-file-path path)
 
-    (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)))
+    (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)
+    (setq lsp-bridge-tramp-sync-var t)))
+
+(defcustom lsp-bridge-tramp-blacklist nil "tramp hosts that don't use lsp-bridge")
+
+(defun lsp-bridge-sync-tramp-remote ()
+  (interactive)
+  (let* ((file-name (buffer-file-name))
+         (tramp-file-name (tramp-dissect-file-name file-name))
+         (username (tramp-file-name-user tramp-file-name))
+         (domain (tramp-file-name-domain tramp-file-name))
+         (port (tramp-file-name-port tramp-file-name))
+         (host (tramp-file-name-host tramp-file-name))
+         (path (tramp-file-name-localname tramp-file-name)))
+
+    (when (not (member host lsp-bridge-tramp-blacklist))
+      (lsp-bridge-call-async "sync_tramp_remote" username host port file-name))))
 
 (defun lsp-bridge-open-remote-file--response(server path content position)
   (let ((buf-name (format "[LBR] %s" (file-name-nondirectory path))))

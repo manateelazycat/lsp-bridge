@@ -144,8 +144,8 @@ def get_file_content_from_file_server(filename):
 def get_current_line():
     return get_emacs_func_result('get-current-line')
 
-def get_ssh_password(host):
-    return get_emacs_func_result('get-ssh-password', host)
+def get_ssh_password(user, host, port):
+    return get_emacs_func_result('get-ssh-password', user, host, port)
 
 remote_eval_socket = None
 def set_remote_eval_socket(socket):
@@ -410,6 +410,10 @@ def cmp(x, y):
         return 1
     else:
         return 0
+
+def is_valid_ip(ip):
+    m = re.match(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$", ip)
+    return bool(m) and all(map(lambda n: 0 <= int(n) <= 255, m.groups()))
 
 def is_valid_ip_path(ssh_path):
     """Check if SSH-PATH is a valid ssh path."""

@@ -30,7 +30,7 @@ class RemoteFileClient(threading.Thread):
 
     remote_password_dict = {}
 
-    def __init__(self, ssh_host, ssh_user, ssh_port, server_port, callback):
+    def __init__(self, ssh_host, ssh_user, ssh_port, server_port, callback, use_gssapi=False):
         threading.Thread.__init__(self)
 
         # Init.
@@ -42,7 +42,7 @@ class RemoteFileClient(threading.Thread):
 
 
         # Build SSH channel between local client and remote server.
-        self.ssh = self.connect_ssh()
+        self.ssh = self.connect_ssh(use_gssapi)
         self.transport = self.ssh.get_transport()
         self.chan = self.transport.open_channel("direct-tcpip", (self.ssh_host, self.server_port), ('0.0.0.0', 0))
 
@@ -52,20 +52,25 @@ class RemoteFileClient(threading.Thread):
         pub_keys = glob.glob(os.path.join(ssh_dir, '*.pub'))
         return pub_keys[0]
 
-    def connect_ssh(self):
+    def connect_ssh(self, use_gssapi):
         import paramiko
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:
-            # Login server with ssh public key.
-            pub_key = self.ssh_pub_key()
-            ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, key_filename=pub_key)
+            if use_gssapi:
+                import gssapi
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, gss_auth=True, gss_kex=True)
+            else:
+                # Login server with ssh public key.
+                pub_key = self.ssh_pub_key()
+                ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, key_filename=pub_key)
         except:
             print(traceback.format_exc())
 
             # Try login server with password if public key is not available.
-            password = RemoteFileClient.remote_password_dict[self.ssh_host] if self.ssh_host in RemoteFileClient.remote_password_dict else get_ssh_password(self.ssh_host)
+            password = RemoteFileClient.remote_password_dict[self.ssh_host] if self.ssh_host in RemoteFileClient.remote_password_dict else get_ssh_password(self.ssh_user, self.ssh_host, self.ssh_port)
             try:
                 ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, password=password)
 
