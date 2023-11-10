@@ -8,7 +8,8 @@
   "settings":{
     "gopls": {
       "usePlaceholders": true,
-      "completeUnimported": true
+      "completeUnimported": true,
+      "staticcheck": true
     }
   }
 }
