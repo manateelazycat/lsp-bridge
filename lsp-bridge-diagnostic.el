@@ -238,24 +238,26 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
     (when goto-beginning
       (goto-char (overlay-start diagnostic-overlay)))
 
-    ;; NOTE:
-    ;; We need use redisplay function to make sure diagnostic show in visible area.
-    ;; `redisplay' causes a slight flicker on the screen but currently there is no better solution.
-    (redisplay t)
+    ;; Try scroll window when current command is diagnostic jump commands.
+    (when (member (format "%s" this-command) '("lsp-bridge-diagnostic-jump-next", "lsp-bridge-diagnostic-jump-prev"))
+      ;; NOTE:
+      ;; We need use redisplay function to make sure diagnostic show in visible area.
+      ;; `redisplay' causes a slight flicker on the screen but currently there is no better solution.
+      (redisplay t)
 
-    ;; Adjusting the cursor position when it is too close to the edge of the window.
-    (let* ((window-start-line (save-excursion
-                                (goto-char (window-start))
+      ;; Adjusting the cursor position when it is too close to the edge of the window.
+      (let* ((window-start-line (save-excursion
+                                  (goto-char (window-start))
+                                  (current-line)))
+             (window-end-line (save-excursion
+                                (goto-char (window-end))
                                 (current-line)))
-           (window-end-line (save-excursion
-                              (goto-char (window-end))
-                              (current-line)))
-           (adjust-line-number 5))
-      (ignore-errors
-        (cond ((< (abs (- (current-line) window-start-line)) adjust-line-number)
-               (scroll-down-line adjust-line-number))
-              ((< (abs (- (current-line) window-end-line)) adjust-line-number)
-               (scroll-up-line adjust-line-number)))))
+             (adjust-line-number 5))
+        (ignore-errors
+          (cond ((< (abs (- (current-line) window-start-line)) adjust-line-number)
+                 (scroll-down-line adjust-line-number))
+                ((< (abs (- (current-line) window-end-line)) adjust-line-number)
+                 (scroll-up-line adjust-line-number))))))
 
     ;; Show diagnostic tooltip.
     (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-buffer)
