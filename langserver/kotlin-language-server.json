@@ -16,6 +16,9 @@
     "kotlin.completion.snippets.enabled": true,
     "kotlin.linting.debounceTime": 250,
     "kotlin.compiler.jvm.target": "11",
-    "kotlin.trace.server": "off"
+    "kotlin.trace.server": "off",
+    "kotlin.inlayHints.typeHints": true,
+    "kotlin.inlayHints.parameterHints": true,
+    "kotlin.inlayHints.chainedHints": true
   }
 }
