@@ -251,10 +251,11 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
                               (goto-char (window-end))
                               (current-line)))
            (adjust-line-number 5))
-      (cond ((< (abs (- (current-line) window-start-line)) adjust-line-number)
-             (scroll-down-line adjust-line-number))
-            ((< (abs (- (current-line) window-end-line)) adjust-line-number)
-             (scroll-up-line adjust-line-number))))
+      (ignore-errors
+        (cond ((< (abs (- (current-line) window-start-line)) adjust-line-number)
+               (scroll-down-line adjust-line-number))
+              ((< (abs (- (current-line) window-end-line)) adjust-line-number)
+               (scroll-up-line adjust-line-number)))))
 
     ;; Show diagnostic tooltip.
     (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-buffer)
