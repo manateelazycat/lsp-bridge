@@ -280,11 +280,19 @@ def get_emacs_func_result(method_name, *args):
 def get_command_result(command_string, cwd):
     import subprocess
 
-    process = subprocess.Popen(command_string, cwd=cwd, shell=True, text=True,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                               encoding="utf-8", errors="replace")
+    major, minor = sys.version_info[:2]
+
+    if major >= 3 and minor >= 7:
+        process = subprocess.Popen(command_string, cwd=cwd, shell=True, text=True,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   encoding="utf-8", errors="replace")
+    else:
+        process = subprocess.Popen(command_string, cwd=cwd, shell=True, universal_newlines=True,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   encoding="utf-8", errors="replace")
+
     ret = process.wait()
-    return "".join((process.stdout if ret == 0 else process.stderr).readlines()).strip()    # type: ignore
+    return "".join((process.stdout if ret == 0 else process.stderr).readlines()).strip()
 
 
 def generate_request_id():
