@@ -70,7 +70,7 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 
 1. 在远程服务器安装 lsp-bridge 和相应的 LSP Server
 2. 启动 lsp-bridge： `python3 lsp-bridge/lsp_bridge.py`
-3. 用`lsp-bridge-open-remote-file`命令打开文件， 输入用户名、 IP、 SSH 端口(默认 22) 和路径， 例如`user@ip:[ssh_port]:/path/file`。
+3. 用`lsp-bridge-open-remote-file`命令打开文件， 输入用户名、 IP、 SSH 端口(默认 22) 和路径， 例如`user@ip:[ssh_port]:/path/file`
 4. 启用`lsp-bridge-enable-with-tramp`选项可以直接打开 tramp 文件， 并用 lsp-bridge 的高效算法代替 tramp，实现流畅补全。如果 tramp 中 host 是在 `~/.ssh/config` 定义的，那么 lsp-birdge 可以同步下列选项用于远程连接:
    - HostName(必须是 ip 形式的 hostname，domain 形式的 hostname 会导致问题)
    - User

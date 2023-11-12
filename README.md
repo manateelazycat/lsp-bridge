@@ -72,7 +72,7 @@ It should be noted that lsp-bridge has three scanning modes:
 
 1. Install lsp-bridge and the corresponding LSP Server on the remote server.
 2. Start lsp-bridge: `python3 lsp-bridge/lsp_bridge.py`.
-3. Use the `lsp-bridge-open-remote-file` command to open files, entering the username, IP, SSH port (default 22), and path, such as `user@ip:[ssh_port]:/path/file`.
+3. Use the `lsp-bridge-open-remote-file` command to open files, entering the username, IP, SSH port (default 22), and path, such as `user@ip:[ssh_port]:/path/file`
 4. Enabling the `lsp-bridge-enable-with-tramp` option allows direct opening of tramp files, using the efficient algorithm of lsp-bridge instead of tramp, achieving smooth completion. If the host in tramp is defined in `~/.ssh/config`, lsp-bridge can synchronize the following options for remote connection:
    - HostName (must be in IP format, domain format may cause issues)
    - User
