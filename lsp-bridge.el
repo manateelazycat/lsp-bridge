@@ -2505,6 +2505,10 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
     (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)
     (setq lsp-bridge-tramp-sync-var t)))
 
+(defun lsp-bridge-tramp-show-hostnames ()
+  (interactive)
+  (lsp-bridge-call-async "message_hostnames"))
+
 (defcustom lsp-bridge-tramp-blacklist nil "tramp hosts that don't use lsp-bridge")
 
 (defun lsp-bridge-sync-tramp-remote ()

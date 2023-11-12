@@ -70,7 +70,13 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 
 1. 在远程服务器安装 lsp-bridge 和相应的 LSP Server
 2. 启动 lsp-bridge： `python3 lsp-bridge/lsp_bridge.py`
-3. 用`lsp-bridge-open-remote-file`命令打开文件， 输入用户名、 IP、 SSH 端口(默认 22) 和路径， 例如`user@ip:[ssh_port]:/path/file`。 启用`lsp-bridge-enable-with-tramp`选项可以直接打开 tramp 文件， 并用 lsp-bridge 的高效算法代替 tramp， 实现流畅补全
+3. 用`lsp-bridge-open-remote-file`命令打开文件， 输入用户名、 IP、 SSH 端口(默认 22) 和路径， 例如`user@ip:[ssh_port]:/path/file`
+4. 启用`lsp-bridge-enable-with-tramp`选项可以直接打开 tramp 文件， 并用 lsp-bridge 的高效算法代替 tramp，实现流畅补全。如果 tramp 中 host 是在 `~/.ssh/config` 定义的，那么 lsp-birdge 可以同步下列选项用于远程连接:
+   - HostName(必须是 ip 形式的 hostname，domain 形式的 hostname 会导致问题)
+   - User
+   - Port
+   - GSSAPIAuthentication
+   - ProxyCommand(当前只支持用 ProxyCommand 选项，不支持 ProxyJump 选项)
 
 远程补全原理：
 
@@ -83,6 +89,7 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 1. 若补全菜单未显示， 检查远程服务器的`lsp_bridge.py`输出， 可能是 LSP Server 未完全安装
 2. lsp-bridge 会用`~/.ssh`的第一个 *.pub 文件作为登录凭证。 如果公钥登录失败， 会要求输入密码。 lsp-bridge 不会存储密码， 建议用公钥登录以避免重复输入密码
 3. 你需要在远程服务器完整的下载整个 lsp-bridge git 仓库， 并切换到 lsp-bridge 目录来启动 `lsp_bridge.py`， `lsp_bridge.py` 需要其他文件来保证正常工作， 不能只把 `lsp_bridge.py` 文件拷贝到其他目录来启动
+4. 如果 tramp 文件出现 lsp-bridge 连接错误，可以执行 `lsp-bridge-tramp-show-hostnames` 函数，然后检查输出的 host 配置选项是否符合预期
 
 ## 按键
 

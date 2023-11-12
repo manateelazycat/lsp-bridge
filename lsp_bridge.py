@@ -239,6 +239,9 @@ class LspBridge:
         else:
             message_emacs("Please input valid path match rule: 'ip:/path/file'.")
 
+    def message_hostnames(self):
+        message_emacs(f"host_names:{self.host_names}")
+
     @threaded
     def sync_tramp_remote(self, server_username, server_host, ssh_port, filename):
         use_gssapi = False

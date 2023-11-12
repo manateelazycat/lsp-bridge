@@ -72,7 +72,13 @@ It should be noted that lsp-bridge has three scanning modes:
 
 1. Install lsp-bridge and the corresponding LSP Server on the remote server.
 2. Start lsp-bridge: `python3 lsp-bridge/lsp_bridge.py`.
-3. Use the `lsp-bridge-open-remote-file` command to open files, entering the username, IP, SSH port (default 22), and path, such as `user@ip:[ssh_port]:/path/file`. Enabling the `lsp-bridge-enable-with-tramp` option allows direct opening of tramp files, using the efficient algorithm of lsp-bridge instead of tramp, achieving smooth completion.
+3. Use the `lsp-bridge-open-remote-file` command to open files, entering the username, IP, SSH port (default 22), and path, such as `user@ip:[ssh_port]:/path/file`
+4. Enabling the `lsp-bridge-enable-with-tramp` option allows direct opening of tramp files, using the efficient algorithm of lsp-bridge instead of tramp, achieving smooth completion. If the host in tramp is defined in `~/.ssh/config`, lsp-bridge can synchronize the following options for remote connection:
+   - HostName (must be in IP format, domain format may cause issues)
+   - User
+   - Port
+   - GSSAPIAuthentication
+   - ProxyCommand (currently only supports ProxyCommand option, does not support ProxyJump option)
 
 Principle of remote completion:
 
@@ -85,6 +91,7 @@ Note:
 1. If the completion menu is not displayed, check the output of `lsp_bridge.py` on the remote server, it may be that the LSP Server is not fully installed.
 2. lsp-bridge will use the first *.pub file in `~/.ssh` as a login credential. If public key login fails, you will be asked to enter a password. lsp-bridge will not store the password, it is recommended to use public key login to avoid repeated password entry.
 3. To run lsp_bridge.py successfully you need to completely download the entire git repository of lsp-bridge on a remote server, and switch into its directory, lsp_bridge.py requires other files to function properly, so copying only the lsp_bridge.py file can't work
+4. If a tramp file encounters an lsp-bridge connection error, you can execute the `lsp-bridge-tramp-show-hostnames` function and then check if the output of the host configuration options meets expectations
 
 
 ## Keymap
