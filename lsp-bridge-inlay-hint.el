@@ -114,15 +114,16 @@
        " "))
 
 (defun lsp-bridge-inlay-hint-label-text (label-info)
-  (defun lsp-bridge-inlay-hint-label-text (label-info)
-    (format "%s"
-            (if (listp label-info)
-                ;; We concat value of list if label is list.
-                (mapconcat (lambda (label)
-                             (plist-get label :value))
-                           label-info)
-              ;; Otherwise label is string, just return itself.
-              label-info))))
+  (format "%s"
+          (if (listp label-info)
+              ;; We concat value of list if label is list.
+              (mapconcat (lambda (label)
+                           (plist-get label :value))
+                         label-info
+                         "") ; Separator for mapconcat
+            ;; Otherwise label is string, just return itself.
+            label-info))
+  )
 
 (defun lsp-bridge-inlay-hint--render (filepath filehost inlay-hints)
   (lsp-bridge--with-file-buffer
