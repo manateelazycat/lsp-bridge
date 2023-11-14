@@ -28,7 +28,7 @@ import traceback
 from core.utils import *
 from subprocess import PIPE
 from sys import stderr
-from distutils.version import StrictVersion
+from pkg_resources import parse_version
 
 TABNINE_PROTOCOL_VERSION = "1.0.14"
 TABNINE_EXECUTABLE = "TabNine.exe" if get_os_name() == "windows" else "TabNine"
@@ -78,7 +78,7 @@ class TabNine:
             try:
                 versions = os.listdir(self.tabnine_binaries_folder)
                 versions = list(filter(lambda f: os.path.isdir(os.path.join(self.tabnine_binaries_folder, f)), versions))
-                versions.sort(key=StrictVersion, reverse=True)
+                versions.sort(key=parse_version, reverse=True)
                 for version in versions:
                     version_path = os.path.join(self.tabnine_binaries_folder, version)
                     if os.path.isdir(version_path):
