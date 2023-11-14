@@ -340,6 +340,9 @@ class LspServer:
                         }
                     },
                     "isPreferredSupport": True
+                },
+                "inlayHint": {
+                    "dynamicRegistration": False
                 }
             }
         })
