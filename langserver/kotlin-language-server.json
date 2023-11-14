@@ -4,6 +4,7 @@
   "command": [
     "kotlin-language-server"
   ],
+  "forceInlayHint": true,
   "settings": {
     "kotlin": {
       "externalSources": {
