@@ -220,7 +220,8 @@ class LspServer:
         self.code_format_provider = False
         self.signature_help_provider = False
         self.workspace_symbol_provider = False
-        self.inlay_hint_provider = False
+        [enable_lsp_server_inlay_hint] = get_emacs_vars(["lsp-bridge-enable-inlay-hint"])
+        self.inlay_hint_provider = enable_lsp_server_inlay_hint
         self.semantic_tokens_provider = False
 
         self.code_action_kinds = [
