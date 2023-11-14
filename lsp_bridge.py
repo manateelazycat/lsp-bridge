@@ -270,6 +270,9 @@ class LspBridge:
                 self.host_names[alias] = {"server_host": server_host, "username": server_username, "ssh_port": ssh_port, "use_gssapi": use_gssapi,
                                           "proxy_command": proxy_command}
 
+        if not is_valid_ip(server_host):
+            message_emacs("HostName Must be IP format.")
+
         tramp_file_split = filename.rsplit(":", 1)
         tramp_method = tramp_file_split[0] + ":"
         file_path = tramp_file_split[1]
@@ -294,6 +297,12 @@ class LspBridge:
                 client = self.get_socket_client(server_host, REMOTE_FILE_ELISP_CHANNEL)
                 client.send_message("Connect")
                 message_emacs(f"Connect {server_username}@{server_host}#{ssh_port}...")
+
+                self.send_remote_file_message(server_host, {
+                    "command": "tramp_sync",
+                    "server": server_host,
+                    "method": tramp_method,
+                })
 
             eval_in_emacs("lsp-bridge-update-tramp-file-info", filename, server_host, file_path, tramp_method)
 

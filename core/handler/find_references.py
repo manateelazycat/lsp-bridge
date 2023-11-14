@@ -34,8 +34,9 @@ class FindReferences(Handler):
 
             references_counter = 0
             references_content = ""
+            tramp_method = get_remote_tramp_method()
             for i, (path, ranges) in enumerate(references_dict.items()):
-                references_content += "".join(["\n", REFERENCE_PATH, path, REFERENCE_ENDC, "\n"])
+                references_content += "".join(["\n", REFERENCE_PATH, tramp_method, path, REFERENCE_ENDC, "\n"])
 
                 for rg in ranges:
                     line = rg["start"]["line"]
