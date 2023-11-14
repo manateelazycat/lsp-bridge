@@ -238,8 +238,9 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
     (when goto-beginning
       (goto-char (overlay-start diagnostic-overlay)))
 
-    ;; Try scroll window when current command is diagnostic jump commands.
-    (when (member (format "%s" this-command) '("lsp-bridge-diagnostic-jump-next", "lsp-bridge-diagnostic-jump-prev"))
+    ;; Try scroll window when current command is diagnostic jump commands and code content exceeds screen.
+    (when (and (> (point-max) (window-end))
+               (member (format "%s" this-command) '("lsp-bridge-diagnostic-jump-next", "lsp-bridge-diagnostic-jump-prev")))
       ;; NOTE:
       ;; We need use redisplay function to make sure diagnostic show in visible area.
       ;; `redisplay' causes a slight flicker on the screen but currently there is no better solution.
