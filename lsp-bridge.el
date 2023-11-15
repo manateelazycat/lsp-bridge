@@ -1564,7 +1564,7 @@ So we build this macro to restore postion after code format."
                                  (or (null elt)
                                      (member (file-name-extension elt)
                                              lsp-bridge-search-words-prohibit-file-extensions)))
-                               (mapcar #'buffer-file-name (buffer-list)))))
+                               (mapcar (lambda (b) (substring-no-properties (buffer-file-name b))) (buffer-list)))))
       (lsp-bridge-call-async "search_file_words_index_files" files))))
 
 (defun lsp-bridge-search-words-update (begin-pos end-pos change-text)
