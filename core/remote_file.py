@@ -163,6 +163,12 @@ class RemoteFileServer:
             self.handle_close_file(data, client_socket)
         elif command == "change_file":
             self.handle_change_file(data, client_socket)
+        elif command == "tramp_sync":
+            self.handle_tramp_sync(data, client_socket)
+
+    def handle_tramp_sync(self, data, client_socket):
+        method = data["method"]
+        set_remote_tramp_method(method)
 
     def handle_open_file(self, data, client_socket):
         path = os.path.expanduser(data["path"])
