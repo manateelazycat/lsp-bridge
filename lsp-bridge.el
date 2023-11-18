@@ -1984,7 +1984,7 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
   ;; LSP server will confused those indent action and return wrong completion candidates.
   ;;
   ;; Example, when you enable `electric-indent-mode', when you type `std::', you will got wrong completion candidates from LSP server.
-  (electric-indent-mode -1)
+  (electric-indent-local-mode -1)
 
   ;; Don't enable lsp-bridge when current buffer is acm buffer.
   (unless (or (equal (buffer-name (current-buffer)) acm-buffer)
