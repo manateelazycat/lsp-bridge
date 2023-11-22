@@ -1480,7 +1480,7 @@ So we build this macro to restore postion after code format."
                (lsp-bridge-process-live-p))
       (unless (or (string-equal current-word "") (null current-word))
         (if (lsp-bridge-is-remote-file)
-            (lsp-bridge-remote-send-func-request "codeium_complete"
+            (lsp-bridge-remote-send-func-request "ctags_complete"
                                                  (list
                                                   current-word
                                                   (file-local-name (buffer-file-name))
