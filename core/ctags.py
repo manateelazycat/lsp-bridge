@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import subprocess
+import threading
 import re
 import os
 
@@ -27,6 +28,7 @@ DEFAULT_SORTER_CMD = '(<or> (if (and $name &name) (<> (length $name) (length &na
 class Ctags:    
     def __init__(self) -> None:
         self.current_cursor_offset = 0
+        self.lock = threading.RLock()
 
     def run_cmd_in_path(self, cmd, filename, in_shell=False):
         if os.path.isfile(filename):
@@ -123,12 +125,17 @@ class Ctags:
         return None
 
     def make_complete(self, symbol, filename, cursor_offset):
-        self.current_cursor_offset = cursor_offset
+        self.lock.acquire()
+        try:
+            self.current_cursor_offset = cursor_offset
+        finally:
+            self.lock.release()
+
         if not filename:
             return
 
         tagsfile = self.locate_dominating_file(filename, "tags")
-        if tagsfile is None:
+        if not tagsfile:
             return
         
         cmd = self.readtags_get_cmd(tagsfile, symbol, "prefix", False, DEFAULT_FILTER_CMD, DEFAULT_SORTER_CMD, "")
@@ -138,19 +145,15 @@ class Ctags:
         tags = map(self.parse_tag_line, lines)
         candidates = map(self.make_ctags_acm_candidate, tags)
 
-        completion_candidates = list(candidates)
+        self.dispatch(list(candidates), cursor_offset)
 
-        self.dispatch(lines, cursor_offset)
-
-    def dispatch(self, completion_candidates, cursor_offset):
-        if self.current_cursor_offset != cursor_offset:
-            # drop old completion items
-            return
-
-        print("ctags", cursor_offset)
-        print("ctags", self.current_cursor_offset, completion_candidates[0])
-
-        eval_in_emacs("lsp-bridge-search-backend--record-items", "ctags", completion_candidates)
+    def dispatch(self, candidates, cursor_offset):
+        self.lock.acquire()
+        try:
+            if self.current_cursor_offset == cursor_offset:
+                eval_in_emacs("lsp-bridge-search-backend--record-items", "ctags", candidates)
+        finally:
+            self.lock.release()
 
     def readtags_get_cmd(self, tagsfile, name, match, case_fold, filter, sorter, action):
         extras = ("-Ene" +
