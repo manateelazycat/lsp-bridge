@@ -133,17 +133,20 @@ class Ctags:
 
         lines = self.run_cmd_in_path(cmd, filename)
         
-        self.dispatch(lines, cursor_offset)
-
-    def dispatch(self, lines, cursor_offset):
-        if self.current_cursor_offset != cursor_offset:
-            # drop old completion items
-            return
-
         tags = map(self.parse_tag_line, lines)
         candidates = map(self.make_ctags_acm_candidate, tags)
 
         completion_candidates = list(candidates)
+
+        self.dispatch(lines, cursor_offset)
+
+    def dispatch(self, completion_candidates, cursor_offset):
+        if self.current_cursor_offset != cursor_offset:
+            # drop old completion items
+            return
+
+        print("ctags", cursor_offset)
+        print("ctags", self.current_cursor_offset, completion_candidates[0])
 
         eval_in_emacs("lsp-bridge-search-backend--record-items", "ctags", completion_candidates)
 
