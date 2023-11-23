@@ -124,6 +124,8 @@ class Ctags:
 
     def make_complete(self, symbol, filename, cursor_offset):
         self.current_cursor_offset = cursor_offset
+        if not filename:
+            return
 
         tagsfile = self.locate_dominating_file(filename, "tags")
         if tagsfile is None:
