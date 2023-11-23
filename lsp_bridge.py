@@ -345,7 +345,6 @@ class LspBridge:
                 eval_in_emacs("lsp-bridge-open-remote-file--response", data["server"], path, string_to_base64(data["content"]), data["jump_define_pos"])
                 message_emacs(f"Open file {server}:{path}")
 
-    @threaded
     def handle_lsp_message(self, message):
         data = parse_json_content(message)
         if data["command"] == "eval-in-emacs":
