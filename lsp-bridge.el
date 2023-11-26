@@ -733,7 +733,8 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-get-buffer-file-name-text ()
   ;; `buffer-file-name' may contain face property, we need use `substring-no-properties' remove those face from buffer name.
-  (substring-no-properties buffer-file-name))
+  (when buffer-file-name
+    (substring-no-properties buffer-file-name)))
 
 (defun lsp-bridge-get-buffer-truename (&optional filename)
   (if (lsp-bridge-is-remote-file)
