@@ -732,9 +732,12 @@ So we build this macro to restore postion after code format."
        lsp-bridge-remote-file-flag))
 
 (defun lsp-bridge-get-buffer-file-name-text ()
+  (lsp-bridge-buffer-file-name buffer-file-name))
+
+(defun lsp-bridge-buffer-file-name (name)
   ;; `buffer-file-name' may contain face property, we need use `substring-no-properties' remove those face from buffer name.
-  (when (stringp buffer-file-name)
-    (substring-no-properties buffer-file-name)))
+  (when (stringp name)
+    (substring-no-properties name)))
 
 (defun lsp-bridge-get-buffer-truename (&optional filename)
   (if (lsp-bridge-is-remote-file)
@@ -1576,7 +1579,7 @@ So we build this macro to restore postion after code format."
                                  (or (null elt)
                                      (member (file-name-extension elt)
                                              lsp-bridge-search-words-prohibit-file-extensions)))
-                               (mapcar (lambda (b) (substring-no-properties (buffer-file-name b))) (buffer-list)))))
+                               (mapcar (lambda (b) (lsp-bridge-buffer-file-name (buffer-file-name b))) (buffer-list)))))
       (lsp-bridge-call-async "search_file_words_index_files" files))))
 
 (defun lsp-bridge-search-words-update (begin-pos end-pos change-text)
