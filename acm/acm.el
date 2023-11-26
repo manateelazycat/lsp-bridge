@@ -103,6 +103,7 @@
 (require 'acm-backend-tabnine)
 (require 'acm-backend-tailwind)
 (require 'acm-backend-citre)
+(require 'acm-backend-ctags)
 (require 'acm-backend-codeium)
 (require 'acm-backend-copilot)
 (require 'acm-quick-access)
@@ -446,6 +447,7 @@ Only calculate template candidate when type last character."
          template-candidates
          template-first-part-candidates
          template-second-part-candidates
+         ctags-candidates
          citre-candidates)
     (when acm-enable-tabnine
       (setq tabnine-candidates (acm-backend-tabnine-candidates keyword)))
@@ -467,12 +469,15 @@ Only calculate template candidate when type last character."
 
         (when acm-enable-citre
           (setq citre-candidates (unless (acm-in-comment-p) (acm-backend-citre-candidates keyword))))
+        (when acm-enable-ctags
+          (setq ctags-candidates (unless (acm-in-comment-p) (acm-backend-ctags-candidates keyword))))
         ;; Fetch syntax completion candidates.
         (setq lsp-candidates (unless (acm-in-comment-p) (acm-backend-lsp-candidates keyword)))
         (setq mode-candidates (append
                                (unless (acm-in-comment-p) (acm-backend-tailwind-candidates keyword))
                                (unless (acm-in-comment-p) (acm-backend-elisp-candidates keyword))
                                lsp-candidates
+                               ctags-candidates
                                citre-candidates
                                (acm-backend-search-file-words-candidates keyword)
                                (acm-backend-telega-candidates keyword)))

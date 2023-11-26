@@ -46,6 +46,7 @@ from core.copilot import Copilot
 from core.utils import *
 from core.handler import *
 from core.remote_file import RemoteFileClient, RemoteFileServer, save_ip
+from core.ctags import Ctags
 
 def threaded(func):
     @wraps(func)
@@ -99,6 +100,10 @@ class LspBridge:
         # event_loop never exit, simulation event loop.
         self.event_loop.join()
 
+    @threaded
+    def ctags_complete(self, symbol, filename, cursor_offset):
+        self.ctags.make_complete(symbol, filename, cursor_offset)
+
     def init_search_backends(self):
         # Init tabnine.
         self.tabnine = TabNine()
@@ -115,6 +120,7 @@ class LspBridge:
         self.search_list = SearchList()
         self.search_tailwind_keywords = SearchTailwindKeywords()
         self.search_paths = SearchPaths()
+        self.ctags = Ctags()
 
         # Build EPC interfaces.
         handler_subclasses = list(map(lambda cls: cls.name, Handler.__subclasses__()))
@@ -339,7 +345,6 @@ class LspBridge:
                 eval_in_emacs("lsp-bridge-open-remote-file--response", data["server"], path, string_to_base64(data["content"]), data["jump_define_pos"])
                 message_emacs(f"Open file {server}:{path}")
 
-    @threaded
     def handle_lsp_message(self, message):
         data = parse_json_content(message)
         if data["command"] == "eval-in-emacs":

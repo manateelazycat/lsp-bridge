@@ -1476,6 +1476,16 @@ So we build this macro to restore postion after code format."
                         (minibufferp))))
       (lsp-bridge-codeium-complete))
 
+    (when (and acm-enable-ctags
+               (lsp-bridge-process-live-p))
+      (unless (or (string-equal current-word "") (null current-word))
+        (if (lsp-bridge-is-remote-file)
+            (lsp-bridge-remote-send-func-request "ctags_complete"
+                                                 (list
+                                                  current-word
+                                                  (file-local-name (buffer-file-name))
+                                                  (1- (point))))
+          (lsp-bridge-call-async "ctags_complete" current-word (buffer-file-name) (1- (point))))))
 
     ;; Search sdcv dictionary.
     (when acm-enable-search-sdcv-words
