@@ -924,7 +924,9 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-call-file-api-p ()
   (and lsp-bridge-mode
        (lsp-bridge-has-lsp-server-p)
-       acm-backend-lsp-server-command-exist
+       (if (boundp 'acm-backend-lsp-server-command-exist)
+           acm-backend-lsp-server-command-exist
+         t)
        (lsp-bridge-process-live-p)))
 
 (defun lsp-bridge-call-file-api (method &rest args)
