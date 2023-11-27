@@ -249,7 +249,7 @@ class LspBridge:
         message_emacs(f"host_names:{self.host_names}")
 
     @threaded
-    def sync_tramp_remote(self, server_username, server_host, ssh_port, filename):
+    def sync_tramp_remote(self, server_username, server_host, ssh_port, filename, reconnect):
         use_gssapi = False
         proxy_command = None
         alias = None
@@ -299,6 +299,10 @@ class LspBridge:
 
         try:
             client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
+            if reconnect:
+                self.client_dict.pop(f"{server_host}:{REMOTE_FILE_COMMAND_CHANNEL}", None)
+                self.client_dict.pop(f"{server_host}:{REMOTE_FILE_SYNC_CHANNEL}", None)
+                self.client_dict.pop(f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}", None)
             if client_id not in self.client_dict:
                 client = self.get_socket_client(server_host, REMOTE_FILE_ELISP_CHANNEL)
                 client.send_message("Connect")
