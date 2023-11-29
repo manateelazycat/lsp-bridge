@@ -354,12 +354,19 @@ class LspServer:
                 }
             })
 
-        if not self.enable_diagnostics:
-            merge_capabilites = merge(merge_capabilites, {
-                "textDocument": {
-                    "publishDiagnostics": False
+        merge_capabilites = merge(merge_capabilites, {
+            "textDocument": {
+                "publishDiagnostics": {
+                    "relatedInformation": self.enable_diagnostics,
+                    "tagSupport": {
+                        "valueSet": [1, 2]
+                    },
+                    "versionSupport": self.enable_diagnostics,
+                    "codeDescriptionSupport": self.enable_diagnostics,
+                    "dataSupport": self.enable_diagnostics
                 }
-            })
+            }
+        })
 
         return merge_capabilites
 
