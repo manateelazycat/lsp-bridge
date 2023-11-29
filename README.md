@@ -79,6 +79,11 @@ It should be noted that lsp-bridge has three scanning modes:
    - Port
    - GSSAPIAuthentication
    - ProxyCommand (currently only supports ProxyCommand option, does not support ProxyJump option)
+5. `(setq lsp-bridge-remote-start-automatically t)` can automatically
+start the lsp_bridge.py process on the remote host (which needs to support bash) when opening a tramp file, and it will also automatically close the process when quitting emacs. When using this feature, the following options need to be correctly set:
+    - lsp-bridge-remote-python-command: the name of the python command on the remote host
+    - lsp-bridge-remote-python-file: the full path of lsp_bridge.py on the remote host
+    - lsp-bridge-remote-log: the full path for log output of lsp_bridge.py on the remote host
 
 Principle of remote completion:
 
