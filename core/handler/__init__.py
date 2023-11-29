@@ -43,26 +43,26 @@ class Handler(abc.ABC):
 
 # import subclasses so that we can use core.handler.Handler.__subclasses__()
 # import at the end of this file to avoid CIRCULAR IMPORT
-from core.handler.completion import Completion
-from core.handler.completion_item import CompletionItem
-from core.handler.find_define import FindDefine
-from core.handler.find_type_define import FindTypeDefine
-from core.handler.find_implementation import FindImplementation
-from core.handler.find_references import FindReferences
-from core.handler.peek import PeekFindDefine, PeekFindReferences
-from core.handler.hover import Hover
-from core.handler.signature_help import SignatureHelp
-from core.handler.prepare_rename import PrepareRename
-from core.handler.rename import Rename
-from core.handler.jdt_uri_resolver import JDTUriResolver
-from core.handler.deno_uri_resolver import DenoUriResolver
-from core.handler.code_action import CodeAction
-from core.handler.formatting import Formatting
-from core.handler.execute_command import ExecuteCommand
-from core.handler.workspace_symbol import WorkspaceSymbol
-from core.handler.call_hierarchy import PrepareCallHierarchyIncomingCalls, PrepareCallHierarchyOutgoingCalls, CallHierarchyIncomingCalls, CallHierarchyOutgoingCalls
-from core.handler.document_symbol import DocumentSymbol
-from core.handler.jdtls.jdtls_list_overridable_methods import JdtlsListOverridableMethods
-from core.handler.jdtls.jdtls_add_overridable_methods import JdtlsAddOverridableMethods
-from core.handler.inlay_hint import InlayHint
-from core.handler.semantic_tokens import SemanticTokens
+from core.handler.completion import Completion  # noqa: F401
+from core.handler.completion_item import CompletionItem  # noqa: F401
+from core.handler.find_define import FindDefine  # noqa: F401
+from core.handler.find_type_define import FindTypeDefine  # noqa: F401
+from core.handler.find_implementation import FindImplementation  # noqa: F401
+from core.handler.find_references import FindReferences  # noqa: F401
+from core.handler.peek import PeekFindDefine, PeekFindReferences  # noqa: F401
+from core.handler.hover import Hover  # noqa: F401
+from core.handler.signature_help import SignatureHelp  # noqa: F401
+from core.handler.prepare_rename import PrepareRename  # noqa: F401
+from core.handler.rename import Rename  # noqa: F401
+from core.handler.jdt_uri_resolver import JDTUriResolver  # noqa: F401
+from core.handler.deno_uri_resolver import DenoUriResolver  # noqa: F401
+from core.handler.code_action import CodeAction  # noqa: F401
+from core.handler.formatting import Formatting  # noqa: F401
+from core.handler.execute_command import ExecuteCommand  # noqa: F401
+from core.handler.workspace_symbol import WorkspaceSymbol  # noqa: F401
+from core.handler.call_hierarchy import PrepareCallHierarchyIncomingCalls, PrepareCallHierarchyOutgoingCalls, CallHierarchyIncomingCalls, CallHierarchyOutgoingCalls  # noqa: F401
+from core.handler.document_symbol import DocumentSymbol  # noqa: F401
+from core.handler.jdtls.jdtls_list_overridable_methods import JdtlsListOverridableMethods  # noqa: F401
+from core.handler.jdtls.jdtls_add_overridable_methods import JdtlsAddOverridableMethods  # noqa: F401
+from core.handler.inlay_hint import InlayHint  # noqa: F401
+from core.handler.semantic_tokens import SemanticTokens  # noqa: F401
