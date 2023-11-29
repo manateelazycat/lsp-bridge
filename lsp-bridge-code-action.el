@@ -172,6 +172,9 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
               (call-frame-height (frame-height lsp-bridge-call-hierarchy--frame))
               (call-frame-width (frame-width lsp-bridge-call-hierarchy--frame))
               (width 0) (height 0)
+              (menu-window-height
+               (min (length lsp-bridge-call-hierarchy--popup-response)
+                    (/ (frame-height acm-frame--emacs-frame) 4))) ;; make sure menu-window not exceed 1/4 of frame height
               (window-min-height 0) (window-min-width 0)
               (live-p (frame-live-p lsp-bridge-call-hierarchy--frame)))
     (with-current-buffer  "*lsp-bridge-code-action-preview*"
@@ -218,7 +221,7 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
 
     (acm-frame-set-frame-size lsp-bridge-call-hierarchy--frame
                               (max width call-frame-width)
-                              (+ height (length lsp-bridge-call-hierarchy--popup-response)))
+                              (+ height menu-window-height))
     (acm-frame-adjust-frame-pos lsp-bridge-call-hierarchy--frame)
     (select-frame-set-input-focus lsp-bridge-call-hierarchy--frame)
 
@@ -238,8 +241,7 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
           (unless (eq window menu-window)
             (set-window-buffer window "*lsp-bridge-code-action-preview*")))
         (select-window menu-window)
-        (set-window-text-height menu-window
-                                (length lsp-bridge-call-hierarchy--popup-response))))))
+        (set-window-text-height menu-window menu-window-height)))))
 
 (defun lsp-bridge-code-action-popup-maybe-preview-do ()
   (let* ((buffer (buffer-name lsp-bridge-code-action--current-buffer))
@@ -319,7 +321,8 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
     ;; Don't adjust frame position if code action menu current is visible.
     (unless menu-frame-exist
       (acm-frame-set-frame-position lsp-bridge-call-hierarchy--frame (car cursor) (+ (cdr cursor) (line-pixel-height)))
-      (acm-frame-set-frame-size lsp-bridge-call-hierarchy--frame menu-width menu-length))
+      (acm-frame-set-frame-size lsp-bridge-call-hierarchy--frame menu-width
+                                (min menu-length (/ (frame-height acm-frame--emacs-frame) 4))))
 
     (advice-add 'lsp-bridge-call-hierarchy-maybe-preview :override #'lsp-bridge-code-action-popup-maybe-preview)
     (advice-add 'lsp-bridge-call-hierarchy-select :override #'lsp-bridge-code-action-popup-select)
