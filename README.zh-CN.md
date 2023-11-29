@@ -77,6 +77,11 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
    - Port
    - GSSAPIAuthentication
    - ProxyCommand(当前只支持用 ProxyCommand 选项， 不支持 ProxyJump 选项)
+5. `(setq lsp-bridge-remote-start-automatically t)` 可以在打开 tramp 文件时自动启动远程机器(需要支持 bash)上的 lsp_bridge.py 进程，退出 emacs 时也会自动关闭。使用该功能时需要正确设置下列选项：
+   - lsp-bridge-remote-python-command: 远程机器上的 python 命令名
+   - lsp-bridge-remote-python-file: 远程机器上 lsp_bridge.py 的路经
+   - lsp-bridge-remote-log: 远程机器上 lsp_bridge.py 的 log 输出路经
+
 
 远程补全原理：
 

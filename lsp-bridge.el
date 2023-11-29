@@ -2519,6 +2519,8 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
     (setq-local lsp-bridge-remote-file-host host)
     (setq-local lsp-bridge-remote-file-path path)
 
+    (read-only-mode -1)
+
     (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)
     (setq lsp-bridge-tramp-sync-var t)))
 
@@ -2528,6 +2530,23 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 
 (defcustom lsp-bridge-tramp-blacklist nil "tramp hosts that don't use lsp-bridge")
 
+(defvar lsp-bridge-remote-process-alist nil)
+
+(defcustom lsp-bridge-remote-python-command
+  "python3"
+  "python command on remote host")
+
+(defcustom lsp-bridge-remote-python-file
+  "~/lsp-bridge/lsp_bridge.py"
+  "full path of lsp_bridge.py file on remote host")
+
+(defcustom lsp-bridge-remote-log
+  "~/lsp-bridge/lbr_log.txt"
+  "full path of log file on remote host")
+
+(defcustom lsp-bridge-remote-start-automatically nil
+  "whether start remote lsp-bridge.py automatically")
+
 (defun lsp-bridge-sync-tramp-remote ()
   (interactive)
   (let* ((file-name (buffer-file-name))
@@ -2536,10 +2555,27 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
          (domain (tramp-file-name-domain tramp-file-name))
          (port (tramp-file-name-port tramp-file-name))
          (host (tramp-file-name-host tramp-file-name))
-         (path (tramp-file-name-localname tramp-file-name)))
+         (path (tramp-file-name-localname tramp-file-name))
+         lsp-bridge-remote-process reconnect)
+
+    (read-only-mode 1)
+
+    (when lsp-bridge-remote-start-automatically
+      (unless (and (assoc host lsp-bridge-remote-process-alist)
+                   (process-live-p (cdr (assoc host lsp-bridge-remote-process-alist))))
+        (setq lsp-bridge-remote-process (make-process :name (concat "LBR@" host)
+                                                      :command `("bash"
+                                                                 "-c"
+                                                                 ,(format "%s %s > %s 2>&1"
+                                                                          lsp-bridge-remote-python-command
+                                                                          lsp-bridge-remote-python-file
+                                                                          lsp-bridge-remote-log))
+                                                      :file-handler t))
+        (push `(,host . ,lsp-bridge-remote-process) lsp-bridge-remote-process-alist)
+        (setq reconnect t)))
 
     (when (not (member host lsp-bridge-tramp-blacklist))
-      (lsp-bridge-call-async "sync_tramp_remote" username host port file-name))))
+      (lsp-bridge-call-async "sync_tramp_remote" username host port file-name reconnect))))
 
 (defun lsp-bridge-open-remote-file--response(server path content position)
   (let ((buf-name (format "[LBR] %s" (file-name-nondirectory path))))
