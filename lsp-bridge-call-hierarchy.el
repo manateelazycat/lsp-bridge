@@ -183,7 +183,7 @@
     (define-key map (kbd "M-p") 'lsp-bridge-call-hierarchy-prev)
     (define-key map (kbd "m") 'lsp-bridge-call-hierarchy-select)
     (define-key map (kbd "RET") 'lsp-bridge-call-hierarchy-select)
-    (define-key map (kbd "ESC") 'lsp-bridge-call-hierarchy-quit)
+    (define-key map (kbd "<escape>") 'lsp-bridge-call-hierarchy-quit)
     (define-key map (kbd "q") 'lsp-bridge-call-hierarchy-quit)
     (define-key map (kbd "C-g") 'lsp-bridge-call-hierarchy-quit)
   map))
