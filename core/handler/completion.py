@@ -62,13 +62,6 @@ class Completion(Handler):
         # Sort by length.
         return -1 if len(x_label) < len(y_label) else (1 if len(x_label) > len(y_label) else 0)
 
-    def get_fuzzy_option(self):
-        for server in self.file_action.get_match_lsp_servers("completion"):
-            if server.server_name.endswith("#" + self.method_server_name):
-                return server.server_info.get("incomplete-fuzzy-match")
-
-        return False
-
     def get_display_new_text(self):
         for server in self.file_action.get_match_lsp_servers("completion"):
             if server.server_info.get("displayNewText", False):
@@ -114,8 +107,8 @@ class Completion(Handler):
         items = {}
 
         if response is not None:
-            # Get value of 'incomplete-fuzzy-match' from lsp server config file.
-            fuzzy = self.get_fuzzy_option()
+            # Get match mode to filter candidates.
+            match_mode = self.file_action.completion_match_mode
 
             # Some LSP server, such as Wen, need assign textEdit/newText to displayLabel.
             display_new_text = self.get_display_new_text()
@@ -125,11 +118,13 @@ class Completion(Handler):
                 label = item["label"]
                 detail = item.get("detail", "")
 
-                # NOTE:
-                # If lsp server contain 'incomplete-fuzzy-match' option and it's True, we filter 'label' with fuzzy algorithm.
-                # Otherwise, don't filter 'label' with 'prefix', such as we input "std::" in c++, all candidate's prefix is not "::"
-                if fuzzy and not string_match(label.lower(), self.prefix.lower(), fuzzy=fuzzy):
-                    continue
+                # Try to drop current candidate if it match user rule.
+                if match_mode == "prefix":
+                    if not string_match(label.lower(), self.prefix.lower(), fuzzy=False):
+                        continue
+                elif match_mode == "fuzzy":
+                    if not string_match(label.lower(), self.prefix.lower(), fuzzy=True):
+                        continue
 
                 annotation = kind if kind != "" else detail
 

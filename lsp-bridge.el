@@ -2534,18 +2534,18 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 
 (defcustom lsp-bridge-remote-python-command
   "python3"
-  "python command on remote host")
+  "Python command on remote host.")
 
 (defcustom lsp-bridge-remote-python-file
   "~/lsp-bridge/lsp_bridge.py"
-  "full path of lsp_bridge.py file on remote host")
+  "Full path of lsp_bridge.py file on remote host.")
 
 (defcustom lsp-bridge-remote-log
   "~/lsp-bridge/lbr_log.txt"
-  "full path of log file on remote host")
+  "Full path of log file on remote host.")
 
 (defcustom lsp-bridge-remote-start-automatically nil
-  "whether start remote lsp-bridge.py automatically")
+  "Whether start remote lsp-bridge.py automatically.")
 
 (defun lsp-bridge-sync-tramp-remote ()
   (interactive)

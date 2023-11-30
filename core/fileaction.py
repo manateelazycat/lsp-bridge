@@ -93,6 +93,7 @@ class FileAction:
 
         (self.enable_auto_import,
          self.completion_items_limit,
+         self.completion_match_mode,
          self.insert_spaces,
          self.enable_push_diagnostics,
          self.push_diagnostic_idle,
@@ -100,6 +101,7 @@ class FileAction:
          self.diagnostics_max_number) = get_emacs_vars([
              "acm-backend-lsp-enable-auto-import",
              "acm-backend-lsp-candidates-max-number",
+             "acm-backend-lsp-match-mode",
              "indent-tabs-mode",
              "lsp-bridge-enable-diagnostics",
              "lsp-bridge-diagnostic-fetch-idle",

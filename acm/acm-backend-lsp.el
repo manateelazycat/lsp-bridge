@@ -108,6 +108,17 @@
   :type 'boolean
   :group 'acm-backend-lsp)
 
+(defcustom acm-backend-lsp-match-mode "normal"
+  "The match mode to filter completion candidates.
+
+normal: don't filter candidates.
+prefix: filter candidates with input prefix, note such as C++, after `std::', candidate's prefix is not `::'
+fuzzy: fitler candidates with fuzzy algorithm
+
+Recommand use `normal' that follow LSP server response, emacser's behavior typically does not adapt to LSP protocol."
+  :type 'string
+  :group 'acm-backend-lsp)
+
 (defvar acm-backend-lsp-fetch-completion-item-func nil)
 (defvar-local acm-backend-lsp-fetch-completion-item-ticker nil)
 
