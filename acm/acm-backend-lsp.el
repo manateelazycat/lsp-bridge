@@ -113,6 +113,7 @@
 
 normal: don't filter candidates.
 prefix: filter candidates with input prefix, note such as C++, after `std::', candidate's prefix is not `::'
+prefixCaseSensitive: filter candidates with input prefix, and case sensitive
 fuzzy: fitler candidates with fuzzy algorithm
 
 Recommand use `normal' that follow LSP server response, emacser's behavior typically does not adapt to LSP protocol."

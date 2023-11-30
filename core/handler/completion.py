@@ -122,6 +122,9 @@ class Completion(Handler):
                 if match_mode == "prefix":
                     if not string_match(label.lower(), self.prefix.lower(), fuzzy=False):
                         continue
+                elif match_mode == "prefixCaseSensitive":
+                    if not string_match(label, self.prefix, fuzzy=False):
+                        continue
                 elif match_mode == "fuzzy":
                     if not string_match(label.lower(), self.prefix.lower(), fuzzy=True):
                         continue
