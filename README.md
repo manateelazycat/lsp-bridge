@@ -55,6 +55,7 @@ Please note:
 
 1. When using lsp-bridge, please first disable other completion plugins, such as lsp-mode, eglot, company, corfu, etc. lsp-bridge provides a complete solution from the completion backend, completion frontend to multi-backend integration.
 2. In addition to providing LSP completion, lsp-bridge also provides many non-LSP completion backends, including file words, paths, Yas/Tempel, TabNine, Codeium, Copilot, Citre, Tailwind, Ctags and other completion backends. If you expect to provide these completions in a certain mode, please add the corresponding mode to `lsp-bridge-default-mode-hooks`.
+3. In terminal mode, lsp-bridge cannot popup the completion menu, please use a GUI interface (because Emacs lacks pixel-level coordinate APIs and cross-window display APIs in terminals, resulting in an unsatisfactory completion experience)
 
 ## Local Usage
 

@@ -53,6 +53,7 @@ lsp-bridge 的优势：
 
 1. 使用 lsp-bridge 时， 请先关闭其他补全插件， 比如 lsp-mode, eglot, company, corfu 等等， lsp-bridge 提供从补全后端、 补全前端到多后端融合的全套解决方案。
 2. lsp-bridge 除了提供 LSP 补全以外， 也提供了很多非 LSP 的补全后端， 包括文件单词、 路径、 Yas/Tempel、 TabNine、 Codeium、 Copilot、 Citre、 Tailwind、 Ctags 等补全后端， 如果你期望在某个模式提供这些补全， 请把对应的模式添加到 `lsp-bridge-default-mode-hooks` 
+3. 终端模式下， lsp-bridge 没法弹出补全菜单， 请使用 GUI 界面 (因为 Emacs 终端下缺乏像素级坐标 API 和跨窗口显示 API， 无法做到良好的补全体验)
 
 ## 本地使用
 
@@ -77,7 +78,7 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
    - Port
    - GSSAPIAuthentication
    - ProxyCommand(当前只支持用 ProxyCommand 选项， 不支持 ProxyJump 选项)
-5. `(setq lsp-bridge-remote-start-automatically t)` 可以在打开 tramp 文件时自动启动远程机器(需要支持 bash)上的 lsp_bridge.py 进程，退出 emacs 时也会自动关闭。使用该功能时需要正确设置下列选项：
+5. `(setq lsp-bridge-remote-start-automatically t)` 可以在打开 tramp 文件时自动启动远程机器(需要支持 bash)上的 lsp_bridge.py 进程， 退出 emacs 时也会自动关闭。 使用该功能时需要正确设置下列选项：
    - lsp-bridge-remote-python-command: 远程机器上的 python 命令名
    - lsp-bridge-remote-python-file: 远程机器上 lsp_bridge.py 的路经
    - lsp-bridge-remote-log: 远程机器上 lsp_bridge.py 的 log 输出路经
