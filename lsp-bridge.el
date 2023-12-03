@@ -2558,23 +2558,23 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
          (path (tramp-file-name-localname tramp-file-name))
          lsp-bridge-remote-process reconnect)
 
-    (read-only-mode 1)
-
-    (when lsp-bridge-remote-start-automatically
-      (unless (and (assoc host lsp-bridge-remote-process-alist)
-                   (process-live-p (cdr (assoc host lsp-bridge-remote-process-alist))))
-        (setq lsp-bridge-remote-process (make-process :name (concat "LBR@" host)
-                                                      :command `("bash"
-                                                                 "-c"
-                                                                 ,(format "%s %s > %s 2>&1"
-                                                                          lsp-bridge-remote-python-command
-                                                                          lsp-bridge-remote-python-file
-                                                                          lsp-bridge-remote-log))
-                                                      :file-handler t))
-        (push `(,host . ,lsp-bridge-remote-process) lsp-bridge-remote-process-alist)
-        (setq reconnect t)))
-
     (when (not (member host lsp-bridge-tramp-blacklist))
+      (read-only-mode 1)
+
+      (when lsp-bridge-remote-start-automatically
+        (unless (and (assoc host lsp-bridge-remote-process-alist)
+                     (process-live-p (cdr (assoc host lsp-bridge-remote-process-alist))))
+          (setq lsp-bridge-remote-process (make-process :name (concat "LBR@" host)
+                                                        :command `("bash"
+                                                                   "-c"
+                                                                   ,(format "%s %s > %s 2>&1"
+                                                                            lsp-bridge-remote-python-command
+                                                                            lsp-bridge-remote-python-file
+                                                                            lsp-bridge-remote-log))
+                                                        :file-handler t))
+          (push `(,host . ,lsp-bridge-remote-process) lsp-bridge-remote-process-alist)
+          (setq reconnect t)))
+
       (lsp-bridge-call-async "sync_tramp_remote" username host port file-name reconnect))))
 
 (defun lsp-bridge-open-remote-file--response(server path content position)
