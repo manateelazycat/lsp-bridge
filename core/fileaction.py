@@ -352,12 +352,20 @@ class FileAction:
 
     def send_code_action_request(self, lsp_server, range_start, range_end, action_kind):
         lsp_server_name = lsp_server.server_info["name"]
+
+        diagnostics = []
+        if lsp_server_name in self.diagnostics:
+            for diagnostic in self.diagnostics[lsp_server_name]:
+                if "range" in diagnostic and not (
+                    diagnostic["range"]["start"]["line"] >= range_start["line"]
+                    and diagnostic["range"]["end"]["line"] <= range_end["line"]
+                ):
+                    continue
+                diagnostics.append(diagnostic)
+
         self.send_server_request(
-            lsp_server,
-            "code_action",
-            lsp_server_name,
-            self.diagnostics[lsp_server_name] if lsp_server_name in self.diagnostics else [],
-            range_start, range_end, action_kind)
+            lsp_server, "code_action", lsp_server_name, diagnostics, range_start, range_end, action_kind
+        )
 
     def save_file(self, buffer_name):
         for lsp_server in self.get_lsp_servers():
