@@ -49,6 +49,33 @@ lsp-bridge 的优势：
   (global-lsp-bridge-mode))
 ```
 
+* 如果你使用 `doom-emacs`
+
+添加下面配置到文件 `packages.el`
+
+``` elisp
+(when (package! lsp-bridge
+        :recipe (:host github
+                 :repo "manateelazycat/lsp-bridge"
+                 :branch "master"
+                 :files ("*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+                 ;; do not perform byte compilation or native compilation for lsp-bridge
+                 :build (:not compile)))
+  (package! markdown-mode)
+  (package! yasnippet))
+```
+
+添加下面配置到文件 `config.el`
+
+``` elisp
+(use-package! lsp-bridge
+  :config
+  (setq lsp-bridge-enable-log nil)
+  (global-lsp-bridge-mode))
+```
+
+并执行命令 `doom sync` 进行安装。
+
 请注意:
 
 1. 使用 lsp-bridge 时， 请先关闭其他补全插件， 比如 lsp-mode, eglot, company, corfu 等等， lsp-bridge 提供从补全后端、 补全前端到多后端融合的全套解决方案。
