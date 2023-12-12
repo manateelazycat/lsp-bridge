@@ -1994,15 +1994,16 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
 
   (add-hook 'post-command-hook #'lsp-bridge-start-process)
 
-  ;; NOTE:
-  ;; Don't enable `electric-indent-mode' in lsp-bridge, `electric-indent-post-self-insert-function'
-  ;;
-  ;; It will try adjust line indentation *AFTER* user insert character,
-  ;; this additional indent action send excessive `change_file' request to lsp server.
-  ;; LSP server will confused those indent action and return wrong completion candidates.
-  ;;
-  ;; Example, when you enable `electric-indent-mode', when you type `std::', you will got wrong completion candidates from LSP server.
-  (electric-indent-local-mode -1)
+  (when lsp-bridge-disable-electric-indent
+    ;; NOTE:
+    ;; Don't enable `electric-indent-mode' in lsp-bridge, `electric-indent-post-self-insert-function'
+    ;;
+    ;; It will try adjust line indentation *AFTER* user insert character,
+    ;; this additional indent action send excessive `change_file' request to lsp server.
+    ;; LSP server will confused those indent action and return wrong completion candidates.
+    ;;
+    ;; Example, when you enable `electric-indent-mode', when you type `std::', you will got wrong completion candidates from LSP server.
+    (electric-indent-local-mode -1))
 
   ;; Don't enable lsp-bridge when current buffer is acm buffer.
   (unless (or (equal (buffer-name (current-buffer)) acm-buffer)
@@ -2546,6 +2547,19 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 
 (defcustom lsp-bridge-remote-start-automatically nil
   "Whether start remote lsp-bridge.py automatically.")
+
+(defcustom lsp-bridge-disable-electric-indent nil
+  "`electric-indent-post-self-insert-function' will cause return wrong completion candidates from LSP server, such as type `std::' in C++.
+
+Please turn this option on if you want fix `std::' completion candidates, at same time, `electric-indent-mode' will disable by lsp-bridge.
+
+Please keep this option off if you need `electric-indent-mode' feature more.
+
+It's a bug of `electric-indent-mode' that it will try adjust line indentation *AFTER* user insert character,
+this additional indent action send excessive `change_file' request to lsp server.
+LSP server will confused those indent action and return wrong completion candidates.
+
+I haven't idea how to make lsp-bridge works with `electric-indent-mode', PR are welcome.")
 
 (defun lsp-bridge-sync-tramp-remote ()
   (interactive)
