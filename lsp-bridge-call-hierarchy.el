@@ -179,6 +179,8 @@
     (define-key map (kbd "k") 'lsp-bridge-call-hierarchy-prev)
     (define-key map (kbd "C-n") 'lsp-bridge-call-hierarchy-next)
     (define-key map (kbd "C-p") 'lsp-bridge-call-hierarchy-prev)
+    (define-key map (kbd "<down>") 'lsp-bridge-call-hierarchy-next)
+    (define-key map (kbd "<up>") 'lsp-bridge-call-hierarchy-prev)
     (define-key map (kbd "M-n") 'lsp-bridge-call-hierarchy-next)
     (define-key map (kbd "M-p") 'lsp-bridge-call-hierarchy-prev)
     (define-key map (kbd "m") 'lsp-bridge-call-hierarchy-select)
