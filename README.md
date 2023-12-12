@@ -8,7 +8,7 @@ The goal of lsp-bridge is use multi-thread technology to implement the fastest L
 Advantages of lsp-bridge:
 1. Blazingly fast: Offload LSP request and data analysis to an external process, preventing Emacs from getting stuck due to delays or large data triggering garbage collection
 2. Remote Completion: Built-in support for remote server code completion, with various login methods such as passwords and public keys, supports tramp protocol and jump server
-3. Out of the box: Ready to use immediately after installation, no additional configuration required, no need to tweak with completion frontend, completion backend and multi-backend mix 
+3. Out of the box: Ready to use immediately after installation, no additional configuration required, no need to tweak with completion frontend, completion backend and multi-backend mix
 4. Multiple Server Integration: Can simultaneously use multiple LSP servers to serve the same file, for example, Python can have Pyright for code completion and Ruff for diagnostics and formatting
 5. Flexible Customization: Customizing LSP server options is as simple as using a JSON file, allowing different projects to have different JSON configurations with just a few lines of rules
 
@@ -49,6 +49,33 @@ Advantages of lsp-bridge:
   :init
   (global-lsp-bridge-mode))
 ```
+
+* If you are using `doom-emacs`
+
+add this to your `packages.el`
+
+``` elisp
+(when (package! lsp-bridge
+        :recipe (:host github
+                 :repo "manateelazycat/lsp-bridge"
+                 :branch "master"
+                 :files ("*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+                 ;; do not perform byte compilation or native compilation for lsp-bridge
+                 :build (:not compile)))
+  (package! markdown-mode)
+  (package! yasnippet))
+```
+
+and add this to your `config.el`
+
+``` elisp
+(use-package! lsp-bridge
+  :config
+  (setq lsp-bridge-enable-log nil)
+  (global-lsp-bridge-mode))
+```
+
+and run `doom sync` to install it.
 
 
 Please note:
@@ -450,7 +477,7 @@ If you get a segfault error, please use the following way to collect crash infor
   1. Install gdb and turn on option `lsp-bridge-enable-debug`
   2. Use the command `lsp-bridge-restart-process` to restart the `LSP-BRIDGE` process
   3. Send issue with `*lsp-bridge*` buffer content when next crash
-  
+
 ## Contributor
 lsp-bridge's rapid development couldn't have been possible without the strong support and selfless contributions from the community's experts. Without the community’s support, lsp-bridge wouldn’t be where it is today. Thank you to the loveliest people in the world, happy hacking ;)
 
