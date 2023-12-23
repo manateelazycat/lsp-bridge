@@ -84,6 +84,7 @@ Please note:
 2. In addition to providing LSP completion, lsp-bridge also provides many non-LSP completion backends, including file words, paths, Yas/Tempel, TabNine, Codeium, Copilot, Citre, Tailwind, Ctags and other completion backends. If you expect to provide these completions in a certain mode, please add the corresponding mode to `lsp-bridge-default-mode-hooks`
 3. Please do not perform byte compilation or native compilation for lsp-bridge as it will result in a difference in API and the latest version after upgrading compiling afterwards, Lsp-bridge is designed with multi-threading that does not require compilation to speed it up
 4. In terminal mode, lsp-bridge cannot popup the completion menu, please use a GUI interface (because Emacs lacks pixel-level coordinate APIs and cross-window display APIs in terminals, resulting in an unsatisfactory completion experience)
+5. Please do not enable ```native compilation``` on lsp-bridge, as native compilation may affect the startup of lsp-bridge
 
 ## Local Usage
 

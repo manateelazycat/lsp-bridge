@@ -82,6 +82,7 @@ lsp-bridge 的优势：
 2. lsp-bridge 除了提供 LSP 补全以外， 也提供了很多非 LSP 的补全后端， 包括文件单词、 路径、 Yas/Tempel、 TabNine、 Codeium、 Copilot、 Citre、 Tailwind、 Ctags 等补全后端， 如果你期望在某个模式提供这些补全， 请把对应的模式添加到 `lsp-bridge-default-mode-hooks` 
 3. 请不要对 lsp-bridge 执行 byte compile 或者 native comp， 会导致升级后， compile 后的版本 API 和最新版不一样， lsp-bridge 多线程设计， 不需要 compile 来加速
 4. 终端模式下， lsp-bridge 没法弹出补全菜单， 请使用 GUI 界面 (因为 Emacs 终端下缺乏像素级坐标 API 和跨窗口显示 API， 无法做到良好的补全体验)
+5. 请不要对 lsp-bridge 进行 ```native comp``` 操作， native comp 会影响 lsp-bridge 启动
 
 ## 本地使用
 
