@@ -962,6 +962,7 @@ So we build this macro to restore postion after code format."
   (interactive)
   (lsp-bridge-diagnostic-hide-overlays)
 
+  (lsp-bridge-remote-clean)
   (lsp-bridge-kill-process)
   (lsp-bridge-start-process)
   (message "[LSP-Bridge] Process restarted."))
@@ -2592,6 +2593,9 @@ I haven't idea how to make lsp-bridge works with `electric-indent-mode', PR are 
           (setq reconnect t)))
 
       (lsp-bridge-call-async "sync_tramp_remote" username host port file-name reconnect))))
+
+(defun lsp-bridge-remote-clean ()
+  (setq lsp-bridge-tramp-alias-alist nil))
 
 (defun lsp-bridge-open-remote-file--response(server path content position)
   (let ((buf-name (format "[LBR] %s" (file-name-nondirectory path))))
