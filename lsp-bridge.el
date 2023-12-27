@@ -2605,7 +2605,7 @@ I haven't idea how to make lsp-bridge works with `electric-indent-mode', PR are 
         (cl-return buffer)))))
 
 (defun lsp-bridge-remote-reconnect (ssh-host)
-  (when-let (yes? (yes-or-no-p (format "Reconnect remote %s?" ssh-host)))
+  (when (yes-or-no-p (format "Reconnect remote %s?" ssh-host))
     (with-current-buffer (lsp-bridge-get-match-buffer-by-filehost ssh-host)
       (lsp-bridge-sync-tramp-remote))))
 
