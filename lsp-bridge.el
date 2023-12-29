@@ -1122,7 +1122,7 @@ So we build this macro to restore postion after code format."
       (redisplay t) ; NOTE: we need call `redisplay' to force `window-start' return RIGHT line number.
       (let ((window-pos (window-start)))
         (when (not (equal lsp-bridge-inlay-hint-last-update-pos window-pos))
-          (lsp-bridge-inlay-hint)
+          (lsp-bridge-try-send-inlay-hint-request)
           (setq-local lsp-bridge-inlay-hint-last-update-pos window-pos)))
       )))
 
