@@ -1184,8 +1184,8 @@ So we build this macro to restore postion after code format."
            (if (cl-every (lambda (pred)
                            (if (functionp pred)
                                (let ((result (funcall pred)))
-                                 (when lsp-bridge-enable-log
-                                   (message "*** lsp-bridge-try-completion execute predicate '%s' with result: '%s'" pred result))
+                                 (when (and lsp-bridge-enable-log (not (eq result t)))
+                                   (message "*** lsp-bridge-try-completion execute predicate '%s' failed with result: '%s'" pred result))
                                  result)
                              t))
                          lsp-bridge-completion-popup-predicates)
@@ -1269,9 +1269,12 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-not-only-blank-before-cursor ()
   "Hide completion if only blank before cursor."
-  (split-string (buffer-substring-no-properties
-                 (max (1- (point)) (line-beginning-position))
-                 (point))))
+  (not
+    (null
+       (split-string
+         (buffer-substring-no-properties
+           (max (1- (point)) (line-beginning-position))
+           (point))))))
 
 (defun lsp-bridge-not-match-hide-characters ()
   "Hide completion if char before cursor match `lsp-bridge-completion-hide-characters'."
@@ -1490,11 +1493,15 @@ So we build this macro to restore postion after code format."
                (lsp-bridge-process-live-p))
       (unless (or (string-equal current-word "") (null current-word))
         (if (lsp-bridge-is-remote-file)
-            (lsp-bridge-remote-send-func-request "ctags_complete"
-                                                 (list
-                                                  current-word
-                                                  (file-local-name (buffer-file-name))
-                                                  (1- (point))))
+            (progn
+              (when (and lsp-bridge-enable-log (null (buffer-file-name)))
+                (message "*** acm-enable-ctags buffer-file-name is nil!"))
+
+              (lsp-bridge-remote-send-func-request "ctags_complete"
+                                                   (list
+                                                     current-word
+                                                     (tramp-file-local-name (buffer-file-name))
+                                                     (1- (point)))))
           (lsp-bridge-call-async "ctags_complete" current-word (buffer-file-name) (1- (point))))))
 
     ;; Search sdcv dictionary.
