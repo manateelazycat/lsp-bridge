@@ -39,12 +39,14 @@ class RemoteFileClient(threading.Thread):
         self.ssh_port = ssh_port
         self.server_port = server_port
         self.callback = callback
+        [self.reconnet] = get_emacs_vars(["lsp-bridge-remote-start-automatically"])
 
 
         # Build SSH channel between local client and remote server.
         self.ssh = self.connect_ssh(use_gssapi, proxy_command)
         self.transport = self.ssh.get_transport()
         self.chan = self.transport.open_channel("direct-tcpip", (self.ssh_host, self.server_port), ('0.0.0.0', 0))
+        self.connect_ok = True
 
     def ssh_pub_key(self):
         # Read SSH public key.
@@ -86,8 +88,16 @@ class RemoteFileClient(threading.Thread):
 
     def send_message(self, message):
         try:
-            data = json.dumps(message)
-            self.chan.sendall(f"{data}\n".encode("utf-8"))
+            if self.connect_ok:
+                data = json.dumps(message)
+                self.chan.sendall(f"{data}\n".encode("utf-8"))
+        except OSError:
+            if self.connect_ok:
+                self.connect_ok = False
+                logger.error(traceback.format_exc())
+                if self.reconnet:
+                    logger.error("try to reconnect remote host!")
+                    eval_in_emacs('lsp-bridge-remote-reconnect', self.ssh_host)
         except:
             logger.error(traceback.format_exc())
 

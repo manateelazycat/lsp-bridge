@@ -2563,6 +2563,23 @@ LSP server will confused those indent action and return wrong completion candida
 
 I haven't idea how to make lsp-bridge works with `electric-indent-mode', PR are welcome.")
 
+(defun lsp-bridge-start-remote-process (host)
+  (let (lsp-bridge-remote-process)
+    (when lsp-bridge-remote-start-automatically
+      (unless (and (assoc host lsp-bridge-remote-process-alist)
+                   (process-live-p (cdr (assoc host lsp-bridge-remote-process-alist))))
+        (setq lsp-bridge-remote-process (make-process :name (concat "LBR@" host)
+                                                      :command `("bash"
+                                                                 "-c"
+                                                                 ,(format "%s %s > %s 2>&1"
+                                                                          lsp-bridge-remote-python-command
+                                                                          lsp-bridge-remote-python-file
+                                                                          lsp-bridge-remote-log))
+                                                      :file-handler t))
+        (setq lsp-bridge-remote-process-alist (assoc-delete-all host lsp-bridge-remote-process-alist))
+        (push `(,host . ,lsp-bridge-remote-process) lsp-bridge-remote-process-alist)
+        t))))
+
 (defun lsp-bridge-sync-tramp-remote ()
   (interactive)
   (let* ((file-name (buffer-file-name))
@@ -2572,26 +2589,25 @@ I haven't idea how to make lsp-bridge works with `electric-indent-mode', PR are 
          (port (tramp-file-name-port tramp-file-name))
          (host (tramp-file-name-host tramp-file-name))
          (path (tramp-file-name-localname tramp-file-name))
-         lsp-bridge-remote-process reconnect)
+         reconnect)
 
     (when (not (member host lsp-bridge-tramp-blacklist))
       (read-only-mode 1)
 
-      (when lsp-bridge-remote-start-automatically
-        (unless (and (assoc host lsp-bridge-remote-process-alist)
-                     (process-live-p (cdr (assoc host lsp-bridge-remote-process-alist))))
-          (setq lsp-bridge-remote-process (make-process :name (concat "LBR@" host)
-                                                        :command `("bash"
-                                                                   "-c"
-                                                                   ,(format "%s %s > %s 2>&1"
-                                                                            lsp-bridge-remote-python-command
-                                                                            lsp-bridge-remote-python-file
-                                                                            lsp-bridge-remote-log))
-                                                        :file-handler t))
-          (push `(,host . ,lsp-bridge-remote-process) lsp-bridge-remote-process-alist)
-          (setq reconnect t)))
+      (setq reconnect (lsp-bridge-start-remote-process host))
 
       (lsp-bridge-call-async "sync_tramp_remote" username host port file-name reconnect))))
+
+(defun lsp-bridge-get-match-buffer-by-filehost (filehost)
+  (cl-dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when-let* ((match-buffer (string-equal lsp-bridge-remote-file-host filehost)))
+        (cl-return buffer)))))
+
+(defun lsp-bridge-remote-reconnect (ssh-host)
+  (when (yes-or-no-p (format "Reconnect remote %s?" ssh-host))
+    (with-current-buffer (lsp-bridge-get-match-buffer-by-filehost ssh-host)
+      (lsp-bridge-sync-tramp-remote))))
 
 (defun lsp-bridge-open-remote-file--response(server path content position)
   (let ((buf-name (format "[LBR] %s" (file-name-nondirectory path))))
