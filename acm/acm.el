@@ -12,7 +12,6 @@
 ;;           By: Gong Qijian
 ;; URL: https://www.github.org/manateelazycat/acm
 ;; Keywords:
-;; Package-requires: ((emacs "28.1"))
 ;; Compatibility: GNU Emacs 28.1
 ;;
 ;; Features that might be required by this library:
@@ -109,9 +108,6 @@
 (require 'acm-backend-copilot)
 (require 'acm-quick-access)
 
-;;; Forward declaration
-(defvar lsp-bridge-enable-log)
-
 ;;; Code:
 
 (defgroup acm nil
@@ -127,11 +123,11 @@
 (defcustom acm-continue-commands
   ;; nil is undefined command
   '(nil ignore universal-argument universal-argument-more digit-argument
-    self-insert-command org-self-insert-command
-    ;; Avoid flashing completion menu when backward delete char
-    grammatical-edit-backward-delete backward-delete-char-untabify
-    python-indent-dedent-line-backspace delete-backward-char hungry-delete-backward
-    "\\`acm-" "\\`scroll-other-window" "\\`special-lispy-" "\\`special-" "\\`lispy-")
+        self-insert-command org-self-insert-command
+        ;; Avoid flashing completion menu when backward delete char
+        grammatical-edit-backward-delete backward-delete-char-untabify
+        python-indent-dedent-line-backspace delete-backward-char hungry-delete-backward
+        "\\`acm-" "\\`scroll-other-window" "\\`special-lispy-" "\\`special-" "\\`lispy-")
   "Continue ACM completion after executing these commands."
   :type '(repeat (choice regexp symbol))
   :group 'acm)
@@ -144,8 +140,8 @@
 (defcustom acm-enable-doc-markdown-render 'async
   "Popup documentation automatically when this option is turn on."
   :type '(choice (const :tag "Asynchronous" async)
-          (const :tag "Enabled" t)
-          (const :tag "Disabled" nil))
+                 (const :tag "Enabled" t)
+                 (const :tag "Disabled" nil))
   :group 'acm)
 
 (defcustom acm-enable-icon t
@@ -161,11 +157,11 @@
 (defcustom acm-candidate-match-function 'regexp-quote
   "acm candidate match function."
   :type '(choice (const regexp-quote)
-          (const orderless-literal)
-          (const orderless-prefixes)
-          (const orderless-flex)
-          (const orderless-regexp)
-          (const orderless-initialism))
+                 (const orderless-literal)
+                 (const orderless-prefixes)
+                 (const orderless-flex)
+                 (const orderless-regexp)
+                 (const orderless-initialism))
   :group 'acm)
 
 (defcustom acm-doc-frame-max-lines 20
@@ -454,51 +450,29 @@ Only calculate template candidate when type last character."
          ctags-candidates
          citre-candidates)
     (when acm-enable-tabnine
-      (setq tabnine-candidates (acm-backend-tabnine-candidates keyword))
-      (when (and lsp-bridge-enable-log (not (null tabnine-candidates)))
-        (message "acm-update-candidates: tabnine-candidates %S" tabnine-candidates)))
+      (setq tabnine-candidates (acm-backend-tabnine-candidates keyword)))
 
     (when acm-enable-codeium
-      (setq codeium-candidates (acm-backend-codeium-candidates keyword))
-      (when (and lsp-bridge-enable-log (not (null codeium-candidates)))
-        (message "acm-update-candidates: codeium-candidates %S" codeium-candidates)))
+      (setq codeium-candidates (acm-backend-codeium-candidates keyword)))
 
     (when acm-enable-copilot
-      (setq copilot-candidates (acm-backend-copilot-candidates keyword))
-      (when (and lsp-bridge-enable-log (not (null copilot-candidates)))
-        (message "acm-update-candidates: copilot-candidates %S" copilot-candidates)))
+      (setq copilot-candidates (acm-backend-copilot-candidates keyword)))
 
     (if acm-enable-search-sdcv-words
         ;; Completion SDCV if option `acm-enable-search-sdcv-words' is enable.
-        (progn
-          (setq candidates (acm-backend-search-sdcv-words-candidates keyword))
-          (when (and lsp-bridge-enable-log (not (null candidates)))
-            (message "acm-update-candidates: acm-enable-search-sdcv-words %S" candidates)))
-
+        (setq candidates (acm-backend-search-sdcv-words-candidates keyword))
 
       (setq path-candidates (acm-backend-path-candidates keyword))
       (if (> (length path-candidates) 0)
           ;; Only show path candidates if prefix is valid path.
-          (progn
-            (setq candidates path-candidates)
-            (when (and lsp-bridge-enable-log (not (null candidates)))
-              (message "acm-update-candidates: path-candidates %S" candidates)))
+          (setq candidates path-candidates)
 
         (when acm-enable-citre
-          (setq citre-candidates (unless (acm-in-comment-p) (acm-backend-citre-candidates keyword)))
-          (when (and lsp-bridge-enable-log (not (null citre-candidates)))
-            (message "acm-update-candidates: citre-candidates %S" citre-candidates)))
-
+          (setq citre-candidates (unless (acm-in-comment-p) (acm-backend-citre-candidates keyword))))
         (when acm-enable-ctags
-          (setq ctags-candidates (unless (acm-in-comment-p) (acm-backend-ctags-candidates keyword)))
-          (when (and lsp-bridge-enable-log (not (null ctags-candidates)))
-            (message "acm-update-candidates: ctags-candidates %S" ctags-candidates)))
-
+          (setq ctags-candidates (unless (acm-in-comment-p) (acm-backend-ctags-candidates keyword))))
         ;; Fetch syntax completion candidates.
         (setq lsp-candidates (unless (acm-in-comment-p) (acm-backend-lsp-candidates keyword)))
-        (when (and lsp-bridge-enable-log (not (null lsp-candidates)))
-          (message "acm-update-candidates: lsp-candidates %S" lsp-candidates))
-
         (setq mode-candidates (append
                                (unless (acm-in-comment-p) (acm-backend-tailwind-candidates keyword))
                                (unless (acm-in-comment-p) (acm-backend-elisp-candidates keyword))
@@ -507,13 +481,13 @@ Only calculate template candidate when type last character."
                                citre-candidates
                                (acm-backend-search-file-words-candidates keyword)
                                (acm-backend-telega-candidates keyword)))
-        (when (and lsp-bridge-enable-log (not (null mode-candidates)))
-          (message "acm-update-candidates: mode-candidates %S" mode-candidates))
 
-        (when (and (or (zerop (length lsp-candidates)) ; Show snippet candidates if lsp-candidates length is zero.
-                       ;; Don't search snippet if char before keyword is not in `acm-backend-lsp-completion-trigger-characters'.
-                       (and (boundp 'acm-backend-lsp-completion-trigger-characters)
-                            (not (member char-before-keyword acm-backend-lsp-completion-trigger-characters))))
+        (when (and (or
+                    ;; Show snippet candidates if lsp-candidates length is zero.
+                    (zerop (length lsp-candidates))
+                    ;; Don't search snippet if char before keyword is not in `acm-backend-lsp-completion-trigger-characters'.
+                    (and (boundp 'acm-backend-lsp-completion-trigger-characters)
+                         (not (member char-before-keyword acm-backend-lsp-completion-trigger-characters))))
                    (not (acm-in-comment-p)))
 
           ;; Only calculate template candidate when type last character.
@@ -537,9 +511,6 @@ Only calculate template candidate when type last character."
         ;; Build template candidates.
         ;; And make sure show part of template candidates in first completion menu.
         (setq template-candidates (append yas-candidates tempel-candidates))
-        (when (and lsp-bridge-enable-log (not (null template-candidates)))
-          (message "acm-update-candidates: template-candidates %S" template-candidates))
-
         (if (> (length template-candidates) template-candidates-min-index)
             (progn
               (setq template-first-part-candidates (cl-subseq template-candidates 0 template-candidates-min-index))
@@ -569,8 +540,10 @@ Only calculate template candidate when type last character."
                                                      ("codeium-candidates" codeium-candidates)
                                                      ("copilot-candidates" copilot-candidates)
                                                      ("template-second-part-candidates" template-second-part-candidates)
-                                                     ("mode-second-part-candidates" mode-second-part-candidates)))
-                                                 acm-completion-backend-merge-order)))))
+                                                     ("mode-second-part-candidates" mode-second-part-candidates)
+                                                     ))
+                                                 acm-completion-backend-merge-order))
+              )))
 
     ;; Return candidates.
     (if acm-filter-overlay
@@ -605,8 +578,6 @@ The key of candidate will change between two LSP results."
      ((and (equal (length candidates) 1)
            (string-equal keyword (plist-get (nth 0 candidates) :label))
            (not (member (plist-get (nth 0 candidates) :annotation) '("Emmet Abbreviation" "Snippet" "Yas-Snippet" "Tempel"))))
-      (when lsp-bridge-enable-log
-        (message "*** acm-update hide completion menu: user typed first candidate"))
       (acm-hide))
      ((> (length candidates) 0)
       (let* ((menu-old-cache (cons acm-menu-max-length-cache acm-menu-number-cache)))
@@ -672,8 +643,6 @@ The key of candidate will change between two LSP results."
           (acm-menu-render menu-old-cache))
         ))
      (t
-      (when lsp-bridge-enable-log
-        (message "*** acm-update: hide completion menu"))
       (acm-hide)))))
 
 (defun acm-reset-colors (&rest args)
@@ -1299,8 +1268,8 @@ The key of candidate will change between two LSP results."
 
 ;; Emacs 28: Do not show Acm commands with M-X
 (dolist (sym '(acm-hide acm-complete acm-select-first acm-select-last acm-select-next
-               acm-select-prev acm-insert-common acm-doc-scroll-up acm-doc-scroll-down
-               acm-complete-quick-access acm-doc-toggle))
+                        acm-select-prev acm-insert-common acm-doc-scroll-up acm-doc-scroll-down
+                        acm-complete-quick-access acm-doc-toggle))
   (put sym 'completion-predicate #'ignore))
 
 (provide 'acm)

@@ -12,7 +12,7 @@
 ;; URL: https://github.com/manateelazycat/lsp-bridge
 ;; Keywords:
 ;; Compatibility: emacs-version >= 28
-;; Package-Requires: ((emacs "28"))
+;; Package-Requires: ((emacs "28") (markdown-mode "2.6"))
 ;;
 ;; Features that might be required by this library:
 ;;
@@ -257,14 +257,14 @@ After set `lsp-bridge-completion-obey-trigger-characters-p' to nil, you need use
 (defcustom lsp-bridge-user-langserver-dir nil
   "The directory where the user place langserver configuration."
   :type '(choice (const nil)
-          (string))
+                 (string))
   :safe (lambda (v) (or (null v) (stringp v)))
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-user-multiserver-dir nil
   "The directory where the user place multiserver configuration."
   :type '(choice (const nil)
-          (string))
+                 (string))
   :safe (lambda (v) (or (null v) (stringp v)))
   :group 'lsp-bridge)
 
@@ -462,7 +462,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     ((python-mode python-ts-mode) .                                              lsp-bridge-python-lsp-server)
     (ruby-mode .                                                                 "solargraph")
     ((rust-mode rustic-mode rust-ts-mode) .                                      "rust-analyzer")
-    (move-mode .                                                                 "move-analyzer")
+	(move-mode .                                                                 "move-analyzer")
     ((elixir-mode elixir-ts-mode heex-ts-mode) .                                 lsp-bridge-elixir-lsp-server)
     ((go-mode go-ts-mode) .                                                      "gopls")
     (groovy-mode .                                                               "groovy-language-server")
@@ -495,7 +495,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     (kotlin-mode .                                                               "kotlin-language-server")
     (verilog-mode .                                                              "verible")
     (vhdl-mode .                                                                 "vhdl-tool")
-    (svelte-mode .                                                               "svelteserver")
+    (svelte-mode .                                                               "svelteserver")    
     (fsharp-mode .                                                               "fsautocomplete")
     )
   "The lang server rule for file mode."
@@ -510,7 +510,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     python-mode-hook
     ruby-mode-hook
     lua-mode-hook
-    move-mode-hook
+ 	move-mode-hook
     rust-mode-hook
     rust-ts-mode-hook
     rustic-mode-hook
@@ -642,7 +642,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (enh-ruby-mode              . enh-ruby-indent-level) ; Ruby
     (crystal-mode               . crystal-indent-level) ; Crystal (Ruby)
     (css-mode                   . css-indent-offset)    ; CSS
-    (move-mode                  . move-indent-offset)   ; Move
+	(move-mode                  . move-indent-offset)   ; Move
     (rust-mode                  . rust-indent-offset)   ; Rust
     (rust-ts-mode               . rust-ts-mode-indent-offset) ; Rust
     (rustic-mode                . rustic-indent-offset)       ; Rust
@@ -1190,8 +1190,6 @@ So we build this macro to restore postion after code format."
                              t))
                          lsp-bridge-completion-popup-predicates)
                (progn
-                 (when lsp-bridge-enable-log
-                   (message "*** lsp-bridge-try-completion: call acm-update"))
                  (acm-template-candidate-init)
                  (acm-update)
 
@@ -1272,11 +1270,11 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-not-only-blank-before-cursor ()
   "Hide completion if only blank before cursor."
   (not
-   (null
-    (split-string
-     (buffer-substring-no-properties
-      (max (1- (point)) (line-beginning-position))
-      (point))))))
+    (null
+       (split-string
+         (buffer-substring-no-properties
+           (max (1- (point)) (line-beginning-position))
+           (point))))))
 
 (defun lsp-bridge-not-match-hide-characters ()
   "Hide completion if char before cursor match `lsp-bridge-completion-hide-characters'."
@@ -1495,17 +1493,15 @@ So we build this macro to restore postion after code format."
                (lsp-bridge-process-live-p))
       (unless (or (string-equal current-word "") (null current-word))
         (if (lsp-bridge-is-remote-file)
-            ;; remote file buffer do not associate with an actual file on the disk
-            ;; the buffer is created by lsp-bridge-opne-remote-file--response
-            ;; hence (buffer-file-name) will return nil
-            ;; should use buffer local variable lsp-bridge-remote-file-path
-            (with-current-buffer (buffer-name)
+            (progn
+              (when (and lsp-bridge-enable-log (null (buffer-file-name)))
+                (message "*** acm-enable-ctags buffer-file-name is nil!"))
+
               (lsp-bridge-remote-send-func-request "ctags_complete"
                                                    (list
-                                                    current-word
-                                                    (tramp-file-local-name lsp-bridge-remote-file-path)
-                                                    (1- (point)))))
-          ;; local file
+                                                     current-word
+                                                     (tramp-file-local-name (buffer-file-name))
+                                                     (1- (point)))))
           (lsp-bridge-call-async "ctags_complete" current-word (buffer-file-name) (1- (point))))))
 
     ;; Search sdcv dictionary.
@@ -1705,10 +1701,10 @@ Off by default."
 (defun lsp-bridge-find-def-fallback (position)
   (if (not (= (length lsp-bridge-peek-ace-list) 0))
       (progn
-	(if (nth 0 lsp-bridge-peek-ace-list)
-	    (kill-buffer (nth 0 lsp-bridge-peek-ace-list)))
-	(switch-to-buffer (nth 2 lsp-bridge-peek-ace-list))
-	(goto-char (nth 1 lsp-bridge-peek-ace-list))))
+	    (if (nth 0 lsp-bridge-peek-ace-list)
+	        (kill-buffer (nth 0 lsp-bridge-peek-ace-list)))
+	    (switch-to-buffer (nth 2 lsp-bridge-peek-ace-list))
+	    (goto-char (nth 1 lsp-bridge-peek-ace-list))))
   (message "[LSP-Bridge] No definition found.")
   (if (functionp lsp-bridge-find-def-fallback-function)
       (funcall lsp-bridge-find-def-fallback-function position)))
