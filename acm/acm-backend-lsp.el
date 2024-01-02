@@ -1,5 +1,4 @@
-;;; acm-backend-lsp.el --- LSP backend for acm
-;;; -*- lexical-binding: t; no-byte-compile: t; -*-
+;;; acm-backend-lsp.el --- LSP backend for acm  -*- lexical-binding: t; no-byte-compile: t; -*-
 
 ;; Filename: acm-backend-lsp.el
 ;; Description: LSP backend for acm
@@ -12,7 +11,6 @@
 ;;           By: Gong Qijian
 ;; URL: https://www.github.org/manateelazycat/acm-backend-lsp
 ;; Keywords:
-;; Package-Requires: ((emacs "28.1"))
 ;; Compatibility: GNU Emacs 28.1
 ;;
 ;; Features that might be required by this library:
@@ -83,14 +81,7 @@
 
 ;;; Require
 
-;;; Forward declaration
-(defvar acm-backend-lsp-cache-candidates)
-(defvar acm-backend-lsp-completion-position)
-(defvar lsp-bridge-enable-log)
-(declare-function acm-candidate-fuzzy-search "acm.el")
-(declare-function acm-char-before "acm.el")
-(declare-function acm-preview-create-overlay "acm.el")
-(declare-function acm-with-cache-candidates "acm.el")
+
 ;;; Code:
 
 (defgroup acm-backend-lsp nil
@@ -146,8 +137,6 @@ Recommand use `normal' that follow LSP server response, emacser's behavior typic
                    (hash-table-p acm-backend-lsp-items))
               (dolist (server-name acm-backend-lsp-server-names)
                 (when-let* ((server-items (gethash server-name acm-backend-lsp-items)))
-                  (when lsp-bridge-enable-log
-                    (message "*** acm-backend-lsp-candidates: candidates generated from %S" server-name))
                   (maphash (lambda (k v)
                              (add-to-list 'candidates v t))
                            server-items))))
