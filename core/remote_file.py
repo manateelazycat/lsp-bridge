@@ -43,16 +43,31 @@ class RemoteFileClient(threading.Thread):
 
 
         # Build SSH channel between local client and remote server.
+        [self.user_ssh_private_key] = get_emacs_vars(["lsp-bridge-user-ssh-private-key"])
         self.ssh = self.connect_ssh(use_gssapi, proxy_command)
         self.transport = self.ssh.get_transport()
         self.chan = self.transport.open_channel("direct-tcpip", (self.ssh_host, self.server_port), ('0.0.0.0', 0))
         self.connect_ok = True
 
-    def ssh_pub_key(self):
-        # Read SSH public key.
-        ssh_dir = os.path.expanduser('~/.ssh')
-        pub_keys = glob.glob(os.path.join(ssh_dir, '*.pub'))
-        return pub_keys[0]
+    def ssh_private_key(self):
+        """Retrieves the path to the SSH private key file.
+
+        The user can specify the SSH private key path by setting the
+        `lsp-bridge-user-ssh-private-key` in emacs.
+
+        If this configuration is not set, the function defaults to using the
+        first found public key to determine the private key file in the `.ssh`
+        directory.
+        """
+        if not self.user_ssh_private_key:
+            ssh_dir = "~/.ssh"
+            ssh_dir = os.path.expanduser(ssh_dir)
+            pub_keys = glob.glob(os.path.join(ssh_dir, '*.pub'))
+            default_pub_key = pub_keys[0]
+            private_key = default_pub_key[:-len(".pub")]
+        else:
+            private_key = os.path.expanduser(self.user_ssh_private_key)
+        return private_key
 
     def connect_ssh(self, use_gssapi, proxy_command):
         import paramiko
@@ -67,9 +82,13 @@ class RemoteFileClient(threading.Thread):
             if use_gssapi:
                 ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, gss_auth=True, gss_kex=True, sock=proxy)
             else:
-                # Login server with ssh public key.
-                pub_key = self.ssh_pub_key()
-                ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, key_filename=pub_key, sock=proxy)
+                # Login server with ssh private key.
+                ssh_private_key = self.ssh_private_key()
+                # look_for_keys defaults to True
+                # when user specify the SSH private key path
+                # disable searching for discoverable private key files in ~/.ssh/
+                look_for_keys = not self.user_ssh_private_key
+                ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, key_filename=ssh_private_key, look_for_keys=look_for_keys, sock=proxy)
         except:
             print(traceback.format_exc())
 

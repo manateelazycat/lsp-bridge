@@ -268,6 +268,13 @@ After set `lsp-bridge-completion-obey-trigger-characters-p' to nil, you need use
   :safe (lambda (v) (or (null v) (stringp v)))
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-user-ssh-private-key nil
+  "custom SSH private key path for use in SSH connections."
+  :type '(choice (const nil)
+                 (string))
+  :safe (lambda (v) (or (null v) (stringp v)))
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-symbols-enable-which-func nil
   "Wether use lsp-bridge in which-func."
   :type 'boolean
@@ -510,7 +517,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     python-mode-hook
     ruby-mode-hook
     lua-mode-hook
- 	move-mode-hook
+    move-mode-hook
     rust-mode-hook
     rust-ts-mode-hook
     rustic-mode-hook
