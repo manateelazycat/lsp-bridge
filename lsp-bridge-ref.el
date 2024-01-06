@@ -109,6 +109,20 @@ Default is enable, set this variable to nil if you don't like this feature."
   :type 'boolean
   :group 'lsp-bridge-ref)
 
+(defcustom lsp-bridge-ref-delete-other-windows t
+  "Delete other windows while finding references.
+
+Default is enable, set this variable to nil if you don't like this feature."
+  :type 'boolean
+  :group 'lsp-bridge-ref)
+
+(defcustom lsp-bridge-ref-open-file-in-request-window nil
+  "Open file in the window which requested to find references.
+
+Default is nil, set this variable to t if you like this feature."
+  :type 'boolean
+  :group 'lsp-bridge-ref)
+
 (defface lsp-bridge-ref-font-lock-header-line-text
   '((t (:foreground "Green3" :bold t)))
   "Face for header line text."
@@ -180,6 +194,9 @@ used to restore window configuration after finish search.")
 (defvar lsp-bridge-ref-buffer-point-before-search nil
   "Save buffer point before search,
 used to restore buffer point after finish search.")
+
+(defvar lsp-bridge-ref-request-search-window nil
+  "Save the window which requested to find reference")
 
 (defvar lsp-bridge-ref-window-configuration-before-apply nil
   "Save window configuration before apply changed,
@@ -354,6 +371,8 @@ user more freedom to use rg with special arguments."
             (not (string-equal (buffer-name) lsp-bridge-ref-buffer)))
     (setq lsp-bridge-ref-window-configuration-before-search (current-window-configuration))
     (setq lsp-bridge-ref-buffer-point-before-search (point)))
+  ;; Save the request window.
+  (setq lsp-bridge-ref-request-search-window (selected-window))
 
   ;; Init edit mode.
   (setf (lsp-bridge-ref-search-mode lsp-bridge-ref-cur-search) "View")
@@ -404,7 +423,9 @@ user more freedom to use rg with special arguments."
     (read-only-mode 1))
 
   ;; Pop search buffer.
-  (delete-other-windows)
+  (if lsp-bridge-ref-delete-other-windows
+      (delete-other-windows))
+
   ;; Set `window-resize-pixelwise' with non-nil will cause `split-window' failed.
   (let (window-resize-pixelwise)
     (split-window nil (* 0.618 (window-pixel-height)) nil t))
@@ -790,7 +811,8 @@ user more freedom to use rg with special arguments."
                         (setq end (point))
                         (buffer-substring start end)
                         )))
-    (lsp-bridge-ref-quit)
+    ;; We need to restore windows if we want to insert current line.
+    (lsp-bridge-ref-quit t)
     (insert current-line)))
 
 (defun lsp-bridge-ref-open-file (&optional stay)
@@ -810,7 +832,11 @@ user more freedom to use rg with special arguments."
                    (lsp-bridge-ref-in-org-link-content-p)))
         ;; Open file in other window.
         ;; Note, don't use `find-file-other-window', it will failed if path is tramp path that start with /sudo:root
-        (other-window 1)
+        (if (and lsp-bridge-ref-open-file-in-request-window
+                 ;; check if the window which requested search has beed deleted.
+                 (window-valid-p lsp-bridge-ref-request-search-window))
+            (select-window lsp-bridge-ref-request-search-window)
+          (other-window 1))
         (find-file match-file)
         ;; Add to temp list if file's buffer is not exist.
         (unless match-buffer
@@ -834,8 +860,9 @@ user more freedom to use rg with special arguments."
       (setq ref-buffer-window (get-buffer-window lsp-bridge-ref-buffer))
       (if ref-buffer-window
           (select-window ref-buffer-window)
+        (if lsp-bridge-ref-delete-other-windows
+            (delete-other-windows))
         ;; Split window and select if color-buffer is not exist in windows.
-        (delete-other-windows)
         (split-window)
         (other-window 1)
         (switch-to-buffer lsp-bridge-ref-buffer)))
@@ -932,7 +959,7 @@ Function `move-to-column' can't handle mixed string of Chinese and English corre
   ;; Message to user.
   (message "[LSP-Bridge] Switch to edit mode: press C-c C-c to apply change, press C-c C-q cancel edit"))
 
-(defun lsp-bridge-ref-quit ()
+(defun lsp-bridge-ref-quit (&optional restore)
   (interactive)
   ;; Kill temp buffer open by lsp-bridge-ref.
   (when lsp-bridge-ref-kill-temp-buffer-p
@@ -941,12 +968,22 @@ Function `move-to-column' can't handle mixed string of Chinese and English corre
   (setq lsp-bridge-ref-temp-visit-buffers nil)
   ;; Kill search buffer.
   (kill-buffer lsp-bridge-ref-buffer)
-  ;; Restore window configuration before search.
   (when lsp-bridge-ref-window-configuration-before-search
-    (set-window-configuration lsp-bridge-ref-window-configuration-before-search)
-    (goto-char lsp-bridge-ref-buffer-point-before-search)
+    ;; Restore window configuration before search if we delete-other-window before search.
+    ;; Or if we need to restore. e.g. we are inserting current line.
+    (if (or lsp-bridge-ref-delete-other-windows
+            restore)
+        (progn
+          (set-window-configuration lsp-bridge-ref-window-configuration-before-search)
+          (goto-char lsp-bridge-ref-buffer-point-before-search))
+      ;; Otherwise we just delete the lsp-bridge-ref window, and select the request window if still exists.
+      (delete-window)
+      (if (window-valid-p lsp-bridge-ref-request-search-window)
+          (select-window lsp-bridge-ref-request-search-window)))
     (setq lsp-bridge-ref-window-configuration-before-search nil)
-    (setq lsp-bridge-ref-buffer-point-before-search nil)))
+    (setq lsp-bridge-ref-buffer-point-before-search nil))
+  ;; clear saved window which requested search.
+  (setq lsp-bridge-ref-request-search-window nil))
 
 (defun lsp-bridge-ref-beginning-of-line ()
   (interactive)
