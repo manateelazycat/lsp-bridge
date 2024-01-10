@@ -1,4 +1,4 @@
-;;; lsp-bridge-code-action.el --- Code action for lsp-bridge   -*- lexical-binding: t; -*-
+;;; lsp-bridge-code-action.el --- Code action for lsp-bridge   -*- lexical-binding: t; no-byte-compile: t; -*-*-
 
 ;; Filename: lsp-bridge-code-action.el
 ;; Description: Code action for lsp-bridge

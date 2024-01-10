@@ -1,4 +1,4 @@
-;;; acm-frame.el --- Description -*- lexical-binding: t; -*-
+;;; acm-frame.el --- Description -*- lexical-binding: t; no-byte-compile: t; -*-*-
 ;;
 ;; Copyright (C) 2022 royokong
 ;;
