@@ -292,6 +292,36 @@ After set `lsp-bridge-completion-obey-trigger-characters-p' to nil, you need use
   "Face to flash the current line."
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-tramp-blacklist nil
+  "tramp hosts that don't use lsp-bridge"
+  :type '(repeat string)
+  :safe #'listp
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-remote-python-command "python3"
+  "Python command on remote host."
+  :type 'string
+  :safe #'stringp
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-remote-python-file "~/lsp-bridge/lsp_bridge.py"
+  "Full path of lsp_bridge.py file on remote host."
+  :type 'string
+  :safe #'stringp
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-remote-log "~/lsp-bridge/lbr_log.txt"
+  "Full path of log file on remote host."
+  :type 'string
+  :safe #'stringp
+  :group 'lsp-bridge)
+
+(defcustom lsp-bridge-remote-start-automatically nil
+  "Whether start remote lsp-bridge.py automatically."
+  :type 'boolean
+  :safe #'booleanp
+  :group 'lsp-bridge)
+
 (defvar lsp-bridge-last-change-command nil)
 (defvar lsp-bridge-last-change-position nil)
 (defvar lsp-bridge-last-change-is-delete-command-p nil)
@@ -715,7 +745,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
 (cl-defmacro lsp-bridge--with-file-buffer (filename filehost &rest body)
   "Evaluate BODY in buffer with FILEPATH."
   (declare (indent 1))
-  `(when-let ((buffer (pcase filehost
+  `(when-let ((buffer (pcase ,filehost
                         ("" (lsp-bridge-get-match-buffer-by-filepath ,filename))
                         (_ (lsp-bridge-get-match-buffer-by-remote-file ,filehost ,filename)))))
      (with-current-buffer buffer
@@ -2502,7 +2532,10 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
                `(lsp-bridge-mode ("" lsp-bridge--mode-line-format " "))))
 
 (defvar-local lsp-bridge-remote-file-flag nil)
+(defvar-local lsp-bridge-remote-file-tramp-method nil)
+(defvar-local lsp-bridge-remote-file-user nil)
 (defvar-local lsp-bridge-remote-file-host nil)
+(defvar-local lsp-bridge-remote-file-port nil)
 (defvar-local lsp-bridge-remote-file-path nil)
 
 (defun lsp-bridge-open-or-create-file (filepath)
@@ -2527,11 +2560,25 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
                                   (split-string (buffer-string) "\n" t)))))
     (lsp-bridge-call-async "open_remote_file" path (list :line 0 :character 0))))
 
-(defun lsp-bridge-update-tramp-file-info (file-name host path tramp-method)
-  (unless (assoc host lsp-bridge-tramp-alias-alist)
-    (push `(,host . ,tramp-method) lsp-bridge-tramp-alias-alist))
+(cl-defmacro lsp-bridge--conditional-update-tramp-file-info (tramp-file-name path host &rest body)
+  "Conditionally execute BODY with the buffer associated with TRAMP-FILE-NAME.
 
-  (with-current-buffer (get-file-buffer file-name)
+If the buffer is created by TRAMP with TRAMP-FILE-NAME, BODY is executed within
+the context of that buffer. If the buffer is created by
+`lsp-bridge-open-remote-file--response', `lsp-bridge--with-file-buffer' is used
+ with PATH and HOST to find the buffer, then BODY is executed within that buffer."
+
+  `(if (get-file-buffer ,tramp-file-name)
+       (with-current-buffer (get-file-buffer ,tramp-file-name)
+         ,@body)
+     ;; lsp-bridge--with-file-buffer is another macro, carefully expand it
+     ,(macroexpand `(lsp-bridge--with-file-buffer ,path ,host ,@body))))
+
+(defun lsp-bridge-update-tramp-file-info (tramp-file-name tramp-connection-info host path)
+  (unless (assoc host lsp-bridge-tramp-alias-alist)
+    (push `(,host . ,tramp-connection-info) lsp-bridge-tramp-alias-alist))
+
+  (lsp-bridge--conditional-update-tramp-file-info tramp-file-name path host
     (setq-local lsp-bridge-remote-file-flag t)
     (setq-local lsp-bridge-remote-file-host host)
     (setq-local lsp-bridge-remote-file-path path)
@@ -2545,24 +2592,6 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
   (interactive)
   (lsp-bridge-call-async "message_hostnames"))
 
-(defcustom lsp-bridge-tramp-blacklist nil "tramp hosts that don't use lsp-bridge")
-
-(defvar lsp-bridge-remote-process-alist nil)
-
-(defcustom lsp-bridge-remote-python-command
-  "python3"
-  "Python command on remote host.")
-
-(defcustom lsp-bridge-remote-python-file
-  "~/lsp-bridge/lsp_bridge.py"
-  "Full path of lsp_bridge.py file on remote host.")
-
-(defcustom lsp-bridge-remote-log
-  "~/lsp-bridge/lbr_log.txt"
-  "Full path of log file on remote host.")
-
-(defcustom lsp-bridge-remote-start-automatically nil
-  "Whether start remote lsp-bridge.py automatically.")
 
 (defcustom lsp-bridge-disable-electric-indent nil
   "`electric-indent-post-self-insert-function' will cause return wrong completion candidates from LSP server, such as type `std::' in C++.
@@ -2577,53 +2606,53 @@ LSP server will confused those indent action and return wrong completion candida
 
 I haven't idea how to make lsp-bridge works with `electric-indent-mode', PR are welcome.")
 
-(defun lsp-bridge-start-remote-process (host)
-  (let (lsp-bridge-remote-process)
-    (when lsp-bridge-remote-start-automatically
-      (unless (and (assoc host lsp-bridge-remote-process-alist)
-                   (process-live-p (cdr (assoc host lsp-bridge-remote-process-alist))))
-        (setq lsp-bridge-remote-process (make-process :name (concat "LBR@" host)
-                                                      :command `("bash"
-                                                                 "-c"
-                                                                 ,(format "%s %s > %s 2>&1"
-                                                                          lsp-bridge-remote-python-command
-                                                                          lsp-bridge-remote-python-file
-                                                                          lsp-bridge-remote-log))
-                                                      :file-handler t))
-        (setq lsp-bridge-remote-process-alist (assoc-delete-all host lsp-bridge-remote-process-alist))
-        (push `(,host . ,lsp-bridge-remote-process) lsp-bridge-remote-process-alist)
-        t))))
 
 (defun lsp-bridge-sync-tramp-remote ()
   (interactive)
   (let* ((file-name (buffer-file-name))
-         (tramp-file-name (tramp-dissect-file-name file-name))
-         (username (tramp-file-name-user tramp-file-name))
-         (domain (tramp-file-name-domain tramp-file-name))
-         (port (tramp-file-name-port tramp-file-name))
-         (host (tramp-file-name-host tramp-file-name))
-         (path (tramp-file-name-localname tramp-file-name))
-         reconnect)
+         (tramp-vec (tramp-dissect-file-name file-name))
+         (user (tramp-file-name-user tramp-vec))
+         (host (tramp-file-name-host tramp-vec))
+         (port (tramp-file-name-port tramp-vec))
+         (path (tramp-file-name-localname tramp-vec)))
 
     (when (not (member host lsp-bridge-tramp-blacklist))
       (read-only-mode 1)
+      (lsp-bridge-call-async "sync_tramp_remote" file-name user host port path))))
 
-      (setq reconnect (lsp-bridge-start-remote-process host))
-
-      (lsp-bridge-call-async "sync_tramp_remote" username host port file-name reconnect))))
-
-(defun lsp-bridge-get-match-buffer-by-filehost (filehost)
+(defun lsp-bridge-get-match-buffer-by-filehost (remote-file-host)
   (cl-dolist (buffer (buffer-list))
     (with-current-buffer buffer
-      (when-let* ((match-buffer (string-equal lsp-bridge-remote-file-host filehost)))
+      (when-let* ((match-buffer (string-equal lsp-bridge-remote-file-host remote-file-host)))
         (cl-return buffer)))))
 
-(defun lsp-bridge-remote-reconnect (ssh-host)
-  (when (yes-or-no-p (format "Reconnect remote %s?" ssh-host))
-    (with-current-buffer (lsp-bridge-get-match-buffer-by-filehost ssh-host)
-      (lsp-bridge-sync-tramp-remote))))
+(defun lsp-bridge-construct-tramp-file-name (method user host port path)
+  "Construct a TRAMP file name from components: METHOD USER HOST PORT PATH.
 
-(defun lsp-bridge-open-remote-file--response(server path content position)
+SSH tramp file name is like /ssh:user@host#port:path"
+  (concat "/"
+          method ":"
+          (when user (concat user "@"))
+          host
+          (when port (concat "#" port))
+          ":" path))
+
+(defun lsp-bridge-remote-reconnect (remote-file-host)
+  "Restore TRAMP connection infomation of REMOTE-FILE-HOST."
+  (when lsp-bridge-remote-start-automatically
+    (with-current-buffer (lsp-bridge-get-match-buffer-by-filehost remote-file-host)
+      ;; unify handling logic for buffer created by `lsp-bridge-open-remote-file' or open by tramp
+      ;; override the buffer-file-name used by `lsp-bridge-sync-tramp-remote'
+      ;; if buffer is created by lsp-bridge-open-remote-file then (buffer-file-name) returns nil
+      (let ((buffer-file-name (or (buffer-file-name)
+                                  (lsp-bridge-construct-tramp-file-name lsp-bridge-remote-file-tramp-method
+                                                                        lsp-bridge-remote-file-user
+                                                                        lsp-bridge-remote-file-host
+                                                                        lsp-bridge-remote-file-port
+                                                                        lsp-bridge-remote-file-path))))
+        (lsp-bridge-sync-tramp-remote)))))
+
+(defun lsp-bridge-open-remote-file--response(tramp-method user host port path content position)
   (let ((buf-name (format "[LBR] %s" (file-name-nondirectory path))))
     (lsp-bridge-define--jump-record-postion)
 
@@ -2640,7 +2669,10 @@ I haven't idea how to make lsp-bridge works with `electric-indent-mode', PR are 
       (let ((mode (lsp-bridge-get-mode-name-from-file-path path)))
         (when mode
           (let ((lsp-bridge-remote-file-flag t)
-                (lsp-bridge-remote-file-host server)
+                (lsp-bridge-remote-file-tramp-method tramp-method)
+                (lsp-bridge-remote-file-user user)
+                (lsp-bridge-remote-file-host host)
+                (lsp-bridge-remote-file-port port)
                 (lsp-bridge-remote-file-path path))
             (funcall mode)))))
 
@@ -2652,13 +2684,15 @@ I haven't idea how to make lsp-bridge works with `electric-indent-mode', PR are 
       (lsp-bridge-define--jump-flash position))
 
     (setq-local lsp-bridge-remote-file-flag t)
-    (setq-local lsp-bridge-remote-file-host server)
+    (setq-local lsp-bridge-remote-file-tramp-method tramp-method)
+    (setq-local lsp-bridge-remote-file-user user)
+    (setq-local lsp-bridge-remote-file-host host)
+    (setq-local lsp-bridge-remote-file-port port)
     (setq-local lsp-bridge-remote-file-path path)
 
     ;; Always enable lsp-bridge for remote file.
     ;; Remote file can always edit and update content even some file haven't corresponding lsp server, such as *.txt
-    (lsp-bridge-mode 1)
-    ))
+    (lsp-bridge-mode 1)))
 
 (defun lsp-bridge-remote-kill-buffer ()
   (when lsp-bridge-remote-file-flag
