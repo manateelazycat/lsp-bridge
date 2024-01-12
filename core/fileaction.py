@@ -337,6 +337,8 @@ class FileAction:
             code_actions = self.get_code_actions()
             if len(code_actions) > 0:
                 eval_in_emacs("lsp-bridge-code-action--fix", self.get_code_actions(), action_kind)
+            elif self.get_diagnostics_count() > 0:
+                message_emacs("Please move cursor to error or warning, then execute 'lsp-bridge-code-action' again.")
             else:
                 message_emacs("Fantastic, your code looks great! No further actions needed!")
 
