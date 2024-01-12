@@ -23,11 +23,16 @@ import threading
 import os
 import glob
 import json
+import socket
 import traceback
 from core.utils import *
 
-class RemoteFileClient(threading.Thread):
 
+class SendMessageException(Exception):
+    pass
+
+
+class RemoteFileClient(threading.Thread):
     remote_password_dict = {}
 
     def __init__(self, ssh_host, ssh_user, ssh_port, server_port, callback, use_gssapi=False, proxy_command=None):
@@ -39,15 +44,14 @@ class RemoteFileClient(threading.Thread):
         self.ssh_port = ssh_port
         self.server_port = server_port
         self.callback = callback
-        [self.reconnet] = get_emacs_vars(["lsp-bridge-remote-start-automatically"])
 
-
-        # Build SSH channel between local client and remote server.
         [self.user_ssh_private_key] = get_emacs_vars(["lsp-bridge-user-ssh-private-key"])
+
         self.ssh = self.connect_ssh(use_gssapi, proxy_command)
-        self.transport = self.ssh.get_transport()
-        self.chan = self.transport.open_channel("direct-tcpip", (self.ssh_host, self.server_port), ('0.0.0.0', 0))
-        self.connect_ok = True
+        # after successful login, don't create a channel yet
+        # caller can use client ssh to execute command on remote server
+        # ande then call create_channel() to create the channel
+        self.chan = None
 
     def ssh_private_key(self):
         """Retrieves the path to the SSH private key file.
@@ -62,15 +66,20 @@ class RemoteFileClient(threading.Thread):
         if not self.user_ssh_private_key:
             ssh_dir = "~/.ssh"
             ssh_dir = os.path.expanduser(ssh_dir)
-            pub_keys = glob.glob(os.path.join(ssh_dir, '*.pub'))
+            pub_keys = glob.glob(os.path.join(ssh_dir, "*.pub"))
             default_pub_key = pub_keys[0]
-            private_key = default_pub_key[:-len(".pub")]
+            private_key = default_pub_key[: -len(".pub")]
         else:
             private_key = os.path.expanduser(self.user_ssh_private_key)
         return private_key
 
     def connect_ssh(self, use_gssapi, proxy_command):
+        """Connect to remote ssh_host
+
+        :raises: :class:`paramiko.AuthenticationException`: if all authentication method failed
+        """
         import paramiko
+
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -92,9 +101,11 @@ class RemoteFileClient(threading.Thread):
         except:
             print(traceback.format_exc())
 
-            # Try login server with password if public key is not available.
-            password = RemoteFileClient.remote_password_dict[self.ssh_host] if self.ssh_host in RemoteFileClient.remote_password_dict else get_ssh_password(self.ssh_user, self.ssh_host, self.ssh_port)
+            # Try login server with password if private key is not available.
             try:
+                # running `get-ssh-password` on macOS will raise error of 'The macOS Keychain auth-source backend doesn’t support creation yet'
+                password = RemoteFileClient.remote_password_dict[self.ssh_host] if self.ssh_host in RemoteFileClient.remote_password_dict else get_ssh_password(self.ssh_user, self.ssh_host, self.ssh_port)
+
                 ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, password=password)
 
                 # Only remeber server's login password after login server successfully.
@@ -102,32 +113,64 @@ class RemoteFileClient(threading.Thread):
                 RemoteFileClient.remote_password_dict[self.ssh_host] = password
             except:
                 print(traceback.format_exc())
+                raise paramiko.AuthenticationException()
 
         return ssh
 
+    def create_channel(self):
+        """Create channel to lsp-bridge process running in server
+
+        :raises: :class:`paramiko.ChannelException`: if server lsp-bridge process doesn't exisit
+        """
+        self.chan = self.ssh.get_transport().open_channel(
+            "direct-tcpip", (self.ssh_host, self.server_port), ("0.0.0.0", 0)
+        )
+
     def send_message(self, message):
+        """Send message via the channel
+
+        :raises: :class:`SendMessageException`: if channel is invalid
+        """
         try:
-            if self.connect_ok:
-                data = json.dumps(message)
-                self.chan.sendall(f"{data}\n".encode("utf-8"))
-        except OSError:
-            if self.connect_ok:
-                self.connect_ok = False
-                logger.error(traceback.format_exc())
-                if self.reconnet:
-                    logger.error("try to reconnect remote host!")
-                    eval_in_emacs('lsp-bridge-remote-reconnect', self.ssh_host)
-        except:
-            logger.error(traceback.format_exc())
+            data = json.dumps(message)
+            self.chan.sendall(f"{data}\n".encode("utf-8"))
+        except socket.error as e:       
+            raise SendMessageException() from e
 
     def run(self):
-        chan_file = self.chan.makefile('r')
+        chan_file = self.chan.makefile("r")
         while True:
             message = chan_file.readline().strip()
             if not message:
                 break
             self.callback(message)
         self.chan.close()
+
+    def start_lsp_bridge_process(self):
+        [remote_python_command] = get_emacs_vars(["lsp-bridge-remote-python-command"])
+        [remote_python_file] = get_emacs_vars(["lsp-bridge-remote-python-file"])
+        [remote_log] = get_emacs_vars(["lsp-bridge-remote-log"])
+
+        # use -l option to bash as a login shell, ensuring that login scripts (like ~/.bash_profile) are read and executed.
+        # This is useful for lsp-bridge to use environment settings to correctly find out language server command
+        _, stdout, stderr = self.ssh.exec_command(
+            f"""
+            nohup /bin/bash -l -c '
+            if ! pidof {remote_python_command} >/dev/null 2>&1; then
+                echo -e "Start lsp-bridge process as user $(whoami)" | tee >{remote_log}
+                {remote_python_command} {remote_python_file} >>{remote_log} 2>&1 &
+                if [ "$?" = "0" ]; then
+                    echo -e "Start lsp-bridge successfully" | tee >>{remote_log}
+                else
+                    echo -e "Start lsp-bridge failed" | tee >>{remote_log}
+                fi
+            fi'
+        """
+        )
+        print(f"Remote process started at {self.ssh_host}")
+        print("stdout:" + stdout.read().decode())
+        print("stderr:" + stderr.read().decode())
+
 
 class RemoteFileServer:
     def __init__(self, host, port):
@@ -196,36 +239,27 @@ class RemoteFileServer:
             self.handle_tramp_sync(data, client_socket)
 
     def handle_tramp_sync(self, data, client_socket):
-        method = data["method"]
-        set_remote_tramp_method(method)
+        tramp_connection_info = data["tramp_connection_info"]
+        set_remote_tramp_connection_info(tramp_connection_info)
 
     def handle_open_file(self, data, client_socket):
         path = os.path.expanduser(data["path"])
-        server = data["server"]
-        jump_define_pos = data["jump_define_pos"]
+        response = {**data, "path": path}
 
         if os.path.exists(path):
             with open(path) as f:
                 content = f.read()
-
-                response = {
-                    "command": "open_file",
-                    "server": server,
+                response.update({
                     "path": path,
-                    "jump_define_pos": jump_define_pos,
                     "content": content
-                }
-
+                })
                 self.file_dict[path] = content
         else:
-            response = {
-                "command": "open_file",
-                "server": server,
-                "path": path,
-                "jump_define_pos": jump_define_pos,
+            response.update({
+                "path": path,              
                 "content": "",
-                "error": f"Cannot found file {path} on server."
-            }
+                "error": f"Cannot found file {path} on server.",
+            })          
 
         response_data = json.dumps(response)
         client_socket.send(f"{response_data}\n".encode("utf-8"))
@@ -251,6 +285,7 @@ class RemoteFileServer:
         if path in self.file_dict:
             del self.file_dict[path]
 
+
 def save_ip_to_file(ip, filename):
     with open(filename, 'r') as f:
         existing_ips = f.read().splitlines()
@@ -262,6 +297,7 @@ def save_ip_to_file(ip, filename):
 
     with open(filename, 'w') as f:
         f.write('\n'.join(existing_ips))
+
 
 def save_ip(ip):
     user_emacs_dir = get_emacs_func_result("get-user-emacs-directory")

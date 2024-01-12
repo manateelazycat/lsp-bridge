@@ -147,14 +147,14 @@ def get_current_line():
 def get_ssh_password(user, host, port):
     return get_emacs_func_result('get-ssh-password', user, host, port)
 
-remote_tramp_method = ""
-def set_remote_tramp_method(method):
-    global remote_tramp_method
-    remote_tramp_method = method
+remote_tramp_connection_info = ""
+def set_remote_tramp_connection_info(tramp_connection_info):
+    global remote_tramp_connection_info
+    remote_tramp_connection_info = tramp_connection_info
 
-def get_remote_tramp_method():
-    global remote_tramp_method
-    return remote_tramp_method
+def get_remote_tramp_connection_info():
+    global remote_tramp_connection_info
+    return remote_tramp_connection_info
 
 remote_eval_socket = None
 def set_remote_eval_socket(socket):
@@ -173,10 +173,11 @@ def set_remote_rpc_socket(socket, host):
 
 def get_remote_rpc_socket():
     global remote_rpc_socket
-    return remote_rpc_socket
+    global remote_rpc_host
+    return remote_rpc_socket, remote_rpc_host
 
 def call_remote_rpc(message):
-    global remote_rpc_socket, remote_rpc_host
+    remote_rpc_socket, remote_rpc_host = get_remote_rpc_socket()
 
     if remote_rpc_socket is not None:
         message["host"] = remote_rpc_host
