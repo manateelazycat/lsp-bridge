@@ -1221,7 +1221,7 @@ So we build this macro to restore postion after code format."
            (if (cl-every (lambda (pred)
                            (if (functionp pred)
                                (let ((result (funcall pred)))
-                                 (when (and lsp-bridge-enable-log (not eq result t))
+                                 (when (and lsp-bridge-enable-log (not (eq result t)))
                                    (message "*** lsp-bridge-try-completion execute predicate '%s' failed with result: '%s'" pred result))
                                  result)
                              t))
