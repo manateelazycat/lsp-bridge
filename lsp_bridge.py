@@ -95,6 +95,8 @@ class LspBridge:
         self.event_loop = threading.Thread(target=self.event_dispatcher)
         self.event_loop.start()
 
+        self.sync_tramp_remote_complete_event = threading.Event()
+
         if self.running_in_server:
             self.init_search_backends_complete_event = threading.Event()
             # Start remote file server if lsp-bridge running in server.
@@ -355,6 +357,7 @@ class LspBridge:
             })
 
         eval_in_emacs("lsp-bridge-update-tramp-file-info", tramp_file_name, tramp_connection_info, server_host, path)
+        self.sync_tramp_remote_complete_event.set()
 
     @threaded
     def save_remote_file(self, remote_file_host, remote_file_path):
@@ -467,6 +470,13 @@ class LspBridge:
         self.remote_request_loop.start()
 
     def get_socket_client(self, server_host, server_port, is_retry=False):
+        if server_host not in self.host_names:
+            message_emacs(f"{server_host} is not connected, try reconnect...")
+            self.sync_tramp_remote_complete_event.clear()
+            eval_in_emacs('lsp-bridge-remote-reconnect', server_host)
+            self.sync_tramp_remote_complete_event.wait()
+            message_emacs(f"{server_host} connected.")
+
         client_id = f"{server_host}:{server_port}"
         if client_id in self.client_dict:
             return self.client_dict[client_id]
