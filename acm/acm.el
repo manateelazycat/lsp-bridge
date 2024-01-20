@@ -366,6 +366,10 @@ So we use `minor-mode-overriding-map-alist' to override key, make sure all keys 
   (pcase acm-input-bound-style
     ("symbol"
      (bounds-of-thing-at-point 'symbol))
+    ("org-roam"
+     (when (org-in-regexp org-roam-bracket-completion-re 1)
+       (cons (match-beginning 2)
+	     (match-end 2))))
     ("string"
      (cons (point)
            (save-excursion
@@ -384,7 +388,7 @@ So we use `minor-mode-overriding-map-alist' to override key, make sure all keys 
 (defun acm-get-input-prefix ()
   "Get user input prefix."
   (let* ((acm-input-bound-style (if (acm-in-roam-bracket-p)
-				    "symbol"
+				    "org-roam"
 				  "ascii"))
 	 (bound (acm-get-input-prefix-bound)))
     (if bound
@@ -591,7 +595,7 @@ The key of candidate will change between two LSP results."
          (menu-candidates (cl-subseq candidates 0 (min (length candidates) acm-menu-length)))
          (current-select-candidate-index (cl-position previous-select-candidate (mapcar 'acm-menu-index-info menu-candidates) :test 'equal))
 	 (acm-input-bound-style (if (acm-in-roam-bracket-p)
-				    "symbol"
+				    "org-roam"
 				  "ascii"))
 	 (bounds (acm-get-input-prefix-bound)))
     (cond
