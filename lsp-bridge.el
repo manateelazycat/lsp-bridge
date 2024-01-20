@@ -1578,8 +1578,12 @@ So we build this macro to restore postion after code format."
         (when-let* ((filename (thing-at-point 'filename t))
                     (dirname (ignore-errors (expand-file-name (file-name-directory filename)))))
           (if (lsp-bridge-is-remote-file)
-              (lsp-bridge-remote-send-func-request "search_paths_search"
-                                                   (list dirname (file-name-base filename)))
+              (let ((path (if (tramp-tramp-file-p dirname)
+                              (tramp-file-name-localname (tramp-dissect-file-name dirname))
+                            dirname)))
+                (lsp-bridge-remote-send-func-request "search_paths_search"
+                                                     (list path (file-name-base filename))))
+
             (when (file-exists-p dirname)
               (lsp-bridge-call-async "search_paths_search"
                                      dirname
