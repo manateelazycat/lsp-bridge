@@ -972,8 +972,11 @@ So we build this macro to restore postion after code format."
        (lsp-bridge-process-live-p)))
 
 (defun lsp-bridge-call-file-api (method &rest args)
-  (if (lsp-bridge-is-remote-file)
-      (lsp-bridge-remote-send-lsp-request method args)
+  (if (file-remote-p (buffer-file-name))
+      (if (lsp-bridge-is-remote-file)
+          (lsp-bridge-remote-send-lsp-request method args)
+        (message "[LSP-Bridge] remote file \"%s\" is updating info... skip call %s."
+                 (buffer-file-name) method))
     (when (lsp-bridge-call-file-api-p)
       (if (and (boundp 'acm-backend-lsp-filepath)
                (file-exists-p acm-backend-lsp-filepath))
@@ -2612,7 +2615,9 @@ the context of that buffer. If the buffer is created by
     (read-only-mode -1)
 
     (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)
-    (setq lsp-bridge-tramp-sync-var t)))
+    (setq lsp-bridge-tramp-sync-var t)
+    (message "[LSP-Bridge] remote file %s updated info successfully."
+             (buffer-file-name))))
 
 (defun lsp-bridge-tramp-show-hostnames ()
   (interactive)
