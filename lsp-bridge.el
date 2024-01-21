@@ -1309,8 +1309,8 @@ So we build this macro to restore postion after code format."
   (not
    (null
     (split-string (buffer-substring-no-properties
-                   (max (1- (point)) (line-beginning-position))
-                   (point))))))
+                    (max (1- (point)) (line-beginning-position))
+                    (point))))))
 
 (defun lsp-bridge-not-match-hide-characters ()
   "Hide completion if char before cursor match `lsp-bridge-completion-hide-characters'."
@@ -2243,13 +2243,13 @@ SymbolKind (defined in the LSP)."
          ;; Tempel not active.
          (or (not (boundp 'tempel--active))
              (not tempel--active)))
-    (let ((indent (lsp-bridge--get-indent-width major-mode)))
+    (let ((indent (symbol-value (lsp-bridge--get-indent-width major-mode))))
       (lsp-bridge-call-file-api "try_formatting"
                                 ;; Sometimes `c-basic-offset' return string `set-from-style', make some lsp server broken, such as, gopls,
                                 ;; so we need convert indent to integer `4' to make sure code format works expectantly.
                                 (if (eq indent 'set-from-style)
                                     4
-                                  (symbol-value indent))))))
+                                  indent)))))
 
 (defun lsp-bridge-format--update (filename edits)
   ;; We need set `inhibit-modification-hooks' to t to avoid GC freeze Emacs.
@@ -2583,14 +2583,14 @@ the context of that buffer. If the buffer is created by
     (push `(,host . ,tramp-connection-info) lsp-bridge-tramp-alias-alist))
 
   (lsp-bridge--conditional-update-tramp-file-info tramp-file-name path host
-                                                  (setq-local lsp-bridge-remote-file-flag t)
-                                                  (setq-local lsp-bridge-remote-file-host host)
-                                                  (setq-local lsp-bridge-remote-file-path path)
+    (setq-local lsp-bridge-remote-file-flag t)
+    (setq-local lsp-bridge-remote-file-host host)
+    (setq-local lsp-bridge-remote-file-path path)
 
-                                                  (read-only-mode -1)
+    (read-only-mode -1)
 
-                                                  (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)
-                                                  (setq lsp-bridge-tramp-sync-var t)))
+    (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)
+    (setq lsp-bridge-tramp-sync-var t)))
 
 (defun lsp-bridge-tramp-show-hostnames ()
   (interactive)
