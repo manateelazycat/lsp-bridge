@@ -9,15 +9,25 @@
       "enable": true
     },
     "cargo": {
-      "features": "all",
+      "features": "",
       "noDefaultFeatures": false,
       "runBuildScripts": true,
       "loadOutDirsFromCheck": true,
       "useRustcWrapperForBuildScripts": true,
-      "autoreload": true,
+      "autoreload": false,
       "buildScripts": {
-        "enable": true
-      }
+        "enable": true,
+        "rebuildOnSave": false,
+        "invocationLocation": "root",
+        "invocationStrategy": "once",
+        "overrideCommand": null
+        }
+      },
+    "checkOnSave": {
+      "enable": false,
+      "allTargets": false,
+      "features": "null",
+      "overrideCommand": null
     },
     "completion": {
       "addCallParenthesis": true,
