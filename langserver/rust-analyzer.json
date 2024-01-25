@@ -9,7 +9,7 @@
       "enable": true
     },
     "cargo": {
-      "features": "",
+      "features": "all",
       "noDefaultFeatures": false,
       "runBuildScripts": true,
       "loadOutDirsFromCheck": true,
@@ -25,9 +25,10 @@
       },
     "checkOnSave": {
       "enable": false,
-      "allTargets": false,
-      "features": "null",
-      "overrideCommand": null
+      "allTargets": true,
+      "features": "all",
+      "invocationLocation": "root",
+      "invocationStrategy": "once"
     },
     "completion": {
       "addCallParenthesis": true,
