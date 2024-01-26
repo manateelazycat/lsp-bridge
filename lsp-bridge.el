@@ -505,6 +505,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     (groovy-mode .                                                               "groovy-language-server")
     (haskell-mode .                                                              "hls")
     (lua-mode .                                                                  "sumneko")
+    (markdown-mode .                                                             "vale-ls")    
     (dart-mode .                                                                 "dart-analysis-server")
     (scala-mode .                                                                "metals")
     ((js2-mode js-mode js-ts-mode rjsx-mode) .                                   "javascript")
@@ -549,6 +550,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     lua-mode-hook
     move-mode-hook
     rust-mode-hook
+    markdown-mode-hook
     rust-ts-mode-hook
     rustic-mode-hook
     erlang-mode-hook
@@ -647,6 +649,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
   '((c-mode                     . c-basic-offset) ; C
     (c-ts-mode                  . c-basic-offset) ; C
     (c++-mode                   . c-basic-offset) ; C++
+    (markdown-mode              . c-basic-offset) ; Markdown.
     (csharp-mode                . c-basic-offset) ; C#
     (csharp-tree-sitter-mode    . csharp-tree-sitter-indent-offset) ; C#
     (d-mode                     . c-basic-offset)             ; D
