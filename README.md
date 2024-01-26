@@ -407,6 +407,7 @@ If your language supports mixed multi-language servers, it is recommended to che
 | [verible](https://github.com/chipsalliance/verible)                                                | Verilog                                 |                                                                                                                                                                                                                                                                    |
 | [move-analyzer](https://github.com/move-language/move)                                             | Move                                    | The `move-analyzer` is included in the move language repository                                                                                                                                                                                                    |
 | [nls](https://crates.io/crates/nickel-lang-lsp/)                                             | Nickel                                    | cargo add nickel-lang-lsp                                                                                                                                               |
+| [vale-ls](https://github.com/errata-ai/vale-ls)                                             | Markdown                                    |                                                                                                                                               |
 
 ## Join development
 
