@@ -1282,8 +1282,8 @@ So we build this macro to restore postion after code format."
    (lsp-bridge-string-interpolation-p lsp-bridge-string-interpolation-open-chars-alist)
    ;; Allow file path completion in string area
    (ignore-errors
-     (and (thing-at-point 'filename)
-          (or (file-exists-p (file-name-directory (thing-at-point 'filename)))
+     (and (lsp-bridge-elisp-get-filepath)
+          (or (file-exists-p (file-name-directory (lsp-bridge-elisp-get-filepath)))
               ;; Allow string in lsp-bridge-remote file.
               (lsp-bridge-is-remote-file))))))
 
@@ -1578,7 +1578,7 @@ So we build this macro to restore postion after code format."
 
     ;; Send path search request when detect path string.
     (if (acm-in-string-p)
-        (when-let* ((filename (thing-at-point 'filename t))
+        (when-let* ((filename (lsp-bridge-elisp-get-filepath))
                     (dirname (ignore-errors (expand-file-name (file-name-directory filename)))))
           (if (lsp-bridge-is-remote-file)
               (let ((path (if (tramp-tramp-file-p dirname)
@@ -1595,6 +1595,25 @@ So we build this macro to restore postion after code format."
       ;; We need cleanup `acm-backend-path-items' when cursor not in string.
       ;; Otherwise, other completion backend won't show up.
       (setq-local acm-backend-path-items nil))))
+
+(defun lsp-bridge-elisp-get-filepath ()
+  " Supports obtaining paths with spaces "
+  (let* ((file-end (point))
+         (filepath (save-excursion
+                     (catch 'break
+                       (let* ((file-path "")
+                              (file-beg 0))
+                         (while (acm-in-string-p)
+                           (setq file-beg (car (bounds-of-thing-at-point 'filename)))
+                           (if file-beg
+                               (progn
+                                 (setq file-path (buffer-substring file-beg file-end))
+                                 (if (and (file-name-directory file-path) (file-exists-p (file-name-directory file-path)))
+                                     (progn
+                                       (throw 'break file-path))
+                                   (goto-char (1- file-beg))))
+                             (throw 'break nil))))))))
+    filepath))
 
 (defun lsp-bridge-elisp-symbols-update ()
   "We need synchronize elisp symbols to Python side when idle."
