@@ -2637,7 +2637,7 @@ I haven't idea how to make lsp-bridge works with `electric-indent-mode', PR are 
 
 (defun lsp-bridge-sync-tramp-remote ()
   (interactive)
-  (let* ((file-name (buffer-file-name))
+  (let* ((file-name (lsp-bridge-get-buffer-file-name-text))
          (tramp-vec (tramp-dissect-file-name file-name))
          (user (tramp-file-name-user tramp-vec))
          (host (tramp-file-name-host tramp-vec))
