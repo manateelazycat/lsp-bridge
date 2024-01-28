@@ -151,13 +151,6 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'number
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-remote-heartbeat-interval nil
-  "Interval for sending heartbeat to server in seconds.
-
-Setting this to nil or 0 will turn off the heartbeat mechanism."
-  :type 'number
-  :group 'lsp-bridge)
-
 (defcustom lsp-bridge-enable-mode-line t
   "Whether display LSP-bridge's server info in mode-line ."
   :type 'boolean
@@ -979,11 +972,8 @@ So we build this macro to restore postion after code format."
        (lsp-bridge-process-live-p)))
 
 (defun lsp-bridge-call-file-api (method &rest args)
-  (if (file-remote-p (buffer-file-name))
-      (if (lsp-bridge-is-remote-file)
-          (lsp-bridge-remote-send-lsp-request method args)
-        (message "[LSP-Bridge] remote file \"%s\" is updating info... skip call %s."
-                 (buffer-file-name) method))
+  (if (lsp-bridge-is-remote-file)
+      (lsp-bridge-remote-send-lsp-request method args)
     (when (lsp-bridge-call-file-api-p)
       (if (and (boundp 'acm-backend-lsp-filepath)
                (file-exists-p acm-backend-lsp-filepath))
@@ -1661,7 +1651,6 @@ So we build this macro to restore postion after code format."
         (lsp-bridge-remote-send-func-request "search_file_words_index_files" (list files)))
     (let ((files (cl-remove-if (lambda (elt)
                                  (or (null elt)
-                                     (file-remote-p elt)
                                      (member (file-name-extension elt)
                                              lsp-bridge-search-words-prohibit-file-extensions)))
                                (mapcar (lambda (b) (lsp-bridge-buffer-file-name (buffer-file-name b))) (buffer-list)))))
@@ -2623,9 +2612,7 @@ the context of that buffer. If the buffer is created by
     (read-only-mode -1)
 
     (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)
-    (setq lsp-bridge-tramp-sync-var t)
-    (message "[LSP-Bridge] remote file %s updated info successfully."
-             (buffer-file-name))))
+    (setq lsp-bridge-tramp-sync-var t)))
 
 (defun lsp-bridge-tramp-show-hostnames ()
   (interactive)
@@ -2648,7 +2635,7 @@ I haven't idea how to make lsp-bridge works with `electric-indent-mode', PR are 
 
 (defun lsp-bridge-sync-tramp-remote ()
   (interactive)
-  (let* ((file-name (lsp-bridge-get-buffer-file-name-text))
+  (let* ((file-name (buffer-file-name))
          (tramp-vec (tramp-dissect-file-name file-name))
          (user (tramp-file-name-user tramp-vec))
          (host (tramp-file-name-host tramp-vec))
