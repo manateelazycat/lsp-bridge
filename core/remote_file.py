@@ -25,6 +25,7 @@ import glob
 import json
 import socket
 import traceback
+import time
 from core.utils import *
 
 
@@ -125,6 +126,18 @@ class RemoteFileClient(threading.Thread):
         self.chan = self.ssh.get_transport().open_channel(
             "direct-tcpip", (self.ssh_host, self.server_port), ("0.0.0.0", 0)
         )
+        if self.chan:
+            [self.remote_heartbeat_interval] = get_emacs_vars(["lsp-bridge-remote-heartbeat-interval"])
+            if self.remote_heartbeat_interval and self.remote_heartbeat_interval != 0:
+                threading.Thread(target=self.heartbeat).start()
+
+    def heartbeat(self):
+        try:
+            while True:
+                self.chan.sendall("ping\n".encode("utf-8"))
+                time.sleep(self.remote_heartbeat_interval)
+        except Exception as e:
+            logger.exception(e)
 
     def send_message(self, message):
         """Send message via the channel
@@ -209,6 +222,8 @@ class RemoteFileServer:
                 data = client_file.readline().strip()
                 if not data:
                     break
+                elif data == "ping":
+                    continue
 
                 message = parse_json_content(data)
                 resp = self.handle_message(message)
