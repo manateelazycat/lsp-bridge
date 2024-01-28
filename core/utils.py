@@ -367,6 +367,10 @@ def log_time(message):
     import datetime
     logger.info("\n--- [{}] {}".format(datetime.datetime.now().time(), message))
 
+def log_time_debug(message):
+    import datetime
+    logger.debug("\n--- [{}] {}".format(datetime.datetime.now().time(), message))
+
 def get_os_name():
     return platform.system().lower()
 
