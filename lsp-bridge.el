@@ -151,6 +151,13 @@ Setting this to nil or 0 will turn off the indicator."
   :type 'number
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-remote-heartbeat-interval nil
+  "Interval for sending heartbeat to server in seconds.
+
+Setting this to nil or 0 will turn off the heartbeat mechanism."
+  :type 'number
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-enable-mode-line t
   "Whether display LSP-bridge's server info in mode-line ."
   :type 'boolean
