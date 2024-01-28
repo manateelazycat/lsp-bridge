@@ -25,6 +25,7 @@ import glob
 import json
 import socket
 import traceback
+import time
 from core.utils import *
 
 
@@ -125,6 +126,19 @@ class RemoteFileClient(threading.Thread):
         self.chan = self.ssh.get_transport().open_channel(
             "direct-tcpip", (self.ssh_host, self.server_port), ("0.0.0.0", 0)
         )
+        if self.chan:
+            [self.remote_heartbeat_interval] = get_emacs_vars(["lsp-bridge-remote-heartbeat-interval"])
+            if self.remote_heartbeat_interval and self.remote_heartbeat_interval != 0:
+                threading.Thread(target=self.heartbeat).start()
+
+    def heartbeat(self):
+        try:
+            while True:
+                self.chan.sendall("ping\n".encode("utf-8"))
+                log_time_debug(f"Ping server: {self.ssh_host}, port: {self.server_port}")
+                time.sleep(self.remote_heartbeat_interval)
+        except Exception as e:
+            logger.exception(e)
 
     def send_message(self, message):
         """Send message via the channel
@@ -134,15 +148,20 @@ class RemoteFileClient(threading.Thread):
         try:
             data = json.dumps(message)
             self.chan.sendall(f"{data}\n".encode("utf-8"))
-        except socket.error as e:       
+        except socket.error as e:
             raise SendMessageException() from e
+        else:
+            log_time_debug(f"Sended to server {self.ssh_host} port {self.server_port}: {message}")
 
     def run(self):
         chan_file = self.chan.makefile("r")
         while True:
-            message = chan_file.readline().strip()
-            if not message:
+            data = chan_file.readline().strip()
+            if not data:
                 break
+
+            message = parse_json_content(data)
+            log_time_debug(f"Received from server {self.ssh_host} port {self.server_port}: {message}")
             self.callback(message)
         self.chan.close()
 
@@ -188,63 +207,88 @@ class RemoteFileServer:
         self.event_loop = threading.Thread(target=self.event_dispatcher)
         self.event_loop.start()
 
-        # Build message loop.
-        self.message_queue = queue.Queue()
-        self.message_thread = threading.Thread(target=self.message_dispatcher)
-        self.message_thread.start()
-
-        self.file_dict = {}
+        self.client_socket = None
+        self.client_address = None
 
     def event_dispatcher(self):
         try:
             while True:
-                client_socket, client_address = self.server.accept()
+                self.client_socket, self.client_address = self.server.accept()
 
-                client_handler = threading.Thread(target=self.handle_client, args=(client_socket,))
-                client_handler.start()
-        except:
-            print(traceback.format_exc())
+                threading.Thread(target=self.handle_client).start()
+        except Exception as e:
+            logger.exception(e)
 
-    def message_dispatcher(self):
+    def handle_client(self):
         try:
+            client_file = self.client_socket.makefile('r')
             while True:
-                client_socket = self.message_queue.get(True)
-                self.handle_client(client_socket)
-                self.message_queue.task_done()
-        except:
-            print(traceback.format_exc())
+                data = client_file.readline().strip()
+                if not data:
+                    break
+                elif data == "ping":
+                    log_time_debug(f"Server port {self.port} received ping from client {self.client_address}")
+                    continue
 
-    def handle_client(self, client_socket):
-        client_file = client_socket.makefile('r')
-        while True:
-            message = client_file.readline().strip()
-            if not message:
-                break
-            self.handle_message(message, client_socket)
-        client_socket.close()
+                message = parse_json_content(data)
+                log_time_debug(f"Server port {self.port} received message from client {self.client_address}: {message}")
+                resp = self.handle_message(message)
+                if resp:
+                    self.client_socket.send(f"{resp}\n".encode("utf-8"))
 
-    def handle_message(self, message, client_socket):
-        data = parse_json_content(message)
-        command = data["command"]
+            client_file.close()
+            self.client_socket.shutdown(socket.SHUT_RDWR)
+            self.client_socket.close()
+            log_time(f"Server port {self.port} socket close for client {self.client_address}")
+            self.client_socket = None
+            self.client_address = None
+        except Exception as e:
+            logger.exception(e)
+
+    def handle_message(self, message):
+        return
+
+    def send_message(self, message):
+        try:
+            if self.client_socket:
+                if self.client_address:
+                    message["host"] = self.client_address[0]
+
+                data = json.dumps(message)
+                self.client_socket.send(f"{data}\n".encode("utf-8"))
+        except Exception as e:
+            logger.exception(e)
+            raise SendMessageException() from e
+        else:
+            log_time_debug(f"Server port {self.port} sended to client {self.client_address}: {message}")
+
+
+class FileSyncServer(RemoteFileServer):
+    def __init__(self, host, port):
+        self.file_dict = {}
+        super().__init__(host, port)
+
+    def handle_message(self, message):
+        command = message["command"]
 
         if command == "open_file":
-            self.handle_open_file(data, client_socket)
+            return self.handle_open_file(message)
         elif command == "save_file":
-            self.handle_save_file(data, client_socket)
+            return self.handle_save_file(message)
         elif command == "close_file":
-            self.handle_close_file(data, client_socket)
+            return self.handle_close_file(message)
         elif command == "change_file":
-            self.handle_change_file(data, client_socket)
+            return self.handle_change_file(message)
         elif command == "tramp_sync":
-            self.handle_tramp_sync(data, client_socket)
+            return self.handle_tramp_sync(message)
 
-    def handle_tramp_sync(self, data, client_socket):
-        tramp_connection_info = data["tramp_connection_info"]
+    def handle_tramp_sync(self, message):
+        tramp_connection_info = message["tramp_connection_info"]
         set_remote_tramp_connection_info(tramp_connection_info)
 
-    def handle_open_file(self, data, client_socket):
-        path = os.path.expanduser(data["path"])
-        response = {**data, "path": path}
+    def handle_open_file(self, message):
+        path = os.path.expanduser(message["path"])
+        response = {**message, "path": path}
 
         if os.path.exists(path):
             with open(path) as f:
@@ -256,34 +300,91 @@ class RemoteFileServer:
                 self.file_dict[path] = content
         else:
             response.update({
-                "path": path,              
+                "path": path,
                 "content": "",
                 "error": f"Cannot found file {path} on server.",
-            })          
+            })
 
-        response_data = json.dumps(response)
-        client_socket.send(f"{response_data}\n".encode("utf-8"))
+        return json.dumps(response)
 
-    def handle_change_file(self, data, client_socket):
-        path = data["path"]
+    def handle_change_file(self, message):
+        path = message["path"]
         if path not in self.file_dict:
             with open(path) as f:
                 self.file_dict[path] = f.read()
 
-        self.file_dict[path] = rebuild_content_from_diff(self.file_dict[path], data["args"][0], data["args"][1], data["args"][3])
+        self.file_dict[path] = rebuild_content_from_diff(self.file_dict[path], message["args"][0], message["args"][1], message["args"][3])
 
-    def handle_save_file(self, data, client_socket):
-        path = data["path"]
+    def handle_save_file(self, message):
+        path = message["path"]
 
         if path in self.file_dict:
             with open(path, 'w') as file:
                 file.write(self.file_dict[path])
 
-    def handle_close_file(self, data, client_socket):
-        path = data["path"]
+    def handle_close_file(self, message):
+        path = message["path"]
 
         if path in self.file_dict:
             del self.file_dict[path]
+
+
+class FileElispServer(RemoteFileServer):
+    def __init__(self, host, port, lsp_bridge):
+        self.lsp_bridge = lsp_bridge
+        self.result_queue = queue.Queue()
+        super().__init__(host, port)
+
+    def handle_client(self):
+        threading.Thread(target=super().handle_client).start()
+        # remote server lsp-bridge process use this cient_socket to call elisp function from local Emacs.
+        log_time(f"Client connect from {self.client_address[0]}:{self.client_address[1]}")
+        self.lsp_bridge.init_search_backends()
+        log_time("init_search_backends finish")
+        # Signal that init_search_backends is done
+        self.lsp_bridge.init_search_backends_complete_event.set()
+
+    def handle_message(self, message):
+        if message == "Connect":
+            # Drop "say hello" message from local Emacs.
+            return
+        else:
+            self.result_queue.put(message)
+
+    def call_remote_rpc(self, message):
+        try:
+            self.send_message(message)
+        except Exception as e:
+            logger.exception(e)
+            return None
+        else:
+            result = self.result_queue.get()
+            self.result_queue.task_done()
+            return result
+
+
+class FileCommandServer(RemoteFileServer):
+    def __init__(self, host, port, lsp_bridge):
+        self.lsp_bridge = lsp_bridge
+        super().__init__(host, port)
+
+    def handle_client(self):
+        # we wait for init_search_backends to finish execution
+        # before start thread to handle remote request
+        log_time("wait for init_search_backends to finsih execution")
+        self.lsp_bridge.init_search_backends_complete_event.wait()
+        super().handle_client()
+
+    def handle_message(self, message):
+        if message["command"] == "lsp_request":
+            # Call LSP request.
+            self.lsp_bridge.event_queue.put({
+                "name": "action_func",
+                "content": ("_{}".format(message["method"]), [message["path"]] + message["args"])
+            })
+        elif message["command"] == "func_request":
+            # Call lsp-bridge normal function.
+            getattr(self.lsp_bridge, message["method"])(*message["args"])
 
 
 def save_ip_to_file(ip, filename):
