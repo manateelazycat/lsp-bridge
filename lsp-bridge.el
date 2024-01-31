@@ -518,7 +518,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     ((sh-mode bash-mode bash-ts-mode) .                                          "bash-language-server")
     ((css-mode css-ts-mode) .                                                    "vscode-css-language-server")
     (elm-mode   .                                                                "elm-language-server")
-    (php-mode .                                                                  lsp-bridge-php-lsp-server)
+    ((php-mode php-ts-mode) .                                                    lsp-bridge-php-lsp-server)
     ((yaml-mode yaml-ts-mode) .                                                  "yaml-language-server")
     (zig-mode .                                                                  "zls")
     (dockerfile-mode .                                                           "docker-langserver")
@@ -591,6 +591,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     lisp-interaction-mode-hook
     org-mode-hook
     php-mode-hook
+    php-ts-mode-hook
     yaml-mode-hook
     zig-mode-hook
     groovy-mode-hook
@@ -665,6 +666,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (lua-mode                   . lua-indent-level)   ; Lua
     (objc-mode                  . c-basic-offset)     ; Objective C
     (php-mode                   . c-basic-offset)     ; PHP
+    (php-ts-mode                . php-ts-mode-indent-offset) ; PHP
     (perl-mode                  . perl-indent-level)  ; Perl
     (cperl-mode                 . cperl-indent-level) ; Perl
     (raku-mode                  . raku-indent-offset) ; Perl6/Raku
