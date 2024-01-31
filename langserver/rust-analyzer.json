@@ -3,6 +3,13 @@
   "languageId": "rust",
   "command": ["rust-analyzer"],
   "settings": {},
+  "capabilities": {
+    "textDocument": {
+      "hover": {
+        "contentFormat": ["markdown"]
+      }
+    }
+  },
   "initializationOptions": {
     "enableExperimental": false,
     "diagnostics": {
