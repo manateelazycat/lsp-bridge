@@ -35,9 +35,17 @@ class Hover(Handler):
             elif "language" in contents:
                 render_strings.append(make_code_block(contents["language"], contents["value"]))
         elif content_type == list:
+            language = ""
             for item in contents:
-                if item != "":
+                if type(item) == dict:
+                    language = item["language"]
                     self.parse_hover_contents(item, render_strings)
+                if type(item) == str:
+                    if item != "":
+                        if language == "java":
+                            render_strings.append(item)
+                        else:
+                            self.parse_hover_contents(item, render_strings)
         return "\n".join(render_strings)
 
     def process_response(self, response: dict) -> None:
