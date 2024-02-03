@@ -196,11 +196,11 @@ class LspBridge:
 
         # Build loop for remote files management.
         self.file_server = FileSyncServer("0.0.0.0", REMOTE_FILE_SYNC_CHANNEL)
-        set_remote_file_server(self.file_server)
         # Build loop for call local Emacs function from server.
         self.file_elisp_server = FileElispServer("0.0.0.0", REMOTE_FILE_ELISP_CHANNEL, self)
         # Build loop for call remote command from local Emacs.
         self.file_command_server = FileCommandServer("0.0.0.0", REMOTE_FILE_COMMAND_CHANNEL, self)
+        set_lsp_bridge_server(self)
 
     # Functions for communication between local and remote server
     def get_socket_client(self, server_host, server_port, is_retry=False):

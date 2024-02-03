@@ -307,22 +307,38 @@ class FileSyncServer(RemoteFileServer):
 class FileElispServer(RemoteFileServer):
     def __init__(self, host, port, lsp_bridge):
         self.lsp_bridge = lsp_bridge
+        self.result_queue = queue.Queue()
         super().__init__(host, port)
 
     def handle_client(self):
         # remote server lsp-bridge process use this cient_socket to call elisp function from local Emacs.
         log_time(f"Client connect from {self.client_address[0]}:{self.client_address[1]}")
-        set_remote_rpc_socket(self.client_socket, self.client_address[0])
 
         # Drop first "say hello" message from local Emacs.
         socket_file = self.client_socket.makefile("r")
         socket_file.readline().strip()
         socket_file.close()
 
+        threading.Thread(target=super().handle_client).start()
+
         self.lsp_bridge.init_search_backends()
         log_time("init_search_backends finish")
         # Signal that init_search_backends is done
         self.lsp_bridge.init_search_backends_complete_event.set()
+
+    def handle_message(self, message):
+        self.result_queue.put(message)
+
+    def call_remote_rpc(self, message):
+        try:
+            self.send_message(message)
+        except Exception as e:
+            logger.exception(e)
+            return None
+        else:
+            result = self.result_queue.get()
+            self.result_queue.task_done()
+            return result
 
 
 class FileCommandServer(RemoteFileServer):
@@ -336,9 +352,6 @@ class FileCommandServer(RemoteFileServer):
         # before start thread to handle remote request
         log_time("wait for init_search_backends to finsih execution")
         self.lsp_bridge.init_search_backends_complete_event.wait()
-
-        set_lsp_file_host(self.client_address[0])
-        set_remote_eval_socket(self.client_socket)
 
         super().handle_client()
 
