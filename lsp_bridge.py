@@ -70,6 +70,12 @@ REMOTE_FILE_SYNC_CHANNEL = 9999
 REMOTE_FILE_COMMAND_CHANNEL = 9998
 REMOTE_FILE_ELISP_CHANNEL = 9997
 
+remote_server_ports = [
+    REMOTE_FILE_SYNC_CHANNEL,
+    REMOTE_FILE_COMMAND_CHANNEL,
+    REMOTE_FILE_ELISP_CHANNEL
+]
+
 class LspBridge:
     def __init__(self, args):
         # Check running environment.
@@ -165,42 +171,36 @@ class LspBridge:
         self.message_thread = threading.Thread(target=self.message_dispatcher)
         self.message_thread.start()
 
-        # Build loop to open remote file.
-        self.remote_file_sender_queue = queue.Queue()
-        self.remote_file_sender_thread = threading.Thread(target=self.send_message_dispatcher,
-                                                          args=(self.remote_file_sender_queue, REMOTE_FILE_SYNC_CHANNEL))
-        self.remote_file_sender_thread.start()
+        if not self.running_in_server:
+            remote_threads = {
+                "send_message_dispatcher": {
+                    # Build loop to open remote file.
+                    "remote_file_sender_queue": REMOTE_FILE_SYNC_CHANNEL,
+                    # Build loop to call remote Python command.
+                    "remote_file_command_sender_queue": REMOTE_FILE_COMMAND_CHANNEL,
+                    # Build loop to reply remote rpc command.
+                    "remote_file_elisp_sender_queue": REMOTE_FILE_ELISP_CHANNEL
+                },
+                "receive_message_dispatcher": {
+                    # Build loop to receive remote file to local Emacs.
+                    "remote_file_receiver_queue": "handle_remote_file_message",
+                    # Build loop to receive remote Python command response from remote server to local Emacs.
+                    "remote_file_command_receiver_queue": "handle_lsp_message",
+                    # Build loop to receive remote rpc from remote server to local Emacs.
+                    "remote_file_elisp_receiver_queue": "handle_file_elisp_message"
+                }
+            }
 
-        # Build loop to reply remote rpc command.
-        self.remote_file_elisp_sender_queue = queue.Queue()
-        self.remote_file_elisp_sender_thread = threading.Thread(target=self.send_message_dispatcher,
-                                                          args=(self.remote_file_elisp_sender_queue, REMOTE_FILE_ELISP_CHANNEL))
-        self.remote_file_elisp_sender_thread.start()
-
-        # Build loop to call remote Python command.
-        self.remote_file_command_sender_queue = queue.Queue()
-        self.remote_file_command_sender_thread = threading.Thread(target=self.send_message_dispatcher,
-                                                         args=(self.remote_file_command_sender_queue, REMOTE_FILE_COMMAND_CHANNEL))
-        self.remote_file_command_sender_thread.start()
-
-        # Build loop to send remote file to local Emacs.
-        self.remote_file_receiver_queue = queue.Queue()
-        self.remote_file_receiver_thread = threading.Thread(target=self.receive_message_dispatcher,
-                                                            args=(self.remote_file_receiver_queue, self.handle_remote_file_message))
-        self.remote_file_receiver_thread.start()
-
-        # Build loop to receive remote rpc from remote server to local Emacs.
-        self.remote_file_elisp_receiver_queue = queue.Queue()
-        self.remote_file_elisp_receiver_thread = threading.Thread(target=self.receive_message_dispatcher,
-                                                            args=(self.remote_file_elisp_receiver_queue, self.handle_file_elisp_message))
-        self.remote_file_elisp_receiver_thread.start()
-
-        # Build loop to send elisp command from remote server to local Emacs.
-        self.remote_file_command_receiver_queue = queue.Queue()
-        self.remote_file_command_receiver_thread = threading.Thread(
-            target=self.receive_message_dispatcher,
-            args=(self.remote_file_command_receiver_queue, self.handle_lsp_message))
-        self.remote_file_command_receiver_thread.start()
+            for dispatcher, args in remote_threads.items():
+                for q, v in args.items():
+                    newq = queue.Queue()
+                    setattr(self, q, newq)
+                    if not isinstance(v, int):
+                        v = getattr(self, v)
+                    threading.Thread(
+                        target=getattr(self, dispatcher),
+                        args=(newq, v)
+                    ).start()
 
     @threaded
     def init_remote_file_server(self):
@@ -290,9 +290,8 @@ class LspBridge:
                     logger.exception("Channel %s is broken, message %s, error %s", f"{server_host}:{port}", data["message"], e)
                     # remove all the clients for server_host from client_dict
                     # client will be created again when get_socket_client is called
-                    self.client_dict.pop(f"{server_host}:{REMOTE_FILE_SYNC_CHANNEL}", None)
-                    self.client_dict.pop(f"{server_host}:{REMOTE_FILE_COMMAND_CHANNEL}", None)
-                    self.client_dict.pop(f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}", None)
+                    for p in remote_server_ports:
+                        self.client_dict.pop(f"{server_host}:{p}", None)
 
                     message_emacs(f"try to recreate channel to {server_host}:{port}")
                     try:
