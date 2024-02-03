@@ -140,9 +140,11 @@ class RemoteFileClient(threading.Thread):
     def run(self):
         chan_file = self.chan.makefile("r")
         while True:
-            message = chan_file.readline().strip()
-            if not message:
+            data = chan_file.readline().strip()
+            if not data:
                 break
+
+            message = parse_json_content(data)
             self.callback(message)
         self.chan.close()
 

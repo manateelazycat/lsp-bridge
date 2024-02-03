@@ -183,6 +183,12 @@ class LspBridge:
                                                             args=(self.remote_file_receiver_queue, self.handle_remote_file_message))
         self.remote_file_receiver_thread.start()
 
+        # Build loop to receive remote rpc from remote server to local Emacs.
+        self.remote_file_elisp_receiver_queue = queue.Queue()
+        self.remote_file_elisp_receiver_thread = threading.Thread(target=self.receive_message_dispatcher,
+                                                            args=(self.remote_file_elisp_receiver_queue, self.handle_file_elisp_message))
+        self.remote_file_elisp_receiver_thread.start()
+
         # Build loop to send elisp command from remote server to local Emacs.
         self.remote_file_command_receiver_queue = queue.Queue()
         self.remote_file_command_receiver_thread = threading.Thread(
@@ -225,7 +231,7 @@ class LspBridge:
                 server_username,
                 server_ssh_port,
                 server_port,
-                lambda message: self.receive_socket_message(message, server_port),
+                lambda message: self.receive_remote_message(message, server_port),
                 self.host_names[server_host]["use_gssapi"],
                 self.host_names[server_host]["proxy_command"]
             )
@@ -306,36 +312,19 @@ class LspBridge:
         except:
             logger.error(traceback.format_exc())
 
-    def receive_socket_message(self, message, server_port):
+    def receive_remote_message(self, message, server_port):
         if server_port == REMOTE_FILE_SYNC_CHANNEL:
             self.remote_file_receiver_queue.put(message)
         elif server_port == REMOTE_FILE_COMMAND_CHANNEL:
             self.remote_file_command_receiver_queue.put(message)
         elif server_port == REMOTE_FILE_ELISP_CHANNEL:
-            # Receive elisp RPC call from remote server.
-            log_time(f"Receive remote message: {message}")
+            self.remote_file_elisp_receiver_queue.put(message)
 
-            data = parse_json_content(message)
-            host = data["host"]
-
-            # Read elisp code from local Emacs, and sendback to remote server.
-            client = self.get_socket_client(host, REMOTE_FILE_ELISP_CHANNEL)
-            if data["command"] == "get_emacs_func_result":
-                result = get_emacs_func_result(data["method"], *data["args"])
-            elif data["command"] == "get_emacs_vars":
-                result = get_emacs_vars(data["args"])
-            else:
-                logger.error("Unsupported command %s", data["command"])
-                result = None
-
-            if client:
-                client.send_message(result)
-
-    def receive_message_dispatcher(self, queue, handle_remote_file_message):
+    def receive_message_dispatcher(self, queue, handle_remote_message):
         try:
             while True:
                 message = queue.get(True)
-                handle_remote_file_message(message)
+                handle_remote_message(message)
                 queue.task_done()
         except:
             logger.error(traceback.format_exc())
@@ -513,29 +502,48 @@ class LspBridge:
     # Functions for local to handle messages from remote server
     @threaded
     def handle_remote_file_message(self, message):
-        data = parse_json_content(message)
-        command = data["command"]
+        command = message["command"]
         if command == "open_file":
-            if "error" in data:
-                message_emacs(data["error"])
+            if "error" in message:
+                message_emacs(message["error"])
             else:
                 eval_in_emacs(
                     "lsp-bridge-open-remote-file--response",
-                    data["tramp_method"],
-                    data["user"],
-                    data["server"],
-                    data["port"],
-                    data["path"],
-                    string_to_base64(data["content"]),
-                    data["jump_define_pos"],
+                    message["tramp_method"],
+                    message["user"],
+                    message["server"],
+                    message["port"],
+                    message["path"],
+                    string_to_base64(message["content"]),
+                    message["jump_define_pos"],
                 )
-                message_emacs(f"Open file {data['path']} on {data['server']}")
+                message_emacs(f"Open file {message['path']} on {message['server']}")
 
+    @threaded
     def handle_lsp_message(self, message):
-        data = parse_json_content(message)
-        if data["command"] == "eval-in-emacs":
+        if message["command"] == "eval-in-emacs":
             # Execute emacs command from remote server.
-            eval_sexp_in_emacs(data["sexp"])
+            eval_sexp_in_emacs(message["sexp"])
+
+    @threaded
+    def handle_file_elisp_message(self, message):
+        # Receive elisp RPC call from remote server.
+        log_time(f"Receive server elisp RPC: {message}")
+
+        host = message["host"]
+
+        # Read elisp code from local Emacs, and sendback to remote server.
+        if message["command"] == "get_emacs_func_result":
+            result = get_emacs_func_result(message["method"], *message["args"])
+        elif message["command"] == "get_emacs_vars":
+            result = get_emacs_vars(message["args"])
+        else:
+            logger.error("Unsupported command %s", message["command"])
+            result = None
+
+        client = self.get_socket_client(host, REMOTE_FILE_ELISP_CHANNEL)
+        if client:
+            client.send_message(result)
 
     # Functions for local handling
     def event_dispatcher(self):
