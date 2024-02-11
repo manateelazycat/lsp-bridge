@@ -974,33 +974,33 @@ So we build this macro to restore postion after code format."
        (lsp-bridge-process-live-p)))
 
 (defun lsp-bridge-call-file-api (method &rest args)
-  (if (file-remote-p (buffer-file-name))
-      (if (lsp-bridge-is-remote-file)
-          (lsp-bridge-remote-send-lsp-request method args)
+  (if (lsp-bridge-is-remote-file)
+      (lsp-bridge-remote-send-lsp-request method args)
+    (if (file-remote-p (buffer-file-name))
         (message "[LSP-Bridge] remote file \"%s\" is updating info... skip call %s."
-                 (buffer-file-name) method))
-    (when (lsp-bridge-call-file-api-p)
-      (if (and (boundp 'acm-backend-lsp-filepath)
-               (file-exists-p acm-backend-lsp-filepath))
-          (if lsp-bridge-buffer-file-deleted
-              ;; If buffer's file create again (such as switch branch back), we need save buffer first,
-              ;; send the LSP request after the file is changed next time.
-              (progn
-                (save-buffer)
-                (setq-local lsp-bridge-buffer-file-deleted nil)
-                (message "[LSP-Bridge] %s is back, will send the %s LSP request after the file is changed next time." acm-backend-lsp-filepath method))
-            (when (and acm-backend-lsp-filepath
-                       (not (string-equal acm-backend-lsp-filepath "")))
-              (lsp-bridge-deferred-chain
-                (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) (append (list acm-backend-lsp-filepath) args)))))
-        ;; We need send `closeFile' request to lsp server if we found buffer's file is not exist,
-        ;; it is usually caused by switching branch or other tools to delete file.
-        ;;
-        ;; We won't send any lsp request until buffer's file create again.
-        (unless lsp-bridge-buffer-file-deleted
-          (lsp-bridge-close-buffer-file)
-          (setq-local lsp-bridge-buffer-file-deleted t)
-          (message "[LSP-Bridge] %s is not exist, stop send the %s LSP request until file create again." acm-backend-lsp-filepath method))))))
+                 (buffer-file-name) method)
+      (when (lsp-bridge-call-file-api-p)
+        (if (and (boundp 'acm-backend-lsp-filepath)
+                 (file-exists-p acm-backend-lsp-filepath))
+            (if lsp-bridge-buffer-file-deleted
+                ;; If buffer's file create again (such as switch branch back), we need save buffer first,
+                ;; send the LSP request after the file is changed next time.
+                (progn
+                  (save-buffer)
+                  (setq-local lsp-bridge-buffer-file-deleted nil)
+                  (message "[LSP-Bridge] %s is back, will send the %s LSP request after the file is changed next time." acm-backend-lsp-filepath method))
+              (when (and acm-backend-lsp-filepath
+                         (not (string-equal acm-backend-lsp-filepath "")))
+                (lsp-bridge-deferred-chain
+                  (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) (append (list acm-backend-lsp-filepath) args)))))
+          ;; We need send `closeFile' request to lsp server if we found buffer's file is not exist,
+          ;; it is usually caused by switching branch or other tools to delete file.
+          ;;
+          ;; We won't send any lsp request until buffer's file create again.
+          (unless lsp-bridge-buffer-file-deleted
+            (lsp-bridge-close-buffer-file)
+            (setq-local lsp-bridge-buffer-file-deleted t)
+            (message "[LSP-Bridge] %s is not exist, stop send the %s LSP request until file create again." acm-backend-lsp-filepath method)))))))
 
 (defun lsp-bridge-restart-process ()
   "Stop and restart LSP-Bridge process."
