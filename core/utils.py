@@ -435,13 +435,13 @@ def is_valid_ip(ip):
 
 def is_valid_ip_path(ssh_path):
     """Check if SSH-PATH is a valid ssh path."""
-    pattern = r"^(?:([a-z_][a-z0-9_-]*)@)?((?:[0-9]{1,3}\.){3}[0-9]{1,3})(?::(\d+))?:~?(.*)$"
+    pattern = r"^(?:([a-z_][a-z0-9_\.-]*)@)?((?:[0-9]{1,3}\.){3}[0-9]{1,3})(?::(\d+))?:~?(.*)$"
     match = re.match(pattern, ssh_path)
     return match is not None
 
 def split_ssh_path(ssh_path):
     """Split SSH-PATH into username, host, port and path."""
-    pattern = r"^(?:([a-z_][a-z0-9_-]*)@)?((?:[0-9]{1,3}\.){3}[0-9]{1,3})(?::(\d+))?:?(.*)$"
+    pattern = r"^(?:([a-z_][a-z0-9_\.-]*)@)?((?:[0-9]{1,3}\.){3}[0-9]{1,3})(?::(\d+))?:?(.*)$"
     match = re.match(pattern, ssh_path)
     if match:
         username, host, port, path = match.groups()
