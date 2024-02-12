@@ -110,34 +110,31 @@ def merge_emacs_exec_path():
 
         is_merge_emacs_exec_path = True
 
-lsp_file_host = ""
-def set_lsp_file_host(host):
-    global lsp_file_host
-    lsp_file_host = host
+lsp_bridge_server = None
+def set_lsp_bridge_server(bridge):
+    global lsp_bridge_server
+    lsp_bridge_server = bridge
 
 def get_lsp_file_host():
-    global lsp_file_host
-    return lsp_file_host
-
-remote_file_server = None
-def set_remote_file_server(server):
-    global remote_file_server
-
-    remote_file_server = server
+    global lsp_bridge_server
+    if lsp_bridge_server and lsp_bridge_server.file_command_server:
+        return lsp_bridge_server.file_command_server.client_address[0]
+    else:
+        return ""
 
 def get_buffer_content(filename, buffer_name):
-    global remote_file_server, lsp_file_host
+    global lsp_bridge_server
 
-    if lsp_file_host != "":
-        return remote_file_server.file_dict[filename]
+    if lsp_bridge_server and lsp_bridge_server.file_server:
+        return lsp_bridge_server.file_server.file_dict[filename]
     else:
         return get_emacs_func_result('get-buffer-content', buffer_name)
 
 def get_file_content_from_file_server(filename):
-    global remote_file_server
+    global lsp_bridge_server
 
-    if filename in remote_file_server.file_dict:
-        return remote_file_server.file_dict[filename]
+    if lsp_bridge_server and lsp_bridge_server.file_server and filename in lsp_bridge_server.file_server.file_dict:
+        return lsp_bridge_server.file_server.file_dict[filename]
     else:
         return ""
 
@@ -156,44 +153,8 @@ def get_remote_tramp_connection_info():
     global remote_tramp_connection_info
     return remote_tramp_connection_info
 
-remote_eval_socket = None
-def set_remote_eval_socket(socket):
-    global remote_eval_socket
-
-    remote_eval_socket = socket
-
-remote_rpc_socket = None
-remote_rpc_host = None
-def set_remote_rpc_socket(socket, host):
-    global remote_rpc_socket
-    global remote_rpc_host
-
-    remote_rpc_socket = socket
-    remote_rpc_host = host
-
-def get_remote_rpc_socket():
-    global remote_rpc_socket
-    global remote_rpc_host
-    return remote_rpc_socket, remote_rpc_host
-
-def call_remote_rpc(message):
-    remote_rpc_socket, remote_rpc_host = get_remote_rpc_socket()
-
-    if remote_rpc_socket is not None:
-        message["host"] = remote_rpc_host
-        data = json.dumps(message)
-        remote_rpc_socket.send(f"{data}\n".encode("utf-8"))
-
-        socket_file = remote_rpc_socket.makefile("r")
-        result = socket_file.readline().strip()
-        socket_file.close()
-
-        return result
-    else:
-        return None
-
 def eval_in_emacs(method_name, *args):
-    global remote_eval_socket
+    global lsp_bridge_server
 
     if test_interceptor:  # for test purpose, record all eval_in_emacs calls
         test_interceptor(method_name, args)
@@ -204,13 +165,11 @@ def eval_in_emacs(method_name, *args):
     logger.debug("Eval in Emacs: %s", sexp)
 
     # Call eval-in-emacs elisp function.
-    if remote_eval_socket:
-        message = {
+    if lsp_bridge_server and lsp_bridge_server.file_command_server:
+        lsp_bridge_server.file_command_server.send_message({
             "command": "eval-in-emacs",
             "sexp": [sexp]
-        }
-        data = json.dumps(message)
-        remote_eval_socket.send(f"{data}\n".encode("utf-8"))
+        })
     else:
         epc_client.call("eval-in-emacs", [sexp])    # type: ignore
 
@@ -260,29 +219,27 @@ def convert_emacs_bool(symbol_value, symbol_is_boolean):
 
 
 def get_emacs_vars(args):
-    global remote_rpc_socket
+    global lsp_bridge_server
 
-    if remote_rpc_socket:
-        results = call_remote_rpc({
+    if lsp_bridge_server and lsp_bridge_server.file_elisp_server:
+        return lsp_bridge_server.file_elisp_server.call_remote_rpc({
             "command": "get_emacs_vars",
             "args": args
         })
-        return parse_json_content(results)
     else:
         results = epc_client.call_sync("get-emacs-vars", args)
         return list(map(lambda result: convert_emacs_bool(result[0], result[1]) if result != [] else False, results))
 
 def get_emacs_func_result(method_name, *args):
     """Call eval-in-emacs elisp function synchronously and return the result."""
-    global remote_rpc_socket
+    global lsp_bridge_server
 
-    if remote_rpc_socket:
-        result = call_remote_rpc({
+    if lsp_bridge_server and lsp_bridge_server.file_elisp_server:
+        return lsp_bridge_server.file_elisp_server.call_remote_rpc({
             "command": "get_emacs_func_result",
             "method": method_name,
             "args": args
         })
-        return parse_json_content(result)
     else:
         result = epc_client.call_sync(method_name, args)    # type: ignore
         return result
