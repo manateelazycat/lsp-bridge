@@ -77,6 +77,7 @@ and add this to your `config.el`
 
 and run `doom sync` to install it.
 
+### If you are unable to use normally after installing it, please read [Report bug](https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#report-bug) first
 
 Please note:
 
