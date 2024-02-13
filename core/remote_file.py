@@ -35,19 +35,22 @@ class SendMessageException(Exception):
 class RemoteFileClient(threading.Thread):
     remote_password_dict = {}
 
-    def __init__(self, ssh_host, ssh_user, ssh_port, server_port, callback, use_gssapi=False, proxy_command=None):
+    def __init__(self, ssh_conf, server_port, callback):
         threading.Thread.__init__(self)
 
         # Init.
-        self.ssh_host = ssh_host
-        self.ssh_user = ssh_user
-        self.ssh_port = ssh_port
+        self.ssh_host = ssh_conf['hostname']
+        self.ssh_user = ssh_conf.get('user', "root")
+        self.ssh_port = ssh_conf.get('port', 22)
         self.server_port = server_port
         self.callback = callback
 
         [self.user_ssh_private_key] = get_emacs_vars(["lsp-bridge-user-ssh-private-key"])
 
-        self.ssh = self.connect_ssh(use_gssapi, proxy_command)
+        self.ssh = self.connect_ssh(
+            ssh_conf.get('gssapiauthentication', 'no') in ('yes'),
+            ssh_conf.get('proxycommand', None)
+        )
         # after successful login, don't create a channel yet
         # caller can use client ssh to execute command on remote server
         # ande then call create_channel() to create the channel

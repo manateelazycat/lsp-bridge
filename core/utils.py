@@ -398,15 +398,16 @@ def is_valid_ip_path(ssh_path):
 
 def split_ssh_path(ssh_path):
     """Split SSH-PATH into username, host, port and path."""
-    pattern = r"^(?:([a-z_][a-z0-9_\.-]*)@)?((?:[0-9]{1,3}\.){3}[0-9]{1,3})(?::(\d+))?:?(.*)$"
+    pattern = r"^((?:([a-z_][a-z0-9_\.-]*)@)?((?:[0-9]{1,3}\.){3}[0-9]{1,3})(?::(\d+))?):?(.*)$"
     match = re.match(pattern, ssh_path)
     if match:
-        username, host, port, path = match.groups()
-        if not username:
-            username = None
-        if not port:
-            port = None
-        return (username, host, port, path)
+        remote_info, username, host, port, path = match.groups()
+        ssh_conf = {'hostname' : host}
+        if username:
+            ssh_conf['user'] = username
+        if port:
+            ssh_conf['port'] = port
+        return (remote_info, host, ssh_conf, path)
     else:
         return None
 
