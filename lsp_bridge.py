@@ -70,6 +70,12 @@ REMOTE_FILE_SYNC_CHANNEL = 9999
 REMOTE_FILE_COMMAND_CHANNEL = 9998
 REMOTE_FILE_ELISP_CHANNEL = 9997
 
+remote_server_ports = [
+    REMOTE_FILE_SYNC_CHANNEL,
+    REMOTE_FILE_COMMAND_CHANNEL,
+    REMOTE_FILE_ELISP_CHANNEL
+]
+
 class LspBridge:
     def __init__(self, args):
         # Check running environment.
@@ -165,36 +171,36 @@ class LspBridge:
         self.message_thread = threading.Thread(target=self.message_dispatcher)
         self.message_thread.start()
 
-        # Build loop to open remote file.
-        self.remote_file_sender_queue = queue.Queue()
-        self.remote_file_sender_thread = threading.Thread(target=self.send_message_dispatcher,
-                                                          args=(self.remote_file_sender_queue, REMOTE_FILE_SYNC_CHANNEL))
-        self.remote_file_sender_thread.start()
+        if not self.running_in_server:
+            remote_threads = {
+                "send_message_dispatcher": {
+                    # Build loop to open remote file.
+                    "remote_file_sender_queue": REMOTE_FILE_SYNC_CHANNEL,
+                    # Build loop to call remote Python command.
+                    "remote_file_command_sender_queue": REMOTE_FILE_COMMAND_CHANNEL,
+                    # Build loop to reply remote rpc command.
+                    "remote_file_elisp_sender_queue": REMOTE_FILE_ELISP_CHANNEL
+                },
+                "receive_message_dispatcher": {
+                    # Build loop to receive remote file to local Emacs.
+                    "remote_file_receiver_queue": "handle_remote_file_message",
+                    # Build loop to receive remote Python command response from remote server to local Emacs.
+                    "remote_file_command_receiver_queue": "handle_lsp_message",
+                    # Build loop to receive remote rpc from remote server to local Emacs.
+                    "remote_file_elisp_receiver_queue": "handle_file_elisp_message"
+                }
+            }
 
-        # Build loop to call remote Python command.
-        self.remote_file_command_sender_queue = queue.Queue()
-        self.remote_file_command_sender_thread = threading.Thread(target=self.send_message_dispatcher,
-                                                         args=(self.remote_file_command_sender_queue, REMOTE_FILE_COMMAND_CHANNEL))
-        self.remote_file_command_sender_thread.start()
-
-        # Build loop to send remote file to local Emacs.
-        self.remote_file_receiver_queue = queue.Queue()
-        self.remote_file_receiver_thread = threading.Thread(target=self.receive_message_dispatcher,
-                                                            args=(self.remote_file_receiver_queue, self.handle_remote_file_message))
-        self.remote_file_receiver_thread.start()
-
-        # Build loop to receive remote rpc from remote server to local Emacs.
-        self.remote_file_elisp_receiver_queue = queue.Queue()
-        self.remote_file_elisp_receiver_thread = threading.Thread(target=self.receive_message_dispatcher,
-                                                            args=(self.remote_file_elisp_receiver_queue, self.handle_file_elisp_message))
-        self.remote_file_elisp_receiver_thread.start()
-
-        # Build loop to send elisp command from remote server to local Emacs.
-        self.remote_file_command_receiver_queue = queue.Queue()
-        self.remote_file_command_receiver_thread = threading.Thread(
-            target=self.receive_message_dispatcher,
-            args=(self.remote_file_command_receiver_queue, self.handle_lsp_message))
-        self.remote_file_command_receiver_thread.start()
+            for dispatcher, args in remote_threads.items():
+                for q, v in args.items():
+                    newq = queue.Queue()
+                    setattr(self, q, newq)
+                    if not isinstance(v, int):
+                        v = getattr(self, v)
+                    threading.Thread(
+                        target=getattr(self, dispatcher),
+                        args=(newq, v)
+                    ).start()
 
     @threaded
     def init_remote_file_server(self):
@@ -265,17 +271,10 @@ class LspBridge:
 
         return client
 
-    def send_remote_file_message(self, host, message):
-        self.remote_file_sender_queue.put({
-            "host": host,
-            "message": message
-        })
-
-    def send_lsp_bridge_message(self, host, message):
-        self.remote_file_command_sender_queue.put({
-            "host": host,
-            "message": message
-        })
+    def send_remote_message(self, host, queue, message, wait=False):
+        queue.put({"host": host, "message": message})
+        if wait:
+            queue.join()
 
     def send_message_dispatcher(self, queue, port):
         try:
@@ -291,9 +290,8 @@ class LspBridge:
                     logger.exception("Channel %s is broken, message %s, error %s", f"{server_host}:{port}", data["message"], e)
                     # remove all the clients for server_host from client_dict
                     # client will be created again when get_socket_client is called
-                    self.client_dict.pop(f"{server_host}:{REMOTE_FILE_SYNC_CHANNEL}", None)
-                    self.client_dict.pop(f"{server_host}:{REMOTE_FILE_COMMAND_CHANNEL}", None)
-                    self.client_dict.pop(f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}", None)
+                    for p in remote_server_ports:
+                        self.client_dict.pop(f"{server_host}:{p}", None)
 
                     message_emacs(f"try to recreate channel to {server_host}:{port}")
                     try:
@@ -383,16 +381,15 @@ class LspBridge:
 
         client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
         if client_id not in self.client_dict:
-            client = self.get_socket_client(server_host, REMOTE_FILE_ELISP_CHANNEL)
-            if client:
-                # send "say hello" upon establishing the first connection
-                client.send_message("Connect")
+            # send "say hello" upon establishing the first connection
+            self.send_remote_message(server_host, self.remote_file_elisp_sender_queue, "Connect", True)
 
-            self.send_remote_file_message(server_host, {
-                "command": "tramp_sync",
-                "server": server_host,
-                "tramp_connection_info": tramp_connection_info,
-            })
+            self.send_remote_message(
+                server_host, self.remote_file_sender_queue, {
+                    "command": "tramp_sync",
+                    "server": server_host,
+                    "tramp_connection_info": tramp_connection_info,
+                })
 
         eval_in_emacs("lsp-bridge-update-tramp-file-info", tramp_file_name, tramp_connection_info, server_host, path)
         self.sync_tramp_remote_complete_event.set()
@@ -429,11 +426,8 @@ class LspBridge:
 
                 client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
                 if client_id not in self.client_dict:
-                    client = self.get_socket_client(server_host, REMOTE_FILE_ELISP_CHANNEL)
                     # send "say hello" upon establishing the first connection
-                    if client:
-                        client.send_message("Connect")
-
+                    self.send_remote_message(server_host, self.remote_file_elisp_sender_queue, "Connect", True)
                 message_emacs(f"Open {server_username}@{server_host}#{ssh_port}:{server_path}...")
                 # Add TRAMP-related fields
                 # The following fields: tramp_method, user, server, port, and path
@@ -441,7 +435,8 @@ class LspBridge:
                 # These variables facilitate the construction of a TRAMP file name,
                 # and then allow the buffer to reconnect to a restarted remote lsp-bridge process
                 # using the same logic with reconnecting a TRAMP remote file buffer.
-                self.send_remote_file_message(server_host, {
+                self.send_remote_message(
+                    server_host, self.remote_file_sender_queue, {
                     "command": "open_file",
                     "tramp_method": "ssh",
                     "user": server_username,
@@ -456,7 +451,8 @@ class LspBridge:
 
     @threaded
     def save_remote_file(self, remote_file_host, remote_file_path):
-        self.send_remote_file_message(remote_file_host, {
+        self.send_remote_message(
+            remote_file_host, self.remote_file_sender_queue, {
             "command": "save_file",
             "server": remote_file_host,
             "path": remote_file_path
@@ -464,7 +460,8 @@ class LspBridge:
 
     @threaded
     def close_remote_file(self, remote_file_host, remote_file_path):
-        self.send_remote_file_message(remote_file_host, {
+        self.send_remote_message(
+            remote_file_host, self.remote_file_sender_queue, {
             "command": "close_file",
             "server": remote_file_host,
             "path": remote_file_path
@@ -474,14 +471,16 @@ class LspBridge:
     @threaded
     def lsp_request(self, remote_file_host, remote_file_path, method, args):
         if method == "change_file":
-            self.send_remote_file_message(remote_file_host, {
+            self.send_remote_message(
+                remote_file_host, self.remote_file_sender_queue, {
                 "command": "change_file",
                 "server": remote_file_host,
                 "path": remote_file_path,
                 "args": list(map(epc_arg_transformer, args))
             })
 
-        self.send_lsp_bridge_message(remote_file_host, {
+        self.send_remote_message(
+            remote_file_host, self.remote_file_command_sender_queue, {
             "command": "lsp_request",
             "server": remote_file_host,
             "path": remote_file_path,
@@ -491,7 +490,8 @@ class LspBridge:
 
     @threaded
     def func_request(self, remote_file_host, remote_file_path, method, args):
-        self.send_lsp_bridge_message(remote_file_host, {
+        self.send_remote_message(
+            remote_file_host, self.remote_file_command_sender_queue, {
             "command": "func_request",
             "server": remote_file_host,
             "path": remote_file_path,
@@ -541,9 +541,7 @@ class LspBridge:
             logger.error("Unsupported command %s", message["command"])
             result = None
 
-        client = self.get_socket_client(host, REMOTE_FILE_ELISP_CHANNEL)
-        if client:
-            client.send_message(result)
+        self.send_remote_message(host, self.remote_file_elisp_sender_queue, result)
 
     # Functions for local handling
     def event_dispatcher(self):

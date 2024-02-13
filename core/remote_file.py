@@ -316,11 +316,6 @@ class FileElispServer(RemoteFileServer):
         # remote server lsp-bridge process use this cient_socket to call elisp function from local Emacs.
         log_time(f"Client connect from {self.client_address[0]}:{self.client_address[1]}")
 
-        # Drop first "say hello" message from local Emacs.
-        socket_file = self.client_socket.makefile("r")
-        socket_file.readline().strip()
-        socket_file.close()
-
         threading.Thread(target=super().handle_client).start()
 
         self.lsp_bridge.init_search_backends()
@@ -329,7 +324,11 @@ class FileElispServer(RemoteFileServer):
         self.lsp_bridge.init_search_backends_complete_event.set()
 
     def handle_message(self, message):
-        self.result_queue.put(message)
+        if message == "Connect":
+            # Drop "say hello" message from local Emacs.
+            return
+        else:
+            self.result_queue.put(message)
 
     def call_remote_rpc(self, message):
         try:
