@@ -505,7 +505,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     (groovy-mode .                                                               "groovy-language-server")
     (haskell-mode .                                                              "hls")
     (lua-mode .                                                                  "sumneko")
-    (markdown-mode .                                                             "vale-ls")    
+    (markdown-mode .                                                             "vale-ls")
     (dart-mode .                                                                 "dart-analysis-server")
     (scala-mode .                                                                "metals")
     ((js2-mode js-mode js-ts-mode rjsx-mode) .                                   "javascript")
@@ -535,6 +535,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     (vhdl-mode .                                                                 "vhdl-tool")
     (svelte-mode .                                                               "svelteserver")
     (fsharp-mode .                                                               "fsautocomplete")
+    (beancount-mode .                                                            "beancount-language-server")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -628,6 +629,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     yaml-ts-mode-hook
     svelte-mode-hook
     fsharp-mode-hook
+    beancount-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
