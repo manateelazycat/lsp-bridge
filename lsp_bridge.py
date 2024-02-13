@@ -322,6 +322,20 @@ class LspBridge:
         except:
             logger.error(traceback.format_exc())
 
+    def remote_sync(self, host, remote_info):
+        client_id = f"{host}:{REMOTE_FILE_ELISP_CHANNEL}"
+        if client_id not in self.client_dict:
+            # send "say hello" upon establishing the first connection
+            self.send_remote_message(
+                host, self.remote_file_elisp_sender_queue, "Connect", True)
+
+            self.send_remote_message(
+                host, self.remote_file_sender_queue, {
+                    "command": "remote_sync",
+                    "server": host,
+                    "remote_connection_info": remote_info,
+                })
+
     @threaded
     def sync_tramp_remote(self, tramp_file_name, server_username, server_host, ssh_port, path):
         # arguments are passed from emacs using standard TRAMP functions tramp-file-name-<field>
@@ -353,17 +367,7 @@ class LspBridge:
         # we call it TRAMP connection information
         tramp_connection_info = tramp_file_name.rsplit(":", 1)[0] + ":"
 
-        client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
-        if client_id not in self.client_dict:
-            # send "say hello" upon establishing the first connection
-            self.send_remote_message(server_host, self.remote_file_elisp_sender_queue, "Connect", True)
-
-            self.send_remote_message(
-                server_host, self.remote_file_sender_queue, {
-                    "command": "tramp_sync",
-                    "server": server_host,
-                    "tramp_connection_info": tramp_connection_info,
-                })
+        self.remote_sync(server_host, tramp_connection_info)
 
         eval_in_emacs("lsp-bridge-update-tramp-file-info", tramp_file_name, tramp_connection_info, server_host, path)
         self.sync_tramp_remote_complete_event.set()
@@ -381,10 +385,8 @@ class LspBridge:
 
                 self.host_names[server_host] = ssh_conf
 
-                client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
-                if client_id not in self.client_dict:
-                    # send "say hello" upon establishing the first connection
-                    self.send_remote_message(server_host, self.remote_file_elisp_sender_queue, "Connect", True)
+                self.remote_sync(server_host, f"/{remote_info}:")
+
                 message_emacs(f"Open {remote_info}:{server_path}...")
                 # Add TRAMP-related fields
                 # The following fields: tramp_method, user, server, port, and path

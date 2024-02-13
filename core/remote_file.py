@@ -259,12 +259,12 @@ class FileSyncServer(RemoteFileServer):
             return self.handle_close_file(message)
         elif command == "change_file":
             return self.handle_change_file(message)
-        elif command == "tramp_sync":
-            return self.handle_tramp_sync(message)
+        elif command == "remote_sync":
+            return self.handle_remote_sync(message)
 
-    def handle_tramp_sync(self, message):
-        tramp_connection_info = message["tramp_connection_info"]
-        set_remote_tramp_connection_info(tramp_connection_info)
+    def handle_remote_sync(self, message):
+        remote_info = message["remote_connection_info"]
+        set_remote_connection_info(remote_info)
 
     def handle_open_file(self, message):
         path = os.path.expanduser(message["path"])
