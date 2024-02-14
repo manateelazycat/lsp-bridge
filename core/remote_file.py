@@ -25,6 +25,7 @@ import glob
 import json
 import socket
 import traceback
+import time
 from core.utils import *
 
 
@@ -128,6 +129,19 @@ class RemoteFileClient(threading.Thread):
         self.chan = self.ssh.get_transport().open_channel(
             "direct-tcpip", (self.ssh_host, self.server_port), ("0.0.0.0", 0)
         )
+        if self.chan:
+            [self.remote_heartbeat_interval] = get_emacs_vars(["lsp-bridge-remote-heartbeat-interval"])
+            if self.remote_heartbeat_interval and self.remote_heartbeat_interval != 0:
+                threading.Thread(target=self.heartbeat).start()
+
+    def heartbeat(self):
+        try:
+            while True:
+                self.chan.sendall("ping\n".encode("utf-8"))
+                log_time_debug(f"Ping server: {self.ssh_host}, port: {self.server_port}")
+                time.sleep(self.remote_heartbeat_interval)
+        except Exception as e:
+            logger.exception(e)
 
     def send_message(self, message):
         """Send message via the channel
@@ -139,6 +153,8 @@ class RemoteFileClient(threading.Thread):
             self.chan.sendall(f"{data}\n".encode("utf-8"))
         except socket.error as e:
             raise SendMessageException() from e
+        else:
+            log_time_debug(f"Sended to server {self.ssh_host} port {self.server_port}: {message}")
 
     def run(self):
         chan_file = self.chan.makefile("r")
@@ -148,6 +164,7 @@ class RemoteFileClient(threading.Thread):
                 break
 
             message = parse_json_content(data)
+            log_time_debug(f"Received from server {self.ssh_host} port {self.server_port}: {message}")
             self.callback(message)
         self.chan.close()
 
@@ -212,8 +229,12 @@ class RemoteFileServer:
                 data = client_file.readline().strip()
                 if not data:
                     break
+                elif data == "ping":
+                    log_time_debug(f"Server port {self.port} received ping from client {self.client_address}")
+                    continue
 
                 message = parse_json_content(data)
+                log_time_debug(f"Server port {self.port} received message from client {self.client_address}: {message}")
                 resp = self.handle_message(message)
                 if resp:
                     self.client_socket.send(f"{resp}\n".encode("utf-8"))
@@ -241,6 +262,8 @@ class RemoteFileServer:
         except Exception as e:
             logger.exception(e)
             raise SendMessageException() from e
+        else:
+            log_time_debug(f"Server port {self.port} sended to client {self.client_address}: {message}")
 
 
 class FileSyncServer(RemoteFileServer):
