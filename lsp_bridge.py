@@ -340,7 +340,7 @@ class LspBridge:
     def sync_tramp_remote(self, tramp_file_name, server_username, server_host, ssh_port, path):
         # arguments are passed from emacs using standard TRAMP functions tramp-file-name-<field>
         if server_host in self.host_names:
-            server_host = self.host_names[alias]['hostname']
+            server_host = self.host_names[server_host]['hostname']
             ssh_conf = self.host_names[server_host]
         elif is_valid_ip(server_host):
             ssh_conf = {'hostname' : server_host}
@@ -387,9 +387,9 @@ class LspBridge:
 
                 self.host_names[server_host] = ssh_conf
 
-                self.remote_sync(server_host, f"/{remote_info}:")
+                self.remote_sync(server_host, f"/{remote_info}")
 
-                message_emacs(f"Open {remote_info}:{server_path}...")
+                message_emacs(f"Open {remote_info}{server_path}...")
                 # Add TRAMP-related fields
                 # The following fields: tramp_method, user, server, port, and path
                 # are set as buffer-local variables in the buffer created by Emacs.

@@ -2578,6 +2578,17 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 (defvar-local lsp-bridge-remote-file-host nil)
 (defvar-local lsp-bridge-remote-file-port nil)
 (defvar-local lsp-bridge-remote-file-path nil)
+(defvar lsp-bridge-remote-file-pattern
+  (rx bos (? "/")
+      ;; username
+      (? (seq (any "a-z_") (* (any "a-z0-9_.-"))) "@")
+      ;; host ip
+      (repeat 3 (seq (repeat 1 3 (any "0-9")) ".")) (repeat 1 3 (any "0-9"))
+      ;; ssh port
+      (? ":" (+ digit))
+      ;; path
+      (? ":") (? "~") (* nonl) eol
+      ))
 
 (defun lsp-bridge-open-or-create-file (filepath)
   "Open FILEPATH, if it exists. If not, create it and its parent directories."
@@ -2742,7 +2753,9 @@ SSH tramp file name is like /ssh:user@host#port:path"
     ;; Remote file can always edit and update content even some file haven't corresponding lsp server, such as *.txt
     (lsp-bridge-mode 1))
   (if lsp-bridge-ref-open-remote-file-go-back-to-ref-window
-      (lsp-bridge-switch-to-ref-window))
+      (progn
+        (lsp-bridge-switch-to-ref-window)
+        (setq lsp-bridge-ref-open-remote-file-go-back-to-ref-window nil)))
   )
 
 (defun lsp-bridge-remote-kill-buffer ()

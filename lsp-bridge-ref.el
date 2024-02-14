@@ -850,7 +850,8 @@ user more freedom to use rg with special arguments."
                  (window-valid-p lsp-bridge-ref-request-search-window))
             (select-window lsp-bridge-ref-request-search-window)
           (other-window 1))
-        (if (and (not lsp-bridge-enable-with-tramp) (file-remote-p match-file))
+        (if (and (not lsp-bridge-enable-with-tramp)
+                 (string-match-p lsp-bridge-remote-file-pattern match-file))
             (progn
               (setq lsp-bridge-remote-file-window (selected-window))
               (setq lsp-bridge-ref-open-remote-file-go-back-to-ref-window (not stay))
