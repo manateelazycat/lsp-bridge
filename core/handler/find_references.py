@@ -34,9 +34,9 @@ class FindReferences(Handler):
 
             references_counter = 0
             references_content = ""
-            tramp_connection_info = get_remote_tramp_connection_info()
+            remote_connection_info = get_remote_connection_info()
             for i, (path, ranges) in enumerate(references_dict.items()):
-                references_content += "".join(["\n", REFERENCE_PATH, tramp_connection_info, path, REFERENCE_ENDC, "\n"])
+                references_content += "".join(["\n", REFERENCE_PATH, remote_connection_info, path, REFERENCE_ENDC, "\n"])
 
                 for rg in ranges:
                     line = rg["start"]["line"]
@@ -54,4 +54,3 @@ class FindReferences(Handler):
             linecache.clearcache()  # clear line cache
 
             eval_in_emacs("lsp-bridge-references--popup", references_content, references_counter, self.pos)
-

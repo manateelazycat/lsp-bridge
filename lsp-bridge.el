@@ -2688,7 +2688,12 @@ SSH tramp file name is like /ssh:user@host#port:path"
                                                                         lsp-bridge-remote-file-path))))
         (lsp-bridge-sync-tramp-remote)))))
 
+(defvar lsp-bridge-remote-file-window nil)
 (defun lsp-bridge-open-remote-file--response(tramp-method user host port path content position)
+  (if lsp-bridge-remote-file-window
+      (progn
+        (select-window lsp-bridge-remote-file-window)
+        (setq lsp-bridge-remote-file-window nil)))
   (let ((buf-name (format "[LBR] %s" (file-name-nondirectory path))))
     (lsp-bridge-define--jump-record-postion)
 
@@ -2728,7 +2733,10 @@ SSH tramp file name is like /ssh:user@host#port:path"
 
     ;; Always enable lsp-bridge for remote file.
     ;; Remote file can always edit and update content even some file haven't corresponding lsp server, such as *.txt
-    (lsp-bridge-mode 1)))
+    (lsp-bridge-mode 1))
+  (if lsp-bridge-ref-open-remote-file-go-back-to-ref-window
+      (lsp-bridge-switch-to-ref-window))
+  )
 
 (defun lsp-bridge-remote-kill-buffer ()
   (when lsp-bridge-remote-file-flag

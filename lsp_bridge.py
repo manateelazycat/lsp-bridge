@@ -229,21 +229,16 @@ class LspBridge:
 
         import paramiko
 
-        server_username = self.host_names[server_host]["username"]
-        server_ssh_port = self.host_names[server_host]["ssh_port"]
+        ssh_conf = self.host_names[server_host]
         try:
             client = RemoteFileClient(
-                server_host,
-                server_username,
-                server_ssh_port,
+                ssh_conf,
                 server_port,
                 lambda message: self.receive_remote_message(message, server_port),
-                self.host_names[server_host]["use_gssapi"],
-                self.host_names[server_host]["proxy_command"]
             )
         except paramiko.AuthenticationException:
             # cloud not login server
-            message_emacs(f"login {server_username}@{server_host}:{server_ssh_port} failed, please check *lsp-bridge*")
+            message_emacs(f"login {ssh_conf} failed, please check *lsp-bridge*")
             return None
 
         try:
@@ -327,35 +322,42 @@ class LspBridge:
         except:
             logger.error(traceback.format_exc())
 
+    def remote_sync(self, host, remote_info):
+        client_id = f"{host}:{REMOTE_FILE_ELISP_CHANNEL}"
+        if client_id not in self.client_dict:
+            # send "say hello" upon establishing the first connection
+            self.send_remote_message(
+                host, self.remote_file_elisp_sender_queue, "Connect", True)
+
+            self.send_remote_message(
+                host, self.remote_file_sender_queue, {
+                    "command": "remote_sync",
+                    "server": host,
+                    "remote_connection_info": remote_info,
+                })
+
     @threaded
     def sync_tramp_remote(self, tramp_file_name, server_username, server_host, ssh_port, path):
         # arguments are passed from emacs using standard TRAMP functions tramp-file-name-<field>
-        use_gssapi = False
-        proxy_command = None
-        alias = None
         if not is_valid_ip(server_host):
             alias = server_host
             if alias in self.host_names:
-                server_host = self.host_names[alias]["server_host"]
-                server_username = self.host_names[alias]["username"]
-                ssh_port = self.host_names[alias]["ssh_port"]
-                use_gssapi = self.host_names[alias]["use_gssapi"]
-                proxy_command = self.host_names[alias]["proxy_command"]
+                server_host = self.host_names[alias]['hostname']
+                ssh_conf = self.host_names[server_host]
             else:
                 import paramiko
                 ssh_config = paramiko.SSHConfig()
                 with open(os.path.expanduser('~/.ssh/config')) as f:
                     ssh_config.parse(f)
-                conf = ssh_config.lookup(alias)
+                ssh_conf = ssh_config.lookup(alias)
 
-                server_host = conf.get('hostname', server_host)
-                server_username = conf.get('user', server_username)
-                ssh_port = conf.get('port', ssh_port)
-                use_gssapi = conf.get('gssapiauthentication', 'no') in ('yes')
-                proxy_command = conf.get('proxycommand', None)
+                server_host = ssh_conf['hostname']
+                if server_username:
+                    ssh_conf['user'] = server_username
+                if ssh_port:
+                    ssh_conf['port'] = ssh_port
 
-                self.host_names[alias] = {"server_host": server_host, "username": server_username, "ssh_port": ssh_port, "use_gssapi": use_gssapi,
-                                          "proxy_command": proxy_command}
+                self.host_names[alias] = self.host_names[server_host] = ssh_conf
 
         if not is_valid_ip(server_host):
             message_emacs("HostName Must be IP format.")
@@ -365,31 +367,7 @@ class LspBridge:
         # we call it TRAMP connection information
         tramp_connection_info = tramp_file_name.rsplit(":", 1)[0] + ":"
 
-        if not server_username:
-            if server_host in self.host_names:
-                server_username = self.host_names[server_host]["username"]
-            else:
-                server_username = "root"
-
-        if not ssh_port:
-            if server_host in self.host_names:
-                ssh_port = self.host_names[server_host]["ssh_port"]
-            else:
-                ssh_port = 22
-
-        self.host_names[server_host] = {"username": server_username, "ssh_port": ssh_port, "use_gssapi": use_gssapi, "proxy_command": proxy_command}
-
-        client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
-        if client_id not in self.client_dict:
-            # send "say hello" upon establishing the first connection
-            self.send_remote_message(server_host, self.remote_file_elisp_sender_queue, "Connect", True)
-
-            self.send_remote_message(
-                server_host, self.remote_file_sender_queue, {
-                    "command": "tramp_sync",
-                    "server": server_host,
-                    "tramp_connection_info": tramp_connection_info,
-                })
+        self.remote_sync(server_host, tramp_connection_info)
 
         eval_in_emacs("lsp-bridge-update-tramp-file-info", tramp_file_name, tramp_connection_info, server_host, path)
         self.sync_tramp_remote_complete_event.set()
@@ -403,32 +381,13 @@ class LspBridge:
             # ip:port:path
             path_info = split_ssh_path(path)
             if path_info:
-                (server_username, server_host, ssh_port, server_path) = path_info
+                (remote_info, server_host, ssh_conf, server_path) = path_info
 
-                if not server_username:
-                    if server_host in self.host_names:
-                        server_username = self.host_names[server_host]["username"]
-                    else:
-                        server_username = "root"
+                self.host_names[server_host] = ssh_conf
 
-                if not ssh_port:
-                    if server_host in self.host_names:
-                        ssh_port = self.host_names[server_host]["ssh_port"]
-                    else:
-                        ssh_port = 22
+                self.remote_sync(server_host, f"/{remote_info}:")
 
-                self.host_names[server_host] = {
-                    "username": server_username,
-                    "ssh_port": ssh_port,
-                    "use_gssapi": False,
-                    "proxy_command": None
-                }
-
-                client_id = f"{server_host}:{REMOTE_FILE_ELISP_CHANNEL}"
-                if client_id not in self.client_dict:
-                    # send "say hello" upon establishing the first connection
-                    self.send_remote_message(server_host, self.remote_file_elisp_sender_queue, "Connect", True)
-                message_emacs(f"Open {server_username}@{server_host}#{ssh_port}:{server_path}...")
+                message_emacs(f"Open {remote_info}:{server_path}...")
                 # Add TRAMP-related fields
                 # The following fields: tramp_method, user, server, port, and path
                 # are set as buffer-local variables in the buffer created by Emacs.
@@ -439,13 +398,13 @@ class LspBridge:
                     server_host, self.remote_file_sender_queue, {
                     "command": "open_file",
                     "tramp_method": "ssh",
-                    "user": server_username,
+                    "user": ssh_conf.get('user'),
                     "server": server_host,
-                    "port": ssh_port,
+                    "port": ssh_conf.get('port'),
                     "path": server_path,
                     "jump_define_pos": epc_arg_transformer(jump_define_pos)
                 })
-                save_ip(f"{server_username}@{server_host}:{ssh_port}")
+                save_ip(f"{remote_info}")
         else:
             message_emacs("Please input valid path match rule: 'ip:/path/file'.")
 
