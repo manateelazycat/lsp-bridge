@@ -339,28 +339,30 @@ class LspBridge:
     @threaded
     def sync_tramp_remote(self, tramp_file_name, server_username, server_host, ssh_port, path):
         # arguments are passed from emacs using standard TRAMP functions tramp-file-name-<field>
-        if not is_valid_ip(server_host):
+        if server_host in self.host_names:
+            server_host = self.host_names[alias]['hostname']
+            ssh_conf = self.host_names[server_host]
+        elif is_valid_ip(server_host):
+            ssh_conf = {'hostname' : server_host}
+        else:
+            import paramiko
             alias = server_host
-            if alias in self.host_names:
-                server_host = self.host_names[alias]['hostname']
-                ssh_conf = self.host_names[server_host]
-            else:
-                import paramiko
-                ssh_config = paramiko.SSHConfig()
-                with open(os.path.expanduser('~/.ssh/config')) as f:
-                    ssh_config.parse(f)
-                ssh_conf = ssh_config.lookup(alias)
+            ssh_config = paramiko.SSHConfig()
+            with open(os.path.expanduser('~/.ssh/config')) as f:
+                ssh_config.parse(f)
+            ssh_conf = ssh_config.lookup(alias)
 
-                server_host = ssh_conf['hostname']
-                if server_username:
-                    ssh_conf['user'] = server_username
-                if ssh_port:
-                    ssh_conf['port'] = ssh_port
-
-                self.host_names[alias] = self.host_names[server_host] = ssh_conf
+            server_host = ssh_conf.get('hostname', server_host)
+            self.host_names[alias] = ssh_conf
 
         if not is_valid_ip(server_host):
             message_emacs("HostName Must be IP format.")
+
+        if server_username:
+            ssh_conf['user'] = server_username
+        if ssh_port:
+            ssh_conf['port'] = ssh_port
+        self.host_names[server_host] = ssh_conf
 
         # this value is like /ssh:user@ip#port:
         # it should not be called tramp-method to avoid confusion
