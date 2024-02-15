@@ -2752,11 +2752,9 @@ SSH tramp file name is like /ssh:user@host#port:path"
     ;; Always enable lsp-bridge for remote file.
     ;; Remote file can always edit and update content even some file haven't corresponding lsp server, such as *.txt
     (lsp-bridge-mode 1))
-  (if lsp-bridge-ref-open-remote-file-go-back-to-ref-window
-      (progn
-        (lsp-bridge-switch-to-ref-window)
-        (setq lsp-bridge-ref-open-remote-file-go-back-to-ref-window nil)))
-  )
+  (when lsp-bridge-ref-open-remote-file-go-back-to-ref-window
+    (lsp-bridge-switch-to-ref-window)
+    (setq lsp-bridge-ref-open-remote-file-go-back-to-ref-window nil)))
 
 (defun lsp-bridge-remote-kill-buffer ()
   (when lsp-bridge-remote-file-flag

@@ -855,10 +855,9 @@ The buffer and the point is returned in a cons cell."
   (setf (nth 2 lsp-bridge-peek-chosen-displaying-list) (1- lsp-bridge-peek-list-height))
   (let* ((selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
 	     (parent-symbol (nth 3 selected-symbol)))
-    (if parent-symbol
-	    (progn
-	      (setq lsp-bridge-peek-selected-symbol parent-symbol)
-	      (setq lsp-bridge-peek--content-update t)))))
+    (when parent-symbol
+	  (setq lsp-bridge-peek-selected-symbol parent-symbol)
+	  (setq lsp-bridge-peek--content-update t))))
 
 (defun lsp-bridge-peek-tree-next-node ()
   "Select the next node in the tree history."
@@ -869,10 +868,9 @@ The buffer and the point is returned in a cons cell."
   (let* ((selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
 	     (child-list (nth 4 selected-symbol))
 	     (selected-child (nth 5 selected-symbol)))
-    (if child-list
-	    (progn
-	      (setq lsp-bridge-peek-selected-symbol (nth selected-child child-list))
-	      (setq lsp-bridge-peek--content-update t)))))
+    (when child-list
+	  (setq lsp-bridge-peek-selected-symbol (nth selected-child child-list))
+	  (setq lsp-bridge-peek--content-update t))))
 
 (defun lsp-bridge-peek-tree-change-branch (num)
   (lsp-bridge-peek--error-if-not-peeking)
