@@ -214,6 +214,7 @@ lsp-bridge provides support for more than two language servers for many language
 - `lsp-bridge-complete-manually`: Only popup completion menu when user call `lsp-bridge-popup-complete-menu` command, default is nil
 - `lsp-bridge-enable-with-tramp`: When this option is enabled, lsp-bridge provides remote autocompletion support for files opened by tramp. It requires the lsp_bridge.py to be installed and started on the server side in advance. Note that this option only uses tramp to open files, it does not use tramp technology to implement autocompletion, because the implementation principle of tramp has serious performance issues.
 - `lsp-bridge-remote-save-password`: Saves the password for remote editing to the netrc file, disabled by default
+- `lsp-bridge-remote-heartbeat-interval`: Interval for sending heartbeat to server in seconds, disabled by default, set it to a suitable value for your server sshd if you want to keep the connection alive after a long idle time.
 - `lsp-bridge-get-workspace-folder`: You need to put multiple project in a `workspace` directory in Java before you can jump function defintion normally. This function can be customized, the function input is the project path and returns the `workspace` directory corresponding
 - `lsp-bridge-default-mode-hooks`: The list of modes that automatically start lsp-bridge, you can customize this option to control the scope of starting lsp-bridge
 - `lsp-bridge-org-babel-lang-list`: list of language to support org-mode code block completion, nil enable all languages, default is nil
