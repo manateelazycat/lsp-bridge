@@ -166,14 +166,7 @@ Recommand use `normal' that follow LSP server response, emacser's behavior typic
                           (acm-backend-lsp-snippet-expansion-fn)))
          ;; Default, delete-bound is from menu popup postion to cursor postion.
          (delete-start-pos bound-start)
-         (delete-end-pos (point))
-         ;; We record indent offset of first line,
-         ;; make sure last line of snippet is same indent as first line.
-         (snippet-indent-offset (save-excursion
-                                  (back-to-indentation)
-                                  (buffer-substring-no-properties
-                                   (line-beginning-position)
-                                   (point)))))
+         (delete-end-pos (point)))
 
     ;; Try to adjust delete-bound if `text-edit' is not nil.
     (when text-edit
@@ -219,7 +212,7 @@ Recommand use `normal' that follow LSP server response, emacser's behavior typic
         (save-excursion
           (goto-char yas-snippet-end)
           (goto-char (line-beginning-position))
-          (insert snippet-indent-offset)))
+          (indent-according-to-mode)))
       ;; Do `additional-text-edits' if return auto-imprt information.
       (when (and acm-backend-lsp-enable-auto-import
                  (cl-plusp (length additional-text-edits)))
