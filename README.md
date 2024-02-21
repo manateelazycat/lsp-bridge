@@ -207,6 +207,7 @@ lsp-bridge provides support for more than two language servers for many language
 - `lsp-bridge-csharp-lsp-server`: C# language server, you can choose `omnisharp-mono` or`omnisharp-dotnet`, note that you need to give **execute permissions** to the OmniSharp file
 - `lsp-bridge-python-multi-lsp-server`: Python multi-language servers, you can choose `pyright_ruff`, `jedi_ruff`, `python-ms_ruff`, `pylsp_ruff`
 - `lsp-bridge-nix-lsp-server`: Nix language server, you can choose `rnix-lsp` or `nil`
+- `lsp-bridge-markdown-lsp-server`: Markdown language server, you can choose `vale-ls` or `nil`
 
 ## Options
 

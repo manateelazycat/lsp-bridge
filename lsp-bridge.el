@@ -482,6 +482,10 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
   "Default LSP server for nix, you can choose `rnix-lsp' or `nil'."
   :type 'string)
 
+(defcustom lsp-bridge-markdown-lsp-server nil
+  "Default LSP server for markdown, you can choose `vale-ls' or `nil'."
+  :type 'string)
+
 (defcustom lsp-bridge-use-wenls-in-org-mode nil
   "Use `wen' lsp server in org-mode, default is disable.")
 
@@ -512,7 +516,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     (groovy-mode .                                                               "groovy-language-server")
     (haskell-mode .                                                              "hls")
     (lua-mode .                                                                  "sumneko")
-    (markdown-mode .                                                             "vale-ls")
+    (markdown-mode .                                                             lsp-bridge-markdown-lsp-server)
     (dart-mode .                                                                 "dart-analysis-server")
     (scala-mode .                                                                "metals")
     ((js2-mode js-mode js-ts-mode rjsx-mode) .                                   "javascript")
