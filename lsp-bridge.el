@@ -666,19 +666,19 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (julia-mode                 . c-basic-offset)             ; Julia
     (java-mode                  . c-basic-offset)             ; Java
     (java-ts-mode               . java-ts-mode-indent-offset) ; Java
-    (jde-mode                   . c-basic-offset)     ; Java (JDE)
-    (js-mode                    . js-indent-level)    ; JavaScript
-    (js2-mode                   . js2-basic-offset)   ; JavaScript-IDE
-    (js3-mode                   . js3-indent-level)   ; JavaScript-IDE
-    (json-mode                  . js-indent-level)    ; JSON
-    (json-ts-mode               . js-indent-level)    ; JSON
-    (lua-mode                   . lua-indent-level)   ; Lua
-    (objc-mode                  . c-basic-offset)     ; Objective C
-    (php-mode                   . c-basic-offset)     ; PHP
+    (jde-mode                   . c-basic-offset)   ; Java (JDE)
+    (js-mode                    . js-indent-level)  ; JavaScript
+    (js2-mode                   . js2-basic-offset) ; JavaScript-IDE
+    (js3-mode                   . js3-indent-level) ; JavaScript-IDE
+    (json-mode                  . js-indent-level)  ; JSON
+    (json-ts-mode               . js-indent-level)  ; JSON
+    (lua-mode                   . lua-indent-level) ; Lua
+    (objc-mode                  . c-basic-offset)   ; Objective C
+    (php-mode                   . c-basic-offset)   ; PHP
     (php-ts-mode                . php-ts-mode-indent-offset) ; PHP
-    (perl-mode                  . perl-indent-level)  ; Perl
-    (cperl-mode                 . cperl-indent-level) ; Perl
-    (raku-mode                  . raku-indent-offset) ; Perl6/Raku
+    (perl-mode                  . perl-indent-level)         ; Perl
+    (cperl-mode                 . cperl-indent-level)        ; Perl
+    (raku-mode                  . raku-indent-offset)  ; Perl6/Raku
     (erlang-mode                . erlang-indent-level) ; Erlang
     (ada-mode                   . ada-indent)          ; Ada
     (sgml-mode                  . sgml-basic-offset)   ; SGML
@@ -1326,8 +1326,8 @@ So we build this macro to restore postion after code format."
   (not
    (null
     (split-string (buffer-substring-no-properties
-                    (max (1- (point)) (line-beginning-position))
-                    (point))))))
+                   (max (1- (point)) (line-beginning-position))
+                   (point))))))
 
 (defun lsp-bridge-not-match-hide-characters ()
   "Hide completion if char before cursor match `lsp-bridge-completion-hide-characters'."
@@ -1677,7 +1677,7 @@ So we build this macro to restore postion after code format."
         (lsp-bridge-remote-send-func-request "search_file_words_load_file" (list lsp-bridge-remote-file-path t)))
     (when (lsp-bridge-process-live-p)
       (lsp-bridge-call-async "search_file_words_change_buffer"
-                             (buffer-name)
+                             (substring-no-properties (buffer-name))
                              begin-pos
                              end-pos
                              change-text
@@ -2631,16 +2631,16 @@ the context of that buffer. If the buffer is created by
     (push `(,host . ,tramp-connection-info) lsp-bridge-tramp-alias-alist))
 
   (lsp-bridge--conditional-update-tramp-file-info tramp-file-name path host
-    (setq-local lsp-bridge-remote-file-flag t)
-    (setq-local lsp-bridge-remote-file-host host)
-    (setq-local lsp-bridge-remote-file-path path)
+                                                  (setq-local lsp-bridge-remote-file-flag t)
+                                                  (setq-local lsp-bridge-remote-file-host host)
+                                                  (setq-local lsp-bridge-remote-file-path path)
 
-    (read-only-mode -1)
+                                                  (read-only-mode -1)
 
-    (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)
-    (setq lsp-bridge-tramp-sync-var t)
-    (message "[LSP-Bridge] remote file %s updated info successfully."
-             (buffer-file-name))))
+                                                  (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)
+                                                  (setq lsp-bridge-tramp-sync-var t)
+                                                  (message "[LSP-Bridge] remote file %s updated info successfully."
+                                                           (buffer-file-name))))
 
 (defun lsp-bridge-tramp-show-hostnames ()
   (interactive)
