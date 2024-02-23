@@ -1,4 +1,4 @@
-;;; lsp-bridge-inlay-hint.el --- Inlay hint protocol   -*- lexical-binding: t; -*-
+;;; lsp-bridge-inlay-hint.el --- Inlay hint protocol   -*- lexical-binding: t; no-byte-compile: t; -*-*-
 
 ;; Filename: lsp-bridge-inlay-hint.el
 ;; Description: Inlay hint protocol

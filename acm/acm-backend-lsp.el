@@ -207,6 +207,12 @@ Recommand use `normal' that follow LSP server response, emacser's behavior typic
       ;; Insert candidate or expand snippet.
       (funcall (or snippet-fn #'insert)
                (or new-text insert-text label))
+      ;; Indent last line of snippet, make sure it same as first line of snippet.
+      (when snippet-fn
+        (save-excursion
+          (goto-char yas-snippet-end)
+          (goto-char (line-beginning-position))
+          (indent-according-to-mode)))
       ;; Do `additional-text-edits' if return auto-imprt information.
       (when (and acm-backend-lsp-enable-auto-import
                  (cl-plusp (length additional-text-edits)))

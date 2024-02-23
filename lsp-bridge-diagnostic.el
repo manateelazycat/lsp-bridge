@@ -1,4 +1,4 @@
-;;; lsp-bridge-diagnostic.el --- Diagnostic for lsp-bridge   -*- lexical-binding: t; -*-
+;;; lsp-bridge-diagnostic.el --- Diagnostic for lsp-bridge   -*- lexical-binding: t; no-byte-compile: t; -*-*-
 
 ;; Filename: lsp-bridge-diagnostic.el
 ;; Description: Diagnostic for lsp-bridge

@@ -5,6 +5,13 @@
     "jdtls"
   ],
   "settings": {},
+  "capabilities": {
+    "textDocument": {
+      "hover": {
+        "contentFormat": ["markdown"]
+      }
+    }
+  },
   "initializationOptions": {
     "settings": {
       "java": {

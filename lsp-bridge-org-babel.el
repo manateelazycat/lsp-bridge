@@ -1,4 +1,4 @@
-;;; lsp-bridge-org-babel.el --- lsp-bridge for Org Babel -*- lexical-binding: t; -*-
+;;; lsp-bridge-org-babel.el --- lsp-bridge for Org Babel -*- lexical-binding: t; no-byte-compile: t; -*-*-
 ;;
 ;; Copyright (C) 2023 royokong
 ;;

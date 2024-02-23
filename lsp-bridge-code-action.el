@@ -1,4 +1,4 @@
-;;; lsp-bridge-code-action.el --- Code action for lsp-bridge   -*- lexical-binding: t; -*-
+;;; lsp-bridge-code-action.el --- Code action for lsp-bridge   -*- lexical-binding: t; no-byte-compile: t; -*-*-
 
 ;; Filename: lsp-bridge-code-action.el
 ;; Description: Code action for lsp-bridge
@@ -222,7 +222,7 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
     (acm-frame-set-frame-size lsp-bridge-call-hierarchy--frame
                               (max width call-frame-width)
                               (+ height menu-window-height))
-    (acm-frame-adjust-frame-pos lsp-bridge-call-hierarchy--frame)
+    (acm-frame-adjust-frame-pos lsp-bridge-call-hierarchy--frame nil nil t)
     (select-frame-set-input-focus lsp-bridge-call-hierarchy--frame)
 
     (let ((menu-window (get-buffer-window "*lsp-bridge-code-action-menu*"

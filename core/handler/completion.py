@@ -1,4 +1,5 @@
 import os
+import hashlib
 from enum import Enum
 from functools import cmp_to_key
 
@@ -131,9 +132,17 @@ class Completion(Handler):
 
                 annotation = kind if kind != "" else detail
 
+
                 # The key keyword combines the values ​​of 'label' and 'detail'
                 # to handle different libraries provide the same function.
                 key = f"{label}_{detail}"
+
+                if self.file_action.enable_auto_import:
+                    # For imports, the "detail" can often be the same for all symbols.
+                    # Make the key unique.
+                    key += "_" + "_".join(
+                        hashlib.md5(x["newText"].encode('utf-8')).hexdigest()[:8]
+                        for x in item.get("additionalTextEdits", []))
 
                 # Build candidate.
                 candidate = {

@@ -109,6 +109,7 @@
 	(perl-mode . 28)
 	(cperl-mode . 28)
 	(php-mode . 29)
+	(php-ts-mode . 29)
 	(text-mode . 30)
 	(python-mode . 33)
 	(python-ts-mode . 33)
