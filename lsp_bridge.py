@@ -616,6 +616,13 @@ class LspBridge:
         if is_in_path_dict(FILE_ACTION_DICT, filepath):
             get_from_path_dict(FILE_ACTION_DICT, filepath).exit()
 
+    def close_all_files(self):
+        FILE_ACTION_DICT.clear()
+
+        for lsp_server in LSP_SERVER_DICT.values():
+            lsp_server.exit()
+        LSP_SERVER_DICT.clear()
+
     def enjoy_hacking(self, servers, project_path):
         # Notify user server is ready.
         print("Start lsp server ({}) for {}".format(", ".join(servers), project_path))
