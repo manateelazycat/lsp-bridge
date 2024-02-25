@@ -2352,8 +2352,7 @@ SymbolKind (defined in the LSP)."
               (acm-doc-try-show t)
             ;; Hide doc frame immediately.
             (acm-doc-hide))
-          )
-        )))
+          ))))
 
 (defun lsp-bridge-toggle-sdcv-helper ()
   "Toggle sdcv helper."
