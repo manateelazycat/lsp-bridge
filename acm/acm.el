@@ -106,6 +106,7 @@
 (require 'acm-backend-ctags)
 (require 'acm-backend-codeium)
 (require 'acm-backend-copilot)
+(require 'acm-backend-org-roam)
 (require 'acm-quick-access)
 
 ;;; Code:
@@ -351,11 +352,24 @@ So we use `minor-mode-overriding-map-alist' to override key, make sure all keys 
                             (eq sym x)
                           (string-match-p x (symbol-name sym))))))
 
+(defun acm-in-roam-bracket-p ()
+  "If in roam bracket. This is a WORKAROUND to change `acm-input-bound-style' locally for completing and expanding nonascii links."
+  (and acm-enable-org-roam
+       (eq major-mode 'org-mode)
+       (featurep 'org-roam)
+       (not (org-in-src-block-p))
+       (org-in-regexp org-roam-bracket-completion-re 1)
+       ;; Prevent completing before roam bracket, e.g. *[[]]
+       (<= (match-beginning 2) (point))))
 
 (defun acm-get-input-prefix-bound ()
   (pcase acm-input-bound-style
     ("symbol"
      (bounds-of-thing-at-point 'symbol))
+    ("org-roam"
+     (when (org-in-regexp org-roam-bracket-completion-re 1)
+       (cons (match-beginning 2)
+	     (match-end 2))))
     ("string"
      (cons (point)
            (save-excursion
@@ -373,7 +387,10 @@ So we use `minor-mode-overriding-map-alist' to override key, make sure all keys 
 
 (defun acm-get-input-prefix ()
   "Get user input prefix."
-  (let ((bound (acm-get-input-prefix-bound)))
+  (let* ((acm-input-bound-style (if (acm-in-roam-bracket-p)
+				    "org-roam"
+				  "ascii"))
+	 (bound (acm-get-input-prefix-bound)))
     (if bound
         (buffer-substring-no-properties (car bound) (cdr bound))
       "")))
@@ -448,7 +465,11 @@ Only calculate template candidate when type last character."
          template-first-part-candidates
          template-second-part-candidates
          ctags-candidates
-         citre-candidates)
+         citre-candidates
+         org-roam-candidates)
+    (when (acm-in-roam-bracket-p)
+      (setq org-roam-candidates (acm-backend-org-roam-candidates keyword)))
+
     (when acm-enable-tabnine
       (setq tabnine-candidates (acm-backend-tabnine-candidates keyword)))
 
@@ -479,6 +500,7 @@ Only calculate template candidate when type last character."
                                lsp-candidates
                                ctags-candidates
                                citre-candidates
+			       org-roam-candidates
                                (acm-backend-search-file-words-candidates keyword)
                                (acm-backend-telega-candidates keyword)))
 
@@ -572,7 +594,10 @@ The key of candidate will change between two LSP results."
          (candidates (or candidate (acm-update-candidates)))
          (menu-candidates (cl-subseq candidates 0 (min (length candidates) acm-menu-length)))
          (current-select-candidate-index (cl-position previous-select-candidate (mapcar 'acm-menu-index-info menu-candidates) :test 'equal))
-         (bounds (acm-get-input-prefix-bound)))
+	 (acm-input-bound-style (if (acm-in-roam-bracket-p)
+				    "org-roam"
+				  "ascii"))
+	 (bounds (acm-get-input-prefix-bound)))
     (cond
      ;; Hide completion menu if user type first candidate completely, except when candidate annotation is `emmet' or `snippet'.
      ((and (equal (length candidates) 1)
