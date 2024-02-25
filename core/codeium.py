@@ -257,7 +257,7 @@ class Codeium:
         self.is_get_info = True
 
     def get_server_port(self):
-        pattern = re.compile("\\d{5}")
+        pattern = re.compile(r"\\d{5}")
 
         while True:
             try:

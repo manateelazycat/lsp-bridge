@@ -109,7 +109,7 @@ class SearchSdcvWords:
     def search_words(self, prefix: str, ticker: int):
         candidates = []
         
-        prefix_regexp = re.compile(".*".join(prefix))
+        prefix_regexp = re.compile(r".*".join(prefix))
         if len(prefix.lower()) > 3 and prefix.lower() in self.pinyin:
             for word, translation in self.pinyin[prefix.lower()].items():
                 candidate = {
