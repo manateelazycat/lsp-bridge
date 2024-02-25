@@ -331,6 +331,9 @@ class FileSyncServer(RemoteFileServer):
         if path in self.file_dict:
             del self.file_dict[path]
 
+    def close_all_files(self):
+        self.file_dict.clear()
+
 
 class FileElispServer(RemoteFileServer):
     def __init__(self, host, port, lsp_bridge):
@@ -381,6 +384,10 @@ class FileCommandServer(RemoteFileServer):
         self.lsp_bridge.init_search_backends_complete_event.wait()
 
         super().handle_client()
+
+        # close all files when client disconnects
+        self.lsp_bridge.file_server.close_all_files()
+        self.lsp_bridge.close_all_files()
 
     def handle_message(self, message):
         if message["command"] == "lsp_request":

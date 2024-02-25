@@ -688,17 +688,18 @@ class LspServer:
 
         # We need shutdown LSP server when last file closed, to save system memory.
         if len(self.files) == 0:
-            self.send_shutdown_request()
-            self.send_exit_notification()
-
             self.message_queue.put({
                 "name": "server_process_exit",
                 "content": self.server_name
             })
+            self.exit()
 
-            # Don't need to wait LSP server response, kill immediately.
-            if self.lsp_subprocess is not None:
-                try:
-                    os.kill(self.lsp_subprocess.pid, 9)
-                except ProcessLookupError:
-                    log_time("LSP server {} ({}) already exited!".format(self.server_info["name"], self.lsp_subprocess.pid))
+    def exit(self):
+        self.send_shutdown_request()
+        self.send_exit_notification()
+        # Don't need to wait LSP server response, kill immediately.
+        if self.lsp_subprocess is not None:
+            try:
+                os.kill(self.lsp_subprocess.pid, 9)
+            except ProcessLookupError:
+                log_time("LSP server {} ({}) already exited!".format(self.server_info["name"], self.lsp_subprocess.pid))
