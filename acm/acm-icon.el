@@ -165,7 +165,8 @@
     ("null" . ("material" "spider" "##98c807"))
     ("tabnine" . ("material" "alpha-t-box-outline" "#954a97"))
     ("codeium" . ("material" "alpha-c-box-outline" "#09b6a2"))
-    (t . ("material" "smoking-pipe" "#90cef1"))))
+    (t . ("material" "smoking-pipe" "#90cef1"))
+    ("note" . ("material" "note" "#77aa99"))))
 
 (defvar acm-icon-cache (make-hash-table :test 'equal))
 (defvar acm-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))

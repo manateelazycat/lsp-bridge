@@ -1,16 +1,16 @@
 ;;; acm-backend-org-roam.el -*- lexical-binding: t; no-byte-compile: t; -*-
 
 (defgroup acm-backend-org-roam nil
-  "Org-roam backend for acm."
+  "Org roam backend for acm."
   :group 'acm)
 
 (defcustom acm-enable-org-roam nil
-  "Popup Org-roam completions when this option is turn on."
+  "Popup Org roam completions when this option is turn on."
   :type 'boolean
   :group 'acm-backend-org-roam)
 
 (defcustom acm-backend-org-roam-candidates-number 10
-  "Maximal number of Org-roam candidate of menu."
+  "Maximal number of Org roam candidate of menu."
   :type 'integer
   :group 'acm-backend-org-roam)
 
@@ -24,10 +24,10 @@
        (mapcar
         (lambda (title)
           (list :key title
-                :icon "ref"
+                :icon "note"
                 :label title
                 :displayLabel title
-                :annotation "Org-roam"
+                :annotation "Org roam"
                 :backend "org-roam"))
         (cl-subseq match-titles 0 (min (length match-titles) acm-backend-org-roam-candidates-number)))))))
 
