@@ -2669,12 +2669,14 @@ I haven't idea how to make lsp-bridge works with `electric-indent-mode', PR are 
   (interactive)
   (let* ((file-name (lsp-bridge-get-buffer-file-name-text))
          (tramp-vec (tramp-dissect-file-name file-name))
+         (tramp-method (tramp-file-name-method tramp-vec))
          (user (tramp-file-name-user tramp-vec))
          (host (tramp-file-name-host tramp-vec))
          (port (tramp-file-name-port tramp-vec))
          (path (tramp-file-name-localname tramp-vec)))
 
-    (when (not (member host lsp-bridge-tramp-blacklist))
+    (when (and (not (member tramp-method '("sudo" "sudoedit" "su" "doas")))
+           (not (member host lsp-bridge-tramp-blacklist)))
       (read-only-mode 1)
       (lsp-bridge-call-async "sync_tramp_remote" file-name user host port path))))
 
