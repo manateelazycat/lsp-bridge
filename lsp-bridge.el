@@ -1250,8 +1250,13 @@ So we build this macro to restore postion after code format."
            (if (cl-every (lambda (pred)
                            (if (functionp pred)
                                (let ((result (funcall pred)))
-                                 (when (and lsp-bridge-enable-log (not (eq result t)))
-                                   (message "*** lsp-bridge-try-completion execute predicate '%s' failed with result: '%s'" pred result))
+                                 (when lsp-bridge-enable-log
+                                   (unless result
+                                     (with-current-buffer (get-buffer-create lsp-bridge-name)
+                                       (save-excursion
+                                         (goto-char (point-max))
+                                         (insert (format "\n*** lsp-bridge-try-completion execute predicate '%s' failed with result: '%s'\n"
+                                                         pred result))))))
                                  result)
                              t))
                          lsp-bridge-completion-popup-predicates)
@@ -1265,10 +1270,22 @@ So we build this macro to restore postion after code format."
              (acm-hide)
              )))))
 
+(defun lsp-bridge-record-last-change-position ()
+  (setq lsp-bridge-last-change-position
+        (list (current-buffer) (buffer-chars-modified-tick) (point))))
+
 (defun lsp-bridge-popup-complete-menu ()
   (interactive)
   ;; Set `lsp-bridge-manual-complete-flag' to non-nil, make sure poup completion menu once.
   (setq-local lsp-bridge-manual-complete-flag t)
+
+  ;; Record last change position make sure `lsp-bridge-try-completion' will popup completion menu.
+  (lsp-bridge-record-last-change-position)
+
+  ;; Sync src block content to lsp server make sure lsp-bridge can popup completion menu even user don't change code in src block.
+  (when (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode))
+    (setq-local lsp-bridge-org-babel--update-file-before-change t)
+    (lsp-bridge-org-babel-send-src-block-to-lsp-server))
 
   ;; We send `try_completion' request directly, because user input nothing before call command `lsp-bridge-popup-complete-menu'.
   (lsp-bridge-call-file-api "try_completion"
@@ -1419,13 +1436,8 @@ So we build this macro to restore postion after code format."
   ;; Use `save-match-data' protect match data, avoid conflict with command call `search-regexp'.
   (save-match-data
     (when (lsp-bridge-has-lsp-server-p)
-      ;; send whole org src block to lsp server
-      (when (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)
-                 lsp-bridge-org-babel--block-bop
-                 lsp-bridge-org-babel--update-file-before-change)
-        (setq-local lsp-bridge-org-babel--update-file-before-change nil)
-        (lsp-bridge-call-file-api "update_file" (buffer-name)
-                                  (1- (line-number-at-pos lsp-bridge-org-babel--block-bop t)))))
+      ;; Send whole org src block to lsp server.
+      (lsp-bridge-org-babel-send-src-block-to-lsp-server))
 
     ;; Set `lsp-bridge--before-change-begin-pos' and `lsp-bridge--before-change-end-pos'
     ;; if `lsp-bridge-has-lsp-server-p' or `lsp-bridge-is-remote-file'
@@ -1457,8 +1469,7 @@ So we build this macro to restore postion after code format."
   ;;
   ;; The last position of cursor is wrong, that makes a misjudgment in
   ;; `lsp-bridge-try-completion'.
-  (setq lsp-bridge-last-change-position
-        (list (current-buffer) (buffer-chars-modified-tick) (point))))
+  (lsp-bridge-record-last-change-position))
 
 (defun lsp-bridge-monitor-after-change (begin end length)
   ;; Nothing change actual if `begin' and `end' equal `lsp-bridge--before-change-begin-point' and `lsp-bridge--before-change-end-point'
@@ -1473,7 +1484,7 @@ So we build this macro to restore postion after code format."
           (setq lsp-bridge-last-change-command (format "%s" this-command))
 
           ;; Record last change position to avoid popup outdate completions.
-          (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
+          (lsp-bridge-record-last-change-position)
 
           ;; Set `lsp-bridge-last-change-is-delete-command-p'
           (setq lsp-bridge-last-change-is-delete-command-p (> length 0))
@@ -2685,7 +2696,7 @@ I haven't idea how to make lsp-bridge works with `electric-indent-mode', PR are 
          (path (tramp-file-name-localname tramp-vec)))
 
     (when (and (not (member tramp-method '("sudo" "sudoedit" "su" "doas")))
-           (not (member host lsp-bridge-tramp-blacklist)))
+               (not (member host lsp-bridge-tramp-blacklist)))
       (read-only-mode 1)
       (lsp-bridge-call-async "sync_tramp_remote" file-name user host port path))))
 
