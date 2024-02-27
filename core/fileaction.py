@@ -177,11 +177,8 @@ class FileAction:
         if self.org_file:
             if self.org_line_bias is None:
                 return
-
-            line_bias = self.org_line_bias
-            start['line'] -= line_bias
-            end['line'] -= line_bias
-            position['line'] -= line_bias
+            start['line'] -= self.org_line_bias
+            end['line'] -= self.org_line_bias
 
         buffer_content = ''
         # Send didChange request to LSP server.
@@ -219,6 +216,11 @@ class FileAction:
     def try_completion(self, position, before_char, prefix, version=None):
         # If we call try_completion from Elisp side, Emacs don't know the version of FileAction.
         # So we need fill version if it is None.
+        if self.org_file:
+            if self.org_line_bias is None:
+                return
+            position['line'] -= self.org_line_bias
+
         if version is None:
             version = self.version
 
