@@ -1334,12 +1334,14 @@ So we build this macro to restore postion after code format."
    ))
 
 (defun lsp-bridge-not-only-blank-before-cursor ()
-  "Hide completion if only blank before cursor."
-  (not
-   (null
-    (split-string (buffer-substring-no-properties
-                   (max (1- (point)) (line-beginning-position))
-                   (point))))))
+  "Hide completion if only blank before cursor, except in roam bracket."
+  (or (not
+       (null
+        (split-string (buffer-substring-no-properties
+                       (max (1- (point)) (line-beginning-position))
+                       (point)))))
+      ;; Keep completion after space in Org roam bracket.
+      (acm-in-roam-bracket-p)))
 
 (defun lsp-bridge-not-match-hide-characters ()
   "Hide completion if char before cursor match `lsp-bridge-completion-hide-characters'."
