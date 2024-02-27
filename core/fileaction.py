@@ -217,6 +217,8 @@ class FileAction:
         # If we call try_completion from Elisp side, Emacs don't know the version of FileAction.
         # So we need fill version if it is None.
         if self.org_file:
+            # update line bias in `try_completion` instead of `change_file`
+            # to avoid mismatch when `try_completion` is called directly through `lsp-bridge-popup-complete-menu`
             if self.org_line_bias is None:
                 return
             position['line'] -= self.org_line_bias
