@@ -2266,6 +2266,13 @@ SymbolKind (defined in the LSP)."
           (cons string face)
           (cons string face)))
 
+(defun lsp-bridge-workspace-list-symbol-at-point ()
+  "Looks up the symbol under the cursor. If there's a marked region, use that instead."
+  (interactive)
+  (if (region-active-p)
+	  (lsp-bridge-workspace-list-symbols (buffer-substring-no-properties (mark) (point)))
+	(lsp-bridge-workspace-list-symbols (substring-no-properties (symbol-name (symbol-at-point))))))
+
 (defun lsp-bridge-workspace-list-symbols (query)
   (interactive "sWorkspace symbol query: ")
   (lsp-bridge-call-file-api "workspace_symbol" query))
