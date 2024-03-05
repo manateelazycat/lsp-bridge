@@ -830,8 +830,16 @@ So we build this macro to restore postion after code format."
         (cl-return buffer)))))
 
 (defun lsp-bridge--get-project-path-func (filename)
-  (when lsp-bridge-get-project-path-by-filepath
-    (funcall lsp-bridge-get-project-path-by-filepath filename)))
+  "Get project root path, search order:
+
+1. Follow the rule of `lsp-bridge-get-project-path-by-filepath'
+2. Search up `.dir-locals.el'
+3. Search up `.git'"
+  (if lsp-bridge-get-project-path-by-filepath
+      ;; Fetch project root path by `lsp-bridge-get-project-path-by-filepath' if it set by user.
+      (funcall lsp-bridge-get-project-path-by-filepath filename)
+    ;; Otherwise try to search up `.dir-locals.el' file
+    (car (dir-locals-find-file filename))))
 
 (defun lsp-bridge--get-workspace-folder-func (project-path)
   (when lsp-bridge-get-workspace-folder
