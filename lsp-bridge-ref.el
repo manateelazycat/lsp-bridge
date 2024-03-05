@@ -453,9 +453,11 @@ user more freedom to use rg with special arguments."
 
 (defun lsp-bridge-ref-get-match-buffer (filepath)
   (cl-dolist (buffer (buffer-list))
-    (when (string-equal (buffer-file-name buffer) filepath)
-      (cl-return buffer)
-      )))
+    (let* ((buf-file-name (buffer-file-name buffer))
+           (file-name (if (stringp buf-file-name) (substring-no-properties buf-file-name) buf-file-name)))
+      (when (string-equal file-name filepath)
+        (cl-return buffer)
+        ))))
 
 (defun lsp-bridge-ref-current-line-empty-p ()
   (save-excursion
