@@ -397,8 +397,10 @@ So we use `minor-mode-overriding-map-alist' to override key, make sure all keys 
 
 (defun acm-candidate-fuzzy-search (keyword candidate)
   "Fuzzy search candidate."
-  (string-match-p (funcall acm-candidate-match-function (downcase keyword))
-                  (downcase candidate)))
+  (let ((result (funcall acm-candidate-match-function (downcase keyword))))
+    (string-match-p (cond ((stringp result) result)
+                          (t (rx-to-string result))) ;; If `rx'.
+                    (downcase candidate))))
 
 (defun acm-candidate-sort-by-prefix (keyword candidates)
   "Priority display of the candidates of the prefix matching."
