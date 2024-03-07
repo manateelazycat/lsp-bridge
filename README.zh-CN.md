@@ -24,7 +24,6 @@ lsp-bridge 的优势：
 1. 安装 Emacs 28 及以上版本
 2. 安装 Python 依赖: `pip3 install epc orjson sexpdata six setuptools paramiko rapidfuzz` (orjson 是可选的， orjson 基于 Rust， 提供更快的 JSON 解析性能)
 3. 安装 Elisp 依赖: [markdown-mode](https://github.com/jrblevin/markdown-mode), [yasnippet](https://github.com/joaotavora/yasnippet)
-
 4. 用 `git clone` 下载此仓库， 并替换下面配置中的 load-path 路径
 5. 把下面代码加入到你的配置文件 ~/.emacs 中：
 
@@ -37,6 +36,8 @@ lsp-bridge 的优势：
 (require 'lsp-bridge)
 (global-lsp-bridge-mode)
 ```
+
+终端模式请安装 [acm-terminal](https://github.com/twlz0ne/acm-terminal), 需要注意的是， acm-terminal 有可能会因为我修改了 acm.el 代码而导致兼容性破坏， 欢迎反馈 issue 给 acm-terminal 的作者， 他是一个非常好的开发者， 会迅速解决兼容性问题
 
 * 如果你使用 straight 来安装， 应该用下面的配置来安装：
 
@@ -83,7 +84,6 @@ lsp-bridge 的优势：
 1. 使用 lsp-bridge 时， 请先关闭其他补全插件， 比如 lsp-mode, eglot, company, corfu 等等， lsp-bridge 提供从补全后端、 补全前端到多后端融合的全套解决方案。
 2. lsp-bridge 除了提供 LSP 补全以外， 也提供了很多非 LSP 的补全后端， 包括文件单词、 路径、 Yas/Tempel、 TabNine、 Codeium、 Copilot、 Citre、 Tailwind、 Ctags, Org roam 等补全后端， 如果你期望在某个模式提供这些补全， 请把对应的模式添加到 `lsp-bridge-default-mode-hooks`
 3. 请不要对 lsp-bridge 执行 ```byte compile``` 或者 ```native comp``， 会导致升级后， compile 后的版本 API 和最新版不一样， lsp-bridge 多线程设计， 不需要 compile 来加速
-4. 终端模式下， lsp-bridge 没法弹出补全菜单， 请使用 GUI 界面 (因为 Emacs 终端下缺乏像素级坐标 API 和跨窗口显示 API， 无法做到良好的补全体验)
 
 ## 本地使用
 
