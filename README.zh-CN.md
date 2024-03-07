@@ -451,7 +451,7 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 | core/search_file_words.py           | 文件单词异步搜索后端                                                                                                 |
 | core/search_paths.py                | 文件路径异步搜索后端                                                                                                 |
 | core/search_sdcv_words.py           | 英文单词搜索后端， 可更换为其他语言的 StarDict 词典                                                                  |
-| core/search_tailwindcss_keywords.py | TailwindCSS 关键词搜索后端                                                                                           |
+| core/search_tailwindcss_keywords.py | TailwindCSS 关键词搜索后端, 开启这个后端， 需要保证项目 root 目录存在 tailwind.config.js 文件                                                                                            |
 | core/search_list.py                 | 异步搜索框架， 可用于编写自己的异步搜索后端                                                                          |
 | langserver                          | 主要放置 LSP 服务器的配置， 每一个服务器一个 json 文件， 分别定义服务器的名称、 语言 ID、 启动命令和设置选项等       |
 | multiserver                         | 主要放置多 LSP 服务器的配置                                                                                          |

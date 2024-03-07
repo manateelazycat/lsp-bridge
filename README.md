@@ -453,7 +453,7 @@ The following is the directory structure of the lsp-bridge project:
 | core/search_file_words.py             | Asynchronous backend for file word search                                                                           |
 | core/search_paths.py                  | Asynchronous backend for file path search                                                                           |
 | core/search_sdcv_words.py             | English word search backend, can be replaced with StarDict dictionaries of other languages                          |
-| core/search_tailwindcss_keywords.py   | TailwindCSS keyword search backend                                                                                  |
+| core/search_tailwindcss_keywords.py   | TailwindCSS keyword search backend, enable this feature need tailwind.config.js at project root path                                                                                   |
 | core/search_list.py                   | Asynchronous search framework, can be used to write your own asynchronous search backend                             |
 | langserver                            | Mainly places the configuration of the LSP server, each server has a json file, defining the server's name, language ID, startup command, and setting options, etc. |
 | multiserver                           | Mainly places the configuration of multiple LSP servers                                                             |
