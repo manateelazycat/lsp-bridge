@@ -210,9 +210,10 @@ Recommand use `normal' that follow LSP server response, emacser's behavior typic
       ;; Indent last line of snippet, make sure it same as first line of snippet.
       (when snippet-fn
         (save-excursion
-          (goto-char yas-snippet-end)
-          (goto-char (line-beginning-position))
-          (indent-according-to-mode)))
+          (when yas-snippet-end
+            (goto-char yas-snippet-end)
+            (goto-char (line-beginning-position))
+            (indent-according-to-mode))))
       ;; Do `additional-text-edits' if return auto-imprt information.
       (when (and acm-backend-lsp-enable-auto-import
                  (cl-plusp (length additional-text-edits)))
