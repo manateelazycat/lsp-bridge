@@ -1835,7 +1835,7 @@ Off by default."
 (defun lsp-bridge-rename ()
   (interactive)
   (lsp-bridge-call-file-api "prepare_rename" (lsp-bridge--position))
-  (let ((new-name (read-string "Rename to: " (thing-at-point 'symbol 'no-properties))))
+  (let ((new-name (substring-no-properties (read-string "Rename to: " (thing-at-point 'symbol 'no-properties)))))
     (lsp-bridge-call-file-api "rename" (lsp-bridge--position) new-name)))
 
 (defun lsp-bridge-flash-region (start-pos end-pos)
