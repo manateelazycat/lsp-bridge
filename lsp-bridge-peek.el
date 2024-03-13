@@ -373,16 +373,16 @@ not affected by its surroundings."
   (setq file-content nil)
   (goto-char (acm-backend-lsp-position-to-point pos))
   (let* ((beg (save-excursion
-		(forward-line content-move)
-		(line-beginning-position)))
-	 (end (save-excursion
-		(forward-line content-move)
-		(forward-line (1- lsp-bridge-peek-file-content-height))
-		(line-end-position)))
-	 (highlight-begin (point))
-	 (highlight-end (save-excursion
-			  (forward-symbol 1)
-			  (point))))
+		        (forward-line content-move)
+		        (line-beginning-position)))
+	     (end (save-excursion
+		        (forward-line content-move)
+		        (forward-line (1- lsp-bridge-peek-file-content-height))
+		        (line-end-position)))
+	     (highlight-begin (point))
+	     (highlight-end (save-excursion
+			              (forward-symbol 1)
+			              (point))))
     (font-lock-fontify-region beg end)
     (put-text-property highlight-begin highlight-end 'face 'lsp-bridge-peek--highlight-symbol-face)
     (setq file-content (concat (buffer-substring beg end) "\n"))
@@ -556,11 +556,11 @@ The beginnings of each symbol are replaced by ace strings with
 	          (setq pos (list :line (string-to-number line) :character (string-to-number char)))
 	          (push filename (nth 1 lsp-bridge-peek-symbol-at-point))
 	          (push pos (nth 2 lsp-bridge-peek-symbol-at-point))
-		  (setf (nth 6 lsp-bridge-peek-symbol-at-point)
-			(nreverse (nth 6 lsp-bridge-peek-symbol-at-point)))
-		  (push (- (/ lsp-bridge-peek-file-content-height 2)) (nth 6 lsp-bridge-peek-symbol-at-point))
-		  (setf (nth 6 lsp-bridge-peek-symbol-at-point)
-			(nreverse (nth 6 lsp-bridge-peek-symbol-at-point))))))
+		      (setf (nth 6 lsp-bridge-peek-symbol-at-point)
+			        (nreverse (nth 6 lsp-bridge-peek-symbol-at-point)))
+		      (push (- (/ lsp-bridge-peek-file-content-height 2)) (nth 6 lsp-bridge-peek-symbol-at-point))
+		      (setf (nth 6 lsp-bridge-peek-symbol-at-point)
+			        (nreverse (nth 6 lsp-bridge-peek-symbol-at-point))))))
 	    (setf (nth 1 lsp-bridge-peek-symbol-at-point)
 	          (nreverse (nth 1 lsp-bridge-peek-symbol-at-point))
 	          (nth 2 lsp-bridge-peek-symbol-at-point)
@@ -656,9 +656,9 @@ When FORCE if non-nil, the content of the peek window is recalculated."
 (defun lsp-bridge-peek-file-content-move (num)
   (lsp-bridge-peek--error-if-not-peeking)
   (cl-symbol-macrolet ((selected-id (nth 1 lsp-bridge-peek-chosen-displaying-list))
-		       (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
-		       (content-move-list (nth 6 selected-symbol))
-		       (content-move (nth selected-id content-move-list)))
+		               (selected-symbol (nth lsp-bridge-peek-selected-symbol lsp-bridge-peek-symbol-tree))
+		               (content-move-list (nth 6 selected-symbol))
+		               (content-move (nth selected-id content-move-list)))
     (setf content-move (+ content-move num))
     (setq lsp-bridge-peek--content-update t)))
 
@@ -685,16 +685,17 @@ When FORCE if non-nil, the content of the peek window is recalculated."
 	     (pos-list (nth 2 selected-symbol))
 	     (file (nth selected-id path-list))
 	     (pos (nth selected-id pos-list)))
-    (find-file file)
-    (goto-char (acm-backend-lsp-position-to-point pos))))
+    (lsp-bridge-jump-to-file file pos)
+    ))
 
 (defun lsp-bridge-peek-jump-back ()
   "Jump to the file and position before jump."
   (interactive)
-  (if lsp-bridge-peek-file-and-pos-before-jump
-      (progn
-	    (find-file (nth 0 lsp-bridge-peek-file-and-pos-before-jump))
-	    (goto-char (nth 1 lsp-bridge-peek-file-and-pos-before-jump)))))
+  (when lsp-bridge-peek-file-and-pos-before-jump
+    (lsp-bridge-jump-to-file
+     (nth 0 lsp-bridge-peek-file-and-pos-before-jump)
+     (nth 1 lsp-bridge-peek-file-and-pos-before-jump)
+     )))
 
 (defun lsp-bridge-peek--search-symbols (line)
   "Search for symbols from current position to LINEs after.
@@ -786,7 +787,7 @@ The buffer and the point is returned in a cons cell."
 	      (with-current-buffer buf
 	        (save-excursion
 	          (goto-char (acm-backend-lsp-position-to-point pos))
-		  (forward-line content-move)
+		      (forward-line content-move)
 	          (beginning-of-line 1)
 	          (cons (point)
 		            (lsp-bridge-peek--search-symbols

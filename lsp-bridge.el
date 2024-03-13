@@ -2287,9 +2287,15 @@ SymbolKind (defined in the LSP)."
         (let* ((symbol-info (plist-get (car match-info) :location))
                (symbol-file (lsp-bridge-pick-file-path (format "%s" (plist-get symbol-info :uri))))
                (symbol-position (plist-get (plist-get symbol-info :range) :start)))
-          (find-file symbol-file)
-          (goto-char (acm-backend-lsp-position-to-point symbol-position))
+          (lsp-bridge-jump-to-file symbol-file symbol-position)
           )))))
+
+(defun lsp-bridge-jump-to-file (file position)
+  (cond ((string-prefix-p "jdt://" file)
+         (lsp-bridge-call-file-api "jdt_uri_resolver" (url-encode-url file) position))
+        (t
+         (find-file file)
+         (goto-char (acm-backend-lsp-position-to-point position)))))
 
 (defun lsp-bridge-workspace-transform-info(info)
   (let* ((name (plist-get info :name))
