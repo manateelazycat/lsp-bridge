@@ -1575,6 +1575,16 @@ So we build this macro to restore postion after code format."
                         (minibufferp))))
       (lsp-bridge-codeium-complete))
 
+    ;; emacs jupyter
+    (when (and acm-enable-jupyter
+               (lsp-bridge-process-live-p)
+               (and lsp-bridge-enable-org-babel
+                    (eq major-mode 'org-mode)
+                    (not (lsp-bridge-is-org-temp-buffer-p)))
+               (org-in-src-block-p 'inside)
+               (string-prefix-p "jupyter" (plist-get (car (cdr (org-element-context))) :language)))
+      (lsp-bridge-jupyter-complete))
+
     (when (and acm-enable-ctags
                (lsp-bridge-process-live-p))
       (unless (or (string-equal current-word "") (null current-word))
@@ -2530,6 +2540,27 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
                              (not indent-tabs-mode)
                              (acm-get-input-prefix)
                              language))))
+
+(defun lsp-bridge-jupyter-complete ()
+  (interactive)
+  (unless (fboundp 'jupyter-org-completion-at-point)
+    (require 'jupyter)
+    (require 'jupyter-org-client)
+    (require 'ob-jupyter))
+  (setq-local acm-backend-jupyter-items nil)
+  (let* ((candidates (all-completions "" (nth 2 (jupyter-org-completion-at-point))))
+         (candidates-with-metadata (mapcar (lambda (candidate)
+                                             (let ((text (substring-no-properties candidate)))
+                                               (list :key text
+                                                     :icon ""
+                                                     :label text
+                                                     :displayLabel text
+                                                     :annotation "jupyter"
+                                                     :backend "jupyter")))
+                                           candidates)))
+    (when candidates
+      (lsp-bridge-search-backend--record-items "jupyter" candidates-with-metadata)
+      )))
 
 (defun lsp-bridge-copilot-complete ()
   (interactive)
