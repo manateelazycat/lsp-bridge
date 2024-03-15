@@ -116,6 +116,7 @@
 	(cython-mode . 33)
 	(ess-r-mode . 34)
 	(ruby-mode . 35)
+	(ruby-ts-mode . 35)
 	(enh-ruby-mode . 35)
 	(ruby-ts-mode . 35)
 	(rust-mode . 36)

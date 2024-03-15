@@ -508,7 +508,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     ((java-mode java-ts-mode) .                                                  "jdtls")
     ((julia-mode) .                                                              "julials")
     ((python-mode python-ts-mode) .                                              lsp-bridge-python-lsp-server)
-    (ruby-mode .                                                                 "solargraph")
+    ((ruby-mode ruby-ts-mode) .                                                  "solargraph")
     ((rust-mode rustic-mode rust-ts-mode) .                                      "rust-analyzer")
 	(move-mode .                                                                 "move-analyzer")
     ((elixir-mode elixir-ts-mode heex-ts-mode) .                                 lsp-bridge-elixir-lsp-server)
@@ -567,6 +567,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     julia-mode-hook
     python-mode-hook
     ruby-mode-hook
+    ruby-ts-mode-hook
     lua-mode-hook
     move-mode-hook
     rust-mode-hook
@@ -701,7 +702,8 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (typescript-ts-mode         . typescript-ts-mode-indent-offset) ; Typescript
     (tsx-ts-mode                . typescript-ts-mode-indent-offset) ; Typescript[TSX]
     (sh-mode                    . sh-basic-offset)   ; Shell Script
-    (ruby-mode                  . ruby-indent-level) ; Ruby
+    (ruby-mode                  . ruby-indent-level)     ; Ruby
+    (ruby-ts-mode               . ruby-indent-level)     ; Ruby
     (enh-ruby-mode              . enh-ruby-indent-level) ; Ruby
     (crystal-mode               . crystal-indent-level) ; Crystal (Ruby)
     (css-mode                   . css-indent-offset)    ; CSS
@@ -746,6 +748,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (elixir-mode .        "\#\{")
     (elixir-ts-mode .     "\#\{")
     (ruby-mode .          "\#\{")
+    (ruby-ts-mode .       "\#\{")
     ;; For {{}}
     (yaml-mode .          "\{\{"))
   "Open characters for string interpolation. The elements are cons cell (major-mode . open-char-regexp)"
