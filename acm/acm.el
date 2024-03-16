@@ -107,6 +107,7 @@
 (require 'acm-backend-codeium)
 (require 'acm-backend-copilot)
 (require 'acm-backend-org-roam)
+(require 'acm-backend-jupyter)
 (require 'acm-quick-access)
 
 ;;; Code:
@@ -458,6 +459,7 @@ Only calculate template candidate when type last character."
          tabnine-candidates
          codeium-candidates
          copilot-candidates
+         jupyter-candidates
          tempel-candidates
          mode-candidates
          mode-first-part-candidates
@@ -481,6 +483,9 @@ Only calculate template candidate when type last character."
     (when acm-enable-copilot
       (setq copilot-candidates (acm-backend-copilot-candidates keyword)))
 
+    (when acm-enable-jupyter
+      (setq jupyter-candidates (acm-backend-jupyter-candidates keyword)))
+
     (if acm-enable-search-sdcv-words
         ;; Completion SDCV if option `acm-enable-search-sdcv-words' is enable.
         (setq candidates (acm-backend-search-sdcv-words-candidates keyword))
@@ -500,6 +505,7 @@ Only calculate template candidate when type last character."
                                (unless (acm-in-comment-p) (acm-backend-tailwind-candidates keyword))
                                (unless (acm-in-comment-p) (acm-backend-elisp-candidates keyword))
                                lsp-candidates
+                               jupyter-candidates
                                ctags-candidates
                                citre-candidates
 			       org-roam-candidates

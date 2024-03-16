@@ -1578,6 +1578,16 @@ So we build this macro to restore postion after code format."
                         (minibufferp))))
       (lsp-bridge-codeium-complete))
 
+    ;; emacs jupyter
+    (when (and acm-enable-jupyter
+               (lsp-bridge-process-live-p)
+               (and lsp-bridge-enable-org-babel
+                    (eq major-mode 'org-mode)
+                    (not (lsp-bridge-is-org-temp-buffer-p)))
+               (org-in-src-block-p 'inside)
+               (string-prefix-p "jupyter" (plist-get (car (cdr (org-element-context))) :language)))
+      (acm-backend-jupyter-record current-symbol))
+
     (when (and acm-enable-ctags
                (lsp-bridge-process-live-p))
       (unless (or (string-equal current-word "") (null current-word))
