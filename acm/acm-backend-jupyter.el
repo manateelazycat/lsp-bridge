@@ -22,9 +22,27 @@
     keyword
     acm-backend-jupyter-items)))
 
-(defun lsp-bridge-jupyter-record (candidates)
-  (setq-local acm-backend-jupyter-items candidates)
-  (lsp-bridge-try-completion))
+(defun acm-backend-jupyter-record (current-symbol)
+  (interactive)
+  (unless (fboundp 'jupyter-org-completion-at-point)
+    (require 'jupyter)
+    (require 'jupyter-org-client)
+    (require 'ob-jupyter))
+  (setq-local acm-backend-jupyter-items nil)
+  (let* ((candidates (mapcar #'substring-no-properties (all-completions "" (nth 2 (jupyter-org-completion-at-point)))))
+         (candidates (if (stringp current-symbol)
+                         (seq-filter (apply-partially #'string-prefix-p current-symbol) candidates)
+                       candidates))
+         (candidates-with-metadata (mapcar (lambda (candidate)
+                                             (list :key candidate
+                                                   :icon ""
+                                                   :label candidate
+                                                   :displayLabel candidate
+                                                   :annotation "jupyter"
+                                                   :backend "jupyter"))
+                                           candidates)))
+    (when candidates
+      (lsp-bridge-search-backend--record-items "jupyter" candidates-with-metadata))))
 
 (defun acm-backend-jupyter-clean ()
   (setq-local acm-backend-jupyter-items nil)
