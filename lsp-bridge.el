@@ -249,7 +249,7 @@ After set `lsp-bridge-completion-obey-trigger-characters-p' to nil, you need use
   :safe #'booleanp
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-enable-inlay-hint t
+(defcustom lsp-bridge-enable-inlay-hint nil
   "Whether to enable inlay hint."
   :type 'boolean
   :safe #'booleanp
@@ -702,8 +702,8 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (typescript-ts-mode         . typescript-ts-mode-indent-offset) ; Typescript
     (tsx-ts-mode                . typescript-ts-mode-indent-offset) ; Typescript[TSX]
     (sh-mode                    . sh-basic-offset)   ; Shell Script
-    (ruby-mode                  . ruby-indent-level)     ; Ruby
-    (ruby-ts-mode               . ruby-indent-level)     ; Ruby
+    (ruby-mode                  . ruby-indent-level) ; Ruby
+    (ruby-ts-mode               . ruby-indent-level) ; Ruby
     (enh-ruby-mode              . enh-ruby-indent-level) ; Ruby
     (crystal-mode               . crystal-indent-level) ; Crystal (Ruby)
     (css-mode                   . css-indent-offset)    ; CSS
@@ -1195,12 +1195,14 @@ So we build this macro to restore postion after code format."
           (ignore-errors
             (lsp-bridge-code-action-popup-quit))))
 
-      ;; Try send inlay hint if window scroll.
-      (redisplay t) ; NOTE: we need call `redisplay' to force `window-start' return RIGHT line number.
-      (let ((window-pos (window-start)))
-        (when (not (equal lsp-bridge-inlay-hint-last-update-pos window-pos))
-          (lsp-bridge-try-send-inlay-hint-request)
-          (setq-local lsp-bridge-inlay-hint-last-update-pos window-pos)))
+      ;; Inlay hint.
+      (when lsp-bridge-enable-inlay-hint
+        ;; Try send inlay hint if window scroll.
+        (redisplay t) ; NOTE: we need call `redisplay' to force `window-start' return RIGHT line number.
+        (let ((window-pos (window-start)))
+          (when (not (equal lsp-bridge-inlay-hint-last-update-pos window-pos))
+            (lsp-bridge-try-send-inlay-hint-request)
+            (setq-local lsp-bridge-inlay-hint-last-update-pos window-pos))))
       )))
 
 (defun lsp-bridge-close-buffer-file ()

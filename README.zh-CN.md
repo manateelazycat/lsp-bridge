@@ -225,7 +225,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 - `lsp-bridge-enable-completion-in-string`: 支持在字符串中弹出补全， 默认关闭
 - `lsp-bridge-enable-completion-in-minibuffer`: 支持在 Minibuffer 中弹出补全， 默认关闭
 - `lsp-bridge-enable-diagnostics`: 代码诊断， 默认打开
-- `lsp-bridge-enable-inlay-hint`: 类型嵌入提示， 默认打开， 这个选项对于那些严重依赖类型提示的语言比较有用， 比如 Rust
+- `lsp-bridge-enable-inlay-hint`: 类型嵌入提示， 默认关闭， 这个选项对于那些严重依赖类型提示的语言比较有用， 比如 Rust
 - `lsp-bridge-enable-hover-diagnostic`: 光标移动到错误位置弹出诊断信息， 默认关闭
 - `lsp-bridge-enable-search-words`: 索引打开文件的单词， 默认打开
 - `lsp-bridge-enable-auto-format-code`: 自动格式化代码, 默认关闭
