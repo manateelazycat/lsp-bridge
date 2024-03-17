@@ -83,7 +83,7 @@ lsp-bridge 的优势：
 
 1. 使用 lsp-bridge 时， 请先关闭其他补全插件， 比如 lsp-mode, eglot, company, corfu 等等， lsp-bridge 提供从补全后端、 补全前端到多后端融合的全套解决方案。
 2. lsp-bridge 除了提供 LSP 补全以外， 也提供了很多非 LSP 的补全后端， 包括文件单词、 路径、 Yas/Tempel、 TabNine、 Codeium、 Copilot、 Citre、 Tailwind、 Ctags, Org roam 等补全后端， 如果你期望在某个模式提供这些补全， 请把对应的模式添加到 `lsp-bridge-default-mode-hooks`
-3. 请不要对 lsp-bridge 执行 ```byte compile``` 或者 ```native comp``， 会导致升级后， compile 后的版本 API 和最新版不一样， lsp-bridge 多线程设计， 不需要 compile 来加速
+3. 请不要对 lsp-bridge 执行 ```byte compile``` 或者 ```native comp```， 会导致升级后， compile 后的版本 API 和最新版不一样， lsp-bridge 多线程设计， 不需要 compile 来加速
 
 ## 本地使用
 
@@ -144,7 +144,7 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 | Tab          | acm-complete              | 完成补全                                                 |
 | Alt + h      | acm-complete              | 完成补全                                                 |
 | Alt + H      | acm-insert-common         | 插入候选词共有部分                                       |
-| Alt + u      | acm-filter                | 对候选词做二次过滤， 提升候选词的选择效率                |
+| Alt + u      | acm-filter                | 对候选词做二次过滤， 类似其他补全前端的模糊搜索                |
 | Alt + d      | acm-doc-toggle            | 开启或关闭候选词文档                                     |
 | Alt + j      | acm-doc-scroll-up         | 向下滚动候选词文档                                       |
 | Alt + k      | acm-doc-scroll-down       | 向上滚动候选词文档                                       |
