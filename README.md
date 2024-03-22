@@ -147,7 +147,7 @@ Note:
 | Tab          | acm-complete              | Complete completion                                                                                                           |
 | Alt + h      | acm-complete              | Complete completion                                                                                                           |
 | Alt + H      | acm-insert-common         | Insert common part of candidates                                                                                              |
-| Alt + u      | acm-filter                | Perform secondary filtering on candidate words, improving the selection efficiency of candidate words                         |
+| Alt + u      | acm-filter                | Performing second-level filtering on candidate words, similar to the fuzzy search feature in other auto-complete frontends                         |
 | Alt + d      | acm-doc-toggle            | Enable or disable candidate documentation                                                                                     |
 | Alt + j      | acm-doc-scroll-up         | Scroll up candidate documentation                                                                                             |
 | Alt + k      | acm-doc-scroll-down       | Scroll down candidate documentation                                                                                           |
@@ -227,7 +227,7 @@ lsp-bridge provides support for more than two language servers for many language
 - `lsp-bridge-enable-completion-in-string`: Enable completion pop-up within strings, default is off
 - `lsp-bridge-enable-completion-in-minibuffer`: Enable pop-completion up in Minibuffer, disabled by default
 - `lsp-bridge-enable-diagnostics`: code diagnostic, enable by default
-- `lsp-bridge-enable-inlay-hint`: inlay hint, enable by default, this option is use for strong type language, such as, Rust
+- `lsp-bridge-enable-inlay-hint`: inlay hint, disable by default, this option is use for strong type language, such as, Rust
 - `lsp-bridge-enable-hover-diagnostic`: show diagnostic tooltip when cursor hover diagnostic place, disable by default
 - `lsp-bridge-enable-search-words`: index the word of the file, enable by default
 - `lsp-bridge-enable-auto-format-code`: automatic format code, disable by default

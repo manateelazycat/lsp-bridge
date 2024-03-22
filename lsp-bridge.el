@@ -249,7 +249,7 @@ After set `lsp-bridge-completion-obey-trigger-characters-p' to nil, you need use
   :safe #'booleanp
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-enable-inlay-hint t
+(defcustom lsp-bridge-enable-inlay-hint nil
   "Whether to enable inlay hint."
   :type 'boolean
   :safe #'booleanp
@@ -508,7 +508,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     ((java-mode java-ts-mode) .                                                  "jdtls")
     ((julia-mode) .                                                              "julials")
     ((python-mode python-ts-mode) .                                              lsp-bridge-python-lsp-server)
-    (ruby-mode .                                                                 "solargraph")
+    ((ruby-mode ruby-ts-mode) .                                                  "solargraph")
     ((rust-mode rustic-mode rust-ts-mode) .                                      "rust-analyzer")
 	(move-mode .                                                                 "move-analyzer")
     ((elixir-mode elixir-ts-mode heex-ts-mode) .                                 lsp-bridge-elixir-lsp-server)
@@ -568,6 +568,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     julia-mode-hook
     python-mode-hook
     ruby-mode-hook
+    ruby-ts-mode-hook
     lua-mode-hook
     move-mode-hook
     rust-mode-hook
@@ -704,6 +705,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (tsx-ts-mode                . typescript-ts-mode-indent-offset) ; Typescript[TSX]
     (sh-mode                    . sh-basic-offset)   ; Shell Script
     (ruby-mode                  . ruby-indent-level) ; Ruby
+    (ruby-ts-mode               . ruby-indent-level) ; Ruby
     (enh-ruby-mode              . enh-ruby-indent-level) ; Ruby
     (crystal-mode               . crystal-indent-level) ; Crystal (Ruby)
     (css-mode                   . css-indent-offset)    ; CSS
@@ -748,6 +750,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (elixir-mode .        "\#\{")
     (elixir-ts-mode .     "\#\{")
     (ruby-mode .          "\#\{")
+    (ruby-ts-mode .       "\#\{")
     ;; For {{}}
     (yaml-mode .          "\{\{"))
   "Open characters for string interpolation. The elements are cons cell (major-mode . open-char-regexp)"
@@ -1194,12 +1197,14 @@ So we build this macro to restore postion after code format."
           (ignore-errors
             (lsp-bridge-code-action-popup-quit))))
 
-      ;; Try send inlay hint if window scroll.
-      (redisplay t) ; NOTE: we need call `redisplay' to force `window-start' return RIGHT line number.
-      (let ((window-pos (window-start)))
-        (when (not (equal lsp-bridge-inlay-hint-last-update-pos window-pos))
-          (lsp-bridge-try-send-inlay-hint-request)
-          (setq-local lsp-bridge-inlay-hint-last-update-pos window-pos)))
+      ;; Inlay hint.
+      (when lsp-bridge-enable-inlay-hint
+        ;; Try send inlay hint if window scroll.
+        (redisplay t) ; NOTE: we need call `redisplay' to force `window-start' return RIGHT line number.
+        (let ((window-pos (window-start)))
+          (when (not (equal lsp-bridge-inlay-hint-last-update-pos window-pos))
+            (lsp-bridge-try-send-inlay-hint-request)
+            (setq-local lsp-bridge-inlay-hint-last-update-pos window-pos))))
       )))
 
 (defun lsp-bridge-close-buffer-file ()
@@ -1577,6 +1582,16 @@ So we build this macro to restore postion after code format."
                         (minibufferp))))
       (lsp-bridge-codeium-complete))
 
+    ;; emacs jupyter
+    (when (and acm-enable-jupyter
+               (lsp-bridge-process-live-p)
+               (and lsp-bridge-enable-org-babel
+                    (eq major-mode 'org-mode)
+                    (not (lsp-bridge-is-org-temp-buffer-p)))
+               (org-in-src-block-p 'inside)
+               (string-prefix-p "jupyter" (plist-get (car (cdr (org-element-context))) :language)))
+      (acm-backend-jupyter-record current-symbol))
+
     (when (and acm-enable-ctags
                (lsp-bridge-process-live-p))
       (unless (or (string-equal current-word "") (null current-word))
@@ -1837,7 +1852,7 @@ Off by default."
 (defun lsp-bridge-rename ()
   (interactive)
   (lsp-bridge-call-file-api "prepare_rename" (lsp-bridge--position))
-  (let ((new-name (read-string "Rename to: " (thing-at-point 'symbol 'no-properties))))
+  (let ((new-name (substring-no-properties (read-string "Rename to: " (thing-at-point 'symbol 'no-properties)))))
     (lsp-bridge-call-file-api "rename" (lsp-bridge--position) new-name)))
 
 (defun lsp-bridge-flash-region (start-pos end-pos)
@@ -2289,9 +2304,15 @@ SymbolKind (defined in the LSP)."
         (let* ((symbol-info (plist-get (car match-info) :location))
                (symbol-file (lsp-bridge-pick-file-path (format "%s" (plist-get symbol-info :uri))))
                (symbol-position (plist-get (plist-get symbol-info :range) :start)))
-          (find-file symbol-file)
-          (goto-char (acm-backend-lsp-position-to-point symbol-position))
+          (lsp-bridge-jump-to-file symbol-file symbol-position)
           )))))
+
+(defun lsp-bridge-jump-to-file (file position)
+  (cond ((string-prefix-p "jdt://" file)
+         (lsp-bridge-call-file-api "jdt_uri_resolver" (url-encode-url file) position))
+        (t
+         (find-file file)
+         (goto-char (acm-backend-lsp-position-to-point position)))))
 
 (defun lsp-bridge-workspace-transform-info(info)
   (let* ((name (plist-get info :name))
