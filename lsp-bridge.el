@@ -524,7 +524,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     ((typescript-mode typescript-ts-mode) .                                      "typescript")
     (tuareg-mode .                                                               "ocamllsp")
     (erlang-mode .                                                               "erlang-ls")
-    ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . lsp-bridge-tex-lsp-server)
+    ((LaTeX-mode latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . lsp-bridge-tex-lsp-server)
     ((clojure-mode
       clojurec-mode
       clojurescript-mode
