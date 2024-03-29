@@ -1008,7 +1008,7 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-call-file-api (method &rest args)
   (if (lsp-bridge-is-remote-file)
       (lsp-bridge-remote-send-lsp-request method args)
-    (if (file-remote-p (buffer-file-name))
+    (if (and buffer-file-name (file-remote-p (buffer-file-name)))
         (message "[LSP-Bridge] remote file \"%s\" is updating info... skip call %s."
                  (buffer-file-name) method)
       (when (lsp-bridge-call-file-api-p)
