@@ -1,5 +1,13 @@
 [English](./README.md) | 简体中文
 
+<hr>
+  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#installation"><strong>安装</strong></a> • 
+  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#supported-language-servers"><strong>支持的语言列表</strong></a> • 
+  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#keymap"><strong>按键</strong></a> •
+  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#lsp-server-options"><strong>自定义选项</strong></a> •
+  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#join-development"><strong>加入开发</strong></a> 
+<hr>
+
 # lsp-bridge
 
 lsp-bridge 的目标是使用多线程技术实现 Emacs 生态中性能最快的 LSP 客户端。
