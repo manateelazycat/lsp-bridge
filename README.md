@@ -1,6 +1,17 @@
 <p align="left">
 <a href="https://github.com/manateelazycat/lsp-bridge/actions/workflows/test.yml"><img src="https://github.com/manateelazycat/lsp-bridge/actions/workflows/test.yml/badge.svg"/></a> <a href ="https://github.com/manateelazycat/lsp-bridge/blob/master/README.zh-CN.md"><img src="https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-555555.svg"/></a>
 
+<hr>
+<p align="center">
+  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#installation"><strong>installation</strong></a> • 
+  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#supported-language-servers"><strong>languages</strong></a> • 
+  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#keymap"><strong>keymaps</strong></a> •
+  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#lsp-server-options"><strong>options</strong></a> •
+  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#join-development"><strong>join development</strong></a> 
+</p>
+<hr>
+
+
 # lsp-bridge
 
 The goal of lsp-bridge is use multi-thread technology to implement the fastest LSP client in the Emacs ecosystem.
