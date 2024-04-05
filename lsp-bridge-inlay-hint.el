@@ -120,7 +120,7 @@
               (mapconcat (lambda (label)
                            (plist-get label :value))
                          label-info
-                         "") ; Separator for mapconcat
+                         "")            ; Separator for mapconcat
             ;; Otherwise label is string, just return itself.
             label-info))
   )
@@ -161,6 +161,15 @@
 
                 (setq hint-index (1+ hint-index))
                 )))))))
+
+(defun lsp-bridge-inlay-hint-retry (filepath)
+  "InlayHint will got error 'content modified' error if it followed immediately by a didChange request.
+
+If lsp-bridge detect this error, lsp-bridge will call `lsp-bridge-inlay-hint-retry' function again to avoid inlayHint request no respond."
+  (when (string-prefix-p "file://" filepath)
+    (setq filepath (string-remove-prefix "file://" filepath)))
+  (when (string-equal filepath (buffer-file-name))
+    (lsp-bridge-try-send-inlay-hint-request)))
 
 (provide 'lsp-bridge-inlay-hint)
 
