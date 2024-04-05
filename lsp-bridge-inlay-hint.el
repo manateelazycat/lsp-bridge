@@ -97,6 +97,9 @@
 
 (defvar-local lsp-bridge-inlay-hint-overlays '())
 
+(defvar-local lsp-bridge-inlay-hint-cache nil
+  "We use `lsp-bridge-inlay-hint-cache' avoid screen flicker if two respond result is same.")
+
 (defun lsp-bridge-inlay-hint-hide-overlays ()
   (when lsp-bridge-inlay-hint-overlays
     (dolist (inlay-hint-overlay lsp-bridge-inlay-hint-overlays)
@@ -128,39 +131,46 @@
 (defun lsp-bridge-inlay-hint--render (filepath filehost inlay-hints)
   (lsp-bridge--with-file-buffer
       filepath filehost
-      ;; Hide previous overlays first.
-      (lsp-bridge-inlay-hint-hide-overlays)
 
-      ;; Render new overlays.
-      (save-excursion
-        (save-restriction
-          (let ((hint-index 0))
-            (dolist (hint inlay-hints)
-              (goto-char (acm-backend-lsp-position-to-point (plist-get hint :position)))
-              (let* ((hint-kind (plist-get hint :kind))
-                     ;; InlayHintKind is 1 mean is an inlay hint that for a type annotation.
-                     ;; 2 mean is an inlay hint that is for a parameter.
-                     ;; type annotation is hint need render at end of line, we use `after-string' overlay to implement it.
-                     (hint-render-use-after-string-p (eql hint-kind 1))
-                     ;; Hint text need concat padding-left, label and padding-right.
-                     (hint-text (concat
-                                 (lsp-bridge-inlay-hint-padding-text (plist-get hint :paddingLeft) t)
-                                 (lsp-bridge-inlay-hint-label-text (plist-get hint :label))
-                                 (lsp-bridge-inlay-hint-padding-text (plist-get hint :paddingRight) nil)))
-                     (overlay (if hint-render-use-after-string-p
-                                  (make-overlay (point) (1+ (point)) nil t)
-                                (make-overlay (1- (point)) (point) nil nil nil))))
-                (when (and (equal hint-index 0)
-                           hint-render-use-after-string-p)
-                  (put-text-property 0 1 'cursor 1 hint-text))
-                (overlay-put overlay
-                             (if hint-render-use-after-string-p 'before-string 'after-string)
-                             (propertize hint-text 'face 'lsp-bridge-inlay-hint-face))
-                (overlay-put overlay 'evaporate t) ; NOTE, `evaporate' is import
-                (push overlay lsp-bridge-inlay-hint-overlays)
+      (unless (equal inlay-hints lsp-bridge-inlay-hint-cache)
+        ;; Hide previous overlays first.
+        (lsp-bridge-inlay-hint-hide-overlays)
 
-                (setq hint-index (1+ hint-index))
-                )))))))
+        (setq-local lsp-bridge-inlay-hint-cache inlay-hints)
+
+        ;; Render new overlays.
+        (save-excursion
+          (save-restriction
+            (let ((hint-index 0))
+              (dolist (hint inlay-hints)
+                (goto-char (acm-backend-lsp-position-to-point (plist-get hint :position)))
+                (let* ((hint-kind (plist-get hint :kind))
+                       ;; InlayHintKind is 1 mean is an inlay hint that for a type annotation.
+                       ;; 2 mean is an inlay hint that is for a parameter.
+                       ;; type annotation is hint need render at end of line, we use `after-string' overlay to implement it.
+                       (hint-render-use-after-string-p (eql hint-kind 1))
+                       ;; Hint text need concat padding-left, label and padding-right.
+                       (hint-text (concat
+                                   (lsp-bridge-inlay-hint-padding-text (plist-get hint :paddingLeft) t)
+                                   (lsp-bridge-inlay-hint-label-text (plist-get hint :label))
+                                   (lsp-bridge-inlay-hint-padding-text (plist-get hint :paddingRight) nil)))
+                       (overlay (if hint-render-use-after-string-p
+                                    (make-overlay (point) (1+ (point)) nil t)
+                                  (make-overlay (1- (point)) (point) nil nil nil))))
+                  (when (and (equal hint-index 0)
+                             hint-render-use-after-string-p)
+                    (put-text-property 0 1 'cursor 1 hint-text))
+                  (overlay-put overlay
+                               (if hint-render-use-after-string-p 'before-string 'after-string)
+                               (propertize hint-text 'face 'lsp-bridge-inlay-hint-face))
+                  (overlay-put overlay 'evaporate t) ; NOTE, `evaporate' is import
+                  (push overlay lsp-bridge-inlay-hint-overlays)
+
+                  (setq hint-index (1+ hint-index))
+                  )))))
+        )
+
+      ))
 
 (defun lsp-bridge-inlay-hint-retry (filepath)
   "InlayHint will got error 'content modified' error if it followed immediately by a didChange request.
