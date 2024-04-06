@@ -454,7 +454,7 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 | lsp-bridge-dart.el                  | 提供对 Dart 私有协议的支持， 比如 Dart 的 Closing Labels 协议                                                        |
 | lsp-bridge-semantic-tokens.el       | 灵活显示某些语义符号， 对于静态语言， 比如 C 或 C++ 比较有用                                                         |
 | lsp-bridge-lsp-installer.el         | 安装 TabNine 和 Omnisharp                                                                                            |
-| lsp-bridge-peek.el                  | 用 peek windows 来查看定义和引用                                                                                     |
+| lsp-bridge-peek.el                  | 用 peek windows 来查看定义和引用, 类似 VSCode 中 Code Lens 的体验                                                                                      |
 | lsp-bridge.py                       | lsp-bridge 的 Python 主逻辑部分， 提供事件循环、 消息调度和状态管理                                                  |
 | acm/acm.el                          | 异步补全菜单， 专门为 lsp-bridge 后端而设计， 支持 lsp, elisp, words, TabNine 等后端                                 |
 | core/fileaction.py                  | 主要记录每个文件状态， 处理 LSP 响应消息， 调用 Emacs Elisp 函数                                                     |

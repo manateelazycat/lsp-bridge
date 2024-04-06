@@ -455,7 +455,7 @@ The following is the directory structure of the lsp-bridge project:
 | lsp-bridge-dart.el                    | Provides support for Dart's private protocols, such as Dart's Closing Labels protocol                                |
 | lsp-bridge-semantic-tokens.el         | Flexible display of certain semantic symbols is especially useful for static languages such as C or C++.             |
 | lsp-bridge-lsp-installer.el           | Install TabNine and Omnisharp                                                                                       |
-| lsp-bridge-peek.el                    | Use peek windows to view definitions and references                                                                 |
+| lsp-bridge-peek.el                    | Use peek windows to view definitions and references, similar to the experience of Code Lens in VSCode                                                                 |
 | lsp-bridge.py                         | The main Python logic part of lsp-bridge, providing event loops, message scheduling, and status management          |
 | acm/acm.el                            | Asynchronous completion menu, designed specifically for the lsp-bridge backend, supporting lsp, elisp, words, TabNine and other backends |
 | core/fileaction.py                    | Mainly records the status of each file, processes LSP response messages, and calls Emacs Elisp functions            |
