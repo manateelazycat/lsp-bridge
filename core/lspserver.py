@@ -91,13 +91,7 @@ class LspServerSender(MessageSender):
 
         # InlayHint will got error 'content modified' error if it followed immediately by a didChange request.
         # So we need INLAY_HINT_REQUEST_ID_DICT to contain documentation path to send retry request.
-        if message.get("method", "response") == "textDocument/inlayHint":
-            try:
-                message_id = message.get("id")
-                message_documentation = message["params"]["textDocument"]["uri"]
-                INLAY_HINT_REQUEST_ID_DICT[message_id] = message_documentation
-            except:
-                pass
+        record_inlay_hint_request(message)
 
         message_type = message.get("message_type")
 
@@ -143,6 +137,28 @@ class LspServerSender(MessageSender):
                 self.send_message(message)
         except:
             logger.error(traceback.format_exc())
+
+def record_inlay_hint_request(message):
+    # InlayHint will got error 'content modified' error if it followed immediately by a didChange request.
+    # So we need INLAY_HINT_REQUEST_ID_DICT to contain documentation path to send retry request.
+    if message.get("method", "response") == "textDocument/inlayHint":
+        try:
+            message_id = message.get("id")
+            message_documentation = message["params"]["textDocument"]["uri"]
+            INLAY_HINT_REQUEST_ID_DICT[message_id] = message_documentation
+        except:
+            pass
+
+def resend_inlay_hint_request_after_content_modified_error(message):
+    # Get message file path.
+    message_id = message.get("id")
+    message_documentation = INLAY_HINT_REQUEST_ID_DICT[message_id]
+
+    # Clean INLAY_HINT_REQUEST_ID_DICT to save memory.
+    INLAY_HINT_REQUEST_ID_DICT.pop(message_id)
+
+    # Call lsp-bridge-inlay-hint-retry to send retry request.
+    eval_in_emacs("lsp-bridge-inlay-hint-retry", message_documentation)
 
 class LspServerReceiver(MessageReceiver):
 
@@ -547,14 +563,7 @@ class LspServer:
         if "id" in message:
             message_id = message.get("id")
             if message_id in INLAY_HINT_REQUEST_ID_DICT:
-                # Get message file path.
-                message_documentation = INLAY_HINT_REQUEST_ID_DICT[message_id]
-
-                # Clean INLAY_HINT_REQUEST_ID_DICT to save memory.
-                INLAY_HINT_REQUEST_ID_DICT.pop(message_id)
-
-                # Call lsp-bridge-inlay-hint-retry to send retry request.
-                eval_in_emacs("lsp-bridge-inlay-hint-retry", message_documentation)
+                resend_inlay_hint_request_after_content_modified_error(message)
                 return
 
         error_message = message["error"]["message"]
