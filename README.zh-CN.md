@@ -430,8 +430,7 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 | Yaml        | [yaml-language-server](https://github.com/redhat-developer/yaml-language-server)                   | `npm install -g yaml-language-server`                                                                                                                                                                                          |
 | Zig         | [zls](https://github.com/zigtools/zls)                                                             | 运行 `zls config` 来生成 zls 的配置。 参考 [Configuration Options](https://github.com/zigtools/zls#configuration-options)                                                                                                      |
 
- ;
-                                                                                                                                                 |
+                                                                                                                                                 
 ## 加入开发
 
 下图是 lsp-bridge 的架构设计:
