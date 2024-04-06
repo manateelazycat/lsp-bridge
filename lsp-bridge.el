@@ -1034,13 +1034,30 @@ So we build this macro to restore postion after code format."
             (setq-local lsp-bridge-buffer-file-deleted t)
             (message "[LSP-Bridge] %s is not exist, stop send the %s LSP request until file create again." acm-backend-lsp-filepath method)))))))
 
+(defvar lsp-bridge-log-buffer-window nil)
+
 (defun lsp-bridge-restart-process ()
   "Stop and restart LSP-Bridge process."
   (interactive)
+  ;; Record log buffer window before restart lsp-bridge process.
+  (setq lsp-bridge-log-buffer-window
+        (cl-dolist (buffer (buffer-list))
+          (when (string-equal (buffer-name buffer) lsp-bridge-name)
+            (cl-return (cons (get-buffer-window buffer) (selected-window)))
+            )))
+
   (lsp-bridge-diagnostic-hide-overlays)
 
   (lsp-bridge-kill-process)
   (lsp-bridge-start-process)
+
+  ;; Restore lsp-bridge log buffer after restart.
+  (when lsp-bridge-log-buffer-window
+    (save-excursion
+      (select-window (car lsp-bridge-log-buffer-window))
+      (switch-to-buffer lsp-bridge-name)
+      (select-window (cdr lsp-bridge-log-buffer-window))))
+
   (message "[LSP-Bridge] Process restarted."))
 
 (defun lsp-bridge-profile-dump ()
