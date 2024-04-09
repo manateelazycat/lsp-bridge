@@ -555,6 +555,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     (fsharp-mode .                                                               "fsautocomplete")
     (beancount-mode .                                                            "beancount-language-server")
     (racket-mode    .                                                            "racket-langserver")
+    (mojo-mode    .                                                              "mojo-lsp-server")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -650,6 +651,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     svelte-mode-hook
     fsharp-mode-hook
     beancount-mode-hook
+    mojo-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
