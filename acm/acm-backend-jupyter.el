@@ -5,7 +5,7 @@
 ;;; Code:
 
 (defgroup acm-backend-jupyter nil
-  "ACM codeium support."
+  "ACM jupyter support."
   :group 'acm)
 
 (defcustom acm-enable-jupyter nil

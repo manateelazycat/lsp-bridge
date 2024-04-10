@@ -40,6 +40,8 @@ from core.utils import *
 
 DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
 
+INLAY_HINT_REQUEST_ID_DICT = {}
+
 class LspServerSender(MessageSender):
     def __init__(self, process: subprocess.Popen, server_name, project_name):
         super().__init__(process)
@@ -87,6 +89,10 @@ class LspServerSender(MessageSender):
         self.process.stdin.write(message_str.encode("utf-8"))    # type: ignore
         self.process.stdin.flush()    # type: ignore
 
+        # InlayHint will got error 'content modified' error if it followed immediately by a didChange request.
+        # So we need INLAY_HINT_REQUEST_ID_DICT to contain documentation path to send retry request.
+        record_inlay_hint_request(message)
+
         message_type = message.get("message_type")
 
         if message_type == "request" and \
@@ -131,6 +137,28 @@ class LspServerSender(MessageSender):
                 self.send_message(message)
         except:
             logger.error(traceback.format_exc())
+
+def record_inlay_hint_request(message):
+    # InlayHint will got error 'content modified' error if it followed immediately by a didChange request.
+    # So we need INLAY_HINT_REQUEST_ID_DICT to contain documentation path to send retry request.
+    if message.get("method", "response") == "textDocument/inlayHint":
+        try:
+            message_id = message.get("id")
+            message_documentation = message["params"]["textDocument"]["uri"]
+            INLAY_HINT_REQUEST_ID_DICT[message_id] = message_documentation
+        except:
+            pass
+
+def resend_inlay_hint_request_after_content_modified_error(message):
+    # Get message file path.
+    message_id = message.get("id")
+    message_documentation = INLAY_HINT_REQUEST_ID_DICT[message_id]
+
+    # Clean INLAY_HINT_REQUEST_ID_DICT to save memory.
+    INLAY_HINT_REQUEST_ID_DICT.pop(message_id)
+
+    # Call lsp-bridge-inlay-hint-retry to send retry request.
+    eval_in_emacs("lsp-bridge-inlay-hint-retry", message_documentation)
 
 class LspServerReceiver(MessageReceiver):
 
@@ -529,6 +557,14 @@ class LspServer:
     def handle_error_message(self, message):
         logger.error("Recv message (error):")
         logger.error(json.dumps(message, indent=3))
+
+        # InlayHint will got error 'content modified' error if it followed immediately by a didChange request.
+        # If we found this error, call lsp-bridge-inlay-hint-retry to send retry request.
+        if "id" in message:
+            message_id = message.get("id")
+            if message_id in INLAY_HINT_REQUEST_ID_DICT:
+                resend_inlay_hint_request_after_content_modified_error(message)
+                return
 
         error_message = message["error"]["message"]
         provider_attributes = {

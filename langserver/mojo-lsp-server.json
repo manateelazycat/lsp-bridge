@@ -1,0 +1,8 @@
+{
+  "name": "mojo-lsp-server",
+  "languageId": "mojo",
+  "command": [
+    "mojo-lsp-server"
+  ],
+  "settings": {}
+}

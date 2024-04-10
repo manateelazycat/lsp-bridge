@@ -524,7 +524,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     ((typescript-mode typescript-ts-mode) .                                      "typescript")
     (tuareg-mode .                                                               "ocamllsp")
     (erlang-mode .                                                               "erlang-ls")
-    ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . lsp-bridge-tex-lsp-server)
+    ((LaTeX-mode latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . lsp-bridge-tex-lsp-server)
     ((clojure-mode
       clojurec-mode
       clojurescript-mode
@@ -556,6 +556,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     (beancount-mode .                                                            "beancount-language-server")
     (racket-mode    .                                                            "racket-langserver")
     (solidity-mode .                                                             "solidity-ls")
+    (mojo-mode    .                                                              "mojo-lsp-server")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -652,6 +653,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     fsharp-mode-hook
     beancount-mode-hook
     solidity-mode-hook
+    mojo-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
@@ -1010,7 +1012,7 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-call-file-api (method &rest args)
   (if (lsp-bridge-is-remote-file)
       (lsp-bridge-remote-send-lsp-request method args)
-    (if (file-remote-p (buffer-file-name))
+    (if (and buffer-file-name (file-remote-p (buffer-file-name)))
         (message "[LSP-Bridge] remote file \"%s\" is updating info... skip call %s."
                  (buffer-file-name) method)
       (when (lsp-bridge-call-file-api-p)
@@ -1036,13 +1038,30 @@ So we build this macro to restore postion after code format."
             (setq-local lsp-bridge-buffer-file-deleted t)
             (message "[LSP-Bridge] %s is not exist, stop send the %s LSP request until file create again." acm-backend-lsp-filepath method)))))))
 
+(defvar lsp-bridge-log-buffer-window nil)
+
 (defun lsp-bridge-restart-process ()
   "Stop and restart LSP-Bridge process."
   (interactive)
+  ;; Record log buffer window before restart lsp-bridge process.
+  (setq lsp-bridge-log-buffer-window
+        (cl-dolist (buffer (buffer-list))
+          (when (string-equal (buffer-name buffer) lsp-bridge-name)
+            (cl-return (cons (get-buffer-window buffer) (selected-window)))
+            )))
+
   (lsp-bridge-diagnostic-hide-overlays)
 
   (lsp-bridge-kill-process)
   (lsp-bridge-start-process)
+
+  ;; Restore lsp-bridge log buffer after restart.
+  (when lsp-bridge-log-buffer-window
+    (save-excursion
+      (select-window (car lsp-bridge-log-buffer-window))
+      (switch-to-buffer lsp-bridge-name)
+      (select-window (cdr lsp-bridge-log-buffer-window))))
+
   (message "[LSP-Bridge] Process restarted."))
 
 (defun lsp-bridge-profile-dump ()
