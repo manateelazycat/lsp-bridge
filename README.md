@@ -275,7 +275,8 @@ lsp-bridge provides support for more than two language servers for many language
 - `acm-enable-citre`: Integration with [citre(ctags)](https://github.com/universal-ctags/citre). Enable this to add citre (ctags) backend (disabled by default)
 - `acm-doc-frame-max-lines`: Max line number of help documentation, default is 20
 - `acm-candidate-match-function`: The complete menu matching algorithm, the algorithm prefix of orderless-\* needs to be installed additional [orderless](https://github.com/oantolin/orderless)
-- `acm-completion-backend-merge-order`: Display order of completion backends. By default, multiple completion backends are merged in the order of LSP, Templates, and TabNine, and then the remaining templates and LSP completion options are displayed. You can adjust the order of completion back-end merging according to your needs
+- `acm-completion-backend-merge-order`: Customize the order of the completion backends, default order is: first part of mode candidate, first part of template candidates, tabnine/copilot/codeium, second part of template candidates, second part of mode candidates, set `acm-completion-mode-candidates-merge-order` customize mode candidates order 
+- `acm-completion-mode-candidates-merge-order`: Customize the order of the mode candidates, the display order for mode candidates, default order: Tailwind、 Elisp、 LSP、 Jupyter、 Ctags、 Citre、 ROAM、 Word、 Telegra
 - `acm-backend-lsp-candidate-min-length`: The minimum characters to trigger lsp completion, default is 0
 - `acm-backend-elisp-candidate-min-length`: The minimum characters to trigger elisp completion, default is 0
 - `acm-backend-yas-candidate-min-length`: The minimum characters to trigger yasnippet completion, default is 0

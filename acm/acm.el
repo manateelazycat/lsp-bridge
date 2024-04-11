@@ -192,6 +192,19 @@
   :type 'list
   :group 'acm)
 
+(defcustom acm-completion-mode-candidates-merge-order '("tailwind-candidates"
+                                                        "elisp-candidates"
+                                                        "lsp-candidates"
+                                                        "jupyter-candidates"
+                                                        "ctags-candidates"
+                                                        "citre-candidates"
+                                                        "org-roam-candidates"
+                                                        "file-words-candidates"
+                                                        "telega-candidates")
+  "The merge order for mode candidates."
+  :type 'list
+  :group 'acm)
+
 (defcustom acm-enable-preview nil
   "Enable tab-and-go preview."
   :type 'boolean
@@ -501,16 +514,20 @@ Only calculate template candidate when type last character."
           (setq ctags-candidates (unless (acm-in-comment-p) (acm-backend-ctags-candidates keyword))))
         ;; Fetch syntax completion candidates.
         (setq lsp-candidates (unless (acm-in-comment-p) (acm-backend-lsp-candidates keyword)))
-        (setq mode-candidates (append
-                               (unless (acm-in-comment-p) (acm-backend-tailwind-candidates keyword))
-                               (unless (acm-in-comment-p) (acm-backend-elisp-candidates keyword))
-                               lsp-candidates
-                               jupyter-candidates
-                               ctags-candidates
-                               citre-candidates
-			       org-roam-candidates
-                               (acm-backend-search-file-words-candidates keyword)
-                               (acm-backend-telega-candidates keyword)))
+        (setq mode-candidates
+              (apply #'append (mapcar (lambda (mode-candidate-name)
+                                        (pcase mode-candidate-name
+                                          ("tailwind-candidates" (unless (acm-in-comment-p) (acm-backend-tailwind-candidates keyword)))
+                                          ("elisp-candidates" (unless (acm-in-comment-p) (acm-backend-elisp-candidates keyword)))
+                                          ("lsp-candidates" lsp-candidates)
+                                          ("jupyter-candidates" jupyter-candidates)
+                                          ("ctags-candidates" ctags-candidates)
+                                          ("citre-candidates" citre-candidates)
+			                              ("org-roam-candidates" org-roam-candidates)
+                                          ("file-words-candidates" (acm-backend-search-file-words-candidates keyword))
+                                          ("telega-candidates" (acm-backend-telega-candidates keyword))
+                                          ))
+                                      acm-completion-mode-candidates-merge-order)))
 
         (when (and (or
                     ;; Show snippet candidates if lsp-candidates length is zero.
