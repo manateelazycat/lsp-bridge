@@ -427,13 +427,23 @@ class LspServer:
         return uri
 
     def get_language_id(self, fa):
+        _, extension = os.path.splitext(fa.filepath)
+        extension_name = extension.split(os.path.extsep)[-1]
+
         if "languageIds" in self.server_info:
-            _, extension = os.path.splitext(fa.filepath)
-            extension_name = extension.split(os.path.extsep)[-1]
             if extension_name in self.server_info["languageIds"]:
                 return self.server_info["languageIds"][extension_name]
 
-        return self.server_info["languageId"]
+        language_id = self.server_info["languageId"]
+
+        # Some LSP server, such as Tailwindcss, languageId is a dynamically field follow with file extension,
+        # we can't not receive respond to `completionItem/resolve` request if send wrong languageId to tailwindcss.
+        #
+        # Please reference issue https://github.com/tailwindlabs/tailwindcss-intellisense/issues/925.
+        if language_id == "":
+            return extension_name.lower()
+        else:
+            return language_id
 
     def send_did_open_notification(self, fa: "FileAction"):
         self.sender.send_notification("textDocument/didOpen", {
