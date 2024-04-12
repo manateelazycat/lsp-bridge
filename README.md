@@ -207,6 +207,53 @@ Note:
 - `lsp-bridge-indent-right`: Indents the pasted text to the right according to the indent values defined in `lsp-bridge-formatting-indent-alist`
 - `lsp-bridge-semantic-tokens-mode`: Enable or disable semantic token highlighting, Please refer to [Semantic Tokens Wiki](https://github.com/manateelazycat/lsp-bridge/wiki/Semantic-Tokens) for detailed instructions on how to use.
 
+## Customize language server configuration
+
+The configuration for the LSP server of each language in lsp-bridge is stored in [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
+
+In most cases, you can customize the server configuration according to the following priority order:
+
+1. `lsp-bridge-get-single-lang-server-by-project`: A user-defined function that takes project-path and file-path as input parameters and returns the corresponding LSP server string. You can query the names of all LSP servers in the lsp-bridge-single-lang-server-mode-list list. By default, this function returns nil.
+2. `lsp-bridge-single-lang-server-extension-list`: Returns the server based on the file extension, for example, when opening a \*.wxml file, we will use the wxml LSP server for completion.
+3. `lsp-bridge-single-lang-server-mode-list`: Returns the corresponding server based on Emacs’s major-mode.
+
+If you are writing JavaScript code, you may need to customize multiple server configurations:
+
+1. `lsp-bridge-get-multi-lang-server-by-project`: A user-defined function that takes project-path and file-path as input parameters and returns the multiple server configuration names. You can search for them in the subdirectory [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver).
+2. `lsp-bridge-multi-lang-server-extension-list`: Returns multiple server configuration names based on the file extension. For example, when opening a \*.vue file, we will use volar_emmet to simultaneously utilize volar and emmet-ls for completion.
+3. `lsp-bridge-multi-lang-server-mode-list`: Returns the corresponding multiple server configuration names based on Emacs’s major-mode.
+
+For example, we can enable the Deno LSP server for Deno scripts with the following configuration:
+
+```elisp
+(setq lsp-bridge-get-multi-lang-server-by-project
+      (lambda (project-path filepath)
+        ;; If typescript file include deno.land url, then use Deno LSP server.
+        (save-excursion
+          (when (string-equal (file-name-extension filepath) "ts")
+            (dolist (buf (buffer-list))
+              (when (string-equal (buffer-file-name buf) filepath)
+                (with-current-buffer buf
+                  (goto-char (point-min))
+                  (when (search-forward-regexp (regexp-quote "from \"https://deno.land") nil t)
+                    (return "deno")))))))))
+```
+
+## Customize language server configuration file
+
+Copy the configuration files in [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) or [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) to lsp-bridge-user-langserver-dir or lsp-bridge-user-multiserver-dir for customization. Lsp-bridge will prioritize reading the configuration files in lsp-bridge-user-langserver-dir or lsp-bridge-user-multiserver-dir.
+
+We can set the value of lsp-bridge-user-langserver-dir or lsp-bridge-user-multiserver-dir before starting lsp-bridge-mode to achieve different project-specific configuration files.
+
+```elisp
+(defun enable-lsp-bridge()
+  (when-let* ((project (project-current))
+              (project-root (nth 2 project)))
+    (setq-local lsp-bridge-user-langserver-dir project-root
+                lsp-bridge-user-multiserver-dir project-root))
+  (lsp-bridge-mode))
+```
+
 ## LSP server options
 lsp-bridge provides support for more than two language servers for many languages. You can customize the following options to choose the language server you prefer:
 
@@ -292,53 +339,6 @@ lsp-bridge provides support for more than two language servers for many language
 - `acm-backend-search-sdcv-words-dictionary`: StarDict dictionary for word completion, default is `kdic-ec-11w`, you can replace it with StarDict dictionary path, example, if you have dictionary `/usr/share/stardict/dic/stardict-oxford-gb-formated-2.4.2/oxford-gb-formated.ifo`, you need set this value to `/usr/share/stardict/dic/stardict-oxford-gb-formated-2.4.2/oxford-gb-formated`, not include `.ifo` extension.
 - `acm-backend-lsp-match-mode`: The filtering mode for candidate words in LSP backend, there are three options: "normal", "prefix", "prefixCaseSensitive", and "fuzzy". By default it is normal. It does not filter the candidate words returned by LSP Server
 - `acm-enable-preview`: enable Tab-and-Go completion, commands like acm-select-* will select and preview other candidate and further input will then commit this candidate, disable by default
-
-## Customize language server configuration
-
-The configuration for the LSP server of each language in lsp-bridge is stored in [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
-
-In most cases, you can customize the server configuration according to the following priority order:
-
-1. `lsp-bridge-get-single-lang-server-by-project`: A user-defined function that takes project-path and file-path as input parameters and returns the corresponding LSP server string. You can query the names of all LSP servers in the lsp-bridge-single-lang-server-mode-list list. By default, this function returns nil.
-2. `lsp-bridge-single-lang-server-extension-list`: Returns the server based on the file extension, for example, when opening a \*.wxml file, we will use the wxml LSP server for completion.
-3. `lsp-bridge-single-lang-server-mode-list`: Returns the corresponding server based on Emacs’s major-mode.
-
-If you are writing JavaScript code, you may need to customize multiple server configurations:
-
-1. `lsp-bridge-get-multi-lang-server-by-project`: A user-defined function that takes project-path and file-path as input parameters and returns the multiple server configuration names. You can search for them in the subdirectory [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver).
-2. `lsp-bridge-multi-lang-server-extension-list`: Returns multiple server configuration names based on the file extension. For example, when opening a \*.vue file, we will use volar_emmet to simultaneously utilize volar and emmet-ls for completion.
-3. `lsp-bridge-multi-lang-server-mode-list`: Returns the corresponding multiple server configuration names based on Emacs’s major-mode.
-
-For example, we can enable the Deno LSP server for Deno scripts with the following configuration:
-
-```elisp
-(setq lsp-bridge-get-multi-lang-server-by-project
-      (lambda (project-path filepath)
-        ;; If typescript file include deno.land url, then use Deno LSP server.
-        (save-excursion
-          (when (string-equal (file-name-extension filepath) "ts")
-            (dolist (buf (buffer-list))
-              (when (string-equal (buffer-file-name buf) filepath)
-                (with-current-buffer buf
-                  (goto-char (point-min))
-                  (when (search-forward-regexp (regexp-quote "from \"https://deno.land") nil t)
-                    (return "deno")))))))))
-```
-
-## Customize language server configuration file
-
-Copy the configuration files in [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) or [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) to lsp-bridge-user-langserver-dir or lsp-bridge-user-multiserver-dir for customization. Lsp-bridge will prioritize reading the configuration files in lsp-bridge-user-langserver-dir or lsp-bridge-user-multiserver-dir.
-
-We can set the value of lsp-bridge-user-langserver-dir or lsp-bridge-user-multiserver-dir before starting lsp-bridge-mode to achieve different project-specific configuration files.
-
-```elisp
-(defun enable-lsp-bridge()
-  (when-let* ((project (project-current))
-              (project-root (nth 2 project)))
-    (setq-local lsp-bridge-user-langserver-dir project-root
-                lsp-bridge-user-multiserver-dir project-root))
-  (lsp-bridge-mode))
-```
 
 ## Add support for new language?
 
