@@ -1645,18 +1645,6 @@ So we build this macro to restore postion after code format."
                 (lsp-bridge-remote-send-func-request "search_file_words_search" (list current-word))
               (lsp-bridge-call-async "search_file_words_search" current-word))))))
 
-    ;; Send tailwind keyword search request just when cursor in class area.
-    (when (and (derived-mode-p 'web-mode)
-               (acm-in-string-p)
-               (save-excursion
-                 (search-backward-regexp "class=" (point-at-bol) t)))
-      (unless (or (string-equal current-symbol "") (null current-symbol))
-        (if (lsp-bridge-is-remote-file)
-            (lsp-bridge-remote-send-func-request "search_tailwind_keywords_search" (list lsp-bridge-remote-file-path current-symbol))
-          (lsp-bridge-call-async "search_tailwind_keywords_search"
-                                 (lsp-bridge-get-buffer-file-name-text)
-                                 current-symbol))))
-
     ;; Send path search request when detect path string.
     (if (acm-in-string-p)
         (when-let* ((filename (lsp-bridge-elisp-get-filepath))

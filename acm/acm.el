@@ -101,7 +101,6 @@
 (require 'acm-backend-tempel)
 (require 'acm-backend-telega)
 (require 'acm-backend-tabnine)
-(require 'acm-backend-tailwind)
 (require 'acm-backend-citre)
 (require 'acm-backend-ctags)
 (require 'acm-backend-codeium)
@@ -192,8 +191,7 @@
   :type 'list
   :group 'acm)
 
-(defcustom acm-completion-mode-candidates-merge-order '("tailwind-candidates"
-                                                        "elisp-candidates"
+(defcustom acm-completion-mode-candidates-merge-order '("elisp-candidates"
                                                         "lsp-candidates"
                                                         "jupyter-candidates"
                                                         "ctags-candidates"
@@ -517,7 +515,6 @@ Only calculate template candidate when type last character."
         (setq mode-candidates
               (apply #'append (mapcar (lambda (mode-candidate-name)
                                         (pcase mode-candidate-name
-                                          ("tailwind-candidates" (unless (acm-in-comment-p) (acm-backend-tailwind-candidates keyword)))
                                           ("elisp-candidates" (unless (acm-in-comment-p) (acm-backend-elisp-candidates keyword)))
                                           ("lsp-candidates" lsp-candidates)
                                           ("jupyter-candidates" jupyter-candidates)
