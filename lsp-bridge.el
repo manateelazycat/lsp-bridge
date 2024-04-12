@@ -1048,16 +1048,19 @@ So we build this macro to restore postion after code format."
             (cl-return (cons (get-buffer-window buffer) (selected-window)))
             )))
 
+  ;; Hide diagnostics.
   (lsp-bridge-diagnostic-hide-overlays)
 
+  ;; Restart lsp-bridge process.
   (lsp-bridge-kill-process)
   (lsp-bridge-start-process)
 
-  ;; Restore lsp-bridge log buffer after restart.
+  ;; Try restore lsp-bridge log buffer after restart.
   (when lsp-bridge-log-buffer-window
     (save-excursion
-      (select-window (car lsp-bridge-log-buffer-window))
-      (switch-to-buffer lsp-bridge-name)
+      (when (window-live-p (car lsp-bridge-log-buffer-window))
+        (select-window (car lsp-bridge-log-buffer-window))
+        (switch-to-buffer lsp-bridge-name))
       (select-window (cdr lsp-bridge-log-buffer-window))))
 
   (message "[LSP-Bridge] Process restarted."))
