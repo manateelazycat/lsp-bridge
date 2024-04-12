@@ -257,7 +257,7 @@ class Codeium:
         self.is_get_info = True
 
     def get_server_port(self):
-        pattern = re.compile(r"\\d{5}")
+        pattern = re.compile(r"\d{5}")
 
         while True:
             try:
@@ -290,5 +290,6 @@ class Codeium:
             with urllib.request.urlopen(req) as response:
                 response_data = response.read().decode("utf-8")
                 return parse_json_content(response_data)
-        except:
+        except Exception as e:
+            logger.exception(e)
             return {}
