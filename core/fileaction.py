@@ -61,7 +61,7 @@ class FileAction:
         self.completion_items = {}
 
         self.diagnostics = {}
-        self.diagnostics_ticker = 0
+        self.diagnostics_ticker = {}
 
         self.external_file_link = external_file_link
         self.filepath = filepath
@@ -306,18 +306,28 @@ class FileAction:
         # Record diagnostics data that push from LSP server.
         import functools
         self.diagnostics[server_name] = sorted(diagnostics, key=functools.cmp_to_key(self.sort_diagnostic))
-        self.diagnostics_ticker += 1
+
+        if server_name in self.diagnostics_ticker:
+            self.diagnostics_ticker[server_name] += 1
+        else:
+            self.diagnostics_ticker[server_name] = 0
 
         # Try to push diagnostics to Emacs.
         if self.enable_push_diagnostics:
-            push_diagnostic_ticker = self.diagnostics_ticker
-            push_diagnostic_timer = threading.Timer(self.push_diagnostic_idle, lambda : self.try_push_diagnostics(push_diagnostic_ticker))
+            push_diagnostic_ticker = self.diagnostics_ticker[server_name]
+            push_diagnostic_timer = threading.Timer(
+                self.push_diagnostic_idle,
+                lambda : self.try_push_diagnostics(push_diagnostic_ticker, server_name))
             push_diagnostic_timer.start()
 
-    def try_push_diagnostics(self, ticker):
+    def try_push_diagnostics(self, ticker, server_name):
         # Only push diagnostics to Emacs when ticker is newest.
         # Drop all temporarily diagnostics when typing.
-        if ticker == self.diagnostics_ticker:
+        #
+        # Note:
+        # We need to check diagnostics ticker separately based on LSP server name,
+        # to avoid multiple LSP server conflict each other.
+        if ticker == self.diagnostics_ticker[server_name]:
             eval_in_emacs("lsp-bridge-diagnostic--render",
                           self.filepath,
                           get_lsp_file_host(),
