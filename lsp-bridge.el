@@ -1050,16 +1050,19 @@ So we build this macro to restore postion after code format."
             (cl-return (cons (get-buffer-window buffer) (selected-window)))
             )))
 
+  ;; Hide diagnostics.
   (lsp-bridge-diagnostic-hide-overlays)
 
+  ;; Restart lsp-bridge process.
   (lsp-bridge-kill-process)
   (lsp-bridge-start-process)
 
-  ;; Restore lsp-bridge log buffer after restart.
+  ;; Try restore lsp-bridge log buffer after restart.
   (when lsp-bridge-log-buffer-window
     (save-excursion
-      (select-window (car lsp-bridge-log-buffer-window))
-      (switch-to-buffer lsp-bridge-name)
+      (when (window-live-p (car lsp-bridge-log-buffer-window))
+        (select-window (car lsp-bridge-log-buffer-window))
+        (switch-to-buffer lsp-bridge-name))
       (select-window (cdr lsp-bridge-log-buffer-window))))
 
   (message "[LSP-Bridge] Process restarted."))
@@ -1646,18 +1649,6 @@ So we build this macro to restore postion after code format."
             (if (lsp-bridge-is-remote-file)
                 (lsp-bridge-remote-send-func-request "search_file_words_search" (list current-word))
               (lsp-bridge-call-async "search_file_words_search" current-word))))))
-
-    ;; Send tailwind keyword search request just when cursor in class area.
-    (when (and (derived-mode-p 'web-mode)
-               (acm-in-string-p)
-               (save-excursion
-                 (search-backward-regexp "class=" (point-at-bol) t)))
-      (unless (or (string-equal current-symbol "") (null current-symbol))
-        (if (lsp-bridge-is-remote-file)
-            (lsp-bridge-remote-send-func-request "search_tailwind_keywords_search" (list lsp-bridge-remote-file-path current-symbol))
-          (lsp-bridge-call-async "search_tailwind_keywords_search"
-                                 (lsp-bridge-get-buffer-file-name-text)
-                                 current-symbol))))
 
     ;; Send path search request when detect path string.
     (if (acm-in-string-p)
