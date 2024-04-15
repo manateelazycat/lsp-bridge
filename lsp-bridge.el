@@ -1462,6 +1462,11 @@ So we build this macro to restore postion after code format."
   (list :line (1- (line-number-at-pos nil t))
         :character (lsp-bridge--calculate-column)))
 
+(defun lsp-bridge--position-in-org ()
+  (list :line (1- (- (line-number-at-pos nil t)
+                     (line-number-at-pos (plist-get (car (cdr (org-element-context))) :begin) t)))
+        :character (lsp-bridge--calculate-column)))
+
 (defvar-local lsp-bridge--before-change-begin-pos nil)
 (defvar-local lsp-bridge--before-change-end-pos nil)
 (defvar-local lsp-bridge--before-change-begin-point nil)
@@ -1894,7 +1899,11 @@ Off by default."
   (interactive)
   (when (lsp-bridge-has-lsp-server-p)
     (unless (equal lsp-bridge-cursor-before-command lsp-bridge-cursor-after-command)
-      (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))))
+      (lsp-bridge-call-file-api "signature_help"
+                                (if (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode))
+                                    (lsp-bridge--position-in-org)
+                                  (lsp-bridge--position))
+                                ))))
 
 (defun lsp-bridge-pick-file-path (filename)
   ;; Remove `file://' and `:file://' prefix.
