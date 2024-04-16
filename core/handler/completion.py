@@ -75,7 +75,7 @@ class Completion(Handler):
         detail = item.get("detail", "")
 
         # Get display label.
-        if detail.strip() != "":
+        if isinstance(detail, str) and detail.strip() != "":
             detail_label = f"{label} => {detail}"
         else:
             detail_label = label
