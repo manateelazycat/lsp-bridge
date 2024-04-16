@@ -86,7 +86,7 @@ class Ctags:
         extras = tag.get("extras", "")
         reference = "<R>" if "reference" in extras else ""
 
-        typeref = removeprefix(typeref, "typename:")
+        typeref = remove_prefix(typeref, "typename:")
         typeref = re.sub(r'(^|:)(__anon[^:]+)(:|$)', r'\1__anon\3', typeref)
         scope = re.sub(r'(^|:)(__anon[^:]+)(:|$)', r'\1__anon\3', scope)
 
