@@ -123,6 +123,20 @@ Recommand use `normal' that follow LSP server response, emacser's behavior typic
 (defvar acm-backend-lsp-fetch-completion-item-func nil)
 (defvar-local acm-backend-lsp-fetch-completion-item-ticker nil)
 
+(defvar-local acm-backend-lsp-block-kind-list nil
+  "You can customize this option to filter certain types of completion candidates.
+
+This variable is a list type.
+
+Below is available types:
+
+`Text' `Method' `Function' `Constructor' `Field'
+`Variable' `Class' `Interface' `Module' `Property'
+`Unit' `Value' `Enum' `Keyword' `Snippet' `Color'
+`File' `Reference' `Folder' `EnumMember' `Constant'
+`Struct' `Event' `Operator' `TypeParameter'
+")
+
 (defun acm-backend-lsp-candidates (keyword)
   (let ((match-candidates
          (acm-with-cache-candidates

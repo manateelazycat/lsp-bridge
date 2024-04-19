@@ -119,6 +119,13 @@ class Completion(Handler):
                 label = item["label"]
                 detail = item.get("detail", "")
 
+                # Filter candidate that kind match acm-backend-lsp-block-kind-list.
+                try:
+                    if self.file_action.completion_block_kind_list is not False and kind in self.file_action.completion_block_kind_list:
+                        continue
+                except:
+                    pass
+
                 # Try to drop current candidate if it match user rule.
                 if match_mode == "prefix":
                     if not string_match(label.lower(), self.prefix.lower(), fuzzy=False):

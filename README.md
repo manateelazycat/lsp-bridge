@@ -325,6 +325,7 @@ lsp-bridge provides support for more than two language servers for many language
 - `acm-completion-backend-merge-order`: Customize the order of the completion backends, default order is: first part of mode candidate, first part of template candidates, tabnine/copilot/codeium, second part of template candidates, second part of mode candidates, set `acm-completion-mode-candidates-merge-order` customize mode candidates order 
 - `acm-completion-mode-candidates-merge-order`: Customize the order of the mode candidates, the display order for mode candidates, default order: Elisp、 LSP、 Jupyter、 Ctags、 Citre、 ROAM、 Word、 Telegra
 - `acm-backend-lsp-candidate-min-length`: The minimum characters to trigger lsp completion, default is 0
+- `acm-backend-lsp-block-kind-list`: Filters certain types of LSP completion candidates. By default, it's a empty list. When the value is set to `'(Snippet Enum)`, this means that Snippet and Enum completions will not be shown.
 - `acm-backend-elisp-candidate-min-length`: The minimum characters to trigger elisp completion, default is 0
 - `acm-backend-yas-candidate-min-length`: The minimum characters to trigger yasnippet completion, default is 0
 - `acm-backend-search-file-words-candidate-min-length`: The minimum characters to trigger search file words completion, default is 0
