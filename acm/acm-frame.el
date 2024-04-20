@@ -232,11 +232,21 @@
 
 (defun acm-frame-get-popup-position (frame-popup-point &optional line-bias)
   (let* ((edges (window-pixel-edges))
-         (window-left (+ (nth 0 edges)
-                         ;; We need adjust left margin for buffer centering module.
-                         (/ (- (window-pixel-width)
-                               (window-body-width nil t))
-                            2)))
+         (window-left (+
+                       ;; Edges fine-tuning.
+                       (nth 0 edges)
+                       ;; Icon fine-tuning.
+                       (if acm-enable-icon
+                           0
+                         (* (frame-char-width) (- acm-icon-width 1))) ; acm will add left padding 1 char when icon is disable
+                       ;; Index fine-tuning.
+                       (if acm-enable-quick-access
+                           (- (* (frame-char-width) 3)) ; 3 is index width
+                         0)
+                       ;; Margin fine-tuning for centering module.
+                       (/ (- (window-pixel-width)
+                             (window-body-width nil t))
+                          2)))
          (window-top (nth 1 edges))
          (pos (posn-x-y (posn-at-point frame-popup-point)))
          (x (car pos))

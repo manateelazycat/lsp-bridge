@@ -381,7 +381,7 @@ So we use `minor-mode-overriding-map-alist' to override key, make sure all keys 
     ("org-roam"
      (when (org-in-regexp org-roam-bracket-completion-re 1)
        (cons (match-beginning 2)
-	     (match-end 2))))
+	         (match-end 2))))
     ("string"
      (cons (point)
            (save-excursion
@@ -400,9 +400,9 @@ So we use `minor-mode-overriding-map-alist' to override key, make sure all keys 
 (defun acm-get-input-prefix ()
   "Get user input prefix."
   (let* ((acm-input-bound-style (if (acm-in-roam-bracket-p)
-				    "org-roam"
-				  "ascii"))
-	 (bound (acm-get-input-prefix-bound)))
+				                    "org-roam"
+				                  "ascii"))
+	     (bound (acm-get-input-prefix-bound)))
     (if bound
         (buffer-substring-no-properties (car bound) (cdr bound))
       "")))
@@ -616,10 +616,10 @@ The key of candidate will change between two LSP results."
          (candidates (or candidate (acm-update-candidates)))
          (menu-candidates (cl-subseq candidates 0 (min (length candidates) acm-menu-length)))
          (current-select-candidate-index (cl-position previous-select-candidate (mapcar 'acm-menu-index-info menu-candidates) :test 'equal))
-	 (acm-input-bound-style (if (acm-in-roam-bracket-p)
-				    "org-roam"
-				  "ascii"))
-	 (bounds (acm-get-input-prefix-bound)))
+	     (acm-input-bound-style (if (acm-in-roam-bracket-p)
+				                    "org-roam"
+				                  "ascii"))
+	     (bounds (acm-get-input-prefix-bound)))
     (cond
      ;; Hide completion menu if user type first candidate completely, except when candidate annotation is `emmet' or `snippet'.
      ((and (equal (length candidates) 1)
@@ -857,8 +857,11 @@ The key of candidate will change between two LSP results."
         ;; Build candidate line.
         (setq candidate-line
               (concat
-               ;; Icon text.
-               icon-text
+               ;; Icon.
+               (if acm-enable-icon
+                   icon-text   ; render icon if `acm-enable-icon' is t
+                 " ")   ; add left padding if `acm-enable-icon' is nil
+               ;; Index.
                (when acm-enable-quick-access
                  (if quick-access-key (concat quick-access-key ". ") "   "))
                ;; Candidate.
