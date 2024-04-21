@@ -1,0 +1,21 @@
+{
+  "completion": ["tailwindcss", "vscode-html-language-server"],
+  "completion_item_resolve": ["tailwindcss", "vscode-html-language-server"],
+  "diagnostics": ["vscode-html-language-server", "tailwindcss"],
+  "code_action": ["vscode-html-language-server", "tailwindcss"],
+  "execute_command": ["vscode-html-language-server", "tailwindcss"],
+  "find_define": "vscode-html-language-server",
+  "find_type_define": "vscode-html-language-server",
+  "peek_find_definition": "vscode-html-language-server",
+  "peek_find_references": "vscode-html-language-server",
+  "find_implementation": "vscode-html-language-server",
+  "find_references": "vscode-html-language-server",
+  "formatting": "vscode-html-language-server",
+  "hover": "vscode-html-language-server",
+  "signature_help": "vscode-html-language-server",
+  "prepare_rename": "vscode-html-language-server",
+  "rename": "vscode-html-language-server",
+  "document_symbol": "vscode-html-language-server",
+  "workspace_symbol": "vscode-html-language-server",
+  "inlay_hint": "vscode-html-language-server"
+}
