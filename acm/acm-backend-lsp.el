@@ -108,15 +108,18 @@
   :type 'boolean
   :group 'acm-backend-lsp)
 
-(defcustom acm-backend-lsp-match-mode "normal"
+(defcustom acm-backend-lsp-match-mode "fuzzy"
   "The match mode to filter completion candidates.
 
-normal: don't filter candidates.
-prefix: filter candidates with input prefix, note such as C++, after `std::', candidate's prefix is not `::'
-prefixCaseSensitive: filter candidates with input prefix, and case sensitive
-fuzzy: fitler candidates with fuzzy algorithm
+`prefix': filter candidates with input prefix, note such as C++, after `std::', candidate's prefix is not `::'
+`prefixCaseSensitive': filter candidates with input prefix, and case sensitive
+`fuzzy': fitler candidates with fuzzy algorithm
 
-Recommand use `normal' that follow LSP server response, emacser's behavior typically does not adapt to LSP protocol."
+lsp-bridge still will use `fuzzy' algorithm filter candidates if value is not `prefix' `prefixCaseSensitive' or `fuzzy'.
+
+The lsp-bridge will continuously filter candidates on the Python side.
+If not filter and the value of `acm-backend-lsp-candidates-max-number' is far smaller than the number of candidates returned by the LSP server,
+it will cause the lsp-bridge to always send the previous batch of candidates which do not match the users input."
   :type 'string
   :group 'acm-backend-lsp)
 

@@ -126,19 +126,22 @@ class Completion(Handler):
                 except:
                     pass
 
-                # Try to drop current candidate if it match user rule.
+                # The lsp-bridge will continuously filter candidates on the Python side.
+                # If not filter and the value of `acm-backend-lsp-candidates-max-number' is far smaller
+                # than the number of candidates returned by the LSP server,
+                # it will cause the lsp-bridge to always send the previous batch of candidates
+                # which do not match the users input.
                 if match_mode == "prefix":
                     if not string_match(label.lower(), self.prefix.lower(), fuzzy=False):
                         continue
                 elif match_mode == "prefixCaseSensitive":
                     if not string_match(label, self.prefix, fuzzy=False):
                         continue
-                elif match_mode == "fuzzy":
+                else:
                     if not string_match(label.lower(), self.prefix.lower(), fuzzy=True):
                         continue
 
                 annotation = kind if kind != "" else detail
-
 
                 # The key keyword combines the values ​​of 'label' and 'detail'
                 # to handle different libraries provide the same function.
