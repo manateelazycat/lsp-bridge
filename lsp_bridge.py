@@ -641,7 +641,7 @@ class LspBridge:
             lang_server_info["support-single-file"] is False):
             self.turn_off(
                 filepath,
-                "ERROR: {} not support single-file, you need put this file in a git repository".format(single_lang_server))
+                "ERROR: {} not support single-file, you need put this file in a git repository or put .dir-locals.el in project root directory".format(single_lang_server))
 
             return False
 
