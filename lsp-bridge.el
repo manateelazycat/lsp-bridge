@@ -106,6 +106,8 @@
 (require 'tramp)
 (defvar lsp-bridge-tramp-alias-alist nil)
 
+(defvar lsp-bridge-tramp-connection-info nil)
+
 (setq acm-backend-lsp-fetch-completion-item-func 'lsp-bridge-fetch-completion-item-info)
 
 (defun lsp-bridge-fetch-completion-item-info (candidate)
@@ -1464,6 +1466,11 @@ So we build this macro to restore postion after code format."
   (list :line (1- (line-number-at-pos nil t))
         :character (lsp-bridge--calculate-column)))
 
+(defun lsp-bridge--position-in-org ()
+  (list :line (1- (- (line-number-at-pos nil t)
+                     (line-number-at-pos (plist-get (car (cdr (org-element-context))) :begin) t)))
+        :character (lsp-bridge--calculate-column)))
+
 (defvar-local lsp-bridge--before-change-begin-pos nil)
 (defvar-local lsp-bridge--before-change-end-pos nil)
 (defvar-local lsp-bridge--before-change-begin-point nil)
@@ -1896,7 +1903,11 @@ Off by default."
   (interactive)
   (when (lsp-bridge-has-lsp-server-p)
     (unless (equal lsp-bridge-cursor-before-command lsp-bridge-cursor-after-command)
-      (lsp-bridge-call-file-api "signature_help" (lsp-bridge--position)))))
+      (lsp-bridge-call-file-api "signature_help"
+                                (if (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode))
+                                    (lsp-bridge--position-in-org)
+                                  (lsp-bridge--position))
+                                ))))
 
 (defun lsp-bridge-pick-file-path (filename)
   ;; Remove `file://' and `:file://' prefix.
@@ -2702,6 +2713,9 @@ the context of that buffer. If the buffer is created by
   (unless (assoc host lsp-bridge-tramp-alias-alist)
     (push `(,host . ,tramp-connection-info) lsp-bridge-tramp-alias-alist))
 
+  (unless (assoc tramp-connection-info lsp-bridge-tramp-connection-info)
+    (push `(,tramp-connection-info . ,host) lsp-bridge-tramp-connection-info))
+
   (lsp-bridge--conditional-update-tramp-file-info tramp-file-name path host
                                                   (setq-local lsp-bridge-remote-file-flag t)
                                                   (setq-local lsp-bridge-remote-file-host host)
@@ -2741,12 +2755,22 @@ I haven't idea how to make lsp-bridge works with `electric-indent-mode', PR are 
          (user (tramp-file-name-user tramp-vec))
          (host (tramp-file-name-host tramp-vec))
          (port (tramp-file-name-port tramp-vec))
-         (path (tramp-file-name-localname tramp-vec)))
+         (path (tramp-file-name-localname tramp-vec))
+         (tramp-connection-info (substring file-name 0 (+ 1 (string-match ":" file-name (+ 1 (string-match ":" file-name))))))
+         (ip-host (cdr (assoc tramp-connection-info lsp-bridge-tramp-connection-info))))
 
-    (when (and (not (member tramp-method '("sudo" "sudoedit" "su" "doas")))
-               (not (member host lsp-bridge-tramp-blacklist)))
-      (read-only-mode 1)
-      (lsp-bridge-call-async "sync_tramp_remote" file-name user host port path))))
+    (if (not ip-host)
+        (when (and (not (member tramp-method '("sudo" "sudoedit" "su" "doas")))
+                   (not (member host lsp-bridge-tramp-blacklist)))
+          (read-only-mode 1)
+          (lsp-bridge-call-async "sync_tramp_remote" file-name user host port path))
+      (lsp-bridge--conditional-update-tramp-file-info file-name path ip-host
+                                                      (setq-local lsp-bridge-remote-file-flag t)
+                                                      (setq-local lsp-bridge-remote-file-host ip-host)
+                                                      (setq-local lsp-bridge-remote-file-path path)
+
+                                                      (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)
+                                                      (setq lsp-bridge-tramp-sync-var t)))))
 
 (defun lsp-bridge-get-match-buffer-by-filehost (remote-file-host)
   (cl-dolist (buffer (buffer-list))

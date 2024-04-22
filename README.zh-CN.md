@@ -323,6 +323,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 - `acm-completion-backend-merge-order`: 补全后端的显示顺序， 默认是按照模式补全前半部分、 模板补全前半部分、 TabNine/Copilot/Codeium、 模板补全后半部分、 模式补全后半部分的顺序显示， 你可以根据你的需求调整补全后端的显示顺序， 如果要自定义模式补全的顺序， 请自定义 `acm-completion-mode-candidates-merge-order`
 - `acm-completion-mode-candidates-merge-order`: 模式补全的显示顺序， 默认是按照 Elisp、 LSP、 Jupyter、 Ctags、 Citre、 ROAM、 单词、 Telegra 的顺序显示， 你可以根据你的需求调整模式补全的显示顺序
 - `acm-backend-lsp-candidate-min-length`: LSP 补全最小的触发字符数, 默认是 0
+- `acm-backend-lsp-block-kind-list`: 过滤某些类型的 LSP 候选词， 默认是列表， 当值为 `'("Snippet" "Enum")` 的时候， 意味着 Snippet Enum 这两种类型的补全不会显示
 - `acm-backend-elisp-candidate-min-length`: Elisp 补全最小的触发字符数, 默认是 0
 - `acm-backend-yas-candidate-min-length`: YaSnippet 补全最小的触发字符数, 默认是 0
 - `acm-backend-search-file-words-candidate-min-length`: Search Words 补全最小的触发字符数, 默认是 0
@@ -335,7 +336,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 - `acm-backend-yas-candidates-number`: yasnippet 显示个数， 默认 2 个
 - `acm-backend-citre-keyword-complete`: 根据`acm-backend-citre-keywords-alist`定义的各个模式的关键字进行补全， 需要使能 citre 后才生效
 - `acm-backend-search-sdcv-words-dictionary`: 用于单词补全的 StarDict 词典， 默认是 `kdic-ec-11w`, 可以自定义为其他 StarDict 词典， 如果你的系统存在词典 `/usr/share/stardict/dic/stardict-oxford-gb-formated-2.4.2/oxford-gb-formated.ifo`, 你需要设置这个选项为 `/usr/share/stardict/dic/stardict-oxford-gb-formated-2.4.2/oxford-gb-formated`, 不需要包括 `.ifo` 扩展
-- `acm-backend-lsp-match-mode`: LSP 后端候选词过滤模式， 有 "normal", "prefix", "prefixCaseSensitive", "fuzzy" 三个选项， 默认是 "normal", 不对 LSP Server 返回候选词进行过滤
+- `acm-backend-lsp-match-mode`: LSP 后端候选词过滤模式， 有 "prefix", "prefixCaseSensitive", "fuzzy" 三个选项， 默认是 "fuzzy"
 - `acm-enable-preview`: 开启 Tab-and-Go completion， 当改变当前候选时， 可以预览候选， 并且后续输入会选择预览候选， 默认关闭
 
 ## 添加新的编程语言支持?

@@ -75,7 +75,7 @@ class Completion(Handler):
         detail = item.get("detail", "")
 
         # Get display label.
-        if detail.strip() != "":
+        if isinstance(detail, str) and detail.strip() != "":
             detail_label = f"{label} => {detail}"
         else:
             detail_label = label
@@ -119,19 +119,29 @@ class Completion(Handler):
                 label = item["label"]
                 detail = item.get("detail", "")
 
-                # Try to drop current candidate if it match user rule.
+                # Filter candidate that kind match acm-backend-lsp-block-kind-list.
+                try:
+                    if self.file_action.completion_block_kind_list is not False and kind in self.file_action.completion_block_kind_list:
+                        continue
+                except:
+                    pass
+
+                # The lsp-bridge will continuously filter candidates on the Python side.
+                # If not filter and the value of `acm-backend-lsp-candidates-max-number' is far smaller
+                # than the number of candidates returned by the LSP server,
+                # it will cause the lsp-bridge to always send the previous batch of candidates
+                # which do not match the users input.
                 if match_mode == "prefix":
                     if not string_match(label.lower(), self.prefix.lower(), fuzzy=False):
                         continue
                 elif match_mode == "prefixCaseSensitive":
                     if not string_match(label, self.prefix, fuzzy=False):
                         continue
-                elif match_mode == "fuzzy":
+                else:
                     if not string_match(label.lower(), self.prefix.lower(), fuzzy=True):
                         continue
 
                 annotation = kind if kind != "" else detail
-
 
                 # The key keyword combines the values ​​of 'label' and 'detail'
                 # to handle different libraries provide the same function.

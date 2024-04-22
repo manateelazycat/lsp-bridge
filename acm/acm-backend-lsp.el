@@ -108,20 +108,37 @@
   :type 'boolean
   :group 'acm-backend-lsp)
 
-(defcustom acm-backend-lsp-match-mode "normal"
+(defcustom acm-backend-lsp-match-mode "fuzzy"
   "The match mode to filter completion candidates.
 
-normal: don't filter candidates.
-prefix: filter candidates with input prefix, note such as C++, after `std::', candidate's prefix is not `::'
-prefixCaseSensitive: filter candidates with input prefix, and case sensitive
-fuzzy: fitler candidates with fuzzy algorithm
+`prefix': filter candidates with input prefix, note such as C++, after `std::', candidate's prefix is not `::'
+`prefixCaseSensitive': filter candidates with input prefix, and case sensitive
+`fuzzy': fitler candidates with fuzzy algorithm
 
-Recommand use `normal' that follow LSP server response, emacser's behavior typically does not adapt to LSP protocol."
+lsp-bridge still will use `fuzzy' algorithm filter candidates if value is not `prefix' `prefixCaseSensitive' or `fuzzy'.
+
+The lsp-bridge will continuously filter candidates on the Python side.
+If not filter and the value of `acm-backend-lsp-candidates-max-number' is far smaller than the number of candidates returned by the LSP server,
+it will cause the lsp-bridge to always send the previous batch of candidates which do not match the users input."
   :type 'string
   :group 'acm-backend-lsp)
 
 (defvar acm-backend-lsp-fetch-completion-item-func nil)
 (defvar-local acm-backend-lsp-fetch-completion-item-ticker nil)
+
+(defvar-local acm-backend-lsp-block-kind-list nil
+  "You can customize this option to filter certain types of completion candidates.
+
+This variable is a list type.
+
+Below is available types:
+
+`Text' `Method' `Function' `Constructor' `Field'
+`Variable' `Class' `Interface' `Module' `Property'
+`Unit' `Value' `Enum' `Keyword' `Snippet' `Color'
+`File' `Reference' `Folder' `EnumMember' `Constant'
+`Struct' `Event' `Operator' `TypeParameter'
+")
 
 (defun acm-backend-lsp-candidates (keyword)
   (let ((match-candidates

@@ -108,6 +108,7 @@ class FileAction:
              "acm-backend-lsp-candidate-max-length",
              "lsp-bridge-diagnostic-max-number"
         ])
+        self.completion_block_kind_list = None
         self.insert_spaces = not self.insert_spaces
 
         self.set_lsp_server()
@@ -202,6 +203,11 @@ class FileAction:
         self.last_change_file_time = time.time()
 
         # Send textDocument/completion 100ms later.
+        if self.completion_block_kind_list is None:
+            (self.completion_block_kind_list, ) = get_emacs_vars(["acm-backend-lsp-block-kind-list"])
+            if isinstance(self.completion_block_kind_list, list):
+                self.completion_block_kind_list = list(map(lambda x: x.lower(), self.completion_block_kind_list))
+
         delay = 0 if is_running_in_server() else 0.1
         self.try_completion_timer = threading.Timer(delay, lambda : self.try_completion(position, before_char, prefix, self.version))
         self.try_completion_timer.start()
