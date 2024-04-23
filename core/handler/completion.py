@@ -105,6 +105,15 @@ class Completion(Handler):
 
         return display_label
 
+    def fnv_1a(self, data):
+        '''
+        FNV-1a is a non-cryptographic hash function, faster than md5.
+        '''
+        h = 2166136261
+        for byte in data:
+            h = (h ^ byte) * 16777219
+        return h
+
     def process_response(self, response: dict) -> None:
         # Get completion items.
         completion_candidates = []
@@ -153,8 +162,9 @@ class Completion(Handler):
                 if self.file_action.enable_auto_import:
                     # For imports, the "detail" can often be the same for all symbols.
                     # Make the key unique.
+
                     key += "_" + "_".join(
-                        hashlib.md5(x["newText"].encode('utf-8')).hexdigest()[:8]
+                        format(fnv_1a(x["newText"].encode('utf-8')), 'x')[:8]
                         for x in item.get("additionalTextEdits", []))
 
                 # Build candidate.
