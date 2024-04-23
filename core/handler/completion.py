@@ -44,6 +44,13 @@ class Completion(Handler):
         x_include_prefix, y_include_prefix = x_label.startswith(prefix), y_label.startswith(prefix)
         x_method_name, y_method_name = x_label.split('(')[0], y_label.split('(')[0]
 
+        # Sort by prefix.
+        # If the number of LSP server return candidates is much bigger than acm-backend-lsp-candidates-max-number limit.
+        # We need sort prefix first even acm-backend-lsp-match-mode is fuzzy.
+        # Otherwise, the front part of the candidates cannot be matched user input prefix.
+        if x_include_prefix != y_include_prefix:
+            return -1 if x_include_prefix else 1
+
         # Sort file by score, score is provided by LSP server.
         if x_score != y_score:
             return 1 if x_score < y_score else -1
@@ -51,10 +58,6 @@ class Completion(Handler):
         # Sort file by sortText, sortText is provided by LSP server.
         if x_sort_text and y_sort_text and x_sort_text != y_sort_text:
             return -1 if x_sort_text < y_sort_text else 1
-
-        # Sort by prefix.
-        if x_include_prefix != y_include_prefix:
-            return -1 if x_include_prefix else 1
 
         # Sort by method name if both candidates are method.
         if x_icon == y_icon == "method" and x_method_name != y_method_name:
