@@ -246,6 +246,7 @@ class LspServer:
         self.rename_prepare_provider = False
         self.code_action_provider = False
         self.code_format_provider = False
+        self.range_format_provider = False
         self.signature_help_provider = False
         self.workspace_symbol_provider = False
         self.inlay_hint_provider = False
@@ -582,6 +583,7 @@ class LspServer:
             "Unhandled method textDocument/prepareRename": "rename_prepare_provider",
             "Unhandled method textDocument/codeAction": "code_action_provider",
             "Unhandled method textDocument/formatting": "code_format_provider",
+            "Unhandled method textDocument/rangeFormatting": "range_format_provider",
             "Unhandled method textDocument/signatureHelp": "signature_help_provider",
             "Unhandled method workspace/symbol": "workspace_symbol_provider",
             "Unhandled method textDocument/inlayHint": "inlay_hint_provider",
@@ -661,6 +663,7 @@ class LspServer:
             ("code_action_provider", ["result", "capabilities", "codeActionProvider"]),
             ("code_action_kinds", ["result", "capabilities", "codeActionProvider", "codeActionKinds"]),
             ("code_format_provider", ["result", "capabilities", "documentFormattingProvider"]),
+            ("range_format_provider", ["result", "capabilities", "documentRangeFormattingProvider", "rangesSupport"]),
             ("signature_help_provider", ["result", "capabilities", "signatureHelpProvider"]),
             ("workspace_symbol_provider", ["result", "capabilities", "workspaceSymbolProvider"]),
             ("inlay_hint_provider", ["result", "capabilities", "inlayHintProvider", "resolveProvider"]),
