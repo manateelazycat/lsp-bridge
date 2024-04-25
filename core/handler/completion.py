@@ -44,6 +44,13 @@ class Completion(Handler):
         x_include_prefix, y_include_prefix = x_label.startswith(prefix), y_label.startswith(prefix)
         x_method_name, y_method_name = x_label.split('(')[0], y_label.split('(')[0]
 
+        # Sort by prefix.
+        # If the number of LSP server return candidates is much bigger than acm-backend-lsp-candidates-max-number limit.
+        # We need sort prefix first even acm-backend-lsp-match-mode is fuzzy.
+        # Otherwise, the front part of the candidates cannot be matched user input prefix.
+        if x_include_prefix != y_include_prefix:
+            return -1 if x_include_prefix else 1
+
         # Sort file by score, score is provided by LSP server.
         if x_score != y_score:
             return 1 if x_score < y_score else -1
@@ -51,10 +58,6 @@ class Completion(Handler):
         # Sort file by sortText, sortText is provided by LSP server.
         if x_sort_text and y_sort_text and x_sort_text != y_sort_text:
             return -1 if x_sort_text < y_sort_text else 1
-
-        # Sort by prefix.
-        if x_include_prefix != y_include_prefix:
-            return -1 if x_include_prefix else 1
 
         # Sort by method name if both candidates are method.
         if x_icon == y_icon == "method" and x_method_name != y_method_name:
@@ -101,6 +104,15 @@ class Completion(Handler):
                 display_label = text_edit.get("newText", None)
 
         return display_label
+
+    def fnv_1a(self, data):
+        '''
+        FNV-1a is a non-cryptographic hash function, faster than md5.
+        '''
+        h = 2166136261
+        for byte in data:
+            h = (h ^ byte) * 16777219
+        return h
 
     def process_response(self, response: dict) -> None:
         # Get completion items.
@@ -150,8 +162,9 @@ class Completion(Handler):
                 if self.file_action.enable_auto_import:
                     # For imports, the "detail" can often be the same for all symbols.
                     # Make the key unique.
+
                     key += "_" + "_".join(
-                        hashlib.md5(x["newText"].encode('utf-8')).hexdigest()[:8]
+                        format(fnv_1a(x["newText"].encode('utf-8')), 'x')[:8]
                         for x in item.get("additionalTextEdits", []))
 
                 # Build candidate.

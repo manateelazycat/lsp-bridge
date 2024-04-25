@@ -2,14 +2,19 @@ from core.handler import Handler
 from core.utils import *
 
 
-class Formatting(Handler):
-    name = "formatting"
-    method = "textDocument/formatting"
+class RangeFormatting(Handler):
+    name = "rangeFormatting"
+    method = "textDocument/rangeFormatting"
     cancel_on_change = True
-    provider = "code_format_provider"
-    provider_message = "Current server not support code format."
+    provider = "range_format_provider"
+    provider_message = "Current server not support range format."
 
-    def process_request(self, tab_size) -> dict:
+    def process_request(self, range_start, range_end, tab_size) -> dict:
+        range = {
+            "start": range_start,
+            "end": range_end
+        }
+
         options = {
             "tabSize": tab_size,
             "insertSpaces": self.file_action.insert_spaces,
@@ -18,7 +23,7 @@ class Formatting(Handler):
             "trimFinalNewlines": True,
         }
 
-        return dict(options=options)
+        return dict(range=range, options=options)
 
     def process_response(self, response) -> None:
         if response and len(response) > 0:

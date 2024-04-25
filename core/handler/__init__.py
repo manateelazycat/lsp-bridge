@@ -58,6 +58,7 @@ from core.handler.jdt_uri_resolver import JDTUriResolver  # noqa: F401
 from core.handler.deno_uri_resolver import DenoUriResolver  # noqa: F401
 from core.handler.code_action import CodeAction  # noqa: F401
 from core.handler.formatting import Formatting  # noqa: F401
+from core.handler.range_formatting import RangeFormatting  # noqa: F401
 from core.handler.execute_command import ExecuteCommand  # noqa: F401
 from core.handler.workspace_symbol import WorkspaceSymbol  # noqa: F401
 from core.handler.call_hierarchy import PrepareCallHierarchyIncomingCalls, PrepareCallHierarchyOutgoingCalls, CallHierarchyIncomingCalls, CallHierarchyOutgoingCalls  # noqa: F401
