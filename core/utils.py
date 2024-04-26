@@ -154,6 +154,7 @@ def get_remote_connection_info():
     return remote_connection_info
 
 def local_path_to_tramp_path(path, tramp_method):
+    """convert path in DocumentUri format to tramp format."""
     tramp_path = path.replace("file://", "file://" + tramp_method)
     return tramp_path
 
