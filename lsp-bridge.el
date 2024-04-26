@@ -2362,8 +2362,12 @@ SymbolKind (defined in the LSP)."
          ;; Tempel not active.
          (or (not (boundp 'tempel--active))
              (not tempel--active)))
-    (let ((indent (symbol-value (lsp-bridge--get-indent-width major-mode))))
+    (let* ((indent (symbol-value (lsp-bridge--get-indent-width major-mode)))
+           (start (lsp-bridge--point-position (if (region-active-p) (region-beginning) (point))))
+           (end (lsp-bridge--point-position (if (region-active-p) (region-end) (point)))))
       (lsp-bridge-call-file-api "try_formatting"
+                                start
+                                end
                                 ;; Sometimes `c-basic-offset' return string `set-from-style', make some lsp server broken, such as, gopls,
                                 ;; so we need convert indent to integer `4' to make sure code format works expectantly.
                                 (if (eq indent 'set-from-style)
@@ -2501,6 +2505,10 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 
 ;; We use `lsp-bridge-revert-buffer-flag' var avoid lsp-bridge send change_file request while execute `revert-buffer' command.
 (defun lsp-bridge--revert-buffer-advisor (orig-fun &optional arg &rest args)
+  ;; We need clean diagnostic overlays before revert action,
+  ;; otherwise some diagnostic overlays will keep in buffer after revert.
+  (lsp-bridge-diagnostic-hide-overlays)
+
   (setq-local lsp-bridge-revert-buffer-flag t)
   (apply orig-fun arg args)
   (setq-local lsp-bridge-revert-buffer-flag nil))

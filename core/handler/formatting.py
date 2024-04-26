@@ -25,3 +25,5 @@ class Formatting(Handler):
             remote_connection_info = get_remote_connection_info()
             tramp_path = remote_connection_info + self.file_action.filepath
             eval_in_emacs("lsp-bridge-format--update", tramp_path, response)
+        else:
+            message_emacs("Nothing need format.")

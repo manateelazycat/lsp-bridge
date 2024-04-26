@@ -239,13 +239,19 @@ class FileAction:
         else:
             self.send_server_request(self.single_server, "completion", self.single_server, position, before_char, prefix, version)
 
-    def try_formatting(self, *args, **kwargs):
+    def try_formatting(self, start, end, *args, **kwargs):
         if self.multi_servers:
             for lsp_server in self.multi_servers.values():
                 if lsp_server.server_info["name"] in self.multi_servers_info["formatting"]:
-                    self.send_server_request(lsp_server, "formatting", *args, **kwargs)
+                    if start == end:
+                        self.send_request(lsp_server, "formatting", Formatting, *args, **kwargs)
+                    else:
+                        self.send_request(lsp_server, "rangeFormatting", RangeFormatting, start, end, *args, **kwargs)
         else:
-            self.send_server_request(self.single_server, "formatting", *args, **kwargs)
+            if start == end:
+                self.send_request(self.single_server, "formatting", Formatting, *args, **kwargs)
+            else:
+                self.send_request(self.single_server, "rangeFormatting", RangeFormatting, start, end, *args, **kwargs)
 
     def try_code_action(self, *args, **kwargs):
         self.code_action_counter = 0
@@ -385,8 +391,9 @@ class FileAction:
                     continue
                 diagnostics.append(diagnostic)
 
-        self.send_server_request(
-            lsp_server, "code_action", lsp_server_name, diagnostics, range_start, range_end, action_kind
+        self.send_request(
+            lsp_server, "code_action", Codeaction,
+            lsp_server_name, diagnostics, range_start, range_end, action_kind
         )
 
     def save_file(self, buffer_name):
