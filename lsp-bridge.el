@@ -1219,15 +1219,12 @@ So we build this macro to restore postion after code format."
           (ignore-errors
             (lsp-bridge-code-action-popup-quit))))
 
-      ;; Inlay hint.
+      ;; Try send inlay hint if window scroll.
       (when lsp-bridge-enable-inlay-hint
-        ;; Try send inlay hint if window scroll.
-        (redisplay t) ; NOTE: we need call `redisplay' to force `window-start' return RIGHT line number.
-        (let ((window-pos (window-start)))
+        (let ((window-pos (window-end nil t)))
           (when (not (equal lsp-bridge-inlay-hint-last-update-pos window-pos))
             (lsp-bridge-try-send-inlay-hint-request)
-            (setq-local lsp-bridge-inlay-hint-last-update-pos window-pos))))
-      )))
+            (setq-local lsp-bridge-inlay-hint-last-update-pos window-pos)))))))
 
 (defun lsp-bridge-close-buffer-file ()
   (if (lsp-bridge-is-remote-file)
