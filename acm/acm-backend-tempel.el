@@ -16,8 +16,12 @@
 
 (defun acm-backend-tempel-candidates (keyword)
   (when (and acm-enable-tempel
-             (featurep 'tempel))
-    (let* ((snippets (cl-loop for template in (tempel--templates)
+             (featurep 'tempel)
+             (or (not tempel-trigger-prefix) (string-prefix-p tempel-trigger-prefix keyword)))
+    (let* ((keyword (if tempel-trigger-prefix
+                        (string-remove-prefix tempel-trigger-prefix keyword)
+                      keyword))
+           (snippets (cl-loop for template in (tempel--templates)
                               collect (format "%s" (car template))))
            (match-snippets (seq-filter (lambda (s) (acm-candidate-fuzzy-search keyword s)) snippets)))
       (acm-candidate-sort-by-prefix
