@@ -532,9 +532,9 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
       clojurescript-mode
       clojurex-mode
       clojure-ts-mode
-      clojurec-ts-mode
-      clojurescript-ts-mode
-      clojure-dart-ts-mode)  .                                                   "clojure-lsp")
+      clojure-ts-clojurec-mode
+      clojure-ts-clojurescript-mode
+      clojure-ts-clojuredart-mode)  .                                                   "clojure-lsp")
     ((sh-mode bash-mode bash-ts-mode) .                                          "bash-language-server")
     ((css-mode css-ts-mode) .                                                    "vscode-css-language-server")
     (elm-mode   .                                                                "elm-language-server")
