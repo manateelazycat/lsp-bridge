@@ -1,5 +1,4 @@
 import os
-import hashlib
 from enum import Enum
 from functools import cmp_to_key
 
