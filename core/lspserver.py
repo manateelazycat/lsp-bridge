@@ -656,6 +656,7 @@ class LspServer:
             setattr(self, attribute_name, value)
 
     def save_attribute_from_message(self, message):
+        # Fetch LSP server's capability provider.
         attributes_to_set = [
             ("completion_trigger_characters", ["result", "capabilities", "completionProvider", "triggerCharacters"]),
             ("completion_resolve_provider", ["result", "capabilities", "completionProvider", "resolveProvider"]),
@@ -663,7 +664,7 @@ class LspServer:
             ("code_action_provider", ["result", "capabilities", "codeActionProvider"]),
             ("code_action_kinds", ["result", "capabilities", "codeActionProvider", "codeActionKinds"]),
             ("code_format_provider", ["result", "capabilities", "documentFormattingProvider"]),
-            ("range_format_provider", ["result", "capabilities", "documentRangeFormattingProvider", "rangesSupport"]),
+            ("range_format_provider", ["result", "capabilities", "documentRangeFormattingProvider"]),
             ("signature_help_provider", ["result", "capabilities", "signatureHelpProvider"]),
             ("workspace_symbol_provider", ["result", "capabilities", "workspaceSymbolProvider"]),
             ("inlay_hint_provider", ["result", "capabilities", "inlayHintProvider", "resolveProvider"]),
@@ -674,8 +675,12 @@ class LspServer:
         for attr, path in attributes_to_set:
             self.set_attribute_from_message(message, attr, path)
 
+        # If the returned result is a dict, dig the deeper attributes.
         if isinstance(self.text_document_sync, dict):
             self.text_document_sync = self.text_document_sync.get("change", self.text_document_sync)
+
+        if isinstance(self.range_format_provider, dict):
+            self.range_format_provider = self.range_format_provider.get("rangesSupport", self.range_format_provider)
 
         # Some LSP server has inlayHint capability, but won't response inlayHintProvider in capability message.
         # So we set `inlay_hint_provider` to True if found `forceInlayHint` option in config file.

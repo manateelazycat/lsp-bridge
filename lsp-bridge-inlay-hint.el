@@ -90,6 +90,7 @@
   :group 'lsp-bridge-inlay-hint)
 
 (defun lsp-bridge-inlay-hint ()
+  (redisplay t) ; NOTE: we need call `redisplay' to force `window-start' return RIGHT line number.
   (lsp-bridge-call-file-api "inlay_hint"
                             (lsp-bridge--point-position (window-start))
                             ;; We need pass UPDATE argument to `window-end', to make sure it's value is update, not cache.

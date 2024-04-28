@@ -532,9 +532,9 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
       clojurescript-mode
       clojurex-mode
       clojure-ts-mode
-      clojurec-ts-mode
-      clojurescript-ts-mode
-      clojure-dart-ts-mode)  .                                                   "clojure-lsp")
+      clojure-ts-clojurec-mode
+      clojure-ts-clojurescript-mode
+      clojure-ts-clojuredart-mode)  .                                                   "clojure-lsp")
     ((sh-mode bash-mode bash-ts-mode) .                                          "bash-language-server")
     ((css-mode css-ts-mode) .                                                    "vscode-css-language-server")
     (elm-mode   .                                                                "elm-language-server")
@@ -1221,15 +1221,12 @@ So we build this macro to restore postion after code format."
           (ignore-errors
             (lsp-bridge-code-action-popup-quit))))
 
-      ;; Inlay hint.
+      ;; Try send inlay hint if window scroll.
       (when lsp-bridge-enable-inlay-hint
-        ;; Try send inlay hint if window scroll.
-        (redisplay t) ; NOTE: we need call `redisplay' to force `window-start' return RIGHT line number.
-        (let ((window-pos (window-start)))
+        (let ((window-pos (window-end nil t)))
           (when (not (equal lsp-bridge-inlay-hint-last-update-pos window-pos))
             (lsp-bridge-try-send-inlay-hint-request)
-            (setq-local lsp-bridge-inlay-hint-last-update-pos window-pos))))
-      )))
+            (setq-local lsp-bridge-inlay-hint-last-update-pos window-pos)))))))
 
 (defun lsp-bridge-close-buffer-file ()
   (if (lsp-bridge-is-remote-file)
