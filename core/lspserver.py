@@ -720,6 +720,11 @@ class LspServer:
     def handle_work_done_progress_message(self, message):
 
         if "method" in message and message["method"] in ["window/workDoneProgress/create", "$/progress"]:
+            # We need respond to request 'window/workDoneProgress/create',
+            # otherwise LSP server won't respond
+            if message["method"] == "window/workDoneProgress/create":
+                self.sender.send_response(message["id"], {})
+
             progress_message = ""
 
             kind_attr = get_nested_value(message, ["params", "value", "kind"])
