@@ -123,6 +123,13 @@ it will cause the lsp-bridge to always send the previous batch of candidates whi
   :type 'string
   :group 'acm-backend-lsp)
 
+(defcustom acm-backend-lsp-show-progress nil
+  "Show message from 'Work Done Progress' message.
+
+Default is nil."
+  :type 'boolean
+  :group 'acm-backend-lsp)
+
 (defvar acm-backend-lsp-fetch-completion-item-func nil)
 (defvar-local acm-backend-lsp-fetch-completion-item-ticker nil)
 

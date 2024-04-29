@@ -373,6 +373,9 @@ class LspServer:
                 "inlayHint": {
                     "dynamicRegistration": False
                 }
+            },
+            "window": {
+                "workDoneProgress": True
             }
         })
 
@@ -643,14 +646,6 @@ class LspServer:
                 pass
 
     def set_attribute_from_message(self, message, attribute_name, key_list):
-        def get_nested_value(dct, keys):
-            for key in keys:
-                try:
-                    dct = dct[key]
-                except (KeyError, TypeError):
-                    return None
-            return dct
-
         value = get_nested_value(message, key_list)
         if value is not None:
             setattr(self, attribute_name, value)
@@ -722,6 +717,34 @@ class LspServer:
                 else:
                     self.handle_workspace_message(message)
 
+    def handle_work_done_progress_message(self, message):
+
+        if "method" in message and message["method"] in ["window/workDoneProgress/create", "$/progress"]:
+            progress_message = ""
+
+            kind_attr = get_nested_value(message, ["params", "value", "kind"])
+            token_attr = get_nested_value(message, ["params", "token"])
+            message_attr = get_nested_value(message, ["params", "value", "message"])
+            percentage_attr = get_nested_value(message, ["params", "value", "percentage"])
+
+            if token_attr is not None:
+                progress_message += token_attr
+
+            if percentage_attr is not None and percentage_attr > 0:
+                progress_message += " (" + str(percentage_attr) + "%%)"
+
+            if message_attr is not None:
+                progress_message += " " + message_attr
+
+            if kind_attr is not None:
+                if kind_attr == "begin":
+                    progress_message += " start..."
+                elif kind_attr == "end":
+                    progress_message += " done."
+
+            if progress_message != "":
+                eval_in_emacs("lsp-bridge--record-work-done-progress", "[LSP-Bridge] " + progress_message)
+
     def handle_recv_message(self, message: dict):
         if "error" in message:
             self.handle_error_message(message)
@@ -731,6 +754,7 @@ class LspServer:
         self.handle_diagnostics_message(message)
         self.handle_log_message(message)
         self.handle_id_message(message)
+        self.handle_work_done_progress_message(message)
 
         logger.debug(json.dumps(message, indent=3))
 

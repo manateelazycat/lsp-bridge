@@ -489,6 +489,14 @@ def remove_duplicate_references(data):
             result.append(item)
     return result
 
+def get_nested_value(dct, keys):
+    for key in keys:
+        try:
+            dct = dct[key]
+        except (KeyError, TypeError):
+            return None
+    return dct
+
 class MessageSender(Thread):
 
     def __init__(self, process: subprocess.Popen):

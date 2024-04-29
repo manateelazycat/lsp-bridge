@@ -2629,6 +2629,11 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
   "Add `lsp-bridge-symbols-current-defun' to `which-func-functions'."
   lsp-bridge-symbols-current-defun)
 
+(defun lsp-bridge--record-work-done-progress (progress)
+  (when acm-backend-lsp-show-progress
+    (unless (active-minibuffer-window)
+      (message progress))))
+
 ;;; Mode-line
 ;;;
 
