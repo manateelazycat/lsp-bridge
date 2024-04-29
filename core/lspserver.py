@@ -252,6 +252,8 @@ class LspServer:
         self.inlay_hint_provider = False
         self.semantic_tokens_provider = False
 
+        self.work_done_progress_title = ""
+
         self.code_action_kinds = [
             "quickfix",
             "refactor",
@@ -718,7 +720,6 @@ class LspServer:
                     self.handle_workspace_message(message)
 
     def handle_work_done_progress_message(self, message):
-
         if "method" in message and message["method"] in ["window/workDoneProgress/create", "$/progress"]:
             # We need respond to request 'window/workDoneProgress/create',
             # otherwise LSP server won't respond
@@ -730,22 +731,32 @@ class LspServer:
             kind_attr = get_nested_value(message, ["params", "value", "kind"])
             token_attr = get_nested_value(message, ["params", "token"])
             message_attr = get_nested_value(message, ["params", "value", "message"])
+            title_attr = get_nested_value(message, ["params", "value", "title"])
             percentage_attr = get_nested_value(message, ["params", "value", "percentage"])
 
-            if token_attr is not None:
-                progress_message += token_attr
+            if kind_attr is not None:
+                if kind_attr == "begin":
+                    self.work_done_progress_title = title_attr
+                elif kind_attr == "end":
+                    self.work_done_progress_title = ""
+
+            if title_attr is not None:
+                progress_message += title_attr
+            else:
+                if kind_attr == "report":
+                    if self.work_done_progress_title != "":
+                        progress_message += self.work_done_progress_title
+                    else:
+                        progress_message += token_attr
 
             if percentage_attr is not None and percentage_attr > 0:
                 progress_message += " (" + str(percentage_attr) + "%%)"
 
             if message_attr is not None:
-                progress_message += " " + message_attr
-
-            if kind_attr is not None:
-                if kind_attr == "begin":
-                    progress_message += " start..."
-                elif kind_attr == "end":
-                    progress_message += " done."
+                if progress_message != "":
+                    progress_message += " " + message_attr
+                else:
+                    progress_message += message_attr
 
             if progress_message != "":
                 eval_in_emacs("lsp-bridge--record-work-done-progress", "[LSP-Bridge] " + progress_message)
