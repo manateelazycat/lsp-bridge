@@ -83,12 +83,22 @@ class Completion(Handler):
             detail_label = label
 
         try:
-            if "\u2026" in label and "(" in label:
+            if "(\u2026)" in label or "()" in label: # '\u2026' is the unicode char: '…'
                 # Optimizing for Rust
-                # When finding an ellipsis in 'label'
-                # replace 'fn' with function name in 'label'
+                # label may look like:
+                #   - from_secs(…)
+                #   - clone_from(…) (as Clone)
+                # detail may like:
+                #   - pub const fn from_secs(sec: u64) -> Duration
+                # we want to show function_name, params and return type like:
+                #   - `from_secs(sec: u64) -> Duration`
+                #   - `clone_from(dur: Duration) -> Duration (as Clone)`
                 function_name = label.split('(')[0]
-                detail_label = re.sub(r'\bfn\b', function_name, detail)
+                function_tail = label.replace(function_name, "", 1);
+                function_tail = function_tail[function_tail.find(")") + 1:]
+                f_index = detail.find(function_name)
+                detail_label = detail[f_index:] if f_index != -1 else detail
+                detail_label = f"{detail_label} {function_tail}"
         except:
             pass
 
