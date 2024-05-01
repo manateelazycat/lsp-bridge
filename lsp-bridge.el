@@ -547,7 +547,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     (nix-mode .                                                                  lsp-bridge-nix-lsp-server)
     (nickel-mode .                                                               "nls")
     (ess-r-mode .                                                                "rlanguageserver")
-    (graphql-mode .                                                              "graphql-lsp")
+    ((graphql-mode graphql-ts-mode) .                                            "graphql-lsp")
     (swift-mode .                                                                "swift-sourcekit")
     (csharp-mode .                                                               lsp-bridge-csharp-lsp-server)
     (kotlin-mode .                                                               "kotlin-language-server")
