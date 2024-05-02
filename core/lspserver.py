@@ -556,15 +556,22 @@ class LspServer:
 
         # Otherwise, send back section value or default settings.
         items = []
+        serverName = self.server_info["name"]
         for p in params["items"]:
-            section = p.get("section", self.server_info["name"])
+            section = p.get("section", serverName)
             sessionSettings = settings.get(section, {})
 
-            if self.server_info["name"] == "vscode-eslint-language-server":
+            if serverName == "vscode-eslint-language-server":
                 sessionSettings = settings
                 sessionSettings["workspaceFolder"] = {
                     "name": self.project_name,
                     "uri": path_to_uri(self.project_path),
+                }
+
+            elif serverName == "graphql-lsp":
+                sessionSettings = settings
+                sessionSettings["load"] = {
+                    "rootDir": self.project_path,
                 }
 
             items.append(sessionSettings)
