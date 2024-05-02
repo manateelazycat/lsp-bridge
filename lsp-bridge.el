@@ -635,6 +635,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     vhdl-mode-hook
     typst-mode-hook
     graphql-mode-hook
+    graphql-ts-mode-hook
     c-ts-mode-hook
     c++-ts-mode-hook
     cmake-ts-mode-hook
