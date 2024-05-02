@@ -205,7 +205,7 @@ Note:
 - `lsp-bridge-peek-tree-next-node`: Select the next lower-level node in the browsing history (default binding to `<right>`)
 - `lsp-bridge-indent-left`: Indents the pasted text to the left according to the indent values defined in `lsp-bridge-formatting-indent-alist`
 - `lsp-bridge-indent-right`: Indents the pasted text to the right according to the indent values defined in `lsp-bridge-formatting-indent-alist`
-- `lsp-bridge-semantic-tokens-mode`: Enables or disables semantic token highlighting, please configure `lsp-bridge-semantic-tokens-ignore-modifier-limit-types` according to the documentation on [Semantic Tokens Wiki](https://github.com/manateelazycat/lsp-bridge/wiki/Semantic-Tokens-%5B%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%5D) before enabling, otherwise it cannot be highlighted normally
+- `lsp-bridge-semantic-tokens-mode`: Enables or disables semantic token highlighting, please configure `lsp-bridge-semantic-tokens-ignore-modifier-limit-types` according to the documentation on [Semantic Tokens Wiki](https://github.com/manateelazycat/lsp-bridge/wiki/Semantic-Tokens) before enabling, otherwise it cannot be highlighted normally
 
 ## Customize language server configuration
 
