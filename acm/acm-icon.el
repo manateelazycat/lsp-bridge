@@ -166,6 +166,7 @@
     ("tabnine" . ("material" "alpha-t-box-outline" "#954a97"))
     ("codeium" . ("material" "alpha-c-box-outline" "#09b6a2"))
     ("note" . ("material" "note" "#77aa99"))
+    ("copilot" . ("octicons" "copilot" "#808080"))
     (t . ("material" "smoking-pipe" "#90cef1"))))
 
 (defvar acm-icon-cache (make-hash-table :test 'equal))
