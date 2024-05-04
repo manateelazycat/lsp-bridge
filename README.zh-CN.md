@@ -202,7 +202,7 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 - `lsp-bridge-peek-tree-next-node`: 选择浏览历史上下一级节点 (默认绑定到 `<right>` )
 - `lsp-bridge-indent-left`: 根据 `lsp-bridge-formatting-indent-alist` 定义的缩进值, 向左缩进刚刚粘贴的文本
 - `lsp-bridge-indent-right`: 根据 `lsp-bridge-formatting-indent-alist` 定义的缩进值, 向右缩进刚刚粘贴的文本
-- `lsp-bridge-semantic-tokens-mode`: 开启或者关闭语义符号高亮， 请先按照 [Semantic Tokens Wiki](https://github.com/manateelazycat/lsp-bridge/wiki/Semantic-Tokens-%5B%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%E7%89%88%5D) 的文档配置 `lsp-bridge-semantic-tokens-ignore-modifier-limit-types`, 否则无法正常高亮
+- `lsp-bridge-semantic-tokens-mode`: 开启或者关闭语义符号高亮， 自定义请参考[Semantic Tokens Wiki](https://github.com/manateelazycat/lsp-bridge/wiki/Semantic-Tokens-%5B%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%E7%89%88%5D) 
 
 ## 自定义语言服务器配置
 
