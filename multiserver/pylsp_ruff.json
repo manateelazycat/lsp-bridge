@@ -17,5 +17,6 @@
   "rename": "pylsp",
   "document_symbol": "pylsp",
   "workspace_symbol": "pylsp",
+  "semantic_tokens": "pylsp",
   "inlay_hint": "pylsp"
 }
