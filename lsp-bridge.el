@@ -1776,7 +1776,9 @@ Off by default."
   (interactive)
   (cond
    ((acm-is-elisp-mode-p)
-    (acm-backend-elisp-find-def))
+    (lsp-bridge-define--jump-record-postion)
+    (acm-backend-elisp-find-def)
+    (setq-local lsp-bridge-mark-ring (append (list position-before-jump) mark-ring)))
    (t
     (setq-local lsp-bridge-jump-to-def-in-other-window nil)
     (lsp-bridge-call-file-api "find_define" (lsp-bridge--position)))))
@@ -1785,7 +1787,9 @@ Off by default."
   (interactive)
   (cond
    ((acm-is-elisp-mode-p)
-    (acm-backend-elisp-find-def))
+    (lsp-bridge-define--jump-record-postion)
+    (acm-backend-elisp-find-def)
+    (setq-local lsp-bridge-mark-ring (append (list position-before-jump) mark-ring)))
    (t
     (setq-local lsp-bridge-jump-to-def-in-other-window t)
     (lsp-bridge-call-file-api "find_define" (lsp-bridge--position)))))
