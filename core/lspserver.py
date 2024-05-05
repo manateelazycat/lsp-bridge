@@ -646,11 +646,10 @@ class LspServer:
                 get_from_path_dict(self.files, filepath).record_dart_closing_lables(message["params"]["labels"])
 
     def handle_log_message(self, message):
-        # Notice user if got error message from lsp server.
         if "method" in message and message["method"] == "window/logMessage":
             try:
                 if "error" in message["params"]["message"].lower():
-                    message_emacs("{} ({}): {}".format(self.project_name, self.server_info["name"], message["params"]["message"]))
+                    print("{} ({}): {}".format(self.project_name, self.server_info["name"], message["params"]["message"]))
             except:
                 pass
 
