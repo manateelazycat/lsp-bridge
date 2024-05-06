@@ -155,7 +155,7 @@
   :type 'boolean
   :group 'acm)
 
-(defcustom acm-candidate-match-function nil
+(defcustom acm-candidate-match-function 'regexp-quote
   "acm candidate match function."
   :type '(choice
           (const nil)

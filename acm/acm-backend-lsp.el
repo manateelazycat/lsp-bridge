@@ -123,12 +123,22 @@ it will cause the lsp-bridge to always send the previous batch of candidates whi
   :type 'string
   :group 'acm-backend-lsp)
 
+(defcustom acm-backend-lsp-frontend-filter-p nil
+  "Because LSP candidates has filtered at Python backend.
+
+So don't need filter candidates again when show candidates in acm menu.
+
+Anyway, if want use `acm-candidate-fuzzy-search' filter again in acm menu, turn on this option."
+  :type 'string
+  :group 'acm-backend-lsp)
+
 (defcustom acm-backend-lsp-show-progress nil
   "Show message from 'Work Done Progress' message.
 
 Default is nil."
   :type 'boolean
   :group 'acm-backend-lsp)
+
 
 (defvar acm-backend-lsp-fetch-completion-item-func nil)
 (defvar-local acm-backend-lsp-fetch-completion-item-ticker nil)
@@ -170,13 +180,17 @@ Below is available types:
             ;; please do not do secondary sorting here, elisp is very slow.
             candidates))))
 
-    ;; When some LSP server very slow and other completion backend is fast,
-    ;; acm menu will render all backend candidates.
-    ;; Then old LSP candidates won't match `prefix' if new candidates haven't return.
-    ;; So we need filter old LSP candidates with `prefix' if `prefix' is not empty.
-    (if (string-equal keyword "")
-        match-candidates
-      (seq-filter (lambda (c) (acm-candidate-fuzzy-search keyword (plist-get c :label))) match-candidates))))
+    ;; Show candidates
+    (cond
+     ;; Don't filter candidates is prefix is empty.
+     ((string-equal keyword "")
+      match-candidates)
+     ;; Fitler candidates when `acm-backend-lsp-frontend-filter-p' is non-nil.
+     (acm-backend-lsp-frontend-filter-p
+      (seq-filter (lambda (c) (acm-candidate-fuzzy-search keyword (plist-get c :label))) match-candidates))
+     ;; Don't filter candidates default, because LSP candidates has filtered at Python backend.
+     (t
+      match-candidates))))
 
 (defun acm-backend-lsp-candidate-expand (candidate-info bound-start &optional preview)
   (let* ((label (plist-get candidate-info :label))
