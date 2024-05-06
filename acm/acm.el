@@ -157,12 +157,14 @@
 
 (defcustom acm-candidate-match-function 'regexp-quote
   "acm candidate match function."
-  :type '(choice (const regexp-quote)
-                 (const orderless-literal)
-                 (const orderless-prefixes)
-                 (const orderless-flex)
-                 (const orderless-regexp)
-                 (const orderless-initialism))
+  :type '(choice
+          (const nil)
+          (const regexp-quote)
+          (const orderless-flex)
+          (const orderless-literal)
+          (const orderless-prefixes)
+          (const orderless-regexp)
+          (const orderless-initialism))
   :group 'acm)
 
 (defcustom acm-doc-frame-max-lines 20
@@ -409,10 +411,12 @@ So we use `minor-mode-overriding-map-alist' to override key, make sure all keys 
 
 (defun acm-candidate-fuzzy-search (keyword candidate)
   "Fuzzy search candidate."
-  (let ((result (funcall acm-candidate-match-function (downcase keyword))))
-    (string-match-p (cond ((stringp result) result)
-                          (t (rx-to-string result))) ;; If `rx'.
-                    (downcase candidate))))
+  (if acm-candidate-match-function
+      (let ((result (funcall acm-candidate-match-function (downcase keyword))))
+        (string-match-p (cond ((stringp result) result)
+                              (t (rx-to-string result))) ;; If `rx'.
+                        (downcase candidate)))
+    t))
 
 (defun acm-candidate-sort-by-prefix (keyword candidates)
   "Priority display of the candidates of the prefix matching."

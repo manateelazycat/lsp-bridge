@@ -252,6 +252,8 @@ class LspServer:
         self.inlay_hint_provider = False
         self.semantic_tokens_provider = False
 
+        self.work_done_progress_title = ""
+
         self.code_action_kinds = [
             "quickfix",
             "refactor",
@@ -373,6 +375,9 @@ class LspServer:
                 "inlayHint": {
                     "dynamicRegistration": False
                 }
+            },
+            "window": {
+                "workDoneProgress": True
             }
         })
 
@@ -551,18 +556,25 @@ class LspServer:
 
         # Otherwise, send back section value or default settings.
         items = []
+        server_name = self.server_info["name"]
         for p in params["items"]:
-            section = p.get("section", self.server_info["name"])
-            sessionSettings = settings.get(section, {})
+            section = p.get("section", server_name)
+            session_settings = settings.get(section, {})
 
-            if self.server_info["name"] == "vscode-eslint-language-server":
-                sessionSettings = settings
-                sessionSettings["workspaceFolder"] = {
+            if server_name == "vscode-eslint-language-server":
+                session_settings = settings
+                session_settings["workspaceFolder"] = {
                     "name": self.project_name,
                     "uri": path_to_uri(self.project_path),
                 }
 
-            items.append(sessionSettings)
+            elif server_name == "graphql-lsp":
+                session_settings = settings
+                session_settings["load"] = {
+                    "rootDir": self.project_path,
+                }
+
+            items.append(session_settings)
         self.sender.send_response(request_id, items)
 
     def handle_error_message(self, message):
@@ -634,23 +646,14 @@ class LspServer:
                 get_from_path_dict(self.files, filepath).record_dart_closing_lables(message["params"]["labels"])
 
     def handle_log_message(self, message):
-        # Notice user if got error message from lsp server.
         if "method" in message and message["method"] == "window/logMessage":
             try:
                 if "error" in message["params"]["message"].lower():
-                    message_emacs("{} ({}): {}".format(self.project_name, self.server_info["name"], message["params"]["message"]))
+                    print("{} ({}): {}".format(self.project_name, self.server_info["name"], message["params"]["message"]))
             except:
                 pass
 
     def set_attribute_from_message(self, message, attribute_name, key_list):
-        def get_nested_value(dct, keys):
-            for key in keys:
-                try:
-                    dct = dct[key]
-                except (KeyError, TypeError):
-                    return None
-            return dct
-
         value = get_nested_value(message, key_list)
         if value is not None:
             setattr(self, attribute_name, value)
@@ -722,6 +725,48 @@ class LspServer:
                 else:
                     self.handle_workspace_message(message)
 
+    def handle_work_done_progress_message(self, message):
+        if "method" in message and message["method"] in ["window/workDoneProgress/create", "$/progress"]:
+            # We need respond to request 'window/workDoneProgress/create',
+            # otherwise LSP server won't respond
+            if message["method"] == "window/workDoneProgress/create":
+                self.sender.send_response(message["id"], {})
+
+            progress_message = ""
+
+            kind_attr = get_nested_value(message, ["params", "value", "kind"])
+            token_attr = get_nested_value(message, ["params", "token"])
+            message_attr = get_nested_value(message, ["params", "value", "message"])
+            title_attr = get_nested_value(message, ["params", "value", "title"])
+            percentage_attr = get_nested_value(message, ["params", "value", "percentage"])
+
+            if kind_attr is not None:
+                if kind_attr == "begin":
+                    self.work_done_progress_title = title_attr
+                elif kind_attr == "end":
+                    self.work_done_progress_title = ""
+
+            if title_attr is not None:
+                progress_message += title_attr
+            else:
+                if kind_attr == "report":
+                    if self.work_done_progress_title != "":
+                        progress_message += self.work_done_progress_title
+                    else:
+                        progress_message += token_attr
+
+            if percentage_attr is not None and percentage_attr > 0:
+                progress_message += " (" + str(percentage_attr) + "%%)"
+
+            if message_attr is not None:
+                if progress_message != "":
+                    progress_message += " " + message_attr
+                else:
+                    progress_message += message_attr
+
+            if progress_message != "":
+                eval_in_emacs("lsp-bridge--record-work-done-progress", "[LSP-Bridge] " + progress_message)
+
     def handle_recv_message(self, message: dict):
         if "error" in message:
             self.handle_error_message(message)
@@ -731,6 +776,7 @@ class LspServer:
         self.handle_diagnostics_message(message)
         self.handle_log_message(message)
         self.handle_id_message(message)
+        self.handle_work_done_progress_message(message)
 
         logger.debug(json.dumps(message, indent=3))
 

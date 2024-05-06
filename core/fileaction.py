@@ -392,7 +392,7 @@ class FileAction:
                 diagnostics.append(diagnostic)
 
         self.send_request(
-            lsp_server, "code_action", Codeaction,
+            lsp_server, "code_action", CodeAction,
             lsp_server_name, diagnostics, range_start, range_end, action_kind
         )
 

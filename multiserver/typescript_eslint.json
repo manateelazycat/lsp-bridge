@@ -17,5 +17,6 @@
   "rename": "typescript",
   "document_symbol": "typescript",
   "workspace_symbol": "typescript",
+  "semantic_tokens": "typescript",
   "inlay_hint": "typescript"
 }

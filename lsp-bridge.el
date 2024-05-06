@@ -391,7 +391,7 @@ After set `lsp-bridge-completion-obey-trigger-characters-p' to nil, you need use
 (defvar lsp-bridge-internal-process nil)
 (defvar lsp-bridge-internal-process-prog nil)
 (defvar lsp-bridge-internal-process-args nil)
-(defvar position-before-jump nil)
+(defvar lsp-bridge-position-before-jump nil)
 
 (defcustom lsp-bridge-name "*lsp-bridge*"
   "Name of LSP-Bridge buffer."
@@ -547,7 +547,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     (nix-mode .                                                                  lsp-bridge-nix-lsp-server)
     (nickel-mode .                                                               "nls")
     (ess-r-mode .                                                                "rlanguageserver")
-    (graphql-mode .                                                              "graphql-lsp")
+    ((graphql-mode graphql-ts-mode) .                                            "graphql-lsp")
     (swift-mode .                                                                "swift-sourcekit")
     (csharp-mode .                                                               lsp-bridge-csharp-lsp-server)
     (kotlin-mode .                                                               "kotlin-language-server")
@@ -636,6 +636,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     vhdl-mode-hook
     typst-mode-hook
     graphql-mode-hook
+    graphql-ts-mode-hook
     c-ts-mode-hook
     c++-ts-mode-hook
     cmake-ts-mode-hook
@@ -1777,7 +1778,9 @@ Off by default."
   (interactive)
   (cond
    ((acm-is-elisp-mode-p)
-    (acm-backend-elisp-find-def))
+    (lsp-bridge--record-mark-ring)
+    (acm-backend-elisp-find-def)
+    (lsp-bridge--set-mark-ring-in-new-buffer))
    (t
     (setq-local lsp-bridge-jump-to-def-in-other-window nil)
     (lsp-bridge-call-file-api "find_define" (lsp-bridge--position)))))
@@ -1786,7 +1789,9 @@ Off by default."
   (interactive)
   (cond
    ((acm-is-elisp-mode-p)
-    (acm-backend-elisp-find-def))
+    (lsp-bridge--record-mark-ring)
+    (acm-backend-elisp-find-def)
+    (lsp-bridge--set-mark-ring-in-new-buffer))
    (t
     (setq-local lsp-bridge-jump-to-def-in-other-window t)
     (lsp-bridge-call-file-api "find_define" (lsp-bridge--position)))))
@@ -1938,11 +1943,19 @@ Off by default."
 
   (setq-local lsp-bridge-prohibit-completion t))
 
-(defun lsp-bridge-define--jump-record-postion ()
+(defun lsp-bridge--record-mark-ring ()
+  "For implement jump and return back, we need call `lsp-bridge--record-mark-ring' in old buffer before jump.
+
+Then we need call `lsp-bridge--set-mark-ring-in-new-buffer' in new buffer after jump.
+
+`lsp-bridge--record-mark-ring' and `lsp-bridge--set-mark-ring-in-new-buffer' functions must be used in pairs."
   ;; Record postion.
   (let ((marker (set-marker (mark-marker) (point) (current-buffer))))
-    (setq position-before-jump (copy-marker marker)))
+    (setq lsp-bridge-position-before-jump (copy-marker marker)))
   (setq mark-ring lsp-bridge-mark-ring))
+
+(defun lsp-bridge--set-mark-ring-in-new-buffer ()
+  (setq-local lsp-bridge-mark-ring (append (list lsp-bridge-position-before-jump) mark-ring)))
 
 (defun lsp-bridge-find-window-match-filename (filename)
   (cl-dolist (window (window-list))
@@ -1950,8 +1963,8 @@ Off by default."
       (cl-return window))))
 
 (defun lsp-bridge-define--jump (filename filehost position)
-  (let (position-before-jump)
-    (lsp-bridge-define--jump-record-postion)
+  (let (lsp-bridge-position-before-jump)
+    (lsp-bridge--record-mark-ring)
 
     (if (or (string-equal filehost "") lsp-bridge-enable-with-tramp)
         (progn
@@ -1969,7 +1982,7 @@ Off by default."
               ))
 
           ;; Init jump history in new buffer.
-          (setq-local lsp-bridge-mark-ring (append (list position-before-jump) mark-ring))
+          (lsp-bridge--set-mark-ring-in-new-buffer)
 
           (lsp-bridge-define--jump-flash position))
       (lsp-bridge-call-async "open_remote_file" (format "%s:%s" filehost filename) position))
@@ -2631,6 +2644,11 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
   "Add `lsp-bridge-symbols-current-defun' to `which-func-functions'."
   lsp-bridge-symbols-current-defun)
 
+(defun lsp-bridge--record-work-done-progress (progress)
+  (when acm-backend-lsp-show-progress
+    (unless (active-minibuffer-window)
+      (message progress))))
+
 ;;; Mode-line
 ;;;
 
@@ -2816,7 +2834,7 @@ SSH tramp file name is like /ssh:user@host#port:path"
         (select-window lsp-bridge-remote-file-window)
         (setq lsp-bridge-remote-file-window nil)))
   (let ((buf-name (format "[LBR] %s" (file-name-nondirectory path))))
-    (lsp-bridge-define--jump-record-postion)
+    (lsp-bridge--record-mark-ring)
 
     (with-current-buffer (get-buffer-create buf-name)
       (text-mode)
@@ -2841,7 +2859,7 @@ SSH tramp file name is like /ssh:user@host#port:path"
     (switch-to-buffer buf-name)
 
     (unless (equal position (list :line 0 :character 0))
-      (setq-local lsp-bridge-mark-ring (append (list position-before-jump) mark-ring))
+      (lsp-bridge--set-mark-ring-in-new-buffer)
 
       (lsp-bridge-define--jump-flash position))
 

@@ -17,5 +17,6 @@
   "rename": "pyright-background-analysis",
   "document_symbol": "pyright-background-analysis",
   "workspace_symbol": "pyright-background-analysis",
+  "semantic_tokens": "pyright-background-analysis",
   "inlay_hint": "pyright-background-analysis"
 }

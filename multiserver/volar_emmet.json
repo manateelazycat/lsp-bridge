@@ -17,5 +17,6 @@
   "rename": "volar",
   "document_symbol": "volar",
   "workspace_symbol": "volar",
+  "semantic_tokens": "volar",
   "inlay_hint": "volar"
 }
