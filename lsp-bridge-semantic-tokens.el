@@ -149,7 +149,7 @@ requesting new semantic tokens."
   :group 'lsp-bridge-semantic-tokens)
 
 (defface lsp-bridge-semantic-tokens-global-scope-face
-  '((t :weight extra-bold))
+  '((t (:inherit font-lock-constant-face)))
   "Face used for globalScope token."
   :group 'lsp-bridge-semantic-tokens)
 
