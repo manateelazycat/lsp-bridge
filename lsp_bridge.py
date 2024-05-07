@@ -828,6 +828,11 @@ class LspBridge:
             log_time("Exit server {}".format(server_name))
             del LSP_SERVER_DICT[server_name]
 
+    def close_client(self):
+        for client in self.client_dict.values():
+            if hasattr(client, "kill_lsp_bridge_process"):
+                client.kill_lsp_bridge_process()
+
     def cleanup(self):
         """Do some cleanup before exit python process."""
         close_epc_client()

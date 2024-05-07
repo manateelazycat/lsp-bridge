@@ -165,6 +165,11 @@ Setting this to nil or 0 will turn off the heartbeat mechanism."
   :type 'boolean
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-remote-enable-kill-process nil
+  "Whether kill remote lsp-bridge process when Emacs exit ."
+  :type 'boolean
+  :group 'lsp-bridge)
+
 (defcustom lsp-bridge-completion-stop-commands
   '("undo-tree-undo" "undo-tree-redo"
     "kill-region" "delete-block-backward"
@@ -997,6 +1002,11 @@ So we build this macro to restore postion after code format."
   (lsp-bridge-deferred-chain
     (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) args)))
 
+(defun lsp-bridge-call-sync (method &rest args)
+  "Call Python EPC function METHOD and ARGS synchronously."
+  (lsp-bridge-deferred-chain
+    (lsp-bridge-epc-call-sync lsp-bridge-epc-process (read method) args)))
+
 (defvar-local lsp-bridge-buffer-file-deleted nil)
 
 (defun lsp-bridge-process-live-p ()
@@ -1123,6 +1133,8 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge--kill-python-process ()
   "Kill LSP-Bridge background python process."
   (when (lsp-bridge-process-live-p)
+    (when lsp-bridge-remote-enable-kill-process
+      (lsp-bridge-call-sync "close_client"))
     ;; Cleanup before exit LSP-Bridge server process.
     (lsp-bridge-call-async "cleanup")
     ;; Delete LSP-Bridge server process.

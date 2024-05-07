@@ -45,6 +45,7 @@ class RemoteFileClient(threading.Thread):
         self.ssh_port = ssh_conf.get('port', 22)
         self.server_port = server_port
         self.callback = callback
+        [self.remote_python_command, self.remote_python_file, self.remote_log] = get_emacs_vars(["lsp-bridge-remote-python-command", "lsp-bridge-remote-python-file", "lsp-bridge-remote-log"])
 
         [self.user_ssh_private_key] = get_emacs_vars(["lsp-bridge-user-ssh-private-key"])
 
@@ -169,9 +170,9 @@ class RemoteFileClient(threading.Thread):
         self.chan.close()
 
     def start_lsp_bridge_process(self):
-        [remote_python_command] = get_emacs_vars(["lsp-bridge-remote-python-command"])
-        [remote_python_file] = get_emacs_vars(["lsp-bridge-remote-python-file"])
-        [remote_log] = get_emacs_vars(["lsp-bridge-remote-log"])
+        remote_python_command = self.remote_python_command
+        remote_python_file = self.remote_python_file
+        remote_log = self.remote_log
 
         # use -l option to bash as a login shell, ensuring that login scripts (like ~/.bash_profile) are read and executed.
         # This is useful for lsp-bridge to use environment settings to correctly find out language server command
@@ -193,6 +194,26 @@ class RemoteFileClient(threading.Thread):
         print(f"Remote process started at {self.ssh_host}")
         print("stdout:" + stdout.read().decode())
         print("stderr:" + stderr.read().decode())
+
+    def kill_lsp_bridge_process(self):
+        remote_log = self.remote_log
+
+        self.ssh.exec_command(
+            f"""
+            nohup /bin/bash -l -c '
+            pid=$(ps aux | grep -v grep | grep lsp_bridge.py | cut -d " " -f2)
+            echo "try kill" | tee >> {remote_log}
+            if ! [ "$pid" == "" ]; then
+                echo -e "kill lsp-bridge process as user $(whoami)" | tee >>{remote_log}
+                kill $pid
+                if [ "$?" = "0" ]; then
+                    echo -e "Kill lsp-bridge successfully" | tee >>{remote_log}
+                else
+                    echo -e "Kill lsp-bridge failed" | tee >>{remote_log}
+                fi
+            fi'
+        """
+        )
 
 
 class RemoteFileServer:
