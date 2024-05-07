@@ -82,31 +82,29 @@ class Completion(Handler):
         else:
             detail_label = label
 
+        # Optimizing for Rust
         try:
-            if "(\u2026)" in label or "()" in label: # '\u2026' is the unicode char: '…'
-                # Optimizing for Rust
-                # label may look like:
-                #   - from_secs(…)
-                #   - clone_from(…) (as Clone)
-                # detail may like:
-                #   - pub const fn from_secs(sec: u64) -> Duration
-                # we want to show function_name, params and return type like:
-                #   - `from_secs(sec: u64) -> Duration`
-                #   - `clone_from(dur: Duration) -> Duration (as Clone)`
+            if self.method_server_name == "rust-analyzer" and "(\u2026)" in label or "()" in label: # '\u2026' is the unicode char: '…'
+                # When finding an ellipsis in 'label'
+                # replace 'fn' with function name in 'label'
                 function_name = label.split('(')[0]
-                function_tail = label.replace(function_name, "", 1);
-                function_tail = function_tail[function_tail.find(")") + 1:]
-                f_index = detail.find(function_name)
-                detail_label = detail[f_index:] if f_index != -1 else detail
-                detail_label = f"{detail_label} {function_tail}"
+                detail_label = re.sub(r'\bfn\b', function_name, detail)
+
+                # Remove `pub` or `pub const` before function name.
+                match = re.search(r'\b(\w+\s*\([^)]*\)\s*->\s*\w+)\b', detail_label)
+                if match:
+                    # If a match is successful, pick up the captured group
+                    detail_label = match.group(1)
         except:
             pass
 
+        # Avoid label length not longer than display_label_max_length.
         if len(detail_label) > self.file_action.display_label_max_length:
             display_label = detail_label[:self.file_action.display_label_max_length] + " ..."
         else:
             display_label = detail_label
 
+        # displayNewText use for Pin Yin LSP server.
         if display_new_text:
             text_edit = item.get("textEdit", None)
             if text_edit is not None:
