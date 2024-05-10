@@ -171,7 +171,7 @@ class Completion(Handler):
                     # Make the key unique.
 
                     key += "_" + "_".join(
-                        format(fnv_1a(x["newText"].encode('utf-8')), 'x')[:8]
+                        format(self.fnv_1a(x["newText"].encode('utf-8')), 'x')[:8]
                         for x in item.get("additionalTextEdits", []))
 
                 # Build candidate.
