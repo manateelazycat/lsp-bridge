@@ -198,22 +198,25 @@ class RemoteFileClient(threading.Thread):
     def kill_lsp_bridge_process(self):
         remote_log = self.remote_log
 
-        self.ssh.exec_command(
-            f"""
-            nohup /bin/bash -l -c '
-            pid=$(ps aux | grep -v grep | grep lsp_bridge.py | cut -d " " -f2)
-            echo "try kill" | tee >> {remote_log}
-            if ! [ "$pid" == "" ]; then
-                echo -e "kill lsp-bridge process as user $(whoami)" | tee >>{remote_log}
-                kill $pid
-                if [ "$?" = "0" ]; then
-                    echo -e "Kill lsp-bridge successfully" | tee >>{remote_log}
-                else
-                    echo -e "Kill lsp-bridge failed" | tee >>{remote_log}
-                fi
-            fi'
-        """
-        )
+        try:
+            self.ssh.exec_command(
+                f"""
+                nohup /bin/bash -l -c '
+                pid=$(ps aux | grep -v grep | grep lsp_bridge.py | cut -d " " -f2)
+                echo "try kill" | tee >> {remote_log}
+                if ! [ "$pid" == "" ]; then
+                    echo -e "kill lsp-bridge process as user $(whoami)" | tee >>{remote_log}
+                    kill $pid
+                    if [ "$?" = "0" ]; then
+                        echo -e "Kill lsp-bridge successfully" | tee >>{remote_log}
+                    else
+                        echo -e "Kill lsp-bridge failed" | tee >>{remote_log}
+                    fi
+                fi'
+            """
+            )
+        except:
+            pass
 
 
 class RemoteFileServer:
