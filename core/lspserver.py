@@ -730,7 +730,7 @@ class LspServer:
             # We need respond to request 'window/workDoneProgress/create',
             # otherwise LSP server won't respond
             if message["method"] == "window/workDoneProgress/create":
-                self.sender.send_response(message["id"], {})
+                self.sender.send_response(message["id"], None) # use None to make sure respond to LSP server nextls
 
             progress_message = ""
 
