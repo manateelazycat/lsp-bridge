@@ -258,7 +258,7 @@ We can set the value of lsp-bridge-user-langserver-dir or lsp-bridge-user-multis
 lsp-bridge provides support for more than two language servers for many languages. You can customize the following options to choose the language server you prefer:
 
 - `lsp-bridge-c-lsp-server`: C language server, you can choose `clangd` or`ccls`
-- `lsp-bridge-elixir-lsp-server`: Elixir language server, you can choose `elixirLS`(default) or`lexical`
+- `lsp-bridge-elixir-lsp-server`: Elixir language server, you can choose `elixirLS`(default), `lexical` or `nextls`
 - `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright`, `jedi`, `python-ms`, `pylsp`, `ruff`, it's important to note that lsp-bridge-multi-lang-server-mode-list has a higher priority than lsp-bridge-single-lang-server-mode-list. If you only want to use a single server, please first remove the python-mode setting from lsp-bridge-multi-lang-server-mode-list.
 - `lsp-bridge-php-lsp-server`: PHP language server, you can choose `intelephense` or `phpactor`
 - `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `texlab` or`digestif`
