@@ -1,4 +1,4 @@
-;;; lsp-bridge-diagnostic.el --- Diagnostic for lsp-bridge   -*- lexical-binding: t; -*-
+;;; lsp-bridge-diagnostic.el --- Diagnostic for lsp-bridge   -*- lexical-binding: t; no-byte-compile: t; -*-*-
 
 ;; Filename: lsp-bridge-diagnostic.el
 ;; Description: Diagnostic for lsp-bridge
@@ -186,8 +186,7 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
   (lsp-bridge--with-file-buffer filepath filehost
                                 (setq-local lsp-bridge-diagnostic-count diagnostic-count)
 
-                                (unless lsp-bridge-diagnostic-enable-overlays
-                                  (setq-local lsp-bridge-diagnostic-records diagnostics))
+                                (setq-local lsp-bridge-diagnostic-records diagnostics)
 
                                 (run-hooks 'lsp-bridge-diagnostic-update-hook)
 

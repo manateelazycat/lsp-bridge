@@ -25,6 +25,12 @@ DEFAULT_FILTER_CMD = '(not (or (and $extras ((string->regexp "(^|,) ?(anonymous|
 
 DEFAULT_SORTER_CMD = '(<or> (if (and $name &name) (<> (length $name) (length &name)) 0) (if (and $name &name) (<> $name &name) 0))'
 
+# for Python 3.9-
+def remove_prefix(text, prefix):
+    if text.startswith(prefix):
+        return text[len(prefix):]
+    return text
+
 class Ctags:    
     def __init__(self) -> None:
         self.current_cursor_offset = 0
@@ -80,7 +86,7 @@ class Ctags:
         extras = tag.get("extras", "")
         reference = "<R>" if "reference" in extras else ""
 
-        typeref = typeref.removeprefix("typename:")
+        typeref = remove_prefix(typeref, "typename:")
         typeref = re.sub(r'(^|:)(__anon[^:]+)(:|$)', r'\1__anon\3', typeref)
         scope = re.sub(r'(^|:)(__anon[^:]+)(:|$)', r'\1__anon\3', scope)
 

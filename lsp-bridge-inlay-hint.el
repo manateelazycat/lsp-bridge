@@ -1,4 +1,4 @@
-;;; lsp-bridge-inlay-hint.el --- Inlay hint protocol   -*- lexical-binding: t; -*-
+;;; lsp-bridge-inlay-hint.el --- Inlay hint protocol   -*- lexical-binding: t; no-byte-compile: t; -*-*-
 
 ;; Filename: lsp-bridge-inlay-hint.el
 ;; Description: Inlay hint protocol
@@ -90,12 +90,16 @@
   :group 'lsp-bridge-inlay-hint)
 
 (defun lsp-bridge-inlay-hint ()
+  (redisplay t) ; NOTE: we need call `redisplay' to force `window-start' return RIGHT line number.
   (lsp-bridge-call-file-api "inlay_hint"
                             (lsp-bridge--point-position (window-start))
                             ;; We need pass UPDATE argument to `window-end', to make sure it's value is update, not cache.
                             (lsp-bridge--point-position (window-end nil t))))
 
 (defvar-local lsp-bridge-inlay-hint-overlays '())
+
+(defvar-local lsp-bridge-inlay-hint-cache nil
+  "We use `lsp-bridge-inlay-hint-cache' avoid screen flicker if two respond result is same.")
 
 (defun lsp-bridge-inlay-hint-hide-overlays ()
   (when lsp-bridge-inlay-hint-overlays
@@ -120,7 +124,7 @@
               (mapconcat (lambda (label)
                            (plist-get label :value))
                          label-info
-                         "") ; Separator for mapconcat
+                         "")            ; Separator for mapconcat
             ;; Otherwise label is string, just return itself.
             label-info))
   )
@@ -128,39 +132,55 @@
 (defun lsp-bridge-inlay-hint--render (filepath filehost inlay-hints)
   (lsp-bridge--with-file-buffer
       filepath filehost
-      ;; Hide previous overlays first.
-      (lsp-bridge-inlay-hint-hide-overlays)
 
-      ;; Render new overlays.
-      (save-excursion
-        (save-restriction
-          (let ((hint-index 0))
-            (dolist (hint inlay-hints)
-              (goto-char (acm-backend-lsp-position-to-point (plist-get hint :position)))
-              (let* ((hint-kind (plist-get hint :kind))
-                     ;; InlayHintKind is 1 mean is an inlay hint that for a type annotation.
-                     ;; 2 mean is an inlay hint that is for a parameter.
-                     ;; type annotation is hint need render at end of line, we use `after-string' overlay to implement it.
-                     (hint-render-use-after-string-p (eql hint-kind 1))
-                     ;; Hint text need concat padding-left, label and padding-right.
-                     (hint-text (concat
-                                 (lsp-bridge-inlay-hint-padding-text (plist-get hint :paddingLeft) t)
-                                 (lsp-bridge-inlay-hint-label-text (plist-get hint :label))
-                                 (lsp-bridge-inlay-hint-padding-text (plist-get hint :paddingRight) nil)))
-                     (overlay (if hint-render-use-after-string-p
-                                  (make-overlay (point) (1+ (point)) nil t)
-                                (make-overlay (1- (point)) (point) nil nil nil))))
-                (when (and (equal hint-index 0)
-                           hint-render-use-after-string-p)
-                  (put-text-property 0 1 'cursor 1 hint-text))
-                (overlay-put overlay
-                             (if hint-render-use-after-string-p 'before-string 'after-string)
-                             (propertize hint-text 'face 'lsp-bridge-inlay-hint-face))
-                (overlay-put overlay 'evaporate t) ; NOTE, `evaporate' is import
-                (push overlay lsp-bridge-inlay-hint-overlays)
+      (unless (equal inlay-hints lsp-bridge-inlay-hint-cache)
+        ;; Hide previous overlays first.
+        (lsp-bridge-inlay-hint-hide-overlays)
 
-                (setq hint-index (1+ hint-index))
-                )))))))
+        (setq-local lsp-bridge-inlay-hint-cache inlay-hints)
+
+        ;; Render new overlays.
+        (save-excursion
+          (save-restriction
+            (let ((hint-index 0))
+              (dolist (hint inlay-hints)
+                (goto-char (acm-backend-lsp-position-to-point (plist-get hint :position)))
+                (let* ((hint-kind (plist-get hint :kind))
+                       ;; InlayHintKind is 1 mean is an inlay hint that for a type annotation.
+                       ;; 2 mean is an inlay hint that is for a parameter.
+                       ;; type annotation is hint need render at end of line, we use `after-string' overlay to implement it.
+                       (hint-render-use-after-string-p (eql hint-kind 1))
+                       ;; Hint text need concat padding-left, label and padding-right.
+                       (hint-text (concat
+                                   (lsp-bridge-inlay-hint-padding-text (plist-get hint :paddingLeft) t)
+                                   (lsp-bridge-inlay-hint-label-text (plist-get hint :label))
+                                   (lsp-bridge-inlay-hint-padding-text (plist-get hint :paddingRight) nil)))
+                       (overlay (if hint-render-use-after-string-p
+                                    (make-overlay (point) (1+ (point)) nil t)
+                                  (make-overlay (1- (point)) (point) nil nil nil))))
+                  (when (and (equal hint-index 0)
+                             hint-render-use-after-string-p)
+                    (put-text-property 0 1 'cursor 1 hint-text))
+                  (overlay-put overlay
+                               (if hint-render-use-after-string-p 'before-string 'after-string)
+                               (propertize hint-text 'face 'lsp-bridge-inlay-hint-face))
+                  (overlay-put overlay 'evaporate t) ; NOTE, `evaporate' is import
+                  (push overlay lsp-bridge-inlay-hint-overlays)
+
+                  (setq hint-index (1+ hint-index))
+                  )))))
+        )
+
+      ))
+
+(defun lsp-bridge-inlay-hint-retry (filepath)
+  "InlayHint will got error 'content modified' error if it followed immediately by a didChange request.
+
+If lsp-bridge detect this error, lsp-bridge will call `lsp-bridge-inlay-hint-retry' function again to avoid inlayHint request no respond."
+  (when (string-prefix-p "file://" filepath)
+    (setq filepath (string-remove-prefix "file://" filepath)))
+  (when (string-equal filepath (buffer-file-name))
+    (lsp-bridge-try-send-inlay-hint-request)))
 
 (provide 'lsp-bridge-inlay-hint)
 

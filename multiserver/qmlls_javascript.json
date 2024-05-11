@@ -17,5 +17,6 @@
   "rename": "qmlls",
   "document_symbol": "qmalls",
   "workspace_symbol": "qmalls",
+  "semantic_tokens": "qmalls",
   "inlay_hint": "qmalls"
 }

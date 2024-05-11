@@ -40,6 +40,8 @@ from core.utils import *
 
 DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
 
+INLAY_HINT_REQUEST_ID_DICT = {}
+
 class LspServerSender(MessageSender):
     def __init__(self, process: subprocess.Popen, server_name, project_name):
         super().__init__(process)
@@ -87,6 +89,10 @@ class LspServerSender(MessageSender):
         self.process.stdin.write(message_str.encode("utf-8"))    # type: ignore
         self.process.stdin.flush()    # type: ignore
 
+        # InlayHint will got error 'content modified' error if it followed immediately by a didChange request.
+        # So we need INLAY_HINT_REQUEST_ID_DICT to contain documentation path to send retry request.
+        record_inlay_hint_request(message)
+
         message_type = message.get("message_type")
 
         if message_type == "request" and \
@@ -131,6 +137,28 @@ class LspServerSender(MessageSender):
                 self.send_message(message)
         except:
             logger.error(traceback.format_exc())
+
+def record_inlay_hint_request(message):
+    # InlayHint will got error 'content modified' error if it followed immediately by a didChange request.
+    # So we need INLAY_HINT_REQUEST_ID_DICT to contain documentation path to send retry request.
+    if message.get("method", "response") == "textDocument/inlayHint":
+        try:
+            message_id = message.get("id")
+            message_documentation = message["params"]["textDocument"]["uri"]
+            INLAY_HINT_REQUEST_ID_DICT[message_id] = message_documentation
+        except:
+            pass
+
+def resend_inlay_hint_request_after_content_modified_error(message):
+    # Get message file path.
+    message_id = message.get("id")
+    message_documentation = INLAY_HINT_REQUEST_ID_DICT[message_id]
+
+    # Clean INLAY_HINT_REQUEST_ID_DICT to save memory.
+    INLAY_HINT_REQUEST_ID_DICT.pop(message_id)
+
+    # Call lsp-bridge-inlay-hint-retry to send retry request.
+    eval_in_emacs("lsp-bridge-inlay-hint-retry", message_documentation)
 
 class LspServerReceiver(MessageReceiver):
 
@@ -218,10 +246,13 @@ class LspServer:
         self.rename_prepare_provider = False
         self.code_action_provider = False
         self.code_format_provider = False
+        self.range_format_provider = False
         self.signature_help_provider = False
         self.workspace_symbol_provider = False
         self.inlay_hint_provider = False
         self.semantic_tokens_provider = False
+
+        self.work_done_progress_title = ""
 
         self.code_action_kinds = [
             "quickfix",
@@ -344,6 +375,9 @@ class LspServer:
                 "inlayHint": {
                     "dynamicRegistration": False
                 }
+            },
+            "window": {
+                "workDoneProgress": True
             }
         })
 
@@ -399,13 +433,23 @@ class LspServer:
         return uri
 
     def get_language_id(self, fa):
+        _, extension = os.path.splitext(fa.filepath)
+        extension_name = extension.split(os.path.extsep)[-1]
+
         if "languageIds" in self.server_info:
-            _, extension = os.path.splitext(fa.filepath)
-            extension_name = extension.split(os.path.extsep)[-1]
             if extension_name in self.server_info["languageIds"]:
                 return self.server_info["languageIds"][extension_name]
 
-        return self.server_info["languageId"]
+        language_id = self.server_info["languageId"]
+
+        # Some LSP server, such as Tailwindcss, languageId is a dynamically field follow with file extension,
+        # we can't not receive respond to `completionItem/resolve` request if send wrong languageId to tailwindcss.
+        #
+        # Please reference issue https://github.com/tailwindlabs/tailwindcss-intellisense/issues/925.
+        if language_id == "":
+            return extension_name.lower()
+        else:
+            return language_id
 
     def send_did_open_notification(self, fa: "FileAction"):
         self.sender.send_notification("textDocument/didOpen", {
@@ -512,23 +556,38 @@ class LspServer:
 
         # Otherwise, send back section value or default settings.
         items = []
+        server_name = self.server_info["name"]
         for p in params["items"]:
-            section = p.get("section", self.server_info["name"])
-            sessionSettings = settings.get(section, {})
+            section = p.get("section", server_name)
+            session_settings = settings.get(section, {})
 
-            if self.server_info["name"] == "vscode-eslint-language-server":
-                sessionSettings = settings
-                sessionSettings["workspaceFolder"] = {
+            if server_name == "vscode-eslint-language-server":
+                session_settings = settings
+                session_settings["workspaceFolder"] = {
                     "name": self.project_name,
                     "uri": path_to_uri(self.project_path),
                 }
 
-            items.append(sessionSettings)
+            elif server_name == "graphql-lsp":
+                session_settings = settings
+                session_settings["load"] = {
+                    "rootDir": self.project_path,
+                }
+
+            items.append(session_settings)
         self.sender.send_response(request_id, items)
 
     def handle_error_message(self, message):
         logger.error("Recv message (error):")
         logger.error(json.dumps(message, indent=3))
+
+        # InlayHint will got error 'content modified' error if it followed immediately by a didChange request.
+        # If we found this error, call lsp-bridge-inlay-hint-retry to send retry request.
+        if "id" in message:
+            message_id = message.get("id")
+            if message_id in INLAY_HINT_REQUEST_ID_DICT:
+                resend_inlay_hint_request_after_content_modified_error(message)
+                return
 
         error_message = message["error"]["message"]
         provider_attributes = {
@@ -536,6 +595,7 @@ class LspServer:
             "Unhandled method textDocument/prepareRename": "rename_prepare_provider",
             "Unhandled method textDocument/codeAction": "code_action_provider",
             "Unhandled method textDocument/formatting": "code_format_provider",
+            "Unhandled method textDocument/rangeFormatting": "range_format_provider",
             "Unhandled method textDocument/signatureHelp": "signature_help_provider",
             "Unhandled method workspace/symbol": "workspace_symbol_provider",
             "Unhandled method textDocument/inlayHint": "inlay_hint_provider",
@@ -586,28 +646,20 @@ class LspServer:
                 get_from_path_dict(self.files, filepath).record_dart_closing_lables(message["params"]["labels"])
 
     def handle_log_message(self, message):
-        # Notice user if got error message from lsp server.
         if "method" in message and message["method"] == "window/logMessage":
             try:
                 if "error" in message["params"]["message"].lower():
-                    message_emacs("{} ({}): {}".format(self.project_name, self.server_info["name"], message["params"]["message"]))
+                    print("{} ({}): {}".format(self.project_name, self.server_info["name"], message["params"]["message"]))
             except:
                 pass
 
     def set_attribute_from_message(self, message, attribute_name, key_list):
-        def get_nested_value(dct, keys):
-            for key in keys:
-                try:
-                    dct = dct[key]
-                except (KeyError, TypeError):
-                    return None
-            return dct
-
         value = get_nested_value(message, key_list)
         if value is not None:
             setattr(self, attribute_name, value)
 
     def save_attribute_from_message(self, message):
+        # Fetch LSP server's capability provider.
         attributes_to_set = [
             ("completion_trigger_characters", ["result", "capabilities", "completionProvider", "triggerCharacters"]),
             ("completion_resolve_provider", ["result", "capabilities", "completionProvider", "resolveProvider"]),
@@ -615,6 +667,7 @@ class LspServer:
             ("code_action_provider", ["result", "capabilities", "codeActionProvider"]),
             ("code_action_kinds", ["result", "capabilities", "codeActionProvider", "codeActionKinds"]),
             ("code_format_provider", ["result", "capabilities", "documentFormattingProvider"]),
+            ("range_format_provider", ["result", "capabilities", "documentRangeFormattingProvider"]),
             ("signature_help_provider", ["result", "capabilities", "signatureHelpProvider"]),
             ("workspace_symbol_provider", ["result", "capabilities", "workspaceSymbolProvider"]),
             ("inlay_hint_provider", ["result", "capabilities", "inlayHintProvider", "resolveProvider"]),
@@ -625,8 +678,12 @@ class LspServer:
         for attr, path in attributes_to_set:
             self.set_attribute_from_message(message, attr, path)
 
+        # If the returned result is a dict, dig the deeper attributes.
         if isinstance(self.text_document_sync, dict):
             self.text_document_sync = self.text_document_sync.get("change", self.text_document_sync)
+
+        if isinstance(self.range_format_provider, dict):
+            self.range_format_provider = self.range_format_provider.get("rangesSupport", self.range_format_provider)
 
         # Some LSP server has inlayHint capability, but won't response inlayHintProvider in capability message.
         # So we set `inlay_hint_provider` to True if found `forceInlayHint` option in config file.
@@ -668,6 +725,48 @@ class LspServer:
                 else:
                     self.handle_workspace_message(message)
 
+    def handle_work_done_progress_message(self, message):
+        if "method" in message and message["method"] in ["window/workDoneProgress/create", "$/progress"]:
+            # We need respond to request 'window/workDoneProgress/create',
+            # otherwise LSP server won't respond
+            if message["method"] == "window/workDoneProgress/create":
+                self.sender.send_response(message["id"], {})
+
+            progress_message = ""
+
+            kind_attr = get_nested_value(message, ["params", "value", "kind"])
+            token_attr = get_nested_value(message, ["params", "token"])
+            message_attr = get_nested_value(message, ["params", "value", "message"])
+            title_attr = get_nested_value(message, ["params", "value", "title"])
+            percentage_attr = get_nested_value(message, ["params", "value", "percentage"])
+
+            if kind_attr is not None:
+                if kind_attr == "begin":
+                    self.work_done_progress_title = title_attr
+                elif kind_attr == "end":
+                    self.work_done_progress_title = ""
+
+            if title_attr is not None:
+                progress_message += title_attr
+            else:
+                if kind_attr == "report":
+                    if self.work_done_progress_title != "":
+                        progress_message += self.work_done_progress_title
+                    else:
+                        progress_message += token_attr
+
+            if percentage_attr is not None and percentage_attr > 0:
+                progress_message += " (" + str(percentage_attr) + "%%)"
+
+            if message_attr is not None:
+                if progress_message != "":
+                    progress_message += " " + message_attr
+                else:
+                    progress_message += message_attr
+
+            if progress_message != "":
+                eval_in_emacs("lsp-bridge--record-work-done-progress", "[LSP-Bridge] " + progress_message)
+
     def handle_recv_message(self, message: dict):
         if "error" in message:
             self.handle_error_message(message)
@@ -677,6 +776,7 @@ class LspServer:
         self.handle_diagnostics_message(message)
         self.handle_log_message(message)
         self.handle_id_message(message)
+        self.handle_work_done_progress_message(message)
 
         logger.debug(json.dumps(message, indent=3))
 
@@ -688,17 +788,18 @@ class LspServer:
 
         # We need shutdown LSP server when last file closed, to save system memory.
         if len(self.files) == 0:
-            self.send_shutdown_request()
-            self.send_exit_notification()
-
             self.message_queue.put({
                 "name": "server_process_exit",
                 "content": self.server_name
             })
+            self.exit()
 
-            # Don't need to wait LSP server response, kill immediately.
-            if self.lsp_subprocess is not None:
-                try:
-                    os.kill(self.lsp_subprocess.pid, 9)
-                except ProcessLookupError:
-                    log_time("LSP server {} ({}) already exited!".format(self.server_info["name"], self.lsp_subprocess.pid))
+    def exit(self):
+        self.send_shutdown_request()
+        self.send_exit_notification()
+        # Don't need to wait LSP server response, kill immediately.
+        if self.lsp_subprocess is not None:
+            try:
+                os.kill(self.lsp_subprocess.pid, 9)
+            except ProcessLookupError:
+                log_time("LSP server {} ({}) already exited!".format(self.server_info["name"], self.lsp_subprocess.pid))

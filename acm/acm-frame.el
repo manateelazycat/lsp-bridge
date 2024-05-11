@@ -1,4 +1,4 @@
-;;; acm-frame.el --- Description -*- lexical-binding: t; -*-
+;;; acm-frame.el --- Description -*- lexical-binding: t; no-byte-compile: t; -*-*-
 ;;
 ;; Copyright (C) 2022 royokong
 ;;
@@ -232,11 +232,21 @@
 
 (defun acm-frame-get-popup-position (frame-popup-point &optional line-bias)
   (let* ((edges (window-pixel-edges))
-         (window-left (+ (nth 0 edges)
-                         ;; We need adjust left margin for buffer centering module.
-                         (/ (- (window-pixel-width)
-                               (window-body-width nil t))
-                            2)))
+         (window-left (+
+                       ;; Edges fine-tuning.
+                       (nth 0 edges)
+                       ;; Icon fine-tuning.
+                       (if acm-enable-icon
+                           0
+                         (* (frame-char-width) (- acm-icon-width 1))) ; acm will add left padding 1 char when icon is disable
+                       ;; Index fine-tuning.
+                       (if acm-enable-quick-access
+                           (- (* (frame-char-width) 3)) ; 3 is index width
+                         0)
+                       ;; Margin fine-tuning for centering module.
+                       (/ (- (window-pixel-width)
+                             (window-body-width nil t))
+                          2)))
          (window-top (nth 1 edges))
          (pos (posn-x-y (posn-at-point frame-popup-point)))
          (x (car pos))
@@ -300,8 +310,10 @@ influence of C1 on the result."
   (when (acm-frame-visible-p frame)
     (make-frame-invisible frame)))
 
-(defun acm-frame-adjust-frame-pos (frame &optional popup-pos margin)
-  "Adjust position to avoid out of screen."
+(defun acm-frame-adjust-frame-pos (frame &optional popup-pos margin action-menu-p)
+  "Adjust position to avoid out of screen.
+ACTION-MENU-P is used to give code action menu a special treat to make it more useful.
+Only when calling this function from code-action file should make this variable be true."
   (let* ((margin (or margin 50))
          (popup-pos (or popup-pos "point"))
          (main-window-x (car (frame-position acm-frame--emacs-frame)))
@@ -331,10 +343,11 @@ influence of C1 on the result."
                              (- (+ main-window-x main-window-width) frame-width margin)
                              frame-y))
        (when (> frame-bottom-edge main-window-bottom-limit)
-         (set-frame-position frame
-                             frame-x
-                             (- (+ main-window-y main-window-height) frame-height margin)
-                             ))))))
+         (if action-menu-p
+             (set-frame-position frame frame-x main-window-y)
+           (set-frame-position frame
+                               frame-x
+                               (- (+ main-window-y main-window-height) frame-height margin))))))))
 
 (defun acm-frame-can-display-p ()
   (not (or noninteractive

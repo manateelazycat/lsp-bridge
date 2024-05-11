@@ -1,4 +1,4 @@
-;;; lsp-bridge-dart.el --- Dart protocol   -*- lexical-binding: t; -*-
+;;; lsp-bridge-dart.el --- Dart protocol   -*- lexical-binding: t; no-byte-compile: t; -*-*-
 
 ;; Filename: lsp-bridge-dart.el
 ;; Description: Dart protocol

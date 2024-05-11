@@ -1,0 +1,10 @@
+{
+  "name": "racket-langserver",
+  "languageId": "racket",
+    "command": [
+      "racket",
+       "--lib",
+      "racket-langserver"
+    ],
+  "settings": {}
+}

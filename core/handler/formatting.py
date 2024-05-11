@@ -22,4 +22,8 @@ class Formatting(Handler):
 
     def process_response(self, response) -> None:
         if response and len(response) > 0:
-            eval_in_emacs("lsp-bridge-format--update", self.file_action.filepath, response)
+            remote_connection_info = get_remote_connection_info()
+            tramp_path = remote_connection_info + self.file_action.filepath
+            eval_in_emacs("lsp-bridge-format--update", tramp_path, response)
+        else:
+            message_emacs("Nothing need format.")

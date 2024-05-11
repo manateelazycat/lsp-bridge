@@ -86,10 +86,14 @@
 (defun lsp-bridge-install-omnisharp ()
   (interactive)
   (let* ((to-append (if (string= lsp-bridge-csharp-lsp-server "omnisharp-dotnet")
-			(if (eq system-type 'windows-nt)
-			    "omnisharp-win-x64-net6.0.zip"
-			  "omnisharp-linux-x64-net6.0.zip")
-		      "omnisharp-mono.zip"))
+                        (cond
+                         ((eq system-type 'windows-nt) "omnisharp-win-x64-net6.0.zip")
+                         ((eq system-type 'darwin)
+                          (if (eq (car (split-string system-configuration "-")) 'aarch64)
+			                        "omnisharp-osx-arm64-net6.0.zip"
+			                      "omnisharp-osx-x64-net6.0.zip"))
+                         (t "omnisharp-linux-x64-net6.0.zip"))
+		                  "omnisharp-mono.zip"))
 	(url (concat "https://github.com/OmniSharp/omnisharp-roslyn/releases/latest/download/" to-append))
         (down-des (if (eq system-type 'windows-nt)
                        (substitute-in-file-name (concat "\\$USERPROFILE\\AppData\\Local\\Temp\\" to-append))
@@ -102,6 +106,7 @@
     (unless (file-directory-p install-des)
       (make-directory install-des t))
     (call-process-shell-command (format "%s -xf %s -C %s" "tar" down-des install-des))
+    (call-process-shell-command (format "chmod +x %s" (format "%sOmniSharp" install-des)))
     ))
 
 (defconst tabnine-bridge--version-tempfile "version")

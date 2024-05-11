@@ -33,9 +33,109 @@ requesting new semantic tokens."
   :group 'lsp-bridge-semantic-tokens
   :type 'number)
 
+(defface lsp-bridge-semantic-tokens-property-face
+  '((t (:inherit font-lock-property-name-face)))
+  "Face used for property name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-class-face
+  '((t (:inherit font-lock-type-face)))
+  "Face used for class name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-number-face
+  '((t (:inherit font-lock-number-face)))
+  "Face used for number name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-interface-face
+  '((t (:inherit font-lock-function-name-face)))
+  "Face used for interface name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-namespace-face
+  '((t (:inherit font-lock-keyword-face)))
+  "Face used for namespace name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-decorator-face
+  '((t (:inherit font-lock-comment-delimiter-face)))
+  "Face used for decorator name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-regexp-face
+  '((t (:inherit font-lock-regexp-face)))
+  "Face used for regexp name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-operator-face
+  '((t (:inherit font-lock-operator-face)))
+  "Face used for operator name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-modifier-face
+  '((t (:inherit font-lock-function-call-face)))
+  "Face used for modifier name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-macro-face
+  '((t (:inherit font-lock-builtin-face)))
+  "Face used for macro name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-event-face
+  '((t (:inherit font-lock-builtin-face)))
+  "Face used for event name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-enum-member-face
+  '((t (:inherit font-lock-type-face)))
+  "Face used for enum member name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-enum-face
+  '((t (:inherit font-lock-type-face)))
+  "Face used for enum name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-struct-face
+  '((t (:inherit font-lock-type-face)))
+  "Face used for struct name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-type-face
+  '((t (:inherit font-lock-type-face)))
+  "Face used for type name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-string-face
+  '((t (:inherit font-lock-string-face)))
+  "Face used for string name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-keyword-face
+  '((t (:inherit font-lock-keyword-face)))
+  "Face used for keyword name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-type-parameter-face
+  '((t (:inherit font-lock-variable-name-face)))
+  "Face used for parameter name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-parameter-face
+  '((t (:inherit font-lock-variable-name-face)))
+  "Face used for parameter name."
+  :group 'lsp-bridge-semantic-tokens)
+
 (defface lsp-bridge-semantic-tokens-variable-face
   '((t (:inherit font-lock-variable-name-face)))
   "Face used for variable name."
+  :group 'lsp-bridge-semantic-tokens)
+
+(defface lsp-bridge-semantic-tokens-function-face
+  '((t (:inherit font-lock-function-name-face)))
+  "Face used for function name."
   :group 'lsp-bridge-semantic-tokens)
 
 (defface lsp-bridge-semantic-tokens-method-face
@@ -49,19 +149,56 @@ requesting new semantic tokens."
   :group 'lsp-bridge-semantic-tokens)
 
 (defface lsp-bridge-semantic-tokens-global-scope-face
-  '((t :weight extra-bold))
+  '((t (:inherit font-lock-constant-face)))
   "Face used for globalScope token."
   :group 'lsp-bridge-semantic-tokens)
 
 (defvar-local lsp-bridge-semantic-tokens-type-faces
-    [("comment" . lsp-bridge-semantic-tokens-comment-face)]
+    [
+     ("namespace" . lsp-bridge-semantic-tokens-namespace-face)
+     ("type" . lsp-bridge-semantic-tokens-type-face)
+     ("class" . lsp-bridge-semantic-tokens-class-face)
+     ("enum" . lsp-bridge-semantic-tokens-enum-face)
+     ("interface" . lsp-bridge-semantic-tokens-interface-face)
+     ("struct" . lsp-bridge-semantic-tokens-struct-face)
+     ("typeParameter" . lsp-bridge-semantic-tokens-type-parameter-face)
+     ("parameter" . lsp-bridge-semantic-tokens-parameter-face)
+     ("variable" . lsp-bridge-semantic-tokens-variable-face)
+     ("property" . lsp-bridge-semantic-tokens-property-face)
+     ("enumMember" . lsp-bridge-semantic-tokens-enum-member-face)
+     ("event" . lsp-bridge-semantic-tokens-event-face)
+     ("function" . lsp-bridge-semantic-tokens-function-face)
+     ("method" . lsp-bridge-semantic-tokens-method-face)
+     ("macro" . lsp-bridge-semantic-tokens-macro-face)
+     ("keyword" . lsp-bridge-semantic-tokens-keyword-face)
+     ("modifier" . lsp-bridge-semantic-tokens-modifier-face)
+     ("comment" . lsp-bridge-semantic-tokens-comment-face)
+     ("string" . lsp-bridge-semantic-tokens-string-face)
+     ("number" . lsp-bridge-semantic-tokens-number-face)
+     ("regexp" . lsp-bridge-semantic-tokens-regexp-face)
+     ("operator" . lsp-bridge-semantic-tokens-operator-face)
+     ("decorator" . lsp-bridge-semantic-tokens-decorator-face)
+     ]
   "Faces to use for semantic tokens.")
 
 (defvar-local lsp-bridge-semantic-tokens-type-modifier-faces []
   "Semantic tokens modifier faces.
 Faces to use for semantic token modifiers.")
 
-(defvar-local lsp-bridge-semantic-tokens-ignore-modifier-limit-types ["comment"]
+(defvar-local lsp-bridge-semantic-tokens-ignore-modifier-limit-types ["namespace"
+                                                                      "class"
+                                                                      "enum"
+                                                                      "interface"
+                                                                      "struct"
+                                                                      "typeParameter"
+                                                                      "parameter"
+                                                                      "enumMember"
+                                                                      "event"
+                                                                      "macro"
+                                                                      "modifier"
+                                                                      "comment"
+                                                                      "decorator"
+                                                                      ]
   "Which types need to ignore modifier limit.")
 
 (defvar-local lsp-bridge-semantic-tokens--overlays nil  "Semantic tokens overlays.")

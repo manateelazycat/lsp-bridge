@@ -108,20 +108,54 @@
   :type 'boolean
   :group 'acm-backend-lsp)
 
-(defcustom acm-backend-lsp-match-mode "normal"
+(defcustom acm-backend-lsp-match-mode "fuzzy"
   "The match mode to filter completion candidates.
 
-normal: don't filter candidates.
-prefix: filter candidates with input prefix, note such as C++, after `std::', candidate's prefix is not `::'
-prefixCaseSensitive: filter candidates with input prefix, and case sensitive
-fuzzy: fitler candidates with fuzzy algorithm
+`prefix': filter candidates with input prefix, note such as C++, after `std::', candidate's prefix is not `::'
+`prefixCaseSensitive': filter candidates with input prefix, and case sensitive
+`fuzzy': fitler candidates with fuzzy algorithm
 
-Recommand use `normal' that follow LSP server response, emacser's behavior typically does not adapt to LSP protocol."
+lsp-bridge still will use `fuzzy' algorithm filter candidates if value is not `prefix' `prefixCaseSensitive' or `fuzzy'.
+
+The lsp-bridge will continuously filter candidates on the Python side.
+If not filter and the value of `acm-backend-lsp-candidates-max-number' is far smaller than the number of candidates returned by the LSP server,
+it will cause the lsp-bridge to always send the previous batch of candidates which do not match the users input."
   :type 'string
   :group 'acm-backend-lsp)
 
+(defcustom acm-backend-lsp-frontend-filter-p nil
+  "Because LSP candidates has filtered at Python backend.
+
+So don't need filter candidates again when show candidates in acm menu.
+
+Anyway, if want use `acm-candidate-fuzzy-search' filter again in acm menu, turn on this option."
+  :type 'string
+  :group 'acm-backend-lsp)
+
+(defcustom acm-backend-lsp-show-progress nil
+  "Show message from 'Work Done Progress' message.
+
+Default is nil."
+  :type 'boolean
+  :group 'acm-backend-lsp)
+
+
 (defvar acm-backend-lsp-fetch-completion-item-func nil)
 (defvar-local acm-backend-lsp-fetch-completion-item-ticker nil)
+
+(defvar-local acm-backend-lsp-block-kind-list nil
+  "You can customize this option to filter certain types of completion candidates.
+
+This variable is a list type.
+
+Below is available types:
+
+`Text' `Method' `Function' `Constructor' `Field'
+`Variable' `Class' `Interface' `Module' `Property'
+`Unit' `Value' `Enum' `Keyword' `Snippet' `Color'
+`File' `Reference' `Folder' `EnumMember' `Constant'
+`Struct' `Event' `Operator' `TypeParameter'
+")
 
 (defun acm-backend-lsp-candidates (keyword)
   (let ((match-candidates
@@ -146,13 +180,17 @@ Recommand use `normal' that follow LSP server response, emacser's behavior typic
             ;; please do not do secondary sorting here, elisp is very slow.
             candidates))))
 
-    ;; When some LSP server very slow and other completion backend is fast,
-    ;; acm menu will render all backend candidates.
-    ;; Then old LSP candidates won't match `prefix' if new candidates haven't return.
-    ;; So we need filter old LSP candidates with `prefix' if `prefix' is not empty.
-    (if (string-equal keyword "")
-        match-candidates
-      (seq-filter (lambda (c) (acm-candidate-fuzzy-search keyword (plist-get c :label))) match-candidates))))
+    ;; Show candidates
+    (cond
+     ;; Don't filter candidates is prefix is empty.
+     ((string-equal keyword "")
+      match-candidates)
+     ;; Fitler candidates when `acm-backend-lsp-frontend-filter-p' is non-nil.
+     (acm-backend-lsp-frontend-filter-p
+      (seq-filter (lambda (c) (acm-candidate-fuzzy-search keyword (plist-get c :label))) match-candidates))
+     ;; Don't filter candidates default, because LSP candidates has filtered at Python backend.
+     (t
+      match-candidates))))
 
 (defun acm-backend-lsp-candidate-expand (candidate-info bound-start &optional preview)
   (let* ((label (plist-get candidate-info :label))
@@ -207,6 +245,13 @@ Recommand use `normal' that follow LSP server response, emacser's behavior typic
       ;; Insert candidate or expand snippet.
       (funcall (or snippet-fn #'insert)
                (or new-text insert-text label))
+      ;; Indent last line of snippet, make sure it same as first line of snippet.
+      (when snippet-fn
+        (save-excursion
+          (when yas-snippet-end
+            (goto-char yas-snippet-end)
+            (goto-char (line-beginning-position))
+            (indent-according-to-mode))))
       ;; Do `additional-text-edits' if return auto-imprt information.
       (when (and acm-backend-lsp-enable-auto-import
                  (cl-plusp (length additional-text-edits)))

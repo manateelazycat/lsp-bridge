@@ -1,0 +1,8 @@
+{
+  "name": "beancount-language-server",
+  "languageId": "beancount",
+  "command": [
+    "beancount-language-server"
+  ],
+  "settings": {}
+}
