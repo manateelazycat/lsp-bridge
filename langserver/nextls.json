@@ -1,0 +1,6 @@
+{
+  "name": "nextls",
+  "languageId": "elixir",
+  "command": ["nextls", "--stdio=true"],
+  "settings": {}
+}
