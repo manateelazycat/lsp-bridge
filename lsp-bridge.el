@@ -525,6 +525,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     (js-jsx-mode .                                                               "javascriptreact")
     ((typescript-tsx-mode tsx-ts-mode) .                                         "typescriptreact")
     ((typescript-mode typescript-ts-mode) .                                      "typescript")
+    ((js-json-mode json-ts-mode json-mode) .                                     "vscode-json-language-server")
     (tuareg-mode .                                                               "ocamllsp")
     (erlang-mode .                                                               "erlang-ls")
     ((LaTeX-mode latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode) . lsp-bridge-tex-lsp-server)
