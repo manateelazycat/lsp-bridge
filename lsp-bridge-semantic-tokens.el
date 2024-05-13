@@ -5,8 +5,12 @@
   :prefix "lsp-bridge-semantic-tokens-"
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-semantic-tokens-apply-modifiers 'override
-  "The method used to apply modifiers."
+(defcustom lsp-bridge-semantic-tokens-apply-modifiers 'combine
+  "The method used to apply modifiers.
+
+Example, if choose `combine', `lsp-bridge-semantic-tokens-global-scope-face' bold attributes will combine with origin face that provide by Emacs.
+
+If choose `override', `lsp-bridge-semantic-tokens-*-face' will override face that provide by Emacs."
   :group 'lsp-bridge-semantic-tokens
   :type '(radio
           (const nil)
@@ -149,7 +153,7 @@ requesting new semantic tokens."
   :group 'lsp-bridge-semantic-tokens)
 
 (defface lsp-bridge-semantic-tokens-global-scope-face
-  '((t (:inherit font-lock-constant-face)))
+  '((t :weight extra-bold))
   "Face used for globalScope token."
   :group 'lsp-bridge-semantic-tokens)
 

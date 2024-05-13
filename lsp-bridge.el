@@ -453,7 +453,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   :type 'string)
 
 (defcustom lsp-bridge-elixir-lsp-server "elixirLS"
-  "Default LSP server for Elixir language, you can choose `elixirLS' or `lexical'."
+  "Default LSP server for Elixir language, you can choose `elixirLS', `lexical' or `nextls'."
   :type 'string
   :safe #'stringp)
 
