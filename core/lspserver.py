@@ -433,6 +433,7 @@ class LspServer:
         return uri
 
     def get_language_id(self, fa):
+        language_id_dict={"jsx":"javascriptreact"}
         _, extension = os.path.splitext(fa.filepath)
         extension_name = extension.split(os.path.extsep)[-1]
 
@@ -447,7 +448,7 @@ class LspServer:
         #
         # Please reference issue https://github.com/tailwindlabs/tailwindcss-intellisense/issues/925.
         if language_id == "":
-            return extension_name.lower()
+            return extension_name.lower() if not language_id_dict.get(extension_name.lower()) else language_id_dict.get(extension_name.lower())
         else:
             return language_id
 
