@@ -104,7 +104,8 @@ def merge_emacs_exec_path():
     if not is_merge_emacs_exec_path:
         paths = os.environ["PATH"].split(":")
         [emacs_paths, ] = get_emacs_vars(["exec-path"])
-        new_paths = list(dict.fromkeys(paths + emacs_paths))
+        all_paths = [i for i in paths + emacs_paths if not isinstance(i,list)]
+        new_paths = list(dict.fromkeys(all_paths))
 
         os.environ["PATH"] = ":".join(new_paths)
 
