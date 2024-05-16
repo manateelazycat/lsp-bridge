@@ -42,6 +42,8 @@ DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pi
 
 INLAY_HINT_REQUEST_ID_DICT = {}
 
+TAILWINDCSS_LANGUAGE_ID_DICT = {"jsx": "javascriptreact"}
+
 class LspServerSender(MessageSender):
     def __init__(self, process: subprocess.Popen, server_name, project_name):
         super().__init__(process)
@@ -433,9 +435,9 @@ class LspServer:
         return uri
 
     def get_language_id(self, fa):
-        language_id_dict={"jsx":"javascriptreact"}
+        # Get extension name.
         _, extension = os.path.splitext(fa.filepath)
-        extension_name = extension.split(os.path.extsep)[-1]
+        extension_name = extension.split(os.path.extsep)[-1].lower()
 
         if "languageIds" in self.server_info:
             if extension_name in self.server_info["languageIds"]:
@@ -448,7 +450,8 @@ class LspServer:
         #
         # Please reference issue https://github.com/tailwindlabs/tailwindcss-intellisense/issues/925.
         if language_id == "":
-            return extension_name.lower() if not language_id_dict.get(extension_name.lower()) else language_id_dict.get(extension_name.lower())
+            match_language_id = TAILWINDCSS_LANGUAGE_ID_DICT.get(extension_name)
+            return match_language_id if match_language_id else extension_name
         else:
             return language_id
 
