@@ -796,6 +796,10 @@ class LspBridge:
     def ctags_complete(self, symbol, filename, cursor_offset):
         self.ctags.make_complete(symbol, filename, cursor_offset)
 
+    @threaded
+    def ctags_find_def(self, symbol, filename):
+        self.ctags.find_definition(symbol, filename)
+
     def copilot_complete(self, position, editor_mode, file_path, relative_path, tab_size, text, insert_spaces):
         self.copilot.complete(position, editor_mode, file_path, relative_path, tab_size, text, insert_spaces)
 

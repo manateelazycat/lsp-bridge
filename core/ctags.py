@@ -153,6 +153,39 @@ class Ctags:
 
         self.dispatch(list(candidates), cursor_offset)
 
+    def make_xref(self, tag: dict, rootdir):
+        candidate = {}
+        tagname = tag["tagname"]
+
+        path = tag.get("tagfile", "")
+        line = int(tag.get("line", "1"))
+        pattern = tag.get("tagaddress", "")
+        annotation = self.make_tag_annotation(tag)
+
+        ext_abspath = os.path.join(rootdir, path)
+        tramp_method = get_remote_connection_info()
+
+        candidate["ext-abspath"] = tramp_method + ext_abspath
+        candidate["line"] = line
+        candidate["str"] = pattern
+        candidate["annotation"] = annotation[2:-2]
+
+        return candidate
+
+    def find_definition(self, symbol, filename):
+        tagsfile = self.locate_dominating_file(filename, "tags")
+        if not tagsfile:
+            return
+
+        cmd = self.readtags_get_cmd(tagsfile, symbol, "exact", False, "", "", "")
+        lines = self.run_cmd_in_path(cmd, filename)
+        tags = map(self.parse_tag_line, lines)
+
+        candidates = map(lambda tag: self.make_xref(tag, os.path.dirname(tagsfile)), tags)
+        candidates = list(candidates)
+
+        eval_in_emacs("lsp-bridge-xref-callback", candidates)
+
     def dispatch(self, candidates, cursor_offset):
         self.lock.acquire()
         try:

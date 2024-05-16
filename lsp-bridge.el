@@ -78,6 +78,7 @@
 (require 'subr-x)
 (require 'markdown-mode)
 (require 'diff)
+(require 'xref)
 
 (defvar acm-library-path (expand-file-name "acm" (if load-file-name
                                                      (file-name-directory load-file-name)
@@ -2143,6 +2144,29 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
     (before-revert-hook lsp-bridge-close-buffer-file nil t)
     (post-self-insert-hook lsp-bridge-monitor-post-self-insert 90 t)
     ))
+
+(defun lsp-bridge-xref--make-object (tag)
+  "Make xref object of TAG."
+  (let\* ((path (plist-get tag :ext-abspath))
+          (line (plist-get tag :line))
+          (str (plist-get tag :str))
+          (annotation (plist-get tag :annotation)))
+         (xref-make
+          (concat (propertize (concat "(" annotation ") ") 'face 'citre-tag-annotation-face) str)
+          (xref-make-file-location path line 0))))
+
+(defun lsp-bridge-xref-callback (tags)
+  (let ((fetcher (lambda () (mapcar #'lsp-bridge-xref--make-object tags))))
+    (xref-show-xrefs fetcher nil)))
+
+(defun lsp-bridge-ctags-find-def-at-point ()
+  (interactive)
+  (if (lsp-bridge-is-remote-file)
+      (lsp-bridge-remote-send-func-request "ctags_find_def"
+                                           (list
+                                            (symbol-at-point)
+                                            (file-local-name (buffer-file-name))))
+    (lsp-bridge-call-async "ctags_find_def" (symbol-at-point) (buffer-file-name))))
 
 (defvar lsp-bridge-mode-map (make-sparse-keymap))
 
