@@ -458,6 +458,7 @@ The following is the directory structure of the lsp-bridge project:
 | lsp-bridge-diagnostic.el              | Diagnostic information related code                                                                                 |
 | lsp-bridge-ref.el                     | Code reference viewing framework, providing reference viewing, batch renaming, reference result regular filtering, etc., core code forked from color-rg.el |
 | lsp-bridge-inlay-hint.el              | Provides code type hints, more useful for static languages, such as Rust or Haskell                                 |
+| lsp-bridge-semantic-tokens.el         | Provides semantic tokens, more syntax highlighting                                 |
 | lsp-bridge-jdtls.el                   | Provides third-party library jump function for Java language                                                         |
 | lsp-bridge-dart.el                    | Provides support for Dart's private protocols, such as Dart's Closing Labels protocol                                |
 | lsp-bridge-semantic-tokens.el         | Flexible display of certain semantic symbols is especially useful for static languages such as C or C++.             |
