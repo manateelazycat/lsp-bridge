@@ -1643,6 +1643,7 @@ So we build this macro to restore postion after code format."
                                                    (list
                                                     current-word
                                                     (tramp-file-local-name lsp-bridge-remote-file-path)
+                                                    acm-backend-ctags-max-candidates
                                                     (1- (point)))))
           (lsp-bridge-call-async "ctags_complete" current-word (buffer-file-name) (1- (point))))))
 
@@ -2145,15 +2146,25 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
     (post-self-insert-hook lsp-bridge-monitor-post-self-insert 90 t)
     ))
 
+(defface lsp-bridge-tag-annotation-face
+  '((((background light))
+     :foreground "#666666" :slant italic)
+    (t
+     :foreground "#c0c0c0" :slant italic))
+  "Face used for annotations when presenting a tag.
+Annotations include kind, type, etc.")
+
 (defun lsp-bridge-xref--make-object (tag)
   "Make xref object of TAG."
-  (let\* ((path (plist-get tag :ext-abspath))
-          (line (plist-get tag :line))
-          (str (plist-get tag :str))
-          (annotation (plist-get tag :annotation)))
-         (xref-make
-          (concat (propertize (concat "(" annotation ") ") 'face 'citre-tag-annotation-face) str)
-          (xref-make-file-location path line 0))))
+  (let* ((path (plist-get tag :ext-abspath))
+         (line (plist-get tag :line))
+         (str (plist-get tag :str))
+         (annotation (plist-get tag :annotation)))
+    (xref-make
+     (if annotation
+         (concat (propertize (concat "(" annotation ") ") 'face 'lsp-bridge-tag-annotation-face) str)
+       str)
+     (xref-make-file-location path line 0))))
 
 (defun lsp-bridge-xref-callback (tags)
   (let ((fetcher (lambda () (mapcar #'lsp-bridge-xref--make-object tags))))

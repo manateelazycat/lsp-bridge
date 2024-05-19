@@ -793,8 +793,8 @@ class LspBridge:
         self.tabnine.complete(before, after, filename, region_includes_beginning, region_includes_end, max_num_results)
 
     @threaded
-    def ctags_complete(self, symbol, filename, cursor_offset):
-        self.ctags.make_complete(symbol, filename, cursor_offset)
+    def ctags_complete(self, symbol, filename, max_lines, cursor_offset):
+        self.ctags.make_complete(symbol, filename, max_lines, cursor_offset)
 
     @threaded
     def ctags_find_def(self, symbol, filename):

@@ -130,7 +130,7 @@ class Ctags:
             
         return None
 
-    def make_complete(self, symbol, filename, cursor_offset):
+    def make_complete(self, symbol, filename, max_lines, cursor_offset):
         self.lock.acquire()
         try:
             self.current_cursor_offset = cursor_offset
@@ -147,6 +147,7 @@ class Ctags:
         cmd = self.readtags_get_cmd(tagsfile, symbol, "prefix", False, DEFAULT_FILTER_CMD, DEFAULT_SORTER_CMD, "")
 
         lines = self.run_cmd_in_path(cmd, filename)
+        lines = lines[0:max_lines]
         
         tags = map(self.parse_tag_line, lines)
         candidates = map(self.make_ctags_acm_candidate, tags)
@@ -167,8 +168,8 @@ class Ctags:
 
         candidate["ext-abspath"] = tramp_method + ext_abspath
         candidate["line"] = line
-        candidate["str"] = pattern
-        candidate["annotation"] = annotation[2:-2]
+        candidate["str"] = pattern[2:-2]
+        candidate["annotation"] = annotation
 
         return candidate
 
@@ -184,7 +185,10 @@ class Ctags:
         candidates = map(lambda tag: self.make_xref(tag, os.path.dirname(tagsfile)), tags)
         candidates = list(candidates)
 
-        eval_in_emacs("lsp-bridge-xref-callback", candidates)
+        if candidates == []:
+            message_emacs(f"symbol {symbol} not found by ctags")
+        else:
+            eval_in_emacs("lsp-bridge-xref-callback", candidates)
 
     def dispatch(self, candidates, cursor_offset):
         self.lock.acquire()
