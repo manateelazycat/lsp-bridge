@@ -357,6 +357,7 @@ After set `lsp-bridge-completion-obey-trigger-characters-p' to nil, you need use
                (lsp-bridge-epc-define-method mngr 'eval-in-emacs 'lsp-bridge--eval-in-emacs-func)
                (lsp-bridge-epc-define-method mngr 'get-emacs-vars 'lsp-bridge--get-emacs-vars-func)
                (lsp-bridge-epc-define-method mngr 'get-project-path 'lsp-bridge--get-project-path-func)
+               (lsp-bridge-epc-define-method mngr 'get-language-id 'lsp-bridge--get-language-id-func)
                (lsp-bridge-epc-define-method mngr 'get-workspace-folder 'lsp-bridge--get-workspace-folder-func)
                (lsp-bridge-epc-define-method mngr 'get-multi-lang-server 'lsp-bridge--get-multi-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-single-lang-server 'lsp-bridge--get-single-lang-server-func)
@@ -850,6 +851,16 @@ So we build this macro to restore postion after code format."
       (funcall lsp-bridge-get-project-path-by-filepath filename)
     ;; Otherwise try to search up `.dir-locals.el' file
     (car (dir-locals-find-file filename))))
+
+(defun lsp-bridge--get-language-id-func (project-path file-name server-name extension-name)
+  ;; Some LSP server, such as Tailwindcss, languageId is a dynamically field follow with file extension,
+  ;; we can't not receive respond to `completionItem/resolve` request if send wrong languageId to tailwindcss.
+  ;;
+  ;; Please reference issue https://github.com/tailwindlabs/tailwindcss-intellisense/issues/925.
+  (when (string-equal server-name "tailwindcss")
+    (if (string-equal extension-name "jsx")
+        "javascriptreact"
+      extension-name)))
 
 (defun lsp-bridge--get-workspace-folder-func (project-path)
   (when lsp-bridge-get-workspace-folder

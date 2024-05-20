@@ -42,8 +42,6 @@ DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pi
 
 INLAY_HINT_REQUEST_ID_DICT = {}
 
-TAILWINDCSS_LANGUAGE_ID_DICT = {"jsx": "javascriptreact"}
-
 class LspServerSender(MessageSender):
     def __init__(self, process: subprocess.Popen, server_name, project_name):
         super().__init__(process)
@@ -439,21 +437,20 @@ class LspServer:
         _, extension = os.path.splitext(fa.filepath)
         extension_name = extension.split(os.path.extsep)[-1].lower()
 
-        if "languageIds" in self.server_info:
-            if extension_name in self.server_info["languageIds"]:
-                return self.server_info["languageIds"][extension_name]
+        match_language_id = get_emacs_func_result("get-language-id", self.project_path, fa.filepath, self.server_name, extension_name)
 
-        language_id = self.server_info["languageId"]
-
-        # Some LSP server, such as Tailwindcss, languageId is a dynamically field follow with file extension,
-        # we can't not receive respond to `completionItem/resolve` request if send wrong languageId to tailwindcss.
-        #
-        # Please reference issue https://github.com/tailwindlabs/tailwindcss-intellisense/issues/925.
-        if language_id == "":
-            match_language_id = TAILWINDCSS_LANGUAGE_ID_DICT.get(extension_name)
-            return match_language_id if match_language_id else extension_name
+        # User can customize `lsp-bridge--get-language-id-func` to support some advanced LSP server
+        # that need return language id with project environment, such as, TailwindCSS LSP server.
+        if isinstance(match_language_id, str):
+            return match_language_id
         else:
-            return language_id
+            if "languageIds" in self.server_info:
+                if extension_name in self.server_info["languageIds"]:
+                    return self.server_info["languageIds"][extension_name]
+
+            language_id = self.server_info["languageId"]
+
+            return extension_name if language_id == "" else language_id
 
     def send_did_open_notification(self, fa: "FileAction"):
         self.sender.send_notification("textDocument/didOpen", {
