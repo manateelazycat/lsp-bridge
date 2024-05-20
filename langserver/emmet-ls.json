@@ -1,6 +1,6 @@
 {
   "name": "emmet-ls",
-  "languageId": "html",
+  "languageId": ["css", "eruby", "html", "javascript", "javascriptreact", "less", "sass", "scss", "svelte", "pug", "typescriptreact", "vue" ],
   "command": [
     "emmet-ls",
     "--stdio"
