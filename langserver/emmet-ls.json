@@ -1,6 +1,6 @@
 {
   "name": "emmet-ls",
-  "languageId": "html",
+  "languageId": "",
   "command": [
     "emmet-ls",
     "--stdio"
