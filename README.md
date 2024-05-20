@@ -242,6 +242,8 @@ For example, we can enable the Deno LSP server for Deno scripts with the followi
 	  "deno")))
 ```
 
+Note: Some advanced LSP server, such as tailwindcss and emmet-ls, require a languageId and file extension that cannot be one-to-one corresponded. Instead, they dynamically return the languageId based on different frontend projects environment. In this case, you need to customize the `lsp-bridge-get-language-id` function to meet this requirement.
+
 ## Customize language server configuration file
 
 Copy the configuration files in [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) or [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) to lsp-bridge-user-langserver-dir or lsp-bridge-user-multiserver-dir for customization. Lsp-bridge will prioritize reading the configuration files in lsp-bridge-user-langserver-dir or lsp-bridge-user-multiserver-dir.

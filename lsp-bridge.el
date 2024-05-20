@@ -668,6 +668,15 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
 (defcustom lsp-bridge-get-multi-lang-server-by-project nil
   "Get lang server with project path and file path.")
 
+(defcustom lsp-bridge-get-language-id #'lsp-bridge--get-language-id-func
+  "Function to get language id for multi-server.
+
+Some LSP server like emmet-ls or tailwindcss need to get language id dynamicly according to different framework and project.
+
+When server start, lsp-bridge would call this function to get returned string value as languageId.
+
+If this customize function return nil, lsp-bridge will parse languageId from file langserver/*.json.")
+
 (defcustom lsp-bridge-get-project-path-by-filepath nil
   "Default use command 'git rev-parse --show-toplevel' get project path,
 you can customize `lsp-bridge-get-project-path-by-filepath' to return project path by give file path.")
@@ -852,15 +861,17 @@ So we build this macro to restore postion after code format."
     ;; Otherwise try to search up `.dir-locals.el' file
     (car (dir-locals-find-file filename))))
 
-(defun lsp-bridge--get-language-id-func (project-path file-name server-name extension-name)
-  ;; Some LSP server, such as Tailwindcss, languageId is a dynamically field follow with file extension,
-  ;; we can't not receive respond to `completionItem/resolve` request if send wrong languageId to tailwindcss.
-  ;;
-  ;; Please reference issue https://github.com/tailwindlabs/tailwindcss-intellisense/issues/925.
-  (when (string-equal server-name "tailwindcss")
-    (if (string-equal extension-name "jsx")
-        "javascriptreact"
-      extension-name)))
+(defun lsp-bridge--get-language-id-func (project-path file-path server-name extension-name)
+  (if lsp-bridge-get-multi-lang-server-by-project
+      (funcall lsp-bridge-get-multi-lang-server-by-project project-path file-path server-name extension-name)
+    ;; Some LSP server, such as Tailwindcss, languageId is a dynamically field follow with file extension,
+    ;; we can't not receive respond to `completionItem/resolve` request if send wrong languageId to tailwindcss.
+    ;;
+    ;; Please reference issue https://github.com/tailwindlabs/tailwindcss-intellisense/issues/925.
+    (when (string-equal server-name "tailwindcss")
+      (if (string-equal extension-name "jsx")
+          "javascriptreact"
+        extension-name))))
 
 (defun lsp-bridge--get-workspace-folder-func (project-path)
   (when lsp-bridge-get-workspace-folder

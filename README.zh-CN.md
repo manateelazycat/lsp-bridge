@@ -239,6 +239,8 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 	  "deno")))
 ```
 
+备注： 一些高级的 LSP server, 比如 tailwindcss 和 emmet-ls 所需的 languageId 和文件扩展名无法一一对应， 而是根据不同前端项目来动态返回 languageId, 这时候需要自定义 `lsp-bridge-get-language-id` 函数来满足这种需求。
+
 ## 自定义语言服务器配置文件
 
 拷贝 [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) 或 [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) 中的配置文件到 `lsp-bridge-user-langserver-dir` 或 `lsp-bridge-user-multiserver-dir` 中进行自定义， lsp-bridge 会优先读取 `lsp-bridge-user-langserver-dir` 或 `lsp-bridge-user-multiserver-dir` 里的配置文件。
