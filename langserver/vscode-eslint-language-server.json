@@ -1,6 +1,6 @@
 {
   "name": "vscode-eslint-language-server",
-  "languageId": "javascript",
+  "languageId": "",
   "command": [
     "vscode-eslint-language-server",
     "--stdio"
