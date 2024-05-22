@@ -433,23 +433,24 @@ class LspServer:
         return uri
 
     def get_language_id(self, fa):
+        # Get extension name.
         _, extension = os.path.splitext(fa.filepath)
-        extension_name = extension.split(os.path.extsep)[-1]
+        extension_name = extension.split(os.path.extsep)[-1].lower()
 
-        if "languageIds" in self.server_info:
-            if extension_name in self.server_info["languageIds"]:
-                return self.server_info["languageIds"][extension_name]
+        match_language_id = get_emacs_func_result("get-language-id", self.project_path, fa.filepath, self.server_name, extension_name)
 
-        language_id = self.server_info["languageId"]
-
-        # Some LSP server, such as Tailwindcss, languageId is a dynamically field follow with file extension,
-        # we can't not receive respond to `completionItem/resolve` request if send wrong languageId to tailwindcss.
-        #
-        # Please reference issue https://github.com/tailwindlabs/tailwindcss-intellisense/issues/925.
-        if language_id == "":
-            return extension_name.lower()
+        # User can customize `lsp-bridge--get-language-id-func` to support some advanced LSP server
+        # that need return language id with project environment, such as, TailwindCSS LSP server.
+        if isinstance(match_language_id, str):
+            return match_language_id
         else:
-            return language_id
+            if "languageIds" in self.server_info:
+                if extension_name in self.server_info["languageIds"]:
+                    return self.server_info["languageIds"][extension_name]
+
+            language_id = self.server_info["languageId"]
+
+            return extension_name if language_id == "" else language_id
 
     def send_did_open_notification(self, fa: "FileAction"):
         self.sender.send_notification("textDocument/didOpen", {

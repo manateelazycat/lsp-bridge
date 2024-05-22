@@ -226,18 +226,23 @@ If you are writing JavaScript code, you may need to customize multiple server co
 For example, we can enable the Deno LSP server for Deno scripts with the following configuration:
 
 ```elisp
-(setq lsp-bridge-get-multi-lang-server-by-project
-      (lambda (project-path filepath)
-        ;; If typescript file include deno.land url, then use Deno LSP server.
-        (save-excursion
-          (when (string-equal (file-name-extension filepath) "ts")
-            (dolist (buf (buffer-list))
-              (when (string-equal (buffer-file-name buf) filepath)
-                (with-current-buffer buf
-                  (goto-char (point-min))
-                  (when (search-forward-regexp (regexp-quote "from \"https://deno.land") nil t)
-                    (return "deno")))))))))
+;; lsp-bridge first try `lsp-bridge--get-multi-lang-server-func', then try `lsp-bridge--get-single-lang-server-func'
+;; So we need remove `ts' and `tsx' setting from default value of lsp-bridge-multi-lang-server-extension-list.
+(setq lsp-bridge-multi-lang-server-extension-list
+      (cl-remove-if (lambda (item)
+                      (equal (car item) '("ts" "tsx")))
+                    lsp-bridge-multi-lang-server-extension-list))
+
+;; Last we customize `lsp-bridge-get-single-lang-server-by-project' to return `deno' lsp server name.
+;; I recommand you write some code to compare project-path or file-path, return `deno' only if match target path.
+(setq lsp-bridge-get-single-lang-server-by-project
+      (lambda (project-path file-path)
+	(when (or (string-suffix-p ".ts" file-path)
+		  (string-suffix-p ".tsx" file-path))
+	  "deno")))
 ```
+
+Note: Some advanced LSP server, such as tailwindcss and emmet-ls, require a languageId and file extension that cannot be one-to-one corresponded. Instead, they dynamically return the languageId based on different frontend projects environment. In this case, you need to customize the `lsp-bridge-get-language-id` function to meet this requirement.
 
 ## Customize language server configuration file
 
@@ -458,6 +463,7 @@ The following is the directory structure of the lsp-bridge project:
 | lsp-bridge-diagnostic.el              | Diagnostic information related code                                                                                 |
 | lsp-bridge-ref.el                     | Code reference viewing framework, providing reference viewing, batch renaming, reference result regular filtering, etc., core code forked from color-rg.el |
 | lsp-bridge-inlay-hint.el              | Provides code type hints, more useful for static languages, such as Rust or Haskell                                 |
+| lsp-bridge-semantic-tokens.el         | Provides semantic tokens, more syntax highlighting                                 |
 | lsp-bridge-jdtls.el                   | Provides third-party library jump function for Java language                                                         |
 | lsp-bridge-dart.el                    | Provides support for Dart's private protocols, such as Dart's Closing Labels protocol                                |
 | lsp-bridge-semantic-tokens.el         | Flexible display of certain semantic symbols is especially useful for static languages such as C or C++.             |

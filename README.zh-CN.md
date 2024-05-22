@@ -223,18 +223,23 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 举例, 我们可以通过如下配置， 对 Deno 脚本开启 Deno LSP 服务器：
 
 ```elisp
+;; lsp-bridge first try `lsp-bridge--get-multi-lang-server-func', then try `lsp-bridge--get-single-lang-server-func'
+;; So we need remove `ts' and `tsx' setting from default value of lsp-bridge-multi-lang-server-extension-list.
+(setq lsp-bridge-multi-lang-server-extension-list
+      (cl-remove-if (lambda (item)
+                      (equal (car item) '("ts" "tsx")))
+                    lsp-bridge-multi-lang-server-extension-list))
+
+;; Last we customize `lsp-bridge-get-single-lang-server-by-project' to return `deno' lsp server name.
+;; I recommand you write some code to compare project-path or file-path, return `deno' only if match target path.
 (setq lsp-bridge-get-single-lang-server-by-project
-      (lambda (project-path filepath)
-        ;; If typescript file include deno.land url, then use Deno LSP server.
-        (save-excursion
-          (when (string-equal (file-name-extension filepath) "ts")
-            (dolist (buf (buffer-list))
-              (when (string-equal (buffer-file-name buf) filepath)
-                (with-current-buffer buf
-                  (goto-char (point-min))
-                  (when (search-forward-regexp (regexp-quote "from \"https://deno.land") nil t)
-                    (return "deno")))))))))
+      (lambda (project-path file-path)
+	(when (or (string-suffix-p ".ts" file-path)
+		  (string-suffix-p ".tsx" file-path))
+	  "deno")))
 ```
+
+备注： 一些高级的 LSP server, 比如 tailwindcss 和 emmet-ls 所需的 languageId 和文件扩展名无法一一对应， 而是根据不同前端项目来动态返回 languageId, 这时候需要自定义 `lsp-bridge-get-language-id` 函数来满足这种需求。
 
 ## 自定义语言服务器配置文件
 
@@ -457,6 +462,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 | lsp-bridge-diagnostic.el            | 诊断信息相关代码                                                                                                     |
 | lsp-bridge-ref.el                   | 代码引用查看框架， 提供引用查看、 批量重命名、 引用结果正则过滤等， 核心代码 fork 自 color-rg.el                     |
 | lsp-bridge-inlay-hint.el            | 提供代码类型提示， 对于静态语言， 比如 Rust 或 Haskell 比较有用                                                      |
+| lsp-bridge-semantic-tokens.el       | 提供语义高亮, 比 Emacs 内置的语法高亮更细致                                                      |
 | lsp-bridge-jdtls.el                 | 提供 Java 语言第三方库跳转功能                                                                                       |
 | lsp-bridge-dart.el                  | 提供对 Dart 私有协议的支持， 比如 Dart 的 Closing Labels 协议                                                        |
 | lsp-bridge-semantic-tokens.el       | 灵活显示某些语义符号， 对于静态语言， 比如 C 或 C++ 比较有用                                                         |

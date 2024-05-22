@@ -1,9 +1,0 @@
-{
-  "name": "emmet-ls-css",
-  "languageId": "css",
-  "command": [
-    "emmet-ls",
-    "--stdio"
-  ],
-  "settings": {}
-}
