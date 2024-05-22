@@ -668,7 +668,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
 (defcustom lsp-bridge-get-multi-lang-server-by-project nil
   "Get lang server with project path and file path.")
 
-(defcustom lsp-bridge-get-language-id #'lsp-bridge--get-language-id-func
+(defcustom lsp-bridge-get-language-id nil
   "Function to get language id for multi-server.
 
 Some LSP server like emmet-ls or tailwindcss need to get language id dynamicly according to different framework and project.
@@ -862,8 +862,8 @@ So we build this macro to restore postion after code format."
     (car (dir-locals-find-file filename))))
 
 (defun lsp-bridge--get-language-id-func (project-path file-path server-name extension-name)
-  (if lsp-bridge-get-multi-lang-server-by-project
-      (funcall lsp-bridge-get-multi-lang-server-by-project project-path file-path server-name extension-name)
+  (if lsp-bridge-get-language-id
+      (funcall lsp-bridge-get-language-id project-path file-path server-name extension-name)
     ;; Some LSP server, such as Tailwindcss, languageId is a dynamically field follow with file extension,
     ;; we can't not receive respond to `completionItem/resolve` request if send wrong languageId to tailwindcss.
     ;;
