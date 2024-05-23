@@ -14,7 +14,7 @@
   :type 'boolean
   :group 'acm-backend-ctags)
 
-(defcustom acm-backend-ctags-candidates-max-num 10
+(defcustom acm-backend-ctags-max-candidates 10
   "Maximal number of candidate of menu."
   :type 'integer
   :group 'acm-backend-ctags)
