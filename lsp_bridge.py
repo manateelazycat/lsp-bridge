@@ -599,7 +599,8 @@ class LspBridge:
             logger.error("Unsupported command %s", message["command"])
             result = None
 
-        self.send_remote_message(host, self.remote_file_elisp_sender_queue, result)
+        message["result"] = result
+        self.send_remote_message(host, self.remote_file_elisp_sender_queue, message)
 
     # Functions for local handling
     def event_dispatcher(self):
