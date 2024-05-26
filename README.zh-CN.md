@@ -441,8 +441,9 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 | Wxml        | [wxml-language-server](https://github.com/chemzqm/wxml-languageserver)                             |                                                                                                                                                                                                                                |
 | Yaml        | [yaml-language-server](https://github.com/redhat-developer/yaml-language-server)                   | `npm install -g yaml-language-server`                                                                                                                                                                                          |
 | Zig         | [zls](https://github.com/zigtools/zls)                                                             | 运行 `zls config` 来生成 zls 的配置。 参考 [Configuration Options](https://github.com/zigtools/zls#configuration-options)                                                                                                      |
+| Solidity    | [solidity-language-server](https://github.com/NomicFoundation/hardhat-vscode)                      | `npm install -g @nomicfoundation/solidity-language-server`， 参考 [Solidity Language Server](https://github.com/NomicFoundation/hardhat-vscode/blob/development/server/README.md)                                              |
 
-                                                                                                                                                 
+
 ## 加入开发
 
 下图是 lsp-bridge 的架构设计:
