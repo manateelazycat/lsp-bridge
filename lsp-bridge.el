@@ -560,7 +560,6 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     (fsharp-mode .                                                               "fsautocomplete")
     (beancount-mode .                                                            "beancount-language-server")
     (racket-mode    .                                                            "racket-langserver")
-    (solidity-mode .                                                             "solidity-ls")
     (mojo-mode    .                                                              "mojo-lsp-server")
     (solidity-mode .                                                             "solidity")
     )
@@ -659,7 +658,6 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     svelte-mode-hook
     fsharp-mode-hook
     beancount-mode-hook
-    solidity-mode-hook
     mojo-mode-hook
     solidity-mode-hook
     )
