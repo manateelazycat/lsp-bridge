@@ -60,7 +60,7 @@ class Copilot:
             message_emacs('To use copilot, Please install node version >= 16')
             return
 
-        npm_package_path = subprocess.check_output(['npm', 'root', '-g'], universal_newlines=True).strip()
+        npm_package_path = subprocess.check_output(["npm.cmd" if get_os_name() == "windows" else "npm", 'root', '-g'], universal_newlines=True).strip()
         agent_path =  os.path.join(npm_package_path, "copilot-node-server", "copilot/dist/agent.js")
 
         self.copilot_subprocess = subprocess.Popen([self.node_path, agent_path],
