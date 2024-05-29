@@ -281,7 +281,11 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
          (compress-file (concat binary-dir file-name))
          (binary-file (string-trim-right compress-file "\\.gz"))
          ;; Binary file after rename
-         (last-binary-file (concat binary-dir "language_server"))
+         (last-binary-file (if (or (eq system-type 'ms-dos)
+                                   (eq system-type 'windows-nt)
+                                   (eq system-type 'cygwin))
+                               (concat binary-dir "language_server.exe")
+                             (concat binary-dir "language_server")))
          (download-url (concat codeium-download-url-prefix version "/" file-name)))
     (make-directory binary-dir t)
     (if (string= version codeium-bridge-binary-version)
