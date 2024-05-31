@@ -79,7 +79,7 @@ class Codeium:
                 "text": text,
                 "language": language,
             },
-            "editor_options": {"insert_spaces": insert_spaces, "tab_size": tab_size},
+            "editor_options": {"insert_spaces": True if insert_spaces else False, "tab_size": tab_size},
         }
 
         self.dispatch(
