@@ -78,7 +78,6 @@
 (require 'subr-x)
 (require 'markdown-mode)
 (require 'diff)
-(require 'xref)
 
 (defvar acm-library-path (expand-file-name "acm" (if load-file-name
                                                      (file-name-directory load-file-name)
@@ -163,11 +162,6 @@ Setting this to nil or 0 will turn off the heartbeat mechanism."
 
 (defcustom lsp-bridge-enable-mode-line t
   "Whether display LSP-bridge's server info in mode-line ."
-  :type 'boolean
-  :group 'lsp-bridge)
-
-(defcustom lsp-bridge-remote-enable-kill-process nil
-  "Whether kill remote lsp-bridge process when Emacs exit ."
   :type 'boolean
   :group 'lsp-bridge)
 
@@ -1003,11 +997,6 @@ So we build this macro to restore postion after code format."
   (lsp-bridge-deferred-chain
     (lsp-bridge-epc-call-deferred lsp-bridge-epc-process (read method) args)))
 
-(defun lsp-bridge-call-sync (method &rest args)
-  "Call Python EPC function METHOD and ARGS synchronously."
-  (lsp-bridge-deferred-chain
-    (lsp-bridge-epc-call-sync lsp-bridge-epc-process (read method) args)))
-
 (defvar-local lsp-bridge-buffer-file-deleted nil)
 
 (defun lsp-bridge-process-live-p ()
@@ -1134,8 +1123,6 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge--kill-python-process ()
   "Kill LSP-Bridge background python process."
   (when (lsp-bridge-process-live-p)
-    (when lsp-bridge-remote-enable-kill-process
-      (lsp-bridge-call-sync "close_client"))
     ;; Cleanup before exit LSP-Bridge server process.
     (lsp-bridge-call-async "cleanup")
     ;; Delete LSP-Bridge server process.
@@ -2145,39 +2132,6 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
     (before-revert-hook lsp-bridge-close-buffer-file nil t)
     (post-self-insert-hook lsp-bridge-monitor-post-self-insert 90 t)
     ))
-
-(defface lsp-bridge-tag-annotation-face
-  '((((background light))
-     :foreground "#666666" :slant italic)
-    (t
-     :foreground "#c0c0c0" :slant italic))
-  "Face used for annotations when presenting a tag.
-Annotations include kind, type, etc.")
-
-(defun lsp-bridge-xref--make-object (tag)
-  "Make xref object of TAG."
-  (let* ((path (plist-get tag :ext-abspath))
-         (line (plist-get tag :line))
-         (str (plist-get tag :str))
-         (annotation (plist-get tag :annotation)))
-    (xref-make
-     (if annotation
-         (concat (propertize (concat "(" annotation ") ") 'face 'lsp-bridge-tag-annotation-face) str)
-       str)
-     (xref-make-file-location path line 0))))
-
-(defun lsp-bridge-xref-callback (tags)
-  (let ((fetcher (lambda () (mapcar #'lsp-bridge-xref--make-object tags))))
-    (xref-show-xrefs fetcher nil)))
-
-(defun lsp-bridge-ctags-find-def-at-point ()
-  (interactive)
-  (if (lsp-bridge-is-remote-file)
-      (lsp-bridge-remote-send-func-request "ctags_find_def"
-                                           (list
-                                            (symbol-at-point)
-                                            (file-local-name (buffer-file-name))))
-    (lsp-bridge-call-async "ctags_find_def" (symbol-at-point) (buffer-file-name))))
 
 (defvar lsp-bridge-mode-map (make-sparse-keymap))
 
