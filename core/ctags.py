@@ -188,7 +188,7 @@ class Ctags:
         if candidates == []:
             message_emacs(f"symbol {symbol} not found by ctags")
         else:
-            eval_in_emacs("lsp-bridge-xref-callback", candidates)
+            eval_in_emacs("acm-backend-ctags-xref-callback", candidates)
 
     def dispatch(self, candidates, cursor_offset):
         self.lock.acquire()
