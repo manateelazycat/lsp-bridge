@@ -266,7 +266,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 - `lsp-bridge-tex-lsp-server`: LaTeX 语言的服务器， 可以选择`texlab`或者`digestif`
 - `lsp-bridge-csharp-lsp-server`: C#语言的服务器， 可以选择`omnisharp-mono` 或者 `omnisharp-dotnet`, 注意你需要给 OmniSharp 文件**执行权限**才能正常工作
 - `lsp-bridge-python-multi-lsp-server`: Python 多语言服务器， 可以选择 `pyright_ruff`, `jedi_ruff`, `python-ms_ruff`, `pylsp_ruff`
-- `lsp-bridge-nix-lsp-server`: Nix 语言的服务器， 可以选择 `rnix-lsp` 或者 `nil`
+- `lsp-bridge-nix-lsp-server`: Nix 语言的服务器， 可以选择 `rnix-lsp`, `nixd` 或者 `nil`
 - `lsp-bridge-markdown-lsp-server`: Markdown 语言的服务器， 可以选择 `vale-ls` 或者 `nil`
 
 ## 选项
@@ -410,6 +410,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 | Nickel      | [nls](https://crates.io/crates/nickel-lang-lsp/)                                                   | cargo add nickel-lang-lsp                                                                                                                                                                                                      |
 | Nix         | [nil](https://github.com/oxalica/nil)                                                              | `lsp-bridge-nix-lsp-server` 设置成 `nil`                                                                                                                                                                                       |
 |             | [rnix-lsp](https://github.com/nix-community/rnix-lsp)                                              | `lsp-bridge-nix-lsp-server` 设置成 `rnix-lsp`                                                                                                                                                                                  |
+|             | [nixd](https://github.com/nix-community/nixd)                                              | `lsp-bridge-nix-lsp-server` 设置成 `nixd`                                                                                                                                                                                                                                   |
 | Object-C    | [clangd](https://github.com/clangd/clangd)                                                         | 需要在项目根目录配置好 compile_commands.json 或 CMakeLists.txt 文件                                                                                                                                                            |
 |             | [ccls](https://github.com/MaskRay/ccls)                                                            | `lsp-bridge-c-lsp-server` 设置成 `ccls`, 需要在项目根目录配置好 compile_commands.json                                                                                                                                          |
 | Ocaml       | [ocamllsp](https://github.com/ocaml/ocaml-lsp)                                                     |                                                                                                                                                                                                                                |

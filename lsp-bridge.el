@@ -482,7 +482,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
   :type 'string)
 
 (defcustom lsp-bridge-nix-lsp-server "rnix-lsp"
-  "Default LSP server for nix, you can choose `rnix-lsp', `nil' or `nixd'."
+  "Default LSP server for nix, you can choose `rnix-lsp', `nixd' or `nil'."
   :type 'string)
 
 (defcustom lsp-bridge-markdown-lsp-server nil
