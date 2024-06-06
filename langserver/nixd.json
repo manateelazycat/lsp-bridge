@@ -1,0 +1,6 @@
+{
+  "name": "nixd",
+  "languageId": "nix",
+  "command": [ "nixd" ],
+  "settings": {}
+}
