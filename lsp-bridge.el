@@ -478,7 +478,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
   :type 'string)
 
 (defcustom lsp-bridge-csharp-lsp-server "omnisharp-dotnet"
-  "Default LSP server for C#, you can choose `omnisharp-mono' or `omnisharp-dotnet'."
+  "Default LSP server for C#, you can choose `omnisharp-mono', `omnisharp-dotnet' or `csharp-ls'."
   :type 'string)
 
 (defcustom lsp-bridge-nix-lsp-server "rnix-lsp"

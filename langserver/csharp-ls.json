@@ -1,0 +1,7 @@
+{
+    "name": "csharp-ls",
+    "languageId": "c#",
+    "command": ["$HOME/.dotnet/tools/csharp-ls"],
+    "settings": {},
+    "support-single-file": false
+}
