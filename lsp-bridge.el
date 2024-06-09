@@ -1656,8 +1656,9 @@ So we build this macro to restore postion after code format."
                                                    (list
                                                     current-word
                                                     (tramp-file-local-name lsp-bridge-remote-file-path)
+                                                    acm-backend-ctags-max-candidates
                                                     (1- (point)))))
-          (lsp-bridge-call-async "ctags_complete" current-word (buffer-file-name) (1- (point))))))
+          (lsp-bridge-call-async "ctags_complete" current-word (buffer-file-name) acm-backend-ctags-max-candidates (1- (point))))))
 
     ;; Search sdcv dictionary.
     (when acm-enable-search-sdcv-words

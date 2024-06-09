@@ -793,12 +793,17 @@ class LspBridge:
         self.tabnine.complete(before, after, filename, region_includes_beginning, region_includes_end, max_num_results)
 
     @threaded
-    def ctags_complete(self, symbol, filename, cursor_offset):
-        self.ctags.make_complete(symbol, filename, cursor_offset)
+    def ctags_complete(self, symbol, filename, max_lines, cursor_offset):
+        self.ctags.make_complete(symbol, filename, max_lines, cursor_offset)
+
+    @threaded
+    def ctags_find_def(self, symbol, filename):
+        self.ctags.find_definition(symbol, filename)
 
     def copilot_complete(self, position, editor_mode, file_path, relative_path, tab_size, text, insert_spaces):
         self.copilot.complete(position, editor_mode, file_path, relative_path, tab_size, text, insert_spaces)
 
+    @threaded
     def codeium_complete(self, cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language):
         self.codeium.complete(cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language)
 
@@ -828,7 +833,13 @@ class LspBridge:
             log_time("Exit server {}".format(server_name))
             del LSP_SERVER_DICT[server_name]
 
+    def close_client(self):
+        for client in self.client_dict.values():
+            if hasattr(client, "kill_lsp_bridge_process"):
+                client.kill_lsp_bridge_process()
+
     def cleanup(self):
+        self.close_client()
         """Do some cleanup before exit python process."""
         close_epc_client()
 
