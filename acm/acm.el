@@ -246,18 +246,14 @@
     (define-key map "\M-k" #'acm-doc-scroll-down)
     (define-key map "\M-l" #'acm-hide)
     (define-key map "\C-g" #'acm-hide)
-    (define-key map "1" #'acm-insert-number-or-complete-candiate)
-    (define-key map "2" #'acm-insert-number-or-complete-candiate)
-    (define-key map "3" #'acm-insert-number-or-complete-candiate)
-    (define-key map "4" #'acm-insert-number-or-complete-candiate)
-    (define-key map "5" #'acm-insert-number-or-complete-candiate)
-    (define-key map "6" #'acm-insert-number-or-complete-candiate)
-    (define-key map "7" #'acm-insert-number-or-complete-candiate)
-    (define-key map "8" #'acm-insert-number-or-complete-candiate)
-    (define-key map "9" #'acm-insert-number-or-complete-candiate)
-    (define-key map "0" #'acm-insert-number-or-complete-candiate)
     map)
   "Keymap used when popup is shown.")
+
+;; Only set `acm-mode-map' when acm-enable-quick-access is non-nil.
+(when (and acm-enable-quick-access
+           acm-quick-access-use-number-select)
+  (dotimes (i 10)
+    (define-key acm-mode-map (format "%d" i) #'acm-insert-number-or-complete-candiate)))
 
 (defvar acm-buffer " *acm-buffer*")
 (defvar acm-menu-frame nil)
