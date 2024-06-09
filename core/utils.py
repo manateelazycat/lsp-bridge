@@ -421,8 +421,20 @@ def split_ssh_path(ssh_path):
     else:
         return None
 
+def split_docker_path(docker_path):
+    # Pattern to extract username, container name, and path
+    pattern = r"^/docker:(?P<username>[^@]+)@(?P<container_name>[^:]+):(?P<path>/.*)$"
+    match = re.match(pattern, docker_path)
+    if match:
+        username = match.group('username')
+        container_name = match.group('container_name')
+        path = match.group('path')
+        return (username, container_name, path)
+    else:
+        return None
+
 def is_remote_path(filepath):
-    return filepath.startswith("/ssh:")
+    return filepath.startswith("/ssh:") or filepath.startswith("/docker:")
 
 def eval_sexp_in_emacs(sexp):
     epc_client.call("eval-in-emacs", [sexp])

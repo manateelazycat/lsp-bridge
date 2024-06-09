@@ -266,21 +266,21 @@ After set `lsp-bridge-completion-obey-trigger-characters-p' to nil, you need use
 (defcustom lsp-bridge-user-langserver-dir nil
   "The directory where the user place langserver configuration."
   :type '(choice (const nil)
-                 (string))
+          (string))
   :safe (lambda (v) (or (null v) (stringp v)))
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-user-multiserver-dir nil
   "The directory where the user place multiserver configuration."
   :type '(choice (const nil)
-                 (string))
+          (string))
   :safe (lambda (v) (or (null v) (stringp v)))
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-user-ssh-private-key nil
   "custom SSH private key path for use in SSH connections."
   :type '(choice (const nil)
-                 (string))
+          (string))
   :safe (lambda (v) (or (null v) (stringp v)))
   :group 'lsp-bridge)
 
@@ -513,7 +513,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     ((python-mode python-ts-mode) .                                              lsp-bridge-python-lsp-server)
     ((ruby-mode ruby-ts-mode) .                                                  "solargraph")
     ((rust-mode rustic-mode rust-ts-mode) .                                      "rust-analyzer")
-	(move-mode .                                                                 "move-analyzer")
+    (move-mode .                                                                 "move-analyzer")
     ((elixir-mode elixir-ts-mode heex-ts-mode) .                                 lsp-bridge-elixir-lsp-server)
     ((go-mode go-ts-mode) .                                                      "gopls")
     (groovy-mode .                                                               "groovy-language-server")
@@ -726,7 +726,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (enh-ruby-mode              . enh-ruby-indent-level) ; Ruby
     (crystal-mode               . crystal-indent-level) ; Crystal (Ruby)
     (css-mode                   . css-indent-offset)    ; CSS
-	(move-mode                  . move-indent-offset)   ; Move
+    (move-mode                  . move-indent-offset)   ; Move
     (rust-mode                  . rust-indent-offset)   ; Rust
     (rust-ts-mode               . rust-ts-mode-indent-offset) ; Rust
     (rustic-mode                . rustic-indent-offset)       ; Rust
@@ -781,7 +781,9 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
 
 (defun lsp-bridge-find-file-hook-function ()
   (when (and lsp-bridge-enable-with-tramp (file-remote-p (buffer-file-name)))
-    (lsp-bridge-sync-tramp-remote)))
+    (lsp-bridge-sync-tramp-remote)
+    (when (string-prefix-p "/docker:" (buffer-file-name))
+      (lsp-bridge-call-async "open_remote_file" (buffer-file-name) (list :line 0 :character 0)))))
 
 (add-hook 'find-file-hook #'lsp-bridge-find-file-hook-function)
 
@@ -840,7 +842,10 @@ So we build this macro to restore postion after code format."
       (when (and (boundp 'lsp-bridge-remote-file-path)
                  (string-equal lsp-bridge-remote-file-path path)
                  (boundp 'lsp-bridge-remote-file-host)
-                 (string-equal lsp-bridge-remote-file-host host))
+                 (or (string-equal lsp-bridge-remote-file-host host)
+                     ;; host is "127.0.0.1" sent from get_lsp_file_host() when server running inside container
+                     ;; client connect to lsp bridge server from local host
+                     (string-equal "127.0.0.1" host)))
         (cl-return buffer)))))
 
 (defun lsp-bridge-get-match-buffer-by-filepath (name)
@@ -1873,10 +1878,10 @@ Off by default."
 (defun lsp-bridge-find-def-fallback (position)
   (if (not (= (length lsp-bridge-peek-ace-list) 0))
       (progn
-	    (if (nth 0 lsp-bridge-peek-ace-list)
-	        (kill-buffer (nth 0 lsp-bridge-peek-ace-list)))
-	    (switch-to-buffer (nth 2 lsp-bridge-peek-ace-list))
-	    (goto-char (nth 1 lsp-bridge-peek-ace-list))))
+	(if (nth 0 lsp-bridge-peek-ace-list)
+	    (kill-buffer (nth 0 lsp-bridge-peek-ace-list)))
+	(switch-to-buffer (nth 2 lsp-bridge-peek-ace-list))
+	(goto-char (nth 1 lsp-bridge-peek-ace-list))))
   (message "[LSP-Bridge] No definition found.")
   (if (functionp lsp-bridge-find-def-fallback-function)
       (funcall lsp-bridge-find-def-fallback-function position)))
@@ -2343,8 +2348,8 @@ SymbolKind (defined in the LSP)."
   "Looks up the symbol under the cursor. If there's a marked region, use that instead."
   (interactive)
   (if (region-active-p)
-	  (lsp-bridge-workspace-list-symbols (buffer-substring-no-properties (mark) (point)))
-	(lsp-bridge-workspace-list-symbols (substring-no-properties (symbol-name (symbol-at-point))))))
+      (lsp-bridge-workspace-list-symbols (buffer-substring-no-properties (mark) (point)))
+    (lsp-bridge-workspace-list-symbols (substring-no-properties (symbol-name (symbol-at-point))))))
 
 (defun lsp-bridge-workspace-list-symbols (query)
   (interactive "sWorkspace symbol query: ")
@@ -2757,7 +2762,7 @@ the context of that buffer. If the buffer is created by
      ;; lsp-bridge--with-file-buffer is another macro, carefully expand it
      ,(macroexpand `(lsp-bridge--with-file-buffer ,path ,host ,@body))))
 
-(defun lsp-bridge-update-tramp-file-info (tramp-file-name tramp-connection-info host path)
+(defun lsp-bridge-update-tramp-file-info (tramp-file-name tramp-connection-info tramp-method user host path)
   (unless (assoc host lsp-bridge-tramp-alias-alist)
     (push `(,host . ,tramp-connection-info) lsp-bridge-tramp-alias-alist))
 
@@ -2766,6 +2771,8 @@ the context of that buffer. If the buffer is created by
 
   (lsp-bridge--conditional-update-tramp-file-info tramp-file-name path host
                                                   (setq-local lsp-bridge-remote-file-flag t)
+                                                  (setq-local lsp-bridge-remote-file-tramp-method tramp-method)
+                                                  (setq-local lsp-bridge-remote-file-user user)
                                                   (setq-local lsp-bridge-remote-file-host host)
                                                   (setq-local lsp-bridge-remote-file-path path)
 
@@ -2811,9 +2818,11 @@ I haven't idea how to make lsp-bridge works with `electric-indent-mode', PR are 
         (when (and (not (member tramp-method '("sudo" "sudoedit" "su" "doas")))
                    (not (member host lsp-bridge-tramp-blacklist)))
           (read-only-mode 1)
-          (lsp-bridge-call-async "sync_tramp_remote" file-name user host port path))
+          (lsp-bridge-call-async "sync_tramp_remote" file-name tramp-method user host port path))
       (lsp-bridge--conditional-update-tramp-file-info file-name path ip-host
                                                       (setq-local lsp-bridge-remote-file-flag t)
+                                                      (setq-local lsp-bridge-remote-file-tramp-method tramp-method)
+                                                      (setq-local lsp-bridge-remote-file-user user)
                                                       (setq-local lsp-bridge-remote-file-host ip-host)
                                                       (setq-local lsp-bridge-remote-file-path path)
 
@@ -2898,6 +2907,19 @@ SSH tramp file name is like /ssh:user@host#port:path"
     ;; Always enable lsp-bridge for remote file.
     ;; Remote file can always edit and update content even some file haven't corresponding lsp server, such as *.txt
     (lsp-bridge-mode 1))
+
+  (when (string-equal tramp-method "docker")
+    (let ((tramp-filename (lsp-bridge-construct-tramp-file-name lsp-bridge-remote-file-tramp-method
+                                                                lsp-bridge-remote-file-user
+                                                                lsp-bridge-remote-file-host
+                                                                lsp-bridge-remote-file-port
+                                                                lsp-bridge-remote-file-path)))
+      ;; use `find-file' to open TRAMP docker file will open a tramp buffer, kill it
+      (kill-buffer (get-file-buffer tramp-filename))
+      ;; set the name of the file visited in the current buffer
+      ;; the next time the buffer is saved it will go in the tramp file
+      (set-visited-file-name tramp-filename t t)))
+
   (when lsp-bridge-ref-open-remote-file-go-back-to-ref-window
     (lsp-bridge-switch-to-ref-window)
     (setq lsp-bridge-ref-open-remote-file-go-back-to-ref-window nil)))
