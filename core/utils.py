@@ -466,10 +466,16 @@ def replace_template(arg, project_path=None):
         return arg.replace("%FILEHASH%", os.urandom(21).hex())
     elif "%USERPROFILE%" in arg:
         return arg.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
-    elif "%PROJECTPATH%" in arg and project_path:
-        return arg.replace("%PROJECTPATH%", project_path)
     else:
         return arg
+
+def find_csharp_solution_file(directory):
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".sln"):
+                return os.path.join(root, file)
+
+    return None
 
 def touch(path):
     import os

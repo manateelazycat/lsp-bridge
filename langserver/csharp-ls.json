@@ -1,9 +1,13 @@
 {
   "name": "csharp-ls",
-  "languageId": "c#",
-  "command": ["$HOME/.dotnet/tools/csharp-ls", "-s", "%PROJECTPATH%"],
+  "languageId": "csharp",
+  "command": ["$HOME/.dotnet/tools/csharp-ls"],
   "forceInlayHint": true,
-  "settings": {},
+  "settings": {
+    "csharp": {
+      "solution": null
+    }
+  },
   "support-single-file": false,
   "capabilities": {
     "general": {

@@ -266,11 +266,6 @@ class LspServer:
         self.save_include_text = False
 
         # Start LSP server.
-        command_args = self.server_info["command"]
-        for i, arg in enumerate(command_args):
-            command_args[i] = replace_template(arg, self.project_path)
-        self.server_info["command"] = command_args
-
         self.lsp_subprocess = subprocess.Popen(self.server_info["command"],
                                                bufsize=DEFAULT_BUFFER_SIZE,
                                                stdin=PIPE,
@@ -546,9 +541,21 @@ class LspServer:
         self.sender.send_notification("exit", {})
 
     def get_server_workspace_change_configuration(self):
-        return {
+        settings = {
             "settings": self.server_info.get("settings", {})
         }
+
+        if self.server_info["name"] == "csharp-ls":
+            # Set settings.csharp.solution if found *.sln file in project,
+            # to make sure csharp-ls find and load solution with project path, not current path.
+            settings = {
+                "settings": {
+                    "csharp": {
+                        "solution": find_csharp_solution_file(self.project_path)
+                    }
+                }}
+
+        return settings
 
     def handle_workspace_configuration_request(self, name, request_id, params):
         settings = self.server_info.get("settings", {})
