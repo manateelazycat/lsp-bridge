@@ -383,7 +383,7 @@ So we use `minor-mode-overriding-map-alist' to override key, make sure all keys 
     ("org-roam"
      (when (org-in-regexp org-roam-bracket-completion-re 1)
        (cons (match-beginning 2)
-	         (match-end 2))))
+             (match-end 2))))
     ("string"
      (cons (point)
            (save-excursion
@@ -402,9 +402,9 @@ So we use `minor-mode-overriding-map-alist' to override key, make sure all keys 
 (defun acm-get-input-prefix ()
   "Get user input prefix."
   (let* ((acm-input-bound-style (if (acm-in-roam-bracket-p)
-				                    "org-roam"
-				                  "ascii"))
-	     (bound (acm-get-input-prefix-bound)))
+                                    "org-roam"
+                                  "ascii"))
+         (bound (acm-get-input-prefix-bound)))
     (if bound
         (buffer-substring-no-properties (car bound) (cdr bound))
       "")))
@@ -524,7 +524,7 @@ Only calculate template candidate when type last character."
                                           ("jupyter-candidates" jupyter-candidates)
                                           ("ctags-candidates" ctags-candidates)
                                           ("citre-candidates" citre-candidates)
-			                              ("org-roam-candidates" org-roam-candidates)
+                                          ("org-roam-candidates" org-roam-candidates)
                                           ("file-words-candidates" (acm-backend-search-file-words-candidates keyword))
                                           ("telega-candidates" (acm-backend-telega-candidates keyword))
                                           ))
@@ -620,15 +620,15 @@ The key of candidate will change between two LSP results."
          (candidates (or candidate (acm-update-candidates)))
          (menu-candidates (cl-subseq candidates 0 (min (length candidates) acm-menu-length)))
          (current-select-candidate-index (cl-position previous-select-candidate (mapcar 'acm-menu-index-info menu-candidates) :test 'equal))
-	     (acm-input-bound-style (if (acm-in-roam-bracket-p)
-				                    "org-roam"
-				                  "ascii"))
-	     (bounds (acm-get-input-prefix-bound)))
+         (acm-input-bound-style (if (acm-in-roam-bracket-p)
+                                    "org-roam"
+                                  "ascii"))
+         (bounds (acm-get-input-prefix-bound)))
     (cond
-     ;; Hide completion menu if user type first candidate completely, except when candidate annotation is `emmet' or `snippet'.
+     ;; Hide completion menu if there is only one exact match candidate, except when the candidate is a template.
      ((and (equal (length candidates) 1)
            (string-equal keyword (plist-get (nth 0 candidates) :label))
-           (not (member (plist-get (nth 0 candidates) :annotation) '("Emmet Abbreviation" "Snippet" "Yas-Snippet" "Tempel"))))
+           (not (member (plist-get (nth 0 candidates) :annotation) '("Emmet Abbreviation" "Snippet" "Yas-Snippet" "Tempel" "Org roam"))))
       (acm-hide))
      ((> (length candidates) 0)
       (let* ((menu-old-cache (cons acm-menu-max-length-cache acm-menu-number-cache)))
