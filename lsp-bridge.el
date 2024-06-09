@@ -2365,7 +2365,7 @@ SymbolKind (defined in the LSP)."
 
 (defun lsp-bridge-jump-to-file (file position)
   (cond ((string-prefix-p "jdt://" file)
-         (lsp-bridge-call-file-api "jdt_uri_resolver" (url-encode-url file) position))
+         (lsp-bridge-call-file-api "jdt_uri_resolver" (url-encode-url file) position "lsp-bridge-define--jump"))
         (t
          (find-file file)
          (goto-char (acm-backend-lsp-position-to-point position)))))

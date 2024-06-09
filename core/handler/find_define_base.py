@@ -13,10 +13,12 @@ def find_define_response(obj, response, define_jump_handler) -> None:
 
     if file_uri.startswith("jdt://"):
         # for java
+        message_emacs("Resolve path {} ...".format(file_uri))
         obj.file_action.send_server_request(obj.file_action.single_server, "jdt_uri_resolver", file_uri, start_pos, define_jump_handler)
-    elif file_uri.startswith("csharp://"):
+    elif file_uri.startswith("csharp:/metadata/"):
         # for csharp
-        raise NotImplementedError()
+        message_emacs("Resolve path {} ...".format(file_uri))
+        obj.file_action.send_server_request(obj.file_action.single_server, "csharp_uri_resolver", file_uri, start_pos, define_jump_handler)
     elif file_uri.startswith("jar://"):
         # for clojure
         raise NotImplementedError()
@@ -24,6 +26,7 @@ def find_define_response(obj, response, define_jump_handler) -> None:
         # for deno
         # Deno will return targetUri like "deno:asset/lib.deno.ns.d.ts",
         # so we need send server deno/virtualTextDocument to request virtual text document from Deno.
+        message_emacs("Resolve path {} ...".format(file_uri))
         obj.file_action.send_server_request(obj.file_action.single_server, "deno_uri_resolver", file_uri, start_pos, define_jump_handler)
     else:
         # for normal file uri
