@@ -440,7 +440,7 @@ def get_position(content, line, character):
     position = sum(len(lines[i]) + 1 for i in range(line)) + character
     return position
 
-def replace_template(arg):
+def replace_template(arg, project_path=None):
     if "%USER_EMACS_DIRECTORY%" in arg:
         if get_os_name() == "windows":
             user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
@@ -448,12 +448,14 @@ def replace_template(arg):
             user_emacs_dir = get_emacs_func_result("get-user-emacs-directory")
         return arg.replace("%USER_EMACS_DIRECTORY%", user_emacs_dir)
     elif "$HOME" in arg:
-            return os.path.expandvars(arg)
+        return os.path.expandvars(arg)
     elif "%FILEHASH%" in arg:
         # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.
         return arg.replace("%FILEHASH%", os.urandom(21).hex())
     elif "%USERPROFILE%" in arg:
         return arg.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
+    elif "%PROJECTPATH%" in arg and project_path:
+        return arg.replace("%PROJECTPATH%", project_path)
     else:
         return arg
 

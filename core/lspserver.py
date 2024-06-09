@@ -266,6 +266,11 @@ class LspServer:
         self.save_include_text = False
 
         # Start LSP server.
+        command_args = self.server_info["command"]
+        for i, arg in enumerate(command_args):
+            command_args[i] = replace_template(arg, self.project_path)
+        self.server_info["command"] = command_args
+
         self.lsp_subprocess = subprocess.Popen(self.server_info["command"],
                                                bufsize=DEFAULT_BUFFER_SIZE,
                                                stdin=PIPE,
@@ -768,6 +773,10 @@ class LspServer:
             if progress_message != "":
                 eval_in_emacs("lsp-bridge--record-work-done-progress", "[LSP-Bridge] " + progress_message)
 
+    def handle_register_capability_message(self, message):
+        if "method" in message and message["method"] in ["client/registerCapability"]:
+            self.sender.send_response(message["id"], None)
+
     def handle_recv_message(self, message: dict):
         if "error" in message:
             self.handle_error_message(message)
@@ -778,6 +787,7 @@ class LspServer:
         self.handle_log_message(message)
         self.handle_id_message(message)
         self.handle_work_done_progress_message(message)
+        self.handle_register_capability_message(message)
 
         logger.debug(json.dumps(message, indent=3))
 
