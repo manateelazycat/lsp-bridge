@@ -19,7 +19,6 @@
   "Maximal number of candidate of menu."
   :type 'integer
   :group 'acm-backend-ctags)
-(require 'xref)
 
 (defface acm-backend-ctags-annotation-face
   '((((background light))

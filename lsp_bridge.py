@@ -839,8 +839,8 @@ class LspBridge:
                 client.kill_lsp_bridge_process()
 
     def cleanup(self):
-        self.close_client()
         """Do some cleanup before exit python process."""
+        self.close_client()
         close_epc_client()
 
     def start_test(self):
