@@ -2,6 +2,7 @@
   "name": "csharp-ls",
   "languageId": "c#",
   "command": ["$HOME/.dotnet/tools/csharp-ls", "-s", "%PROJECTPATH%"],
+  "forceInlayHint": true,
   "settings": {},
   "support-single-file": false,
   "capabilities": {
