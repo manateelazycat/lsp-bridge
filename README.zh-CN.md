@@ -105,7 +105,7 @@ lsp-bridge 的优势：
 请注意:
 
 1. 使用 lsp-bridge 时， 请先关闭其他补全插件， 比如 lsp-mode, eglot, company, corfu 等等， lsp-bridge 提供从补全后端、 补全前端到多后端融合的全套解决方案。
-2. lsp-bridge 除了提供 LSP 补全以外， 也提供了很多非 LSP 的补全后端， 包括文件单词、 路径、 Yas/Tempel、 TabNine、 Codeium、 Copilot、 Citre、 Tailwind、 Ctags, Org roam 等补全后端， 如果你期望在某个模式提供这些补全， 请把对应的模式添加到 `lsp-bridge-default-mode-hooks`
+2. lsp-bridge 除了提供 LSP 补全以外， 也提供了很多非 LSP 的补全后端， 包括文件单词、 路径、 Yas/Tempel、 TabNine、 Codeium、 Copilot、 Citre、 Ctags, Org roam 等补全后端， 如果你期望在某个模式提供这些补全， 请把对应的模式添加到 `lsp-bridge-default-mode-hooks`
 3. 请不要对 lsp-bridge 执行 ```byte compile``` 或者 ```native comp```， 会导致升级后， compile 后的版本 API 和最新版不一样， lsp-bridge 多线程设计， 不需要 compile 来加速
 
 ## 本地使用

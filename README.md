@@ -112,7 +112,7 @@ for your selected Python version, instead of the `pyenv` shim for
 Please note:
 
 1. When using lsp-bridge, please first disable other completion plugins, such as lsp-mode, eglot, company, corfu, etc. lsp-bridge provides a complete solution from the completion backend, completion frontend to multi-backend integration
-2. In addition to providing LSP completion, lsp-bridge also provides many non-LSP completion backends, including file words, paths, Yas/Tempel, TabNine, Codeium, Copilot, Citre, Tailwind, Ctags, Org roam and other completion backends. If you expect to provide these completions in a certain mode, please add the corresponding mode to `lsp-bridge-default-mode-hooks`
+2. In addition to providing LSP completion, lsp-bridge also provides many non-LSP completion backends, including file words, paths, Yas/Tempel, TabNine, Codeium, Copilot, Citre, Ctags, Org roam and other completion backends. If you expect to provide these completions in a certain mode, please add the corresponding mode to `lsp-bridge-default-mode-hooks`
 3. Please do not perform ```byte compilation``` or ```native compilation``` for lsp-bridge as it will result in a difference in API and the latest version after upgrading compiling afterwards, Lsp-bridge is designed with multi-threading that does not require compilation to speed it up
 
 ## Local Usage
