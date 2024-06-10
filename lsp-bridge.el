@@ -266,21 +266,21 @@ After set `lsp-bridge-completion-obey-trigger-characters-p' to nil, you need use
 (defcustom lsp-bridge-user-langserver-dir nil
   "The directory where the user place langserver configuration."
   :type '(choice (const nil)
-          (string))
+                 (string))
   :safe (lambda (v) (or (null v) (stringp v)))
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-user-multiserver-dir nil
   "The directory where the user place multiserver configuration."
   :type '(choice (const nil)
-          (string))
+                 (string))
   :safe (lambda (v) (or (null v) (stringp v)))
   :group 'lsp-bridge)
 
 (defcustom lsp-bridge-user-ssh-private-key nil
   "custom SSH private key path for use in SSH connections."
   :type '(choice (const nil)
-          (string))
+                 (string))
   :safe (lambda (v) (or (null v) (stringp v)))
   :group 'lsp-bridge)
 
@@ -1878,10 +1878,10 @@ Off by default."
 (defun lsp-bridge-find-def-fallback (position)
   (if (not (= (length lsp-bridge-peek-ace-list) 0))
       (progn
-	(if (nth 0 lsp-bridge-peek-ace-list)
-	    (kill-buffer (nth 0 lsp-bridge-peek-ace-list)))
-	(switch-to-buffer (nth 2 lsp-bridge-peek-ace-list))
-	(goto-char (nth 1 lsp-bridge-peek-ace-list))))
+	    (if (nth 0 lsp-bridge-peek-ace-list)
+	        (kill-buffer (nth 0 lsp-bridge-peek-ace-list)))
+	    (switch-to-buffer (nth 2 lsp-bridge-peek-ace-list))
+	    (goto-char (nth 1 lsp-bridge-peek-ace-list))))
   (message "[LSP-Bridge] No definition found.")
   (if (functionp lsp-bridge-find-def-fallback-function)
       (funcall lsp-bridge-find-def-fallback-function position)))
@@ -2019,6 +2019,10 @@ Then we need call `lsp-bridge--set-mark-ring-in-new-buffer' in new buffer after 
     ))
 
 (defun lsp-bridge-define--jump-flash (position)
+  ;; We need call `display' before `goto-char',
+  ;; otherwise Emacs won't jump to target line if file has opened.
+  (redisplay)
+
   ;; Jump to define postion.
   (goto-char (acm-backend-lsp-position-to-point position))
   (recenter)
