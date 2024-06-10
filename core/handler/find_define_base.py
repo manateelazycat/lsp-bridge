@@ -39,7 +39,7 @@ def find_define_response(obj, response, define_jump_handler) -> None:
         obj.file_action.create_external_file_action(filepath)
         eval_in_emacs(define_jump_handler, filepath, get_lsp_file_host(), start_pos)
 
-def create_decompile_external_file(resolver, language_dir, decompile_dir, source_code):
+def create_decompile_external_file(uri_resolver, language_dir, decompile_dir, source_code):
     '''Some LSP server, such as Java or C#, LSP server need decompile source code to *external* file before jump to definition in *original* file.
     Base on lsp-bridge default policy, lsp-bridge will create NEW LSP server for *external* file if *external* file own by different directory.
     If *external* file use *new* LSP server, `lsp-bridge-find-def` won't response in *external* file,
@@ -55,13 +55,13 @@ def create_decompile_external_file(resolver, language_dir, decompile_dir, source
 
     # Build temp directory base on project hash.
     md5 = hashlib.md5()
-    md5.update(resolver.file_action.get_lsp_server_project_path())
+    md5.update(uri_resolver.file_action.get_lsp_server_project_path())
     project_hash = md5.hexdigest()
     data_dir = pathlib.Path(os.path.join(tempfile.gettempdir(), language_dir, project_hash))
     external_file_dir = data_dir / decompile_dir
 
     # Build temp file path.
-    url = urlparse(resolver.external_file_link)
+    url = urlparse(uri_resolver.external_file_link)
     path = unquote(url.path)[1:] # remove first / from path to make `external_file_dir` can join `path` at below
     external_file = external_file_dir / path
 
@@ -76,6 +76,6 @@ def create_decompile_external_file(resolver, language_dir, decompile_dir, source
     external_file = external_file.as_posix()
 
     # Create external file action, make sure external file share one LSP server with current file.
-    resolver.file_action.create_external_file_action(external_file, resolver.external_file_link)
+    uri_resolver.file_action.create_external_file_action(external_file, uri_resolver.external_file_link)
 
     return external_file
