@@ -1,7 +1,3 @@
-import hashlib
-import os
-import tempfile
-from urllib.parse import urlparse, unquote
 
 from core.handler import Handler
 from core.handler.find_define_base import create_decompile_external_file
