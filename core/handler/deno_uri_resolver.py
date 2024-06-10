@@ -1,4 +1,7 @@
+import hashlib
 import os
+import tempfile
+from urllib.parse import urlparse, unquote
 
 from core.handler import Handler
 from core.utils import *
@@ -23,9 +26,27 @@ class DenoUriResolver(Handler):
 
     def process_response(self, response):
         if response is not None:
-            import tempfile
-            deno_virtual_text_document_path = os.path.join(tempfile.gettempdir(), self.external_file_link.split("/")[-1])
-            with open(deno_virtual_text_document_path, "w") as f:
-                f.write(response)    # type: ignore
-                
-            eval_in_emacs(self.define_jump_handler, deno_virtual_text_document_path, get_lsp_file_host(), self.start_pos)
+            external_file_dir = ''
+            decompile_dir_name = 'deno-uri-resolver'
+
+            md5 = hashlib.md5()
+            md5.update(self.file_action.get_lsp_server_project_path())
+            project_hash = md5.hexdigest()
+            data_dir = pathlib.Path(os.path.join(tempfile.gettempdir(), "lsp-bridge-deno", project_hash))
+
+            external_file_dir = data_dir / decompile_dir_name
+
+            url = urlparse(self.external_file_link)
+            path = unquote(url.path)[1:]
+            external_file = external_file_dir / path
+
+            external_file.parent.mkdir(exist_ok=True, parents=True)
+
+            if not external_file.exists():
+                with open(external_file, 'w') as f:
+                    f.write(response)
+
+            external_file = external_file.as_posix()
+
+            self.file_action.create_external_file_action(external_file, self.external_file_link)
+            eval_in_emacs(self.define_jump_handler, external_file, get_lsp_file_host(), self.start_pos)
