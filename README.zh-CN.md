@@ -10,7 +10,7 @@
 
 # lsp-bridge
 
-lsp-bridge 的目标是使用多线程技术实现 Emacs 生态中性能最快的 LSP 客户端。
+lsp-bridge 的目标是使用多线程技术实现 Emacs 生态中速度最快的 LSP 客户端， 开箱即用的设计理念， 节省你自己折腾的时间， 时间就是金钱。
 
 lsp-bridge 的优势：
 1. 速度超快： 把 LSP 的请求等待和数据分析都隔离到外部进程， 不会因为 LSP Server 返回延迟或大量数据触发 GC 而卡住 Emacs
