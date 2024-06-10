@@ -1,3 +1,8 @@
+import hashlib
+import os
+import tempfile
+from urllib.parse import urlparse, unquote
+
 from core.handler import Handler
 from core.utils import *
 
@@ -21,23 +26,27 @@ class CSharpUriResolver(Handler):
 
     def process_response(self, response):
         if response is not None:
-            import tempfile
-            define_file_path = os.path.join(
-                tempfile.gettempdir(),
-                "csharp-ls",
-                "metadata",
-                "projects",
-                response["projectName"],
-                "assemblies",
-                response["assemblyName"],
-                "{}.cs".format(response["symbolName"])
-            )
+            external_file_dir = ''
+            decompile_dir_name = 'csharp-uri-resolver'
 
-            # We need build cache file first.
-            touch(define_file_path)
+            md5 = hashlib.md5()
+            md5.update(self.file_action.get_lsp_server_project_path())
+            project_hash = md5.hexdigest()
+            data_dir = pathlib.Path(os.path.join(tempfile.gettempdir(), "lsp-bridge-csharp", project_hash))
 
-            # Write source code to cache file.
-            with open(define_file_path, "w") as f:
-                f.write(response["source"])
+            external_file_dir = data_dir / decompile_dir_name
 
-            eval_in_emacs(self.define_jump_handler, define_file_path, get_lsp_file_host(), self.start_pos)
+            url = urlparse(self.external_file_link)
+            path = unquote(url.path)[1:]
+            external_file = external_file_dir / path
+
+            external_file.parent.mkdir(exist_ok=True, parents=True)
+
+            if not external_file.exists():
+                with open(external_file, 'w') as f:
+                    f.write(response["source"])
+
+            external_file = external_file.as_posix()
+
+            self.file_action.create_external_file_action(external_file, self.external_file_link)
+            eval_in_emacs(self.define_jump_handler, external_file, get_lsp_file_host(), self.start_pos)
