@@ -251,7 +251,7 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 (setq lsp-bridge-get-single-lang-server-by-project
       (lambda (project-path file-path)
 	(when (or (string-suffix-p ".ts" file-path)
-		      (string-suffix-p ".tsx" file-path))
+		  (string-suffix-p ".tsx" file-path))
 	  "deno")))
 ```
 
