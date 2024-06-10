@@ -88,7 +88,7 @@ and add this to your `config.el`
 
 and run `doom sync` to install it.
 
-### `pyenv` configuration
+### pyenv configuration
 
 If you use a Python distribution installed via `pyenv`, you must adjust your
 `lsp-bridge-python-command` variable to point to the actual `python3` executable

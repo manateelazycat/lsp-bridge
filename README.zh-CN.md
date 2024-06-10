@@ -85,7 +85,7 @@ lsp-bridge 的优势：
 
 并执行命令 `doom sync` 进行安装。
 
-### `pyenv` 配置
+### pyenv 配置
 
 如果你使用通过 `pyenv` 安装的 Python 发行版， 你必须调整你的 `lsp-bridge-python-command` 变量， 使其指向你所选 Python 版本的实际 `python3` 可执行文件， 而不是 `pyenv` 为 `python3` 提供的 shim。 选择下面任意一种方案放到你的 `lsp-bridge` 配置中：
 
