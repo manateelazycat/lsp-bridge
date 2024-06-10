@@ -20,11 +20,11 @@ class Handler(abc.ABC):
         """Called from Emacs, return the request params."""
         raise NotImplementedError()
 
-    def process_response(self, response: dict) -> None:
+    def process_response(self, response: dict, project_path) -> None:
         """Process the response from LSP server."""
         raise NotImplementedError()
 
-    def handle_response(self, request_id, response):
+    def handle_response(self, request_id, response, project_path):
         if request_id != self.latest_request_id:
             logger.debug("Discard outdated response: received=%d, latest=%d",
                          request_id, self.latest_request_id)
@@ -35,7 +35,7 @@ class Handler(abc.ABC):
             return
 
         try:
-            self.process_response(response)
+            self.process_response(response, project_path)
         except:
             logger.error("Error when processing response %d", request_id)
             import traceback

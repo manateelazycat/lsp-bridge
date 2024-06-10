@@ -21,11 +21,11 @@ class DenoUriResolver(Handler):
         self.define_jump_handler = define_jump_handler
         return dict(textDocument={"uri": uri})
 
-    def process_response(self, response):
+    def process_response(self, response, project_path):
         if response is not None:
             import tempfile
             deno_virtual_text_document_path = os.path.join(tempfile.gettempdir(), self.external_file_link.split("/")[-1])
             with open(deno_virtual_text_document_path, "w") as f:
                 f.write(response)    # type: ignore
-                
+
             eval_in_emacs(self.define_jump_handler, deno_virtual_text_document_path, get_lsp_file_host(), self.start_pos)

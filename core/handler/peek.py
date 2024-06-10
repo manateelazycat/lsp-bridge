@@ -14,7 +14,7 @@ class PeekFindDefine(Handler):
         self.pos = position
         return dict(position=position)
 
-    def process_response(self, response: Union[dict, list]) -> None:
+    def process_response(self, response: Union[dict, list], project_path) -> None:
         find_define_response(self, response, "lsp-bridge-peek-define--return")
 
 class PeekFindReferences(Handler):
@@ -30,7 +30,7 @@ class PeekFindReferences(Handler):
             context=dict(includeDeclaration=False)
         )
 
-    def process_response(self, response) -> None:
+    def process_response(self, response, project_path) -> None:
         if response is None:
             eval_in_emacs("lsp-bridge-find-ref-fallback", self.pos)
         else:

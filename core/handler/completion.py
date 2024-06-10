@@ -121,7 +121,7 @@ class Completion(Handler):
             h = (h ^ byte) * 16777219
         return h
 
-    def process_response(self, response: dict) -> None:
+    def process_response(self, response: dict, project_path) -> None:
         # Get completion items.
         completion_candidates = []
         items = {}

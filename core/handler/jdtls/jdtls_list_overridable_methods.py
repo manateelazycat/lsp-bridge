@@ -13,7 +13,7 @@ class JdtlsListOverridableMethods(Handler):
         self.context = arguments
         return arguments
 
-    def process_response(self, response) -> None:
+    def process_response(self, response, project_path) -> None:
         if response is not None and len(response) > 0:
             resp = {
                 "response": response,

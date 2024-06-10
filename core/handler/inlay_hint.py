@@ -15,7 +15,7 @@ class InlayHint(Handler):
         }
         return dict(range=range)
 
-    def process_response(self, response: dict) -> None:
+    def process_response(self, response: dict, project_path) -> None:
         if response is not None:
             inlay_hints = {}
 

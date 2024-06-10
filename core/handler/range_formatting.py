@@ -25,7 +25,7 @@ class RangeFormatting(Handler):
 
         return dict(range=range, options=options)
 
-    def process_response(self, response) -> None:
+    def process_response(self, response, project_path) -> None:
         if response and len(response) > 0:
             eval_in_emacs("lsp-bridge-format--update", self.file_action.filepath, response)
         else:

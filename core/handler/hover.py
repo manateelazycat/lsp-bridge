@@ -48,7 +48,7 @@ class Hover(Handler):
                             self.parse_hover_contents(item, render_strings)
         return "\n".join(render_strings)
 
-    def process_response(self, response: dict) -> None:
+    def process_response(self, response: dict, project_path) -> None:
         if response is None or "contents" not in response or len(response["contents"]) == 0:
             message_emacs("No documentation available.")
             return

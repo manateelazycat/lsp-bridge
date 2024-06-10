@@ -8,12 +8,12 @@ class Rename(Handler):
     def process_request(self, position, new_name) -> dict:
         return dict(position=position, newName=new_name)
 
-    def process_response(self, response: dict) -> None:
+    def process_response(self, response: dict, project_path) -> None:
         if response is None:
             logger.info("No rename found.")
             message_emacs("No rename found")
             return
-        
+
         eval_in_emacs("lsp-bridge-workspace-apply-edit", response)
-        
+
         message_emacs("Rename done.")

@@ -12,10 +12,10 @@ class CompletionItem(Handler):
         self.server_name = server_name
         return item
 
-    def process_response(self, response: dict) -> None:
+    def process_response(self, response: dict, project_path) -> None:
         response_doc = ""
         additional_text_edits = []
-        
+
         if response is not None:
             if "documentation" in response:
                 response_doc = response["documentation"]

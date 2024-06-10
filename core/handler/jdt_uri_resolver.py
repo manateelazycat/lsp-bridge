@@ -24,7 +24,7 @@ class JDTUriResolver(Handler):
         self.define_jump_handler = define_jump_handler
         return dict(uri=uri)
 
-    def process_response(self, response: str):
+    def process_response(self, response: str, project_path):
         if not response:
             message_emacs("No definition found.")
             return

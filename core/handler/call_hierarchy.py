@@ -12,12 +12,12 @@ class PrepareCallHierarchy(Handler):
     def process_request(self, position) -> dict:
         return dict(position=position)
 
-    def process_response(self, response: dict) -> None:
+    def process_response(self, response: dict, project_path) -> None:
         if response is None:
             message_emacs("No call hierarchies found")
         else:
             self.file_action.call(self.method_call_hierarchy, response[0], self.response_prefix)
-            
+
 class CallHierarchy(Handler):
     name = "_call_hierarchy"
     send_document_uri = False
@@ -38,7 +38,7 @@ class CallHierarchy(Handler):
                                    'range': item['range'],
                                    'from_ranges': from_ranges})
 
-    def process_response(self, response: dict) -> None:
+    def process_response(self, response: dict, project_path) -> None:
         for call_info in response:
             call = call_info[self.response_prefix]
             from_ranges = call_info['fromRanges']
@@ -53,7 +53,7 @@ class CallHierarchy(Handler):
                 call['rel_path'] = call['path']
 
         eval_in_emacs("lsp-bridge-call-hierarchy--popup", self.call_contents)
-        
+
         self.call_contents = []
 
 class PrepareCallHierarchyIncomingCalls(PrepareCallHierarchy, Handler):
@@ -73,4 +73,3 @@ class CallHierarchyIncomingCalls(CallHierarchy, Handler):
 class CallHierarchyOutgoingCalls(CallHierarchy, Handler):
     name = "call_hierarchy_outgoing"
     method = "callHierarchy/outgoingCalls"
-    

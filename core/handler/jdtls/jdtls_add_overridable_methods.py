@@ -11,6 +11,6 @@ class JdtlsAddOverridableMethods(Handler):
     def process_request(self, params) -> dict:
         return parse_json_content(params)
 
-    def process_response(self, response) -> None:
+    def process_response(self, response, project_path) -> None:
         if response is not None and len(response) > 0:
             eval_in_emacs("lsp-bridge-workspace-apply-edit", response)

@@ -15,7 +15,7 @@ class FindImplementation(Handler):
         self.pos = position
         return dict(position=position)
 
-    def process_response(self, response: dict) -> None:
+    def process_response(self, response: dict, project_path) -> None:
         if response is None:
             message_emacs("No implementation found")
         elif len(response) == 1:

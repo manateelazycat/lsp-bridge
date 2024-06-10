@@ -13,5 +13,5 @@ class FindDefine(Handler):
         self.pos = position
         return dict(position=position)
 
-    def process_response(self, response: Union[dict, list]) -> None:
+    def process_response(self, response: Union[dict, list], project_path) -> None:
         find_define_response(self, response, "lsp-bridge-define--jump")

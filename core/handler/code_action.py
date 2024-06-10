@@ -12,12 +12,12 @@ class CodeAction(Handler):
     def process_request(self, lsp_server_name, diagnostics, range_start, range_end, action_kind) -> dict:
         self.action_kind = action_kind
         self.lsp_server_name = lsp_server_name
-        
+
         range = {
             "start": range_start,
             "end": range_end
         }
-        
+
         if isinstance(action_kind, str):
             context = {
                 "diagnostics": diagnostics,
@@ -27,10 +27,10 @@ class CodeAction(Handler):
             context = {
                 "diagnostics": diagnostics
             }
-            
+
         return dict(range=range, context=context)
 
-    def process_response(self, response) -> None:
+    def process_response(self, response, project_path) -> None:
         remote_connection_info = get_remote_connection_info()
         if remote_connection_info != "" :
             for item in response:

@@ -471,7 +471,7 @@ def replace_template(arg, project_path=None):
 def find_csharp_solution_file(directory):
     for root, dirs, files in os.walk(directory):
         for file in files:
-            if file.endswith(".sln"):
+            if file.endswith(".sln") or file.endswith(".csproj"):
                 return os.path.join(root, file)
 
     return None

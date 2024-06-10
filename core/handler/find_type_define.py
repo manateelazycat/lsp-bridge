@@ -10,7 +10,7 @@ class FindTypeDefine(Handler):
     def process_request(self, position) -> dict:
         return dict(position=position)
 
-    def process_response(self, response: dict) -> None:
+    def process_response(self, response: dict, project_path) -> None:
         if not response:
             message_emacs("No type define found.")
             return

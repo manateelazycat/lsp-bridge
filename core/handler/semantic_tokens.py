@@ -35,7 +35,7 @@ class SemanticTokens(Handler):
         return dict()
 
 
-    def process_response(self, response):
+    def process_response(self, response, project_path):
         if response is None:
             return
         data = response.get("data")

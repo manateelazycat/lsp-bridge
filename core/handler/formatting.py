@@ -20,7 +20,7 @@ class Formatting(Handler):
 
         return dict(options=options)
 
-    def process_response(self, response) -> None:
+    def process_response(self, response, project_path) -> None:
         if response and len(response) > 0:
             remote_connection_info = get_remote_connection_info()
             tramp_path = remote_connection_info + self.file_action.filepath

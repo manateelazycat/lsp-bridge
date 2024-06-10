@@ -10,7 +10,7 @@ class PrepareRename(Handler):
     def process_request(self, position) -> dict:
         return dict(position=position)
 
-    def process_response(self, response: dict) -> None:
+    def process_response(self, response: dict, project_path) -> None:
         # compatible for gopls
         if "range" in response:
             response = response["range"]

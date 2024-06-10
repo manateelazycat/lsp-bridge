@@ -734,6 +734,7 @@ class LspServer:
                     handler.handle_response(
                         request_id=message["id"],
                         response=message["result"],
+                        project_path=self.project_path,
                     )
                 else:
                     self.handle_workspace_message(message)

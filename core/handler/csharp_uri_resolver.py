@@ -19,25 +19,29 @@ class CSharpUriResolver(Handler):
         self.define_jump_handler = define_jump_handler
         return dict(textDocument={"uri": uri})
 
-    def process_response(self, response):
+    def process_response(self, response, project_path):
         if response is not None:
-            import tempfile
-            define_file_path = os.path.join(
-                tempfile.gettempdir(),
-                "csharp-ls",
-                "metadata",
-                "projects",
-                response["projectName"],
-                "assemblies",
-                response["assemblyName"],
-                "{}.cs".format(response["symbolName"])
-            )
+            # Find the path to the C# solution file
+            solution_path = find_csharp_solution_file(project_path)
 
-            # We need build cache file first.
-            touch(define_file_path)
+            if solution_path is not None:
+                define_file_path = os.path.join(
+                    solution_path,
+                    ".cache",
+                    "csharp-ls",
+                    "metadata",
+                    "projects",
+                    response["projectName"],
+                    "assemblies",
+                    response["assemblyName"],
+                    "{}.cs".format(response["symbolName"])
+                )
 
-            # Write source code to cache file.
-            with open(define_file_path, "w") as f:
-                f.write(response["source"])
+                # We need build cache file first.
+                touch(define_file_path)
 
-            eval_in_emacs(self.define_jump_handler, define_file_path, get_lsp_file_host(), self.start_pos)
+                # Write source code to cache file.
+                with open(define_file_path, "w") as f:
+                    f.write(response["source"])
+
+                eval_in_emacs(self.define_jump_handler, define_file_path, get_lsp_file_host(), self.start_pos)

@@ -18,7 +18,7 @@ class FindReferences(Handler):
             context=dict(includeDeclaration=False)
         )
 
-    def process_response(self, response) -> None:
+    def process_response(self, response, project_path) -> None:
         if response is None:
             eval_in_emacs("lsp-bridge-find-ref-fallback", self.pos)
         else:
