@@ -2371,6 +2371,10 @@ SymbolKind (defined in the LSP)."
 (defun lsp-bridge-jump-to-file (file position)
   (cond ((string-prefix-p "jdt://" file)
          (lsp-bridge-call-file-api "jdt_uri_resolver" (url-encode-url file) position "lsp-bridge-define--jump"))
+        ((string-prefix-p "deno:" file)
+         (lsp-bridge-call-file-api "deno_uri_resolver" (url-encode-url file) position "lsp-bridge-define--jump"))
+        ((string-prefix-p "csharp:/metadata/" file)
+         (lsp-bridge-call-file-api "csharp_uri_resolver" (url-encode-url file) position "lsp-bridge-define--jump"))
         (t
          (find-file file)
          (goto-char (acm-backend-lsp-position-to-point position)))))
