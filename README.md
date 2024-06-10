@@ -88,6 +88,25 @@ and add this to your `config.el`
 
 and run `doom sync` to install it.
 
+### `pyenv` configuration
+
+If you use a Python distribution installed via `pyenv`, you must adjust your
+`lsp-bridge-python-command` variable to point to the actual `python3` executable
+for your selected Python version, instead of the `pyenv` shim for
+`python3`. Place one of the following `setq` expressions within your
+`lsp-bridge` configuration:
+
+``` elisp
+;; OPTION 1 (static)
+;; Replace <VERSION> with the actual Python version number (i.e., 3.11.4).
+(setq lsp-bridge-python-command "~/.pyenv/versions/<VERSION>/bin/python3")
+
+;; OPTION 2 (dynamic)
+;; This is a better option if the `pyenv' executable is discoverable on `exec-path':
+(setq lsp-bridge-python-command (string-trim
+                                 (shell-command-to-string "pyenv which python3")))
+```
+
 ### If you are unable to use normally after installing it, please read [Report bug](https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#report-bug) first
 
 Please note:
