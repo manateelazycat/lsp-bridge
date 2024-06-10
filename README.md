@@ -257,7 +257,7 @@ For example, we can enable the Deno LSP server for Deno scripts with the followi
 (setq lsp-bridge-get-single-lang-server-by-project
       (lambda (project-path file-path)
 	(when (or (string-suffix-p ".ts" file-path)
-		  (string-suffix-p ".tsx" file-path))
+		      (string-suffix-p ".tsx" file-path))
 	  "deno")))
 ```
 

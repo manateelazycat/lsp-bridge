@@ -238,19 +238,20 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 举例, 我们可以通过如下配置， 对 Deno 脚本开启 Deno LSP 服务器：
 
 ```elisp
-;; lsp-bridge first try `lsp-bridge--get-multi-lang-server-func', then try `lsp-bridge--get-single-lang-server-func'
-;; So we need remove `ts' and `tsx' setting from default value of lsp-bridge-multi-lang-server-extension-list.
+;; lsp-bridge 首先尝试使用 `lsp-bridge--get-multi-lang-server-func`， 然后尝试使用 `lsp-bridge--get-single-lang-server-func`
+;; 因此我们需要从 lsp-bridge-multi-lang-server-extension-list 的默认值中移除 `ts` 和 `tsx` 的设置。
 (setq lsp-bridge-multi-lang-server-extension-list
       (cl-remove-if (lambda (item)
                       (equal (car item) '("ts" "tsx")))
                     lsp-bridge-multi-lang-server-extension-list))
 
-;; Last we customize `lsp-bridge-get-single-lang-server-by-project' to return `deno' lsp server name.
-;; I recommand you write some code to compare project-path or file-path, return `deno' only if match target path.
+;; 最后我们自定义 `lsp-bridge-get-single-lang-server-by-project` 以返回 `deno` lsp 服务器名称。
+;; 我建议你编写一些代码来比较 project-path 或 file-path， 只有在匹配目标路径时才返回 `deno`
+;; 下面的配置只是简单的匹配 `ts` 和 `tsx` 的扩展名， 让你快速体验 Deno
 (setq lsp-bridge-get-single-lang-server-by-project
       (lambda (project-path file-path)
 	(when (or (string-suffix-p ".ts" file-path)
-		  (string-suffix-p ".tsx" file-path))
+		      (string-suffix-p ".tsx" file-path))
 	  "deno")))
 ```
 
