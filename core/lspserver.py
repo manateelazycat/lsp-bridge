@@ -432,12 +432,15 @@ class LspServer:
 
         return uri
 
+    def get_server_name(self):
+        return self.server_name.split('#')[1] if '#' in self.server_name else self.server_name
+
     def get_language_id(self, fa):
         # Get extension name.
         _, extension = os.path.splitext(fa.filepath)
         extension_name = extension.split(os.path.extsep)[-1].lower()
 
-        match_language_id = get_emacs_func_result("get-language-id", self.project_path, fa.filepath, self.server_name, extension_name)
+        match_language_id = get_emacs_func_result("get-language-id", self.project_path, fa.filepath, self.get_server_name(), extension_name)
 
         # User can customize `lsp-bridge--get-language-id-func` to support some advanced LSP server
         # that need return language id with project environment, such as, TailwindCSS LSP server.
