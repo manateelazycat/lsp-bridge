@@ -512,6 +512,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 - [lsp-bridge 架构设计](https://manateelazycat.github.io/2022/05/12/lsp-bridge/)
 - [lsp-bridge 远程补全架构设计](https://manateelazycat.github.io/2023/03/31/lsp-bridge-remote-file/)
 - [为什么 lsp-bridge 不用 capf](https://manateelazycat.github.io/2022/06/26/why-lsp-bridge-not-use-capf/)
+- [深入分析 LSP 协议](https://manateelazycat.github.io/2024/06/11/lsp-trick/)
 - [lsp-bridge Wiki](https://github.com/manateelazycat/lsp-bridge/wiki)
 
 接着打开开发选项 `lsp-bridge-enable-log` ， happy hacking! ;)

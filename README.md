@@ -516,6 +516,7 @@ Please read below articles first:
 - [lsp-bridge Architecture Design](https://manateelazycat.github.io/2022/05/12/lsp-bridge/)
 - [lsp-bridge Remote Completion Architecture Design](https://manateelazycat.github.io/2023/03/31/lsp-bridge-remote-file/)
 - [Why lsp-bridge doesn't use capf](https://manateelazycat.github.io/2022/06/26/why-lsp-bridge-not-use-capf/)
+- [In-depth Analysis of the LSP Protocol](https://manateelazycat.github.io/2024/06/11/lsp-trick/)
 - [lsp-bridge Wiki](https://github.com/manateelazycat/lsp-bridge/wiki)
 
 Then turn on develop option `lsp-bridge-enable-log` and happy hacking! ;)
