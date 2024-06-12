@@ -56,6 +56,7 @@ from core.handler.prepare_rename import PrepareRename  # noqa: F401
 from core.handler.rename import Rename  # noqa: F401
 from core.handler.jdt_uri_resolver import JDTUriResolver  # noqa: F401
 from core.handler.deno_uri_resolver import DenoUriResolver  # noqa: F401
+from core.handler.csharp_uri_resolver import CSharpUriResolver  # noqa: F401
 from core.handler.code_action import CodeAction  # noqa: F401
 from core.handler.formatting import Formatting  # noqa: F401
 from core.handler.range_formatting import RangeFormatting  # noqa: F401

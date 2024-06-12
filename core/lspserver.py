@@ -432,12 +432,15 @@ class LspServer:
 
         return uri
 
+    def get_server_name(self):
+        return self.server_name.split('#')[1] if '#' in self.server_name else self.server_name
+
     def get_language_id(self, fa):
         # Get extension name.
         _, extension = os.path.splitext(fa.filepath)
         extension_name = extension.split(os.path.extsep)[-1].lower()
 
-        match_language_id = get_emacs_func_result("get-language-id", self.project_path, fa.filepath, self.server_name, extension_name)
+        match_language_id = get_emacs_func_result("get-language-id", self.project_path, fa.filepath, self.get_server_name(), extension_name)
 
         # User can customize `lsp-bridge--get-language-id-func` to support some advanced LSP server
         # that need return language id with project environment, such as, TailwindCSS LSP server.
@@ -541,9 +544,21 @@ class LspServer:
         self.sender.send_notification("exit", {})
 
     def get_server_workspace_change_configuration(self):
-        return {
+        settings = {
             "settings": self.server_info.get("settings", {})
         }
+
+        if self.server_info["name"] == "csharp-ls":
+            # Set settings.csharp.solution if found *.sln file in project,
+            # to make sure csharp-ls find and load solution with project path, not current path.
+            settings = {
+                "settings": {
+                    "csharp": {
+                        "solution": find_csharp_solution_file(self.project_path)
+                    }
+                }}
+
+        return settings
 
     def handle_workspace_configuration_request(self, name, request_id, params):
         settings = self.server_info.get("settings", {})
@@ -768,6 +783,10 @@ class LspServer:
             if progress_message != "":
                 eval_in_emacs("lsp-bridge--record-work-done-progress", "[LSP-Bridge] " + progress_message)
 
+    def handle_register_capability_message(self, message):
+        if "method" in message and message["method"] in ["client/registerCapability"]:
+            self.sender.send_response(message["id"], None)
+
     def handle_recv_message(self, message: dict):
         if "error" in message:
             self.handle_error_message(message)
@@ -778,6 +797,7 @@ class LspServer:
         self.handle_log_message(message)
         self.handle_id_message(message)
         self.handle_work_done_progress_message(message)
+        self.handle_register_capability_message(message)
 
         logger.debug(json.dumps(message, indent=3))
 

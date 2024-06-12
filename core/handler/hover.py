@@ -37,10 +37,10 @@ class Hover(Handler):
         elif content_type == list:
             language = ""
             for item in contents:
-                if type(item) == dict:
+                if isinstance(item, dict):
                     language = item["language"]
                     self.parse_hover_contents(item, render_strings)
-                if type(item) == str:
+                if isinstance(item, str):
                     if item != "":
                         if language == "java":
                             render_strings.append(item)
