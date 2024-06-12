@@ -2533,7 +2533,10 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 
 (defun lsp-bridge--not-zsh-buffer ()
   "Check if the file extension matches .zsh, .zshenv, or .zshrc."
-  (not (ignore-errors (member (file-name-extension (buffer-file-name)) '("zsh" "zshenv" "zshrc")))))
+  (not (ignore-errors
+         (or (string-equal (file-name-extension (buffer-file-name)) "zsh")
+             (member (buffer-name) '(".zshenv" ".zshrc"))
+             ))))
 
 ;;;###autoload
 (defun global-lsp-bridge-mode ()
