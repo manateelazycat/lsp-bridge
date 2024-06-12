@@ -1017,6 +1017,12 @@ So we build this macro to restore postion after code format."
   (cond ((and lsp-bridge-enable-org-babel (eq major-mode 'org-mode))
          (setq-local acm-is-elisp-mode-in-org nil)
          (lsp-bridge-org-babel-check-lsp-server))
+        ;; `acm-backend-lsp-server-names' is set after LSP server start,
+        ;; we don't need search below LSP rules if `acm-backend-lsp-server-names' is set
+        ((and (boundp 'acm-backend-lsp-server-names)
+              acm-backend-lsp-server-names)
+         acm-backend-lsp-server-names)
+        ;; Search LSP rules.
         (t
          (when-let* ((filename (or (ignore-errors (file-truename
                                                    (lsp-bridge-get-buffer-file-name-text)))
