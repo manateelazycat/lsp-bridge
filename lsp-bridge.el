@@ -146,6 +146,14 @@
   :type '(repeat function)
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-enable-predicates '(
+                                          lsp-bridge--not-acm-doc-markdown-buffer
+                                          lsp-bridge--not-mind-wave-chat-buffer
+                                          lsp-bridge--not-zsh-buffer
+                                          )
+  "A list of predicate functions with no argument to enable lsp-bridge in `lsp-bridge-default-mode-hooks'."
+  :type '(repeat function)
+  :group 'lsp-bridge)
 (defcustom lsp-bridge-flash-region-delay .3
   "How many seconds to flash `lsp-bridge-font-lock-flash' after navigation.
 
@@ -2523,15 +2531,21 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
    (not (buffer-file-name))
    (not (string-equal (file-name-extension (buffer-file-name)) "chat"))))
 
+(defun lsp-bridge--not-zsh-buffer ()
+  "Check if the file extension matches .zsh, .zshenv, or .zshrc."
+  (not (ignore-errors (member (file-name-extension (buffer-file-name)) '("zsh" "zshenv" "zshrc")))))
+
 ;;;###autoload
 (defun global-lsp-bridge-mode ()
   (interactive)
 
   (dolist (hook lsp-bridge-default-mode-hooks)
     (add-hook hook (lambda ()
-                     (when (and (lsp-bridge--not-mind-wave-chat-buffer)
-                                (lsp-bridge--not-acm-doc-markdown-buffer))
-                       (lsp-bridge-mode 1))))))
+                     (when (cl-every (lambda (pred)
+                                       (lsp-bridge-check-predicate pred "global-lsp-bridge-mode"))
+                                     lsp-bridge-enable-predicates)
+                       (lsp-bridge-mode 1))
+                     ))))
 
 (with-eval-after-load 'evil
   (evil-add-command-properties #'lsp-bridge-find-def :jump t)
