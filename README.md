@@ -215,30 +215,6 @@ If you use `apheleia` as formatter, `lsp-bridge` now support auto formatting fil
     (add-hook 'apheleia-post-format-hook #'lsp-bridge-update-tramp-docker-file-mod-time)))
 ```
 
-### goodness
-Use [topsy](https://github.com/alphapapa/topsy.el) to remind you that you're editing a remote file.
-
-#### doom-emacs configuration example
-`packages.el`
-```elisp
-(package! topsy)
-```
-
-`config.el`
-```
-(use-package! topsy
-    :config
-    (after! lsp-bridge
-      (setcdr (assoc nil topsy-mode-functions)
-              (lambda ()
-                (when (lsp-bridge-is-remote-file) "[LBR] REMOTE FILE")))
-
-      ;; do not activate when the current major mode is org-mode
-      (add-hook 'lsp-bridge-mode-hook (lambda ()
-                                        (unless (derived-mode-p 'org-mode)
-                                          (topsy-mode 1))))))
-```                                          
-
 ## Keymap
 
 | Key          | Command                   | Description                                                                                                                   |
