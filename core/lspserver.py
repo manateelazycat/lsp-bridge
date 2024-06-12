@@ -332,186 +332,52 @@ class LspServer:
 
         merge_capabilites = merge(server_capabilities, {
             "workspace": {
-              "workspaceEdit": {
-                "documentChanges": True,
-                "resourceOperations": [
-                  "create",
-                  "rename",
-                  "delete"
-                ]
-              },
-              "applyEdit": True,
-              "symbol": {
-                "symbolKind": {
-                  "valueSet":  list(range(1, 27))
+                "configuration": True,
+                "symbol": {
+                    "resolveSupport": {
+                        "properties": []
+                    }
                 }
-              },
-              "executeCommand": {
-                "dynamicRegistration": True
-              },
-              "workspaceFolders": True,
-              "configuration": True,
-              "codeLens": {
-                "refreshSupport": True
-              },
-              "inlayHint": {
-                "refreshSupport": True
-              },
-              "fileOperations": {
-                "didCreate": True,
-                "willCreate": True,
-                "didRename": True,
-                "willRename": True,
-                "didDelete": True,
-                "willDelete": True
-              }
             },
             "textDocument": {
-              "declaration": {
-                "dynamicRegistration": True,
-                "linkSupport": True
-              },
-              "definition": {
-                "dynamicRegistration": True,
-                "linkSupport": True
-              },
-              "references": {
-                "dynamicRegistration": True
-              },
-              "implementation": {
-                "dynamicRegistration": True,
-                "linkSupport": True
-              },
-              "typeDefinition": {
-                "dynamicRegistration": True,
-                "linkSupport": True
-              },
-              "synchronization": {
-                "willSave": True,
-                "didSave": True,
-                "willSaveWaitUntil": True
-              },
-              "documentSymbol": {
-                "symbolKind": {
-                  "valueSet": list(range(1, 27))
+                "completion": {
+                    "completionItem": {
+                        "snippetSupport": True,
+                        "deprecatedSupport": True,
+                        "tagSupport": {
+                            "valueSet": [
+                                1
+                            ]
+                        },
+                        "resolveSupport": {
+                            # rust-analyzer need add `additionalTextEdits` to enable auto-import.
+                            "properties": ["documentation", "detail", "additionalTextEdits"]
+                        }
+                    }
                 },
-                "hierarchicalDocumentSymbolSupport": True
-              },
-              "formatting": {
-                "dynamicRegistration": True
-              },
-              "rangeFormatting": {
-                "dynamicRegistration": True
-              },
-              "onTypeFormatting": {
-                "dynamicRegistration": True
-              },
-              "rename": {
-                "dynamicRegistration": True,
-                "prepareSupport": True
-              },
-              "codeAction": {
-                "dynamicRegistration": True,
-                "isPreferredSupport": True,
-                "codeActionLiteralSupport": {
-                  "codeActionKind": {
-                    "valueSet": [
-                      "",
-                      "quickfix",
-                      "refactor",
-                      "refactor.extract",
-                      "refactor.inline",
-                      "refactor.rewrite",
-                      "source",
-                      "source.organizeImports"
-                    ]
-                  }
+                "codeAction": {
+                    "dynamicRegistration": False,
+                    "codeActionLiteralSupport": {
+                        "codeActionKind": {
+                            "valueSet": [
+                                "quickfix",
+                                "refactor",
+                                "refactor.extract",
+                                "refactor.inline",
+                                "refactor.rewrite",
+                                "source",
+                                "source.organizeImports"
+                            ]
+                        }
+                    },
+                    "isPreferredSupport": True
                 },
                 "inlayHint": {
                     "dynamicRegistration": False
-                },
-                "resolveSupport": {
-                  "properties": [
-                    "edit",
-                    "command"
-                  ]
-                },
-                "dataSupport": True
-              },
-              "completion": {
-                "completionItem": {
-                  "snippetSupport": True,
-                  "documentationFormat": [
-                    "markdown",
-                    "plaintext"
-                  ],
-                  "resolveAdditionalTextEditsSupport": True,
-                  "insertReplaceSupport": True,
-                  "deprecatedSupport": True,
-                  "resolveSupport": {
-                    "properties": [
-                      "documentation",
-                      "detail",
-                      "additionalTextEdits",
-                      "command"
-                    ]
-                  },
-                  "insertTextModeSupport": {
-                    "valueSet": [
-                      1,
-                      2
-                    ]
-                  }
-                },
-                "contextSupport": True,
-                "dynamicRegistration": True
-              },
-              "signatureHelp": {
-                "signatureInformation": {
-                  "parameterInformation": {
-                    "labelOffsetSupport": True
-                  }
-                },
-                "dynamicRegistration": True
-              },
-              "documentLink": {
-                "dynamicRegistration": True,
-                "tooltipSupport": True
-              },
-              "hover": {
-                "dynamicRegistration": True
-              },
-              "foldingRange": {
-                "dynamicRegistration": True
-              },
-              "selectionRange": {
-                "dynamicRegistration": True
-              },
-              "callHierarchy": {
-                "dynamicRegistration": True
-              },
-              "typeHierarchy": {
-                "dynamicRegistration": True
-              },
-              "publishDiagnostics": {
-                "relatedInformation": True,
-                "tagSupport": {
-                  "valueSet": [
-                    1,
-                    2
-                  ]
-                },
-                "versionSupport": True
-              },
-              "linkedEditingRange": {
-                "dynamicRegistration": True
-              }
+                }
             },
             "window": {
-              "workDoneProgress": True,
-              "showDocument": {
-                "support": True
-              }
+                "workDoneProgress": True
             }
         })
 
