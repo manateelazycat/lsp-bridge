@@ -120,6 +120,7 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 
 ## 远程使用
 
+### 远程 SSH 服务器
 `lsp-bridge`能像 VSCode 一样在远程服务器文件上进行代码语法补全。 配置步骤如下：
 
 1. 在远程服务器安装 lsp-bridge 和相应的 LSP Server
@@ -149,6 +150,91 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 2. lsp-bridge 会用`~/.ssh`的第一个 *.pub 文件作为登录凭证。 如果公钥登录失败， 会要求输入密码。 lsp-bridge 不会存储密码， 建议用公钥登录以避免重复输入密码
 3. 你需要在远程服务器完整的下载整个 lsp-bridge git 仓库， 并切换到 lsp-bridge 目录来启动 `lsp_bridge.py`， `lsp_bridge.py` 需要其他文件来保证正常工作， 不能只把 `lsp_bridge.py` 文件拷贝到其他目录来启动
 4. 如果 tramp 文件出现 lsp-bridge 连接错误， 可以执行 `lsp-bridge-tramp-show-hostnames` 函数， 然后检查输出的 host 配置选项是否符合预期
+
+Here is the translation of the technical description to Chinese:
+
+### 本地开发容器
+
+`lsp-bridge` 现在支持在 `devcontainer` 上的文件补完，类似于 VSCode。这是通过使用 [devcontainer-feature-emacs-lsp-bridge](https://github.com/nohzafk/devcontainer-feature-emacs-lsp-bridge) 实现的。
+
+以下是一个完整的配置示例：
+
+#### devcontainer.json
+`.devcontainer/devcontainer.json`
+
+```json
+{
+    "name": "Node.js & TypeScript",
+    // Your base image
+    "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+    // Features to add to the dev container. More info: https://containers.dev/features.
+    "features": {
+        "ghcr.io/nohzafk/devcontainer-feature-emacs-lsp-bridge/pyright-background-analysis_ruff:latest": {}
+    },
+    "forwardPorts": [
+        9997,
+        9998,
+        9999
+    ],
+    // More info: https://aka.ms/dev-containers-non-root.
+    "remoteUser": "root"
+}
+```
+
+#### Doom Emacs 配置
+`config.el`
+
+```elisp
+(use-package! lsp-bridge
+  :config
+  (setq lsp-bridge-python-multi-lsp-server "pyright-background-analysis_ruff")
+
+  (global-lsp-bridge-mode))
+```
+
+启动开发容器，并使用 `file-find` `/docker:user@container:/path/to/file` 打开文件。
+
+更多详细信息，请参阅 [devcontainer-feature-emacs-lsp-bridge](https://github.com/nohzafk/devcontainer-feature-emacs-lsp-bridge)。
+
+如果您使用 `apheleia` 作为 Formatter，`lsp-bridge` 现在支持自动格式化 devcontainer 上的文件。
+
+```elisp
+(use-package! apheleia
+  :config
+  (setq +format-with-lsp nil)
+  ;; 设置 Formatter
+  (setf (alist-get 'python-mode apheleia-mode-alist) 'ruff)
+  (setf (alist-get 'python-ts-mode apheleia-mode-alist) 'ruff)
+
+  (setq apheleia-remote-algorithm 'local)
+  (after! lsp-bridge
+    (add-hook 'apheleia-post-format-hook #'lsp-bridge-update-tramp-docker-file-mod-time)))
+```
+
+### 编辑远程文件提示
+
+使用 [topsy](https://github.com/alphapapa/topsy.el) 提醒您正在编辑远程文件。
+
+#### Doom Emacs 配置示例
+`packages.el`
+```elisp
+(package! topsy)
+```
+
+`config.el`
+```elisp
+(use-package! topsy
+    :config
+    (after! lsp-bridge
+      (setcdr (assoc nil topsy-mode-functions)
+              (lambda ()
+                (when (lsp-bridge-is-remote-file) "[LBR] 远程文件")))
+
+      ;; 当前主要模式为 org-mode 时不激活
+      (add-hook 'lsp-bridge-mode-hook (lambda ()
+                                        (unless (derived-mode-p 'org-mode)
+                                          (topsy-mode 1))))))
+```
 
 ## 按键
 

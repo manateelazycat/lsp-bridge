@@ -127,6 +127,7 @@ It should be noted that lsp-bridge has three scanning modes:
 
 ## Remote Usage
 
+### Remote SSH server
 `lsp-bridge` can perform code syntax completion on files on a remote server, similar to VSCode. The configuration steps are as follows:
 
 1. Install lsp-bridge and the corresponding LSP Server on the remote server.
@@ -157,6 +158,86 @@ Note:
 3. To run lsp_bridge.py successfully you need to completely download the entire git repository of lsp-bridge on a remote server, and switch into its directory, lsp_bridge.py requires other files to function properly, so copying only the lsp_bridge.py file can't work
 4. If a tramp file encounters an lsp-bridge connection error, you can execute the `lsp-bridge-tramp-show-hostnames` function and then check if the output of the host configuration options meets expectations
 
+### Local devcontainer
+`lsp-bridge` now support completion on files on `devcontainer`, similar to VSCode. This is done by using [devcontainer-feature-emacs-lsp-bridge](https://github.com/nohzafk/devcontainer-feature-emacs-lsp-bridge).
+
+Here is a compelte configuration example
+
+#### devcontainer.json
+`.devcontainer/devcontainer.json`
+
+``` json
+{
+    "name": "Node.js & TypeScript",
+    // Your base image
+    "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+    // Features to add to the dev container. More info: https://containers.dev/features.
+    "features": {
+        "ghcr.io/nohzafk/devcontainer-feature-emacs-lsp-bridge/pyright-background-analysis_ruff:latest": {}
+    },
+    "forwardPorts": [
+        9997,
+        9998,
+        9999
+    ],
+    // More info: https://aka.ms/dev-containers-non-root.
+    "remoteUser": "root"
+}
+```
+
+#### doom-emacs configuration
+`config.el`
+
+``` elisp
+(use-package! lsp-bridge
+  :config
+  (setq lsp-bridge-python-multi-lsp-server "pyright-background-analysis_ruff")
+
+  (global-lsp-bridge-mode))
+```
+
+start the devcontainer and use `file-find` `/docker:user@container:/path/to/file` to open the file.
+
+more detail please refer to [devcontainer-feature-emacs-lsp-bridge](https://github.com/nohzafk/devcontainer-feature-emacs-lsp-bridge).
+
+If you use `apheleia` as formatter, `lsp-bridge` now support auto formatting file on devcontainer.
+
+```elsip
+(use-package! apheleia
+  :config
+  (setq +format-with-lsp nil)
+  ;; which formatter to use
+  (setf (alist-get 'python-mode apheleia-mode-alist) 'ruff)
+  (setf (alist-get 'python-ts-mode apheleia-mode-alist) 'ruff)
+
+  (setq apheleia-remote-algorithm 'local)
+  (after! lsp-bridge
+    (add-hook 'apheleia-post-format-hook #'lsp-bridge-update-tramp-docker-file-mod-time)))
+```
+
+### goodness
+Use [topsy](https://github.com/alphapapa/topsy.el) to remind you that you're editing a remote file.
+
+#### doom-emacs configuration example
+`packages.el`
+```elisp
+(package! topsy)
+```
+
+`config.el`
+```
+(use-package! topsy
+    :config
+    (after! lsp-bridge
+      (setcdr (assoc nil topsy-mode-functions)
+              (lambda ()
+                (when (lsp-bridge-is-remote-file) "[LBR] REMOTE FILE")))
+
+      ;; do not activate when the current major mode is org-mode
+      (add-hook 'lsp-bridge-mode-hook (lambda ()
+                                        (unless (derived-mode-p 'org-mode)
+                                          (topsy-mode 1))))))
+```                                          
 
 ## Keymap
 
