@@ -85,21 +85,6 @@ lsp-bridge 的优势：
 
 并执行命令 `doom sync` 进行安装。
 
-### pyenv 配置
-
-如果你使用通过 `pyenv` 安装的 Python 发行版， 你必须调整你的 `lsp-bridge-python-command` 变量， 使其指向你所选 Python 版本的实际 `python3` 可执行文件， 而不是 `pyenv` 为 `python3` 提供的 shim。 选择下面任意一种方案放到你的 `lsp-bridge` 配置中：
-
-``` elisp
-;; 方案 1 （静态）
-;; 将 <VERSION> 替换为实际的 Python 版本 （例如， 3.11.4）
-(setq lsp-bridge-python-command "~/.pyenv/versions/<VERSION>/bin/python3")
-
-;; 方案 2 （动态）
-;; 如果 `pyenv` 在环境变量中， 用 `pyenv` 来查找 Python 的版本
-(setq lsp-bridge-python-command (string-trim
-                                 (shell-command-to-string "pyenv which python3")))
-```
-
 ### 如果你安装以后不能正常工作， 请先阅读[反馈问题](https://github.com/manateelazycat/lsp-bridge/blob/master/README.zh-CN.md#%E5%8F%8D%E9%A6%88%E9%97%AE%E9%A2%98)
 
 请注意:
@@ -153,7 +138,7 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 
 ### 本地开发容器
 
-`lsp-bridge` 现在支持在 `devcontainer` 上的文件补完，类似于 VSCode。这是通过使用 [devcontainer-feature-emacs-lsp-bridge](https://github.com/nohzafk/devcontainer-feature-emacs-lsp-bridge) 实现的。
+`lsp-bridge` 现在支持在 `devcontainer` 上的文件补完， 类似于 VSCode。 这是通过使用 [devcontainer-feature-emacs-lsp-bridge](https://github.com/nohzafk/devcontainer-feature-emacs-lsp-bridge) 实现的。
 
 以下是一个完整的配置示例：
 
@@ -190,11 +175,11 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
   (global-lsp-bridge-mode))
 ```
 
-启动开发容器，并使用 `file-find` `/docker:user@container:/path/to/file` 打开文件。
+启动开发容器， 并使用 `file-find` `/docker:user@container:/path/to/file` 打开文件。
 
-更多详细信息，请参阅 [devcontainer-feature-emacs-lsp-bridge](https://github.com/nohzafk/devcontainer-feature-emacs-lsp-bridge)。
+更多详细信息， 请参阅 [devcontainer-feature-emacs-lsp-bridge](https://github.com/nohzafk/devcontainer-feature-emacs-lsp-bridge)。
 
-如果您使用 `apheleia` 作为 Formatter，`lsp-bridge` 现在支持自动格式化 devcontainer 上的文件。
+如果您使用 `apheleia` 作为 Formatter， `lsp-bridge` 现在支持自动格式化 devcontainer 上的文件。
 
 ```elisp
 (use-package! apheleia
@@ -277,59 +262,6 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 - `lsp-bridge-indent-left`: 根据 `lsp-bridge-formatting-indent-alist` 定义的缩进值, 向左缩进刚刚粘贴的文本
 - `lsp-bridge-indent-right`: 根据 `lsp-bridge-formatting-indent-alist` 定义的缩进值, 向右缩进刚刚粘贴的文本
 - `lsp-bridge-semantic-tokens-mode`: 开启或者关闭语义符号高亮， 自定义请参考 [Semantic Tokens Wiki](https://github.com/manateelazycat/lsp-bridge/wiki/Semantic-Tokens-%5B%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%E7%89%88%5D) 
-
-## 自定义语言服务器配置
-
-lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
-
-大多数情况， 你可以根据以下优先级顺序来自定义服务器配置：
-
-1. `lsp-bridge-get-single-lang-server-by-project`: 用户自定义函数， 输入参数是 `project-path` 和 `file-path`, 返回对应的 LSP 服务器字符串， 可以在 `lsp-bridge-single-lang-server-mode-list` 列表中查询所有 LSP 服务器的名称， 默认这个函数返回 nil
-2. `lsp-bridge-single-lang-server-extension-list`: 根据文件的扩展名来返回服务器， 比如打开\*.wxml 文件时， 我们会使用 `wxml` LSP 服务器提供补全
-3. `lsp-bridge-single-lang-server-mode-list`: 根据 Emacs 的 major-mode 来返回对应的服务器
-
-如果你在编写 JavaScript 代码， 你可能需要自定义多服务器配置：
-
-1. `lsp-bridge-get-multi-lang-server-by-project`: 用户自定义函数， 输入参数是 `project-path` 和 `file-path`, 返回多服务器配置名， 可以在子目录 [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) 中查找
-2. `lsp-bridge-multi-lang-server-extension-list`: 根据文件的扩展名来返回多服务器配置名， 比如打开\*.vue 文件时， 我们会使用 `volar_emmet` 来同时利用 `volar` 和 `emmet-ls` 两种 LSP 服务器提供补全
-3. `lsp-bridge-multi-lang-server-mode-list`: 根据 Emacs 的 major-mode 来返回对应的多服务器配置名
-
-举例, 我们可以通过如下配置， 对 Deno 脚本开启 Deno LSP 服务器：
-
-```elisp
-;; lsp-bridge 首先尝试使用 `lsp-bridge--get-multi-lang-server-func`， 然后尝试使用 `lsp-bridge--get-single-lang-server-func`
-;; 因此我们需要从 lsp-bridge-multi-lang-server-extension-list 的默认值中移除 `ts` 和 `tsx` 的设置。
-(setq lsp-bridge-multi-lang-server-extension-list
-      (cl-remove-if (lambda (item)
-                      (equal (car item) '("ts" "tsx")))
-                    lsp-bridge-multi-lang-server-extension-list))
-
-;; 最后我们自定义 `lsp-bridge-get-single-lang-server-by-project` 以返回 `deno` lsp 服务器名称。
-;; 我建议你编写一些代码来比较 project-path 或 file-path， 只有在匹配目标路径时才返回 `deno`
-;; 下面的配置只是简单的匹配 `ts` 和 `tsx` 的扩展名， 让你快速体验 Deno
-(setq lsp-bridge-get-single-lang-server-by-project
-      (lambda (project-path file-path)
-	(when (or (string-suffix-p ".ts" file-path)
-		  (string-suffix-p ".tsx" file-path))
-	  "deno")))
-```
-
-备注： 一些高级的 LSP server, 比如 tailwindcss 和 emmet-ls 所需的 languageId 和文件扩展名无法一一对应， 而是根据不同前端项目来动态返回 languageId, 这时候需要自定义 `lsp-bridge-get-language-id` 函数来满足这种需求。
-
-## 自定义语言服务器配置文件
-
-拷贝 [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) 或 [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) 中的配置文件到 `lsp-bridge-user-langserver-dir` 或 `lsp-bridge-user-multiserver-dir` 中进行自定义， lsp-bridge 会优先读取 `lsp-bridge-user-langserver-dir` 或 `lsp-bridge-user-multiserver-dir` 里的配置文件。
-
-我们可以在启动 `lsp-bridge-mode` 之前设置 `lsp-bridge-user-langserver-dir` 或 `lsp-bridge-user-multiserver-dir` 的值， 实现不同的工程用不同的配置文件
-
-```elisp
-(defun enable-lsp-bridge()
-  (when-let* ((project (project-current))
-              (project-root (nth 2 project)))
-    (setq-local lsp-bridge-user-langserver-dir project-root
-                lsp-bridge-user-multiserver-dir project-root))
-  (lsp-bridge-mode))
-```
 
 ## LSP 服务器选项
 lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， 您可以通过定制下面的选项来选择你喜欢的语言服务器:
@@ -421,15 +353,6 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 - `acm-backend-lsp-show-progress`: 是否显示 LSP Server 工作进度, 默认关闭
 - `acm-enable-preview`: 开启 Tab-and-Go completion， 当改变当前候选时， 可以预览候选， 并且后续输入会选择预览候选， 默认关闭
 
-## 添加新的编程语言支持?
-
-1. 在 lsp-bridge/langserver 目录下创建配置文件， 比如`pyright.json`就是 pyright 服务器的配置文件 (windows 平台用`pyright_windows.json`, macOS 平台用`pyright_darwin.json`)。
-2. 添加 `(mode . server_name)` 到 `lsp-bridge.el` 文件中的 `lsp-bridge-single-lang-server-mode-list` 选项中, 比如 `(python-mode . "pyright")`。
-3. 添加新的 mode-hook 到 `lsp-bridge.el` 文件中的 `lsp-bridge-default-mode-hooks` 选项中。
-4. 添加新的缩进变量到 `lsp-bridge.el` 文件中的 `lsp-bridge-formatting-indent-alist` 选项中。
-
-欢迎发送补丁帮助我们支持更多的 LSP 服务器， 感谢你的帮助！
-
 ## 已经支持的语言服务器
 
 你需要安装每个编程语言对应的 LSP 服务器， lsp-bridge 才能提供代码补全服务。
@@ -520,6 +443,83 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 | Zig         | [zls](https://github.com/zigtools/zls)                                                             | 运行 `zls config` 来生成 zls 的配置。 参考 [Configuration Options](https://github.com/zigtools/zls#configuration-options)                                                                                                      |
 | Solidity    | [solidity-language-server](https://github.com/NomicFoundation/hardhat-vscode)                      | `npm install -g @nomicfoundation/solidity-language-server`， 参考 [Solidity Language Server](https://github.com/NomicFoundation/hardhat-vscode/blob/development/server/README.md)                                              |
 
+## FAQ
+### pyenv 配置
+
+如果你使用通过 `pyenv` 安装的 Python 发行版， 你必须调整你的 `lsp-bridge-python-command` 变量， 使其指向你所选 Python 版本的实际 `python3` 可执行文件， 而不是 `pyenv` 为 `python3` 提供的 shim。 选择下面任意一种方案放到你的 `lsp-bridge` 配置中：
+
+``` elisp
+;; 方案 1 （静态）
+;; 将 <VERSION> 替换为实际的 Python 版本 （例如， 3.11.4）
+(setq lsp-bridge-python-command "~/.pyenv/versions/<VERSION>/bin/python3")
+
+;; 方案 2 （动态）
+;; 如果 `pyenv` 在环境变量中， 用 `pyenv` 来查找 Python 的版本
+(setq lsp-bridge-python-command (string-trim
+                                 (shell-command-to-string "pyenv which python3")))
+```
+
+### 自定义语言服务器配置
+
+lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver).
+
+大多数情况， 你可以根据以下优先级顺序来自定义服务器配置：
+
+1. `lsp-bridge-get-single-lang-server-by-project`: 用户自定义函数， 输入参数是 `project-path` 和 `file-path`, 返回对应的 LSP 服务器字符串， 可以在 `lsp-bridge-single-lang-server-mode-list` 列表中查询所有 LSP 服务器的名称， 默认这个函数返回 nil
+2. `lsp-bridge-single-lang-server-extension-list`: 根据文件的扩展名来返回服务器， 比如打开\*.wxml 文件时， 我们会使用 `wxml` LSP 服务器提供补全
+3. `lsp-bridge-single-lang-server-mode-list`: 根据 Emacs 的 major-mode 来返回对应的服务器
+
+如果你在编写 JavaScript 代码， 你可能需要自定义多服务器配置：
+
+1. `lsp-bridge-get-multi-lang-server-by-project`: 用户自定义函数， 输入参数是 `project-path` 和 `file-path`, 返回多服务器配置名， 可以在子目录 [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) 中查找
+2. `lsp-bridge-multi-lang-server-extension-list`: 根据文件的扩展名来返回多服务器配置名， 比如打开\*.vue 文件时， 我们会使用 `volar_emmet` 来同时利用 `volar` 和 `emmet-ls` 两种 LSP 服务器提供补全
+3. `lsp-bridge-multi-lang-server-mode-list`: 根据 Emacs 的 major-mode 来返回对应的多服务器配置名
+
+举例, 我们可以通过如下配置， 对 Deno 脚本开启 Deno LSP 服务器：
+
+```elisp
+;; lsp-bridge 首先尝试使用 `lsp-bridge--get-multi-lang-server-func`， 然后尝试使用 `lsp-bridge--get-single-lang-server-func`
+;; 因此我们需要从 lsp-bridge-multi-lang-server-extension-list 的默认值中移除 `ts` 和 `tsx` 的设置。
+(setq lsp-bridge-multi-lang-server-extension-list
+      (cl-remove-if (lambda (item)
+                      (equal (car item) '("ts" "tsx")))
+                    lsp-bridge-multi-lang-server-extension-list))
+
+;; 最后我们自定义 `lsp-bridge-get-single-lang-server-by-project` 以返回 `deno` lsp 服务器名称。
+;; 我建议你编写一些代码来比较 project-path 或 file-path， 只有在匹配目标路径时才返回 `deno`
+;; 下面的配置只是简单的匹配 `ts` 和 `tsx` 的扩展名， 让你快速体验 Deno
+(setq lsp-bridge-get-single-lang-server-by-project
+      (lambda (project-path file-path)
+	(when (or (string-suffix-p ".ts" file-path)
+		  (string-suffix-p ".tsx" file-path))
+	  "deno")))
+```
+
+备注： 一些高级的 LSP server, 比如 tailwindcss 和 emmet-ls 所需的 languageId 和文件扩展名无法一一对应， 而是根据不同前端项目来动态返回 languageId, 这时候需要自定义 `lsp-bridge-get-language-id` 函数来满足这种需求。
+
+### 自定义语言服务器配置文件
+
+拷贝 [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) 或 [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) 中的配置文件到 `lsp-bridge-user-langserver-dir` 或 `lsp-bridge-user-multiserver-dir` 中进行自定义， lsp-bridge 会优先读取 `lsp-bridge-user-langserver-dir` 或 `lsp-bridge-user-multiserver-dir` 里的配置文件。
+
+我们可以在启动 `lsp-bridge-mode` 之前设置 `lsp-bridge-user-langserver-dir` 或 `lsp-bridge-user-multiserver-dir` 的值， 实现不同的工程用不同的配置文件
+
+```elisp
+(defun enable-lsp-bridge()
+  (when-let* ((project (project-current))
+              (project-root (nth 2 project)))
+    (setq-local lsp-bridge-user-langserver-dir project-root
+                lsp-bridge-user-multiserver-dir project-root))
+  (lsp-bridge-mode))
+```
+
+### 添加新的编程语言支持?
+
+1. 在 lsp-bridge/langserver 目录下创建配置文件， 比如`pyright.json`就是 pyright 服务器的配置文件 (windows 平台用`pyright_windows.json`, macOS 平台用`pyright_darwin.json`)。
+2. 添加 `(mode . server_name)` 到 `lsp-bridge.el` 文件中的 `lsp-bridge-single-lang-server-mode-list` 选项中, 比如 `(python-mode . "pyright")`。
+3. 添加新的 mode-hook 到 `lsp-bridge.el` 文件中的 `lsp-bridge-default-mode-hooks` 选项中。
+4. 添加新的缩进变量到 `lsp-bridge.el` 文件中的 `lsp-bridge-formatting-indent-alist` 选项中。
+
+欢迎发送补丁帮助我们支持更多的 LSP 服务器， 感谢你的帮助！
 
 ## 加入开发
 
