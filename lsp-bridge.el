@@ -1022,13 +1022,13 @@ So we build this macro to restore postion after code format."
                                                    (lsp-bridge-get-buffer-file-name-text)))
                                    (when (lsp-bridge-is-remote-file)
                                      lsp-bridge-remote-file-path))))
-           (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension filename)
-                                                      (lsp-bridge-get-multi-lang-server-by-file-mode filename)))
-                  (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension filename)
-                                                (lsp-bridge-get-single-lang-server-by-file-mode filename))))
-             (if multi-lang-server-by-extension
-                 multi-lang-server-by-extension
-               lang-server-by-extension)
+           (let* ((multi-lang-server-name (or (lsp-bridge-get-multi-lang-server-by-extension filename)
+                                              (lsp-bridge-get-multi-lang-server-by-file-mode filename)))
+                  (lang-server-by-name (or (lsp-bridge-get-single-lang-server-by-extension filename)
+                                           (lsp-bridge-get-single-lang-server-by-file-mode filename))))
+             (if multi-lang-server-name
+                 multi-lang-server-name
+               lang-server-by-name)
              )))))
 
 (defun lsp-bridge-call-async (method &rest args)
