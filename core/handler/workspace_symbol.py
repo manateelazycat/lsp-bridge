@@ -13,4 +13,9 @@ class WorkspaceSymbol(Handler):
 
     def process_response(self, response: dict) -> None:
         if response is not None:
+            remote_connection_info = get_remote_connection_info()
+            for item in response:
+                item["location"]["uri"] = local_path_to_tramp_path(item["location"]["uri"],
+                                                                   remote_connection_info)
+
             eval_in_emacs("lsp-bridge-workspace--list-symbols", response)
