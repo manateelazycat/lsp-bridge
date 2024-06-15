@@ -15,8 +15,8 @@
   "signature_help": "qmlls",
   "prepare_rename": "qmlls",
   "rename": "qmlls",
-  "document_symbol": "qmalls",
-  "workspace_symbol": "qmalls",
-  "semantic_tokens": "qmalls",
-  "inlay_hint": "qmalls"
+  "document_symbol": "qmlls",
+  "workspace_symbol": "qmlls",
+  "semantic_tokens": "qmlls",
+  "inlay_hint": "qmlls"
 }
