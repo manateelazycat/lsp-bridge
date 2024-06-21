@@ -23,6 +23,7 @@ import threading
 import os
 import glob
 import json
+import select
 import socket
 import traceback
 import time
@@ -30,6 +31,10 @@ from core.utils import *
 
 
 class SendMessageException(Exception):
+    pass
+
+
+class ContainerConnectionException(Exception):
     pass
 
 
@@ -45,6 +50,7 @@ class RemoteFileClient(threading.Thread):
         self.ssh_port = ssh_conf.get('port', 22)
         self.server_port = server_port
         self.callback = callback
+        [self.remote_python_command, self.remote_python_file, self.remote_log] = get_emacs_vars(["lsp-bridge-remote-python-command", "lsp-bridge-remote-python-file", "lsp-bridge-remote-log"])
 
         [self.user_ssh_private_key] = get_emacs_vars(["lsp-bridge-user-ssh-private-key"])
 
@@ -169,9 +175,9 @@ class RemoteFileClient(threading.Thread):
         self.chan.close()
 
     def start_lsp_bridge_process(self):
-        [remote_python_command] = get_emacs_vars(["lsp-bridge-remote-python-command"])
-        [remote_python_file] = get_emacs_vars(["lsp-bridge-remote-python-file"])
-        [remote_log] = get_emacs_vars(["lsp-bridge-remote-log"])
+        remote_python_command = self.remote_python_command
+        remote_python_file = self.remote_python_file
+        remote_log = self.remote_log
 
         # use -l option to bash as a login shell, ensuring that login scripts (like ~/.bash_profile) are read and executed.
         # This is useful for lsp-bridge to use environment settings to correctly find out language server command
@@ -194,6 +200,92 @@ class RemoteFileClient(threading.Thread):
         print("stdout:" + stdout.read().decode())
         print("stderr:" + stderr.read().decode())
 
+    def kill_lsp_bridge_process(self):
+        remote_log = self.remote_log
+
+        try:
+            self.ssh.exec_command(
+                f"""
+                nohup /bin/bash -l -c '
+                pid=$(ps aux | grep -v grep | grep lsp_bridge.py | cut -d " " -f2)
+                echo "try kill" | tee >> {remote_log}
+                if ! [ "$pid" == "" ]; then
+                    echo -e "kill lsp-bridge process as user $(whoami)" | tee >>{remote_log}
+                    kill $pid
+                    if [ "$?" = "0" ]; then
+                        echo -e "Kill lsp-bridge successfully" | tee >>{remote_log}
+                    else
+                        echo -e "Kill lsp-bridge failed" | tee >>{remote_log}
+                    fi
+                fi'
+            """
+            )
+        except:
+            pass
+
+
+class DockerFileClient(threading.Thread):
+    def __init__(self, container_name, server_port, callback):
+        threading.Thread.__init__(self)
+        self.container_name = container_name
+        self.server_port = server_port
+        self.callback = callback
+        self.sock = None
+        self.lock = threading.Lock()  # For thread-safe socket access
+
+        self.connect()
+
+    def connect(self):
+        """Connect to docker container
+
+        :raises: :class:`ContainerConnectionException`: if failed to connect
+        """
+        with self.lock:
+            try:
+                self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                # connect to local host
+                self.sock.connect(("127.0.0.1", self.server_port))
+            except Exception as e:
+                raise ContainerConnectionException(e)
+
+    def send_message(self, message):
+        """Send message via socket
+
+        :raises: :class:`SendMessageException`: if socket is invalid
+        """
+        try:
+            if self.sock.fileno == -1:
+                # container might be restarted, try to reconnect
+                time.sleep(1)
+                self.connect()
+
+            data = json.dumps(message)
+            self.sock.sendall(f"{data}\n".encode("utf-8"))
+
+        except Exception as e:
+            logger.exception(e)
+            raise e
+        else:
+            log_time_debug(f"Sended to server {self.container_name} port {self.server_port}: {message}")
+
+    def run(self):
+        """Continuously listen for incoming data from the server."""
+        try:
+            sock_file = self.sock.makefile("r")
+            while True:
+                message = sock_file.readline().strip()
+                if not message:
+                    break
+
+                message = parse_json_content(message)
+                message["host"] = self.container_name
+                log_time_debug(f"Received from server {self.container_name} port {self.server_port}: {message}")
+                self.callback(message)
+
+        except socket.error as e:
+            raise SendMessageException() from e
+        finally:
+            self.sock.close()
 
 class RemoteFileServer:
     def __init__(self, host, port):
@@ -355,7 +447,7 @@ class FileElispServer(RemoteFileServer):
 
     def handle_message(self, message):
         if message == "Connect":
-            # Drop "say hello" message from local Emacs.
+            log_time("Drop 'say hello' message from local Emacs.")
             return
         else:
             self.result_queue.put(message)
@@ -413,6 +505,16 @@ def save_ip_to_file(ip, filename):
 
     with open(filename, 'w') as f:
         f.write('\n'.join(existing_ips))
+
+
+def get_container_local_ip(container_name):
+    try:
+        command = "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' " + container_name
+        result = subprocess.check_output(command, shell=True, text=True).strip()
+        return result
+    except subprocess.CalledProcessError as e:
+        message_emacs(f"{traceback.format_exc()}")
+        return None
 
 
 def save_ip(ip):

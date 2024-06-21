@@ -4,9 +4,9 @@ from core.handler.find_define_base import create_decompile_external_file
 from core.utils import *
 
 
-class DenoUriResolver(Handler):
-    name = "deno_uri_resolver"
-    method = "deno/virtualTextDocument"
+class CSharpUriResolver(Handler):
+    name = "csharp_uri_resolver"
+    method = "csharp/metadata"
     cancel_on_change = True
     send_document_uri = False
 
@@ -25,8 +25,8 @@ class DenoUriResolver(Handler):
         if response is not None:
             external_file = create_decompile_external_file(
                 self,
-                "lsp-bridge-deno",
-                "deno-uri-resolver",
-                response)
+                "lsp-bridge-csharp",
+                "csharp-uri-resolver",
+                response["source"])
 
             eval_in_emacs(self.define_jump_handler, external_file, get_lsp_file_host(), self.start_pos)

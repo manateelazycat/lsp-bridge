@@ -46,11 +46,14 @@ from core.utils import *
 from core.handler import *
 from core.remote_file import (
     RemoteFileClient,
+    DockerFileClient,
     FileSyncServer,
     FileElispServer,
     FileCommandServer,
     SendMessageException,
-    save_ip
+    ContainerConnectionException,
+    save_ip,
+    get_container_local_ip
 )
 from core.ctags import Ctags
 
@@ -67,11 +70,6 @@ REMOTE_FILE_SYNC_CHANNEL = 9999
 REMOTE_FILE_COMMAND_CHANNEL = 9998
 REMOTE_FILE_ELISP_CHANNEL = 9997
 
-remote_server_ports = [
-    REMOTE_FILE_SYNC_CHANNEL,
-    REMOTE_FILE_COMMAND_CHANNEL,
-    REMOTE_FILE_ELISP_CHANNEL
-]
 
 class LspBridge:
     def __init__(self, args):
@@ -199,7 +197,9 @@ class LspBridge:
 
     @threaded
     def init_remote_file_server(self):
-        print("* Running lsp-bridge in remote server, use command 'lsp-bridge-open-remote-file' to open remote file.")
+        print("* Running lsp-bridge in remote server, "
+              "use command 'lsp-bridge-open-remote-file' to open remote file, "
+              "or 'find-file' /docker: to open file in running container.")
 
         # Build loop for remote files management.
         self.file_server = FileSyncServer("0.0.0.0", REMOTE_FILE_SYNC_CHANNEL)
@@ -211,6 +211,17 @@ class LspBridge:
 
     # Functions for communication between local and remote server
     def get_socket_client(self, server_host, server_port, is_retry=False):
+        # currently only support SSH and docker
+        #
+        # try to distinguish SSH remote file or docker remote file using server_host
+        # if visiting docker remote file, container name is passed as server_host
+        if is_valid_ip(server_host):
+            return self._get_remtoe_file_client(server_host, server_port, is_retry)
+        else:
+            # server_host is the container_name
+            return self._get_docker_file_client(server_host, server_port)
+
+    def _get_remtoe_file_client(self, server_host, server_port, is_retry):
         if server_host not in self.host_names:
             message_emacs(f"{server_host} is not connected, try reconnect...")
             self.sync_tramp_remote_complete_event.clear()
@@ -258,8 +269,26 @@ class LspBridge:
         else:
             client.start()
             self.client_dict[client_id] = client
+            return client
 
-        return client
+    def _get_docker_file_client(self, container_name, server_port):
+        client_id = f"{container_name}:{server_port}"
+        if client_id in self.client_dict:
+            return self.client_dict[client_id]
+
+        try:
+            client = DockerFileClient(
+                container_name=container_name,
+                server_port=server_port,
+                callback=lambda message: self.receive_remote_message(message, server_port),
+            )
+        except ContainerConnectionException as e:
+            print(f"Failed to connect {container_name}, is it running?")
+            raise e
+        else:
+            client.start()
+            self.client_dict[client_id] = client
+            return client
 
     def send_remote_message(self, host, queue, message, wait=False):
         queue.put({"host": host, "message": message})
@@ -277,20 +306,20 @@ class LspBridge:
                     client.send_message(data["message"])
                 except SendMessageException as e:
                     # lsp-bridge process might has been restarted, making the orignal socket no longer valid.
-                    logger.exception("Channel %s is broken, message %s, error %s", f"{server_host}:{port}", data["message"], e)
+                    logger.exception("Connection %s is broken, message %s, error %s", f"{server_host}:{port}", data["message"], e)
                     # remove all the clients for server_host from client_dict
                     # client will be created again when get_socket_client is called
-                    for p in remote_server_ports:
-                        self.client_dict.pop(f"{server_host}:{p}", None)
+                    for client_id in [key for key in self.client_dict.keys() if key.startswith(server_host + ":")]:
+                        self.client_dict.pop(client_id, None)
 
-                    message_emacs(f"try to recreate channel to {server_host}:{port}")
+                    message_emacs(f"try to recreate connection to {server_host}:{port}")
                     try:
                         client = self.get_socket_client(server_host, port)
                     except Exception as e:
-                        # unable to restore the channel
+                        # FATAL: unable to restore
                         logger.exception(e)
                     else:
-                        # try to send the message
+                        # connection restored, try to send out the message
                         client.send_message(data["message"])
                         eval_in_emacs('lsp-bridge-remote-reconnect', server_host)
                 except Exception as e:
@@ -317,7 +346,7 @@ class LspBridge:
         except:
             logger.error(traceback.format_exc())
 
-    def remote_sync(self, host, remote_info):
+    def remote_sync(self, host, remote_connection_info):
         client_id = f"{host}:{REMOTE_FILE_ELISP_CHANNEL}"
         if client_id not in self.client_dict:
             # send "say hello" upon establishing the first connection
@@ -328,46 +357,91 @@ class LspBridge:
                 host, self.remote_file_sender_queue, {
                     "command": "remote_sync",
                     "server": host,
-                    "remote_connection_info": remote_info,
+                    "remote_connection_info": remote_connection_info,
                 })
 
     @threaded
-    def sync_tramp_remote(self, tramp_file_name, server_username, server_host, ssh_port, path):
-        # arguments are passed from emacs using standard TRAMP functions tramp-file-name-<field>
-        if server_host in self.host_names:
-            server_host = self.host_names[server_host]['hostname']
-            ssh_conf = self.host_names[server_host]
-        elif is_valid_ip(server_host):
-            ssh_conf = {'hostname' : server_host}
+    def sync_tramp_remote(self, tramp_file_name, tramp_method, server_username, server_host, ssh_port, path):
+
+        # tramp_file_name format example:
+        #   /ssh:user@ip#port:/path/to/file
+        #   /docker:user@container:/path/to/file
+        # see https://www.gnu.org/software/tramp/#File-name-syntax
+        tramp_method_prefix = tramp_file_name.rsplit(":", 1)[0]
+
+        if tramp_method_prefix.startswith("/ssh"):
+
+            # arguments are passed from emacs using standard TRAMP functions tramp-file-name-<field>
+            if server_host in self.host_names:
+                server_host = self.host_names[server_host]['hostname']
+                ssh_conf = self.host_names[server_host]
+            elif is_valid_ip(server_host):
+                ssh_conf = {'hostname' : server_host}
+            else:
+                import paramiko
+                alias = server_host
+                ssh_config = paramiko.SSHConfig()
+                with open(os.path.expanduser('~/.ssh/config')) as f:
+                    ssh_config.parse(f)
+                ssh_conf = ssh_config.lookup(alias)
+
+                server_host = ssh_conf.get('hostname', server_host)
+                self.host_names[alias] = ssh_conf
+
+            if not is_valid_ip(server_host):
+                message_emacs("HostName Must be IP format.")
+
+            if server_username:
+                ssh_conf['user'] = server_username
+            if ssh_port:
+                ssh_conf['port'] = ssh_port
+            self.host_names[server_host] = ssh_conf
+
+            tramp_connection_info = tramp_method_prefix + ":"
+            self.remote_sync(server_host, tramp_connection_info)
+
+            eval_in_emacs("lsp-bridge-update-tramp-file-info", tramp_file_name, tramp_connection_info, tramp_method, server_username, server_host, path)
+            self.sync_tramp_remote_complete_event.set()
+
+        elif tramp_method_prefix.startswith("/docker"):
+            # when using tramp to connect to container, the tramp_file_name might be
+            #
+            # /docker:USER@CONTAINER:/path/to/file
+            # /docker:CONTAINER:/path/to/file
+            #
+            # see https://git.savannah.gnu.org/git/tramp.git listp/tramp-container.el
+            tramp_method_split = tramp_method_prefix.split(":")[1]
+            if "@" in tramp_method_split:
+                container_user, container_name = tramp_method_split.split("@")
+            else:
+                container_user = "root"
+                container_name = tramp_method_split
+
+            if not get_container_local_ip(container_name):
+                message_emacs(f"Cloud not get local ip of container {container_name}, is it running?")
+                return
+
+            # only support local container
+            self.host_names[container_name] = {
+                "server_host": "127.0.0.1",
+                "username": container_user
+            }
+
+            try:
+                tramp_connection_info = tramp_method_prefix + ":"
+                self.remote_sync(container_name, tramp_connection_info)
+                # container_name is used for emacs buffer local variable lsp-bridge-remote-file-host
+                eval_in_emacs("lsp-bridge-update-tramp-file-info", tramp_file_name, tramp_connection_info, tramp_method, container_user, container_name, path)
+                self.sync_tramp_remote_complete_event.set()
+            except Exception as e:
+                logger.exception(e)
+                message_emacs(f"Connect {container_user}@{container_name} failed")
+                raise e
         else:
-            import paramiko
-            alias = server_host
-            ssh_config = paramiko.SSHConfig()
-            with open(os.path.expanduser('~/.ssh/config')) as f:
-                ssh_config.parse(f)
-            ssh_conf = ssh_config.lookup(alias)
-
-            server_host = ssh_conf.get('hostname', server_host)
-            self.host_names[alias] = ssh_conf
-
-        if not is_valid_ip(server_host):
-            message_emacs("HostName Must be IP format.")
-
-        if server_username:
-            ssh_conf['user'] = server_username
-        if ssh_port:
-            ssh_conf['port'] = ssh_port
-        self.host_names[server_host] = ssh_conf
-
-        # this value is like /ssh:user@ip#port:
-        # it should not be called tramp-method to avoid confusion
-        # we call it TRAMP connection information
-        tramp_connection_info = tramp_file_name.rsplit(":", 1)[0] + ":"
-
-        self.remote_sync(server_host, tramp_connection_info)
-
-        eval_in_emacs("lsp-bridge-update-tramp-file-info", tramp_file_name, tramp_connection_info, server_host, path)
-        self.sync_tramp_remote_complete_event.set()
+            message_emacs(
+                f"Failed to access {tramp_file_name}, unsupported tramp methd: {tramp_method_prefix[1:]}, "
+                "please make sure `lsp_bridge.py` has started on server."
+            )
 
     # Functions for local to manage remote files
     @threaded
@@ -402,6 +476,34 @@ class LspBridge:
                     "jump_define_pos": epc_arg_transformer(jump_define_pos)
                 })
                 save_ip(f"{remote_info}")
+        elif path.startswith("/docker:"):
+            # open_remote_file path notation
+            # /docker:user@container:/path/to/file
+            # /docker:container:/path/to/file
+            path_info = split_docker_path(path)
+            if path_info:
+                (container_user, server_host, server_path) = path_info
+
+                # only support local container
+                self.host_names[server_host] = {
+                    "server_host": "127.0.0.1",
+                    "username": container_user
+                }
+
+                self.remote_sync(server_host, path.rsplit(":", 1)[0] + ":")
+
+                message_emacs(f"Open {path}...")
+
+                self.send_remote_message(
+                    server_host, self.remote_file_sender_queue, {
+                        "command": "open_file",
+                        "tramp_method": "docker",
+                        "user": container_user,
+                        "server": server_host,
+                        "port": None,
+                        "path": server_path,
+                        "jump_define_pos": epc_arg_transformer(jump_define_pos)
+                })
         else:
             message_emacs("Please input valid path match rule: 'ip:/path/file'.")
 
@@ -793,12 +895,17 @@ class LspBridge:
         self.tabnine.complete(before, after, filename, region_includes_beginning, region_includes_end, max_num_results)
 
     @threaded
-    def ctags_complete(self, symbol, filename, cursor_offset):
-        self.ctags.make_complete(symbol, filename, cursor_offset)
+    def ctags_complete(self, symbol, filename, max_lines, cursor_offset):
+        self.ctags.make_complete(symbol, filename, max_lines, cursor_offset)
+
+    @threaded
+    def ctags_find_def(self, symbol, filename):
+        self.ctags.find_definition(symbol, filename)
 
     def copilot_complete(self, position, editor_mode, file_path, relative_path, tab_size, text, insert_spaces):
         self.copilot.complete(position, editor_mode, file_path, relative_path, tab_size, text, insert_spaces)
 
+    @threaded
     def codeium_complete(self, cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language):
         self.codeium.complete(cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language)
 
@@ -828,8 +935,14 @@ class LspBridge:
             log_time("Exit server {}".format(server_name))
             del LSP_SERVER_DICT[server_name]
 
+    def close_client(self):
+        for client in self.client_dict.values():
+            if hasattr(client, "kill_lsp_bridge_process"):
+                client.kill_lsp_bridge_process()
+
     def cleanup(self):
         """Do some cleanup before exit python process."""
+        self.close_client()
         close_epc_client()
 
     def start_test(self):

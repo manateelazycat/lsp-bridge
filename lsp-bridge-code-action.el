@@ -360,7 +360,10 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
         (plist-put server-command :server-name server_name)
         (lsp-bridge-code-action--fix-do command temp-buffer))))
     (unless temp-buffer
-      (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))))
+      (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))
+
+    ;; Hide diagnostics after code action.
+    (lsp-bridge-diagnostic-hide-overlays)))
 
 (defun lsp-bridge-plistp (object)
   "Non-nil if and only if OBJECT is a valid plist."

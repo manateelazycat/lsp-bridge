@@ -18,7 +18,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import json
 import logging
 import os
 import pathlib
@@ -421,8 +420,20 @@ def split_ssh_path(ssh_path):
     else:
         return None
 
+def split_docker_path(docker_path):
+    # Pattern to extract username, container name, and path
+    pattern = r"^/docker:(?P<username>[^@]+)@(?P<container_name>[^:]+):(?P<path>/.*)$"
+    match = re.match(pattern, docker_path)
+    if match:
+        username = match.group('username')
+        container_name = match.group('container_name')
+        path = match.group('path')
+        return (username, container_name, path)
+    else:
+        return None
+
 def is_remote_path(filepath):
-    return filepath.startswith("/ssh:")
+    return filepath.startswith("/ssh:") or filepath.startswith("/docker:")
 
 def eval_sexp_in_emacs(sexp):
     epc_client.call("eval-in-emacs", [sexp])
@@ -440,7 +451,7 @@ def get_position(content, line, character):
     position = sum(len(lines[i]) + 1 for i in range(line)) + character
     return position
 
-def replace_template(arg):
+def replace_template(arg, project_path=None):
     if "%USER_EMACS_DIRECTORY%" in arg:
         if get_os_name() == "windows":
             user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
@@ -448,7 +459,7 @@ def replace_template(arg):
             user_emacs_dir = get_emacs_func_result("get-user-emacs-directory")
         return arg.replace("%USER_EMACS_DIRECTORY%", user_emacs_dir)
     elif "$HOME" in arg:
-            return os.path.expandvars(arg)
+        return os.path.expandvars(arg)
     elif "%FILEHASH%" in arg:
         # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.
         return arg.replace("%FILEHASH%", os.urandom(21).hex())
@@ -456,6 +467,14 @@ def replace_template(arg):
         return arg.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
     else:
         return arg
+
+def find_csharp_solution_file(directory):
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".sln"):
+                return os.path.join(root, file)
+
+    return None
 
 def touch(path):
     import os
