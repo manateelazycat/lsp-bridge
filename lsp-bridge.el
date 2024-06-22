@@ -570,6 +570,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     (racket-mode    .                                                            "racket-langserver")
     (mojo-mode    .                                                              "mojo-lsp-server")
     (solidity-mode .                                                             "solidity")
+    (gleam-ts-mode .                                                             "gleam")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -668,6 +669,7 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     beancount-mode-hook
     mojo-mode-hook
     solidity-mode-hook
+    gleam-ts-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
@@ -750,6 +752,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (go-ts-mode                 . c-basic-offset)       ;Golang
     (svelte-mode                . js-indent-level)      ;Svelte
     (fsharp-mode                . fsharp-indent-offset) ; F#
+    (gleam-ts-mode              . gleam-ts-indent-offset)     ; Gleam
     (default                    . standard-indent)) ; default fallback
   "A mapping from `major-mode' to its indent variable.")
 
