@@ -40,7 +40,7 @@ class DocumentSymbol(Handler):
                     for kind, items in grouped_data.items():
                         new_response.append({'name': SYMBOL_KIND_NAMES[kind], 'children': items})
 
-                    eval_in_emacs("lsp-bridge--consult-imenu",
+                    eval_in_emacs("lsp-bridge--imenu-show",
                                   self.file_action.filepath,
                                   get_lsp_file_host(),
                                   new_response)

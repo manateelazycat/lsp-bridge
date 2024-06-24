@@ -1,18 +1,20 @@
-;;; lsp-bridge-consult-imenu.el --- LSP bridge  -*- lexical-binding: t -*-
+;;; lsp-bridge-imenu.el --- LSP bridge  -*- lexical-binding: t -*-
 
 ;;; Commentary:
 
 ;;; Code:
 
-(require 'consult-imenu)
+(require 'imenu)
 (require 'lsp-bridge)
 
 ;;;###autoload
-(defun lsp-bridge-consult-imenu-show ()
+(defun lsp-bridge-imenu ()
   (interactive)
-  (lsp-bridge-call-file-api "document_symbol" nil))
+  (if (equal major-mode 'emacs-lisp-mode)
+      (call-interactively 'imenu)
+  (lsp-bridge-call-file-api "document_symbol" nil)))
 
-(defun lsp-bridge--consult-imenu (filename filehost res)
+(defun lsp-bridge--imenu-show (filename filehost res)
   "Compute `imenu--index-alist' for RES vector of FILEHOST:FILENAME."
   (lsp-bridge--with-file-buffer filename filehost
                                 (let* ((index-items
@@ -23,11 +25,10 @@
                                                                (plist-get range :start)))
                                                  (cons name
                                                        (mapcar (lambda (c) (apply #'dfs c)) children)))))
-                                          (mapcar (lambda (s) (apply #'dfs s)) res))))
-                                  (setq consult-imenu--cache (cons (buffer-modified-tick)
-                                                                   (consult-imenu--flatten
-                                                                    nil nil index-items nil)))
-                                  (consult-imenu))))
+                                          (mapcar (lambda (s) (apply #'dfs s)) res)))
+                                       (imenu-create-index-function #'(lambda () index-items))
+                                       (last-nonmenu-event 13))
+                                  (call-interactively 'imenu))))
 
-(provide 'lsp-bridge-consult-imenu)
-;;; lsp-bridge-consult-imenu.el ends here
+(provide 'lsp-bridge-imenu)
+;;; lsp-bridge-imenu.el ends here
