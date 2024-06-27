@@ -64,6 +64,7 @@ from core.handler.execute_command import ExecuteCommand  # noqa: F401
 from core.handler.workspace_symbol import WorkspaceSymbol  # noqa: F401
 from core.handler.call_hierarchy import PrepareCallHierarchyIncomingCalls, PrepareCallHierarchyOutgoingCalls, CallHierarchyIncomingCalls, CallHierarchyOutgoingCalls  # noqa: F401
 from core.handler.document_symbol import DocumentSymbol  # noqa: F401
+from core.handler.imenu import IMenu  # noqa: F401
 from core.handler.jdtls.jdtls_list_overridable_methods import JdtlsListOverridableMethods  # noqa: F401
 from core.handler.jdtls.jdtls_add_overridable_methods import JdtlsAddOverridableMethods  # noqa: F401
 from core.handler.inlay_hint import InlayHint  # noqa: F401

@@ -12,7 +12,7 @@
   (interactive)
   (if (equal major-mode 'emacs-lisp-mode)
       (call-interactively 'imenu)
-  (lsp-bridge-call-file-api "document_symbol" nil)))
+    (lsp-bridge-call-file-api "imenu")))
 
 (defun lsp-bridge--imenu-show (filename filehost res)
   "Compute `imenu--index-alist' for RES vector of FILEHOST:FILENAME."
