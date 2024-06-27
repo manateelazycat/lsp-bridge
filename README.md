@@ -138,6 +138,7 @@ Note:
 2. lsp-bridge will use the first *.pub file in `~/.ssh` as a login credential. If public key login fails, you will be asked to enter a password. lsp-bridge will not store the password, it is recommended to use public key login to avoid repeated password entry.
 3. To run lsp_bridge.py successfully you need to completely download the entire git repository of lsp-bridge on a remote server, and switch into its directory, lsp_bridge.py requires other files to function properly, so copying only the lsp_bridge.py file can't work
 4. If a tramp file encounters an lsp-bridge connection error, you can execute the `lsp-bridge-tramp-show-hostnames` function and then check if the output of the host configuration options meets expectations
+5. If you encounter errors like `remote file ... is updating info... skip call ...`, please ensure that you open the file via SSH and note that ivy-mode may interfere with `C-x C-f`
 
 ### Local devcontainer
 `lsp-bridge` now support completion on files on `devcontainer`, similar to VSCode. This is done by using [devcontainer-feature-emacs-lsp-bridge](https://github.com/nohzafk/devcontainer-feature-emacs-lsp-bridge).

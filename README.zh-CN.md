@@ -135,6 +135,7 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 2. lsp-bridge 会用`~/.ssh`的第一个 *.pub 文件作为登录凭证。 如果公钥登录失败， 会要求输入密码。 lsp-bridge 不会存储密码， 建议用公钥登录以避免重复输入密码
 3. 你需要在远程服务器完整的下载整个 lsp-bridge git 仓库， 并切换到 lsp-bridge 目录来启动 `lsp_bridge.py`， `lsp_bridge.py` 需要其他文件来保证正常工作， 不能只把 `lsp_bridge.py` 文件拷贝到其他目录来启动
 4. 如果 tramp 文件出现 lsp-bridge 连接错误， 可以执行 `lsp-bridge-tramp-show-hostnames` 函数， 然后检查输出的 host 配置选项是否符合预期
+5. 如果你遇到 `remote file ... is updating info... skip call ...` 类似错误， 请确保用 SSH 的方式打开文件， 已经发现 ivy-mode 会干扰 `C-x C-f`
 
 ### 本地开发容器
 
