@@ -518,7 +518,7 @@ The beginnings of each symbol are replaced by ace strings with
 					                           :extend t))
     history-string))
 
-(defun lsp-bridge-peek-define--return (filename position)
+(defun lsp-bridge-peek-define--return (filename filehost position)
   (push filename (nth 1 lsp-bridge-peek-symbol-at-point))
   (push position (nth 2 lsp-bridge-peek-symbol-at-point))
   (push 0 (nth 6 lsp-bridge-peek-symbol-at-point))
