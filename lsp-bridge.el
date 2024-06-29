@@ -828,8 +828,7 @@ So we build this macro to restore postion after code format."
      (forward-char (max (- current-column indent-column) 0))))
 
 (defun lsp-bridge-is-remote-file ()
-  (and (boundp 'lsp-bridge-remote-file-flag)
-       lsp-bridge-remote-file-flag))
+  (bound-and-true-p 'lsp-bridge-remote-file-flag))
 
 (defun lsp-bridge-get-buffer-file-name-text ()
   (lsp-bridge-buffer-file-name buffer-file-name))
@@ -1022,12 +1021,9 @@ So we build this macro to restore postion after code format."
          (lsp-bridge-org-babel-check-lsp-server))
         ;; `acm-backend-lsp-server-names' is set after LSP server start,
         ;; we don't need search below LSP rules if `acm-backend-lsp-server-names' is set
-        ((and (boundp 'acm-backend-lsp-server-names)
-              acm-backend-lsp-server-names)
-         acm-backend-lsp-server-names)
+        ((bound-and-true-p 'acm-backend-lsp-server-names))
         ;; Search LSP rules.
-        (t
-         (when-let* ((filename (or (ignore-errors (file-truename
+        ((when-let* ((filename (or (ignore-errors (file-truename
                                                    (lsp-bridge-get-buffer-file-name-text)))
                                    (when (lsp-bridge-is-remote-file)
                                      lsp-bridge-remote-file-path))))
@@ -1402,8 +1398,7 @@ So we build this macro to restore postion after code format."
    ;; Allow sdcv completion in string area
    acm-enable-search-sdcv-words
    ;; Allow volar popup completion menu in string.
-   (and (boundp 'acm-backend-lsp-filepath)
-        acm-backend-lsp-filepath
+   (and (bound-and-true-p acm-backend-lsp-filepath)
         (string-suffix-p ".vue" acm-backend-lsp-filepath))
    ;; Other language not allowed popup completion in string, it's annoy
    (not (acm-in-string-p))
@@ -1450,8 +1445,7 @@ So we build this macro to restore postion after code format."
   "Hide completion if char before cursor match `lsp-bridge-completion-hide-characters'."
   (let ((char (ignore-errors (char-to-string (char-before)))))
     (or (and lsp-bridge-completion-obey-trigger-characters-p
-             (member char (if (boundp 'acm-backend-lsp-completion-trigger-characters)
-                              (symbol-value 'acm-backend-lsp-completion-trigger-characters))))
+             (member char (bound-and-true-p acm-backend-lsp-completion-trigger-characters)))
         (not (member char lsp-bridge-completion-hide-characters)))))
 
 (defun lsp-bridge--is-evil-state ()
@@ -1468,13 +1462,11 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge--not-in-multiple-cursors ()
   "If `multiple-cursors' mode is enable, hide completion menu."
-  (not (and (featurep 'multiple-cursors)
-            multiple-cursors-mode)))
+  (not (bound-and-true-p multiple-cursors)))
 
 (defun lsp-brige--not-in-chatgpt-response ()
   "Don't popup completion menu if ChatGPT is responsing."
-  (not (and (boundp 'mind-wave-is-response-p)
-            mind-wave-is-response-p)))
+  (not (bound-and-true-p mind-wave-is-response-p)))
 
 (defvar-local lsp-bridge-manual-complete-flag nil)
 
@@ -1491,7 +1483,7 @@ So we build this macro to restore postion after code format."
    ))
 
 (defun lsp-bridge--not-in-org-table ()
-  (not (and (boundp 'org-at-table-p)
+  (not (and (fboundp 'org-at-table-p)
             (org-at-table-p))))
 
 (defun lsp-bridge--point-position (pos)
@@ -2443,11 +2435,9 @@ SymbolKind (defined in the LSP)."
          ;; Completion menu not show.
          (not (lsp-bridge-completion-ui-visible-p))
          ;; Yasnippet not active.
-         (or (not (boundp 'yas--active-snippets))
-             (not yas--active-snippets))
+         (not (bound-and-true-p 'yas--active-snippets))
          ;; Tempel not active.
-         (or (not (boundp 'tempel--active))
-             (not tempel--active)))
+         (not (bound-and-true-p 'tempel--active)))
     (let* ((indent (symbol-value (lsp-bridge--get-indent-width major-mode)))
            (start (lsp-bridge--point-position (if (region-active-p) (region-beginning) (point))))
            (end (lsp-bridge--point-position (if (region-active-p) (region-end) (point)))))
