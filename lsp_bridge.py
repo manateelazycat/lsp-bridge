@@ -225,7 +225,7 @@ class LspBridge:
         if server_host not in self.host_names:
             message_emacs(f"{server_host} is not connected, try reconnect...")
             self.sync_tramp_remote_complete_event.clear()
-            eval_in_emacs('lsp-bridge-remote-reconnect', server_host)
+            eval_in_emacs('lsp-bridge-remote-reconnect', server_host, True)
             self.sync_tramp_remote_complete_event.wait()
             message_emacs(f"{server_host} connected.")
 
@@ -321,7 +321,7 @@ class LspBridge:
                     else:
                         # connection restored, try to send out the message
                         client.send_message(data["message"])
-                        eval_in_emacs('lsp-bridge-remote-reconnect', server_host)
+                        eval_in_emacs('lsp-bridge-remote-reconnect', server_host, False)
                 except Exception as e:
                     logger.exception(e)
                 finally:
@@ -599,7 +599,8 @@ class LspBridge:
             logger.error("Unsupported command %s", message["command"])
             result = None
 
-        self.send_remote_message(host, self.remote_file_elisp_sender_queue, result)
+        message["result"] = result
+        self.send_remote_message(host, self.remote_file_elisp_sender_queue, message)
 
     # Functions for local handling
     def event_dispatcher(self):
