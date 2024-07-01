@@ -508,6 +508,16 @@ class LspBridge:
             message_emacs("Please input valid path match rule: 'ip:/path/file'.")
 
     @threaded
+    def update_remote_file(self, remote_file_host, remote_file_path, content):
+        self.send_remote_message(
+            remote_file_host, self.remote_file_sender_queue, {
+            "command": "update_file",
+            "server": remote_file_host,
+            "path": remote_file_path,
+            "content": content
+        })
+
+    @threaded
     def save_remote_file(self, remote_file_host, remote_file_path):
         self.send_remote_message(
             remote_file_host, self.remote_file_sender_queue, {

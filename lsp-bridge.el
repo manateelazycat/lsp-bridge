@@ -2466,6 +2466,11 @@ SymbolKind (defined in the LSP)."
    (let ((inhibit-modification-hooks t))
      ;; Apply code format edits, not sort, just reverse order.
      (lsp-bridge-file-apply-edits filename edits)
+     (when (lsp-bridge-is-remote-file)
+       (lsp-bridge-call-async "update_remote_file"
+                              lsp-bridge-remote-file-host
+                              lsp-bridge-remote-file-path
+                              (buffer-substring-no-properties (point-min) (point-max))))
      ;; Make LSP server update full content.
      (lsp-bridge-call-file-api "update_file" (buffer-name))
      ;; Notify format complete.
