@@ -519,6 +519,7 @@ The beginnings of each symbol are replaced by ace strings with
     history-string))
 
 (defun lsp-bridge-peek-define--return (filename filehost position)
+  (setq filename (concat (cdr (assoc filehost lsp-bridge-tramp-alias-alist)) filename))
   (push filename (nth 1 lsp-bridge-peek-symbol-at-point))
   (push position (nth 2 lsp-bridge-peek-symbol-at-point))
   (push 0 (nth 6 lsp-bridge-peek-symbol-at-point))

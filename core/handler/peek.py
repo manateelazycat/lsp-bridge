@@ -35,10 +35,11 @@ class PeekFindReferences(Handler):
             eval_in_emacs("lsp-bridge-find-ref-fallback", self.pos)
         else:
             response = remove_duplicate_references(response)
+            remote_connection_info = get_remote_connection_info()
 
             references_dict = {}
             for uri_info in response:
-                path = uri_to_path(uri_info["uri"])
+                path = remote_connection_info + uri_to_path(uri_info["uri"])
                 if path in references_dict:
                     references_dict[path].append(uri_info["range"])
                 else:
