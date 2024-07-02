@@ -23,7 +23,6 @@ import threading
 import os
 import glob
 import json
-import select
 import socket
 import traceback
 import time
@@ -520,7 +519,7 @@ def get_container_local_ip(container_name):
         command = "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' " + container_name
         result = subprocess.check_output(command, shell=True, text=True).strip()
         return result
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         message_emacs(f"{traceback.format_exc()}")
         return None
 
