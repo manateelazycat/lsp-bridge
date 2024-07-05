@@ -448,7 +448,7 @@ If your language supports mixed multi-language servers, it is recommended to che
 
 ## FAQ
 ### Support capf
-The current design of capf is not suitable for the LSP protocol. The capf completion backend is only suitable for non-LSP scenarios. You need to configure `(setq acm-enable-capf t)` and ensure that the current mode is included in `acm-backend-capf-mode-list`.
+The current design of capf is not suitable for the LSP protocol. The capf completion backend is only suitable for non-LSP scenarios. You need to configure `(setq acm-enable-capf t)` and ensure that the current mode is included in `lsp-bridge-default-mode-hooks` and `acm-backend-capf-mode-list`.
 
 ### pyenv configuration
 

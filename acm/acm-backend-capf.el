@@ -91,6 +91,9 @@
 
 (defcustom acm-backend-capf-mode-list '(
                                         haskell-interactive-mode
+                                        llvm-mode
+                                        inf-ruby-mode
+                                        nimsuggest-mode
                                         )
   "The mode list to support capf."
   :type 'cons)

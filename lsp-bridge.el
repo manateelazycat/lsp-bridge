@@ -595,7 +595,6 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     go-mode-hook
     haskell-mode-hook
     haskell-literate-mode-hook
-    haskell-interactive-mode-hook
     dart-mode-hook
     scala-mode-hook
     typescript-mode-hook
@@ -671,6 +670,11 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     mojo-mode-hook
     solidity-mode-hook
     gleam-ts-mode-hook
+    ;; capf hooks
+    haskell-interactive-mode-hook
+    llvm-mode-hook
+    inf-ruby-mode-hook
+    nimsuggest-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))

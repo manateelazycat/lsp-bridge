@@ -446,7 +446,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 
 ## FAQ
 ### 支持 capf
-目前 capf 的设计不适合 LSP 协议， capf 补全后端只适合非 LSP 的场景， 需要配置 `(setq acm-enable-capf t)`， 并确保 capf 当前模式存在于 `acm-backend-capf-mode-list` 中。
+目前 capf 的设计不适合 LSP 协议， capf 补全后端只适合非 LSP 的场景， 需要配置 `(setq acm-enable-capf t)`， 并确保 capf 当前模式存在于 `lsp-bridge-default-mode-hooks` 和 `acm-backend-capf-mode-list` 中。
 
 ### pyenv 配置
 
