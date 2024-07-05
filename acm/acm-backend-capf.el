@@ -94,6 +94,25 @@
                                         llvm-mode
                                         inf-ruby-mode
                                         nimsuggest-mode
+                                        merlin-mode
+                                        racer-mode
+                                        ledger-mode
+                                        nix-repl-mode
+                                        ensime-mode
+                                        systemd-mode
+                                        lmc-asm-mode
+                                        fennel-proto-repl-minor-mode
+                                        ipdb-track-mode
+                                        cider-repl-mode
+                                        ess-mode
+                                        slime-mode
+                                        ggtags-mode
+                                        gdscript-mode
+                                        robe-mode
+                                        inf-clojure-minor-mode
+                                        ahk-mode
+                                        anaconda-mode
+                                        redis-mode
                                         )
   "The mode list to support capf."
   :type 'cons)
