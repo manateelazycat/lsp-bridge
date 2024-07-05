@@ -670,11 +670,6 @@ Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, 
     mojo-mode-hook
     solidity-mode-hook
     gleam-ts-mode-hook
-    ;; capf hooks
-    haskell-interactive-mode-hook
-    llvm-mode-hook
-    inf-ruby-mode-hook
-    nimsuggest-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
@@ -2572,7 +2567,9 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 (defun global-lsp-bridge-mode ()
   (interactive)
 
-  (dolist (hook lsp-bridge-default-mode-hooks)
+  (dolist (hook (append
+                 lsp-bridge-default-mode-hooks
+                 acm-backend-capf-mode-hooks))
     (add-hook hook (lambda ()
                      (when (cl-every (lambda (pred)
                                        (lsp-bridge-check-predicate pred "global-lsp-bridge-mode"))

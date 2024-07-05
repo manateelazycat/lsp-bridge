@@ -98,6 +98,11 @@
   "The mode list to support capf."
   :type 'cons)
 
+(defvar acm-backend-capf-mode-hooks
+  (mapcar (lambda (mode)
+            (intern (concat (symbol-name mode) "-hook")))
+          acm-backend-capf-mode-list))
+
 (defun acm-backend-capf-candiates (keyword)
   (when (member major-mode acm-backend-capf-mode-list)
     (let ((res (run-hook-wrapped 'completion-at-point-functions
