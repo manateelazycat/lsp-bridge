@@ -445,6 +445,9 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 | Solidity    | [solidity-language-server](https://github.com/NomicFoundation/hardhat-vscode)                      | `npm install -g @nomicfoundation/solidity-language-server`， 参考 [Solidity Language Server](https://github.com/NomicFoundation/hardhat-vscode/blob/development/server/README.md)                                             |                                               | `npm install -g emmet-ls`                                                                                                                                                                                                      |
 
 ## FAQ
+### 支持 capf
+目前 capf 的设计不适合 LSP 协议， capf 补全后端只适合非 LSP 的场景， 需要配置 `(setq acm-enable-capf t)`， 并确保 capf 当前模式存在于 `acm-backend-capf-mode-list` 中。
+
 ### pyenv 配置
 
 如果你使用通过 `pyenv` 安装的 Python 发行版， 你必须调整你的 `lsp-bridge-python-command` 变量， 使其指向你所选 Python 版本的实际 `python3` 可执行文件， 而不是 `pyenv` 为 `python3` 提供的 shim。 选择下面任意一种方案放到你的 `lsp-bridge` 配置中：
@@ -571,7 +574,6 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 - [LSP 协议规范](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
 - [lsp-bridge 架构设计](https://manateelazycat.github.io/2022/05/12/lsp-bridge/)
 - [lsp-bridge 远程补全架构设计](https://manateelazycat.github.io/2023/03/31/lsp-bridge-remote-file/)
-- [为什么 lsp-bridge 不用 capf](https://manateelazycat.github.io/2022/06/26/why-lsp-bridge-not-use-capf/)
 - [深入分析 LSP 协议](https://manateelazycat.github.io/2024/06/11/lsp-trick/)
 - [lsp-bridge Wiki](https://github.com/manateelazycat/lsp-bridge/wiki)
 

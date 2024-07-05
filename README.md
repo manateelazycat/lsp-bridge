@@ -447,6 +447,9 @@ If your language supports mixed multi-language servers, it is recommended to che
 
 
 ## FAQ
+### Support capf
+The current design of capf is not suitable for the LSP protocol. The capf completion backend is only suitable for non-LSP scenarios. You need to configure `(setq acm-enable-capf t)` and ensure that the current mode is included in `acm-backend-capf-mode-list`.
+
 ### pyenv configuration
 
 If you use a Python distribution installed via `pyenv`, you must adjust your
@@ -576,7 +579,6 @@ Please read below articles first:
 - [LSP Protocol Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
 - [lsp-bridge Architecture Design](https://manateelazycat.github.io/2022/05/12/lsp-bridge/)
 - [lsp-bridge Remote Completion Architecture Design](https://manateelazycat.github.io/2023/03/31/lsp-bridge-remote-file/)
-- [Why lsp-bridge doesn't use capf](https://manateelazycat.github.io/2022/06/26/why-lsp-bridge-not-use-capf/)
 - [In-depth Analysis of the LSP Protocol](https://manateelazycat.github.io/2024/06/11/lsp-trick/)
 - [lsp-bridge Wiki](https://github.com/manateelazycat/lsp-bridge/wiki)
 

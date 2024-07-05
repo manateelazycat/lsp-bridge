@@ -89,8 +89,14 @@
   :type 'boolean
   :group 'acm-backend-capf)
 
+(defcustom acm-backend-capf-mode-list '(
+                                        haskell-interactive-mode
+                                        )
+  "The mode list to support capf."
+  :type 'cons)
+
 (defun acm-backend-capf-candiates (keyword)
-  (when (member major-mode '(haskell-interactive-mode))
+  (when (member major-mode acm-backend-capf-mode-list)
     (let ((res (run-hook-wrapped 'completion-at-point-functions
                                  #'completion--capf-wrapper 'all)))
       (mapcar (lambda (candidate)
