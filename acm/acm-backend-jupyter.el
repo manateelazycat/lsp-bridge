@@ -35,7 +35,7 @@
                        candidates))
          (candidates-with-metadata (mapcar (lambda (candidate)
                                              (list :key candidate
-                                                   :icon ""
+                                                   :icon "jupyter"
                                                    :label candidate
                                                    :displayLabel candidate
                                                    :annotation "jupyter"

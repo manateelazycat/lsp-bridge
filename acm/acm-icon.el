@@ -166,6 +166,8 @@
     ("tabnine" . ("material" "alpha-t-box-outline" "#954a97"))
     ("codeium" . ("material" "alpha-c-box-outline" "#09b6a2"))
     ("note" . ("material" "note" "#77aa99"))
+    ("capf" . ("material" "infinity" "#f47b7b"))
+    ("jupyter" . ("material" "exponent" "#f47b7b"))
     ("copilot" . ("octicons" "copilot" "#808080"))
     (t . ("material" "smoking-pipe" "#90cef1"))))
 

@@ -107,6 +107,7 @@
 (require 'acm-backend-copilot)
 (require 'acm-backend-org-roam)
 (require 'acm-backend-jupyter)
+(require 'acm-backend-capf)
 (require 'acm-quick-access)
 
 ;;; Code:
@@ -195,6 +196,7 @@
 
 (defcustom acm-completion-mode-candidates-merge-order '("elisp-candidates"
                                                         "lsp-candidates"
+                                                        "capf-candidates"
                                                         "jupyter-candidates"
                                                         "ctags-candidates"
                                                         "citre-candidates"
@@ -465,6 +467,7 @@ Only calculate template candidate when type last character."
          (mode-candidates-min-index 2)
          (template-candidates-min-index 2)
          lsp-candidates
+         capf-candidates
          path-candidates
          yas-candidates
          tabnine-candidates
@@ -497,6 +500,9 @@ Only calculate template candidate when type last character."
     (when acm-enable-jupyter
       (setq jupyter-candidates (acm-backend-jupyter-candidates keyword)))
 
+    (when acm-enable-capf
+      (setq capf-candidates (acm-backend-capf-candiates keyword)))
+
     (if acm-enable-search-sdcv-words
         ;; Completion SDCV if option `acm-enable-search-sdcv-words' is enable.
         (setq candidates (acm-backend-search-sdcv-words-candidates keyword))
@@ -517,6 +523,7 @@ Only calculate template candidate when type last character."
                                         (pcase mode-candidate-name
                                           ("elisp-candidates" (unless (acm-in-comment-p) (acm-backend-elisp-candidates keyword)))
                                           ("lsp-candidates" lsp-candidates)
+                                          ("capf-candidates" capf-candidates)
                                           ("jupyter-candidates" jupyter-candidates)
                                           ("ctags-candidates" ctags-candidates)
                                           ("citre-candidates" citre-candidates)
