@@ -265,6 +265,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 - `lsp-bridge-python-multi-lsp-server`: Python 多语言服务器， 可以选择 `basedpyright_ruff`, `pyright_ruff`, `jedi_ruff`, `python-ms_ruff`, `pylsp_ruff`
 - `lsp-bridge-nix-lsp-server`: Nix 语言的服务器， 可以选择 `rnix-lsp`, `nixd` 或者 `nil`
 - `lsp-bridge-markdown-lsp-server`: Markdown 语言的服务器， 可以选择 `vale-ls`, `nil` 或者 `marksman`
+- `lsp-bridge-lua-lsp-server`: Lua 语言的服务器， 可以选择 `sumneko`, 或者 `lua-lsp`
 
 ## 选项
 
@@ -394,6 +395,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 |             | [texlab](https://github.com/latex-lsp/texlab)                                                      | `lsp-bridge-tex-lsp-server` 设置成 `texlab`                                                                                                                                                                                   |
 | LESS        | [emmet-ls](https://github.com/aca/emmet-ls)                                                        | `npm install -g emmet-ls`                                                                                                                                                                                                     |
 | Lua         | [sumneko](https://github.com/sumneko/lua-language-server)                                          | 请确保导出 sumneko 的 `bin` 目录到你系统的 PATH 路径                                                                                                                                                                          |
+|             | [lua-lsp](https://github.com/Alloyed/lua-lsp)                                          |                                                                                                                                                                           |
 | Markdown    | [vale-ls](https://github.com/errata-ai/vale-ls)                                                    | 先安装 `vale`, 并在 vale-ls git 仓库中用 cargo 来构建 vale-ls, 并确保 vale-ls 添加到 PATH 中                                                                                                                                    |
 | Mint        | [mint-ls](https://www.mint-lang.com/)                                                           |                                                                                                                                                                                                |
 | Mojo        | [mojo](https://www.modular.com/max/mojo)                                                           | modular install mojo-lsp-server                                                                                                                                                                                               |

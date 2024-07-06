@@ -266,6 +266,7 @@ lsp-bridge provides support for more than two language servers for many language
 - `lsp-bridge-python-multi-lsp-server`: Python multi-language servers, you can choose `basedpyright_ruff`, `pyright_ruff`, `jedi_ruff`, `python-ms_ruff`, `pylsp_ruff`
 - `lsp-bridge-nix-lsp-server`: Nix language server, you can choose `rnix-lsp`, `nixd` or `nil`
 - `lsp-bridge-markdown-lsp-server`: Markdown language server, you can choose `vale-ls` `nil` or `marksman` 
+- `lsp-bridge-lua-lsp-server`: Lua language server, you can choose `sumneko` or `lua-lsp` 
 
 ## Options
 
@@ -395,6 +396,7 @@ If your language supports mixed multi-language servers, it is recommended to che
 |             | [texlab](https://github.com/latex-lsp/texlab)                                                      | `lsp-bridge-tex-lsp-server` set to `texlab`                                                                                                                                                                                                                         |
 | LESS        | [emmet-ls](https://github.com/aca/emmet-ls)                                                        | `npm install -g emmet-ls`                                                                                                                                                                                                                                           |
 | Lua         | [sumneko](https://github.com/sumneko/lua-language-server)                                          | Please ensure `bin` under sumneko installation is in your system PATH at first                                                                                                                                                                                      |
+|             | [lua-lsp](https://github.com/Alloyed/lua-lsp)                                          |                                                                                                                                                                           |
 | Markdown    | [vale-ls](https://github.com/errata-ai/vale-ls)                                                    | Install `vale` first, then use `cargo build` and install `vale-ls` from github, and make sure `vale-ls` in PATH                                                                                                                                                             |
 | Mint        | [mint-ls](https://www.mint-lang.com/)                                                           |                                                                                                                                                                                                |
 | Mojo        | [mojo](https://www.modular.com/max/mojo)                                                           | modular install `mojo-lsp-server`                                                                                                                                                                                                                                     |
