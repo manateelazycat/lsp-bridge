@@ -471,14 +471,14 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
   :type 'string
   :safe #'stringp)
 
-(defcustom lsp-bridge-python-lsp-server "pyright"
+(defcustom lsp-bridge-python-lsp-server "basedpyright"
   "Default LSP server for Python.
-Possible choices are pyright, pyright-background-analysis, jedi, python-ms, pylsp, and ruff."
+Possible choices are basedpyright, pyright, pyright-background-analysis, jedi, python-ms, pylsp, and ruff."
   :type 'string)
 
-(defcustom lsp-bridge-python-multi-lsp-server "pyright-background-analysis_ruff"
+(defcustom lsp-bridge-python-multi-lsp-server "basedpyright_ruff"
   "Default Multi LSP server for Python.
-Possible choices are pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, python-ms_ruff, and pylsp_ruff."
+Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, python-ms_ruff, and pylsp_ruff."
   :type 'string)
 
 (defcustom lsp-bridge-tex-lsp-server "texlab"
