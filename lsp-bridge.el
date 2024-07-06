@@ -572,6 +572,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     (solidity-mode .                                                             "solidity")
     (gleam-ts-mode .                                                             "gleam")
     (ada-mode .                                                                  "ada-language-server")
+    (mint-mode .                                                                 "mint-ls")
     (purescript-mode .                                                           "purescript-language-server")
     (perl-mode .                                                                 "perl-language-server")
     (futhark-mode .                                                              "futhark-lsp")
@@ -675,6 +676,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     solidity-mode-hook
     gleam-ts-mode-hook
     ada-mode-hook
+    mint-mode-hook
     purescript-mode-hook
     perl-mode-hook
     futhark-mode-hook
@@ -705,6 +707,9 @@ you can customize `lsp-bridge-get-project-path-by-filepath' to return project pa
   "In Java, sometimes, we need return same workspace folder for multiple projects,
 you can customize `lsp-bridge-get-workspace-folder' to return workspace folder path by give project path.")
 
+(defvar lsp-bridge-indent-two-level 2)
+(defvar lsp-bridge-indent-foure-level 2)
+
 (defvar lsp-bridge-formatting-indent-alist
   '((c-mode                     . c-basic-offset) ; C
     (c-ts-mode                  . c-basic-offset) ; C
@@ -731,6 +736,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (raku-mode                  . raku-indent-offset)  ; Perl6/Raku
     (erlang-mode                . erlang-indent-level) ; Erlang
     (ada-mode                   . ada-indent)          ; Ada
+    (mint-mode                  . lsp-bridge-indent-two-level) ; Mint
     (purescript-mode            . purescript-indent-offset) ; PureScript
     (futhark-mode               . futhark-indent-level) ; Futhark
     (sgml-mode                  . sgml-basic-offset)   ; SGML
