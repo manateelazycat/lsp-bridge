@@ -165,17 +165,6 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 }
 ```
 
-#### Doom Emacs 配置
-`config.el`
-
-```elisp
-(use-package! lsp-bridge
-  :config
-  (setq lsp-bridge-python-multi-lsp-server "pyright-background-analysis_ruff")
-
-  (global-lsp-bridge-mode))
-```
-
 启动开发容器， 并使用 `file-find` `/docker:user@container:/path/to/file` 打开文件。
 
 更多详细信息， 请参阅 [devcontainer-feature-emacs-lsp-bridge](https://github.com/nohzafk/devcontainer-feature-emacs-lsp-bridge)。

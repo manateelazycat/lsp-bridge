@@ -167,17 +167,6 @@ Here is a compelte configuration example
 }
 ```
 
-#### doom-emacs configuration
-`config.el`
-
-``` elisp
-(use-package! lsp-bridge
-  :config
-  (setq lsp-bridge-python-multi-lsp-server "pyright-background-analysis_ruff")
-
-  (global-lsp-bridge-mode))
-```
-
 start the devcontainer and use `file-find` `/docker:user@container:/path/to/file` to open the file.
 
 more detail please refer to [devcontainer-feature-emacs-lsp-bridge](https://github.com/nohzafk/devcontainer-feature-emacs-lsp-bridge).
