@@ -572,6 +572,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     (solidity-mode .                                                             "solidity")
     (gleam-ts-mode .                                                             "gleam")
     (ada-mode .                                                                  "ada-language-server")
+    (purescript-mode .                                                           "purescript-language-server")
     (perl-mode .                                                                 "perl-language-server")
     (futhark-mode .                                                              "futhark-lsp")
     )
@@ -674,6 +675,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     solidity-mode-hook
     gleam-ts-mode-hook
     ada-mode-hook
+    purescript-mode-hook
     perl-mode-hook
     futhark-mode-hook
     )
@@ -729,6 +731,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (raku-mode                  . raku-indent-offset)  ; Perl6/Raku
     (erlang-mode                . erlang-indent-level) ; Erlang
     (ada-mode                   . ada-indent)          ; Ada
+    (purescript-mode            . purescript-indent-offset) ; PureScript
     (futhark-mode               . futhark-indent-level) ; Futhark
     (sgml-mode                  . sgml-basic-offset)   ; SGML
     (nxml-mode                  . nxml-child-indent)   ; XML
