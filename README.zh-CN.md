@@ -45,7 +45,7 @@ lsp-bridge 的优势：
 (global-lsp-bridge-mode)
 ```
 
-终端模式请安装 [acm-terminal](https://github.com/twlz0ne/acm-terminal), 需要注意的是， acm-terminal 有可能会因为我修改了 acm.el 代码而导致兼容性破坏， 欢迎反馈 issue 给 acm-terminal 的作者， 他是一个非常好的开发者， 会迅速解决兼容性问题
+备注： 在终端下补全请安装 [acm-terminal](https://github.com/twlz0ne/acm-terminal)
 
 * 如果你使用 straight 来安装， 应该用下面的配置来安装：
 

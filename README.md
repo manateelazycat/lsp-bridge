@@ -48,7 +48,7 @@ Advantages of lsp-bridge:
 (global-lsp-bridge-mode)
 ```
 
-To use terminal mode, please install [acm-terminal](https://github.com/twlz0ne/acm-terminal). However, it's essential to note that acm-terminal may potentially cause compatibility issues due to modifications made to the acm.el code by me. Should such an occurrence arise, you can report any problems as an issue in the repository of acm-terminal, as its creator is a highly skilled developer who will swiftly address any compatibility issues.
+Note: please install [acm-terminal](https://github.com/twlz0ne/acm-terminal) if you want to complete in terminal
 
 * If you are using straight to install, you should use the following configuration to install:
 
