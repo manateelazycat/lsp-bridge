@@ -308,6 +308,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 - `lsp-bridge-peek-ace-cancel-keys`: 退出 `lsp-bridge-peek-through` 的按键
 - `acm-frame-background-dark-color`: 暗色主题下的菜单背景颜色
 - `acm-frame-background-light-color`: 亮色主题下的菜单背景颜色
+- `acm-enable-capf`: 针对非 LSP 后端提供 capf 补全支持， 默认是关闭的
 - `acm-enable-doc`: 补全菜单是否显示帮助文档
 - `acm-enable-icon`: 补全菜单是否显示图标 (有很多 macOS 用户反馈 emacs-plus28 无法正常显示图标， 显示的是彩色方块， 有两种方法可以解决， 安装 Emacs Mac Port 或者自己编译 Emacs 的时候给 brew 命令增加选项 `--with-rsvg` )
 ， 重新编译了之后好像也没有用， 后来重新装了 emacs mac port

@@ -309,6 +309,7 @@ lsp-bridge provides support for more than two language servers for many language
 - `lsp-bridge-peek-ace-cancel-keys`: Keys to exit `lsp-bridge-peek-through`
 - `acm-frame-background-dark-color`: Menu background color in dark theme
 - `acm-frame-background-light-color`: Menu background color in light theme
+- `acm-enable-capf`: Provides capf completion support for non-LSP backends, it is disabled by default
 - `acm-enable-doc`: Whether the complete menu display the help document
 - `acm-enable-doc-markdown-render`: Richly render Markdown for completion popups, you can choose `'async`, `t` or `nil`. When set to `'async`, styles are applied asynchronously, choose `t`, styles are applied synchronously and will slow down the completion speed, default is `'async`
 - `acm-enable-icon`: Whether the completion menu displays icons (Many macOS users have reported that emacs-plus28 cannot display icons properly, showing colored squares instead. There are two ways to solve this: install Emacs Mac Port or add the `--with-rsvg` option to the brew command when compiling Emacs yourself)
