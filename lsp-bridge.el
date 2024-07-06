@@ -573,6 +573,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     (gleam-ts-mode .                                                             "gleam")
     (ada-mode .                                                                  "ada-language-server")
     (perl-mode .                                                                 "perl-language-server")
+    (futhark-mode .                                                              "futhark-lsp")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -674,6 +675,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     gleam-ts-mode-hook
     ada-mode-hook
     perl-mode-hook
+    futhark-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
@@ -727,6 +729,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (raku-mode                  . raku-indent-offset)  ; Perl6/Raku
     (erlang-mode                . erlang-indent-level) ; Erlang
     (ada-mode                   . ada-indent)          ; Ada
+    (futhark-mode               . futhark-indent-level) ; Futhark
     (sgml-mode                  . sgml-basic-offset)   ; SGML
     (nxml-mode                  . nxml-child-indent)   ; XML
     (nickel-mode                . c-basic-offset)
