@@ -571,6 +571,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     (mojo-mode    .                                                              "mojo-lsp-server")
     (solidity-mode .                                                             "solidity")
     (gleam-ts-mode .                                                             "gleam")
+    (ada-mode .                                                                  "ada-language-server")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -670,6 +671,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     mojo-mode-hook
     solidity-mode-hook
     gleam-ts-mode-hook
+    ada-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
