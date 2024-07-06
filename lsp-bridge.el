@@ -494,7 +494,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
   :type 'string)
 
 (defcustom lsp-bridge-markdown-lsp-server nil
-  "Default LSP server for markdown, you can choose `vale-ls' or `nil'."
+  "Default LSP server for markdown, you can choose `vale-ls', `nil' or `marksman'."
   :type 'string)
 
 (defcustom lsp-bridge-use-wenls-in-org-mode nil
