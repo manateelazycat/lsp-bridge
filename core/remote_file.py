@@ -376,6 +376,12 @@ class FileSyncServer(RemoteFileServer):
             return self.handle_change_file(message)
         elif command == "remote_sync":
             return self.handle_remote_sync(message)
+        elif command == "update_file":
+            return self.handle_update_file(message)
+
+    def handle_update_file(self, message):
+        path = os.path.expanduser(message["path"])
+        self.file_dict[path] = message["content"]
 
     def handle_remote_sync(self, message):
         remote_info = message["remote_connection_info"]
