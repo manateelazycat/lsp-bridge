@@ -1,0 +1,22 @@
+{
+  "completion": ["typescriptreact"],
+  "completion_item_resolve": ["typescriptreact"],
+  "diagnostics": ["typescriptreact", "vscode-eslint-language-server"],
+  "code_action": ["typescriptreact", "vscode-eslint-language-server"],
+  "execute_command": ["typescriptreact", "vscode-eslint-language-server"],
+  "find_define": "typescriptreact",
+  "find_type_define": "typescriptreact",
+  "find_implementation": "typescriptreact",
+  "find_references": "typescriptreact",
+  "peek_find_definition": "typescriptreact",
+  "peek_find_references": "typescriptreact",
+  "formatting": "typescriptreact",
+  "hover": "typescriptreact",
+  "signature_help": "typescriptreact",
+  "prepare_rename": "typescriptreact",
+  "rename": "typescriptreact",
+  "document_symbol": "typescriptreact",
+  "workspace_symbol": "typescriptreact",
+  "semantic_tokens": "typescriptreact",
+  "inlay_hint": "typescriptreact"
+}
