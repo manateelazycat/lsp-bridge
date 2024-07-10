@@ -210,10 +210,17 @@ Default matching use snippet filename."
 
 (defun acm-backend-yas-candidate-expand (candidate bound-start)
   (delete-region bound-start (point))
-  (yas-expand-snippet (string-replace "$TM_SELECTED_TEXT" "" (plist-get candidate :content))))
+  (yas-expand-snippet (plist-get candidate :content)))
 
 (defun acm-backend-yas-candidate-doc (candidate)
   (ignore-errors (plist-get candidate :content)))
+
+;; Use yas-selected-text to implement $TM_SELECTED_TEXT return by jdtls
+(defun yas-expand-snippet-acm-advice (orig-fun &rest args)
+  (apply orig-fun (string-replace "$TM_SELECTED_TEXT" "`yas-selected-text`" (car args)) (cdr args)))
+
+(advice-add 'yas-expand-snippet :around
+	    #'yas-expand-snippet-acm-advice)
 
 (provide 'acm-backend-yas)
 
