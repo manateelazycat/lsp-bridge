@@ -116,6 +116,4 @@ Below LSP server haven't supported, PR are welcome. ;)
     - [github.com/microclimate-devops/xml-language-server](https://github.com/microclimate-devops/xml-language-server)
     - [github.com/angelozerr/lsp4xml](https://github.com/angelozerr/lsp4xml)
 
-54. **YANG**: [github.com/yang-tools/yang-lsp](https://github.com/yang-tools/yang-lsp)
-
 55. **Xtext** (Any Language): [github.com/eclipse/xtext-core](https://github.com/eclipse/xtext-core)
