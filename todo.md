@@ -28,8 +28,6 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 16. **Gauge**: [github.com/getgauge/gauge](https://github.com/getgauge/gauge)
 
-17. **GLSL**: [github.com/svenstaro/glsl-language-server](https://github.com/svenstaro/glsl-language-server)
-
 18. **Grain**: [github.com/grain-lang/grain](https://github.com/grain-lang/grain)
 
 19. **Helm (Kubernetes)**: [github.com/mrjosh/helm-ls](https://github.com/mrjosh/helm-ls)

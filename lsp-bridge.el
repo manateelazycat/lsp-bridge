@@ -577,6 +577,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     (solidity-mode .                                                             "solidity")
     (gleam-ts-mode .                                                             "gleam")
     (ada-mode .                                                                  "ada-language-server")
+    (glsl-mode .                                                                 "glsl-language-server")
     (cobol-mode .                                                                "che-che4z-lsp-for-cobol")
     (hlasm-mode .                                                                "che-che4z-lsp-for-hlasm")
     (yang-mode .                                                                 "yang-lsp")
@@ -684,6 +685,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     solidity-mode-hook
     gleam-ts-mode-hook
     ada-mode-hook
+    glsl-mode-hook
     cobol-mode-hook
     hlasm-mode-hook
     yang-mode-hook
@@ -748,6 +750,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (raku-mode                  . raku-indent-offset)  ; Perl6/Raku
     (erlang-mode                . erlang-indent-level) ; Erlang
     (ada-mode                   . ada-indent)          ; Ada
+    (glsl-mode                  . lsp-bridge-indent-two-level)  ; GLSL
     (cobol-mode                 . lsp-bridge-indent-four-level) ; Cobol
     (hlasm-mode                 . lsp-bridge-indent-eight-level) ; HLASM
     (yang-mode                  . lsp-bridge-indent-two-level) ; Yang
