@@ -578,6 +578,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     (gleam-ts-mode .                                                             "gleam")
     (ada-mode .                                                                  "ada-language-server")
     (cobol-mode .                                                                "che-che4z-lsp-for-cobol")
+    (hlasm-mode .                                                                "che-che4z-lsp-for-hlasm")
     (yang-mode .                                                                 "yang-lsp")
     (mint-mode .                                                                 "mint-ls")
     (purescript-mode .                                                           "purescript-language-server")
@@ -684,6 +685,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     gleam-ts-mode-hook
     ada-mode-hook
     cobol-mode-hook
+    hlasm-mode-hook
     yang-mode-hook
     mint-mode-hook
     purescript-mode-hook
@@ -718,6 +720,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
 
 (defvar lsp-bridge-indent-two-level 2)
 (defvar lsp-bridge-indent-four-level 4)
+(defvar lsp-bridge-indent-eight-level 8)
 
 (defvar lsp-bridge-formatting-indent-alist
   '((c-mode                     . c-basic-offset) ; C
@@ -746,6 +749,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (erlang-mode                . erlang-indent-level) ; Erlang
     (ada-mode                   . ada-indent)          ; Ada
     (cobol-mode                 . lsp-bridge-indent-four-level) ; Cobol
+    (hlasm-mode                 . lsp-bridge-indent-eight-level) ; HLASM
     (yang-mode                  . lsp-bridge-indent-two-level) ; Yang
     (mint-mode                  . lsp-bridge-indent-two-level) ; Mint
     (purescript-mode            . purescript-indent-offset) ; PureScript

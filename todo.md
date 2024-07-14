@@ -34,10 +34,6 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 19. **Helm (Kubernetes)**: [github.com/mrjosh/helm-ls](https://github.com/mrjosh/helm-ls)
 
-20. **IBM High Level Assembler**: 
-    - Broadcom: [github.com/eclipse/che-che4z-lsp-for-hlasm](https://github.com/eclipse/che-che4z-lsp-for-hlasm)
-    - IBM: marketplace.visualstudio.com/items?itemName=IBM.zopeneditor
-
 21. **Imandra Protocol Language**: [github.com/AestheticIntegration/ipl-vscode](https://github.com/AestheticIntegration/ipl-vscode)
 
 22. **Java**: 
