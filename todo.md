@@ -2,8 +2,6 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 1. **ActionScript3**: [github.com/BowlerHatLLC/vscode-nextgenas/tree/master/language-server](https://github.com/BowlerHatLLC/vscode-nextgenas/tree/master/language-server)
 
-2. **ANTLR**: [github.com/kaby76/AntlrVSIX](https://github.com/kaby76/AntlrVSIX)
-
 3. **Apache Camel**: [github.com/camel-tooling/camel-language-server](https://github.com/camel-tooling/camel-language-server)
 
 4. **Ballerina**: [github.com/ballerina-platform/ballerina-lang/tree/master/language-server](https://github.com/ballerina-platform/ballerina-lang/tree/master/language-server)
@@ -15,10 +13,6 @@ Below LSP server haven't supported, PR are welcome. ;)
 7. **Coq**: coq-lsp
 
 8. **Cucumber (Gherkin)**: cucumber/language-server
-
-9. **IBM Enterprise COBOL for z/OS**: 
-   - IBM: marketplace.visualstudio.com/items?itemName=IBM.zopeneditor
-   - Broadcom: [github.com/eclipse/che-che4z-lsp-for-cobol](https://github.com/eclipse/che-che4z-lsp-for-cobol)
 
 10. **Delphi**: Embarcadero (Proprietary - DelphiLSP)
 
