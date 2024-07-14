@@ -4,10 +4,6 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 2. **PowerShell**: [github.com/PowerShell/PowerShellEditorServices](https://github.com/PowerShell/PowerShellEditorServices)
 
-3. **Terraform**: 
-   - [github.com/hashicorp/terraform-ls](https://github.com/hashicorp/terraform-ls)
-   - [github.com/juliosueiras/terraform-lsp](https://github.com/juliosueiras/terraform-lsp)
-
 4. **XML**: 
    - [github.com/microclimate-devops/xml-language-server](https://github.com/microclimate-devops/xml-language-server)
    - [github.com/angelozerr/lsp4xml](https://github.com/angelozerr/lsp4xml)

@@ -1,0 +1,8 @@
+{
+  "name": "terraform-ls",
+  "languageId": "terraform",
+  "command": [
+    "terraform-ls"
+  ],
+  "settings": {}
+}
