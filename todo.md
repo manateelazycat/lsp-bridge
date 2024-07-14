@@ -42,8 +42,6 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 24. **JSON-LD**: [github.com/ajuvercr/jsonld-lsp](https://github.com/ajuvercr/jsonld-lsp)
 
-25. **Jsonnet**: [github.com/grafana/jsonnet-language-server](https://github.com/grafana/jsonnet-language-server)
-
 26. **JS/TS + PHP + Python + Java**: [github.com/SonarSource/sonarlint-language-server](https://github.com/SonarSource/sonarlint-language-server)
 
 27. **Langium**: [github.com/langium/langium](https://github.com/langium/langium)
