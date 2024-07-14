@@ -92,10 +92,6 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 44. **Veryl**: [github.com/dalance/veryl/tree/master/crates/languageserver](https://github.com/dalance/veryl/tree/master/crates/languageserver)
 
-45. **IBM Enterprise PL/I for z/OS**: marketplace.visualstudio.com/items?itemName=IBM.zopeneditor
+45. **Standard ML**: Millet
 
-46. **Polyglot** (Java, JavaScript, Python, R, Ruby, …): marketplace.visualstudio.com/items?itemName=oracle-labs-graalvm.graalvm
-
-47. **Standard ML**: Millet
-
-48. **Systemtap**: Systemtap LSP
+46. **Systemtap**: Systemtap LSP
