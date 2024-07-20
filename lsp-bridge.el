@@ -560,7 +560,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     (dockerfile-mode .                                                           "docker-langserver")
     (d-mode .                                                                    "serve-d")
     ((fortran-mode f90-mode) .                                                   "fortls")
-    (nix-mode .                                                                  lsp-bridge-nix-lsp-server)
+    ((nix-mode nix-ts-mode) .                                                    lsp-bridge-nix-lsp-server)
     (nickel-mode .                                                               "nls")
     (ess-r-mode .                                                                "rlanguageserver")
     ((graphql-mode graphql-ts-mode) .                                            "graphql-lsp")
@@ -653,6 +653,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     f90-mode-hook
     fortran-mode-hook
     nix-mode-hook
+    nix-ts-mode-hook
     nickel-mode-hook
     ess-r-mode-hook
     verilog-mode-hook
@@ -766,6 +767,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (sgml-mode                  . sgml-basic-offset)   ; SGML
     (nxml-mode                  . nxml-child-indent)   ; XML
     (nickel-mode                . c-basic-offset)
+    (nix-ts-mode                . nix-ts-mode-indent-offset) ; Nix
     (pascal-mode                . pascal-indent-level)     ; Pascal
     (typescript-mode            . typescript-indent-level) ; Typescript
     (typescript-ts-mode         . typescript-ts-mode-indent-offset) ; Typescript
