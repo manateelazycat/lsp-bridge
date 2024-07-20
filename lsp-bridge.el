@@ -735,7 +735,6 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (c++-mode                   . c-basic-offset) ; C++
     (markdown-mode              . c-basic-offset) ; Markdown.
     (csharp-mode                . c-basic-offset) ; C#
-    (csharp-tree-sitter-mode    . csharp-tree-sitter-indent-offset) ; C#
     (csharp-ts-mode             . csharp-ts-mode-indent-offset) ; C#
     (d-mode                     . c-basic-offset)             ; D
     (julia-mode                 . c-basic-offset)             ; Julia
