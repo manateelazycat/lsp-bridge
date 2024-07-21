@@ -557,7 +557,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     ((php-mode php-ts-mode) .                                                    lsp-bridge-php-lsp-server)
     ((yaml-mode yaml-ts-mode) .                                                  "yaml-language-server")
     (zig-mode .                                                                  "zls")
-    (dockerfile-mode .                                                           "docker-langserver")
+    ((dockerfile-mode dockerfile-ts-mode) .                                      "docker-langserver")
     (d-mode .                                                                    "serve-d")
     ((fortran-mode f90-mode) .                                                   "fortls")
     (nix-mode .                                                                  lsp-bridge-nix-lsp-server)
@@ -649,6 +649,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     zig-mode-hook
     groovy-mode-hook
     dockerfile-mode-hook
+    dockerfile-ts-mode-hook
     d-mode-hook
     f90-mode-hook
     fortran-mode-hook
