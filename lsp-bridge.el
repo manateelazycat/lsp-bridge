@@ -565,7 +565,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     (ess-r-mode .                                                                "rlanguageserver")
     ((graphql-mode graphql-ts-mode) .                                            "graphql-lsp")
     (swift-mode .                                                                "swift-sourcekit")
-    (csharp-mode .                                                               lsp-bridge-csharp-lsp-server)
+    ((csharp-mode csharp-ts-mode) .                                              lsp-bridge-csharp-lsp-server)
     (kotlin-mode .                                                               "kotlin-language-server")
     (verilog-mode .                                                              "verible")
     (vhdl-mode .                                                                 "vhdl-tool")
@@ -658,6 +658,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     verilog-mode-hook
     swift-mode-hook
     csharp-mode-hook
+    csharp-ts-mode-hook
     telega-chat-mode-hook
     markdown-mode-hook
     kotlin-mode-hook
@@ -734,7 +735,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (c++-mode                   . c-basic-offset) ; C++
     (markdown-mode              . c-basic-offset) ; Markdown.
     (csharp-mode                . c-basic-offset) ; C#
-    (csharp-tree-sitter-mode    . csharp-tree-sitter-indent-offset) ; C#
+    (csharp-ts-mode             . csharp-ts-mode-indent-offset) ; C#
     (d-mode                     . c-basic-offset)             ; D
     (julia-mode                 . c-basic-offset)             ; Julia
     (java-mode                  . c-basic-offset)             ; Java
