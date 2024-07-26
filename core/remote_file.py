@@ -424,7 +424,6 @@ class FileSyncServer(RemoteFileServer):
                         "content": content
                     })
                     self.file_dict[path] = content
-                    print("file_dict after handle_open_file: " + str(self.file_dict.keys()))
         else:
             response.update({
                 "path": path,
