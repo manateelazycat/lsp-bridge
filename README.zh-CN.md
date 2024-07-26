@@ -148,12 +148,12 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 
 ```json
 {
-    "name": "Node.js & TypeScript",
+    "name": "Ubuntu",
     // Your base image
-    "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+    "image": "mcr.microsoft.com/devcontainers/base:jammy",
     // Features to add to the dev container. More info: https://containers.dev/features.
     "features": {
-        "ghcr.io/nohzafk/devcontainer-feature-emacs-lsp-bridge/pyright-background-analysis_ruff:latest": {}
+        "ghcr.io/nohzafk/devcontainer-feature-emacs-lsp-bridge/gleam:latest": {}
     },
     "forwardPorts": [
         9997,
@@ -161,7 +161,7 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
         9999
     ],
     // More info: https://aka.ms/dev-containers-non-root.
-    "remoteUser": "root"
+    "remoteUser": "vscode"
 }
 ```
 
@@ -175,13 +175,12 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 (use-package! apheleia
   :config
   (setq +format-with-lsp nil)
-  ;; 设置 Formatter
+  ;; which formatter to use
   (setf (alist-get 'python-mode apheleia-mode-alist) 'ruff)
   (setf (alist-get 'python-ts-mode apheleia-mode-alist) 'ruff)
 
   (setq apheleia-remote-algorithm 'local)
-  (after! lsp-bridge
-    (add-hook 'apheleia-post-format-hook #'lsp-bridge-update-tramp-docker-file-mod-time)))
+  (setq apheleia-post-format-hook #'lsp-bridge-monitor-after-save))
 ```
 
 ## 按键

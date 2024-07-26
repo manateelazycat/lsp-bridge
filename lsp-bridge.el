@@ -1845,24 +1845,9 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-completion-ui-visible-p ()
   (acm-frame-visible-p acm-menu-frame))
 
-(defun lsp-bridge-update-tramp-docker-file-mod-time ()
-  "Updaet buffer visited file mode time."
-  ;; set-visited-file-name associate a buffer with a file path.
-  ;; file timestamps are handled or recognized by Emacs through TRAMP.
-  ;; discrepancies of file timestamps will make Emacs warn about file has been
-  ;; changed since visited or saved.
-  (when (string-prefix-p "/docker:" buffer-file-name)
-    (let* ((file-name (lsp-bridge-get-buffer-file-name-text))
-           (tramp-vec (tramp-dissect-file-name file-name))
-           (path (tramp-file-name-localname tramp-vec))
-           (host (tramp-file-name-host tramp-vec)))
-      (lsp-bridge--conditional-update-tramp-file-info file-name path host
-                                                      (set-visited-file-modtime
-                                                       (file-attribute-modification-time (file-attributes buffer-file-name)))))))
 
 (defun lsp-bridge-monitor-after-save ()
-  (lsp-bridge-call-file-api "save_file" (buffer-name))
-  (lsp-bridge-update-tramp-docker-file-mod-time))
+  (lsp-bridge-call-file-api "save_file" (buffer-name)))
 
 (defcustom lsp-bridge-find-def-fallback-function nil
   "Fallback for find definition failure."
