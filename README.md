@@ -182,8 +182,7 @@ If you use `apheleia` as formatter, `lsp-bridge` now support auto formatting fil
   (setf (alist-get 'python-ts-mode apheleia-mode-alist) 'ruff)
 
   (setq apheleia-remote-algorithm 'local)
-  (after! lsp-bridge
-    (add-hook 'apheleia-post-format-hook #'lsp-bridge-update-tramp-docker-file-mod-time)))
+  (setq apheleia-post-format-hook #'lsp-bridge-monitor-after-save))
 ```
 
 ## Keymap
