@@ -150,12 +150,12 @@ Here is a compelte configuration example
 
 ``` json
 {
-    "name": "Node.js & TypeScript",
+    "name": "Ubuntu",
     // Your base image
-    "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+    "image": "mcr.microsoft.com/devcontainers/base:jammy",
     // Features to add to the dev container. More info: https://containers.dev/features.
     "features": {
-        "ghcr.io/nohzafk/devcontainer-feature-emacs-lsp-bridge/pyright-background-analysis_ruff:latest": {}
+        "ghcr.io/nohzafk/devcontainer-feature-emacs-lsp-bridge/gleam:latest": {}
     },
     "forwardPorts": [
         9997,
@@ -163,7 +163,7 @@ Here is a compelte configuration example
         9999
     ],
     // More info: https://aka.ms/dev-containers-non-root.
-    "remoteUser": "root"
+    "remoteUser": "vscode"
 }
 ```
 
