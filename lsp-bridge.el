@@ -304,6 +304,13 @@ After set `lsp-bridge-completion-obey-trigger-characters-p' to nil, you need use
   :safe #'booleanp
   :group 'lsp-bridge)
 
+(defcustom lsp-bridge-completion-in-string-file-types '("vue" "dart")
+  "File types where completion in string is allowed.
+This is a list of file extensions for which
+LSP-Bridge will enable completion inside string literals."
+  :type '(repeat string)
+  :group 'lsp-bridge)
+
 (defface lsp-bridge-font-lock-flash
   '((t (:inherit highlight)))
   "Face to flash the current line."
@@ -1448,7 +1455,7 @@ So we build this macro to restore postion after code format."
    ;; For some languages, allow popup completion menu in string.
    (and (boundp 'acm-backend-lsp-filepath)
         acm-backend-lsp-filepath
-        (member (file-name-extension acm-backend-lsp-filepath) '("vue" "dart")))
+        (member (file-name-extension acm-backend-lsp-filepath) lsp-bridge-completion-in-string-file-types))
    ;; Other language not allowed popup completion in string, it's annoy
    (not (acm-in-string-p))
    ;; Allow popup completion menu for string interpolation
