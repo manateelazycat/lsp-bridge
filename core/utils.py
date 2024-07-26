@@ -126,15 +126,15 @@ def get_buffer_content(filename, buffer_name):
     global lsp_bridge_server
 
     if lsp_bridge_server and lsp_bridge_server.file_server:
-        return lsp_bridge_server.file_server.file_dict[filename]
+        return lsp_bridge_server.file_server.get_file_content(filename)
     else:
         return get_emacs_func_result('get-buffer-content', buffer_name)
 
 def get_file_content_from_file_server(filename):
     global lsp_bridge_server
 
-    if lsp_bridge_server and lsp_bridge_server.file_server and filename in lsp_bridge_server.file_server.file_dict:
-        return lsp_bridge_server.file_server.file_dict[filename]
+    if lsp_bridge_server and lsp_bridge_server.file_server:
+        return lsp_bridge_server.file_server.get_file_content(filename)
     else:
         return ""
 
