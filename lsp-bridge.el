@@ -2987,10 +2987,7 @@ SSH tramp file name is like /ssh:user@host#port:path"
       (set-visited-file-name tramp-filename t t)
       ;; auto reload the file content if formatter made change
       ;; otherwise when saving file emacs will warn file has been changed on disk
-      (auto-revert-mode 1)
-
-
-      ))
+      (auto-revert-mode 1)))
 
   (when lsp-bridge-ref-open-remote-file-go-back-to-ref-window
     (lsp-bridge-switch-to-ref-window)
