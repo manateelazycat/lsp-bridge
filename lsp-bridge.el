@@ -738,7 +738,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (markdown-mode              . c-basic-offset) ; Markdown.
     (csharp-mode                . c-basic-offset) ; C#
     (csharp-ts-mode             . csharp-ts-mode-indent-offset) ; C#
-    (d-mode                     . c-basic-offset)             ; D
+    (d-mode                     . c-basic-offset)               ; D
     (julia-mode                 . c-basic-offset)             ; Julia
     (java-mode                  . c-basic-offset)             ; Java
     (java-ts-mode               . java-ts-mode-indent-offset) ; Java
@@ -754,23 +754,23 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (php-ts-mode                . php-ts-mode-indent-offset) ; PHP
     (perl-mode                  . perl-indent-level)         ; Perl
     (cperl-mode                 . cperl-indent-level)        ; Perl
-    (raku-mode                  . raku-indent-offset)  ; Perl6/Raku
-    (erlang-mode                . erlang-indent-level) ; Erlang
-    (ada-mode                   . ada-indent)          ; Ada
+    (raku-mode                  . raku-indent-offset)     ; Perl6/Raku
+    (erlang-mode                . erlang-indent-level)    ; Erlang
+    (ada-mode                   . ada-indent)             ; Ada
     (terraform-mode             . terraform-indent-level) ; Terraform
-    (jsonnet-mode               . jsonnet-indent-level)         ; Jsonnet
+    (jsonnet-mode               . jsonnet-indent-level)   ; Jsonnet
     (glsl-mode                  . lsp-bridge-indent-two-level)  ; GLSL
     (cobol-mode                 . lsp-bridge-indent-four-level) ; Cobol
     (hlasm-mode                 . lsp-bridge-indent-eight-level) ; HLASM
     (yang-mode                  . lsp-bridge-indent-two-level) ; Yang
     (mint-mode                  . lsp-bridge-indent-two-level) ; Mint
     (purescript-mode            . purescript-indent-offset) ; PureScript
-    (futhark-mode               . futhark-indent-level) ; Futhark
-    (sgml-mode                  . sgml-basic-offset)   ; SGML
-    (nxml-mode                  . nxml-child-indent)   ; XML
+    (futhark-mode               . futhark-indent-level)     ; Futhark
+    (sgml-mode                  . sgml-basic-offset)        ; SGML
+    (nxml-mode                  . nxml-child-indent)        ; XML
     (nickel-mode                . c-basic-offset)
     (nix-ts-mode                . nix-ts-mode-indent-offset) ; Nix
-    (pascal-mode                . pascal-indent-level)     ; Pascal
+    (pascal-mode                . pascal-indent-level)       ; Pascal
     (typescript-mode            . typescript-indent-level) ; Typescript
     (typescript-ts-mode         . typescript-ts-mode-indent-offset) ; Typescript
     (tsx-ts-mode                . typescript-ts-mode-indent-offset) ; Typescript[TSX]
@@ -1445,10 +1445,10 @@ So we build this macro to restore postion after code format."
    lsp-bridge-enable-completion-in-string
    ;; Allow sdcv completion in string area
    acm-enable-search-sdcv-words
-   ;; Allow volar popup completion menu in string.
+   ;; For some languages, allow popup completion menu in string.
    (and (boundp 'acm-backend-lsp-filepath)
         acm-backend-lsp-filepath
-        (string-suffix-p ".vue" acm-backend-lsp-filepath))
+        (member (file-name-extension acm-backend-lsp-filepath) '("vue" "dart")))
    ;; Other language not allowed popup completion in string, it's annoy
    (not (acm-in-string-p))
    ;; Allow popup completion menu for string interpolation
