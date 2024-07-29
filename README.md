@@ -150,12 +150,12 @@ Here is a compelte configuration example
 
 ``` json
 {
-    "name": "Node.js & TypeScript",
+    "name": "Ubuntu",
     // Your base image
-    "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+    "image": "mcr.microsoft.com/devcontainers/base:jammy",
     // Features to add to the dev container. More info: https://containers.dev/features.
     "features": {
-        "ghcr.io/nohzafk/devcontainer-feature-emacs-lsp-bridge/pyright-background-analysis_ruff:latest": {}
+        "ghcr.io/nohzafk/devcontainer-feature-emacs-lsp-bridge/gleam:latest": {}
     },
     "forwardPorts": [
         9997,
@@ -163,7 +163,7 @@ Here is a compelte configuration example
         9999
     ],
     // More info: https://aka.ms/dev-containers-non-root.
-    "remoteUser": "root"
+    "remoteUser": "vscode"
 }
 ```
 
@@ -182,8 +182,7 @@ If you use `apheleia` as formatter, `lsp-bridge` now support auto formatting fil
   (setf (alist-get 'python-ts-mode apheleia-mode-alist) 'ruff)
 
   (setq apheleia-remote-algorithm 'local)
-  (after! lsp-bridge
-    (add-hook 'apheleia-post-format-hook #'lsp-bridge-update-tramp-docker-file-mod-time)))
+  (setq apheleia-post-format-hook #'lsp-bridge-monitor-after-save))
 ```
 
 ## Keymap
@@ -281,7 +280,7 @@ lsp-bridge provides support for more than two language servers for many language
 - `lsp-bridge-find-def-fallback-function`: When LSP cannot find a definition, you can customize this function for candidate jumping, such as binding the citre function
 - `lsp-bridge-find-ref-fallback-function`: When LSP cannot find a reference, you can customize this function for candidate jumping, such as binding the citre  function
 - `lsp-bridge-find-def-select-in-open-windows`: If this option is turned on, when searching for function definitions, already open windows will be selected instead of switching buffers. disable by default
-- `lsp-bridge-enable-completion-in-string`: Enable completion pop-up within strings, default is off
+- `lsp-bridge-enable-completion-in-string`: Enable completion pop-up within strings, disabled by default, if you only want to show completion popups in strings for certain languages, please customize the option `lsp-bridge-completion-in-string-file-types`
 - `lsp-bridge-enable-completion-in-minibuffer`: Enable pop-completion up in Minibuffer, disabled by default
 - `lsp-bridge-enable-diagnostics`: code diagnostic, enable by default
 - `lsp-bridge-enable-inlay-hint`: inlay hint, disable by default, this option is use for strong type language, such as, Rust
