@@ -362,7 +362,13 @@ def get_project_path(filepath):
         import os
         dir_path = os.path.dirname(filepath)
         if get_command_result("git rev-parse --is-inside-work-tree", dir_path) == "true":
-            return get_command_result("git rev-parse --show-toplevel", dir_path)
+            path_from_git = get_command_result("git rev-parse --show-toplevel", dir_path)
+            if get_os_name() == "windows":
+                path_parts = path_from_git.split("/")
+                windows_path = path_parts[1] + ":/" + "/".join(path_parts[2:])
+                return windows_path
+            else:
+                return path_from_git
         else:
             return filepath
 
