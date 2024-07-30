@@ -174,13 +174,13 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 ```elisp
 (use-package! apheleia
   :config
-  (setq +format-with-lsp nil)
   ;; which formatter to use
   (setf (alist-get 'python-mode apheleia-mode-alist) 'ruff)
   (setf (alist-get 'python-ts-mode apheleia-mode-alist) 'ruff)
-
-  (setq apheleia-remote-algorithm 'local)
-  (setq apheleia-post-format-hook #'lsp-bridge-monitor-after-save))
+  ;; don't mess up with lsp-mode
+  (setq +format-with-lsp nil)
+  ;; run the formatter inside container
+  (setq apheleia-remote-algorithm 'remote))
 ```
 
 ## 按键
