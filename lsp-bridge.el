@@ -1852,7 +1852,6 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge-completion-ui-visible-p ()
   (acm-frame-visible-p acm-menu-frame))
 
-
 (defun lsp-bridge-monitor-after-save ()
   (lsp-bridge-call-file-api "save_file" (buffer-name)))
 
@@ -3011,13 +3010,7 @@ SSH tramp file name is like /ssh:user@host#port:path"
                                                                 lsp-bridge-remote-file-port
                                                                 lsp-bridge-remote-file-path)))
       ;; use `find-file' to open TRAMP docker file will open a tramp buffer, kill it
-      (kill-buffer (get-file-buffer tramp-filename))
-      ;; set the name of the file visited in the current buffer
-      ;; the next time the buffer is saved it will go in the tramp file
-      (set-visited-file-name tramp-filename t t)
-      ;; auto reload the file content if formatter made change
-      ;; otherwise when saving file emacs will warn file has been changed on disk
-      (auto-revert-mode 1)))
+      (kill-buffer (get-file-buffer tramp-filename))))
 
   (when lsp-bridge-ref-open-remote-file-go-back-to-ref-window
     (lsp-bridge-switch-to-ref-window)
