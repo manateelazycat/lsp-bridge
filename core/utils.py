@@ -365,8 +365,12 @@ def get_project_path(filepath):
             path_from_git = get_command_result("git rev-parse --show-toplevel", dir_path)
             if get_os_name() == "windows":
                 path_parts = path_from_git.split("/")
-                windows_path = path_parts[1] + ":/" + "/".join(path_parts[2:])
-                return windows_path
+                # if this is a Unix-style absolute path, which should be a Windows-style one
+                if path_parts[0] == "/": 
+                    windows_path = path_parts[1] + ":/" + "/".join(path_parts[2:])
+                    return windows_path
+                else:
+                    return path_from_git
             else:
                 return path_from_git
         else:
