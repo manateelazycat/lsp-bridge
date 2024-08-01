@@ -501,8 +501,8 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
   "Default LSP server for nix, you can choose `rnix-lsp', `nixd' or `nil'."
   :type 'string)
 
-(defcustom lsp-bridge-markdown-lsp-server "nil"
-  "Default LSP server for markdown, you can choose `vale-ls', `nil' or `marksman'."
+(defcustom lsp-bridge-markdown-lsp-server "vale-ls"
+  "Default LSP server for markdown, you can choose `vale-ls' or `marksman'."
   :type 'string)
 
 (defcustom lsp-bridge-lua-lsp-server "sumneko"
