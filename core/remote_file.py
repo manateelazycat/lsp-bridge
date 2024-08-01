@@ -385,12 +385,10 @@ class FileSyncServer(RemoteFileServer):
     def file_access_lock(self, path):
         path = os.path.abspath(os.path.expanduser(path))
 
-        # even though messages arrive in sequence, there are edge cases:
-        # - change_file message comes before handle_open_file finishes.
-        # - utils.get_buffer_content utils.get_file_content_from_file_server
-        #   try to read file content before handle_open_file finishes.
-        #
-        # Add a threading.Lock() for each file operation to ensure atomic access.
+        #  use lock to prevent
+        #    - utils.get_buffer_content
+        #    - utils.get_file_content_from_file_server
+        # from reading file content before handle_open_file finishes.
         lock = self.file_locks.setdefault(path, threading.Lock())
         try:
             lock.acquire()
@@ -399,13 +397,16 @@ class FileSyncServer(RemoteFileServer):
             lock.release()
 
     def get_file_content(self, path):
-        with self.file_access_lock(path):
-            return self.file_dict.get(path, "")
+        if path in self.file_dict:
+            return self.file_dict[path]
+        else:
+            # wait for the lock if only path haven't been read
+            with self.file_access_lock(path):
+                return self.file_dict.get(path, "")
 
     def handle_update_file(self, message):
         path = message["path"]
-        with self.file_access_lock(path):
-            self.file_dict[path] = message["content"]
+        self.file_dict[path] = message["content"]
 
     def handle_remote_sync(self, message):
         remote_info = message["remote_connection_info"]
@@ -435,31 +436,28 @@ class FileSyncServer(RemoteFileServer):
 
     def handle_change_file(self, message):
         path = message["path"]
+        if path not in self.file_dict:
+            with open(path) as f:
+                self.file_dict[path] = f.read()
 
-        with self.file_access_lock(path):
-            if path not in self.file_dict:
-                with open(path) as f:
-                    self.file_dict[path] = f.read()
-
-            self.file_dict[path] = rebuild_content_from_diff(self.file_dict[path], message["args"][0], message["args"][1], message["args"][3])
+        self.file_dict[path] = rebuild_content_from_diff(self.file_dict[path], message["args"][0], message["args"][1], message["args"][3])
 
     def handle_save_file(self, message):
         path = message["path"]
 
         if path in self.file_dict:
-            with self.file_access_lock(path):
-                with open(path, 'w') as file:
-                    file.write(self.file_dict[path])
+            with open(path, 'w') as file:
+                file.write(self.file_dict[path])
 
     def handle_close_file(self, message):
         path = message["path"]
 
         if path in self.file_dict:
-            with self.file_access_lock(path):
-                del self.file_dict[path]
+            del self.file_dict[path]
 
     def close_all_files(self):
         self.file_dict.clear()
+        self.file_locks.clear()
 
 
 class FileElispServer(RemoteFileServer):
