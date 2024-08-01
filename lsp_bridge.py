@@ -203,10 +203,15 @@ class LspBridge:
 
         # Build loop for remote files management.
         self.file_server = FileSyncServer("0.0.0.0", REMOTE_FILE_SYNC_CHANNEL)
-        # Build loop for call local Emacs function from server.
-        self.file_elisp_server = FileElispServer("0.0.0.0", REMOTE_FILE_ELISP_CHANNEL, self)
+
         # Build loop for call remote command from local Emacs.
+        # Start waiting for init_search_backends_complete_event
         self.file_command_server = FileCommandServer("0.0.0.0", REMOTE_FILE_COMMAND_CHANNEL, self)
+
+        # Build loop for call local Emacs function from server.
+        # Signal that init_search_backends_complete_event is done
+        self.file_elisp_server = FileElispServer("0.0.0.0", REMOTE_FILE_ELISP_CHANNEL, self)
+
         set_lsp_bridge_server(self)
 
     # Functions for communication between local and remote server
