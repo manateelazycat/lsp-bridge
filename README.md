@@ -172,9 +172,13 @@ start the devcontainer and use `file-find` `/docker:user@container:/path/to/file
 more detail please refer to [devcontainer-feature-emacs-lsp-bridge](https://github.com/nohzafk/devcontainer-feature-emacs-lsp-bridge).
 
 If you use `apheleia` as formatter, `lsp-bridge` now support auto formatting file on devcontainer.
+```elisp
+;; setup PATH for remote command execution
+(with-eval-after-load 'tramp
+  (add-to-list 'tramp-remote-path "~/.nix-profile/bin")
+  (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
 
-```elsip
-(use-package! apheleia
+(use-package apheleia
   :config
   ;; which formatter to use
   (setf (alist-get 'python-mode apheleia-mode-alist) 'ruff)
