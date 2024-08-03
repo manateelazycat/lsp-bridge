@@ -553,7 +553,7 @@ def get_container_local_ip(container_name):
         result = subprocess.check_output(command, shell=True, text=True).strip()
         return result
     except subprocess.CalledProcessError:
-        message_emacs(f"{traceback.format_exc()}")
+        message_emacs(f"get_container_local_ip error: {traceback.format_exc()}")
         return None
 
 

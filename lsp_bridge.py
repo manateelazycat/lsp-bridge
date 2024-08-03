@@ -197,9 +197,8 @@ class LspBridge:
 
     @threaded
     def init_remote_file_server(self):
-        print("* Running lsp-bridge in remote server, "
-              "use command 'lsp-bridge-open-remote-file' to open remote file, "
-              "or 'find-file' /docker: to open file in running container.")
+        print("* Running lsp-bridge on remote server. "
+              "Access files with 'lsp-bridge-open-remote-file' or 'find-file /docker:...'")
 
         # Build loop for remote files management.
         self.file_server = FileSyncServer("0.0.0.0", REMOTE_FILE_SYNC_CHANNEL)
@@ -437,6 +436,7 @@ class LspBridge:
                 self.remote_sync(container_name, tramp_connection_info)
                 # container_name is used for emacs buffer local variable lsp-bridge-remote-file-host
                 eval_in_emacs("lsp-bridge-update-tramp-file-info", tramp_file_name, tramp_connection_info, tramp_method, container_user, container_name, path)
+                eval_in_emacs("lsp-bridge--setup-tramp-docker-buffer", tramp_file_name)
                 self.sync_tramp_remote_complete_event.set()
             except Exception as e:
                 logger.exception(e)
@@ -510,7 +510,7 @@ class LspBridge:
                         "jump_define_pos": epc_arg_transformer(jump_define_pos)
                 })
         else:
-            message_emacs("Please input valid path match rule: 'ip:/path/file'.")
+            message_emacs(f"Unsupported remote path {path}")
 
     @threaded
     def update_remote_file(self, remote_file_host, remote_file_path, content):

@@ -843,9 +843,14 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
 
 (defun lsp-bridge-find-file-hook-function ()
   (when (and lsp-bridge-enable-with-tramp (file-remote-p (buffer-file-name)))
-    (lsp-bridge-sync-tramp-remote nil)
-    (when (string-prefix-p "/docker:" (buffer-file-name))
-      (lsp-bridge-call-async "open_remote_file" (buffer-file-name) (list :line 0 :character 0)))))
+    (lsp-bridge-sync-tramp-remote nil)))
+
+(defun lsp-bridge--setup-tramp-docker-buffer (tramp-file-name)
+  "Setup the buffer of TRAMP-FILE-NAME as if it is a non-file buffer."
+  (with-current-buffer (get-file-buffer tramp-file-name)
+    (setq buffer-file-name nil)
+    (setq buffer-file-truename nil)
+    (message "set buffer %s buffer-file-name to nil" (buffer-name))))
 
 (add-hook 'find-file-hook #'lsp-bridge-find-file-hook-function)
 
@@ -2058,40 +2063,36 @@ Then we need call `lsp-bridge--set-mark-ring-in-new-buffer' in new buffer after 
 (defun lsp-bridge--set-mark-ring-in-new-buffer ()
   (setq-local lsp-bridge-mark-ring (append (list lsp-bridge-position-before-jump) mark-ring)))
 
-(defun lsp-bridge-find-window-match-filename (filename)
-  (cl-dolist (window (window-list))
-    (when (string-equal filename (buffer-file-name (window-buffer window)))
-      (cl-return window))))
-
 (defun lsp-bridge-define--jump (filename filehost position)
   (let (lsp-bridge-position-before-jump)
     (lsp-bridge--record-mark-ring)
 
-    (if (or (string-equal filehost "") lsp-bridge-enable-with-tramp)
-        (progn
-          ;; filehost sent by lsp-bridge server running inside docker is 127.0.0.1
-          (when (and lsp-bridge-remote-file-host (string= filehost "127.0.0.1"))
-            (setq filehost lsp-bridge-remote-file-host))
+    (if (and (not (string= filehost ""))
+             (not lsp-bridge-enable-with-tramp))
+        (lsp-bridge-call-async "open_remote_file" (format "%s:%s" filehost filename) position)
+      ;; filehost is not empty or lsp-bridge-enable-with-tramp is t
+      (when (string= filehost "127.0.0.1")
+        (setq filehost lsp-bridge-remote-file-host))
 
-          (setq filename (concat (cdr (assoc filehost lsp-bridge-tramp-alias-alist)) filename))
-          (let ((match-window (lsp-bridge-find-window-match-filename filename)))
-            (if (and lsp-bridge-find-def-select-in-open-windows
-                     match-window)
-                ;; Try select to window if `lsp-bridge-find-def-select-in-open-windows' is non-nil.
-                (select-window match-window)
-              ;; Jump to define.
-              ;; Show define in other window if `lsp-bridge-jump-to-def-in-other-window' is non-nil.
-              (if lsp-bridge-jump-to-def-in-other-window
-                  (find-file-other-window filename)
-                (find-file filename))
-              ))
+      (let ((match-window (lsp-bridge--with-file-buffer filename filehost (get-buffer-window))))
+        ;; select the window to display definition
+        (if match-window
+            ;; if match-window is found, avoid using find-file to open the file twice
+            (progn
+              (cond
+               (lsp-bridge-find-def-select-in-open-windows (select-window match-window))
+               (lsp-bridge-jump-to-def-in-other-window (select-window match-window))
+               (t (switch-to-buffer (window-buffer match-window)))))
+          ;; match-window not found, we need to open the file
+          (let* ((tramp-file-name (concat (cdr (assoc filehost lsp-bridge-tramp-alias-alist)) filename)))
+            (if lsp-bridge-jump-to-def-in-other-window
+                (find-file-other-window tramp-file-name)
+              (find-file tramp-file-name))))
 
           ;; Init jump history in new buffer.
           (lsp-bridge--set-mark-ring-in-new-buffer)
 
-          (lsp-bridge-define--jump-flash position))
-      (lsp-bridge-call-async "open_remote_file" (format "%s:%s" filehost filename) position))
-    ))
+          (lsp-bridge-define--jump-flash position)))))
 
 (defun lsp-bridge-define--jump-flash (position)
   ;; We need call `display' before `goto-char',
@@ -2813,6 +2814,7 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 (defvar-local lsp-bridge-remote-file-host nil)
 (defvar-local lsp-bridge-remote-file-port nil)
 (defvar-local lsp-bridge-remote-file-path nil)
+;; TODO need to consider tramp docker file pattern
 (defvar lsp-bridge-remote-file-pattern
   (rx bos (? "/")
       ;; username
@@ -2851,9 +2853,11 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
   "Conditionally execute BODY with the buffer associated with TRAMP-FILE-NAME.
 
 If the buffer is created by TRAMP with TRAMP-FILE-NAME, BODY is executed within
-the context of that buffer. If the buffer is created by
-`lsp-bridge-open-remote-file--response', `lsp-bridge--with-file-buffer' is used
- with PATH and HOST to find the buffer, then BODY is executed within that buffer."
+the context of that buffer.
+
+If the buffer is created by `lsp-bridge-open-remote-file--response',
+`lsp-bridge--with-file-buffer' is used with PATH and HOST to find the buffer,
+then BODY is executed within that buffer."
 
   `(if (get-file-buffer ,tramp-file-name)
        (with-current-buffer (get-file-buffer ,tramp-file-name)
@@ -2911,18 +2915,19 @@ I haven't idea how to make lsp-bridge works with `electric-indent-mode', PR are 
          (port (tramp-file-name-port tramp-vec))
          (path (tramp-file-name-localname tramp-vec))
          (tramp-connection-info (substring file-name 0 (+ 1 (string-match ":" file-name (+ 1 (string-match ":" file-name))))))
-         (ip-host (cdr (assoc tramp-connection-info lsp-bridge-tramp-connection-info))))
+         (connected-host (cdr (assoc tramp-connection-info lsp-bridge-tramp-connection-info))))
 
-    (if (or force (not ip-host))
+    (if (or force (not connected-host))
         (when (and (not (member tramp-method '("sudo" "sudoedit" "su" "doas")))
                    (not (member host lsp-bridge-tramp-blacklist)))
           (read-only-mode 1)
           (lsp-bridge-call-async "sync_tramp_remote" file-name tramp-method user host port path))
-      (lsp-bridge--conditional-update-tramp-file-info file-name path ip-host
+
+      (lsp-bridge--conditional-update-tramp-file-info file-name path connected-host
                                                       (setq-local lsp-bridge-remote-file-flag t)
                                                       (setq-local lsp-bridge-remote-file-tramp-method tramp-method)
                                                       (setq-local lsp-bridge-remote-file-user user)
-                                                      (setq-local lsp-bridge-remote-file-host ip-host)
+                                                      (setq-local lsp-bridge-remote-file-host connected-host)
                                                       (setq-local lsp-bridge-remote-file-path path)
 
                                                       (add-hook 'kill-buffer-hook 'lsp-bridge-remote-kill-buffer nil t)
@@ -2971,7 +2976,6 @@ SSH tramp file name is like /ssh:user@host#port:path"
 
     (with-current-buffer (get-buffer-create buf-name)
       (text-mode)
-
       (read-only-mode -1)
       (erase-buffer)
       (insert (lsp-bridge-decode-base64 content))
@@ -3006,15 +3010,6 @@ SSH tramp file name is like /ssh:user@host#port:path"
     ;; Always enable lsp-bridge for remote file.
     ;; Remote file can always edit and update content even some file haven't corresponding lsp server, such as *.txt
     (lsp-bridge-mode 1))
-
-  (when (string-equal tramp-method "docker")
-    (let ((tramp-filename (lsp-bridge-construct-tramp-file-name lsp-bridge-remote-file-tramp-method
-                                                                lsp-bridge-remote-file-user
-                                                                lsp-bridge-remote-file-host
-                                                                lsp-bridge-remote-file-port
-                                                                lsp-bridge-remote-file-path)))
-      ;; use `find-file' to open TRAMP docker file will open a tramp buffer, kill it
-      (kill-buffer (get-file-buffer tramp-filename))))
 
   (when lsp-bridge-ref-open-remote-file-go-back-to-ref-window
     (lsp-bridge-switch-to-ref-window)
