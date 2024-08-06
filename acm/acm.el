@@ -109,6 +109,7 @@
 (require 'acm-backend-jupyter)
 (require 'acm-backend-capf)
 (require 'acm-quick-access)
+(require 'acm-backend-sly)
 
 ;;; Code:
 
@@ -196,6 +197,7 @@
 
 (defcustom acm-completion-mode-candidates-merge-order '("elisp-candidates"
                                                         "lsp-candidates"
+							"sly-candidates"
                                                         "capf-candidates"
                                                         "jupyter-candidates"
                                                         "ctags-candidates"
@@ -467,6 +469,7 @@ Only calculate template candidate when type last character."
          (mode-candidates-min-index 2)
          (template-candidates-min-index 2)
          lsp-candidates
+	 sly-candidates
          capf-candidates
          path-candidates
          yas-candidates
@@ -503,6 +506,9 @@ Only calculate template candidate when type last character."
     (when acm-enable-capf
       (setq capf-candidates (acm-backend-capf-candiates keyword)))
 
+    (when acm-enable-sly
+      (setq sly-candidates (acm-backend-sly-candidates keyword)))
+
     (if acm-enable-search-sdcv-words
         ;; Completion SDCV if option `acm-enable-search-sdcv-words' is enable.
         (setq candidates (acm-backend-search-sdcv-words-candidates keyword))
@@ -524,6 +530,7 @@ Only calculate template candidate when type last character."
                                           ("elisp-candidates" (unless (acm-in-comment-p) (acm-backend-elisp-candidates keyword)))
                                           ("lsp-candidates" lsp-candidates)
                                           ("capf-candidates" capf-candidates)
+					  ("sly-candidates" sly-candidates)
                                           ("jupyter-candidates" jupyter-candidates)
                                           ("ctags-candidates" ctags-candidates)
                                           ("citre-candidates" citre-candidates)
