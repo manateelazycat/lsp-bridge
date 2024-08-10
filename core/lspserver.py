@@ -374,6 +374,10 @@ class LspServer:
                 },
                 "inlayHint": {
                     "dynamicRegistration": False
+                },
+                "diagnostic": {
+                    "dynamicRegistration": True,
+                    "relatedDocumentSupport": True
                 }
             },
             "window": {
