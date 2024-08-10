@@ -147,9 +147,11 @@
                            ;; We're still in the same completion field.
                            (let ((newstart (car-safe (funcall hookfun))))
                              (and newstart (= newstart start)))))
-                        (initial (buffer-substring-no-properties start end)))
-                   (completion-all-completions initial collection nil (length initial))
-                   )))))))
+                        (initial (buffer-substring-no-properties start end))
+                        (candidates (completion-all-completions initial collection nil (length initial))))
+                   (when-let ((z (last candidates)))
+                     (setcdr z nil))
+                   candidates)))))))
 
 (provide 'acm-backend-capf)
 
