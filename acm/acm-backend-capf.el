@@ -113,6 +113,7 @@
                                         ahk-mode
                                         anaconda-mode
                                         redis-mode
+                                        lisp-mode
                                         )
   "The mode list to support capf."
   :type 'cons)
