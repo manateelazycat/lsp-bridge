@@ -69,3 +69,4 @@ from core.handler.jdtls.jdtls_list_overridable_methods import JdtlsListOverridab
 from core.handler.jdtls.jdtls_add_overridable_methods import JdtlsAddOverridableMethods  # noqa: F401
 from core.handler.inlay_hint import InlayHint  # noqa: F401
 from core.handler.semantic_tokens import SemanticTokens  # noqa: F401
+from core.handler.workspace_diagnostics import WorkspaceDiagnostics  # noqa: F401

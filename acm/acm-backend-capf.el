@@ -113,6 +113,7 @@
                                         ahk-mode
                                         anaconda-mode
                                         redis-mode
+                                        lisp-mode
                                         )
   "The mode list to support capf."
   :type 'cons)
@@ -125,26 +126,33 @@
 (defun acm-backend-capf-candiates (keyword)
   (when (member major-mode acm-backend-capf-mode-list)
     (let ((res (run-hook-wrapped 'completion-at-point-functions
-                                 #'completion--capf-wrapper 'all)))
+                                 #'completion--capf-wrapper 'all))
+          annotation-function)
       (mapcar (lambda (candidate)
                 (list :key candidate
                       :icon "capf"
                       :label candidate
                       :displayLabel candidate
-                      :annotation "CAPF"
+                      :annotation (if annotation-function
+                                      (concat (funcall annotation-function candidate) " CAPF")
+                                    "CAPF")
                       :backend "capf"))
               (pcase res
                 (`(,_ . ,(and (pred functionp) f)) (funcall f))
                 (`(,hookfun . (,start ,end ,collection . ,plist))
                  (unless (markerp start) (setq start (copy-marker start)))
+                 (setq annotation-function (plist-get plist :annotation-function))
                  (let* ((completion-extra-properties plist)
                         (completion-in-region-mode-predicate
                          (lambda ()
                            ;; We're still in the same completion field.
                            (let ((newstart (car-safe (funcall hookfun))))
-                             (and newstart (= newstart start))))))
-                   collection
-                   )))))))
+                             (and newstart (= newstart start)))))
+                        (initial (buffer-substring-no-properties start end))
+                        (candidates (completion-all-completions initial collection nil (length initial))))
+                   (when-let ((z (last candidates)))
+                     (setcdr z nil))
+                   candidates)))))))
 
 (provide 'acm-backend-capf)
 

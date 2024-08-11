@@ -333,6 +333,10 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
         (kill-new diagnostic-message)
         (message "Copy diagnostics: '%s'" diagnostic-message)))))
 
+(defun lsp-bridge-workspace-diagnostic-list ()
+  (interactive)
+  (lsp-bridge-call-file-api "workspace_diagnostics"))
+
 (defun lsp-bridge-diagnostic-list ()
   (interactive)
   (lsp-bridge-call-file-api "list_diagnostics"))
