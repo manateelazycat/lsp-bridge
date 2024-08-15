@@ -519,13 +519,33 @@ def remove_duplicate_references(data):
             result.append(item)
     return result
 
+# def get_nested_value(dct, keys):
+#     for key in keys:
+#         try:
+#             dct = dct[key]
+#         except (KeyError, TypeError):
+#             return None
+#     return dct
+
 def get_nested_value(dct, keys):
+    '''
+    keys: ["k1", "k2", ...]匹配一组， [["k1", "k2", ...], [], ...]匹配多组情况
+    '''
+    value = None
     for key in keys:
         try:
-            dct = dct[key]
+            if isinstance(key, list):
+                value = get_nested_value(dct, key)
+                if value:
+                    break
+            else:
+                dct = dct[key]
         except (KeyError, TypeError):
-            return None
-    return dct
+            dct = None
+            break
+
+    return value if value else dct
+
 
 class MessageSender(Thread):
 
