@@ -615,7 +615,7 @@ The key of candidate will change between two LSP results."
   (acm-quick-access-init)
 
   ;; Adjust `gc-cons-threshold' to maximize temporary,
-  ;; make sure Emacs not do GC when filter/sort candidates.
+  ;; make sure Emacs not do GC
   (let* ((gc-cons-threshold most-positive-fixnum)
          (keyword (acm-get-input-prefix))
          (previous-select-candidate-index (+ acm-menu-offset acm-menu-index))
