@@ -89,17 +89,19 @@
   "Face for inlay hint."
   :group 'lsp-bridge-inlay-hint)
 
-(defun lsp-bridge-inlay-hint ()
-  (redisplay t) ; NOTE: we need call `redisplay' to force `window-start' return RIGHT line number.
-  (lsp-bridge-call-file-api "inlay_hint"
-                            (lsp-bridge--point-position (window-start))
-                            ;; We need pass UPDATE argument to `window-end', to make sure it's value is update, not cache.
-                            (lsp-bridge--point-position (window-end nil t))))
-
-(defvar-local lsp-bridge-inlay-hint-overlays '())
-
+(defvar-local lsp-bridge-inlay-hint-last-update-pos nil)
 (defvar-local lsp-bridge-inlay-hint-cache nil
   "We use `lsp-bridge-inlay-hint-cache' avoid screen flicker if two respond result is same.")
+(defvar-local lsp-bridge-inlay-hint-overlays '())
+
+(defun lsp-bridge-inlay-hint ()
+  ;; `window-start' won't return valid value of window start position if we not call `redisplay' before 'window-start',
+  ;; but call `redisplay' will cause current line scroll to window start postion, like issue https://github.com/manateelazycat/lsp-bridge/issues/1029
+  ;;
+  ;; So we use `window-end' to test window is scroll or not, and always pass `point-min' and `point-max' to LSP server.
+  (lsp-bridge-call-file-api "inlay_hint"
+                            (lsp-bridge--point-position (point-min))
+                            (lsp-bridge--point-position (point-max))))
 
 (defun lsp-bridge-inlay-hint-hide-overlays ()
   (when lsp-bridge-inlay-hint-overlays

@@ -1262,8 +1262,6 @@ So we build this macro to restore postion after code format."
 (defvar-local lsp-bridge-cursor-before-command 0)
 (defvar-local lsp-bridge-cursor-after-command 0)
 
-(defvar-local lsp-bridge-inlay-hint-last-update-pos nil)
-
 (defun lsp-bridge-monitor-pre-command ()
   (setq-local lsp-bridge-cursor-before-command (point))
 
