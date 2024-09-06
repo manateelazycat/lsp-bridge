@@ -1150,9 +1150,6 @@ So we build this macro to restore postion after code format."
             (cl-return (cons (get-buffer-window buffer) (selected-window)))
             )))
 
-  ;; Hide diagnostics.
-  (lsp-bridge-diagnostic-hide-overlays)
-
   ;; Restart lsp-bridge process.
   (lsp-bridge-kill-process)
   (lsp-bridge-start-process)
@@ -1211,6 +1208,9 @@ So we build this macro to restore postion after code format."
   "Stop LSP-Bridge process and kill all LSP-Bridge buffers."
   (interactive)
 
+  ;; Hide diagnostics.
+  (lsp-bridge-diagnostic-hide-overlays)
+
   ;; Run stop process hooks.
   (run-hooks 'lsp-bridge-stop-process-hook)
 
@@ -1218,6 +1218,8 @@ So we build this macro to restore postion after code format."
   (lsp-bridge--kill-python-process))
 
 (add-hook 'kill-emacs-hook #'lsp-bridge-kill-process)
+
+(defalias 'lsp-bridge-stop-process #'lsp-bridge-kill-process)
 
 (defun lsp-bridge--kill-python-process ()
   "Kill LSP-Bridge background python process."
