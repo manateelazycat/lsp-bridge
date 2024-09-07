@@ -9,6 +9,7 @@ class SemanticTokens(Handler):
     cancel_on_change = False
     send_document_uri = True
     provider = "semantic_tokens_provider"
+    provider_message = "Current server not support semantic tokens."
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

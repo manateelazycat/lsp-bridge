@@ -6,6 +6,7 @@ class WorkspaceSymbol(Handler):
     name = "workspace_symbol"
     method = "workspace/symbol"
     provider = "workspace_symbol_provider"
+    provider_message = "Current server not support workspace symbol."
 
     def process_request(self, query) -> dict:
         query = ''.join(query.split())

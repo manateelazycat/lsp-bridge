@@ -7,6 +7,7 @@ class InlayHint(Handler):
     method = "textDocument/inlayHint"
     cancel_on_change = True
     provider = "inlay_hint_provider"
+    provider_message = "Current server not support inlay hint."
 
     def process_request(self, range_start, range_end) -> dict:
         range = {

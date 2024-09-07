@@ -7,6 +7,7 @@ class SignatureHelp(Handler):
     method = "textDocument/signatureHelp"
     cancel_on_change = True
     provider = "signature_help_provider"
+    provider_message = "Current server not support signature help."
 
     def process_request(self, position) -> dict:
         return dict(position=position)

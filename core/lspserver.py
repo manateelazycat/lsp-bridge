@@ -690,7 +690,6 @@ class LspServer:
             ("range_format_provider", ["result", "capabilities", "documentRangeFormattingProvider"]),
             ("signature_help_provider", ["result", "capabilities", "signatureHelpProvider"]),
             ("workspace_symbol_provider", ["result", "capabilities", "workspaceSymbolProvider"]),
-            # ("inlay_hint_provider", ["result", "capabilities", "inlayHintProvider", "resolveProvider"]),
             ("inlay_hint_provider", [
                 ["result", "capabilities", "inlayHintProvider", "resolveProvider"],
                 ["result", "capabilities", "clangdInlayHintsProvider"] # 兼容clangd

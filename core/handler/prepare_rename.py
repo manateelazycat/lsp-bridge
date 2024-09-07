@@ -6,6 +6,7 @@ class PrepareRename(Handler):
     name = "prepare_rename"
     method = "textDocument/prepareRename"
     provider = "rename_prepare_provider"
+    provider_message = "Current server not support rename."
 
     def process_request(self, position) -> dict:
         return dict(position=position)
