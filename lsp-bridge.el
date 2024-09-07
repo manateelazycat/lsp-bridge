@@ -2638,9 +2638,11 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 
 ;; We use `lsp-bridge-revert-buffer-flag' var avoid lsp-bridge send change_file request while execute `revert-buffer' command.
 (defun lsp-bridge--revert-buffer-advisor (orig-fun &optional arg &rest args)
-  ;; We need clean diagnostic overlays before revert action,
-  ;; otherwise some diagnostic overlays will keep in buffer after revert.
+  ;; We need clean diagnostic overlays before revert buffer.
   (lsp-bridge-diagnostic-hide-overlays)
+
+  ;; Hide inlay hint overlays before revert buffer.
+  (lsp-bridge-inlay-hint-hide-overlays)
 
   (setq-local lsp-bridge-revert-buffer-flag t)
   (apply orig-fun arg args)
