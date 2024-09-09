@@ -932,13 +932,15 @@ The key of candidate will change between two LSP results."
     (acm-frame-set-frame-position acm-menu-frame acm-frame-x acm-frame-y)))
 
 (defun acm-doc-try-show (&optional update-completion-item)
-  (when acm-enable-doc
-    (let* ((candidate (acm-menu-current-candidate))
-           (backend (plist-get candidate :backend))
-           (candidate-doc-func (intern-soft (format "acm-backend-%s-candidate-doc" backend)))
-           (candidate-doc
-            (when (fboundp candidate-doc-func)
-              (funcall candidate-doc-func candidate))))
+  ;; We need call `acm-backend-*-candidate-doc' function even option `acm-enable-doc' is nil,
+  ;; because `completion_item_resolve' will fetch `additionalTextEdits', otherwise, auto import feature is miss.
+  (let* ((candidate (acm-menu-current-candidate))
+         (backend (plist-get candidate :backend))
+         (candidate-doc-func (intern-soft (format "acm-backend-%s-candidate-doc" backend)))
+         (candidate-doc
+          (when (fboundp candidate-doc-func)
+            (funcall candidate-doc-func candidate))))
+    (when acm-enable-doc
       (if (or (consp candidate-doc) ; If the type fo snippet is set to command, then the "doc" will be a list.
               (and (stringp candidate-doc) (not (string-empty-p candidate-doc))))
           (let ((doc (if (stringp candidate-doc)
