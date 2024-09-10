@@ -169,7 +169,7 @@ class FileAction:
         if hasattr(handler, "provider"):
             method_provider = getattr(method_server, getattr(handler, "provider"), None)
             if method_provider is not None:
-                if method_provider is True:
+                if method_provider is not False:
                     self.send_server_request(method_server, method, *args, **kwargs)
             elif hasattr(handler, "provider_message"):
                 message_emacs(getattr(handler, "provider_message"))
