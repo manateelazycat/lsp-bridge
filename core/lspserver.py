@@ -691,8 +691,9 @@ class LspServer:
             ("signature_help_provider", ["result", "capabilities", "signatureHelpProvider"]),
             ("workspace_symbol_provider", ["result", "capabilities", "workspaceSymbolProvider"]),
             ("inlay_hint_provider", [
+                ["result", "capabilities", "inlayHintProvider"],
                 ["result", "capabilities", "inlayHintProvider", "resolveProvider"],
-                ["result", "capabilities", "clangdInlayHintsProvider"] # 兼容clangd
+                ["result", "capabilities", "clangdInlayHintsProvider"]
             ]),
             ("save_include_text", ["result", "capabilities", "textDocumentSync", "save", "includeText"]),
             ("text_document_sync", ["result", "capabilities", "textDocumentSync"]),
