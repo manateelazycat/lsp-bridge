@@ -519,33 +519,30 @@ def remove_duplicate_references(data):
             result.append(item)
     return result
 
-# def get_nested_value(dct, keys):
-#     for key in keys:
-#         try:
-#             dct = dct[key]
-#         except (KeyError, TypeError):
-#             return None
-#     return dct
+def get_value_from_path(data, path):
+    """
+    Retrieve a value from a nested dictionary based on the given path.
+    """
+    for key in path:
+        if isinstance(data, dict) and key in data:
+            data = data[key]
+        else:
+            return None
+    return data
 
-def get_nested_value(dct, keys):
-    '''
-    keys: ["k1", "k2", ...]匹配一组， [["k1", "k2", ...], [], ...]匹配多组情况
-    '''
-    value = None
-    for key in keys:
-        try:
-            if isinstance(key, list):
-                value = get_nested_value(dct, key)
-                if value:
-                    break
-            else:
-                dct = dct[key]
-        except (KeyError, TypeError):
-            dct = None
-            break
-
-    return value if value else dct
-
+def get_nested_value(json_data, attribute_path):
+    """
+    Find the corresponding value in json_data based on the attribute_path.
+    Handles both single paths and nested list paths.
+    """
+    if isinstance(attribute_path[0], list):  # Handle nested list case
+        for path in attribute_path:
+            value = get_value_from_path(json_data, path)
+            if value is not None:
+                return value
+        return None
+    else:
+        return get_value_from_path(json_data, attribute_path)
 
 class MessageSender(Thread):
 
