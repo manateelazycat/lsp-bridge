@@ -154,8 +154,11 @@ class FileAction:
             if self.single_server:
                 self.send_request(self.single_server, method, handler, *args, **kwargs)
             else:
-                if method in ["completion", "completion_item_resolve", "diagnostics", "code_action", "execute_command"]:
+                if method in ["completion", "completion_item_resolve", "diagnostics", "code_action"]:
                     method_server_names = self.multi_servers_info[method]
+                elif method in ["execute_command"]:
+                    # "execute_command" is trigger by code action, one time only need send request to *ONE* LSP server.
+                    method_server_names = [args[0]] # first arguments if server name.
                 else:
                     method_server_names = [self.multi_servers_info[method]]
 
