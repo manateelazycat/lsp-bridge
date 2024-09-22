@@ -28,18 +28,16 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 14. **Red**: [github.com/bitbegin/redlangserver](https://github.com/bitbegin/redlangserver) (Emacs haven't mode to support red language)
 
-15. **Erg**: [github.com/erg-lang/erg/tree/main/crates/els](https://github.com/erg-lang/erg/tree/main/crates/els)
+15. **Erg**: [github.com/erg-lang/erg/tree/main/crates/els](https://github.com/erg-lang/erg/tree/main/crates/els) (Emacs haven't mode to support Erg language)
 
-16. **Fuzion**: [github.com/tokiwa-software/fuzion-lsp-server](https://github.com/tokiwa-software/fuzion-lsp-server)
+16. **Imandra Protocol Language**: [github.com/AestheticIntegration/ipl-vscode](https://github.com/AestheticIntegration/ipl-vscode)
 
-17. **Imandra Protocol Language**: [github.com/AestheticIntegration/ipl-vscode](https://github.com/AestheticIntegration/ipl-vscode)
+17. **MOCA**: [github.com/mrglassdanny/moca-language-server](https://github.com/mrglassdanny/moca-language-server)
 
-18. **MOCA**: [github.com/mrglassdanny/moca-language-server](https://github.com/mrglassdanny/moca-language-server)
+18. **openVALIDATION**: [github.com/openvalidation/ov-language-server](https://github.com/openvalidation/ov-language-server)
 
-19. **openVALIDATION**: [github.com/openvalidation/ov-language-server](https://github.com/openvalidation/ov-language-server)
+19. **Veryl**: [github.com/dalance/veryl/tree/master/crates/languageserver](https://github.com/dalance/veryl/tree/master/crates/languageserver)
 
-20. **Veryl**: [github.com/dalance/veryl/tree/master/crates/languageserver](https://github.com/dalance/veryl/tree/master/crates/languageserver)
+20. **Standard ML**: Millet
 
-21. **Standard ML**: Millet
-
-22. **Systemtap**: Systemtap LSP
+21. **Systemtap**: Systemtap LSP
