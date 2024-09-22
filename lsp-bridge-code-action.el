@@ -126,7 +126,7 @@ Set it `nil' to improve performance."
 
 Default request all kind code-action.
 
-You can send speical kind of code-action, parameter `action-kind' can use one of below:
+You can send special kind of code-action, parameter `action-kind' can use one of below:
 
 'quickfix'
 'refactor'
