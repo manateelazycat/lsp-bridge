@@ -757,11 +757,22 @@ class LspBridge:
         if ((not os.path.isdir(project_path)) and
             "support-single-file" in lang_server_info and
             lang_server_info["support-single-file"] is False):
-            self.turn_off(
-                filepath,
-                "ERROR: {} not support single-file, you need put this file in a git repository or put .dir-locals.el in project root directory".format(single_lang_server))
 
-            return False
+            if "project-files" in lang_server_info:
+                # If support-support-single-file is False,
+                # we will search project-files up 20 level directories to find project root.
+                project_root = self.find_project_root(filepath, lang_server_info["project-files"])
+                if project_root is None:
+                    self.turn_off_by_single_file(filepath, single_lang_server)
+
+                    return False
+                else:
+                    # Replace project_path with project root path.
+                    project_path = project_root
+            else:
+                self.turn_off_by_single_file(filepath, single_lang_server)
+
+                return False
 
         lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info)
 
@@ -774,10 +785,31 @@ class LspBridge:
 
         return True
 
+    def find_project_root(filepath, project_files, max_depth=20):
+        current_dir = os.path.abspath(filepath)
+
+        for _ in range(max_depth):
+            for file in project_files:
+                if os.path.isfile(os.path.join(current_dir, file)):
+                    return current_dir
+
+            parent_dir = os.path.dirname(current_dir)
+            if parent_dir == current_dir: # reach topest dir
+                break
+
+            current_dir = parent_dir
+
+        return None
+
     def turn_off(self, filepath, message):
         if os.path.splitext(filepath)[1] != ".txt":
             message_emacs(message + ", disable LSP feature.")
             eval_in_emacs("lsp-bridge--turn-off-lsp-feature", filepath, get_lsp_file_host())
+
+    def turn_off_by_single_file(filepath, single_lang_server):
+        self.turn_off(
+            filepath,
+            "ERROR: {} not support single-file, you need put this file in a git repository or put .dir-locals.el in project root directory".format(single_lang_server))
 
     def check_lang_server_command(self, lang_server_info, filepath, turn_off_on_error=True):
         # We merge PATH from `exec-path` variable, to make sure lsp-bridge find LSP server command if it can find by Emacs.
