@@ -785,7 +785,7 @@ class LspBridge:
 
         return True
 
-    def find_project_root(filepath, project_files, max_depth=20):
+    def find_project_root(self, filepath, project_files, max_depth=20):
         current_dir = os.path.abspath(filepath)
 
         for _ in range(max_depth):
