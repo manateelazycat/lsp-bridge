@@ -2,6 +2,7 @@
   "name": "elixirLS",
   "languageId": "elixir",
   "command": ["language_server.bat"],
+  "support-single-file": false,
   "settings": {
     "elixirLS": {
       "dialyzerEnabled": true,
