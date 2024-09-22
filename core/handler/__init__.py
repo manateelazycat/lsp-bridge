@@ -70,4 +70,5 @@ from core.handler.jdtls.jdtls_add_overridable_methods import JdtlsAddOverridable
 from core.handler.inlay_hint import InlayHint  # noqa: F401
 from core.handler.semantic_tokens import SemanticTokens # noqa: F401
 from core.handler.rust_expand_macro import RustExpandMacro # noqa: F401
+from core.handler.rust_reload_workspace import RustReloadWorkspace # noqa: F401
 from core.handler.workspace_diagnostics import WorkspaceDiagnostics  # noqa: F401

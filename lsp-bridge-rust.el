@@ -99,6 +99,10 @@
   (interactive)
   (lsp-bridge-call-file-api "rust_expand_macro" (lsp-bridge--position)))
 
+(defun lsp-bridge-rust-reload-workspace ()
+  (interactive)
+  (lsp-bridge-call-file-api "rust_reload_workspace"))
+
 (provide 'lsp-bridge-rust)
 
 ;;; lsp-bridge-rust.el ends here
