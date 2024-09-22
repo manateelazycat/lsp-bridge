@@ -1,0 +1,8 @@
+{
+  "name": "fennel-ls",
+  "languageId": "fennel",
+  "command": [
+    "fennel-ls"
+  ],
+  "settings": {}
+}
