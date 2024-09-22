@@ -20,32 +20,30 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 10. **Turtle**: [github.com/stardog-union/stardog-language-servers/tree/master/packages/turtle-language-server](https://github.com/stardog-union/stardog-language-servers/tree/master/packages/turtle-language-server)(Emacs haven't mode to support Stardog language)
 
-11. **Smalltalk/Pharo**: [github.com/badetitou/Pharo-LanguageServer](https://github.com/badetitou/Pharo-LanguageServer)
+11. **Smalltalk/Pharo**: [github.com/badetitou/Pharo-LanguageServer](https://github.com/badetitou/Pharo-LanguageServer) (Emacs haven't mode to support pharo mode)
 
-12. **DreamMaker**: [github.com/SpaceManiac/SpacemanDMM/tree/master/crates/dm-langserver](https://github.com/SpaceManiac/SpacemanDMM/tree/master/crates/dm-langserver)
+12. **DreamMaker**: [github.com/SpaceManiac/SpacemanDMM/tree/master/crates/dm-langserver](https://github.com/SpaceManiac/SpacemanDMM/tree/master/crates/dm-langserver) (Emacs haven't mode to support DreamMaker)
 
-13. **Grain**: [github.com/grain-lang/grain](https://github.com/grain-lang/grain)
+13. **Grain**: [github.com/grain-lang/grain](https://github.com/grain-lang/grain) (Emacs haven't mode to support grain language)
 
-14. **V**: [github.com/vlang/v-analyzer](https://github.com/vlang/v-analyzer)
+14. **TTCN-3**: [github.com/nokia/ntt](https://github.com/nokia/ntt)
 
-15. **TTCN-3**: [github.com/nokia/ntt](https://github.com/nokia/ntt)
+15. **Red**: [github.com/bitbegin/redlangserver](https://github.com/bitbegin/redlangserver)
 
-16. **Red**: [github.com/bitbegin/redlangserver](https://github.com/bitbegin/redlangserver)
+16. **Fennel**: [git.sr.ht/~xerool/fennel-ls](https://git.sr.ht/~xerool/fennel-ls)
 
-17. **Fennel**: [git.sr.ht/~xerool/fennel-ls](https://git.sr.ht/~xerool/fennel-ls)
+17. **Erg**: [github.com/erg-lang/erg/tree/main/crates/els](https://github.com/erg-lang/erg/tree/main/crates/els)
 
-18. **Erg**: [github.com/erg-lang/erg/tree/main/crates/els](https://github.com/erg-lang/erg/tree/main/crates/els)
+18. **Fuzion**: [github.com/tokiwa-software/fuzion-lsp-server](https://github.com/tokiwa-software/fuzion-lsp-server)
 
-19. **Fuzion**: [github.com/tokiwa-software/fuzion-lsp-server](https://github.com/tokiwa-software/fuzion-lsp-server)
+19. **Imandra Protocol Language**: [github.com/AestheticIntegration/ipl-vscode](https://github.com/AestheticIntegration/ipl-vscode)
 
-20. **Imandra Protocol Language**: [github.com/AestheticIntegration/ipl-vscode](https://github.com/AestheticIntegration/ipl-vscode)
+20. **MOCA**: [github.com/mrglassdanny/moca-language-server](https://github.com/mrglassdanny/moca-language-server)
 
-21. **MOCA**: [github.com/mrglassdanny/moca-language-server](https://github.com/mrglassdanny/moca-language-server)
+21. **openVALIDATION**: [github.com/openvalidation/ov-language-server](https://github.com/openvalidation/ov-language-server)
 
-22. **openVALIDATION**: [github.com/openvalidation/ov-language-server](https://github.com/openvalidation/ov-language-server)
+22. **Veryl**: [github.com/dalance/veryl/tree/master/crates/languageserver](https://github.com/dalance/veryl/tree/master/crates/languageserver)
 
-23. **Veryl**: [github.com/dalance/veryl/tree/master/crates/languageserver](https://github.com/dalance/veryl/tree/master/crates/languageserver)
+23. **Standard ML**: Millet
 
-24. **Standard ML**: Millet
-
-25. **Systemtap**: Systemtap LSP
+24. **Systemtap**: Systemtap LSP

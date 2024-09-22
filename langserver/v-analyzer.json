@@ -1,0 +1,8 @@
+{
+  "name": "v-analyzer",
+  "languageId": "v",
+  "command": [
+    "v-analyzer"
+  ],
+  "settings": {}
+}
