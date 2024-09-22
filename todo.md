@@ -26,24 +26,22 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 13. **Grain**: [github.com/grain-lang/grain](https://github.com/grain-lang/grain) (Emacs haven't mode to support grain language)
 
-14. **TTCN-3**: [github.com/nokia/ntt](https://github.com/nokia/ntt)
+14. **Red**: [github.com/bitbegin/redlangserver](https://github.com/bitbegin/redlangserver)
 
-15. **Red**: [github.com/bitbegin/redlangserver](https://github.com/bitbegin/redlangserver)
+15. **Fennel**: [git.sr.ht/~xerool/fennel-ls](https://git.sr.ht/~xerool/fennel-ls)
 
-16. **Fennel**: [git.sr.ht/~xerool/fennel-ls](https://git.sr.ht/~xerool/fennel-ls)
+16. **Erg**: [github.com/erg-lang/erg/tree/main/crates/els](https://github.com/erg-lang/erg/tree/main/crates/els)
 
-17. **Erg**: [github.com/erg-lang/erg/tree/main/crates/els](https://github.com/erg-lang/erg/tree/main/crates/els)
+17. **Fuzion**: [github.com/tokiwa-software/fuzion-lsp-server](https://github.com/tokiwa-software/fuzion-lsp-server)
 
-18. **Fuzion**: [github.com/tokiwa-software/fuzion-lsp-server](https://github.com/tokiwa-software/fuzion-lsp-server)
+18. **Imandra Protocol Language**: [github.com/AestheticIntegration/ipl-vscode](https://github.com/AestheticIntegration/ipl-vscode)
 
-19. **Imandra Protocol Language**: [github.com/AestheticIntegration/ipl-vscode](https://github.com/AestheticIntegration/ipl-vscode)
+19. **MOCA**: [github.com/mrglassdanny/moca-language-server](https://github.com/mrglassdanny/moca-language-server)
 
-20. **MOCA**: [github.com/mrglassdanny/moca-language-server](https://github.com/mrglassdanny/moca-language-server)
+20. **openVALIDATION**: [github.com/openvalidation/ov-language-server](https://github.com/openvalidation/ov-language-server)
 
-21. **openVALIDATION**: [github.com/openvalidation/ov-language-server](https://github.com/openvalidation/ov-language-server)
+21. **Veryl**: [github.com/dalance/veryl/tree/master/crates/languageserver](https://github.com/dalance/veryl/tree/master/crates/languageserver)
 
-22. **Veryl**: [github.com/dalance/veryl/tree/master/crates/languageserver](https://github.com/dalance/veryl/tree/master/crates/languageserver)
+22. **Standard ML**: Millet
 
-23. **Standard ML**: Millet
-
-24. **Systemtap**: Systemtap LSP
+23. **Systemtap**: Systemtap LSP
