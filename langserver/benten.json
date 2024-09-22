@@ -1,0 +1,8 @@
+{
+  "name": "benten",
+  "languageId": "cwl",
+  "command": [
+    "benten"
+  ],
+  "settings": {}
+}
