@@ -1,8 +1,8 @@
 Below LSP server haven't supported, PR are welcome. ;)
 
-1. **JavaScript (Flow)**: [github.com/flowtype/flow-for-vscode](https://github.com/flowtype/flow-for-vscode)
+1. **JavaScript (Flow)**: [github.com/flowtype/flow-for-vscode](https://github.com/flowtype/flow-for-vscode) (avoid conflig with other javascript lsp server)
 
-2. **PowerShell**: [github.com/PowerShell/PowerShellEditorServices](https://github.com/PowerShell/PowerShellEditorServices)
+2. **PowerShell**: [github.com/PowerShell/PowerShellEditorServices](https://github.com/PowerShell/PowerShellEditorServices) (need env to test start command)
 
 3. **XML**: 
    - [github.com/microclimate-devops/xml-language-server](https://github.com/microclimate-devops/xml-language-server)
