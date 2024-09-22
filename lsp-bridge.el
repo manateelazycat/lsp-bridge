@@ -508,6 +508,10 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
   "Default LSP server for Verilog, you can choose `verible', `svls'"
   :type 'string)
 
+(defcustom lsp-bridge-xml-lsp-server "lemminx"
+  "Default LSP server for XML, you can choose `lemminx', `camells'"
+  :type 'string)
+
 (defcustom lsp-bridge-use-wenls-in-org-mode nil
   "Use `wen' lsp server in org-mode, default is disable.")
 
@@ -585,7 +589,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     (ada-mode .                                                                  "ada-language-server")
     (rego-mode .                                                                 "regal")
     (puppet-mode .                                                               "puppet-languageserver")
-    (nxml-mode .                                                                 "lemminx")
+    (nxml-mode .                                                                 lsp-bridge-xml-lsp-server)
     (robot-mode .                                                                "vscode-rf-language-server")
     (vimrc-mode .                                                                "vim-language-server")
     (terraform-mode .                                                            "terraform-ls")

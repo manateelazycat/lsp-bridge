@@ -1,0 +1,8 @@
+{
+  "name": "camells",
+  "languageId": "xml",
+  "command": [
+    "camells"
+  ],
+  "settings": {}
+}
