@@ -1,0 +1,10 @@
+{
+  "name": "puppet-languageserver",
+  "languageId": "puppet",
+  "command": [
+    "ruby",
+    "puppet-languageserver",
+    "--stdio"
+  ],
+  "settings": {}
+}
