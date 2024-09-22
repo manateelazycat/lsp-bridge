@@ -504,6 +504,10 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
   "Default LSP server for Lua, you can choose `sumneko' or `lua-lsp'"
   :type 'string)
 
+(defcustom lsp-bridge-verilog-lsp-server "verible"
+  "Default LSP server for Verilog, you can choose `verible', `svls'"
+  :type 'string)
+
 (defcustom lsp-bridge-use-wenls-in-org-mode nil
   "Use `wen' lsp server in org-mode, default is disable.")
 
@@ -569,7 +573,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     (swift-mode .                                                                "swift-sourcekit")
     ((csharp-mode csharp-ts-mode) .                                              lsp-bridge-csharp-lsp-server)
     (kotlin-mode .                                                               "kotlin-language-server")
-    (verilog-mode .                                                              "verible")
+    (verilog-mode .                                                              lsp-bridge-verilog-lsp-server)
     (vhdl-mode .                                                                 "vhdl-tool")
     (svelte-mode .                                                               "svelteserver")
     (fsharp-mode .                                                               "fsautocomplete")
