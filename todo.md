@@ -68,8 +68,6 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 35. **TTCN-3**: [github.com/nokia/ntt](https://github.com/nokia/ntt)
 
-36. **Q#** (Archived): [github.com/microsoft/qsharp-compiler](https://github.com/microsoft/qsharp-compiler)
-
 37. **Red**: [github.com/bitbegin/redlangserver](https://github.com/bitbegin/redlangserver)
 
 38. **Fennel**: [git.sr.ht/~xerool/fennel-ls](https://git.sr.ht/~xerool/fennel-ls)
