@@ -579,6 +579,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     (solidity-mode .                                                             "solidity")
     (gleam-ts-mode .                                                             "gleam")
     (ada-mode .                                                                  "ada-language-server")
+    (vimrc-mode .                                                                "vim-language-server")
     (terraform-mode .                                                            "terraform-ls")
     (jsonnet-mode .                                                              "jsonnet-language-server")
     (glsl-mode .                                                                 "glsl-language-server")
@@ -692,6 +693,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     solidity-mode-hook
     gleam-ts-mode-hook
     ada-mode-hook
+    vimrc-mode-hook
     terraform-mode-hook
     jsonnet-mode-hook
     glsl-mode-hook
@@ -759,6 +761,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (raku-mode                  . raku-indent-offset)     ; Perl6/Raku
     (erlang-mode                . erlang-indent-level)    ; Erlang
     (ada-mode                   . ada-indent)             ; Ada
+    (vimrc-mode                 . lsp-bridge-indent-four-level) ; Vim
     (terraform-mode             . terraform-indent-level) ; Terraform
     (jsonnet-mode               . jsonnet-indent-level)   ; Jsonnet
     (glsl-mode                  . lsp-bridge-indent-two-level)  ; GLSL

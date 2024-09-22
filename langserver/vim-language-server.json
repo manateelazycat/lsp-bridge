@@ -1,0 +1,9 @@
+{
+  "name": "vim-language-server",
+  "languageId": "vim",
+  "command": [
+    "vim-language-server",
+    "--stdio"
+  ],
+  "settings": {}
+}

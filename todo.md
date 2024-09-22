@@ -10,8 +10,6 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 5. **Puppet**: [github.com/lingua-pupuli/puppet-editor-services](https://github.com/lingua-pupuli/puppet-editor-services)
 
-6. **VimScript**: [github.com/iamcco/vim-language-server](https://github.com/iamcco/vim-language-server)
-
 7. **Helm (Kubernetes)**: [github.com/mrjosh/helm-ls](https://github.com/mrjosh/helm-ls)
 
 8. **Robot Framework**: [github.com/robocorp/robotframework-lsp](https://github.com/robocorp/robotframework-lsp)
