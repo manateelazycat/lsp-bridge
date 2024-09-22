@@ -485,7 +485,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
   :type 'string)
 
 (defcustom lsp-bridge-tex-lsp-server "texlab"
-  "Default LSP server for (la)tex, you can choose `texlab' or `digestif'."
+  "Default LSP server for (la)tex, you can choose `texlab', `digestif' or `ltex-ls'."
   :type 'string)
 
 (defcustom lsp-bridge-csharp-lsp-server "omnisharp-dotnet"

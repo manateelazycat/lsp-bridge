@@ -6,66 +6,62 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 3. **Cucumber (Gherkin)**: cucumber/language-server
 
-4. **Snyk**: [github.com/snyk/snyk-ls](https://github.com/snyk/snyk-ls)
+4. **Gauge**: [github.com/getgauge/gauge](https://github.com/getgauge/gauge)
 
-5. **LanguageTool**: [github.com/valentjn/ltex-ls](https://github.com/valentjn/ltex-ls)
+5. **Coq**: coq-lsp
 
-6. **Gauge**: [github.com/getgauge/gauge](https://github.com/getgauge/gauge)
+6. **Delphi**: Embarcadero (Proprietary - DelphiLSP)
 
-7. **Coq**: coq-lsp
+7. **BibTeX**: [github.com/oncomouse/citation-langserver](https://github.com/oncomouse/citation-langserver)
 
-8. **Delphi**: Embarcadero (Proprietary - DelphiLSP)
+8. **JSON-LD**: [github.com/ajuvercr/jsonld-lsp](https://github.com/ajuvercr/jsonld-lsp)
 
-9. **BibTeX**: [github.com/oncomouse/citation-langserver](https://github.com/oncomouse/citation-langserver)
+9. **Ballerina**: [github.com/ballerina-platform/ballerina-lang/tree/master/language-server](https://github.com/ballerina-platform/ballerina-lang/tree/master/language-server)
 
-10. **JSON-LD**: [github.com/ajuvercr/jsonld-lsp](https://github.com/ajuvercr/jsonld-lsp)
+10. **Langium**: [github.com/langium/langium](https://github.com/langium/langium)
 
-11. **Ballerina**: [github.com/ballerina-platform/ballerina-lang/tree/master/language-server](https://github.com/ballerina-platform/ballerina-lang/tree/master/language-server)
+11. **Odin**: [github.com/DanielGavin/ols](https://github.com/DanielGavin/ols)
 
-12. **Langium**: [github.com/langium/langium](https://github.com/langium/langium)
+12. **Xtext** (Any Language): [github.com/eclipse/xtext-core](https://github.com/eclipse/xtext-core)
 
-13. **Odin**: [github.com/DanielGavin/ols](https://github.com/DanielGavin/ols)
+13. **ActionScript3**: [github.com/BowlerHatLLC/vscode-nextgenas/tree/master/language-server](https://github.com/BowlerHatLLC/vscode-nextgenas/tree/master/language-server)
 
-14. **Xtext** (Any Language): [github.com/eclipse/xtext-core](https://github.com/eclipse/xtext-core)
+14. **Raku**: [github.com/bscan/RakuNavigator](https://github.com/bscan/RakuNavigator)
 
-15. **ActionScript3**: [github.com/BowlerHatLLC/vscode-nextgenas/tree/master/language-server](https://github.com/BowlerHatLLC/vscode-nextgenas/tree/master/language-server)
+15. **Flux**: [github.com/influxdata/flux-lsp](https://github.com/influxdata/flux-lsp)
 
-16. **Raku**: [github.com/bscan/RakuNavigator](https://github.com/bscan/RakuNavigator)
+16. **SPARQL**: [github.com/stardog-union/stardog-language-servers/tree/master/packages/sparql-language-server](https://github.com/stardog-union/stardog-language-servers/tree/master/packages/sparql-language-server)
 
-17. **Flux**: [github.com/influxdata/flux-lsp](https://github.com/influxdata/flux-lsp)
+17. **Turtle**: [github.com/stardog-union/stardog-language-servers/tree/master/packages/turtle-language-server](https://github.com/stardog-union/stardog-language-servers/tree/master/packages/turtle-language-server)
 
-18. **SPARQL**: [github.com/stardog-union/stardog-language-servers/tree/master/packages/sparql-language-server](https://github.com/stardog-union/stardog-language-servers/tree/master/packages/sparql-language-server)
+18. **Common Workflow Language (CWL)**: Rabix/Benten
 
-19. **Turtle**: [github.com/stardog-union/stardog-language-servers/tree/master/packages/turtle-language-server](https://github.com/stardog-union/stardog-language-servers/tree/master/packages/turtle-language-server)
+19. **Smalltalk/Pharo**: [github.com/badetitou/Pharo-LanguageServer](https://github.com/badetitou/Pharo-LanguageServer)
 
-20. **Common Workflow Language (CWL)**: Rabix/Benten
+20. **DreamMaker**: [github.com/SpaceManiac/SpacemanDMM/tree/master/crates/dm-langserver](https://github.com/SpaceManiac/SpacemanDMM/tree/master/crates/dm-langserver)
 
-21. **Smalltalk/Pharo**: [github.com/badetitou/Pharo-LanguageServer](https://github.com/badetitou/Pharo-LanguageServer)
+21. **Grain**: [github.com/grain-lang/grain](https://github.com/grain-lang/grain)
 
-22. **DreamMaker**: [github.com/SpaceManiac/SpacemanDMM/tree/master/crates/dm-langserver](https://github.com/SpaceManiac/SpacemanDMM/tree/master/crates/dm-langserver)
+22. **V**: [github.com/vlang/v-analyzer](https://github.com/vlang/v-analyzer)
 
-23. **Grain**: [github.com/grain-lang/grain](https://github.com/grain-lang/grain)
+23. **TTCN-3**: [github.com/nokia/ntt](https://github.com/nokia/ntt)
 
-24. **V**: [github.com/vlang/v-analyzer](https://github.com/vlang/v-analyzer)
+24. **Red**: [github.com/bitbegin/redlangserver](https://github.com/bitbegin/redlangserver)
 
-25. **TTCN-3**: [github.com/nokia/ntt](https://github.com/nokia/ntt)
+25. **Fennel**: [git.sr.ht/~xerool/fennel-ls](https://git.sr.ht/~xerool/fennel-ls)
 
-26. **Red**: [github.com/bitbegin/redlangserver](https://github.com/bitbegin/redlangserver)
+26. **Erg**: [github.com/erg-lang/erg/tree/main/crates/els](https://github.com/erg-lang/erg/tree/main/crates/els)
 
-27. **Fennel**: [git.sr.ht/~xerool/fennel-ls](https://git.sr.ht/~xerool/fennel-ls)
+27. **Fuzion**: [github.com/tokiwa-software/fuzion-lsp-server](https://github.com/tokiwa-software/fuzion-lsp-server)
 
-28. **Erg**: [github.com/erg-lang/erg/tree/main/crates/els](https://github.com/erg-lang/erg/tree/main/crates/els)
+28. **Imandra Protocol Language**: [github.com/AestheticIntegration/ipl-vscode](https://github.com/AestheticIntegration/ipl-vscode)
 
-29. **Fuzion**: [github.com/tokiwa-software/fuzion-lsp-server](https://github.com/tokiwa-software/fuzion-lsp-server)
+29. **MOCA**: [github.com/mrglassdanny/moca-language-server](https://github.com/mrglassdanny/moca-language-server)
 
-30. **Imandra Protocol Language**: [github.com/AestheticIntegration/ipl-vscode](https://github.com/AestheticIntegration/ipl-vscode)
+30. **openVALIDATION**: [github.com/openvalidation/ov-language-server](https://github.com/openvalidation/ov-language-server)
 
-31. **MOCA**: [github.com/mrglassdanny/moca-language-server](https://github.com/mrglassdanny/moca-language-server)
+31. **Veryl**: [github.com/dalance/veryl/tree/master/crates/languageserver](https://github.com/dalance/veryl/tree/master/crates/languageserver)
 
-32. **openVALIDATION**: [github.com/openvalidation/ov-language-server](https://github.com/openvalidation/ov-language-server)
+32. **Standard ML**: Millet
 
-33. **Veryl**: [github.com/dalance/veryl/tree/master/crates/languageserver](https://github.com/dalance/veryl/tree/master/crates/languageserver)
-
-34. **Standard ML**: Millet
-
-35. **Systemtap**: Systemtap LSP
+33. **Systemtap**: Systemtap LSP
