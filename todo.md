@@ -12,8 +12,6 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 7. **Helm (Kubernetes)**: [github.com/mrjosh/helm-ls](https://github.com/mrjosh/helm-ls)
 
-8. **Robot Framework**: [github.com/robocorp/robotframework-lsp](https://github.com/robocorp/robotframework-lsp)
-
 9. **SystemVerilog**: [github.com/dalance/svls](https://github.com/dalance/svls)
 
 10. **Rego**: [github.com/StyraInc/regal](https://github.com/StyraInc/regal)

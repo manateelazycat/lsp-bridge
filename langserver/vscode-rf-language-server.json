@@ -1,0 +1,9 @@
+{
+  "name": "vscode-rf-language-server",
+  "languageId": "robot",
+  "command": [
+    "~/.nvm/versions/node/v9.11.2/bin/node",
+    "~/.vscode/extensions/tomiturtiainen.rf-intellisense-2.8.0/server/server.js"
+  ],
+  "settings": {}
+}
