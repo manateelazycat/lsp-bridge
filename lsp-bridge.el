@@ -583,6 +583,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     (solidity-mode .                                                             "solidity")
     (gleam-ts-mode .                                                             "gleam")
     (ada-mode .                                                                  "ada-language-server")
+    (rego-mode .                                                                 "regal")
     (puppet-mode .                                                               "puppet-languageserver")
     (nxml-mode .                                                                 "lemminx")
     (robot-mode .                                                                "vscode-rf-language-server")
@@ -700,6 +701,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     solidity-mode-hook
     gleam-ts-mode-hook
     ada-mode-hook
+    rego-mode-hook
     puppet-mode-hook
     nxml-mode-hook
     robot-mode-hook
@@ -771,6 +773,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (raku-mode                  . raku-indent-offset)     ; Perl6/Raku
     (erlang-mode                . erlang-indent-level)    ; Erlang
     (ada-mode                   . ada-indent)             ; Ada
+    (rego-mode                  . lsp-bridge-indent-two-level) ; Rego
     (puppet-mode                . puppet-indent-level)    ; Puppet
     (nxml-mode                  . lsp-bridge-indent-two-level) ; XML
     (robot-mode                 . robot-mode-basic-offset)      ; Robot
