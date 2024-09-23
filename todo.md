@@ -36,4 +36,4 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 18. **Veryl**: [github.com/dalance/veryl/tree/master/crates/languageserver](https://github.com/dalance/veryl/tree/master/crates/languageserver) (Emacs haven't mode to suppor Veryl)
 
-19. **Systemtap**: Systemtap LSP
+19. **Systemtap**: Systemtap LSP (This language is too old)
