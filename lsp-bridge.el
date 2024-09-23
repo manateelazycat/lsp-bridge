@@ -587,6 +587,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     (solidity-mode .                                                             "solidity")
     (gleam-ts-mode .                                                             "gleam")
     (ada-mode .                                                                  "ada-language-server")
+    (sml-mode .                                                                  "millet")
     (fuzion-mode .                                                               "fuzion-language-server")
     (fennel-mode .                                                               "fennel-ls")
     (ttcn3-mode .                                                                "ntt")
@@ -714,6 +715,7 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
     solidity-mode-hook
     gleam-ts-mode-hook
     ada-mode-hook
+    sml-mode-hook
     fuzion-mode-hook
     fennel-mode-hook
     ttcn3-mode-hook
@@ -795,6 +797,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (raku-mode                  . raku-indent-offset)     ; Perl6/Raku
     (erlang-mode                . erlang-indent-level)    ; Erlang
     (ada-mode                   . ada-indent)             ; Ada
+    (sml-mode                   . sml-indent-level)       ; Standard ML
     (fuzion-mode                . lsp-bridge-indent-two-level) ; Fuzion
     (fennel-mode                . lsp-bridge-indent-two-level)  ; Fennel
     (ttcn3-mode                 . lsp-bridge-indent-four-level) ; TTCN3

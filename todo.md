@@ -30,14 +30,10 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 15. **Erg**: [github.com/erg-lang/erg/tree/main/crates/els](https://github.com/erg-lang/erg/tree/main/crates/els) (Emacs haven't mode to support Erg language)
 
-16. **Imandra Protocol Language**: [github.com/AestheticIntegration/ipl-vscode](https://github.com/AestheticIntegration/ipl-vscode)
+16. **MOCA**: [github.com/mrglassdanny/moca-language-server](https://github.com/mrglassdanny/moca-language-server) (Emacs haven't mode to suppor MOCA language)
 
-17. **MOCA**: [github.com/mrglassdanny/moca-language-server](https://github.com/mrglassdanny/moca-language-server)
+17. **openVALIDATION**: [github.com/openvalidation/ov-language-server](https://github.com/openvalidation/ov-language-server) (Emacs haven't suppor to openVALIDATION)
 
-18. **openVALIDATION**: [github.com/openvalidation/ov-language-server](https://github.com/openvalidation/ov-language-server)
+18. **Veryl**: [github.com/dalance/veryl/tree/master/crates/languageserver](https://github.com/dalance/veryl/tree/master/crates/languageserver) (Emacs haven't mode to suppor Veryl)
 
-19. **Veryl**: [github.com/dalance/veryl/tree/master/crates/languageserver](https://github.com/dalance/veryl/tree/master/crates/languageserver)
-
-20. **Standard ML**: Millet
-
-21. **Systemtap**: Systemtap LSP
+19. **Systemtap**: Systemtap LSP
