@@ -8,7 +8,7 @@ class RustReloadWorkspace(Handler):
     send_document_uri = False
 
     def process_request(self) -> dict:
-        return dict()
+        return None
 
     def process_response(self, response) -> None:
         pass
