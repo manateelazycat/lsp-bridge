@@ -2669,7 +2669,10 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
 (with-eval-after-load 'evil
   (evil-add-command-properties #'lsp-bridge-find-def :jump t)
   (evil-add-command-properties #'lsp-bridge-find-references :jump t)
-  (evil-add-command-properties #'lsp-bridge-find-impl :jump t))
+  (evil-add-command-properties #'lsp-bridge-find-impl :jump t)
+
+  ;; Fix issue #516
+  (add-hook 'acm-mode-hook #'evil-normalize-keymaps))
 
 (defun lsp-bridge--rename-file-advisor (orig-fun &optional arg &rest args)
   (let* ((current-file-name (buffer-file-name))
