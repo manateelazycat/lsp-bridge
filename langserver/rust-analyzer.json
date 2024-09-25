@@ -31,7 +31,7 @@
         }
       },
     "checkOnSave": {
-      "enable": false,
+      "enable": true,
       "allTargets": true,
       "features": "all",
       "invocationLocation": "root",
