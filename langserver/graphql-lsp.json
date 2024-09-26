@@ -2,6 +2,7 @@
   "name": "graphql-lsp",
   "languageId": "graphql",
   "command": ["graphql-lsp", "server", "--method=stream"],
+  "project-files": ["gradlew"],
   "settings": {
     "graphql-config": {}
   }
