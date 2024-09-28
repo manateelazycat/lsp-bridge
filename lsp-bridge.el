@@ -794,23 +794,23 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (php-ts-mode                . php-ts-mode-indent-offset) ; PHP
     (perl-mode                  . perl-indent-level)         ; Perl
     (cperl-mode                 . cperl-indent-level)        ; Perl
-    (raku-mode                  . raku-indent-offset)     ; Perl6/Raku
-    (erlang-mode                . erlang-indent-level)    ; Erlang
-    (ada-mode                   . ada-indent)             ; Ada
-    (sml-mode                   . sml-indent-level)       ; Standard ML
+    (raku-mode                  . raku-indent-offset)  ; Perl6/Raku
+    (erlang-mode                . erlang-indent-level) ; Erlang
+    (ada-mode                   . ada-indent)          ; Ada
+    (sml-mode                   . sml-indent-level)    ; Standard ML
     (fuzion-mode                . lsp-bridge-indent-two-level) ; Fuzion
-    (fennel-mode                . lsp-bridge-indent-two-level)  ; Fennel
+    (fennel-mode                . lsp-bridge-indent-two-level) ; Fennel
     (ttcn3-mode                 . lsp-bridge-indent-four-level) ; TTCN3
     (v-mode                     . lsp-bridge-indent-four-level) ; V
-    (cwl-mode                   . lsp-bridge-indent-four-level)  ; Common Workflow
+    (cwl-mode                   . lsp-bridge-indent-four-level) ; Common Workflow
     (odin-mode                  . lsp-bridge-indent-eight-level) ; Odin
-    (ballerina-mode             . ballerina-indent-offset)     ; Ballerina
+    (ballerina-mode             . ballerina-indent-offset) ; Ballerina
     (bibtex-mode                . lsp-bridge-indent-two-level) ; BibTex
-    (feature-mode               . feature-indent-level)   ; Cucumber
+    (feature-mode               . feature-indent-level) ; Cucumber
     (rego-mode                  . lsp-bridge-indent-two-level) ; Rego
-    (puppet-mode                . puppet-indent-level)    ; Puppet
+    (puppet-mode                . puppet-indent-level) ; Puppet
     (nxml-mode                  . lsp-bridge-indent-two-level) ; XML
-    (robot-mode                 . robot-mode-basic-offset)      ; Robot
+    (robot-mode                 . robot-mode-basic-offset)     ; Robot
     (vimrc-mode                 . lsp-bridge-indent-four-level) ; Vim
     (terraform-mode             . terraform-indent-level) ; Terraform
     (jsonnet-mode               . jsonnet-indent-level)   ; Jsonnet
@@ -1866,25 +1866,26 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-search-words-index-files ()
   "Index files when lsp-bridge python process finish."
-  (if (lsp-bridge-is-remote-file)
-      (let* ((host lsp-bridge-remote-file-host)
-             (buffers (cl-remove-if-not (lambda (buf)
-                                          (with-current-buffer buf
-                                            (and (lsp-bridge-is-remote-file)
-                                                 (string-equal lsp-bridge-remote-file-host host))))
-                                        (buffer-list)))
-             (files (mapcar (lambda (buf)
-                              (with-current-buffer buf
-                                lsp-bridge-remote-file-path))
-                            buffers)))
-        (lsp-bridge-remote-send-func-request "search_file_words_index_files" (list files)))
-    (let ((files (cl-remove-if (lambda (elt)
-                                 (or (null elt)
-                                     (file-remote-p elt)
-                                     (member (file-name-extension elt)
-                                             lsp-bridge-search-words-prohibit-file-extensions)))
-                               (mapcar (lambda (b) (lsp-bridge-buffer-file-name (buffer-file-name b))) (buffer-list)))))
-      (lsp-bridge-call-async "search_file_words_index_files" files))))
+  (when lsp-bridge-enable-search-words
+    (if (lsp-bridge-is-remote-file)
+        (let* ((host lsp-bridge-remote-file-host)
+               (buffers (cl-remove-if-not (lambda (buf)
+                                            (with-current-buffer buf
+                                              (and (lsp-bridge-is-remote-file)
+                                                   (string-equal lsp-bridge-remote-file-host host))))
+                                          (buffer-list)))
+               (files (mapcar (lambda (buf)
+                                (with-current-buffer buf
+                                  lsp-bridge-remote-file-path))
+                              buffers)))
+          (lsp-bridge-remote-send-func-request "search_file_words_index_files" (list files)))
+      (let ((files (cl-remove-if (lambda (elt)
+                                   (or (null elt)
+                                       (file-remote-p elt)
+                                       (member (file-name-extension elt)
+                                               lsp-bridge-search-words-prohibit-file-extensions)))
+                                 (mapcar (lambda (b) (lsp-bridge-buffer-file-name (buffer-file-name b))) (buffer-list)))))
+        (lsp-bridge-call-async "search_file_words_index_files" files)))))
 
 (defun lsp-bridge-search-words-update (begin-pos end-pos change-text)
   (if (lsp-bridge-is-remote-file)
