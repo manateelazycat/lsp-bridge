@@ -232,6 +232,10 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
 (defun lsp-bridge-diagnostic-show-tooltip (diagnostic-overlay &optional goto-beginning)
   (let* ((diagnostic-display-message (overlay-get diagnostic-overlay 'display-message))
          (diagnostic-message (overlay-get diagnostic-overlay 'message))
+         (diagnostic-wrapped-message (with-temp-buffer
+                                       (insert diagnostic-display-message)
+                                       (fill-region (point-min) (point-max))
+                                       (buffer-string)))
          (foreground-color (plist-get (face-attribute (overlay-get diagnostic-overlay 'face) :underline) :color)))
     ;; Weather goto beginning of diagnostic.
     (when goto-beginning
@@ -262,7 +266,7 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
     ;; Show diagnostic tooltip.
     (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-buffer)
       (erase-buffer)
-      (lsp-bridge-diagnostic-insert-colored-string (overlay-get diagnostic-overlay 'color) diagnostic-display-message)
+      (lsp-bridge-diagnostic-insert-colored-string (overlay-get diagnostic-overlay 'color) diagnostic-wrapped-message)
       (setq-local lsp-bridge-diagnostic-message diagnostic-message))
 
     (cond
