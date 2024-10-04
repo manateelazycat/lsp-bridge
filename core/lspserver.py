@@ -229,7 +229,7 @@ class LspServer:
     def __init__(self, message_queue, project_path, server_info, server_name, enable_diagnostics):
         self.message_queue = message_queue
         self.project_path = project_path
-        self.project_name = os.path.basename(project_path)
+        self.project_name = os.path.basename(os.path.normpath(project_path))
         self.server_info = server_info
 
         self.initialize_id = generate_request_id()
