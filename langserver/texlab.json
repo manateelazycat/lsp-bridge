@@ -1,6 +1,15 @@
 {
-  "name": "texlab",
-  "languageId": "tex",
-  "command": ["texlab"],
-  "settings": {}
+    "name": "texlab",
+    "languageIds": {
+        "tex": "tex",
+        "sty": "tex",
+        "cls": "tex",
+        "def": "tex",
+        "lco": "tex",
+        "rnw": "tex",
+        "bib": "bib",
+        "bibtex": "bib"
+    },
+    "command": ["texlab"],
+    "settings": {}
 }
