@@ -981,10 +981,9 @@ So we build this macro to restore postion after code format."
       ;; Fetch project root path by `lsp-bridge-get-project-path-by-filepath' if it set by user.
       (funcall lsp-bridge-get-project-path-by-filepath filename)
     ;; Otherwise try to search up `.dir-locals.el' file
-    (let ((result (dir-locals-find-file filename)))
-      (if (consp result)
-          (car result)
-        result))))
+    (let* ((result (dir-locals-find-file filename))
+           (dir (if (consp result) (car result) result)))
+      (when dir (directory-file-name dir)))))
 
 (defun lsp-bridge--get-language-id-func (project-path file-path server-name extension-name)
   (if lsp-bridge-get-language-id
