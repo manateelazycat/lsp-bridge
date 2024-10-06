@@ -51,22 +51,26 @@ class MultiFileHandler(FileSystemEventHandler):
         self.dir_path_dict = {}
 
     def add_file(self, file_path):
-        self.file_path_dict[os.path.abspath(file_path)] = file_path
+        self._add_to_dict(self.file_path_dict, file_path)
 
     def add_dir(self, dir_path):
-        self.dir_path_dict[dir_path] = dir_path
+        self._add_to_dict(self.dir_path_dict, dir_path)
+
+    def _add_to_dict(self, dictionary, path):
+        dictionary[os.path.abspath(path)] = path
 
     def on_created(self, event):
-        if not event.is_directory and event.src_path in self.file_path_dict:
-            self.lsp_server.send_workspace_did_change_watched_files(event.src_path, 1)
+        self._handle_event(event, 1)
 
     def on_modified(self, event):
-        if not event.is_directory and event.src_path in self.file_path_dict:
-            self.lsp_server.send_workspace_did_change_watched_files(event.src_path, 2)
+        self._handle_event(event, 2)
 
     def on_deleted(self, event):
+        self._handle_event(event, 3)
+
+    def _handle_event(self, event, change_type):
         if not event.is_directory and event.src_path in self.file_path_dict:
-            self.lsp_server.send_workspace_did_change_watched_files(event.src_path, 3)
+            self.lsp_server.send_workspace_did_change_watched_files(event.src_path, change_type)
 
 class LspServerSender(MessageSender):
     def __init__(self, process: subprocess.Popen, server_name, project_name):
