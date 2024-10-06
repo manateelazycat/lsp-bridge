@@ -479,6 +479,8 @@ Currently, the design of capf is not suitable for the LSP protocol. The capf com
 
 If there is no capf completion, please ensure that the current mode is present in `acm-backend-capf-mode-list`. If it's not in `acm-backend-capf-mode-list`, pull request are welcome.
 
+Note: after enable `acm-enable-capf` emacs becomes slow and its definitely a problem with the capf backend implementation not an issue with lsp-bridge itself
+
 ### pyenv configuration
 
 If you use a Python distribution installed via `pyenv`, you must adjust your

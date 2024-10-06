@@ -473,6 +473,8 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 
 如果没有 capf 补全， 请确保当前模式存在于 `acm-backend-capf-mode-list` 中， 如果不在 `acm-backend-capf-mode-list` 中， 欢迎 PR。
 
+注意： 打开 `acm-enable-capf` 后 Emacs 卡顿， 100% 是 capf 某个后端实现的问题， lsp-bridge 本身不会造成 Emacs 卡顿。
+
 ### pyenv 配置
 
 如果你使用通过 `pyenv` 安装的 Python 发行版， 你必须调整你的 `lsp-bridge-python-command` 变量， 使其指向你所选 Python 版本的实际 `python3` 可执行文件， 而不是 `pyenv` 为 `python3` 提供的 shim。 选择下面任意一种方案放到你的 `lsp-bridge` 配置中：
