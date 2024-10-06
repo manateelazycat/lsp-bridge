@@ -30,6 +30,8 @@ from subprocess import PIPE
 from sys import stderr
 from typing import TYPE_CHECKING, Dict
 from urllib.parse import urlparse
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 from core.handler import Handler
 from core.mergedeep import merge
@@ -41,6 +43,23 @@ from core.utils import *
 DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pipe hang by big data response from LSP server
 
 INLAY_HINT_REQUEST_ID_DICT = {}
+
+class WorkspaceWatchFileHandler(FileSystemEventHandler):
+    def __init__(self, lsp_server, target_file):
+        self.lsp_server = lsp_server
+        self.target_file = os.path.abspath(target_file)
+
+    def on_created(self, event):
+        if event.src_path == self.target_file:
+            self.lsp_server.send_workspace_did_change_watched_files(self.target_file, 1)
+
+    def on_modified(self, event):
+        if event.src_path == self.target_file:
+            self.lsp_server.send_workspace_did_change_watched_files(self.target_file, 2)
+
+    def on_deleted(self, event):
+        if event.src_path == self.target_file:
+            self.lsp_server.send_workspace_did_change_watched_files(self.target_file, 3)
 
 class LspServerSender(MessageSender):
     def __init__(self, process: subprocess.Popen, server_name, project_name):
@@ -254,6 +273,9 @@ class LspServer:
 
         self.work_done_progress_title = ""
 
+        self.workspace_watch_files = []
+        self.workspace_file_watchers = []
+
         self.code_action_kinds = [
             "quickfix",
             "refactor",
@@ -337,6 +359,10 @@ class LspServer:
                     "resolveSupport": {
                         "properties": []
                     }
+                },
+                "didChangeWatchedFiles": {
+                    "dynamicRegistration": True,
+                    "relativePatternSupport": True
                 }
             },
             "textDocument": {
@@ -496,6 +522,14 @@ class LspServer:
             })
 
         self.sender.send_notification("textDocument/didSave", args)
+
+    def send_workspace_did_change_watched_files(self, filepath, change_type):
+        self.sender.send_notification("workspace/didChangeWatchedFiles", {
+            "changes": [{
+                "uri": path_to_uri(filepath),
+                "type": change_type
+            }]
+        })
 
     def send_did_change_notification(self, filepath, version, start, end, range_length, text):
         # STEP 5: Tell LSP server file content is changed.
@@ -789,6 +823,14 @@ class LspServer:
 
     def handle_register_capability_message(self, message):
         if "method" in message and message["method"] in ["client/registerCapability"]:
+            try:
+                if message["params"]["registrations"][0]["id"] == "workspace/didChangeWatchedFiles":
+                    self.workspace_watch_files = self.parse_workspace_watch_files(message["params"])
+                    self.monitor_workspace_files(self.workspace_watch_files)
+                    log_time("Add workspace watch files: {}".format(self.workspace_watch_files))
+            except:
+                log_time(traceback.format_exc())
+
             self.sender.send_response(message["id"], None)
 
     def handle_recv_message(self, message: dict):
@@ -805,6 +847,60 @@ class LspServer:
 
         logger.debug(json.dumps(message, indent=3))
 
+    def monitor_workspace_files(self, file_paths):
+        for file_path in file_paths:
+            target_dir = os.path.dirname(file_path)
+
+            if os.path.exists(target_dir):
+                event_handler = WorkspaceWatchFileHandler(self, file_path)
+                watcher = Observer()
+                self.workspace_file_watchers.append(watcher)
+
+                watcher.schedule(event_handler, target_dir, recursive=False)
+                watcher.start()
+
+    def parse_workspace_watch_files(self, params):
+        patterns = []
+        for registration in params['registrations']:
+            if registration.get('method') == 'workspace/didChangeWatchedFiles':
+                watchers = registration.get('registerOptions', {}).get('watchers', [])
+                for watcher in watchers:
+                    glob_pattern = watcher.get('globPattern', {})
+                    if isinstance(glob_pattern, str):
+                        if not glob_pattern.startswith('**/**.'):
+                            patterns.append(glob_pattern)
+                    elif isinstance(glob_pattern, dict):
+                        base_uri = glob_pattern.get('baseUri', '')
+                        pattern = glob_pattern.get('pattern', '')
+
+                        # Filter **/*.ext rule.
+                        if pattern.startswith('**/*.'):
+                            continue
+
+                        if base_uri.startswith('file://'):
+                            base_uri = base_uri[7:]
+
+                        # Replace ** with base_uri
+                        if pattern.startswith('**'):
+                            full_pattern = os.path.join(base_uri, pattern[2:].lstrip('/'))
+                        else:
+                            full_pattern = os.path.join(base_uri, pattern)
+
+                        # Handle {a,b} syntax
+                        if '{' in full_pattern and '}' in full_pattern:
+                            prefix, suffix = full_pattern.split('{')
+                            suffix = suffix.split('}')
+                            options = suffix[0].split(',')
+                            for option in options:
+                                patterns.append(prefix + option + suffix[1])
+                        else:
+                            patterns.append(full_pattern)
+
+        # Remove duplicate file.
+        patterns = list(set(patterns))
+
+        return patterns
+
     def close_file(self, filepath):
         # Send didClose notification when client close file.
         if is_in_path_dict(self.files, filepath):
@@ -813,6 +909,15 @@ class LspServer:
 
         # We need shutdown LSP server when last file closed, to save system memory.
         if len(self.files) == 0:
+            # Stop workspace file watcher.
+            if len(self.workspace_file_watchers) > 0:
+                for watcher in self.workspace_file_watchers:
+                    # Stop watchdog watcher.
+                    watcher.stop()
+
+                self.workspace_watch_files = []
+                self.workspace_file_watchers = []
+
             self.message_queue.put({
                 "name": "server_process_exit",
                 "content": self.server_name
