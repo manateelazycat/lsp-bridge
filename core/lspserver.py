@@ -47,21 +47,25 @@ INLAY_HINT_REQUEST_ID_DICT = {}
 class MultiFileHandler(FileSystemEventHandler):
     def __init__(self, lsp_server):
         self.lsp_server = lsp_server
-        self.file_handlers = {}
+        self.file_path_dict = {}
+        self.dir_path_dict = {}
 
     def add_file(self, file_path):
-        self.file_handlers[os.path.abspath(file_path)] = file_path
+        self.file_path_dict[os.path.abspath(file_path)] = file_path
+
+    def add_dir(self, dir_path):
+        self.dir_path_dict[dir_path] = dir_path
 
     def on_created(self, event):
-        if not event.is_directory and event.src_path in self.file_handlers:
+        if not event.is_directory and event.src_path in self.file_path_dict:
             self.lsp_server.send_workspace_did_change_watched_files(event.src_path, 1)
 
     def on_modified(self, event):
-        if not event.is_directory and event.src_path in self.file_handlers:
+        if not event.is_directory and event.src_path in self.file_path_dict:
             self.lsp_server.send_workspace_did_change_watched_files(event.src_path, 2)
 
     def on_deleted(self, event):
-        if not event.is_directory and event.src_path in self.file_handlers:
+        if not event.is_directory and event.src_path in self.file_path_dict:
             self.lsp_server.send_workspace_did_change_watched_files(event.src_path, 3)
 
 class LspServerSender(MessageSender):
@@ -277,6 +281,7 @@ class LspServer:
         self.work_done_progress_title = ""
 
         self.workspace_file_watcher = None
+        self.workspace_file_watch_handler = None
 
         self.code_action_kinds = [
             "quickfix",
@@ -849,24 +854,37 @@ class LspServer:
 
         logger.debug(json.dumps(message, indent=3))
 
+    def start_workspace_watch_files(self):
+        if self.workspace_file_watcher is None:
+            self.workspace_file_watcher = Observer()
+            self.workspace_file_watcher.start()
+
+        if self.workspace_file_watch_handler is None:
+            self.workspace_file_watch_handler = MultiFileHandler(self)
+
+    def stop_workspace_watch_files(self):
+        if self.workspace_file_watcher:
+            self.workspace_file_watcher.unschedule_all()
+            self.workspace_file_watcher.stop()
+
+            self.workspace_file_watcher = None
+            self.workspace_file_watch_handler = None
+
     def monitor_workspace_files(self, file_paths):
         if len(file_paths) > 0:
-            if self.workspace_file_watcher is None:
-                self.workspace_file_watcher = Observer()
-                self.workspace_file_watcher.start()
+            # Init workspace watch files vars.
+            self.start_workspace_watch_files()
 
-            multi_handler = MultiFileHandler(self)
-
-            watched_dirs = set()
-
+            # Add workspace file in monitor list.
             for file_path in file_paths:
-                multi_handler.add_file(file_path)
+                # Add file path in notify list.
+                self.workspace_file_watch_handler.add_file(file_path)
 
+                # Only monitor directory once.
                 target_dir = os.path.dirname(file_path)
-
-                if target_dir not in watched_dirs:
-                    self.workspace_file_watcher.schedule(multi_handler, target_dir, recursive=False)
-                    watched_dirs.add(target_dir)
+                if target_dir not in self.workspace_file_watch_handler.dir_path_dict:
+                    self.workspace_file_watcher.schedule(self.workspace_file_watch_handler, target_dir, recursive=False)
+                    self.workspace_file_watch_handler.add_dir(target_dir)
 
     def parse_workspace_watch_files(self, params):
         patterns = []
@@ -922,10 +940,7 @@ class LspServer:
         # We need shutdown LSP server when last file closed, to save system memory.
         if len(self.files) == 0:
             # Stop workspace file watcher.
-            if self.workspace_file_watcher:
-                self.workspace_file_watcher.unschedule_all()
-                self.workspace_file_watcher.stop()
-                self.workspace_file_watcher = None
+            self.stop_workspace_watch_files()
 
             self.message_queue.put({
                 "name": "server_process_exit",
