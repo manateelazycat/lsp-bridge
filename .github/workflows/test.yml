@@ -45,7 +45,7 @@ jobs:
         run: |
           # sudo apt-get install clangd-12
           # sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
-          pip install epc six basedpyright sexpdata
+          pip install epc six basedpyright sexpdata watchdog
           go install golang.org/x/tools/gopls@latest
           curl https://raw.githubusercontent.com/eruizc-dev/jdtls-launcher/master/install.sh | bash
         if: matrix.os == 'ubuntu-latest'
@@ -53,7 +53,7 @@ jobs:
       - name: Install Dependencies (Windows)
         run: |
           # choco install llvm
-          python -m pip install epc six basedpyright sexpdata
+          python -m pip install epc six basedpyright sexpdata watchdog
           go install golang.org/x/tools/gopls@latest
         if: matrix.os == 'windows-latest'
 
