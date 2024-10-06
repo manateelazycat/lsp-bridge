@@ -44,22 +44,25 @@ DEFAULT_BUFFER_SIZE = 100000000  # we need make buffer size big enough, avoid pi
 
 INLAY_HINT_REQUEST_ID_DICT = {}
 
-class WorkspaceWatchFileHandler(FileSystemEventHandler):
-    def __init__(self, lsp_server, target_file):
+class MultiFileHandler(FileSystemEventHandler):
+    def __init__(self, lsp_server):
         self.lsp_server = lsp_server
-        self.target_file = os.path.abspath(target_file)
+        self.file_handlers = {}
+
+    def add_file(self, file_path):
+        self.file_handlers[os.path.abspath(file_path)] = file_path
 
     def on_created(self, event):
-        if event.src_path == self.target_file:
-            self.lsp_server.send_workspace_did_change_watched_files(self.target_file, 1)
+        if not event.is_directory and event.src_path in self.file_handlers:
+            self.lsp_server.send_workspace_did_change_watched_files(event.src_path, 1)
 
     def on_modified(self, event):
-        if event.src_path == self.target_file:
-            self.lsp_server.send_workspace_did_change_watched_files(self.target_file, 2)
+        if not event.is_directory and event.src_path in self.file_handlers:
+            self.lsp_server.send_workspace_did_change_watched_files(event.src_path, 2)
 
     def on_deleted(self, event):
-        if event.src_path == self.target_file:
-            self.lsp_server.send_workspace_did_change_watched_files(self.target_file, 3)
+        if not event.is_directory and event.src_path in self.file_handlers:
+            self.lsp_server.send_workspace_did_change_watched_files(event.src_path, 3)
 
 class LspServerSender(MessageSender):
     def __init__(self, process: subprocess.Popen, server_name, project_name):
@@ -273,8 +276,7 @@ class LspServer:
 
         self.work_done_progress_title = ""
 
-        self.workspace_watch_files = []
-        self.workspace_file_watchers = []
+        self.workspace_file_watcher = None
 
         self.code_action_kinds = [
             "quickfix",
@@ -825,9 +827,9 @@ class LspServer:
         if "method" in message and message["method"] in ["client/registerCapability"]:
             try:
                 if message["params"]["registrations"][0]["id"] == "workspace/didChangeWatchedFiles":
-                    self.workspace_watch_files = self.parse_workspace_watch_files(message["params"])
-                    self.monitor_workspace_files(self.workspace_watch_files)
-                    log_time("Add workspace watch files: {}".format(self.workspace_watch_files))
+                    workspace_watch_files = self.parse_workspace_watch_files(message["params"])
+                    self.monitor_workspace_files(workspace_watch_files)
+                    log_time("Add workspace watch files: {}".format(workspace_watch_files))
             except:
                 log_time(traceback.format_exc())
 
@@ -848,16 +850,23 @@ class LspServer:
         logger.debug(json.dumps(message, indent=3))
 
     def monitor_workspace_files(self, file_paths):
-        for file_path in file_paths:
-            target_dir = os.path.dirname(file_path)
+        if len(file_paths) > 0:
+            if self.workspace_file_watcher is None:
+                self.workspace_file_watcher = Observer()
+                self.workspace_file_watcher.start()
 
-            if os.path.exists(target_dir):
-                event_handler = WorkspaceWatchFileHandler(self, file_path)
-                watcher = Observer()
-                self.workspace_file_watchers.append(watcher)
+            multi_handler = MultiFileHandler(self)
 
-                watcher.schedule(event_handler, target_dir, recursive=False)
-                watcher.start()
+            watched_dirs = set()
+
+            for file_path in file_paths:
+                multi_handler.add_file(file_path)
+
+                target_dir = os.path.dirname(file_path)
+
+                if target_dir not in watched_dirs:
+                    self.workspace_file_watcher.schedule(multi_handler, target_dir, recursive=False)
+                    watched_dirs.add(target_dir)
 
     def parse_workspace_watch_files(self, params):
         patterns = []
@@ -897,9 +906,12 @@ class LspServer:
                             patterns.append(full_pattern)
 
         # Remove duplicate file.
-        patterns = list(set(patterns))
+        paths = list(set(patterns))
 
-        return patterns
+        # Filter path that it's parent directory is not exist.
+        files = list(filter(lambda path: os.path.exists(os.path.dirname(path)), paths))
+
+        return files
 
     def close_file(self, filepath):
         # Send didClose notification when client close file.
@@ -910,13 +922,10 @@ class LspServer:
         # We need shutdown LSP server when last file closed, to save system memory.
         if len(self.files) == 0:
             # Stop workspace file watcher.
-            if len(self.workspace_file_watchers) > 0:
-                for watcher in self.workspace_file_watchers:
-                    # Stop watchdog watcher.
-                    watcher.stop()
-
-                self.workspace_watch_files = []
-                self.workspace_file_watchers = []
+            if self.workspace_file_watcher:
+                self.workspace_file_watcher.unschedule_all()
+                self.workspace_file_watcher.stop()
+                self.workspace_file_watcher = None
 
             self.message_queue.put({
                 "name": "server_process_exit",
