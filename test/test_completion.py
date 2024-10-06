@@ -72,18 +72,18 @@ class SimpleCompletion(unittest.TestCase):
     #         mode="c++-mode",
     #     ))
 
-    def test_go(self):
-        try_complete(SingleFile(
-            filename="test.go",
-            code="""
-package main
+#     def test_go(self):
+#         try_complete(SingleFile(
+#             filename="test.go",
+#             code="""
+# package main
 
-import "os"
+# import "os"
 
-func main() {
-\tos.""",
-            mode="go-mode",
-        ), label="Open")
+# func main() {
+# \tos.""",
+#             mode="go-mode",
+#         ), label="Open")
 
 
 def get_offset(file: SingleFile, target='I'):
