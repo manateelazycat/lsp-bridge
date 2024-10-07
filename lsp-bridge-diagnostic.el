@@ -347,7 +347,7 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
 
 (defun lsp-bridge-diagnostic-list ()
   (interactive)
-  (lsp-bridge-call-file-api "list_diagnostics"))
+  (lsp-bridge-call-file-api "list_diagnostics" lsp-bridge-diagnostic-hide-severities))
 
 (defun lsp-bridge-diagnostic--list (diagnostics)
   (let ((filepath acm-backend-lsp-filepath)
