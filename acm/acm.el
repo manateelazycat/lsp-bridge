@@ -95,6 +95,7 @@
 (require 'acm-backend-yas)
 (require 'acm-backend-elisp)
 (require 'acm-backend-lsp)
+(require 'acm-backend-lsp-workspace-symbol)
 (require 'acm-backend-path)
 (require 'acm-backend-search-file-words)
 (require 'acm-backend-search-sdcv-words)
@@ -196,6 +197,7 @@
 
 (defcustom acm-completion-mode-candidates-merge-order '("elisp-candidates"
                                                         "lsp-candidates"
+                                                        "lsp-workspace-symbol-candidates"
                                                         "capf-candidates"
                                                         "jupyter-candidates"
                                                         "ctags-candidates"
@@ -467,6 +469,7 @@ Only calculate template candidate when type last character."
          (mode-candidates-min-index 2)
          (template-candidates-min-index 2)
          lsp-candidates
+         lsp-workspace-symbol-candidates
          capf-candidates
          path-candidates
          yas-candidates
@@ -518,11 +521,13 @@ Only calculate template candidate when type last character."
           (setq ctags-candidates (unless (acm-in-comment-p) (acm-backend-ctags-candidates keyword))))
         ;; Fetch syntax completion candidates.
         (setq lsp-candidates (unless (acm-in-comment-p) (acm-backend-lsp-candidates keyword)))
+        (setq lsp-workspace-symbol-candidates (unless (acm-in-comment-p) (acm-backend-lsp-workspace-symbol-candidates keyword)))
         (setq mode-candidates
               (apply #'append (mapcar (lambda (mode-candidate-name)
                                         (pcase mode-candidate-name
                                           ("elisp-candidates" (unless (acm-in-comment-p) (acm-backend-elisp-candidates keyword)))
                                           ("lsp-candidates" lsp-candidates)
+                                          ("lsp-workspace-symbol-candidates" lsp-workspace-symbol-candidates)
                                           ("capf-candidates" capf-candidates)
                                           ("jupyter-candidates" jupyter-candidates)
                                           ("ctags-candidates" ctags-candidates)

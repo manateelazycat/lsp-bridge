@@ -169,6 +169,7 @@
     ("capf" . ("material" "infinity" "#f47b7b"))
     ("jupyter" . ("material" "exponent" "#f47b7b"))
     ("copilot" . ("octicons" "copilot" "#808080"))
+    ("workspace-symbol" . ("material" "shark-fin-outline" "#0085c3"))
     (t . ("material" "smoking-pipe" "#90cef1"))))
 
 (defvar acm-icon-cache (make-hash-table :test 'equal))

@@ -240,9 +240,17 @@ class FileAction:
         if self.multi_servers:
             for lsp_server in self.multi_servers.values():
                 if lsp_server.server_info["name"] in self.multi_servers_info["completion"]:
+                    # Send code completion request.
                     self.send_server_request(lsp_server, "completion", lsp_server, position, before_char, prefix, version)
+
+                    # Send workspace symbol completion request.
+                    self.send_server_request(lsp_server, "completion_workspace_symbol", lsp_server, prefix)
         else:
+            # Send code completion request.
             self.send_server_request(self.single_server, "completion", self.single_server, position, before_char, prefix, version)
+
+            # Send workspace symbol completion request.
+            self.send_server_request(self.single_server, "completion_workspace_symbol", self.single_server, prefix)
 
     def try_formatting(self, start, end, *args, **kwargs):
         if self.multi_servers:
