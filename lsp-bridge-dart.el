@@ -98,29 +98,33 @@
 
   (setq-local lsp-bridge-dart-closing-label-overlays nil))
 
+(defvar lsp-bridge-dart-closing-labels-lock (make-mutex "lsp-bridge-dart-closing-labels-lock"))
+
 (defun lsp-bridge-dart-closing-labels--render (filepath filehost closing-labels)
-  (lsp-bridge--with-file-buffer
-      filepath filehost
-      ;; Hide previous overlays first.
-      (lsp-bridge-dart-hide-closing-label-overlays)
+  ;; lsp-bridge is too fast, use locks to avoid interface disorder issues caused by multi-threaded rendering of overlays
+  (with-mutex lsp-bridge-dart-closing-labels-lock
+    (lsp-bridge--with-file-buffer
+        filepath filehost
+        ;; Hide previous overlays first.
+        (lsp-bridge-dart-hide-closing-label-overlays)
 
-      ;; Render new overlays.
-      (save-excursion
-        (save-restriction
-          (dolist (closing-label closing-labels)
-            (let* ((label (plist-get closing-label :label))
-                   (range (plist-get closing-label :range))
-                   (end (plist-get range :end)))
-              (goto-char (acm-backend-lsp-position-to-point end))
+        ;; Render new overlays.
+        (save-excursion
+          (save-restriction
+            (dolist (closing-label closing-labels)
+              (let* ((label (plist-get closing-label :label))
+                     (range (plist-get closing-label :range))
+                     (end (plist-get range :end)))
+                (goto-char (acm-backend-lsp-position-to-point end))
 
-              ;; Looks dart's closing label always at end of line.
-              (end-of-line)
+                ;; Looks dart's closing label always at end of line.
+                (end-of-line)
 
-              (let* ((overlay (make-overlay (point) (1+ (point)) nil t)))
-                (overlay-put overlay 'before-string (propertize (concat " " label) 'face 'lsp-bridge-dart-closing-label-face))
-                (overlay-put overlay 'evaporate t) ; NOTE, `evaporate' is import
-                (push overlay lsp-bridge-dart-closing-label-overlays)
-                )))))))
+                (let* ((overlay (make-overlay (point) (1+ (point)) nil t)))
+                  (overlay-put overlay 'before-string (propertize (concat " " label) 'face 'lsp-bridge-dart-closing-label-face))
+                  (overlay-put overlay 'evaporate t) ; NOTE, `evaporate' is import
+                  (push overlay lsp-bridge-dart-closing-label-overlays)
+                  ))))))))
 
 (provide 'lsp-bridge-dart)
 

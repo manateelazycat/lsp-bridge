@@ -217,65 +217,69 @@ Faces to use for semantic token modifiers.")
       (delete-overlay ov)
       (remhash key lsp-bridge-semantic-tokens--overlays))))
 
-(defun lsp-bridge-semantic-tokens--update (buffer-name old-tokens new-tokens)
+(defvar lsp-bridge-semantic-tokens-lock (make-mutex "lsp-bridge-semantic-tokens-lock"))
+
+(defun lsp-bridge-semantic-tokens--render (buffer-name old-tokens new-tokens)
   "Update semantic tokens."
-  (with-current-buffer buffer-name
-    (with-silent-modifications
-      (lsp-bridge-semantic-tokens--delete-overlays old-tokens)
-      (save-mark-and-excursion
-        (save-restriction
-          (widen)
-          (goto-char (point-min))
-          (let ((current-line 0)
-                (line-start-pos (point))
-                (colum 0)
-                (line-delta)
-                (token-begin)
-                (token-end)
-                (ov))
-            (dolist (token new-tokens)
-              (setq line-delta (nth 0 token))
-              (unless (= line-delta 0)
-                (forward-line line-delta)
-                (setq line-start-pos (point))
-                (setq colum 0)
-                (setq current-line (+ current-line line-delta)))
-              (setq colum (+ colum (nth 1 token)))
-              (setq token-begin (+ line-start-pos colum))
-              (setq token-end (min (line-end-position)
-                                   (+ token-begin (nth 2 token))))
-              (setq ov (make-overlay token-begin token-end))
+  ;; lsp-bridge is too fast, use locks to avoid interface disorder issues caused by multi-threaded rendering of overlays
+  (with-mutex lsp-bridge-semantic-tokens-lock
+    (with-current-buffer buffer-name
+     (with-silent-modifications
+       (lsp-bridge-semantic-tokens--delete-overlays old-tokens)
+       (save-mark-and-excursion
+         (save-restriction
+           (widen)
+           (goto-char (point-min))
+           (let ((current-line 0)
+                 (line-start-pos (point))
+                 (colum 0)
+                 (line-delta)
+                 (token-begin)
+                 (token-end)
+                 (ov))
+             (dolist (token new-tokens)
+               (setq line-delta (nth 0 token))
+               (unless (= line-delta 0)
+                 (forward-line line-delta)
+                 (setq line-start-pos (point))
+                 (setq colum 0)
+                 (setq current-line (+ current-line line-delta)))
+               (setq colum (+ colum (nth 1 token)))
+               (setq token-begin (+ line-start-pos colum))
+               (setq token-end (min (line-end-position)
+                                    (+ token-begin (nth 2 token))))
+               (setq ov (make-overlay token-begin token-end))
 
-              ;; Apply face.
-              (let* ((last-modifier-face-index (car (last (nth 4 token))))
-                     (token-face (if last-modifier-face-index
-                                     (cdr (aref lsp-bridge-semantic-tokens-type-modifier-faces last-modifier-face-index))
-                                   (cdr (aref lsp-bridge-semantic-tokens-type-faces (nth 3 token)))))
-                     (token-face-has-foreground (lsp-bridge-semantic-tokens-get-face-foreground token-face)))
-                (if token-face-has-foreground
-                    ;; Override Emacs default face if token face has foreground
-                    (if last-modifier-face-index
-                        (overlay-put ov 'face (cdr (aref lsp-bridge-semantic-tokens-type-modifier-faces last-modifier-face-index)))
-                      (overlay-put ov 'face (cdr (aref lsp-bridge-semantic-tokens-type-faces (nth 3 token)))))
-                  ;; Otherwise use combine policy, example token face's bold attribute combine with Emacs default face
-                  (let ((faces-alist (cons (aref lsp-bridge-semantic-tokens-type-faces (nth 3 token))
-                                           (mapcar #'(lambda (face-index)
-                                                       (aref lsp-bridge-semantic-tokens-type-modifier-faces face-index))
-                                                   (nth 4 token))))
-                        (combine-face-name "lsp-bridge-semantic-tokens-combine")
-                        (faces))
-                    (dolist (face-alist faces-alist)
-                      (setq combine-face-name (concat combine-face-name "-" (car face-alist)))
-                      (push (cdr face-alist) faces))
-                    (let ((combine-face-symbol (intern combine-face-name)))
-                      (unless (facep combine-face-symbol)
-                        (make-empty-face combine-face-symbol)
-                        (face-spec-set combine-face-symbol
-                                       (lsp-bridge-semantic-tokens--combine-faces faces)))
-                      (overlay-put ov 'face combine-face-symbol)))))
+               ;; Apply face.
+               (let* ((last-modifier-face-index (car (last (nth 4 token))))
+                      (token-face (if last-modifier-face-index
+                                      (cdr (aref lsp-bridge-semantic-tokens-type-modifier-faces last-modifier-face-index))
+                                    (cdr (aref lsp-bridge-semantic-tokens-type-faces (nth 3 token)))))
+                      (token-face-has-foreground (lsp-bridge-semantic-tokens-get-face-foreground token-face)))
+                 (if token-face-has-foreground
+                     ;; Override Emacs default face if token face has foreground
+                     (if last-modifier-face-index
+                         (overlay-put ov 'face (cdr (aref lsp-bridge-semantic-tokens-type-modifier-faces last-modifier-face-index)))
+                       (overlay-put ov 'face (cdr (aref lsp-bridge-semantic-tokens-type-faces (nth 3 token)))))
+                   ;; Otherwise use combine policy, example token face's bold attribute combine with Emacs default face
+                   (let ((faces-alist (cons (aref lsp-bridge-semantic-tokens-type-faces (nth 3 token))
+                                            (mapcar #'(lambda (face-index)
+                                                        (aref lsp-bridge-semantic-tokens-type-modifier-faces face-index))
+                                                    (nth 4 token))))
+                         (combine-face-name "lsp-bridge-semantic-tokens-combine")
+                         (faces))
+                     (dolist (face-alist faces-alist)
+                       (setq combine-face-name (concat combine-face-name "-" (car face-alist)))
+                       (push (cdr face-alist) faces))
+                     (let ((combine-face-symbol (intern combine-face-name)))
+                       (unless (facep combine-face-symbol)
+                         (make-empty-face combine-face-symbol)
+                         (face-spec-set combine-face-symbol
+                                        (lsp-bridge-semantic-tokens--combine-faces faces)))
+                       (overlay-put ov 'face combine-face-symbol)))))
 
-              (puthash (list current-line colum (nth 2 token) (nth 3 token) (nth 4 token))
-                       ov lsp-bridge-semantic-tokens--overlays))))))))
+               (puthash (list current-line colum (nth 2 token) (nth 3 token) (nth 4 token))
+                        ov lsp-bridge-semantic-tokens--overlays)))))))))
 
 
 (defun lsp-bridge-semantic-tokens--request-1 (from to use-cache)

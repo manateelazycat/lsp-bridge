@@ -67,7 +67,7 @@ class SemanticTokens(Handler):
         (new_tokens, old_tokens) = self.calc_diff_tokens(self.render_tokens, render_tokens)
 
         if len(new_tokens) != 0 or len(old_tokens) != 0:
-            eval_in_emacs("lsp-bridge-semantic-tokens--update", self.buffer_name, list(old_tokens), self.absolute_line_to_relative(new_tokens))
+            eval_in_emacs("lsp-bridge-semantic-tokens--render", self.buffer_name, list(old_tokens), self.absolute_line_to_relative(new_tokens))
         self.render_tokens = render_tokens
 
     def get_faces_index(self, type_index, type_modifier_index):
