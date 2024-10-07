@@ -411,6 +411,13 @@ class LspServer:
                 },
                 "inlayHint": {
                     "dynamicRegistration": False
+                },
+                "hover": {
+                    "contentFormat": [
+                        "markdown",
+                        "plaintext"
+                    ],
+                    "dynamicRegistration": True
                 }
             },
             "window": {
