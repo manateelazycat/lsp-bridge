@@ -460,6 +460,12 @@ Only calculate template candidate when type last character."
      (cancel-timer ,timer)
      (setq ,timer nil)))
 
+(defun acm-remove-duplicate-candidates (candidates lsp-labels)
+  "Remove elements from CANDIDATES whose labels exist in LSP-LABELS."
+  (cl-remove-if (lambda (candidate)
+                  (member (plist-get candidate :label) lsp-labels))
+                candidates))
+
 (defun acm-update-candidates ()
   (let* ((keyword (acm-get-input-prefix))
          (char-before-keyword (save-excursion
@@ -470,6 +476,7 @@ Only calculate template candidate when type last character."
          (template-candidates-min-index 2)
          lsp-candidates
          lsp-workspace-symbol-candidates
+         file-words-candidates
          capf-candidates
          path-candidates
          yas-candidates
@@ -522,6 +529,13 @@ Only calculate template candidate when type last character."
         ;; Fetch syntax completion candidates.
         (setq lsp-candidates (unless (acm-in-comment-p) (acm-backend-lsp-candidates keyword)))
         (setq lsp-workspace-symbol-candidates (unless (acm-in-comment-p) (acm-backend-lsp-workspace-symbol-candidates keyword)))
+        (setq file-words-candidates (acm-backend-search-file-words-candidates keyword))
+
+        (let ((lsp-labels (mapcar (lambda (candidate) (plist-get candidate :label)) lsp-candidates)))
+          ;; Remove duplicates from both `lsp-workspace-symbol-candidates` and `file-words-candidates`
+          (setq lsp-workspace-symbol-candidates (acm-remove-duplicate-candidates lsp-workspace-symbol-candidates lsp-labels))
+          (setq file-words-candidates (acm-remove-duplicate-candidates file-words-candidates lsp-labels)))
+
         (setq mode-candidates
               (apply #'append (mapcar (lambda (mode-candidate-name)
                                         (pcase mode-candidate-name
@@ -533,7 +547,7 @@ Only calculate template candidate when type last character."
                                           ("ctags-candidates" ctags-candidates)
                                           ("citre-candidates" citre-candidates)
                                           ("org-roam-candidates" org-roam-candidates)
-                                          ("file-words-candidates" (acm-backend-search-file-words-candidates keyword))
+                                          ("file-words-candidates" file-words-candidates)
                                           ("telega-candidates" (acm-backend-telega-candidates keyword))
                                           ))
                                       acm-completion-mode-candidates-merge-order)))
