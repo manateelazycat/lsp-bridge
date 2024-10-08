@@ -88,6 +88,11 @@
   "LSP backend for acm."
   :group 'acm)
 
+(defcustom acm-enable-lsp-workspace-symbol nil
+  "Popup LSP workspace symbol completions when this option is turn on."
+  :type 'boolean
+  :group 'acm-backend-lsp-workspace-symbol)
+
 (defcustom acm-backend-lsp-workspace-symbol-candidate-min-length 0
   "Minimal length of candidate."
   :type 'integer

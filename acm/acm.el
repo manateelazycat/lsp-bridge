@@ -528,14 +528,17 @@ Only calculate template candidate when type last character."
           (setq ctags-candidates (unless (acm-in-comment-p) (acm-backend-ctags-candidates keyword))))
         ;; Fetch syntax completion candidates.
         (setq lsp-candidates (unless (acm-in-comment-p) (acm-backend-lsp-candidates keyword)))
-        (setq lsp-workspace-symbol-candidates (unless (acm-in-comment-p) (acm-backend-lsp-workspace-symbol-candidates keyword)))
         (setq file-words-candidates (acm-backend-search-file-words-candidates keyword))
+        (when acm-enable-lsp-workspace-symbol
+          (setq lsp-workspace-symbol-candidates (unless (acm-in-comment-p) (acm-backend-lsp-workspace-symbol-candidates keyword))))
 
         (let ((lsp-labels (mapcar (lambda (candidate) (plist-get candidate :label)) lsp-candidates)))
           ;; Remove duplicates from both `lsp-workspace-symbol-candidates` and `file-words-candidates`
           (setq lsp-workspace-symbol-candidates (acm-remove-duplicate-candidates lsp-workspace-symbol-candidates lsp-labels))
           (setq file-words-candidates (acm-remove-duplicate-candidates file-words-candidates lsp-labels)))
 
+
+          
         (setq mode-candidates
               (apply #'append (mapcar (lambda (mode-candidate-name)
                                         (pcase mode-candidate-name

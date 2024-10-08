@@ -327,6 +327,7 @@ lsp-bridge provides support for more than two language servers for many language
 - `acm-quick-access-use-number-select`: Whether to use number keys for quick selection of candidate words, default is off, turning on this option may sometimes interfere with number input or accidentally select candidate words
 - `acm-enable-yas`: yasnippet completion, enable by default
 - `acm-enable-citre`: Integration with [citre(ctags)](https://github.com/universal-ctags/citre). Enable this to add citre (ctags) backend (disabled by default)
+- `acm-enable-lsp-workspace-symbol`: Enable LSP workspace symbol completion, disabled by default
 - `acm-doc-frame-max-lines`: Max line number of help documentation, default is 20
 - `acm-candidate-match-function`: lsp-bridge frontend filter algorithm for candidates, options include `'regexp-quote`, `'orderless-flex`, `'orderless-literal`, `'orderless-prefixes`, `'orderless-regexp`, `'orderless-initialism`, default is `regexp-quote`, orderless-* started algorithms require additional installation of [orderless](https://github.com/oantolin/orderless)
 - `acm-completion-backend-merge-order`: Customize the order of the completion backends, default order is: first part of mode candidate, first part of template candidates, tabnine/copilot/codeium, second part of template candidates, second part of mode candidates, set `acm-completion-mode-candidates-merge-order` customize mode candidates order 
