@@ -2188,7 +2188,8 @@ Then we need call `lsp-bridge--set-mark-ring-in-new-buffer' in new buffer after 
       (insert value)
       (setq-local truncate-lines nil)
       (acm-markdown-render-content t)
-      (read-only-mode 1))
+      (read-only-mode 1)
+      (goto-char (point-min)))
     (display-buffer buffer 'display-buffer-reuse-window)))
 
 (defvar lsp-bridge-popup-documentation-frame nil)
