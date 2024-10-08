@@ -299,11 +299,15 @@ class LspServer:
         self.save_include_text = False
 
         # Start LSP server.
+        cwd = self.project_path
+        if os.path.isfile(self.project_path): # single file
+            cwd = os.path.dirname(self.project_path)
         self.lsp_subprocess = subprocess.Popen(self.server_info["command"],
                                                bufsize=DEFAULT_BUFFER_SIZE,
                                                stdin=PIPE,
                                                stdout=PIPE,
-                                               stderr=stderr)
+                                               stderr=stderr,
+                                               cwd=cwd)
 
         # Two separate thread (read/write) to communicate with LSP server.
         self.receiver = LspServerReceiver(self.lsp_subprocess, self.server_info["name"])
