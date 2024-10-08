@@ -521,7 +521,8 @@ Only calculate template candidate when type last character."
           (setq ctags-candidates (unless (acm-in-comment-p) (acm-backend-ctags-candidates keyword))))
         ;; Fetch syntax completion candidates.
         (setq lsp-candidates (unless (acm-in-comment-p) (acm-backend-lsp-candidates keyword)))
-        (setq lsp-workspace-symbol-candidates (unless (acm-in-comment-p) (acm-backend-lsp-workspace-symbol-candidates keyword)))
+        (when acm-enable-lsp-workspace-symbol
+          (setq lsp-workspace-symbol-candidates (unless (acm-in-comment-p) (acm-backend-lsp-workspace-symbol-candidates keyword))))
         (setq mode-candidates
               (apply #'append (mapcar (lambda (mode-candidate-name)
                                         (pcase mode-candidate-name

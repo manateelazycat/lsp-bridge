@@ -323,6 +323,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 - `acm-quick-access-use-number-select`: 是否用数字键快速选择候选词， 默认关闭， 打开这个选项会导致有时候干扰数字输入或误选候选词
 - `acm-enable-yas`: yasnippet 补全， 默认打开
 - `acm-enable-citre`: [citre(ctags)](https://github.com/universal-ctags/citre) 补全， 默认关闭
+- `acm-enable-lsp-workspace-symbol`: LSP 符号补全， 默认关闭
 - `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是 20
 - `acm-candidate-match-function`: lsp-bridge 前端对补全候选词的过滤算法， 选项有 `'regexp-quote`, `'orderless-flex`, `'orderless-literal`, `'orderless-prefixes`, `'orderless-regexp`, `'orderless-initialism`, 默认为 `regexp-quote`， orderless-\* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
 - `acm-completion-backend-merge-order`: 补全后端的显示顺序， 默认是按照模式补全前半部分、 模板补全前半部分、 TabNine/Copilot/Codeium、 模板补全后半部分、 模式补全后半部分的顺序显示， 你可以根据你的需求调整补全后端的显示顺序， 如果要自定义模式补全的顺序， 请自定义 `acm-completion-mode-candidates-merge-order`
