@@ -15,13 +15,12 @@ class Hover(Handler):
         return dict(position=position)
 
     def parse_hover_contents(self, contents, render_strings):
-        content_type = type(contents)
-        if content_type == str:
+        if isinstance(contents, str):
             if contents.startswith("```"):
                 render_strings.append(contents)
             else:
                 render_strings.append(make_code_block("text", contents))
-        elif content_type == dict:
+        elif isinstance(contents, dict):
             if "kind" in contents:
                 # Some language servers will return plaintext as the kind with the markdown format as value, such as erlang_ls
                 if contents["kind"] == "markdown" or contents["kind"] == "plaintext":
@@ -34,7 +33,7 @@ class Hover(Handler):
                     ))
             elif "language" in contents:
                 render_strings.append(make_code_block(contents["language"], contents["value"]))
-        elif content_type == list:
+        elif isinstance(contents, list):
             language = ""
             for item in contents:
                 if isinstance(item, dict):
