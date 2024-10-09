@@ -176,6 +176,7 @@ Setting this to nil or 0 will turn off the heartbeat mechanism."
 
 (defcustom lsp-bridge-completion-stop-commands
   '("undo-tree-undo" "undo-tree-redo"
+    "undo-tree-visualize-redo" "undo-tree-visualize-undo"
     "kill-region" "delete-block-backward"
     "python-black-buffer" "acm-complete-or-expand-yas-snippet" "acm-insert-number-or-complete-candiate"
     "yank" "string-rectangle" "query-replace" "grammatical-edit-unwrap")
@@ -1559,12 +1560,8 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge--not-follow-complete ()
   "Hide completion if last command is `acm-complete'."
   (or
-   (not (member (format "%s" last-command) '("acm-complete"
-                                             "acm-complete-quick-access"
-                                             "undo-tree-visualize-redo"
-                                             "undo-tree-visualize-undo")))
-   (member (format "%s" this-command) '("self-insert-command"
-                                        "org-self-insert-command"))
+   (not (member (format "%s" last-command) '("acm-complete" "acm-complete-quick-access")))
+   (member (format "%s" this-command) '("self-insert-command" "org-self-insert-command"))
    ))
 
 (defun lsp-bridge--not-only-blank-before-cursor ()
