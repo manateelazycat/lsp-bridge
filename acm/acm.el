@@ -975,8 +975,9 @@ The key of candidate will change between two LSP results."
             ;; Insert documentation and turn on wrap line.
             (with-current-buffer (get-buffer-create acm-doc-buffer)
               (read-only-mode -1)
-              (erase-buffer)
-              (insert doc)
+              (when (not (string-equal doc acm-markdown-render-doc))
+                (erase-buffer)
+                (insert doc))
               (visual-line-mode 1))
 
             ;; Only render markdown styling when idle 200ms, because markdown render is expensive.
