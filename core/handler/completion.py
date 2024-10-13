@@ -85,16 +85,21 @@ class Completion(Handler):
         # Optimizing for Rust
         try:
             if (self.method_server_name == "rust-analyzer") and ("(\u2026)" in label or "()" in label): # '\u2026' is the unicode char: '…'
-                # When finding an ellipsis in 'label'
-                # replace 'fn' with function name in 'label'
                 function_name = label.split('(')[0]
-                detail_label = re.sub(r'\bfn\b', function_name, detail)
 
-                # Remove `pub` or `pub const` before function name.
-                match = re.search(r'\b(\w+\s*\([^)]*\)\s*->\s*\w+)\b', detail_label)
-                if match:
-                    # If a match is successful, pick up the captured group
-                    detail_label = match.group(1)
+                match_fn = re.search(r'\bfn\b', function_name)
+                if match_fn:
+                    # When finding an ellipsis in 'label'
+                    # replace 'fn' with function name in 'label'
+                    detail_label = re.sub(r'\bfn\b', function_name, detail)
+
+                    # Remove `pub` or `pub const` before function name.
+                    match = re.search(r'\b(\w+\s*\([^)]*\)\s*->\s*\w+)\b', detail_label)
+                    if match:
+                        # If a match is successful, pick up the captured group
+                        detail_label = match.group(1)
+                else:
+                    detail_label = function_name
         except:
             pass
 
