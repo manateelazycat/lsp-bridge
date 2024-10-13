@@ -71,7 +71,8 @@ class SemanticTokens(Handler):
         self.render_tokens = render_tokens
 
     def get_faces_index(self, type_index, type_modifier_index):
-        type_name = self.file_action.single_server.semantic_tokens_provider["legend"]["tokenTypes"][type_index]
+        lsp_server = self.file_action.get_match_lsp_servers("semantic_tokens")
+        type_name = lsp_server.semantic_tokens_provider["legend"]["tokenTypes"][type_index]
         ignore_modifier = self.is_ignore_modifier(type_name)
         if type_modifier_index == 0 and not ignore_modifier:
             return None
@@ -107,7 +108,8 @@ class SemanticTokens(Handler):
             else:
                 return ()
 
-        token_modifiers = self.file_action.single_server.semantic_tokens_provider["legend"]["tokenModifiers"]
+        lsp_server = self.file_action.get_match_lsp_servers("semantic_tokens")
+        token_modifiers = lsp_server.semantic_tokens_provider["legend"]["tokenModifiers"]
         type_modifier_names = [token_modifiers[index] for index in self.find_ones(type_modifier_index)]
         type_modifier_faces_index = []
         for name in type_modifier_names:
