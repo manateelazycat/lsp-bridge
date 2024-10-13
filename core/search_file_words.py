@@ -164,12 +164,12 @@ class SearchFileWords:
                     for search_file in search_files:
                         try:
                             if search_file in search_content_dict:
-                                words = set(re.findall("[\w|-]+", search_content_dict[search_file]))
+                                words = set(re.findall(r"[\w|-]+", search_content_dict[search_file]))
                             else:
-                                words = set(re.findall("[\w|-]+", open(search_file).read()))
+                                words = set(re.findall(r"[\w|-]+", open(search_file).read()))
                         except (FileNotFoundError, UnicodeDecodeError):
                             continue
-                        filter_words = set(map(lambda word: re.sub('[^A-Za-z0-9-_]+', '', word),
+                        filter_words = set(map(lambda word: re.sub(r'[^A-Za-z0-9-_]+', '', word),
                                                set(filter(self.filter_word, words))))
                         filter_words.discard("")
                         self.files[search_file] = filter_words
