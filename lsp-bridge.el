@@ -2386,19 +2386,9 @@ Default is `bottom-right', you can choose other value: `top-left', `top-right', 
                    (not (file-exists-p (buffer-file-name))))
           (save-buffer)))
 
-      (setq-local acm-backend-lsp-server-command-exist t)
-      (setq-local acm-backend-lsp-cache-candidates nil)
-      (setq-local acm-backend-lsp-completion-position nil)
-      (setq-local acm-backend-lsp-completion-trigger-characters nil)
-      (setq-local acm-backend-lsp-server-names nil)
-      (setq-local acm-backend-lsp-filepath (lsp-bridge-get-buffer-truename))
-      (setq-local acm-backend-lsp-items (make-hash-table :test 'equal))
-
-      (setq-local acm-backend-lsp-workspace-symbol-cache-candidates nil)
-      (setq-local acm-backend-lsp-workspace-symbol-completion-position nil)
-      (setq-local acm-backend-lsp-workspace-symbol-completion-trigger-characters nil)
-      (setq-local acm-backend-lsp-workspace-symbol-server-names nil)
-      (setq-local acm-backend-lsp-workspace-symbol-items (make-hash-table :test 'equal))
+      ;; Init backends.
+      (acm-backend-lsp-init)
+      (acm-backend-lsp-workspace-symbol-init)
 
       (when lsp-bridge-enable-signature-help
         (acm-run-idle-func lsp-bridge-signature-help-timer lsp-bridge-signature-help-fetch-idle 'lsp-bridge-signature-help-fetch))
