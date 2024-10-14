@@ -407,6 +407,8 @@ user more freedom to use rg with special arguments."
     ;; Highlight references.
     (goto-char (point-min))
     (while (re-search-forward "\033\\[94m\\([^\033]*\\)\033\\[0m" nil t)
+      ;; We need set keyword when popup references
+      (setf (lsp-bridge-ref-search-keyword lsp-bridge-ref-cur-search) (match-string 1))
       (replace-match (concat (propertize (match-string 1)
                                          'face nil 'font-lock-face 'lsp-bridge-ref-font-lock-match))
                      t t))
