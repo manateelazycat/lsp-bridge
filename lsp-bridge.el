@@ -493,8 +493,8 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
   "Default LSP server for C#, you can choose `omnisharp-mono', `omnisharp-dotnet' or `csharp-ls'."
   :type 'string)
 
-(defcustom lsp-bridge-nix-lsp-server "rnix-lsp"
-  "Default LSP server for nix, you can choose `rnix-lsp', `nixd' or `nil'."
+(defcustom lsp-bridge-nix-lsp-server "nixd"
+  "Default LSP server for nix, you can choose `nixd' `rnix-lsp' or `nil'."
   :type 'string)
 
 (defcustom lsp-bridge-markdown-lsp-server "vale-ls"
