@@ -114,6 +114,7 @@
                                         anaconda-mode
                                         redis-mode
                                         lisp-mode
+                                        org-mode
                                         )
   "The mode list to support capf."
   :type 'cons)

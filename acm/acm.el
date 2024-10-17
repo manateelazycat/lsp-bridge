@@ -377,27 +377,28 @@ So we use `minor-mode-overriding-map-alist' to override key, make sure all keys 
        (<= (match-beginning 2) (point))))
 
 (defun acm-get-input-prefix-bound ()
-  (pcase acm-input-bound-style
-    ("symbol"
-     (bounds-of-thing-at-point 'symbol))
-    ("org-roam"
-     (when (org-in-regexp org-roam-bracket-completion-re 1)
-       (cons (match-beginning 2)
-             (match-end 2))))
-    ("string"
-     (cons (point)
-           (save-excursion
-             (if (search-backward-regexp "\\s-" (point-at-bol) t)
-                 (progn
-                   (forward-char)
-                   (point))
-               (point-at-bol)))))
-    ("ascii"
-     (when-let ((bound (bounds-of-thing-at-point 'symbol)))
-       (let* ((keyword (buffer-substring-no-properties (car bound) (cdr bound)))
-              (offset (or (string-match "[[:nonascii:]]+" (reverse keyword))
-                          (length keyword))))
-         (cons (- (cdr bound) offset) (cdr bound)))))))
+  (cond
+   ((or (equal "string" acm-input-bound-style)
+        (derived-mode-p 'org-mode))
+    (cons (point)
+          (save-excursion
+            (if (search-backward-regexp "\\s-" (point-at-bol) t)
+                (progn
+                  (forward-char)
+                  (point))
+              (point-at-bol)))))
+   ((equal "symbol" acm-input-bound-style)
+    (bounds-of-thing-at-point 'symbol))
+   ((equal "org-roam" acm-input-bound-style)
+    (when (org-in-regexp org-roam-bracket-completion-re 1)
+      (cons (match-beginning 2)
+            (match-end 2))))
+   ((equal "ascii" acm-input-bound-style)
+    (when-let ((bound (bounds-of-thing-at-point 'symbol)))
+      (let* ((keyword (buffer-substring-no-properties (car bound) (cdr bound)))
+             (offset (or (string-match "[[:nonascii:]]+" (reverse keyword))
+                         (length keyword))))
+        (cons (- (cdr bound) offset) (cdr bound)))))))
 
 (defun acm-get-input-prefix ()
   "Get user input prefix."
@@ -538,7 +539,7 @@ Only calculate template candidate when type last character."
           (setq file-words-candidates (acm-remove-duplicate-candidates file-words-candidates lsp-labels)))
 
 
-          
+
         (setq mode-candidates
               (apply #'append (mapcar (lambda (mode-candidate-name)
                                         (pcase mode-candidate-name
