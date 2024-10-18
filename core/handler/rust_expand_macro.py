@@ -12,4 +12,11 @@ class RustExpandMacro(Handler):
         return dict(position=position)
 
     def process_response(self, response: Union[dict, list]) -> None:
-        eval_in_emacs("lsp-bridge-rust-expand-macro--update", response["name"], response["expansion"])
+        if response is None:
+            print("Error: Received None response from rust-analyzer")
+            return
+
+        if "name" in response and "expansion" in response:
+            eval_in_emacs("lsp-bridge-rust-expand-macro--update", response["name"], response["expansion"])
+        else:
+            print(f"Error: Response missing 'name' or 'expansion' keys. Response: {response}")
