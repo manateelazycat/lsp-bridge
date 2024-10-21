@@ -2783,7 +2783,8 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
                                               all-text
                                               (not indent-tabs-mode)
                                               (acm-get-input-prefix)
-                                              language))
+                                              language
+                                              (buffer-file-name)))
       (lsp-bridge-call-async "codeium_complete"
                              (1- (point))
                              (symbol-name major-mode)
@@ -2791,7 +2792,8 @@ We need exclude `markdown-code-fontification:*' buffer in `lsp-bridge-monitor-be
                              all-text
                              (not indent-tabs-mode)
                              (acm-get-input-prefix)
-                             language))))
+                             language
+                             (buffer-file-name)))))
 
 (defun lsp-bridge-copilot-complete ()
   (interactive)

@@ -955,8 +955,8 @@ class LspBridge:
         self.copilot.complete(position, editor_mode, file_path, relative_path, tab_size, text, insert_spaces)
 
     @threaded
-    def codeium_complete(self, cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language):
-        self.codeium.complete(cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language)
+    def codeium_complete(self, cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language, file_path):
+        self.codeium.complete(cursor_offset, editor_language, tab_size, text, insert_spaces, prefix, language, file_path)
 
     def codeium_completion_accept(self, id):
         self.codeium.accept(id)
