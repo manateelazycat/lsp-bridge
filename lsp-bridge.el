@@ -1959,7 +1959,9 @@ Off by default."
     (lsp-bridge--set-mark-ring-in-new-buffer))
    (t
     (setq-local lsp-bridge-jump-to-def-in-other-window nil)
-    (lsp-bridge-call-file-api "find_define" (lsp-bridge--position)))))
+    (if (lsp-bridge-has-lsp-server-p)
+        (lsp-bridge-call-file-api "find_define" (lsp-bridge--position))
+      (lsp-bridge-find-def-fallback (lsp-bridge--position))))))
 
 (defun lsp-bridge-find-def-other-window ()
   (interactive)
@@ -1970,7 +1972,9 @@ Off by default."
     (lsp-bridge--set-mark-ring-in-new-buffer))
    (t
     (setq-local lsp-bridge-jump-to-def-in-other-window t)
-    (lsp-bridge-call-file-api "find_define" (lsp-bridge--position)))))
+    (if (lsp-bridge-has-lsp-server-p)
+        (lsp-bridge-call-file-api "find_define" (lsp-bridge--position))
+      (lsp-bridge-find-def-fallback (lsp-bridge--position))))))
 
 (defun lsp-bridge-find-def-return ()
   "Pop off lsp-bridge-mark-ring and jump to the top location."
@@ -2019,7 +2023,9 @@ Off by default."
 
 (defun lsp-bridge-find-references ()
   (interactive)
-  (lsp-bridge-call-file-api "find_references" (lsp-bridge--position)))
+  (if (lsp-bridge-has-lsp-server-p)
+      (lsp-bridge-call-file-api "find_references" (lsp-bridge--position))
+    (lsp-bridge-find-ref-fallback (lsp-bridge--position))))
 
 (defun lsp-bridge-find-def-fallback (position)
   (if (not (= (length lsp-bridge-peek-ace-list) 0))
