@@ -33,7 +33,7 @@ class CompletionWorkspaceSymbol(Handler):
 
             for item in response:
                 symbol_name = item["name"]
-                symbol_kind = KIND_MAP[item.get("kind", 0)].lower()
+                symbol_kind = SYMBOL_MAP[symbol_name].lower()
                 symbol_display_name = "{} [{}]".format(symbol_name, symbol_kind)
                 symbol = {
                     "key": symbol_name,
