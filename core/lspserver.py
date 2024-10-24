@@ -422,7 +422,16 @@ class LspServer:
                         "plaintext"
                     ],
                     "dynamicRegistration": True
-                }
+                },
+                "formatting": {
+                    "dynamicRegistration": True
+                },
+                "rangeFormatting": {
+                    "dynamicRegistration": True
+                },
+                "onTypeFormatting": {
+                    "dynamicRegistration": True
+                },
             },
             "window": {
                 "workDoneProgress": True
