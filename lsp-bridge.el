@@ -2077,11 +2077,15 @@ Off by default."
 
 (defun lsp-bridge-show-documentation ()
   (interactive)
-  (lsp-bridge-call-file-api "hover" (lsp-bridge--position) "buffer"))
+  (let* ((start (lsp-bridge--point-position (if (region-active-p) (region-beginning) (point))))
+         (end (lsp-bridge--point-position (if (region-active-p) (region-end) (point)))))
+    (lsp-bridge-call-file-api "hover" start end "show")))
 
 (defun lsp-bridge-popup-documentation ()
   (interactive)
-  (lsp-bridge-call-file-api "hover" (lsp-bridge--position) "popup"))
+  (let* ((start (lsp-bridge--point-position (if (region-active-p) (region-beginning) (point))))
+         (end (lsp-bridge--point-position (if (region-active-p) (region-end) (point)))))
+    (lsp-bridge-call-file-api "hover" start end "popup")))
 
 (defun lsp-bridge-signature-help-fetch ()
   (interactive)

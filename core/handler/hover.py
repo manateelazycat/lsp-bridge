@@ -10,9 +10,16 @@ class Hover(Handler):
     name = "hover"
     method = "textDocument/hover"
 
-    def process_request(self, position, show_style) -> dict:
+    def process_request(self, start, end, show_style) -> dict:
+        lsp_server_name = self.file_action.get_match_lsp_servers("hover")[0].server_info['name']
         self.show_style = show_style
-        return dict(position=position)
+
+        # rust-analyzer support range hover (not in LSP standard)
+        if start == end or lsp_server_name != "rust-analyzer":
+            return dict(position=start)
+        else:
+            range = {"start": start, "end": end}
+            return dict(position=range)
 
     def parse_hover_contents(self, contents, render_strings):
         if isinstance(contents, str):
