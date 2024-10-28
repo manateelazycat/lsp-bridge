@@ -127,6 +127,7 @@
                                                     lsp-bridge--not-follow-complete
                                                     lsp-bridge--not-match-stop-commands
                                                     lsp-bridge--not-match-hide-characters
+                                                    lsp-bridge--not-match-hide-keywords
 
                                                     lsp-bridge--not-only-blank-before-cursor
                                                     lsp-bridge--not-in-string
@@ -185,7 +186,7 @@ Setting this to nil or 0 will turn off the heartbeat mechanism."
   :safe #'listp
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-completion-hide-characters '(":" ";" "(" ")" "[" "]" "{" "}" "," "\"")
+(defcustom lsp-bridge-completion-hide-characters '(":" ";" "(" ")" "[" "]" "{" "}" "," "\"" ">")
   "If character before match this option, stop popup completion ui.
 
 To make this option works, you need set option `lsp-bridge-completion-obey-trigger-characters-p' with nil first.
@@ -1581,6 +1582,16 @@ So we build this macro to restore postion after code format."
              (member char (if (boundp 'acm-backend-lsp-completion-trigger-characters)
                               (symbol-value 'acm-backend-lsp-completion-trigger-characters))))
         (not (member char lsp-bridge-completion-hide-characters)))))
+
+(defun lsp-bridge--not-match-hide-keywords ()
+  "Hide completion if string before cursor match some special keywords."
+  (let ((string (buffer-substring-no-properties (car (bounds-of-thing-at-point 'symbol))
+                                                (point))))
+    (not (when (and (or (derived-mode-p 'ruby-mode)
+                        (derived-mode-p 'ruby-ts-mode)
+                        (derived-mode-p 'elixir-mode)
+                        (derived-mode-p 'elixir-ts-mode))
+                    (member string '("do" "end")))))))
 
 (defun lsp-bridge--is-evil-state ()
   "If `evil' mode is enable, only show completion when evil is in insert mode."
