@@ -1793,6 +1793,11 @@ So we build this macro to restore postion after code format."
                (string-prefix-p "jupyter" (plist-get (car (cdr (org-element-context))) :language)))
       (acm-backend-jupyter-record current-symbol))
 
+    ;; tabby complete
+    (when (and acm-enable-tabby
+               (lsp-bridge-process-live-p))
+      (acm-backend-tabby-record current-symbol))
+
     (when (and acm-enable-ctags
                (lsp-bridge-process-live-p))
       (unless (or (string-equal current-word "") (null current-word))

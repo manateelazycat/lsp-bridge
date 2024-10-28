@@ -108,6 +108,7 @@
 (require 'acm-backend-copilot)
 (require 'acm-backend-org-roam)
 (require 'acm-backend-jupyter)
+(require 'acm-backend-tabby)
 (require 'acm-backend-capf)
 (require 'acm-quick-access)
 
@@ -200,6 +201,7 @@
                                                         "lsp-workspace-symbol-candidates"
                                                         "capf-candidates"
                                                         "jupyter-candidates"
+                                                        "tabby-candidates"
                                                         "ctags-candidates"
                                                         "citre-candidates"
                                                         "org-roam-candidates"
@@ -485,6 +487,7 @@ Only calculate template candidate when type last character."
          codeium-candidates
          copilot-candidates
          jupyter-candidates
+         tabby-candidates
          tempel-candidates
          mode-candidates
          mode-first-part-candidates
@@ -510,6 +513,9 @@ Only calculate template candidate when type last character."
 
     (when acm-enable-jupyter
       (setq jupyter-candidates (acm-backend-jupyter-candidates keyword)))
+
+    (when acm-enable-tabby
+      (setq tabby-candidates (acm-backend-tabby-candidates keyword)))
 
     (when acm-enable-capf
       (setq capf-candidates (acm-backend-capf-candiates keyword)))
@@ -548,6 +554,7 @@ Only calculate template candidate when type last character."
                                           ("lsp-workspace-symbol-candidates" lsp-workspace-symbol-candidates)
                                           ("capf-candidates" capf-candidates)
                                           ("jupyter-candidates" jupyter-candidates)
+                                          ("tabby-candidates" tabby-candidates)
                                           ("ctags-candidates" ctags-candidates)
                                           ("citre-candidates" citre-candidates)
                                           ("org-roam-candidates" org-roam-candidates)
