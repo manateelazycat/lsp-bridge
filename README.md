@@ -93,7 +93,7 @@ and run `doom sync` to install it.
 Please note:
 
 1. When using lsp-bridge, please first disable other completion plugins, such as lsp-mode, eglot, company, corfu, etc. lsp-bridge provides a complete solution from the completion backend, completion frontend to multi-backend integration
-2. In addition to providing LSP completion, lsp-bridge also provides many non-LSP completion backends, including capf, file words, paths, Yas/Tempel, TabNine, Codeium, Copilot, Citre, Ctags, Org roam and other completion backends. If you expect to provide these completions in a certain mode, please add the corresponding mode to `lsp-bridge-default-mode-hooks`
+2. In addition to providing LSP completion, lsp-bridge also provides many non-LSP completion backends, including capf, file words, paths, Yas/Tempel, TabNine, Codeium, Copilot, Tabby, Citre, Ctags, Org roam and other completion backends. If you expect to provide these completions in a certain mode, please add the corresponding mode to `lsp-bridge-default-mode-hooks`. Customize the order of backend, please check `acm-backend-order`.
 3. Please do not perform ```byte compilation``` or ```native compilation``` for lsp-bridge as it will result in a difference in API and the latest version after upgrading compiling afterwards, Lsp-bridge is designed with multi-threading that does not require compilation to speed it up
 
 ## Local Usage
@@ -313,6 +313,7 @@ lsp-bridge provides support for more than two language servers for many language
 - `lsp-bridge-peek-list-height`: Select the next option for definition and reference
 - `lsp-bridge-peek-ace-keys`: Keys to press when performing `lsp-bridge-peek-through`
 - `lsp-bridge-peek-ace-cancel-keys`: Keys to exit `lsp-bridge-peek-through`
+- `acm-backend-order`: Customize the order of the completion backends
 - `acm-frame-background-dark-color`: Menu background color in dark theme
 - `acm-frame-background-light-color`: Menu background color in light theme
 - `acm-enable-capf`: Provides capf completion support for non-LSP backends, it is disabled by default
@@ -330,7 +331,6 @@ lsp-bridge provides support for more than two language servers for many language
 - `acm-enable-lsp-workspace-symbol`: Enable LSP workspace symbol completion, disabled by default
 - `acm-doc-frame-max-lines`: Max line number of help documentation, default is 20
 - `acm-candidate-match-function`: lsp-bridge frontend filter algorithm for candidates, options include `'regexp-quote`, `'orderless-flex`, `'orderless-literal`, `'orderless-prefixes`, `'orderless-regexp`, `'orderless-initialism`, default is `regexp-quote`, orderless-* started algorithms require additional installation of [orderless](https://github.com/oantolin/orderless)
-- `acm-completion-backend-merge-order`: Customize the order of the completion backends, default order is: first part of mode candidate, first part of template candidates, tabnine/copilot/codeium, second part of template candidates, second part of mode candidates, set `acm-completion-mode-candidates-merge-order` customize mode candidates order 
 - `acm-completion-mode-candidates-merge-order`: Customize the order of the mode candidates, the display order for mode candidates, default order: Elisp、 LSP、 Jupyter、 Tabby Ctags、 Citre、 ROAM、 Word、 Telegra
 - `acm-backend-lsp-candidate-min-length`: The minimum characters to trigger lsp completion, default is 0
 - `acm-backend-lsp-block-kind-list`: Filters certain types of LSP completion candidates. By default, it's a empty list. When the value is set to `'(Snippet Enum)`, this means that Snippet and Enum completions will not be shown.

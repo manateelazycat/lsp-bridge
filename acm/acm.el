@@ -185,14 +185,16 @@
   :type 'string
   :group 'acm)
 
-(defcustom acm-completion-backend-merge-order '("mode-first-part-candidates"
-                                                "template-first-part-candidates"
-                                                "tabnine-candidates"
-                                                "copilot-candidates"
-                                                "codeium-candidates"
-                                                "template-second-part-candidates"
-                                                "mode-second-part-candidates")
-  "The merge order for completion backend."
+(defalias acm-completion-backend-merge-order acm-backend-order)
+
+(defcustom acm-backend-order '("mode-first-part-candidates"
+                               "template-first-part-candidates"
+                               "tabnine-candidates"
+                               "copilot-candidates"
+                               "codeium-candidates"
+                               "template-second-part-candidates"
+                               "mode-second-part-candidates")
+  "The order for completion backend."
   :type 'list
   :group 'acm)
 
@@ -623,7 +625,7 @@ Only calculate template candidate when type last character."
                                                      ("template-second-part-candidates" template-second-part-candidates)
                                                      ("mode-second-part-candidates" mode-second-part-candidates)
                                                      ))
-                                                 acm-completion-backend-merge-order))
+                                                 acm-backend-order))
               )))
 
     ;; Return candidates.

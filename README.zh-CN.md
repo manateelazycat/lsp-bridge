@@ -90,7 +90,7 @@ lsp-bridge 的优势：
 请注意:
 
 1. 使用 lsp-bridge 时， 请先关闭其他补全插件， 比如 lsp-mode, eglot, company, corfu 等等， lsp-bridge 提供从补全后端、 补全前端到多后端融合的全套解决方案。
-2. lsp-bridge 除了提供 LSP 补全以外， 也提供了很多非 LSP 的补全后端， 包括 capf、 文件单词、 路径、 Yas/Tempel、 TabNine、 Codeium、 Copilot、 Citre、 Ctags, Org roam 等补全后端， 如果你期望在某个模式提供这些补全， 请把对应的模式添加到 `lsp-bridge-default-mode-hooks`
+2. lsp-bridge 除了提供 LSP 补全以外， 也提供了很多非 LSP 的补全后端， 包括 capf、 文件单词、 路径、 Yas/Tempel、 TabNine、 Codeium、 Copilot、 Tabby, Citre、 Ctags, Org roam 等补全后端， 如果你期望在某个模式提供这些补全， 请把对应的模式添加到 `lsp-bridge-default-mode-hooks`, 定义补全顺序请查看 `acm-backend-order`
 3. 请不要对 lsp-bridge 执行 ```byte compile``` 或者 ```native comp```， 会导致升级后， compile 后的版本 API 和最新版不一样， lsp-bridge 多线程设计， 不需要 compile 来加速
 
 ## 本地使用
@@ -308,6 +308,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 - `lsp-bridge-peek-list-height`: 选择下一个定义和引用的备选项
 - `lsp-bridge-peek-ace-keys`: 进行 `lsp-bridge-peek-through` 时待按的按键
 - `lsp-bridge-peek-ace-cancel-keys`: 退出 `lsp-bridge-peek-through` 的按键
+- `acm-backend-order`: 补全后端的显示顺序
 - `acm-frame-background-dark-color`: 暗色主题下的菜单背景颜色
 - `acm-frame-background-light-color`: 亮色主题下的菜单背景颜色
 - `acm-enable-capf`: 针对非 LSP 后端提供 capf 补全支持， 默认是关闭的
@@ -326,7 +327,6 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 - `acm-enable-lsp-workspace-symbol`: LSP 符号补全， 默认关闭
 - `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是 20
 - `acm-candidate-match-function`: lsp-bridge 前端对补全候选词的过滤算法， 选项有 `'regexp-quote`, `'orderless-flex`, `'orderless-literal`, `'orderless-prefixes`, `'orderless-regexp`, `'orderless-initialism`, 默认为 `regexp-quote`， orderless-\* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
-- `acm-completion-backend-merge-order`: 补全后端的显示顺序， 默认是按照模式补全前半部分、 模板补全前半部分、 TabNine/Copilot/Codeium、 模板补全后半部分、 模式补全后半部分的顺序显示， 你可以根据你的需求调整补全后端的显示顺序， 如果要自定义模式补全的顺序， 请自定义 `acm-completion-mode-candidates-merge-order`
 - `acm-completion-mode-candidates-merge-order`: 模式补全的显示顺序， 默认是按照 Elisp、 LSP、 Jupyter、 Ctags、 Citre、 ROAM、 单词、 Telegra 的顺序显示， 你可以根据你的需求调整模式补全的显示顺序
 - `acm-backend-lsp-candidate-min-length`: LSP 补全最小的触发字符数, 默认是 0
 - `acm-backend-lsp-block-kind-list`: 过滤某些类型的 LSP 候选词， 默认是列表， 当值为 `'("Snippet" "Enum")` 的时候， 意味着 Snippet Enum 这两种类型的补全不会显示
