@@ -185,7 +185,7 @@
   :type 'string
   :group 'acm)
 
-(defalias acm-completion-backend-merge-order acm-backend-order)
+(defalias 'acm-completion-backend-merge-order 'acm-backend-order)
 
 (defcustom acm-backend-order '("mode-first-part-candidates"
                                "template-first-part-candidates"
