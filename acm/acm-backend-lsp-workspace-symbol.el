@@ -98,6 +98,11 @@
   :type 'integer
   :group 'acm-backend-lsp-workspace-symbol)
 
+(defcustom acm-backend-lsp-workspace-symbol-candidates-max-number 100
+  "Maximal number of candidate of menu."
+  :type 'integer
+  :group 'acm-backend-lsp-workspace-symbol)
+
 (defcustom acm-backend-lsp-workspace-symbol-frontend-filter-p nil
   "Because LSP workspace symbols has filtered at Python backend.
 
