@@ -114,7 +114,6 @@
                                         anaconda-mode
                                         redis-mode
                                         lisp-mode
-                                        org-mode
                                         )
   "The mode list to support capf."
   :type 'cons)
@@ -150,9 +149,18 @@
                            (let ((newstart (car-safe (funcall hookfun))))
                              (and newstart (= newstart start)))))
                         (initial (buffer-substring-no-properties start end))
-                        (candidates (completion-all-completions initial collection nil (length initial))))
+                        (candidates (completion-all-completions initial collection nil (length initial)))
+                        prefix)
                    (when-let ((z (last candidates)))
                      (setcdr z nil))
+                   ;; Sometime CAPF excludes the prefix from the candidates.
+                   ;; Adding it back based on the `keyword' and `initial'.
+                   (when (> (length keyword) (length initial))
+                     (setq prefix (substring keyword 0  (- (length keyword)
+                                                           (length initial))))
+                     (setq candidates (mapcar (lambda (candidate)
+                                                (concat prefix candidate))
+                                              candidates)))
                    candidates)))))))
 
 (provide 'acm-backend-capf)

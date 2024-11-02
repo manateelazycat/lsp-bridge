@@ -215,9 +215,15 @@ class FileAction:
             if isinstance(self.completion_block_kind_list, list):
                 self.completion_block_kind_list = list(map(lambda x: x.lower(), self.completion_block_kind_list))
 
-        delay = 0 if is_running_in_server() else 0.1
-        self.try_completion_timer = threading.Timer(delay, lambda : self.try_completion(position, before_char, prefix, self.version))
-        self.try_completion_timer.start()
+        if position['line'] < 0:
+            # TODO fix this from elisp happened in org source code completion
+            # We can temporary fix this by ignore this case,
+            # which will not influence the completion result.
+            logger.error("Invalid position change file", start, end, range_length, change_text, position, before_char, buffer_name, prefix, self.org_line_bias)
+        else:
+            delay = 0 if is_running_in_server() else 0.1
+            self.try_completion_timer = threading.Timer(delay, lambda : self.try_completion(position, before_char, prefix, self.version))
+            self.try_completion_timer.start()
 
     def update_file(self, buffer_name, org_line_bias=None):
         self.org_line_bias = org_line_bias
