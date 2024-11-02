@@ -382,8 +382,7 @@ So we use `minor-mode-overriding-map-alist' to override key, make sure all keys 
 
 (defun acm-get-input-prefix-bound ()
   (cond
-   ((or (equal "string" acm-input-bound-style)
-        (derived-mode-p 'org-mode))
+   ((equal "string" acm-input-bound-style)
     (cons (point)
           (save-excursion
             (if (search-backward-regexp "\\s-" (point-at-bol) t)

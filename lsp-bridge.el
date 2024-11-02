@@ -1755,10 +1755,14 @@ So we build this macro to restore postion after code format."
             (lsp-bridge-complete-other-backends)
 
             ;; Update search words backend.
-            (lsp-bridge-search-words-update
-             lsp-bridge--before-change-begin-pos
-             lsp-bridge--before-change-end-pos
-             change-text)
+            ;;
+            ;; disable it for org-mode when we enable `lsp-bridge-enable-org-babel'
+            ;; it will trigger with wrong pos due to we only update `pos' on src block
+            (unless (eq major-mode 'org-mode)
+              (lsp-bridge-search-words-update
+               lsp-bridge--before-change-begin-pos
+               lsp-bridge--before-change-end-pos
+               change-text))
             ))))))
 
 (defun lsp-bridge-complete-other-backends ()
