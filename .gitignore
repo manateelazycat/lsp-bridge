@@ -7,3 +7,4 @@ tags
 test.log
 workspace/
 .aider*
+.env

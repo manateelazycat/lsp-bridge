@@ -1653,9 +1653,19 @@ So we build this macro to restore postion after code format."
         :character (lsp-bridge--calculate-column)))
 
 (defun lsp-bridge--position-in-org ()
-  (list :line (1- (- (line-number-at-pos nil t)
-                     (line-number-at-pos (plist-get (car (cdr (org-element-context))) :begin) t)))
-        :character (lsp-bridge--calculate-column)))
+  "Get position in org source block.
+Return a plist with :line and :character.
+The line number is relative to the beginning of the source block."
+  (if (and (derived-mode-p 'org-mode)
+           (org-in-src-block-p))
+      (let* ((element (org-element-context))
+             (begin-pos (plist-get (car (cdr element)) :begin))
+             (current-line (line-number-at-pos nil t))
+             (block-line (line-number-at-pos begin-pos t))
+             (relative-line (max 0 (- current-line block-line 1))))
+        (list :line relative-line
+              :character (lsp-bridge--calculate-column)))
+    (lsp-bridge--position)))
 
 (defvar-local lsp-bridge--before-change-begin-pos nil)
 (defvar-local lsp-bridge--before-change-end-pos nil)
@@ -2050,10 +2060,10 @@ Off by default."
 (defun lsp-bridge-find-def-fallback (position)
   (if (not (= (length lsp-bridge-peek-ace-list) 0))
       (progn
-	    (if (nth 0 lsp-bridge-peek-ace-list)
-	        (kill-buffer (nth 0 lsp-bridge-peek-ace-list)))
-	    (switch-to-buffer (nth 2 lsp-bridge-peek-ace-list))
-	    (goto-char (nth 1 lsp-bridge-peek-ace-list))))
+	(if (nth 0 lsp-bridge-peek-ace-list)
+	    (kill-buffer (nth 0 lsp-bridge-peek-ace-list)))
+	(switch-to-buffer (nth 2 lsp-bridge-peek-ace-list))
+	(goto-char (nth 1 lsp-bridge-peek-ace-list))))
   (message "[LSP-Bridge] No definition found.")
   (if (functionp lsp-bridge-find-def-fallback-function)
       (funcall lsp-bridge-find-def-fallback-function position)))
