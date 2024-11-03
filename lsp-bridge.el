@@ -1585,8 +1585,10 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge--not-match-hide-keywords ()
   "Hide completion if string before cursor match some special keywords."
-  (let ((string (buffer-substring-no-properties (car (bounds-of-thing-at-point 'symbol))
-                                                (point))))
+  (let ((string (if (bounds-of-thing-at-point 'symbol)
+                    (buffer-substring-no-properties (car (bounds-of-thing-at-point 'symbol))
+                                                  (point))
+                  (char-to-string (char-before)))))
     (not (when (and (or (derived-mode-p 'ruby-mode)
                         (derived-mode-p 'ruby-ts-mode)
                         (derived-mode-p 'elixir-mode)
