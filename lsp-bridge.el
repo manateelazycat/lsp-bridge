@@ -1453,15 +1453,21 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-check-predicate (pred current-function)
   (if (functionp pred)
-      (let ((result (funcall pred)))
-        (when lsp-bridge-enable-log
-          (unless result
-            (with-current-buffer (get-buffer-create lsp-bridge-name)
-              (save-excursion
-                (goto-char (point-max))
-                (insert (format "\n*** %s execute predicate '%s' failed with result: '%s'\n"
-                                current-function pred result))))))
-        result)
+      (condition-case err
+          (let ((result (funcall pred)))
+            (when lsp-bridge-enable-log
+              (unless result
+                (with-current-buffer (get-buffer-create lsp-bridge-name)
+                  (save-excursion
+                    (goto-char (point-max))
+                    (insert (format "\n*** %s execute predicate '%s' failed with result: '%s'\n"
+                                  current-function pred result))))))
+            result)
+        (error
+         (message "Error in predicate '%s': %S at point %S in buffer %S, mode %S"
+                  pred err (point) (current-buffer) major-mode)
+         ;; return `t' if got error, avoid break `post-command-hook'
+         t))
     t))
 
 (defun lsp-bridge-try-completion ()
