@@ -281,6 +281,7 @@ class LspServer:
         self.workspace_symbol_provider = False
         self.inlay_hint_provider = False
         self.semantic_tokens_provider = False
+        self.save_file_provider = False
 
         self.work_done_progress_title = ""
 
@@ -538,21 +539,22 @@ class LspServer:
         })
 
     def send_did_save_notification(self, filepath, buffer_name):
-        args = {
-            "textDocument": {
-                "uri": path_to_uri(filepath)
-            }
-        }
-
-        # Fetch buffer whole content to LSP server if server capability 'includeText' is True.
-        if self.save_include_text:
-            args = merge(args, {
+        if self.save_file_provider:
+            args = {
                 "textDocument": {
-                    "text": get_buffer_content(filepath, buffer_name)
+                    "uri": path_to_uri(filepath)
                 }
-            })
+            }
 
-        self.sender.send_notification("textDocument/didSave", args)
+            # Fetch buffer whole content to LSP server if server capability 'includeText' is True.
+            if self.save_include_text:
+                args = merge(args, {
+                    "textDocument": {
+                        "text": get_buffer_content(filepath, buffer_name)
+                    }
+                })
+
+            self.sender.send_notification("textDocument/didSave", args)
 
     def send_workspace_did_change_watched_files(self, filepath, change_type):
         self.sender.send_notification("workspace/didChangeWatchedFiles", {
@@ -758,7 +760,8 @@ class LspServer:
             ]),
             ("save_include_text", ["result", "capabilities", "textDocumentSync", "save", "includeText"]),
             ("text_document_sync", ["result", "capabilities", "textDocumentSync"]),
-            ("semantic_tokens_provider", ["result", "capabilities", "semanticTokensProvider"])]
+            ("semantic_tokens_provider", ["result", "capabilities", "semanticTokensProvider"]),
+            ("save_file_provider", ["result", "capabilities", "textDocumentSync", "willSave"])]
 
         for attr, path in attributes_to_set:
             self.set_attribute_from_message(message, attr, path)
