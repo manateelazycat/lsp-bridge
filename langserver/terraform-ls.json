@@ -2,7 +2,8 @@
   "name": "terraform-ls",
   "languageId": "terraform",
   "command": [
-    "terraform-ls"
+    "terraform-ls",
+    "serve"
   ],
   "settings": {}
 }

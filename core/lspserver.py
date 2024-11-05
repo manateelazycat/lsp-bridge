@@ -112,18 +112,21 @@ class LspServerSender(MessageSender):
         ), **kwargs)
 
     def send_message(self, message: dict):
-        json_content = json.dumps(message)
+        # message_type is not valid key of JSONRPC, we need remove message_type before send LSP server.
+        message_type = message.get("message_type")
+        message.pop("message_type")
 
+        # Parse json content.
+        json_content = json.dumps(message)
         message_str = "Content-Length: {}\r\n\r\n{}".format(len(json_content), json_content)
 
+        # Send to LSP server.
         self.process.stdin.write(message_str.encode("utf-8"))    # type: ignore
         self.process.stdin.flush()    # type: ignore
 
         # InlayHint will got error 'content modified' error if it followed immediately by a didChange request.
         # So we need INLAY_HINT_REQUEST_ID_DICT to contain documentation path to send retry request.
         record_inlay_hint_request(message)
-
-        message_type = message.get("message_type")
 
         if message_type == "request" and \
            not message.get('method', 'response') == 'textDocument/documentSymbol':
