@@ -1,6 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# /// script
+# dependencies = [
+#   "epc",
+#   "orjson",
+#   "sexpdata",
+#   "six",
+#   "setuptools",
+#   "paramiko",
+#   "rapidfuzz",
+#   "watchdog",
+# ]
+# ///
+
 # Copyright (C) 2022 Andy Stewart
 #
 # Author:     Andy Stewart <lazycat.manatee@gmail.com>
