@@ -48,7 +48,7 @@ Advantages of lsp-bridge:
 (global-lsp-bridge-mode)
 ```
 
-Note: please install [acm-terminal](https://github.com/twlz0ne/acm-terminal) if you want to complete in terminal
+Note: To use completion in terminal, please install the compiled tty-child-frames branch of Emacs
 
 * If you are using straight to install, you should use the following configuration to install:
 
