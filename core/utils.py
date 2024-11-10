@@ -475,6 +475,8 @@ def replace_template(arg, project_path=None):
         return arg.replace("%FILEHASH%", os.urandom(21).hex())
     elif "%USERPROFILE%" in arg:
         return arg.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
+    elif "%TSDK_PATH%" in arg:
+        return arg.replace("%TSDK_PATH%", get_emacs_func_result("get-user-tsdk-path"))
     else:
         return arg
 

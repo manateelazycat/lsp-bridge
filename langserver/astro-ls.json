@@ -5,5 +5,10 @@
 	"astro-ls",
 	"--stdio"
   ],
-  "settings": {}
+  "settings": {},
+  "initializationOptions": {
+    "typescript": {
+      "tsdk": "%TSDK_PATH%"
+    }
+  }
 }
