@@ -397,7 +397,7 @@ So we use `minor-mode-overriding-map-alist' to override key, make sure all keys 
       (cons (match-beginning 2)
             (match-end 2))))
    ((equal "ascii" acm-input-bound-style)
-    (when-let ((bound (bounds-of-thing-at-point 'symbol)))
+    (when-let* ((bound (bounds-of-thing-at-point 'symbol)))
       (let* ((keyword (buffer-substring-no-properties (car bound) (cdr bound)))
              (offset (or (string-match "[[:nonascii:]]+" (reverse keyword))
                          (length keyword))))
@@ -827,7 +827,7 @@ The key of candidate will change between two LSP results."
           (setq acm-preview-overlay (funcall candidate-expand candidate-info beg t)))
       (setq acm-preview-overlay (acm-preview-create-overlay beg (point) cand)))
     ;; adjust pos of menu frame.
-    (when-let ((popup-pos (acm-frame-get-popup-position
+    (when-let* ((popup-pos (acm-frame-get-popup-position
                            acm-menu-frame-popup-point
                            (1- (length (split-string (overlay-get acm-preview-overlay 'display) "\n")))))
                ((not (eq (cdr popup-pos) (cdr acm-menu-frame-popup-position)))))

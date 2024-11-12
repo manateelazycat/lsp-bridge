@@ -912,7 +912,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
 (cl-defmacro lsp-bridge--with-file-buffer (filename filehost &rest body)
   "Evaluate BODY in buffer with FILEPATH."
   (declare (indent 1))
-  `(when-let ((buffer (pcase ,filehost
+  `(when-let* ((buffer (pcase ,filehost
                         ("" (lsp-bridge-get-match-buffer-by-filepath ,filename))
                         (_ (lsp-bridge-get-match-buffer-by-remote-file ,filehost ,filename)))))
      (with-current-buffer buffer
@@ -2666,9 +2666,9 @@ SymbolKind (defined in the LSP)."
         filename filehost
         ;; When lsp-bridge running in server, `acm-backend-lsp-items' maybe nil when receive `lsp-bridge-completion-item--update' response.
         ;; So we need check `acm-backend-lsp-items' value before update item documentation.
-        (when-let ((server-lsp-items (gethash server-name acm-backend-lsp-items)))
+        (when-let* ((server-lsp-items (gethash server-name acm-backend-lsp-items)))
           ;; Update `documentation' and `additionalTextEdits'
-          (when-let (item (gethash key server-lsp-items))
+          (when-let* ((item (gethash key server-lsp-items)))
             (when additional-text-edits
               (plist-put item :additionalTextEdits additional-text-edits))
 

@@ -213,7 +213,7 @@ Faces to use for semantic token modifiers.")
 (defun lsp-bridge-semantic-tokens--delete-overlays (keys)
   "Delete semantic tokens overlays."
   (dolist (key keys)
-    (when-let ((ov (gethash key lsp-bridge-semantic-tokens--overlays)))
+    (when-let* ((ov (gethash key lsp-bridge-semantic-tokens--overlays)))
       (delete-overlay ov)
       (remhash key lsp-bridge-semantic-tokens--overlays))))
 
