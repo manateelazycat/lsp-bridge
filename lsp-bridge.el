@@ -374,6 +374,7 @@ LSP-Bridge will enable completion inside string literals."
                (lsp-bridge-epc-define-method mngr 'get-multi-lang-server 'lsp-bridge--get-multi-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-single-lang-server 'lsp-bridge--get-single-lang-server-func)
                (lsp-bridge-epc-define-method mngr 'get-user-emacs-directory 'lsp-bridge--user-emacs-directory-func)
+               (lsp-bridge-epc-define-method mngr 'get-user-tsdk-path 'lsp-bridge--user-tsdk-path-func)
                (lsp-bridge-epc-define-method mngr 'get-buffer-content 'lsp-bridge--get-buffer-content-func)
                (lsp-bridge-epc-define-method mngr 'get-current-line 'lsp-bridge--get-current-line-func)
                (lsp-bridge-epc-define-method mngr 'get-ssh-password 'lsp-bridge--get-ssh-password-func)
@@ -513,6 +514,12 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
 (defcustom lsp-bridge-xml-lsp-server "lemminx"
   "Default LSP server for XML, you can choose `lemminx', `camells'"
   :type 'string)
+
+(defcustom lsp-bridge-tsdk-path nil
+  "Tsserver lib*.d.ts directory path in current system needed by some lsp servers.
+If nil, lsp-bridge would try to detect by default."
+  :type '(choice (const nil)
+                 (string)))
 
 (defcustom lsp-bridge-use-wenls-in-org-mode nil
   "Use `wen' lsp server in org-mode, default is disable.")
@@ -1020,6 +1027,15 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge--user-emacs-directory-func ()
   "Get lang server with project path, file path or file extension."
   (expand-file-name user-emacs-directory))
+
+(defun lsp-bridge--user-tsdk-path-func ()
+  "Get tsserver lib*.d.ts directory path."
+  (when-let* (((null lsp-bridge-tsdk-path))
+              (bin (executable-find "tsc"))
+              (tsdk (expand-file-name "../../lib" (file-truename bin)))
+              ((file-exists-p tsdk)))
+    (setq lsp-bridge-tsdk-path tsdk))
+  (or lsp-bridge-tsdk-path ""))
 
 (defun lsp-bridge--get-buffer-content-func (buffer-name &optional no-org-babel)
   "Get buffer content for lsp. BUFFER-NAME is name eval from (buffer-name)."

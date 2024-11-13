@@ -8,7 +8,7 @@
   "settings": {},
   "initializationOptions": {
     "typescript": {
-      "tsdk": "/usr/local/lib/node_modules/typescript/lib"
+      "tsdk": "%TSDK_PATH%"
     },
     "vue": {
       "hybridMode": false
