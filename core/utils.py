@@ -477,11 +477,6 @@ def replace_template(arg, project_path=None):
         return arg.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
     elif "%TSDK_PATH%" in arg:
         return arg.replace("%TSDK_PATH%", get_emacs_func_result("get-user-tsdk-path"))
-    elif "%EXE%" in arg:
-        if get_os_name() == "windows":
-            return arg.replace("%EXE%", ".cmd")
-        else:
-            return arg.replace("%EXE%", "")
     else:
         return arg
 
