@@ -1024,18 +1024,11 @@ def read_lang_server_info(lang_server_path):
     lang_server_info = json.load(lang_server_path)
 
     # Replace template in command options.
-    command_args = lang_server_info["command"]
-    for i, arg in enumerate(command_args):
-        command_args[i] = replace_template(arg)
-    lang_server_info["command"] = command_args
+    lang_server_info["command"] = eval(replace_template(str(lang_server_info["command"])))
 
     # Replace template in initializationOptions.
     if "initializationOptions" in lang_server_info:
-        initialization_options_args = lang_server_info["initializationOptions"]
-        for i, arg in enumerate(initialization_options_args):
-            if isinstance(initialization_options_args[arg], str):
-                initialization_options_args[arg] = replace_template(initialization_options_args[arg])
-        lang_server_info["initializationOptions"] = initialization_options_args
+        lang_server_info["initializationOptions"] = eval(replace_template(str(lang_server_info["initializationOptions"])))
 
     return lang_server_info
 
