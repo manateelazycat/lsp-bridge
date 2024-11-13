@@ -3,7 +3,7 @@
   "languageId": "rust",
   "command": ["rust-analyzer"],
   "settings": {},
-  "project-files": ["Cargo.toml"],
+  "projectFiles": ["Cargo.toml"],
   "capabilities": {
     "textDocument": {
       "hover": {

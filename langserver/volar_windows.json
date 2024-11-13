@@ -5,7 +5,7 @@
     "vue-language-server.cmd",
     "--stdio"
   ],
-  "project-files": ["package.json"],
+  "projectFiles": ["package.json"],
   "settings": {},
   "initializationOptions": {
     "typescript": {

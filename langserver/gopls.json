@@ -5,7 +5,7 @@
     "gopls",
     "-remote=auto"
   ],
-  "project-files": ["go.mod"],
+  "projectFiles": ["go.mod"],
   "settings":{
     "gopls": {
       "usePlaceholders": true,

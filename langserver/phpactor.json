@@ -5,6 +5,6 @@
     "phpactor",
     "language-server"
   ],
-  "project-files": ["composer.json"],
+  "projectFiles": ["composer.json"],
   "settings": {}
 }

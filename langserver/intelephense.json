@@ -5,6 +5,6 @@
     "intelephense",
     "--stdio"
   ],
-  "project-files": ["composer.json"],
+  "projectFiles": ["composer.json"],
   "settings": {}
 }

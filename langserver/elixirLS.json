@@ -3,7 +3,7 @@
   "languageId": "elixir",
   "command": ["language_server.sh"],
   "support-single-file": false,
-  "project-files": ["mix.exs"],
+  "projectFiles": ["mix.exs"],
   "settings": {
     "elixirLS": {
       "dialyzerEnabled": true,

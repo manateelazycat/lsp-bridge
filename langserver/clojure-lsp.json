@@ -3,6 +3,6 @@
   "languageId": "clojure",
   "command": ["clojure-lsp"],
   "settings": {},
-  "project-files": ["deps.edn"],
+  "projectFiles": ["deps.edn"],
   "support-single-file": false
 }

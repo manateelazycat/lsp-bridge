@@ -772,10 +772,10 @@ class LspBridge:
             ("support-single-file" in lang_server_info and
              lang_server_info["support-single-file"] is False)):
 
-            if "project-files" in lang_server_info:
+            if "projectFiles" in lang_server_info:
                 # If support-support-single-file is False,
-                # we will search project-files up 20 level directories to find project root.
-                project_root = self.find_project_root(filepath, lang_server_info["project-files"])
+                # we will search projectFiles up 20 level directories to find project root.
+                project_root = self.find_project_root(filepath, lang_server_info["projectFiles"])
                 if project_root is None:
                     self.turn_off_by_single_file(filepath, single_lang_server)
 
