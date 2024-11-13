@@ -151,7 +151,7 @@
                         (initial (buffer-substring-no-properties start end))
                         (candidates (completion-all-completions initial collection nil (length initial)))
                         prefix)
-                   (when-let ((z (last candidates)))
+                   (when-let* ((z (last candidates)))
                      (setcdr z nil))
                    ;; Sometime CAPF excludes the prefix from the candidates.
                    ;; Adding it back based on the `keyword' and `initial'.

@@ -264,7 +264,7 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
         (diff-no-select lsp-bridge-code-action--current-buffer (current-buffer)
                         nil nil (get-buffer-create "*lsp-bridge-code-action-preview*")))
 
-      (if-let ((proc (get-buffer-process "*lsp-bridge-code-action-preview*")))
+      (if-let* ((proc (get-buffer-process "*lsp-bridge-code-action-preview*")))
           (set-process-sentinel
            proc (lambda (proc _msg)
                   (with-current-buffer (process-buffer proc)

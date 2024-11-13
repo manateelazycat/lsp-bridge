@@ -896,7 +896,7 @@ user more freedom to use rg with special arguments."
   ;; View the function name when navigate in match line.
   (when lsp-bridge-ref-show-function-name-p
     (require 'which-func)
-    (when-let ((function-name (which-function)))
+    (when-let* ((function-name (which-function)))
       (message "[LSP-Bridge] Located in function: %s"
                (propertize
                 function-name

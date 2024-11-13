@@ -287,7 +287,7 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
 (defun lsp-bridge-diagnostic-maybe-display-error-at-point ()
   "Display error message at point with a delay, unless already displayed."
   (acm-cancel-timer lsp-bridge-diagnostic-display-error-at-point-timer)
-  (when-let ((ol (lsp-bridge-diagnostic-overlay-at-point)))
+  (when-let* ((ol (lsp-bridge-diagnostic-overlay-at-point)))
     (setq lsp-bridge-diagnostic-display-error-at-point-timer
           (run-at-time lsp-bridge-diagnostic-display-errors-delay nil
                        'lsp-bridge-diagnostic-show-tooltip ol))))
@@ -303,7 +303,7 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
   (interactive)
   (if (zerop (length lsp-bridge-diagnostic-overlays))
       (message "[LSP-Bridge] No diagnostics.")
-    (if-let ((diagnostic-overlay (cl-find-if
+    (if-let* ((diagnostic-overlay (cl-find-if
                                   (lambda (overlay)
                                     (or (< (point) (overlay-start overlay))
                                         ;; Show diagnostic information around cursor if diagnostic frame is not visiable.
@@ -316,7 +316,7 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
   (interactive)
   (if (zerop (length lsp-bridge-diagnostic-overlays))
       (message "[LSP-Bridge] No diagnostics.")
-    (if-let ((diagnostic-overlay (cl-find-if
+    (if-let* ((diagnostic-overlay (cl-find-if
                                   (lambda (overlay)
                                     (or (> (point) (overlay-end overlay))
                                         ;; Show diagnostic information around cursor if diagnostic frame is not visiable.
@@ -336,7 +336,7 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
   (interactive)
   (if (zerop (length lsp-bridge-diagnostic-overlays))
       (message "[LSP-Bridge] No diagnostics.")
-    (when-let ((overlay (lsp-bridge-diagnostic-overlay-at-point)))
+    (when-let* ((overlay (lsp-bridge-diagnostic-overlay-at-point)))
       (let ((diagnostic-message (overlay-get overlay 'message)))
         (kill-new diagnostic-message)
         (message "Copy diagnostics: '%s'" diagnostic-message)))))
