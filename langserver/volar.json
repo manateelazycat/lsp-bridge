@@ -2,7 +2,7 @@
   "name": "volar",
   "languageId": "vue",
   "command": [
-    "vue-language-server",
+    "vue-language-server%EXE%",
     "--stdio"
   ],
   "project-files": ["package.json"],
