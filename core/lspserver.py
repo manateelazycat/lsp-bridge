@@ -284,7 +284,17 @@ class LspServer:
         self.workspace_symbol_provider = False
         self.inlay_hint_provider = False
         self.semantic_tokens_provider = False
-        self.save_file_provider = False
+
+        # It's confused about LSP server's textDocumentSync capability.
+        # Python LSP server only have `willSave` field
+        # Rust LSP server only have `save` field
+        # nil LSP server no `willSave` or `save` field.
+        #
+        # So we include `sendSaveNotification` field for nil LSP server
+        # because most of LSP server support send save notification.
+        self.save_file_provider = True
+        if "sendSaveNotification" in server_info:
+            self.save_file_provider = server_info["sendSaveNotification"]
 
         self.work_done_progress_title = ""
 
@@ -763,8 +773,7 @@ class LspServer:
             ]),
             ("save_include_text", ["result", "capabilities", "textDocumentSync", "save", "includeText"]),
             ("text_document_sync", ["result", "capabilities", "textDocumentSync"]),
-            ("semantic_tokens_provider", ["result", "capabilities", "semanticTokensProvider"]),
-            ("save_file_provider", ["result", "capabilities", "textDocumentSync", "willSave"])]
+            ("semantic_tokens_provider", ["result", "capabilities", "semanticTokensProvider"])]
 
         for attr, path in attributes_to_set:
             self.set_attribute_from_message(message, attr, path)
