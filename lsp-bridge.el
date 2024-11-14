@@ -596,6 +596,7 @@ If nil, lsp-bridge would try to detect by default."
     (solidity-mode .                                                             "solidity")
     (gleam-ts-mode .                                                             "gleam")
     (ada-mode .                                                                  "ada-language-server")
+    (scad-mode .                                                                 "openscad-lsp")
     (sml-mode .                                                                  "millet")
     (fuzion-mode .                                                               "fuzion-language-server")
     (fennel-mode .                                                               "fennel-ls")
@@ -724,6 +725,7 @@ If nil, lsp-bridge would try to detect by default."
     solidity-mode-hook
     gleam-ts-mode-hook
     ada-mode-hook
+    scad-mode-hook
     sml-mode-hook
     fuzion-mode-hook
     fennel-mode-hook
@@ -806,6 +808,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (raku-mode                  . raku-indent-offset)  ; Perl6/Raku
     (erlang-mode                . erlang-indent-level) ; Erlang
     (ada-mode                   . ada-indent)          ; Ada
+    (scad-mode                  . lsp-bridge-indent-two-level) ; OpenSCAD
     (sml-mode                   . sml-indent-level)    ; Standard ML
     (fuzion-mode                . lsp-bridge-indent-two-level) ; Fuzion
     (fennel-mode                . lsp-bridge-indent-two-level) ; Fennel
