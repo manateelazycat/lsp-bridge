@@ -458,7 +458,7 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (("wxml") . "wxml-language-server")
     (("html") . "vscode-html-language-server")
     (("astro") . "astro-ls")
-    (("typ") . "typst-lsp")
+    (("typ") . "tinymist")
     )
   "The lang server rule for file extension."
   :type 'cons)
@@ -701,6 +701,7 @@ If nil, lsp-bridge would try to detect by default."
     kotlin-mode-hook
     vhdl-mode-hook
     typst-mode-hook
+    typst-ts-mode-hook
     graphql-mode-hook
     graphql-ts-mode-hook
     c-ts-mode-hook
@@ -881,6 +882,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (sh-mode .            "\$\{")
     (bash-mode .          "\$\{")
     (bash-ts-mode .       "\$\{")
+    (typst-ts-mode .      "\$\{")
     (typst--base-mode .   "\$\{")
     (typst--code-mode .   "\$\{")
     (typst--math-mode .   "\$\{")
