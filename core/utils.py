@@ -153,6 +153,35 @@ def get_remote_connection_info():
     global remote_connection_info
     return remote_connection_info
 
+def convert_workspace_edit_path_to_tramped_path(edit, remote_connection_info):
+    """ Convert documentUris in a WorkspaceEdit instance from local to remote(tramp).
+
+        ex. 'file://...' --> 'file://ssh:...
+
+        About WorkspaceEdit interfeface:
+        https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspaceEdit
+    """
+    if "documentChanges" in edit:
+        # documentChanges's item can be one of (TextDocumentEdit, CreateFile, DeleteFile, RenameFile)
+        for change in edit["documentChanges"]:
+            if change.get("textDocument", {}).get("uri") is not None:
+                # TextDocumentEdit
+                change["textDocument"]["uri"] = local_path_to_tramp_path(change["textDocument"]["uri"], remote_connection_info)
+            elif "uri" in change:
+                # CreateFile | DeleteFile
+                change["uri"] = local_path_to_tramp_path(change["uri"], remote_connection_info)
+            elif "oldUri" in change:
+                # RenameFile
+                change["oldUri"] = local_path_to_tramp_path(change["oldUri"], remote_connection_info)
+                change["newUri"] = local_path_to_tramp_path(change["newUri"], remote_connection_info)
+    elif "changes" in edit:
+        changes = edit["changes"]
+        new_changes = {}
+        for file in changes.keys():
+            tramp_file = local_path_to_tramp_path(file, remote_connection_info)
+            new_changes[tramp_file] = changes[file]
+        edit["changes"] = new_changes
+
 def local_path_to_tramp_path(path, tramp_method):
     """convert path in DocumentUri format to tramp format."""
     tramp_path = path.replace("file://", "file://" + tramp_method)
@@ -366,7 +395,7 @@ def get_project_path(filepath):
             if get_os_name() == "windows":
                 path_parts = path_from_git.split("/")
                 # if this is a Unix-style absolute path, which should be a Windows-style one
-                if path_parts[0] == "/": 
+                if path_parts[0] == "/":
                     windows_path = path_parts[1] + ":/" + "/".join(path_parts[2:])
                     return windows_path
                 else:
