@@ -847,22 +847,22 @@ class LspServer:
                     self.work_done_progress_title = ""
 
             if title_attr is not None:
-                progress_message += title_attr
+                progress_message += str(title_attr)
             else:
                 if kind_attr == "report":
                     if self.work_done_progress_title != "":
-                        progress_message += self.work_done_progress_title
+                        progress_message += str(self.work_done_progress_title)
                     else:
-                        progress_message += token_attr
+                        progress_message += str(token_attr)
 
             if percentage_attr is not None and percentage_attr > 0:
                 progress_message += " (" + str(percentage_attr) + "%%)"
 
             if message_attr is not None:
                 if progress_message != "":
-                    progress_message += " " + message_attr
+                    progress_message += " " + str(message_attr)
                 else:
-                    progress_message += message_attr
+                    progress_message += str(message_attr)
 
             if progress_message != "":
                 eval_in_emacs("lsp-bridge--record-work-done-progress", "[LSP-Bridge] " + progress_message)
