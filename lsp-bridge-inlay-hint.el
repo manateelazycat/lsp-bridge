@@ -201,7 +201,7 @@
 If lsp-bridge detect this error, lsp-bridge will call `lsp-bridge-inlay-hint-retry' function again to avoid inlayHint request no respond."
   (when (string-prefix-p "file://" filepath)
     (setq filepath (string-remove-prefix "file://" filepath)))
-  (when (string-equal filepath (buffer-file-name))
+  (when (lsp-bridge-path-equal filepath (buffer-file-name))
     (lsp-bridge-inlay-hint-try-send-request)))
 
 (provide 'lsp-bridge-inlay-hint)

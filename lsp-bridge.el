@@ -810,7 +810,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (erlang-mode                . erlang-indent-level) ; Erlang
     (ada-mode                   . ada-indent)          ; Ada
     (scad-mode                  . lsp-bridge-indent-two-level) ; OpenSCAD
-    (sml-mode                   . sml-indent-level)    ; Standard ML
+    (sml-mode                   . sml-indent-level) ; Standard ML
     (fuzion-mode                . lsp-bridge-indent-two-level) ; Fuzion
     (fennel-mode                . lsp-bridge-indent-two-level) ; Fennel
     (ttcn3-mode                 . lsp-bridge-indent-four-level) ; TTCN3
@@ -925,8 +925,8 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
   "Evaluate BODY in buffer with FILEPATH."
   (declare (indent 1))
   `(when-let* ((buffer (pcase ,filehost
-                        ("" (lsp-bridge-get-match-buffer-by-filepath ,filename))
-                        (_ (lsp-bridge-get-match-buffer-by-remote-file ,filehost ,filename)))))
+                         ("" (lsp-bridge-get-match-buffer-by-filepath ,filename))
+                         (_ (lsp-bridge-get-match-buffer-by-remote-file ,filehost ,filename)))))
      (with-current-buffer buffer
        ,@body)))
 
@@ -969,7 +969,7 @@ So we build this macro to restore postion after code format."
   (cl-dolist (buffer (buffer-list))
     (with-current-buffer buffer
       (when (and (boundp 'lsp-bridge-remote-file-path)
-                 (string-equal lsp-bridge-remote-file-path path)
+                 (lsp-bridge-path-equal lsp-bridge-remote-file-path path)
                  (boundp 'lsp-bridge-remote-file-host)
                  (or (string-equal lsp-bridge-remote-file-host host)
                      ;; host is "127.0.0.1" sent from get_lsp_file_host() when server running inside container
@@ -981,9 +981,14 @@ So we build this macro to restore postion after code format."
   (cl-dolist (buffer (buffer-list))
     (with-current-buffer buffer
       (when-let* ((file-name (buffer-file-name buffer))
-                  (match-buffer (or (string-equal file-name name)
-                                    (string-equal (file-truename file-name) name))))
+                  (match-buffer (or (lsp-bridge-path-equal file-name name)
+                                    (lsp-bridge-path-equal (file-truename file-name) name))))
         (cl-return buffer)))))
+
+(defun lsp-bridge-path-equal (path-a path-b)
+  (cond ((memq system-type '(cygwin windows-nt ms-dos))
+         (string-equal (downcase path-a) (downcase path-b)))
+        (t (string-equal path-a path-b))))
 
 (defun lsp-bridge--get-project-path-func (filename)
   "Get project root path, search order:
@@ -1484,7 +1489,7 @@ So we build this macro to restore postion after code format."
                   (save-excursion
                     (goto-char (point-max))
                     (insert (format "\n*** %s execute predicate '%s' failed with result: '%s'\n"
-                                  current-function pred result))))))
+                                    current-function pred result))))))
             result)
         (error
          (message "Error in predicate '%s': %S at point %S in buffer %S, mode %S"
@@ -1616,7 +1621,7 @@ So we build this macro to restore postion after code format."
   "Hide completion if string before cursor match some special keywords."
   (let ((string (if (bounds-of-thing-at-point 'symbol)
                     (buffer-substring-no-properties (car (bounds-of-thing-at-point 'symbol))
-                                                  (point))
+                                                    (point))
                   (char-to-string (char-before)))))
     (not (when (and (or (derived-mode-p 'ruby-mode)
                         (derived-mode-p 'ruby-ts-mode)
