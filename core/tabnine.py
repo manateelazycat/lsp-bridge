@@ -2,20 +2,20 @@
 # -*- coding: utf-8 -*-
 
 # Copyright (C) 2022 Andy Stewart
-# 
+#
 # Author:     Andy Stewart <lazycat.manatee@gmail.com>
 # Maintainer: <lazycat.manatee@gmail.com> <lazycat.manatee@gmail.com>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -27,14 +27,9 @@ import traceback
 
 from core.utils import *
 from subprocess import PIPE
-from sys import stderr,version_info
-
-if version_info[1] < 12 :
-    from distutils.version import StrictVersion
-    version_function = StrictVersion
-else: 
-    from pkg_resources import parse_version
-    version_function = parse_version
+from sys import stderr
+from packaging.version import Version
+version_function = Version
 
 TABNINE_PROTOCOL_VERSION = "1.0.14"
 TABNINE_EXECUTABLE = "TabNine.exe" if get_os_name() == "windows" else "TabNine"
@@ -45,20 +40,20 @@ class TabNine:
     def __init__(self):
         self.process = None
         self.path = None
-        
+
         self.receiver = None
         self.sender = None
         self.dispatcher = None
-        
+
         self.try_completion_timer = None
-        
+
         [self.tabnine_binaries_folder] = get_emacs_vars(["tabnine-bridge-binaries-folder"])
-        
+
     def complete(self, before, after, filename, region_includes_beginning, region_includes_end, max_num_results):
         if self.is_tabnine_exist() and isinstance(filename, str):
             if self.try_completion_timer is not None and self.try_completion_timer.is_alive():
                 self.try_completion_timer.cancel()
-            
+
             self.message = {
                 "version": TABNINE_PROTOCOL_VERSION,
                 "request": {
@@ -75,10 +70,10 @@ class TabNine:
 
             self.try_completion_timer = threading.Timer(0.5, self.do_complete)
             self.try_completion_timer.start()
-            
+
     def do_complete(self):
         self.sender.send_request(self.message)    # type: ignore
-    
+
     def get_tabnine_path(self):
         if os.path.exists(self.tabnine_binaries_folder):
             try:
@@ -96,46 +91,46 @@ class TabNine:
                 return None
 
         return None
-    
+
     def is_tabnine_exist(self):
         if self.path is None:
             self.path = self.get_tabnine_path()
-            
+
         if isinstance(self.path, str) and os.path.exists(self.path):
             if self.process is None:
                 self.process = subprocess.Popen(
-                    [self.path, "--client", "emacs"], 
-                    bufsize=DEFAULT_BUFFER_SIZE, 
-                    stdin=PIPE, 
-                    stdout=PIPE, 
+                    [self.path, "--client", "emacs"],
+                    bufsize=DEFAULT_BUFFER_SIZE,
+                    stdin=PIPE,
+                    stdout=PIPE,
                     stderr=stderr)
-                
+
                 self.receiver = TabNineReceiver(self.process)
                 self.receiver.start()
-                
+
                 self.sender = TabNineSender(self.process)
                 self.sender.start()
-                
+
                 self.dispatcher = threading.Thread(target=self.message_dispatcher)
                 self.dispatcher.start()
-                
+
                 log_time("Start TabNine server ({})".format(self.path))
-                
+
             return self.process is not None
         else:
             return False
-        
+
     def message_dispatcher(self):
         try:
             while True:
                 message = self.receiver.get_message()    # type: ignore
-                
+
                 completion_candidates = []
-                
+
                 if "results" in message:
                     for result in message["results"]:
                         label = result["new_prefix"]
-                        
+
                         candidate = {
                             "key": label,
                             "icon": "tabnine",
@@ -146,27 +141,27 @@ class TabNine:
                             "new_suffix": result["new_suffix"],
                             "old_suffix": result["old_suffix"]
                         }
-                        
+
                         completion_candidates.append(candidate)
-                        
+
                     completion_candidates = sorted(completion_candidates, key=lambda candidate: candidate["annotation"], reverse=True)
-                
+
                 eval_in_emacs("lsp-bridge-search-backend--record-items", "tabnine", completion_candidates)
         except:
             logger.error(traceback.format_exc())
-    
+
 class TabNineSender(MessageSender):
-    
+
     def send_message(self, message):
         data = json.dumps(message) + "\n"
-        
+
         self.process.stdin.write(data.encode("utf-8"))    # type: ignore
         self.process.stdin.flush()    # type: ignore
-        
+
         log_time("Send TabNine complete request for project {}".format(message["request"]["Autocomplete"]["filename"]))
-        
+
         logger.debug(json.dumps(message, indent=3))
-        
+
     def run(self):
         try:
             while self.process.poll() is None:
@@ -174,9 +169,9 @@ class TabNineSender(MessageSender):
                 self.send_message(message)
         except:
             logger.error(traceback.format_exc())
-    
+
 class TabNineReceiver(MessageReceiver):
-    
+
     def run(self):
         try:
             while self.process.poll() is None:

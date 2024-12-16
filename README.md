@@ -2,11 +2,11 @@
 <a href="https://github.com/manateelazycat/lsp-bridge/actions/workflows/test.yml"><img src="https://github.com/manateelazycat/lsp-bridge/actions/workflows/test.yml/badge.svg"/></a> <a href ="https://github.com/manateelazycat/lsp-bridge/blob/master/README.zh-CN.md"><img src="https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-555555.svg"/></a>
 
 <hr>
-  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#installation"><strong>Installation</strong></a> • 
-  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#supported-language-servers"><strong>Support languages</strong></a> • 
+  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#installation"><strong>Installation</strong></a> •
+  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#supported-language-servers"><strong>Support languages</strong></a> •
   <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#keymap"><strong>Keymaps</strong></a> •
   <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#lsp-server-options"><strong>Customize options</strong></a> •
-  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#join-development"><strong>Join development</strong></a> 
+  <a href="https://github.com/manateelazycat/lsp-bridge?tab=readme-ov-file#join-development"><strong>Join development</strong></a>
 <hr>
 
 
@@ -32,7 +32,7 @@ Advantages of lsp-bridge:
 ## Installation
 
 1. Install Emacs 28 or higher version
-2. Install Python dependencies: `pip3 install epc orjson sexpdata six setuptools paramiko rapidfuzz watchdog` (orjson is optional, orjson is based on Rust, providing faster JSON parsing performance)
+2. Install Python dependencies: `pip3 install epc orjson sexpdata six setuptools paramiko rapidfuzz watchdog packaging` (orjson is optional, orjson is based on Rust, providing faster JSON parsing performance)
 3. Install Elisp dependencies: [markdown-mode](https://github.com/jrblevin/markdown-mode), [yasnippet](https://github.com/joaotavora/yasnippet)
 
 4. Download this repository using git clone, and replace the load-path path in the configuration below.
@@ -268,8 +268,8 @@ lsp-bridge provides support for more than two language servers for many language
 - `lsp-bridge-csharp-lsp-server`: C# language server, you can choose `omnisharp-mono`, `omnisharp-dotnet` or `csharp-ls`, note that you need to give **execute permissions** to the OmniSharp file
 - `lsp-bridge-python-multi-lsp-server`: Python multi-language servers, you can choose `basedpyright_ruff`, `pyright_ruff`, `jedi_ruff`, `python-ms_ruff`, `pylsp_ruff`
 - `lsp-bridge-nix-lsp-server`: Nix language server, you can choose `rnix-lsp`, `nixd` or `nil`
-- `lsp-bridge-markdown-lsp-server`: Markdown language server, you can choose `vale-ls` or `marksman` 
-- `lsp-bridge-lua-lsp-server`: Lua language server, you can choose `sumneko` or `lua-lsp` 
+- `lsp-bridge-markdown-lsp-server`: Markdown language server, you can choose `vale-ls` or `marksman`
+- `lsp-bridge-lua-lsp-server`: Lua language server, you can choose `sumneko` or `lua-lsp`
 - `lsp-bridge-verilog-lsp-server`: Verilog language server， you can choose `verible`, or `svls`
 - `lsp-bridge-xml-lsp-server`: XML language server， you can choose `lemminx`, or `camells`
 
@@ -393,7 +393,7 @@ If your language supports mixed multi-language servers, it is recommended to che
 | Futhark     | [futhark-lsp](https://futhark-lang.org)                                         |                                                                                                                                                                                                                               |
 | Fuzion     | [fuzion-lsp-server](https://github.com/tokiwa-software/fuzion-lsp-server)                                         |                                                                                                                                                                                                                               |
 | F#          | [fsautocomplete](https://github.com/fsharp/FsAutoComplete)                                         |                                                                                                                                                                                                                                                                     |
-| Gleam       | [gleam lsp](https://gleam.run/news/v0.21-introducing-the-gleam-language-server/)                   |                                                                                                                                                                                
+| Gleam       | [gleam lsp](https://gleam.run/news/v0.21-introducing-the-gleam-language-server/)                   |
 | GLSL        | [glsl-language-server](https://github.com/svenstaro/glsl-language-server)                   |                                                                                                                                                                                                                               |
 | Go          | [gopls](https://github.com/golang/tools/tree/master/gopls)                                         | Make sure install [go-mode](https://github.com/dominikh/go-mode.el) and `gopls` in PATH, please do `ln -s ~/go/bin/gopls ~/.local/bin`, and do `go mod init` first                                                                                                    |
 | GraphQL     | [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli) |                                                                                                                                                                                                                                                                     |
