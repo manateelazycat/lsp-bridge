@@ -48,7 +48,7 @@ Advantages of lsp-bridge:
 (global-lsp-bridge-mode)
 ```
 
-Note: To use completion in terminal, please install the compiled tty-child-frames branch of Emacs
+Note: To enable completion in the terminal, please install the latest version of Emacs, which supports tty-child-frames.
 
 * If you are using straight to install, you should use the following configuration to install:
 

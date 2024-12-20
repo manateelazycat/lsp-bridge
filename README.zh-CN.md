@@ -45,7 +45,7 @@ lsp-bridge 的优势：
 (global-lsp-bridge-mode)
 ```
 
-备注： 在终端下补全请安装编译 Emacs 的 tty-child-frames 分支
+备注： 在终端下补全请安装编译 Emacs 最新版， 以支持 tty-child-frames
 
 * 如果你使用 straight 来安装， 应该用下面的配置来安装：
 
