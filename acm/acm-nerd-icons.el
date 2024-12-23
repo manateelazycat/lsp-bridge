@@ -1,0 +1,141 @@
+;;; acm-nerd-icons.el --- Icons for Acm via nerd-icons -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;;; Code:
+
+(require 'nerd-icons)
+
+(defvar acm-icon-width 4)
+
+(define-widget 'acm-nerd-icons-type 'plist
+  "The type of an icon mapping."
+  :tag "Icon parameters"
+  :options '((:style (choice (const :tag "wicon" "w")
+                             (const :tag "faicon" "fa")
+                             (const :tag "flicon" "fl")
+                             (const :tag "mdicon" "md")
+                             (const :tag "codicon" "cod")
+                             (const :tag "devicon" "dev")
+                             (const :tag "ipsicon" "ips")
+                             (const :tag "octicon" "oct")
+                             (const :tag "pomicon" "pom")
+                             (const :tag "sucicon" "suc")))
+             (:name string)
+             (:face face)))
+
+(defcustom acm-nerd-icons-size 1.0
+  "The default icon size in completion.
+Only effective in gui frame."
+  :type 'float
+  :group 'acm)
+
+(defcustom acm-nerd-icon-alist
+  '(("array" :style "cod" :name "symbol_array" :face nerd-icons-dblue)
+    ("at" :style "md" :name "at" :face nerd-icons-dblue)
+    ("boolean" :style "cod" :name "symbol_boolean" :face nerd-icons-lgreen)
+    ("block" :style "md" :name "alpha_b_box_outline" :face nerd-icons-lgreen)
+    ("capf" :style "md" :name "infinity" :face nerd-icons-dorange)
+    ("class" :style "cod" :name "symbol_class" :face nerd-icons-orange)
+    ("codeium" :style "md" :name "alpah_c_box_outline" :face nerd-icons-green)
+    ("color" :style "cod" :name "symbol_color" :face nerd-icons-dgreen)
+    ("copilot" :style "cod" :name "copilot" :face nerd-icons-dpink)
+    ("command" :style "cod" :name "terminal" :face default)
+    ("const" :style "md" :name "variable_box" :face nerd-icons-lcyan)
+    ("constant" :style "md" :name "variable_box" :face nerd-icons-lcyan)
+    ("constructor" :style "cod" :name "triangle_right" :face nerd-icons-lblue)
+    ("ctor" :style "md" :name "cube" :face nerd-icons-red-alt)
+    ("custom" :style "md" :name "unicorn_variant" :face nerd-icons-dmaroon-)
+    ("dir" :style "cod" :name "folder" :face nerd-icons-blue)
+    ("emmet abbreviation" :style "md" :name "arrow-expand" :face nerd-icons-green)
+    ("enummember" :style "cod" :name "symbol_enum_member" :face nerd-icons-maroon)
+    ("enum-member" :style "cod" :name "symbol_enum_member" :face nerd-icons-maroon)
+    ("enum" :style "cod" :name "symbol_enum" :face nerd-icons-lred)
+    ("event" :style "cod" :name "symbol_event" :face nerd-icons-lsilver)
+    ("face" :style "cod" :name "symbol_color" :face nerd-icons-lgreen)
+    ("feature" :style "md" :name "feather" :face nerd-icons-maroon)
+    ("function" :style "md" :name "function" :face nerd-icons-blue)
+    ("fun" :style "cod" :name "function" :face nerd-icons-blue)
+    ("field" :style "cod" :name "symbol_field" :face nerd-icons-lorange)
+    ("file" :style "cod" :name "symbol_file" :face nerd-icons-maroon)
+    ("folder" :style "cod" :name "folder" :face nerd-icons-blue)
+    ("instance" :style "md" :name "gamepad_circle_left" :face nerd-icons-red)
+    ("interface" :style "cod" :name "symbol_interface" :face nerd-icons-dgreen)
+    ("i/f" :style "cod" :name "symbol_interface" :face nerd-icons-dgreen)
+    ("jupyter" :style "dev" :name "jyputer" :face nerd-icons-dorange)
+    ("keyword" :style "cod" :name "key" :face nerd-icons-dblue)
+    ("k/w" :style "cod" :name "key" :face nerd-icons-dblue)
+    ("key" :style "cod" :name "key" :face nerd-icons-dblue)
+    ("macro" :style "md" :name "function_variant" :face nerd-icons-yellow)
+    ("magic" :style "cod" :name "wand" :face nerd-icons-lpink)
+    ("member" :style "cod" :name "symbol_enum_member" :face nerd-icons-lpink)
+    ("method" :style "md" :name "lambda" :face nerd-icons-pink)
+    ("module" :style "md" :name "view_module_outline" :face nerd-icons-lblue)
+    ("mod" :style "md" :name "view_module_outline" :face nerd-icons-lblue)
+    ("namespace" :style "cod" :name "symbol_namespace" :face nerd-icons-red)
+    ("net" :style "md" :name "ethereum" :face nerd-icons-orange)
+    ("note" :style "cod" :name "note" :face nerd-icons-green)
+    ("null" :style "md" :name "null" :face nerd-icons-green)
+    ("numeric" :style "md" :name "numeric" :face nerd-icons-lpink)
+    ("number" :style "md" :name "numeric" :face nerd-icons-lpink)
+    ("object" :style "md" :name "zodiac-taurus" :face nerd-icons-dblue)
+    ("operator" :style "cod" :name "symbol_operator" :face nerd-icons-orange)
+    ("op" :style "cod" :name "symbol_operator" :face nerd-icons-orange)
+    ("package" :style "cod" :name "package" :face nerd-icons-lorange)
+    ("param" :style "cod" :name "symbol_parameter" :face nerd-icons-red)
+    ("port" :style "md" :name "alphabet_tengwar" :face nerd-icons-blue)
+    ("property" :style "cod" :name "symbol_property" :face nerd-icons-dred)
+    ("prop" :style "cod" :name "symbol_property" :face nerd-icons-dred)
+    ("prototype" :style "md" :name "source_commit_start" :face nerd-icons-lblue)
+    ("register" :style "md" :name "map_marker_outline" :face nerd-icons-yellow)
+    ("reference" :style "md" :name "link_variant" :face nerd-icons-dblue)
+    ("ref" :style "md" :name "link_variant" :face nerd-icons-dblue)
+    ("search" :style "md" :name "magnify" :face nerd-icons-dred)
+    ("snippet" :style "md" :name "dna" :face nerd-icons-maroon)
+    ("sn" :style "md" :name "dna" :face nerd-icons-maroon)
+    ("special form" :style "md" :name "function_variant" :face nerd-icon-blue)
+    ("string" :style "cod" :name "symbol_string" :face nerd-icons-green)
+    ("struct" :style "cod" :name "symbol_structure" :face nerd-icons-green)
+    ("tabnine" :style "md" :name "alpha_t_box_outline" :face nerd-icons-purple)
+    ("tailwind" :style "dev" :name "tailwindcss" :face nerd-icons-lblue)
+    ("task" :style "md" :name "clock_fast" :face nerd-icons-red)
+    ("template" :style "md" :name "dna" :face nerd-icons-maroon)
+    ("text" :style "md" :name "format_text" :face nerd-icons-dsilver)
+    ("translate" :style "md" :name "translate" :face nerd-icons-dgreen)
+    ("typeparameter" :style "cod" :name "list_unordered" :face nerd-icons-dcyan)
+    ("type-parameter" :style "cod" :name "list_unordered" :face nerd-icons-dcyan)
+    ("typedef" :style "md" :name "zodiac_leo" :face nerd-icons-red)
+    ("unit" :style "cod" :name "symbol_ruler" :face nerd-icons-lpink)
+    ("unknown" :style "cod" :name "question" :face nerd-icons-dred)
+    ("value" :style "cod" :name "symbol_field" :face nerd-icons-lpink)
+    ("variable" :style "md" :name "variable" :face nerd-icons-lyellow)
+    ("var" :style "md" :name "variable" :face nerd-icons-lyellow)
+    ("workspace-symbol" :style "md" :name "shark_fin_outline" :face nerd-icons-blue)
+    ("yas-snippet" :style "md" :name "dna" :face nerd-icons-lblue)
+    ("t" :style "cod" :name "code" :face nerd-icons-lpurple))
+  "Acm nerd icons mapping."
+  :type '(alist :key-type string :value-type acm-nerd-icons-type)
+  :group 'acm)
+
+(defvar acm-nerd-icons-cache (make-hash-table :test 'equal))
+
+(defun acm-nerd-icons-fetch (kind)
+  "Fetch nerd icons text accroding to KIND."
+  (if-let* ((icon-text (gethash kind acm-nerd-icons-cache)))
+      icon-text
+    (let* ((icon-entry (cdr (or (assoc kind acm-nerd-icon-alist)
+                                (assoc "t" acm-nerd-icon-alist))))
+           (style (plist-get icon-entry :style))
+           (name (plist-get icon-entry :name))
+           (face (plist-get icon-entry :face))
+           (icon-text
+            (concat " " (funcall (intern (concat "nerd-icons-" style "icon"))
+                                 (concat "nf-" style "-" name)
+                                 :face face
+                                 :height acm-nerd-icons-size)
+                    " ")))
+      (puthash kind icon-text acm-nerd-icons-cache)
+      icon-text)))
+
+(provide 'acm-nerd-icons)
+
+;;; acm-nerd-icons.el ends here
