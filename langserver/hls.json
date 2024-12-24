@@ -6,5 +6,6 @@
     "--lsp"
   ],
   "settings": {},
-  "support-single-file": false
+  "support-single-file": false,
+  "projectFiles": ["hie.yml"],
 }
