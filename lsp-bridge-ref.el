@@ -457,7 +457,7 @@ user more freedom to use rg with special arguments."
   (cl-dolist (buffer (buffer-list))
     (let* ((buf-file-name (buffer-file-name buffer))
            (file-name (if (stringp buf-file-name) (substring-no-properties buf-file-name) buf-file-name)))
-      (when (lsp-bridge-path-equal file-name filepath)
+      (when (string-equal file-name filepath)
         (cl-return buffer)
         ))))
 
