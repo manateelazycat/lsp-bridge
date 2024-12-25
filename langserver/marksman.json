@@ -1,0 +1,6 @@
+{
+  "name": "marksman",
+  "languageId": "markdown",
+  "command": ["marksman", "server"],
+  "settings": {}
+}

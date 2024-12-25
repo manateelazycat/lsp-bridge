@@ -8,7 +8,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         emacs_version:
-          - "27.2"
+          - "28.1"
 
     steps:
       - uses: actions/checkout@v2
@@ -28,7 +28,7 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.7"
+          python-version: "3.8"
           architecture: "x64"
 
       - name: Install NodeJS
@@ -45,7 +45,7 @@ jobs:
         run: |
           # sudo apt-get install clangd-12
           # sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
-          pip install epc six pyright sexpdata
+          pip install epc six basedpyright sexpdata watchdog packaging
           go install golang.org/x/tools/gopls@latest
           curl https://raw.githubusercontent.com/eruizc-dev/jdtls-launcher/master/install.sh | bash
         if: matrix.os == 'ubuntu-latest'
@@ -53,7 +53,7 @@ jobs:
       - name: Install Dependencies (Windows)
         run: |
           # choco install llvm
-          python -m pip install epc six pyright sexpdata
+          python -m pip install epc six basedpyright sexpdata watchdog packaging
           go install golang.org/x/tools/gopls@latest
         if: matrix.os == 'windows-latest'
 

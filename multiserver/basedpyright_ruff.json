@@ -1,0 +1,22 @@
+{
+  "completion": ["basedpyright"],
+  "completion_item_resolve": ["basedpyright"],
+  "diagnostics": ["ruff"],
+  "code_action": ["ruff"],
+  "execute_command": ["basedpyright", "ruff"],
+  "find_define": "basedpyright",
+  "find_type_define": "basedpyright",
+  "find_implementation": "basedpyright",
+  "find_references": "basedpyright",
+  "peek_find_definition": "basedpyright",
+  "peek_find_references": "basedpyright",
+  "formatting": "ruff",
+  "hover": "basedpyright",
+  "signature_help": "basedpyright",
+  "prepare_rename": "basedpyright",
+  "rename": "basedpyright",
+  "document_symbol": "basedpyright",
+  "workspace_symbol": "basedpyright",
+  "semantic_tokens": "basedpyright",
+  "inlay_hint": "basedpyright"
+}

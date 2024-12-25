@@ -1,0 +1,9 @@
+{
+  "name": "purescript-language-server",
+  "languageId": "purescript",
+  "command": [
+    "purescript-language-server",
+    "--stdio"
+  ],
+  "settings": {}
+}

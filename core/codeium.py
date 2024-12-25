@@ -53,6 +53,7 @@ class Codeium:
         insert_spaces,
         prefix,
         language,
+        file_path
     ):
         self.get_info()
         self.run_local_server()
@@ -77,6 +78,7 @@ class Codeium:
                 "cursor_offset": cursor_offset,
                 "editor_language": editor_language,
                 "text": text,
+                "absolute_path_migrate_me_to_uri": file_path,
                 "language": language,
             },
             "editor_options": {"insert_spaces": True if insert_spaces else False, "tab_size": tab_size},
@@ -291,5 +293,5 @@ class Codeium:
                 response_data = response.read().decode("utf-8")
                 return parse_json_content(response_data)
         except Exception as e:
-            logger.exception(e)
+            print("Codeium request error", e, url)
             return {}

@@ -9,6 +9,7 @@ class SemanticTokens(Handler):
     cancel_on_change = False
     send_document_uri = True
     provider = "semantic_tokens_provider"
+    provider_message = "Current server not support semantic tokens."
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -66,11 +67,12 @@ class SemanticTokens(Handler):
         (new_tokens, old_tokens) = self.calc_diff_tokens(self.render_tokens, render_tokens)
 
         if len(new_tokens) != 0 or len(old_tokens) != 0:
-            eval_in_emacs("lsp-bridge-semantic-tokens--update", self.buffer_name, list(old_tokens), self.absolute_line_to_relative(new_tokens))
+            eval_in_emacs("lsp-bridge-semantic-tokens--render", self.buffer_name, list(old_tokens), self.absolute_line_to_relative(new_tokens))
         self.render_tokens = render_tokens
 
     def get_faces_index(self, type_index, type_modifier_index):
-        type_name = self.file_action.single_server.semantic_tokens_provider["legend"]["tokenTypes"][type_index]
+        lsp_server = self.file_action.get_match_lsp_servers("semantic_tokens")[0]
+        type_name = lsp_server.semantic_tokens_provider["legend"]["tokenTypes"][type_index]
         ignore_modifier = self.is_ignore_modifier(type_name)
         if type_modifier_index == 0 and not ignore_modifier:
             return None
@@ -106,7 +108,8 @@ class SemanticTokens(Handler):
             else:
                 return ()
 
-        token_modifiers = self.file_action.single_server.semantic_tokens_provider["legend"]["tokenModifiers"]
+        lsp_server = self.file_action.get_match_lsp_servers("semantic_tokens")[0]
+        token_modifiers = lsp_server.semantic_tokens_provider["legend"]["tokenModifiers"]
         type_modifier_names = [token_modifiers[index] for index in self.find_ones(type_modifier_index)]
         type_modifier_faces_index = []
         for name in type_modifier_names:

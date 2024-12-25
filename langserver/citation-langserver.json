@@ -1,0 +1,8 @@
+{
+  "name": "citation-langserver",
+  "languageId": "bibtex",
+  "command": [
+    "citation-langserver"
+  ],
+  "settings": {}
+}

@@ -1,0 +1,8 @@
+{
+  "name": "jsonnet-language-server",
+  "languageId": "jsonnet",
+  "command": [
+    "jsonnet-language-server"
+  ],
+  "settings": {}
+}

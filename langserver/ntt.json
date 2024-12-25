@@ -1,0 +1,9 @@
+{
+  "name": "ntt",
+  "languageId": "ttcn3",
+  "command": [
+    "ntt",
+    "langserver"
+  ],
+  "settings": {}
+}

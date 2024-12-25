@@ -171,7 +171,7 @@
          (found-buffer))
 
     (if (dolist (buffer (buffer-list) found-buffer)
-          (when (string-equal (buffer-file-name buffer) path)
+          (when (lsp-bridge-path-equal (buffer-file-name buffer) path)
             (setq found-buffer buffer)))
         (find-file path)
       (add-to-list 'lsp-bridge-call-hierarchy--temp-buffers (find-file path)))

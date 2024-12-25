@@ -13,7 +13,10 @@ class Rename(Handler):
             logger.info("No rename found.")
             message_emacs("No rename found")
             return
-        
+
+        remote_connection_info = get_remote_connection_info()
+        logger.info(response)
+        convert_workspace_edit_path_to_tramped_path(response, remote_connection_info)
         eval_in_emacs("lsp-bridge-workspace-apply-edit", response)
-        
+
         message_emacs("Rename done.")

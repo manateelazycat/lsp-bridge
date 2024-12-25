@@ -215,6 +215,17 @@ Default matching use snippet filename."
 (defun acm-backend-yas-candidate-doc (candidate)
   (ignore-errors (plist-get candidate :content)))
 
+(defun yas-expand-snippet-acm-advice (orig-fun &rest args)
+  ;; Use yas-selected-text to implement $TM_SELECTED_TEXT return by jdtls
+  (if (and (boundp 'acm-backend-lsp-server-names)
+           (equal acm-backend-lsp-server-names '("jdtls")))
+      (apply orig-fun (string-replace "$TM_SELECTED_TEXT" "`yas-selected-text`" (car args)) (cdr args))
+    ;; Otherwise, not change yassnippet behavior.
+    (apply orig-fun args)))
+
+(advice-add 'yas-expand-snippet :around
+	        #'yas-expand-snippet-acm-advice)
+
 (provide 'acm-backend-yas)
 
 ;;; acm-backend-yas.el ends here

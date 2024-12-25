@@ -1,0 +1,8 @@
+{
+  "name": "lemminx",
+  "languageId": "xml",
+  "command": [
+    "lemminx"
+  ],
+  "settings": {}
+}

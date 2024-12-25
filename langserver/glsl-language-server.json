@@ -1,0 +1,9 @@
+{
+  "name": "glsl-language-server",
+  "languageId": "glsl",
+  "command": [
+    "glslls",
+    "--stdin"
+  ],
+  "settings": {}
+}

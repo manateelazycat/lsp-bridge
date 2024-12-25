@@ -2,6 +2,8 @@
   "name": "elixirLS",
   "languageId": "elixir",
   "command": ["language_server.sh"],
+  "support-single-file": false,
+  "projectFiles": ["mix.exs"],
   "settings": {
     "elixirLS": {
       "dialyzerEnabled": true,

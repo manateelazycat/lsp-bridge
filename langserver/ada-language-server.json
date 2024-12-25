@@ -1,0 +1,8 @@
+{
+  "name": "ada-language-server",
+  "languageId": "ada",
+  "command": [
+    "ada_language_server"
+  ],
+  "settings": {}
+}

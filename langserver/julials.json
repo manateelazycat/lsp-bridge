@@ -22,6 +22,5 @@
         "julia.lint.missingrefs": "all",
         "julia.lint.disabledDirs": [],
         "julia.completionmode": true
-    },
-    "support-single-file": true
+    }
 }

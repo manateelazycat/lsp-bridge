@@ -1,0 +1,6 @@
+{
+  "name": "tinymist",
+  "languageId": "typst",
+  "command": ["tinymist", "lsp"],
+  "settings": {}
+}

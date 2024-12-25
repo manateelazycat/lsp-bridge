@@ -94,6 +94,7 @@ class FileAction:
         (self.enable_auto_import,
          self.completion_items_limit,
          self.completion_match_mode,
+         self.completion_workspace_symbol_items_limit,
          self.insert_spaces,
          self.enable_push_diagnostics,
          self.push_diagnostic_idle,
@@ -102,6 +103,7 @@ class FileAction:
              "acm-backend-lsp-enable-auto-import",
              "acm-backend-lsp-candidates-max-number",
              "acm-backend-lsp-match-mode",
+             "acm-backend-lsp-workspace-symbol-candidates-max-number",
              "indent-tabs-mode",
              "lsp-bridge-enable-diagnostics",
              "lsp-bridge-diagnostic-fetch-idle",
@@ -154,8 +156,11 @@ class FileAction:
             if self.single_server:
                 self.send_request(self.single_server, method, handler, *args, **kwargs)
             else:
-                if method in ["completion", "completion_item_resolve", "diagnostics", "code_action", "execute_command"]:
+                if method in ["completion", "completion_item_resolve", "diagnostics", "code_action"]:
                     method_server_names = self.multi_servers_info[method]
+                elif method in ["execute_command"]:
+                    # "execute_command" is trigger by code action, one time only need send request to *ONE* LSP server.
+                    method_server_names = [args[0]] # first arguments if server name.
                 else:
                     method_server_names = [self.multi_servers_info[method]]
 
@@ -167,8 +172,10 @@ class FileAction:
 
     def send_request(self, method_server, method, handler, *args, **kwargs):
         if hasattr(handler, "provider"):
-            if getattr(method_server, getattr(handler, "provider")):
-                self.send_server_request(method_server, method, *args, **kwargs)
+            method_provider = getattr(method_server, getattr(handler, "provider"), None)
+            if method_provider is not None:
+                if method_provider is not False:
+                    self.send_server_request(method_server, method, *args, **kwargs)
             elif hasattr(handler, "provider_message"):
                 message_emacs(getattr(handler, "provider_message"))
         else:
@@ -208,9 +215,15 @@ class FileAction:
             if isinstance(self.completion_block_kind_list, list):
                 self.completion_block_kind_list = list(map(lambda x: x.lower(), self.completion_block_kind_list))
 
-        delay = 0 if is_running_in_server() else 0.1
-        self.try_completion_timer = threading.Timer(delay, lambda : self.try_completion(position, before_char, prefix, self.version))
-        self.try_completion_timer.start()
+        if position['line'] < 0:
+            # TODO fix this from elisp happened in org source code completion
+            # We can temporary fix this by ignore this case,
+            # which will not influence the completion result.
+            logger.error("Invalid position change file", start, end, range_length, change_text, position, before_char, buffer_name, prefix, self.org_line_bias)
+        else:
+            delay = 0 if is_running_in_server() else 0.1
+            self.try_completion_timer = threading.Timer(delay, lambda : self.try_completion(position, before_char, prefix, self.version))
+            self.try_completion_timer.start()
 
     def update_file(self, buffer_name, org_line_bias=None):
         self.org_line_bias = org_line_bias
@@ -235,9 +248,19 @@ class FileAction:
         if self.multi_servers:
             for lsp_server in self.multi_servers.values():
                 if lsp_server.server_info["name"] in self.multi_servers_info["completion"]:
+                    # Send code completion request.
                     self.send_server_request(lsp_server, "completion", lsp_server, position, before_char, prefix, version)
+
+                    # Send workspace symbol completion request.
+                    if lsp_server.workspace_symbol_provider:
+                        self.send_server_request(lsp_server, "completion_workspace_symbol", lsp_server, prefix)
         else:
+            # Send code completion request.
             self.send_server_request(self.single_server, "completion", self.single_server, position, before_char, prefix, version)
+
+            # Send workspace symbol completion request.
+            if self.single_server.workspace_symbol_provider:
+                self.send_server_request(self.single_server, "completion_workspace_symbol", self.single_server, prefix)
 
     def try_formatting(self, start, end, *args, **kwargs):
         if self.multi_servers:
@@ -270,11 +293,13 @@ class FileAction:
     def get_diagnostics_count(self):
         return sum(len(diags) for diags in self.diagnostics.values())
 
-    def get_diagnostics(self):
+    def get_diagnostics(self, hide_severities=None):
         diagnostics = []
         diagnostic_count = 0
         for server_name in self.diagnostics:
             for diagnostic in self.diagnostics[server_name]:
+                if hide_severities and diagnostic["severity"] in hide_severities:
+                    continue
                 diagnostic["server-name"] = server_name
                 diagnostics.append(diagnostic)
 
@@ -285,7 +310,7 @@ class FileAction:
 
         return diagnostics
 
-    def list_diagnostics(self):
+    def list_diagnostics(self, hide_severities):
         diagnostic_count = 0
         for server_name in self.diagnostics:
             diagnostic_count += len(self.diagnostics[server_name])
@@ -293,7 +318,7 @@ class FileAction:
         if diagnostic_count == 0:
             message_emacs("No diagnostics found.")
         else:
-            eval_in_emacs("lsp-bridge-diagnostic--list", self.get_diagnostics())
+            eval_in_emacs("lsp-bridge-diagnostic--list", self.get_diagnostics(hide_severities))
 
     def sort_diagnostic(self, diagnostic_a, diagnostic_b):
         score_a = [diagnostic_a["range"]["start"]["line"],
@@ -362,22 +387,11 @@ class FileAction:
 
             code_actions = self.get_code_actions()
             if len(code_actions) > 0:
-                if self.code_action_has_valid_edits(code_actions):
-                    eval_in_emacs("lsp-bridge-code-action--fix", code_actions, action_kind)
-                else:
-                    message_emacs("Fantastic, your code looks great! No further actions needed!")
+                eval_in_emacs("lsp-bridge-code-action--fix", code_actions, action_kind)
             elif self.get_diagnostics_count() > 0:
                 message_emacs("Please move cursor to error or warning, then execute 'lsp-bridge-code-action' again.")
             else:
                 message_emacs("Fantastic, your code looks great! No further actions needed!")
-
-    def code_action_has_valid_edits(self, data):
-        for item in data:
-            if 'edit' in item:
-                for change in item['edit']['documentChanges']:
-                    if change['edits']:
-                        return True
-        return False
 
     def get_code_actions(self):
         code_actions = []

@@ -1,0 +1,9 @@
+{
+  "name": "cucumber-language-server",
+  "languageId": "cucumber",
+  "command": [
+    "cucumber-language-server",
+    "--stdio"
+  ],
+  "settings": {}
+}

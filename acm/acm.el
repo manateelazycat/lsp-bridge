@@ -95,6 +95,7 @@
 (require 'acm-backend-yas)
 (require 'acm-backend-elisp)
 (require 'acm-backend-lsp)
+(require 'acm-backend-lsp-workspace-symbol)
 (require 'acm-backend-path)
 (require 'acm-backend-search-file-words)
 (require 'acm-backend-search-sdcv-words)
@@ -107,6 +108,8 @@
 (require 'acm-backend-copilot)
 (require 'acm-backend-org-roam)
 (require 'acm-backend-jupyter)
+(require 'acm-backend-tabby)
+(require 'acm-backend-capf)
 (require 'acm-quick-access)
 
 ;;; Code:
@@ -182,20 +185,25 @@
   :type 'string
   :group 'acm)
 
-(defcustom acm-completion-backend-merge-order '("mode-first-part-candidates"
-                                                "template-first-part-candidates"
-                                                "tabnine-candidates"
-                                                "copilot-candidates"
-                                                "codeium-candidates"
-                                                "template-second-part-candidates"
-                                                "mode-second-part-candidates")
-  "The merge order for completion backend."
+(defvaralias 'acm-completion-backend-merge-order 'acm-backend-order)
+
+(defcustom acm-backend-order '("mode-first-part-candidates"
+                               "template-first-part-candidates"
+                               "tabnine-candidates"
+                               "copilot-candidates"
+                               "codeium-candidates"
+                               "template-second-part-candidates"
+                               "mode-second-part-candidates")
+  "The order for completion backend."
   :type 'list
   :group 'acm)
 
 (defcustom acm-completion-mode-candidates-merge-order '("elisp-candidates"
                                                         "lsp-candidates"
+                                                        "lsp-workspace-symbol-candidates"
+                                                        "capf-candidates"
                                                         "jupyter-candidates"
+                                                        "tabby-candidates"
                                                         "ctags-candidates"
                                                         "citre-candidates"
                                                         "org-roam-candidates"
@@ -373,27 +381,27 @@ So we use `minor-mode-overriding-map-alist' to override key, make sure all keys 
        (<= (match-beginning 2) (point))))
 
 (defun acm-get-input-prefix-bound ()
-  (pcase acm-input-bound-style
-    ("symbol"
-     (bounds-of-thing-at-point 'symbol))
-    ("org-roam"
-     (when (org-in-regexp org-roam-bracket-completion-re 1)
-       (cons (match-beginning 2)
-             (match-end 2))))
-    ("string"
-     (cons (point)
-           (save-excursion
-             (if (search-backward-regexp "\\s-" (point-at-bol) t)
-                 (progn
-                   (forward-char)
-                   (point))
-               (point-at-bol)))))
-    ("ascii"
-     (when-let ((bound (bounds-of-thing-at-point 'symbol)))
-       (let* ((keyword (buffer-substring-no-properties (car bound) (cdr bound)))
-              (offset (or (string-match "[[:nonascii:]]+" (reverse keyword))
-                          (length keyword))))
-         (cons (- (cdr bound) offset) (cdr bound)))))))
+  (cond
+   ((equal "string" acm-input-bound-style)
+    (cons (point)
+          (save-excursion
+            (if (search-backward-regexp "\\s-" (point-at-bol) t)
+                (progn
+                  (forward-char)
+                  (point))
+              (point-at-bol)))))
+   ((equal "symbol" acm-input-bound-style)
+    (bounds-of-thing-at-point 'symbol))
+   ((equal "org-roam" acm-input-bound-style)
+    (when (org-in-regexp org-roam-bracket-completion-re 1)
+      (cons (match-beginning 2)
+            (match-end 2))))
+   ((equal "ascii" acm-input-bound-style)
+    (when-let* ((bound (bounds-of-thing-at-point 'symbol)))
+      (let* ((keyword (buffer-substring-no-properties (car bound) (cdr bound)))
+             (offset (or (string-match "[[:nonascii:]]+" (reverse keyword))
+                         (length keyword))))
+        (cons (- (cdr bound) offset) (cdr bound)))))))
 
 (defun acm-get-input-prefix ()
   "Get user input prefix."
@@ -456,6 +464,12 @@ Only calculate template candidate when type last character."
      (cancel-timer ,timer)
      (setq ,timer nil)))
 
+(defun acm-remove-duplicate-candidates (candidates lsp-labels)
+  "Remove elements from CANDIDATES whose labels exist in LSP-LABELS."
+  (cl-remove-if (lambda (candidate)
+                  (member (plist-get candidate :label) lsp-labels))
+                candidates))
+
 (defun acm-update-candidates ()
   (let* ((keyword (acm-get-input-prefix))
          (char-before-keyword (save-excursion
@@ -465,12 +479,16 @@ Only calculate template candidate when type last character."
          (mode-candidates-min-index 2)
          (template-candidates-min-index 2)
          lsp-candidates
+         lsp-workspace-symbol-candidates
+         file-words-candidates
+         capf-candidates
          path-candidates
          yas-candidates
          tabnine-candidates
          codeium-candidates
          copilot-candidates
          jupyter-candidates
+         tabby-candidates
          tempel-candidates
          mode-candidates
          mode-first-part-candidates
@@ -497,6 +515,12 @@ Only calculate template candidate when type last character."
     (when acm-enable-jupyter
       (setq jupyter-candidates (acm-backend-jupyter-candidates keyword)))
 
+    (when acm-enable-tabby
+      (setq tabby-candidates (acm-backend-tabby-candidates keyword)))
+
+    (when acm-enable-capf
+      (setq capf-candidates (acm-backend-capf-candiates keyword)))
+
     (if acm-enable-search-sdcv-words
         ;; Completion SDCV if option `acm-enable-search-sdcv-words' is enable.
         (setq candidates (acm-backend-search-sdcv-words-candidates keyword))
@@ -512,16 +536,30 @@ Only calculate template candidate when type last character."
           (setq ctags-candidates (unless (acm-in-comment-p) (acm-backend-ctags-candidates keyword))))
         ;; Fetch syntax completion candidates.
         (setq lsp-candidates (unless (acm-in-comment-p) (acm-backend-lsp-candidates keyword)))
+        (setq file-words-candidates (acm-backend-search-file-words-candidates keyword))
+        (when acm-enable-lsp-workspace-symbol
+          (setq lsp-workspace-symbol-candidates (unless (acm-in-comment-p) (acm-backend-lsp-workspace-symbol-candidates keyword))))
+
+        (let ((lsp-labels (mapcar (lambda (candidate) (plist-get candidate :label)) lsp-candidates)))
+          ;; Remove duplicates from both `lsp-workspace-symbol-candidates` and `file-words-candidates`
+          (setq lsp-workspace-symbol-candidates (acm-remove-duplicate-candidates lsp-workspace-symbol-candidates lsp-labels))
+          (setq file-words-candidates (acm-remove-duplicate-candidates file-words-candidates lsp-labels)))
+
+
+
         (setq mode-candidates
               (apply #'append (mapcar (lambda (mode-candidate-name)
                                         (pcase mode-candidate-name
                                           ("elisp-candidates" (unless (acm-in-comment-p) (acm-backend-elisp-candidates keyword)))
                                           ("lsp-candidates" lsp-candidates)
+                                          ("lsp-workspace-symbol-candidates" lsp-workspace-symbol-candidates)
+                                          ("capf-candidates" capf-candidates)
                                           ("jupyter-candidates" jupyter-candidates)
+                                          ("tabby-candidates" tabby-candidates)
                                           ("ctags-candidates" ctags-candidates)
                                           ("citre-candidates" citre-candidates)
                                           ("org-roam-candidates" org-roam-candidates)
-                                          ("file-words-candidates" (acm-backend-search-file-words-candidates keyword))
+                                          ("file-words-candidates" file-words-candidates)
                                           ("telega-candidates" (acm-backend-telega-candidates keyword))
                                           ))
                                       acm-completion-mode-candidates-merge-order)))
@@ -586,7 +624,7 @@ Only calculate template candidate when type last character."
                                                      ("template-second-part-candidates" template-second-part-candidates)
                                                      ("mode-second-part-candidates" mode-second-part-candidates)
                                                      ))
-                                                 acm-completion-backend-merge-order))
+                                                 acm-backend-order))
               )))
 
     ;; Return candidates.
@@ -608,7 +646,7 @@ The key of candidate will change between two LSP results."
   (acm-quick-access-init)
 
   ;; Adjust `gc-cons-threshold' to maximize temporary,
-  ;; make sure Emacs not do GC when filter/sort candidates.
+  ;; make sure Emacs not do GC
   (let* ((gc-cons-threshold most-positive-fixnum)
          (keyword (acm-get-input-prefix))
          (previous-select-candidate-index (+ acm-menu-offset acm-menu-index))
@@ -789,7 +827,7 @@ The key of candidate will change between two LSP results."
           (setq acm-preview-overlay (funcall candidate-expand candidate-info beg t)))
       (setq acm-preview-overlay (acm-preview-create-overlay beg (point) cand)))
     ;; adjust pos of menu frame.
-    (when-let ((popup-pos (acm-frame-get-popup-position
+    (when-let* ((popup-pos (acm-frame-get-popup-position
                            acm-menu-frame-popup-point
                            (1- (length (split-string (overlay-get acm-preview-overlay 'display) "\n")))))
                ((not (eq (cdr popup-pos) (cdr acm-menu-frame-popup-position)))))
@@ -925,13 +963,15 @@ The key of candidate will change between two LSP results."
     (acm-frame-set-frame-position acm-menu-frame acm-frame-x acm-frame-y)))
 
 (defun acm-doc-try-show (&optional update-completion-item)
-  (when acm-enable-doc
-    (let* ((candidate (acm-menu-current-candidate))
-           (backend (plist-get candidate :backend))
-           (candidate-doc-func (intern-soft (format "acm-backend-%s-candidate-doc" backend)))
-           (candidate-doc
-            (when (fboundp candidate-doc-func)
-              (funcall candidate-doc-func candidate))))
+  ;; We need call `acm-backend-*-candidate-doc' function even option `acm-enable-doc' is nil,
+  ;; because `completion_item_resolve' will fetch `additionalTextEdits', otherwise, auto import feature is miss.
+  (let* ((candidate (acm-menu-current-candidate))
+         (backend (plist-get candidate :backend))
+         (candidate-doc-func (intern-soft (format "acm-backend-%s-candidate-doc" backend)))
+         (candidate-doc
+          (when (fboundp candidate-doc-func)
+            (funcall candidate-doc-func candidate))))
+    (when acm-enable-doc
       (if (or (consp candidate-doc) ; If the type fo snippet is set to command, then the "doc" will be a list.
               (and (stringp candidate-doc) (not (string-empty-p candidate-doc))))
           (let ((doc (if (stringp candidate-doc)
@@ -944,8 +984,9 @@ The key of candidate will change between two LSP results."
             ;; Insert documentation and turn on wrap line.
             (with-current-buffer (get-buffer-create acm-doc-buffer)
               (read-only-mode -1)
-              (erase-buffer)
-              (insert doc)
+              (when (not (string-equal doc acm-markdown-render-doc))
+                (erase-buffer)
+                (insert doc))
               (visual-line-mode 1))
 
             ;; Only render markdown styling when idle 200ms, because markdown render is expensive.

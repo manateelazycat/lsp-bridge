@@ -294,6 +294,11 @@ influence of C1 on the result."
                                  (face-attribute 'default :background)
                                (face-attribute 'acm-frame-default-face :background))))
 
+    ;; Fallback to background of `default' face if `acm-frame-color-blend' test failed.
+    (unless (ignore-errors
+              (acm-frame-color-blend default-background blend-background 0.6))
+      (setq default-background (if is-dark-mode "#000000" "#AAAAAA")))
+
     ;; Make sure menu follow the theme of Emacs.
     (when (or force (equal (face-attribute 'acm-frame-default-face :background) 'unspecified))
       (set-face-background 'acm-frame-default-face (acm-frame-color-blend default-background blend-background (if is-dark-mode 0.8 0.9))))

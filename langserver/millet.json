@@ -1,0 +1,8 @@
+{
+  "name": "millet",
+  "languageId": "sml",
+  "command": [
+    "millet"
+  ],
+  "settings": {}
+}

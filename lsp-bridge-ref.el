@@ -407,6 +407,8 @@ user more freedom to use rg with special arguments."
     ;; Highlight references.
     (goto-char (point-min))
     (while (re-search-forward "\033\\[94m\\([^\033]*\\)\033\\[0m" nil t)
+      ;; We need set keyword when popup references
+      (setf (lsp-bridge-ref-search-keyword lsp-bridge-ref-cur-search) (match-string 1))
       (replace-match (concat (propertize (match-string 1)
                                          'face nil 'font-lock-face 'lsp-bridge-ref-font-lock-match))
                      t t))
@@ -455,7 +457,7 @@ user more freedom to use rg with special arguments."
   (cl-dolist (buffer (buffer-list))
     (let* ((buf-file-name (buffer-file-name buffer))
            (file-name (if (stringp buf-file-name) (substring-no-properties buf-file-name) buf-file-name)))
-      (when (string-equal file-name filepath)
+      (when (lsp-bridge-path-equal file-name filepath)
         (cl-return buffer)
         ))))
 
@@ -894,7 +896,7 @@ user more freedom to use rg with special arguments."
   ;; View the function name when navigate in match line.
   (when lsp-bridge-ref-show-function-name-p
     (require 'which-func)
-    (when-let ((function-name (which-function)))
+    (when-let* ((function-name (which-function)))
       (message "[LSP-Bridge] Located in function: %s"
                (propertize
                 function-name

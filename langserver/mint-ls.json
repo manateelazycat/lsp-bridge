@@ -1,0 +1,9 @@
+{
+  "name": "mint-ls",
+  "languageId": "mint",
+  "command": [
+    "mint",
+    "ls"
+  ],
+  "settings": {}
+}

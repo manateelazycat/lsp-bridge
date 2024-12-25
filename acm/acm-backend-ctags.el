@@ -41,7 +41,7 @@ Annotations include kind, type, etc.")
      (xref-make-file-location path line 0))))
 
 (defun acm-backend-ctags-xref-callback (tags)
-  (let ((fetcher (lambda () (mapcar #'lsp-bridge-xref--make-object tags))))
+  (let ((fetcher (lambda () (mapcar #'acm-backend-ctags-xref--make-object tags))))
     (xref-show-xrefs fetcher nil)))
 
 (defun acm-backend-ctags-find-def-at-point ()

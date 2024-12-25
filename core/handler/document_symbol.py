@@ -1,7 +1,6 @@
 from core.handler import Handler
 from core.utils import *
 
-
 class DocumentSymbol(Handler):
     name = "document_symbol"
     method = "textDocument/documentSymbol"

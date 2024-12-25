@@ -1,0 +1,9 @@
+{
+  "name": "gleam",
+  "languageId": "gleam",
+  "command": [
+    "gleam",
+    "lsp"
+  ],
+  "settings": {}
+}

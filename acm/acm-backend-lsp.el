@@ -157,6 +157,15 @@ Below is available types:
 `Struct' `Event' `Operator' `TypeParameter'
 ")
 
+(defun acm-backend-lsp-init ()
+  (setq-local acm-backend-lsp-server-command-exist t)
+  (setq-local acm-backend-lsp-cache-candidates nil)
+  (setq-local acm-backend-lsp-completion-position nil)
+  (setq-local acm-backend-lsp-completion-trigger-characters nil)
+  (setq-local acm-backend-lsp-server-names nil)
+  (setq-local acm-backend-lsp-filepath (lsp-bridge-get-buffer-truename))
+  (setq-local acm-backend-lsp-items (make-hash-table :test 'equal)))
+
 (defun acm-backend-lsp-candidates (keyword)
   (let ((match-candidates
          (acm-with-cache-candidates

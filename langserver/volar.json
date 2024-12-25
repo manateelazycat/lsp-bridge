@@ -5,10 +5,11 @@
     "vue-language-server",
     "--stdio"
   ],
+  "projectFiles": ["package.json"],
   "settings": {},
   "initializationOptions": {
     "typescript": {
-      "tsdk": "/usr/lib/node_modules/typescript/lib"
+      "tsdk": "%TSDK_PATH%"
     },
     "vue": {
       "hybridMode": false

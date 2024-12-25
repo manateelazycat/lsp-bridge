@@ -5,5 +5,8 @@
     "vscode-json-language-server",
     "--stdio"
   ],
-  "settings": {}
+  "settings": {},
+  "initializationOptions": {
+    "provideFormatter": true
+  }
 }

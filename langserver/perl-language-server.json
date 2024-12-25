@@ -1,0 +1,11 @@
+{
+  "name": "perl-language-server",
+  "languageId": "perl",
+  "command": [
+    "perl",
+    "-MPerl::LanguageServer",
+    "-e",
+    "Perl::LanguageServer::run"
+  ],
+  "settings": {}
+}

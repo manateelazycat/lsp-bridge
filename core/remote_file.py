@@ -23,11 +23,11 @@ import threading
 import os
 import glob
 import json
-import select
 import socket
 import traceback
 import time
 from core.utils import *
+from contextlib import contextmanager
 
 
 class SendMessageException(Exception):
@@ -184,7 +184,7 @@ class RemoteFileClient(threading.Thread):
         _, stdout, stderr = self.ssh.exec_command(
             f"""
             nohup /bin/bash -l -c '
-            pid=$(ps aux | grep -v grep | grep lsp_bridge.py | cut -d " " -f2)
+            pid=$(ps aux | grep -v grep | grep lsp_bridge.py | awk '\\''{{print $2}}'\\'')
             if [ "$pid" == "" ]; then
                 echo -e "Start lsp-bridge process as user $(whoami)" | tee >{remote_log}
                 {remote_python_command} {remote_python_file} >>{remote_log} 2>&1 &
@@ -207,8 +207,8 @@ class RemoteFileClient(threading.Thread):
             self.ssh.exec_command(
                 f"""
                 nohup /bin/bash -l -c '
-                pid=$(ps aux | grep -v grep | grep lsp_bridge.py | cut -d " " -f2)
-                echo "try kill" | tee >> {remote_log}
+                pid=$(ps aux | grep -v grep | grep lsp_bridge.py | awk '\\''{{print $2}}'\\'')
+                echo "try kill $pid" | tee >> {remote_log}
                 if ! [ "$pid" == "" ]; then
                     echo -e "kill lsp-bridge process as user $(whoami)" | tee >>{remote_log}
                     kill $pid
@@ -361,8 +361,9 @@ class RemoteFileServer:
 
 class FileSyncServer(RemoteFileServer):
     def __init__(self, host, port):
-        self.file_dict = {}
         super().__init__(host, port)
+        self.file_dict = {}
+        self.file_locks = {}
 
     def handle_message(self, message):
         command = message["command"]
@@ -377,23 +378,53 @@ class FileSyncServer(RemoteFileServer):
             return self.handle_change_file(message)
         elif command == "remote_sync":
             return self.handle_remote_sync(message)
+        elif command == "update_file":
+            return self.handle_update_file(message)
+
+    @contextmanager
+    def file_access_lock(self, path):
+        path = os.path.abspath(os.path.expanduser(path))
+
+        #  use lock to prevent
+        #    - utils.get_buffer_content
+        #    - utils.get_file_content_from_file_server
+        # from reading file content before handle_open_file finishes.
+        lock = self.file_locks.setdefault(path, threading.Lock())
+        try:
+            lock.acquire()
+            yield
+        finally:
+            lock.release()
+
+    def get_file_content(self, path):
+        if path in self.file_dict:
+            return self.file_dict[path]
+        else:
+            # wait for the lock if only path haven't been read
+            with self.file_access_lock(path):
+                return self.file_dict.get(path, "")
+
+    def handle_update_file(self, message):
+        path = message["path"]
+        self.file_dict[path] = message["content"]
 
     def handle_remote_sync(self, message):
         remote_info = message["remote_connection_info"]
         set_remote_connection_info(remote_info)
 
     def handle_open_file(self, message):
-        path = os.path.expanduser(message["path"])
+        path = message["path"]
         response = {**message, "path": path}
 
         if os.path.exists(path):
-            with open(path) as f:
-                content = f.read()
-                response.update({
-                    "path": path,
-                    "content": content
-                })
-                self.file_dict[path] = content
+            with self.file_access_lock(path):
+                with open(path) as f:
+                    content = f.read()
+                    response.update({
+                        "path": path,
+                        "content": content
+                    })
+                    self.file_dict[path] = content
         else:
             response.update({
                 "path": path,
@@ -426,18 +457,20 @@ class FileSyncServer(RemoteFileServer):
 
     def close_all_files(self):
         self.file_dict.clear()
+        self.file_locks.clear()
 
 
 class FileElispServer(RemoteFileServer):
     def __init__(self, host, port, lsp_bridge):
         self.lsp_bridge = lsp_bridge
-        self.result_queue = queue.Queue()
+        self.rpcs = {}
         super().__init__(host, port)
 
     def handle_client(self):
         # remote server lsp-bridge process use this cient_socket to call elisp function from local Emacs.
         log_time(f"Client connect from {self.client_address[0]}:{self.client_address[1]}")
 
+        self.rpcs.clear()
         threading.Thread(target=super().handle_client).start()
 
         self.lsp_bridge.init_search_backends()
@@ -450,17 +483,24 @@ class FileElispServer(RemoteFileServer):
             log_time("Drop 'say hello' message from local Emacs.")
             return
         else:
-            self.result_queue.put(message)
+            ts = message["timestamp"]
+            self.rpcs[ts]["result"] = message["result"]
+            self.rpcs[ts]["completion"].set()
 
     def call_remote_rpc(self, message):
+        ts = time.monotonic_ns()
+        cpl = threading.Event()
         try:
+            message["timestamp"] = ts
+            self.rpcs[ts] = { "msg": message, "completion": cpl }
             self.send_message(message)
         except Exception as e:
             logger.exception(e)
             return None
         else:
-            result = self.result_queue.get()
-            self.result_queue.task_done()
+            cpl.wait()
+            result = self.rpcs[ts]["result"]
+            del self.rpcs[ts]
             return result
 
 
@@ -512,8 +552,8 @@ def get_container_local_ip(container_name):
         command = "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' " + container_name
         result = subprocess.check_output(command, shell=True, text=True).strip()
         return result
-    except subprocess.CalledProcessError as e:
-        message_emacs(f"{traceback.format_exc()}")
+    except subprocess.CalledProcessError:
+        message_emacs(f"get_container_local_ip error: {traceback.format_exc()}")
         return None
 
 

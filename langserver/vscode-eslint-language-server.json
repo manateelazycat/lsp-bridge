@@ -1,6 +1,11 @@
 {
   "name": "vscode-eslint-language-server",
-  "languageId": "",
+  "languageIds": {
+    "tsx": "typescriptreact",
+    "ts": "typescript",
+    "js": "javascript",
+    "jsx": "javascriptreact"
+  },
   "command": [
     "vscode-eslint-language-server",
     "--stdio"

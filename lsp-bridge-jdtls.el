@@ -85,7 +85,7 @@ E.g. Use `-javaagent:/home/user/.emacs.d/plugin/lombok.jar` to add lombok suppor
 
 (defun lsp-bridge-jdtls-single-file-mode? (project-path filepath)
   "Determine whether it is a single file mode?"
-  (string-equal project-path filepath))
+  (lsp-bridge-path-equal project-path filepath))
 
 (dolist (hook (list
                'java-mode-hook

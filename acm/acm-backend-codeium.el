@@ -66,7 +66,6 @@
 	(c++-mode . 4)
 	(c++-ts-mode . 4)
 	(csharp-mode . 5)
-	(csharp-tree-sitter-mode . 5)
 	(csharp-ts-mode . 5)
 	(css-mode . 6)
 	(css-ts-mode . 6)

@@ -1,11 +1,15 @@
 {
   "name": "volar",
   "languageId": "vue",
-  "command": ["vue-language-server.cmd", "--stdio"],
+  "command": [
+    "vue-language-server.cmd",
+    "--stdio"
+  ],
+  "projectFiles": ["package.json"],
   "settings": {},
   "initializationOptions": {
     "typescript": {
-      "tsdk": "%USERPROFILE%\\AppData\\Roaming\\npm\\node_modules\\typescript\\lib"
+      "tsdk": "%USERPROFILE%\\AppData\\Roaming\\npm\\node_modules\\typescript\\lib",
     },
     "vue": {
       "hybridMode": false

@@ -3,6 +3,7 @@
   "languageId": "rust",
   "command": ["rust-analyzer"],
   "settings": {},
+  "projectFiles": ["Cargo.toml"],
   "capabilities": {
     "textDocument": {
       "hover": {
@@ -31,7 +32,7 @@
         }
       },
     "checkOnSave": {
-      "enable": false,
+      "enable": true,
       "allTargets": true,
       "features": "all",
       "invocationLocation": "root",

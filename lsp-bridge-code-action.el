@@ -126,7 +126,7 @@ Set it `nil' to improve performance."
 
 Default request all kind code-action.
 
-You can send speical kind of code-action, parameter `action-kind' can use one of below:
+You can send special kind of code-action, parameter `action-kind' can use one of below:
 
 'quickfix'
 'refactor'
@@ -264,7 +264,7 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
         (diff-no-select lsp-bridge-code-action--current-buffer (current-buffer)
                         nil nil (get-buffer-create "*lsp-bridge-code-action-preview*")))
 
-      (if-let ((proc (get-buffer-process "*lsp-bridge-code-action-preview*")))
+      (if-let* ((proc (get-buffer-process "*lsp-bridge-code-action-preview*")))
           (set-process-sentinel
            proc (lambda (proc _msg)
                   (with-current-buffer (process-buffer proc)
@@ -352,13 +352,13 @@ Please read https://microsoft.github.io/language-server-protocol/specifications/
      ;; Command is string, send `workspace/executeCommand' request to LSP server. arguments are cached in Python side.
      ((stringp command)
       ;; Execute command with temp-buffer.
-      (lsp-bridge-call-file-api "execute_command" server_name command))
+      (lsp-bridge-call-file-api "execute_command" server_name command arguments))
      ;; Parse command argument if command is plist, and call `lsp-bridge-code-action--fix-do' again.
      ((lsp-bridge-plistp command)
-      ;; We need add server-name in `command', otherwise `lsp-bridge-code-action--fix-do' will send empty server name to Python.
-      (let ((server-command command))
-        (plist-put server-command :server-name server_name)
-        (lsp-bridge-code-action--fix-do command temp-buffer))))
+      ;; We need add server-name in `next-action', otherwise `lsp-bridge-code-action--fix-do' will send empty server name to Python.
+      (let ((next-action command))
+        (plist-put next-action :server-name server_name)
+        (lsp-bridge-code-action--fix-do next-action temp-buffer))))
     (unless temp-buffer
       (message "[LSP-BRIDGE] Execute code action '%s'" (plist-get action :title)))
 
