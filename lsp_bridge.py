@@ -5,6 +5,7 @@
 # dependencies = [
 #   "epc",
 #   "orjson",
+#   "packaging",
 #   "sexpdata",
 #   "six",
 #   "setuptools",
