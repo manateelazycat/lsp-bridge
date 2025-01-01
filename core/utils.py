@@ -495,7 +495,7 @@ def replace_template(arg, project_path=None):
         if get_os_name() == "windows":
             user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
         else:
-            user_emacs_dir = repr(get_emacs_func_result("get-user-emacs-directory")).strip("'")
+            user_emacs_dir = get_emacs_func_result("get-user-emacs-directory")
         return arg.replace("%USER_EMACS_DIRECTORY%", user_emacs_dir)
     elif "$HOME" in arg:
         return os.path.expandvars(arg)
