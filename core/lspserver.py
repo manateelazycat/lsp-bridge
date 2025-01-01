@@ -870,10 +870,15 @@ class LspServer:
     def handle_register_capability_message(self, message):
         if "method" in message and message["method"] in ["client/registerCapability"]:
             try:
-                if message["params"]["registrations"][0]["id"] == "workspace/didChangeWatchedFiles":
-                    workspace_watch_files = self.parse_workspace_watch_files(message["params"])
-                    self.monitor_workspace_files(workspace_watch_files)
-                    log_time("Add workspace watch files: {}".format(workspace_watch_files))
+                for registration in message["params"]["registrations"]:
+                    if registration["id"] == "workspace/didChangeWatchedFiles":
+                        workspace_watch_files = self.parse_workspace_watch_files(message["params"])
+                        self.monitor_workspace_files(workspace_watch_files)
+                        log_time("Add workspace watch files: {}".format(workspace_watch_files))
+                    elif registration["id"] == "textDocument/formatting":
+                        self.code_format_provider = True
+                    elif registration["id"] == "textDocument/rangeFormatting":
+                        self.range_format_provider = True
             except:
                 log_time(traceback.format_exc())
 
