@@ -3048,7 +3048,7 @@ then BODY is executed within that buffer."
   (lsp-bridge-call-async "message_hostnames"))
 
 
-(defcustom lsp-bridge-disable-electric-indent nil
+(defcustom lsp-bridge-disable-electric-indent t
   "`electric-indent-post-self-insert-function' will cause return wrong completion candidates from LSP server, such as type `std::' in C++.
 
 Please turn this option on if you want fix `std::' completion candidates, at same time, `electric-indent-mode' will disable by lsp-bridge.
