@@ -452,6 +452,9 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     )
   "The multi lang server rule for file extension."
   :type 'cons)
+(if (string-match "windows" (symbol-name system-type))
+  (setf (cdr (assoc '("vue") lsp-bridge-multi-lang-server-extension-list)) "volar_emmet_windows")
+)
 
 (defcustom lsp-bridge-single-lang-server-extension-list
   '(

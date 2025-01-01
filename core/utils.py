@@ -495,7 +495,7 @@ def replace_template(arg, project_path=None):
         if get_os_name() == "windows":
             user_emacs_dir = get_emacs_func_result("get-user-emacs-directory").replace("/", "\\")
         else:
-            user_emacs_dir = get_emacs_func_result("get-user-emacs-directory")
+            user_emacs_dir = repr(get_emacs_func_result("get-user-emacs-directory")).strip("'")
         return arg.replace("%USER_EMACS_DIRECTORY%", user_emacs_dir)
     elif "$HOME" in arg:
         return os.path.expandvars(arg)
@@ -503,9 +503,9 @@ def replace_template(arg, project_path=None):
         # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.
         return arg.replace("%FILEHASH%", os.urandom(21).hex())
     elif "%USERPROFILE%" in arg:
-        return arg.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
+        return arg.replace("%USERPROFILE%", repr(windows_get_env_value("USERPROFILE")).strip("'"))
     elif "%TSDK_PATH%" in arg:
-        return arg.replace("%TSDK_PATH%", get_emacs_func_result("get-user-tsdk-path"))
+        return arg.replace("%TSDK_PATH%", repr(get_emacs_func_result("get-user-tsdk-path")).strip("'"))
     else:
         return arg
 
