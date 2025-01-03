@@ -503,9 +503,9 @@ def replace_template(arg, project_path=None):
         # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.
         return arg.replace("%FILEHASH%", os.urandom(21).hex())
     elif "%USERPROFILE%" in arg:
-        return arg.replace("%USERPROFILE%", windows_get_env_value("USERPROFILE"))
+        return arg.replace("%USERPROFILE%", repr(windows_get_env_value("USERPROFILE")).strip("'"))
     elif "%TSDK_PATH%" in arg:
-        return arg.replace("%TSDK_PATH%", get_emacs_func_result("get-user-tsdk-path"))
+        return arg.replace("%TSDK_PATH%", repr(get_emacs_func_result("get-user-tsdk-path")).strip("'"))
     else:
         return arg
 

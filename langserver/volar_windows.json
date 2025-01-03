@@ -9,7 +9,7 @@
   "settings": {},
   "initializationOptions": {
     "typescript": {
-      "tsdk": "%USERPROFILE%\\AppData\\Roaming\\npm\\node_modules\\typescript\\lib",
+      "tsdk": "%USERPROFILE%\\AppData\\Roaming\\npm\\node_modules\\typescript\\lib"
     },
     "vue": {
       "hybridMode": false
