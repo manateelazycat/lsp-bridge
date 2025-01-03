@@ -1,5 +1,5 @@
 {
-  "name": "volar_windows",
+  "name": "volar",
   "languageId": "vue",
   "command": [
     "vue-language-server.cmd",
