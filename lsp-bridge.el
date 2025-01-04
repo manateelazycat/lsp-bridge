@@ -449,6 +449,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (("vue") . "volar_emmet")
     (("ts")  . "typescript_eslint")
     (("tsx") . "typescriptreact_eslint")
+    (("component.html") . "angular_template_html")
+    (("component.ts") . "angular_template_typescript")
     )
   "The multi lang server rule for file extension."
   :type 'cons)
