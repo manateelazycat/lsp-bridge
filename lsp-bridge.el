@@ -2102,10 +2102,10 @@ Off by default."
 (defun lsp-bridge-find-def-fallback (position)
   (if (not (= (length lsp-bridge-peek-ace-list) 0))
       (progn
-	(if (nth 0 lsp-bridge-peek-ace-list)
-	    (kill-buffer (nth 0 lsp-bridge-peek-ace-list)))
-	(switch-to-buffer (nth 2 lsp-bridge-peek-ace-list))
-	(goto-char (nth 1 lsp-bridge-peek-ace-list))))
+	    (if (nth 0 lsp-bridge-peek-ace-list)
+	        (kill-buffer (nth 0 lsp-bridge-peek-ace-list)))
+	    (switch-to-buffer (nth 2 lsp-bridge-peek-ace-list))
+	    (goto-char (nth 1 lsp-bridge-peek-ace-list))))
   (message "[LSP-Bridge] No definition found.")
   (if (functionp lsp-bridge-find-def-fallback-function)
       (funcall lsp-bridge-find-def-fallback-function position)))
@@ -2263,12 +2263,19 @@ Then we need call `lsp-bridge--set-mark-ring-in-new-buffer' in new buffer after 
   (switch-to-buffer-other-window
    (get-buffer-create lsp-bridge-buffer-documentation-buffer) norecord))
 
+(defun lsp-bridge-replace-html-entities ()
+  (save-excursion
+    (goto-char (point-min))
+    (while (search-forward "&nbsp;" nil t)
+      (replace-match " "))))
+
 (defun lsp-bridge-show-documentation--callback (value)
   (let ((buffer (get-buffer-create lsp-bridge-buffer-documentation-buffer)))
     (with-current-buffer buffer
       (read-only-mode -1)
       (erase-buffer)
       (insert value)
+      (lsp-bridge-replace-html-entities)
       (setq-local truncate-lines nil)
       (acm-markdown-render-content t)
       (read-only-mode 1)
