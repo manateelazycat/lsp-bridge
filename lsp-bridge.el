@@ -449,6 +449,8 @@ Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buf
     (("vue") . "volar_emmet")
     (("ts")  . "typescript_eslint")
     (("tsx") . "typescriptreact_eslint")
+    (("component.html") . "angular_template_html")
+    (("component.ts") . "angular_template_typescript")
     )
   "The multi lang server rule for file extension."
   :type 'cons)
@@ -1083,7 +1085,7 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-get-lang-server-by-extension (filename extension-list)
   "Get lang server for file extension."
-  (when-let* ((file-extension (file-name-extension filename))
+  (when-let* ((file-extension (substring filename (+ (cl-position ?. filename) 1) (length filename)))
               (langserver-info (cl-find-if
                                 (lambda (pair)
                                   (let ((extension (car pair)))

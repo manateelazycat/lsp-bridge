@@ -1,0 +1,25 @@
+{
+  "name": "angular-ls",
+  "languageId": "angular",
+  "command": [
+    "ngserver",
+    "--ngProbeLocations",
+    "%USERPROFILE%\\AppData\\Roaming\\npm\\node_modules",
+    "--tsProbeLocations",
+    "%USERPROFILE%\\AppData\\Roaming\\npm\\node_modules",
+    "--tsdk",
+    "%USERPROFILE%\\AppData\\Roaming\\npm\\node_modules\\typescript\\lib",
+    "--disableLetSyntax",
+    "false",
+    "--disableBlockSyntax",
+    "false",
+    "--includeCompletionsWithSnippetText",
+    "true",
+    "--forceStrictTemplates",
+    "true",
+    "--stdio"
+  ],
+  "projectFiles": ["package.json"],
+  "settings": {},
+  "initializationOptions": {}
+}

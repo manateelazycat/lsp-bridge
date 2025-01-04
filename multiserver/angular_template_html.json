@@ -1,0 +1,22 @@
+{
+  "completion": ["vscode-html-language-server", "angular-ls", "emmet-ls"],
+  "completion_item_resolve": ["vscode-html-language-server", "angular-ls", "emmet-ls"],
+  "diagnostics": ["vscode-html-language-server", "angular-ls", "emmet-ls"],
+  "code_action": ["vscode-html-language-server", "angular-ls", "emmet-ls"],
+  "execute_command": ["vscode-html-language-server", "angular-ls", "emmet-ls"],
+  "find_define": "vscode-html-language-server",
+  "find_type_define": "vscode-html-language-server",
+  "find_implementation": "vscode-html-language-server",
+  "find_references": "vscode-html-language-server",
+  "peek_find_definition": "vscode-html-language-server",
+  "peek_find_references": "vscode-html-language-server",
+  "formatting": "vscode-html-language-server",
+  "hover": "vscode-html-language-server",
+  "signature_help": "vscode-html-language-server",
+  "prepare_rename": "vscode-html-language-server",
+  "rename": "vscode-html-language-server",
+  "document_symbol": "vscode-html-language-server",
+  "workspace_symbol": "vscode-html-language-server",
+  "semantic_tokens": "vscode-html-language-server",
+  "inlay_hint": "vscode-html-language-server"
+}

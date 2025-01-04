@@ -1,0 +1,22 @@
+{
+  "completion": ["typescript", "angular-ls"],
+  "completion_item_resolve": ["typescript", "angular-ls"],
+  "diagnostics": ["typescript", "angular-ls"],
+  "code_action": ["typescript", "angular-ls"],
+  "execute_command": ["typescript", "angular-ls"],
+  "find_define": "typescript",
+  "find_type_define": "typescript",
+  "find_implementation": "typescript",
+  "find_references": "typescript",
+  "peek_find_definition": "typescript",
+  "peek_find_references": "typescript",
+  "formatting": "typescript",
+  "hover": "typescript",
+  "signature_help": "typescript",
+  "prepare_rename": "typescript",
+  "rename": "typescript",
+  "document_symbol": "typescript",
+  "workspace_symbol": "typescript",
+  "semantic_tokens": "typescript",
+  "inlay_hint": "typescript"
+}
