@@ -1712,21 +1712,23 @@ The line number is relative to the beginning of the source block."
 
 (defun lsp-bridge-monitor-before-change (begin end)
   ;; Use `save-match-data' protect match data, avoid conflict with command call `search-regexp'.
-  (save-match-data
-    (when (lsp-bridge-has-lsp-server-p)
-      ;; Send whole org src block to lsp server.
-      (lsp-bridge-org-babel-send-src-block-to-lsp-server))
+  (save-restriction
+    (widen)
+    (save-match-data
+      (when (lsp-bridge-has-lsp-server-p)
+        ;; Send whole org src block to lsp server.
+        (lsp-bridge-org-babel-send-src-block-to-lsp-server))
 
-    ;; Set `lsp-bridge--before-change-begin-pos' and `lsp-bridge--before-change-end-pos'
-    ;; if `lsp-bridge-has-lsp-server-p' or `lsp-bridge-is-remote-file'
-    (when (or (lsp-bridge-has-lsp-server-p)
-              (lsp-bridge-is-remote-file))
-      (setq-local lsp-bridge--before-change-begin-point begin)
-      (setq-local lsp-bridge--before-change-end-point end)
+      ;; Set `lsp-bridge--before-change-begin-pos' and `lsp-bridge--before-change-end-pos'
+      ;; if `lsp-bridge-has-lsp-server-p' or `lsp-bridge-is-remote-file'
+      (when (or (lsp-bridge-has-lsp-server-p)
+                (lsp-bridge-is-remote-file))
+        (setq-local lsp-bridge--before-change-begin-point begin)
+        (setq-local lsp-bridge--before-change-end-point end)
 
-      (setq-local lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
-      (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))
-      )))
+        (setq-local lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
+        (setq-local lsp-bridge--before-change-end-pos (lsp-bridge--point-position end))
+        ))))
 
 (defun lsp-bridge-monitor-post-self-insert ()
   ;; Make sure this function be called after `electric-pair-mode'
@@ -1756,62 +1758,64 @@ The line number is relative to the beginning of the source block."
     (unless (and (equal begin lsp-bridge--before-change-begin-point)
                  (equal end lsp-bridge--before-change-end-point))
       ;; Use `save-match-data' protect match data, avoid conflict with command call `search-regexp'.
-      (save-match-data
-        (unless lsp-bridge-revert-buffer-flag
-          (let ((change-text (buffer-substring-no-properties begin end)))
-            ;; Record last command to `lsp-bridge-last-change-command'.
-            (setq lsp-bridge-last-change-command (format "%s" this-command))
+      (save-restriction
+        (widen)
+        (save-match-data
+          (unless lsp-bridge-revert-buffer-flag
+            (let ((change-text (buffer-substring-no-properties begin end)))
+              ;; Record last command to `lsp-bridge-last-change-command'.
+              (setq lsp-bridge-last-change-command (format "%s" this-command))
 
-            ;; Record last change position to avoid popup outdate completions.
-            (lsp-bridge-record-last-change-position)
+              ;; Record last change position to avoid popup outdate completions.
+              (lsp-bridge-record-last-change-position)
 
-            ;; Set `lsp-bridge-last-change-is-delete-command-p'
-            (setq lsp-bridge-last-change-is-delete-command-p (> length 0))
+              ;; Set `lsp-bridge-last-change-is-delete-command-p'
+              (setq lsp-bridge-last-change-is-delete-command-p (> length 0))
 
-            ;; Sync change for org babel if we enable it
-            (lsp-bridge-org-babel-monitor-after-change begin end length)
+              ;; Sync change for org babel if we enable it
+              (lsp-bridge-org-babel-monitor-after-change begin end length)
 
-            ;; Send LSP requests.
-            (when (or (lsp-bridge-call-file-api-p)
-                      (lsp-bridge-is-remote-file))
+              ;; Send LSP requests.
+              (when (or (lsp-bridge-call-file-api-p)
+                        (lsp-bridge-is-remote-file))
 
-              ;; Uncomment below code to debug `change_file' protocol.
-              ;; (message (format "change_file: '%s' '%s' '%s' '%s' '%s' '%s'"
-              ;;                  length
-              ;;                  lsp-bridge--before-change-begin-pos
-              ;;                  lsp-bridge--before-change-end-pos
-              ;;                  (lsp-bridge--position)
-              ;;                  change-text
-              ;;                  (buffer-substring-no-properties (line-beginning-position) (point))
-              ;;                  ))
+                ;; Uncomment below code to debug `change_file' protocol.
+                ;; (message (format "change_file: '%s' '%s' '%s' '%s' '%s' '%s'"
+                ;;                  length
+                ;;                  lsp-bridge--before-change-begin-pos
+                ;;                  lsp-bridge--before-change-end-pos
+                ;;                  (lsp-bridge--position)
+                ;;                  change-text
+                ;;                  (buffer-substring-no-properties (line-beginning-position) (point))
+                ;;                  ))
 
-              ;; Send change_file request to trigger LSP completion.
-              (lsp-bridge-call-file-api "change_file"
-                                        lsp-bridge--before-change-begin-pos
-                                        lsp-bridge--before-change-end-pos
-                                        length
-                                        change-text
-                                        (lsp-bridge--position)
-                                        (acm-char-before)
-                                        (buffer-name)
-                                        (acm-get-input-prefix))
+                ;; Send change_file request to trigger LSP completion.
+                (lsp-bridge-call-file-api "change_file"
+                                          lsp-bridge--before-change-begin-pos
+                                          lsp-bridge--before-change-end-pos
+                                          length
+                                          change-text
+                                          (lsp-bridge--position)
+                                          (acm-char-before)
+                                          (buffer-name)
+                                          (acm-get-input-prefix))
 
-              ;; Send inlay hint request.
-              (lsp-bridge-inlay-hint-try-send-request))
+                ;; Send inlay hint request.
+                (lsp-bridge-inlay-hint-try-send-request))
 
-            ;; Complete other non-LSP backends.
-            (lsp-bridge-complete-other-backends)
+              ;; Complete other non-LSP backends.
+              (lsp-bridge-complete-other-backends)
 
-            ;; Update search words backend.
-            ;;
-            ;; disable it for org-mode when we enable `lsp-bridge-enable-org-babel'
-            ;; it will trigger with wrong pos due to we only update `pos' on src block
-            (unless (eq major-mode 'org-mode)
-              (lsp-bridge-search-words-update
-               lsp-bridge--before-change-begin-pos
-               lsp-bridge--before-change-end-pos
-               change-text))
-            ))))))
+              ;; Update search words backend.
+              ;;
+              ;; disable it for org-mode when we enable `lsp-bridge-enable-org-babel'
+              ;; it will trigger with wrong pos due to we only update `pos' on src block
+              (unless (eq major-mode 'org-mode)
+                (lsp-bridge-search-words-update
+                 lsp-bridge--before-change-begin-pos
+                 lsp-bridge--before-change-end-pos
+                 change-text))
+              )))))))
 
 (defun lsp-bridge-complete-other-backends ()
   (let* ((this-command-string (format "%s" this-command))
