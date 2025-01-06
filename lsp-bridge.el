@@ -2302,6 +2302,7 @@ Then we need call `lsp-bridge--set-mark-ring-in-new-buffer' in new buffer after 
       (read-only-mode -1)
       (erase-buffer)
       (insert value)
+      (lsp-bridge-replace-html-entities)
       (setq-local truncate-lines nil)
       (acm-markdown-render-content))
 
