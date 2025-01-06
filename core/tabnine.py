@@ -27,9 +27,17 @@ import traceback
 
 from core.utils import *
 from subprocess import PIPE
-from sys import stderr
-from packaging.version import Version
-version_function = Version
+from sys import stderr, version_info
+
+if version_info[1] < 12:
+    from distutils.version import StrictVersion
+    version_function = StrictVersion
+elif version_info[1] >= 13:
+    from packaging.version import Version
+    version_function = Version
+else:
+    from pkg_resources import parse_version
+    version_function = parse_version
 
 TABNINE_PROTOCOL_VERSION = "1.0.14"
 TABNINE_EXECUTABLE = "TabNine.exe" if get_os_name() == "windows" else "TabNine"
