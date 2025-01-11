@@ -1085,14 +1085,15 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-get-lang-server-by-extension (filename extension-list)
   "Get lang server for file extension."
-  (when-let* ((file-extension (substring filename (+ (cl-position ?. filename) 1) (length filename)))
+  (when-let* ((dot-pos (cl-position ?. filename))
+              (file-extension (substring filename (1+ dot-pos) (length filename)))
               (langserver-info (cl-find-if
-                                (lambda (pair)
-                                  (let ((extension (car pair)))
-                                    (if (eq (type-of extension) 'string)
-                                        (string-equal file-extension extension)
-                                      (member file-extension extension))))
-                                extension-list)))
+                               (lambda (pair)
+                                 (let ((extension (car pair)))
+                                   (if (eq (type-of extension) 'string)
+                                       (string-equal file-extension extension)
+                                     (member file-extension extension))))
+                               extension-list)))
     (cdr langserver-info)))
 
 (defun lsp-bridge-get-multi-lang-server-by-extension (filename)
