@@ -1938,7 +1938,10 @@ The line number is relative to the beginning of the source block."
                                  (if (and (file-name-directory file-path) (file-exists-p (file-name-directory file-path)))
                                      (progn
                                        (throw 'break file-path))
-                                   (goto-char (1- file-beg))))
+                                   (if (eq file-beg 1)
+                                       ;; Reached beginning of buffer
+                                       (throw 'break nil)
+                                     (goto-char (1- file-beg)))))
                              (throw 'break nil))))))))
     filepath))
 
