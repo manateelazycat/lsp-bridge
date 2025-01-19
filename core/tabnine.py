@@ -32,7 +32,7 @@ from sys import stderr, version_info
 if version_info[1] < 12:
     from distutils.version import StrictVersion
     version_function = StrictVersion
-elif version_info[1] >= 13:
+elif len(version_info) >= 3 and version_info[1] >= 13 and version_info[2] > 1:
     from packaging.version import Version
     version_function = Version
 else:
