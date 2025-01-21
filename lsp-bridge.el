@@ -1083,18 +1083,31 @@ So we build this macro to restore postion after code format."
             (message "Cancelled password input.")
             nil))))
 
+(defun lsp-bridge-find-langserver-info-by-extension (file-extension extension-list)
+  (cl-find-if
+   (lambda (pair)
+     (let ((extension (car pair)))
+       (if (eq (type-of extension) 'string)
+           (string-equal file-extension extension)
+         (member file-extension extension))))
+   extension-list))
+
 (defun lsp-bridge-get-lang-server-by-extension (filename extension-list)
   "Get lang server for file extension."
+  ;; Don't search from extension list if filename not include any extension name.
   (when-let* ((dot-pos (cl-position ?. filename))
-              (file-extension (substring filename (1+ dot-pos) (length filename)))
-              (langserver-info (cl-find-if
-                               (lambda (pair)
-                                 (let ((extension (car pair)))
-                                   (if (eq (type-of extension) 'string)
-                                       (string-equal file-extension extension)
-                                     (member file-extension extension))))
-                               extension-list)))
-    (cdr langserver-info)))
+              (file-extension (substring filename (1+ dot-pos) (length filename))))
+    (let (langserver-info)
+      ;; Search multi-extension first, to support Angular file, reference https://github.com/manateelazycat/lsp-bridge/pull/1144
+      (setq langserver-info (lsp-bridge-find-langserver-info-by-extension file-extension extension-list))
+
+      ;; Search file extension if multi-extension not found in extension list.
+      (unless langserver-info
+        (setq langserver-info (lsp-bridge-find-langserver-info-by-extension (file-name-extension filename) extension-list)))
+
+      ;; Pick up langserver info.
+      (when langserver-info
+        (cdr langserver-info)))))
 
 (defun lsp-bridge-get-multi-lang-server-by-extension (filename)
   "Get lang server for file extension."
