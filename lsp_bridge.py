@@ -815,7 +815,7 @@ class LspBridge:
             message_emacs(message + ", disable LSP feature.")
             eval_in_emacs("lsp-bridge--turn-off-lsp-feature", filepath, get_lsp_file_host())
 
-    def turn_off_by_single_file(filepath, single_lang_server):
+    def turn_off_by_single_file(self, filepath, single_lang_server):
         self.turn_off(
             filepath,
             "ERROR: {} not support single-file, you need put this file in a git repository or put .dir-locals.el in project root directory".format(single_lang_server))
