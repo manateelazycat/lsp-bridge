@@ -63,7 +63,7 @@ jobs:
           python3 -m test.test
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
           name: test-log
