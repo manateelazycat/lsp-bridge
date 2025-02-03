@@ -301,7 +301,7 @@ After set `lsp-bridge-completion-obey-trigger-characters-p' to nil, you need use
   :safe #'booleanp
   :group 'lsp-bridge)
 
-(defcustom lsp-bridge-completion-in-string-file-types '("vue" "dart")
+(defcustom lsp-bridge-completion-in-string-file-types '("vue" "dart" "html")
   "File types where completion in string is allowed.
 This is a list of file extensions for which
 LSP-Bridge will enable completion inside string literals."
