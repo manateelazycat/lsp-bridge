@@ -21,6 +21,7 @@
 
 import json
 import os
+import platform
 import queue
 import re
 import subprocess
@@ -30,7 +31,10 @@ from subprocess import PIPE
 from sys import stderr
 from typing import TYPE_CHECKING, Dict
 from urllib.parse import urlparse
-from watchdog.observers import Observer
+if platform.system() == "Darwin" and platform.machine() == "arm64":
+    from watchdog.observers.kqueue import KqueueObserver
+else:
+    from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 from core.handler import Handler
@@ -900,7 +904,10 @@ class LspServer:
 
     def start_workspace_watch_files(self):
         if self.workspace_file_watcher is None:
-            self.workspace_file_watcher = Observer()
+            if platform.system() == "Darwin" and platform.machine() == "arm64":
+                self.workspace_file_watcher = KqueueObserver()
+            else:
+                self.workspace_file_watcher = Observer()
             self.workspace_file_watcher.start()
 
         if self.workspace_file_watch_handler is None:
