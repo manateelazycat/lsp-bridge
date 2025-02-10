@@ -31,7 +31,7 @@ from subprocess import PIPE
 from sys import stderr
 from typing import TYPE_CHECKING, Dict
 from urllib.parse import urlparse
-if platform.system() == "Darwin" and platform.machine() == "arm64":
+if platform.system() == "Darwin":
     from watchdog.observers.kqueue import KqueueObserver
 else:
     from watchdog.observers import Observer
@@ -904,7 +904,7 @@ class LspServer:
 
     def start_workspace_watch_files(self):
         if self.workspace_file_watcher is None:
-            if platform.system() == "Darwin" and platform.machine() == "arm64":
+            if platform.system() == "Darwin":
                 self.workspace_file_watcher = KqueueObserver()
             else:
                 self.workspace_file_watcher = Observer()
