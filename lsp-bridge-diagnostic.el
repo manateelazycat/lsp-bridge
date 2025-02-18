@@ -343,7 +343,8 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
 
 (defun lsp-bridge-workspace-diagnostic-list ()
   (interactive)
-  (lsp-bridge-call-file-api "workspace_diagnostics"))
+  ;; (lsp-bridge-call-file-api "workspace_diagnostics")
+  (message "Workspace diagnostic just few LSP server implement it, lsp-bridge haven't support it."))
 
 (defun lsp-bridge-diagnostic-list ()
   (interactive)
