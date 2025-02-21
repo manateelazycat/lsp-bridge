@@ -79,7 +79,6 @@ lsp-bridge 的优势：
 ``` elisp
 (use-package! lsp-bridge
   :config
-  (setq lsp-bridge-enable-log nil)
   (global-lsp-bridge-mode))
 ```
 
@@ -289,7 +288,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 - `lsp-bridge-enable-search-words`: 索引打开文件的单词， 默认打开
 - `lsp-bridge-enable-auto-format-code`: 自动格式化代码, 默认关闭
 - `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认打开
-- `lsp-bridge-enable-log`: 启用 LSP 消息日志， 默认关闭, 除非开发目的， 平常请勿打开此选项以避免影响性能
+- `lsp-bridge-log-level`: 设置 LSP 消息日志等级， 默认 INFO, 除非开发目的，平常请勿将此选项设置成`debug`, 以避免影响性能
 - `lsp-bridge-enable-debug`: 启用程序调试， 默认关闭
 - `lsp-bridge-disable-backup`: 禁止 emacs 对文件做版本管理， 默认打开
 - `lsp-bridge-code-action-enable-popup-menu`: 启用 code action 菜单， 默认打开
@@ -608,7 +607,7 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 - [深入分析 LSP 协议](https://manateelazycat.github.io/2024/06/11/lsp-trick/)
 - [lsp-bridge Wiki](https://github.com/manateelazycat/lsp-bridge/wiki)
 
-接着打开开发选项 `lsp-bridge-enable-log` ， happy hacking! ;)
+接着将开发选项 `lsp-bridge-log-level` 设置成`debug` ， happy hacking! ;)
 
 ## 反馈问题
 
@@ -617,7 +616,7 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
 请用命令 `emacs -q` 并只添加 lsp-bridge 配置做一个对比测试， 如果 `emacs -q` 可以正常工作， 请检查你个人的配置文件。
 
 如果`emacs -q`环境下问题依旧
-  1. 打开选项 `(setq lsp-bridge-enable-log t)`
+  1. 设置选项 `(setq lsp-bridge-log-level 'debug)`
   2. 使用命令 `lsp-bridge-restart-process` 重启 LSP-BRIDGE 进程
   3. 在 issue 中发送`*lsp-bridge*`中的内容, 那里面有很多线索可以帮助我们排查问题
 
