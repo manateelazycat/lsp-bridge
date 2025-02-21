@@ -432,9 +432,23 @@ LSP-Bridge will enable completion inside string literals."
 Then LSP-Bridge will start by gdb, please send new issue with `*lsp-bridge*' buffer content when next crash."
   :type 'boolean)
 
-(defcustom lsp-bridge-enable-log nil
-  "Enable this option to print log message in `*lsp-bridge*' buffer, default only print message header."
-  :type 'boolean)
+(defcustom lsp-bridge-log-level 'default
+  "Set the log level to print log message in `*lsp-bridge*' buffer, default only print message header.
+
+The variable can have the following values:
+default(INFO)
+debug
+warning
+error
+critical
+which refer to https://docs.python.org/3/library/logging.html#levels for more detail.
+"
+  :type '(choice
+          (const :tag "default log level, which is INFO level" default)
+          (const :tag "only for debug purpose" debug)
+          (const :tag "warning level" warning)
+          (const :tag "error level" error)
+          (const :tag "critical level" critical)))
 
 (defcustom lsp-bridge-enable-profile nil
   "Enable this option to output performance data to ~/lsp-bridge.prof."
@@ -1499,7 +1513,7 @@ So we build this macro to restore postion after code format."
   (if (functionp pred)
       (condition-case err
           (let ((result (funcall pred)))
-            (when lsp-bridge-enable-log
+            (when (eq lsp-bridge-log-level 'debug)
               (unless result
                 (with-current-buffer (get-buffer-create lsp-bridge-name)
                   (save-excursion

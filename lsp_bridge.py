@@ -168,10 +168,18 @@ class LspBridge:
             for name in export_functions:
                 self.build_prefix_function(search_backend, search_backend, name)
 
-        # Set log level.
-        [enable_lsp_server_log] = get_emacs_vars(["lsp-bridge-enable-log"])
-        if enable_lsp_server_log:
-            logger.setLevel(logging.DEBUG)
+        [lsp_server_log_level] = get_emacs_vars(["lsp-bridge-log-level"])
+        # Cause `default` level is INFO, here we do not need to match this.
+        # FIXME: Here I translate `sexpdata.Symbol` to str, may be a reasonable approach?
+        match str(lsp_server_log_level):
+            case "debug":
+                logger.setLevel(logging.DEBUG)
+            case "warning":
+                logger.setLevel(logging.WARNING)
+            case "error":
+                logger.setLevel(logging.ERROR)
+            case "critical":
+                logger.setLevel(logging.CRITICAL)
 
         # All LSP server response running in message_thread.
         self.message_queue = queue.Queue()
