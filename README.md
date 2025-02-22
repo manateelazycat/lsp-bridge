@@ -82,7 +82,6 @@ and add this to your `config.el`
 ``` elisp
 (use-package! lsp-bridge
   :config
-  (setq lsp-bridge-enable-log nil)
   (global-lsp-bridge-mode))
 ```
 
@@ -294,7 +293,7 @@ lsp-bridge provides support for more than two language servers for many language
 - `lsp-bridge-enable-search-words`: index the word of the file, enable by default
 - `lsp-bridge-enable-auto-format-code`: automatic format code, disable by default
 - `lsp-bridge-enable-signature-help`: show function parameter in minibufer, enable by default
-- `lsp-bridge-enable-log`: enable LSP message log, disable by default, only enable this option for development purposes, usually do not turn on this option to avoid affecting performance
+- `lsp-bridge-log-level`: set LSP message level, which use `logging`'s level. see the `descript-variable lsp-bridge-log-level` for more detail, usually do no set it `debug` to avoid affecting performance
 - `lsp-bridge-enable-debug`: enable program debugging, disable by default
 - `lsp-bridge-disable-backup`: forbidden version manage of emacs, enable by default
 - `lsp-bridge-code-action-enable-popup-menu`: enable code action popup menu, enable by default
@@ -617,7 +616,7 @@ Please read below articles first:
 - [In-depth Analysis of the LSP Protocol](https://manateelazycat.github.io/2024/06/11/lsp-trick/)
 - [lsp-bridge Wiki](https://github.com/manateelazycat/lsp-bridge/wiki)
 
-Then turn on develop option `lsp-bridge-enable-log` and happy hacking! ;)
+Then set option `lsp-bridge-log-level` to `debug` and happy hacking! ;)
 
 ## Report bug
 
@@ -626,7 +625,7 @@ Then turn on develop option `lsp-bridge-enable-log` and happy hacking! ;)
 Please use `emacs -q` and load a minimal setup with only lsp-bridge to verify that the bug is reproducible. If `emacs -q` works fine, probably something is wrong with your Emacs config.
 
 If the problem still exists:
-1. Turn on option `lsp-bridge-enable-log`
+1. Set option `lsp-bridge-log-level` to `debug`
 2. Use `lsp-bridge-restart-process` to restart the `LSP-BRIDGE` process
 3. Report issue with `*lsp-bridge*` buffer content, it contains many clues that can help us locate the problem faster
 
