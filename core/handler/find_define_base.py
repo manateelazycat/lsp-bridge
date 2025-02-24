@@ -20,6 +20,10 @@ def find_define_response(obj, response, define_jump_handler) -> None:
         # for java
         message_emacs("Resolve path {} ...".format(file_uri))
         obj.file_action.send_server_request(obj.file_action.single_server, "jdt_uri_resolver", file_uri, start_pos, define_jump_handler)
+    if file_uri.startswith("solidity://"):
+        # for solidity
+        message_emacs("Resolve path {} ...".format(file_uri))
+        obj.file_action.send_server_request(obj.file_action.single_server, "solidity_uri_resolver", file_uri, start_pos, define_jump_handler)
     elif file_uri.startswith("csharp:/metadata/"):
         # for csharp
         message_emacs("Resolve path {} ...".format(file_uri))

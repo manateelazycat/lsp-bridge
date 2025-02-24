@@ -55,6 +55,7 @@ from core.handler.signature_help import SignatureHelp  # noqa: F401
 from core.handler.prepare_rename import PrepareRename  # noqa: F401
 from core.handler.rename import Rename  # noqa: F401
 from core.handler.jdt_uri_resolver import JDTUriResolver  # noqa: F401
+from core.handler.solidity_uri_resolver import SolidityUriResolver  # noqa: F401
 from core.handler.deno_uri_resolver import DenoUriResolver  # noqa: F401
 from core.handler.csharp_uri_resolver import CSharpUriResolver  # noqa: F401
 from core.handler.code_action import CodeAction  # noqa: F401
