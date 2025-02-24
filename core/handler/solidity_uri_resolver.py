@@ -44,7 +44,7 @@ class SolidityUriResolver(Handler):
             external_file_dir = data_dir / decompile_dir_name
 
             url = urlparse(self.external_file_link)
-            path = unquote(url.path).replace(".sol", ".sol")[1:]
+            path = unquote(url.path).replace(".contract", ".sol")[1:]
             external_file = external_file_dir / path
 
             external_file.parent.mkdir(exist_ok=True, parents=True)
