@@ -474,8 +474,18 @@ class LspServer:
                     "versionSupport": self.enable_diagnostics,
                     "codeDescriptionSupport": self.enable_diagnostics,
                     "dataSupport": self.enable_diagnostics
-                }
-            }
+                },
+                "diagnostic": {
+                    "relatedInformation": self.enable_diagnostics,
+                    "tagSupport": {
+                        "valueSet": [1, 2]
+                    },
+                    "codeDescriptionSupport": self.enable_diagnostics,
+                    "dataSupport": self.enable_diagnostics,
+                    "dynamicRegistration": False,
+                    "relatedDocumentSupport": False
+                },
+            },
         })
 
         return merge_capabilites
