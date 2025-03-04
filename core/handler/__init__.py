@@ -15,6 +15,7 @@ class Handler(abc.ABC):
         self.latest_request_id = -1  # Latest request id
         self.last_change: tuple = file_action.last_change  # Last change information
         self.file_action = file_action
+        self.server_info = None
 
     def process_request(self, *args, **kwargs) -> dict:
         """Called from Emacs, return the request params."""
@@ -73,3 +74,4 @@ from core.handler.semantic_tokens import SemanticTokens # noqa: F401
 from core.handler.rust_expand_macro import RustExpandMacro # noqa: F401
 from core.handler.rust_reload_workspace import RustReloadWorkspace # noqa: F401
 from core.handler.workspace_diagnostics import WorkspaceDiagnostics  # noqa: F401
+from core.handler.diagnostic import Diagnostic # noqa: F401

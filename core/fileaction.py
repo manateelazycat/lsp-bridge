@@ -25,6 +25,7 @@ import time
 from typing import TYPE_CHECKING, Dict, Tuple
 
 from core.handler import *
+from core.handler import Diagnostic
 from core.lspserver import LspServer
 from core.utils import *
 
@@ -77,6 +78,9 @@ class FileAction:
 
         self.org_file = os.path.splitext(filepath)[-1] == '.org'
         self.org_line_bias = None
+
+        self.pull_diagnostic_timer = None
+        self.last_diagnostic_version = None
 
         # We need multiple servers to handle org files
         self.org_lang_servers = {}
@@ -225,12 +229,44 @@ class FileAction:
             self.try_completion_timer = threading.Timer(delay, lambda : self.try_completion(position, before_char, prefix, self.version))
             self.try_completion_timer.start()
 
+        # Pull diagnostics after file changes
+        self.pull_diagnostics()
+
     def update_file(self, buffer_name, org_line_bias=None):
         self.org_line_bias = org_line_bias
         buffer_content = get_buffer_content(self.filepath, buffer_name)
         for lsp_server in self.get_lsp_servers():
             lsp_server.send_whole_change_notification(self.filepath, self.version, buffer_content)
         self.version += 1
+
+        # Pull diagnostics after file update if server supports it
+        self.pull_diagnostics()
+
+    def pull_diagnostics(self):
+        """Request diagnostics from servers that support pull-based diagnostics."""
+        if self.last_diagnostic_version == self.version:
+            return
+
+        self.last_diagnostic_version = self.version
+
+        # Cancel any pending diagnostic pulls
+        if self.pull_diagnostic_timer and self.pull_diagnostic_timer.is_alive():
+            self.pull_diagnostic_timer.cancel()
+
+        delay = self.push_diagnostic_idle
+        self.pull_diagnostic_timer = threading.Timer(delay, self._do_pull_diagnostics)
+        self.pull_diagnostic_timer.start()
+
+    def _do_pull_diagnostics(self):
+        """Actually send the diagnostic requests to the servers."""
+        if self.multi_servers:
+            for server_name in self.multi_servers_info.get('diagnostics', []):
+                lsp_server = self.multi_servers[server_name]
+                if lsp_server.diagnostic_provider:
+                    self.send_request(lsp_server, 'diagnostic', Diagnostic, lsp_server.server_info["name"])
+        else:
+            if self.single_server.diagnostic_provider:
+                self.send_request(self.single_server, 'diagnostic', Diagnostic, self.single_server.server_info["name"])
 
     def try_completion(self, position, before_char, prefix, version=None):
         # If we call try_completion from Elisp side, Emacs don't know the version of FileAction.
@@ -479,6 +515,7 @@ class FileAction:
 
         handler.latest_request_id = request_id = generate_request_id()
         handler.last_change = self.last_change
+        handler.server_info = lsp_server.server_info
 
         lsp_server.record_request_id(request_id, handler)
 
