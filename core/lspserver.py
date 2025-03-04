@@ -288,6 +288,7 @@ class LspServer:
         self.workspace_symbol_provider = False
         self.inlay_hint_provider = False
         self.semantic_tokens_provider = False
+        self.diagnostic_provider = False  # pull based diagnostic
 
         # It's confused about LSP server's textDocumentSync capability.
         # Python LSP server only have `willSave` field
@@ -777,7 +778,9 @@ class LspServer:
             ]),
             ("save_include_text", ["result", "capabilities", "textDocumentSync", "save", "includeText"]),
             ("text_document_sync", ["result", "capabilities", "textDocumentSync"]),
-            ("semantic_tokens_provider", ["result", "capabilities", "semanticTokensProvider"])]
+            ("semantic_tokens_provider", ["result", "capabilities", "semanticTokensProvider"]),
+            ("diagnostic_provider", ["result", "capabilities", "diagnosticProvider"]),
+        ]
 
         for attr, path in attributes_to_set:
             self.set_attribute_from_message(message, attr, path)
