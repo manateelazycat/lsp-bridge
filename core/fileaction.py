@@ -131,6 +131,8 @@ class FileAction:
 
             lsp_server.attach(self)
 
+        self.pull_diagnostics()
+
         # Set acm-input-bound-style when opened file.
         if self.single_server_info is not None:
             eval_in_emacs("lsp-bridge-set-prefix-style", self.single_server_info.get("prefixStyle", "ascii"))
@@ -262,10 +264,10 @@ class FileAction:
         if self.multi_servers:
             for server_name in self.multi_servers_info.get('diagnostics', []):
                 lsp_server = self.multi_servers[server_name]
-                if lsp_server.diagnostic_provider:
+                if lsp_server.diagnostic_provider and lsp_server.enable_diagnostics:
                     self.send_request(lsp_server, 'diagnostic', Diagnostic, lsp_server.server_info["name"])
         else:
-            if self.single_server.diagnostic_provider:
+            if self.single_server.diagnostic_provider and self.single_server.enable_diagnostics:
                 self.send_request(self.single_server, 'diagnostic', Diagnostic, self.single_server.server_info["name"])
 
     def try_completion(self, position, before_char, prefix, version=None):
