@@ -1,9 +1,6 @@
 ;;; lsp-bridge-imenu.el --- LSP bridge  -*- lexical-binding: t -*-
-
 ;;; Commentary:
-
 ;;; Code:
-
 (require 'imenu)
 (require 'lsp-bridge)
 
@@ -12,11 +9,20 @@
   "Modes that use `imenu' instead of Lsp-bridge imenu."
   :type 'cons)
 
+(defcustom lsp-bridge-imenu-function 'imenu
+  "Determines which Imenu function is used when in raw modes.
+Possible values: `imenu', `imenu-consult', or `imenu-consult-multi'."
+  :type '(choice (const :tag "Default" imenu)
+          (const :tag "Use imenu-consult" imenu-consult)
+          (const :tag "Use imenu-consult-multi" imenu-consult-multi))
+  :group 'lsp-bridge)
+
 ;;;###autoload
 (defun lsp-bridge-imenu ()
+  "Run an Imenu comprehension with the LSP server."
   (interactive)
   (if (memq major-mode lsp-bridge-raw-imenu-modes)
-      (call-interactively 'imenu)
+      (call-interactively lsp-bridge-imenu-function)
     (lsp-bridge-call-file-api "imenu")))
 
 (defun lsp-bridge--imenu-show (filename filehost res)
