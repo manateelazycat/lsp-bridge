@@ -638,6 +638,7 @@ If nil, lsp-bridge would try to detect by default."
     (purescript-mode .                                                           "purescript-language-server")
     (perl-mode .                                                                 "perl-language-server")
     (futhark-mode .                                                              "futhark-lsp")
+    (conf-toml-mode .                                                            "taplo")
     )
   "The lang server rule for file mode."
   :type 'cons)
@@ -768,6 +769,7 @@ If nil, lsp-bridge would try to detect by default."
     purescript-mode-hook
     perl-mode-hook
     futhark-mode-hook
+    conf-toml-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
@@ -881,6 +883,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (svelte-mode                . js-indent-level)        ;Svelte
     (fsharp-mode                . fsharp-indent-offset)   ; F#
     (gleam-ts-mode              . gleam-ts-indent-offset) ; Gleam
+    (conf-toml-mode             . toml-indent-offset)     ; Toml
     (default                    . standard-indent)) ; default fallback
   "A mapping from `major-mode' to its indent variable.")
 
