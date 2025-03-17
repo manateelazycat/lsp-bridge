@@ -10,11 +10,11 @@
   :type 'cons)
 
 (defcustom lsp-bridge-imenu-function 'imenu
-  "Determines which Imenu function is used when in raw modes.
-Possible values: `imenu', `imenu-consult', or `imenu-consult-multi'."
+  "Determines which Imenu function is used.
+Possible values: `imenu', `consult-imenu', or `consult-imenu-multi'."
   :type '(choice (const :tag "Default" imenu)
-          (const :tag "Use imenu-consult" imenu-consult)
-          (const :tag "Use imenu-consult-multi" imenu-consult-multi))
+          (const :tag "Use consult-imenu" consult-imenu)
+          (const :tag "Use consult-imenu-multi" consult-imenu-multi))
   :group 'lsp-bridge)
 
 ;;;###autoload
