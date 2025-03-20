@@ -1665,13 +1665,13 @@ So we build this macro to restore postion after code format."
 (defun lsp-bridge--is-evil-state ()
   "If `evil' mode is enable, only show completion when evil is in insert mode."
   (or (not (featurep 'evil))
-      (evil-insert-state-p)
+      (eq (evil-insert-state-p) evil-mode)
       (evil-emacs-state-p)))
 
 (defun lsp-bridge--is-meow-state ()
   "If `meow' mode is enable, only show completion when meow is in insert mode."
   (or (not (featurep 'meow))
-      meow-insert-mode
+      (eq meow-insert-mode meow-mode)
       (minibufferp)))
 
 (defun lsp-bridge--not-in-multiple-cursors ()
