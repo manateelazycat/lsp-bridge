@@ -271,6 +271,7 @@ lsp-bridge provides support for more than two language servers for many language
 - `lsp-bridge-lua-lsp-server`: Lua language server, you can choose `sumneko` or `lua-lsp`
 - `lsp-bridge-verilog-lsp-server`: Verilog language server， you can choose `verible`, or `svls`
 - `lsp-bridge-xml-lsp-server`: XML language server， you can choose `lemminx`, or `camells`
+- `lsp-bridge-cmake-lsp-server`: CMake language server， you can choose `cmake-language-server`, or `neocmakelsp`
 
 ## Options
 
@@ -368,6 +369,7 @@ If your language supports mixed multi-language servers, it is recommended to che
 | BibTex   | [citation-langserver](https://github.com/oncomouse/citation-langserver)               |   |
 | Clojure     | [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp)                                          | If you use `homebrew`, please ensure install `clojure-lsp/brew/clojure-lsp-native` [clojure-lsp-native](https://clojure-lsp.io/installation/#homebrew-macos-and-linux)                                                                                             |
 | Cmake       | [cmake-language-server](https://github.com/regen100/cmake-language-server)                         | `pip install cmake-language-server`                                                                                                                                                                                                                                 |
+|            | [neocmakelsp](https://github.com/neocmakelsp/neocmakelsp)                         |                                                                                                                                                                                            |
 | Cobol       | [che-che4z-lsp-for-cobol](https://github.com/eclipse-che4z/che-che4z-lsp-for-cobol)                         |                                                                                                                                |
 | CSS         | [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted)              | `npm i -g vscode-langservers-extracted`                                                                                                                                                                                                                             |
 | Cucumber         | [cucumber-language-server](https://github.com/cucumber/language-server)              | `npm install @cucumber/language-server`                                                                                                                                                                                       |

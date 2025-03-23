@@ -531,6 +531,10 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
   "Default LSP server for XML, you can choose `lemminx', `camells'"
   :type 'string)
 
+(defcustom lsp-bridge-cmake-lsp-server "cmake-language-server"
+  "Default LSP server for cmake, you can choose `cmake-language-server', `neocmakelsp'"
+  :type 'string)
+
 (defcustom lsp-bridge-tsdk-path nil
   "Tsserver lib*.d.ts directory path in current system needed by some lsp servers.
 If nil, lsp-bridge would try to detect by default."
@@ -555,7 +559,7 @@ If nil, lsp-bridge would try to detect by default."
 (defcustom lsp-bridge-single-lang-server-mode-list
   '(
     ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode c-or-c++-ts-mode) .        lsp-bridge-c-lsp-server)
-    ((cmake-mode cmake-ts-mode) .                                                "cmake-language-server")
+    ((cmake-mode cmake-ts-mode) .                                                lsp-bridge-cmake-lsp-server)
     ((java-mode java-ts-mode) .                                                  "jdtls")
     ((julia-mode) .                                                              "julials")
     ((python-mode python-ts-mode) .                                              lsp-bridge-python-lsp-server)
