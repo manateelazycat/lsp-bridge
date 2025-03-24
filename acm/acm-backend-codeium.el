@@ -119,6 +119,7 @@
 	(ruby-ts-mode . 35)
 	(rust-mode . 36)
 	(rust-ts-mode . 36)
+	(rstml-ts-mode . 36)
 	(rustic-mode . 36)
 	(sass-mode . 37)
 	(ssass-mode . 37)

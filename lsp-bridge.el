@@ -564,7 +564,7 @@ If nil, lsp-bridge would try to detect by default."
     ((julia-mode) .                                                              "julials")
     ((python-mode python-ts-mode) .                                              lsp-bridge-python-lsp-server)
     ((ruby-mode ruby-ts-mode) .                                                  "solargraph")
-    ((rust-mode rustic-mode rust-ts-mode) .                                      "rust-analyzer")
+    ((rust-mode rustic-mode rust-ts-mode rstml-ts-mode) .                        "rust-analyzer")
     (move-mode .                                                                 "move-analyzer")
     ((elixir-mode elixir-ts-mode heex-ts-mode) .                                 lsp-bridge-elixir-lsp-server)
     ((go-mode go-ts-mode) .                                                      "gopls")
@@ -659,6 +659,7 @@ If nil, lsp-bridge would try to detect by default."
     lua-mode-hook
     move-mode-hook
     rust-mode-hook
+    rstml-ts-mode-hook
     markdown-mode-hook
     rust-ts-mode-hook
     rustic-mode-hook
@@ -873,6 +874,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (move-mode                  . move-indent-offset)   ; Move
     (rust-mode                  . rust-indent-offset)   ; Rust
     (rust-ts-mode               . rust-ts-mode-indent-offset) ; Rust
+    (rstml-ts-mode              . rust-ts-mode-indent-offset) ; Rust
     (rustic-mode                . rustic-indent-offset)       ; Rust
     (scala-mode                 . scala-indent:step)          ; Scala
     (powershell-mode            . powershell-indent)      ; PowerShell
