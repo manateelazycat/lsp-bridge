@@ -1,6 +1,7 @@
+import os
 import time
 import subprocess
-from core.utils import *
+from core.utils import epc_arg_transformer, message_emacs, get_emacs_vars, get_os_name, generate_request_id, path_to_uri, eval_in_emacs, logger
 from subprocess import PIPE
 from core.lspserver import LspServerSender, LspServerReceiver
 import threading
@@ -47,7 +48,7 @@ class Copilot:
     def check_node_version(self):
         version = subprocess.check_output([self.node_path, '-v'], stderr=subprocess.STDOUT, universal_newlines=True).strip()
         major_version = int(version.split('.')[0].lstrip('v'))
-        return major_version >= 16
+        return major_version >= 20
 
     def start_copilot(self):
         self.get_info()
@@ -57,13 +58,16 @@ class Copilot:
         self.is_run = True
 
         if not self.check_node_version():
-            message_emacs('To use copilot, Please install node version >= 16')
+            message_emacs('To use copilot, Please install node version >= 20')
             return
 
         npm_package_path = subprocess.check_output(["npm.cmd" if get_os_name() == "windows" else "npm", 'root', '-g'], universal_newlines=True).strip()
-        agent_path =  os.path.join(npm_package_path, "copilot-node-server", "copilot/dist/agent.js")
+        agent_path =  os.path.join(npm_package_path, "@github", "copilot-language-server/dist/language-server.js")
+        if not os.path.exists(agent_path):
+            message_emacs('To use copilot, Please install @github/copilot-language-server')
+            return
 
-        self.copilot_subprocess = subprocess.Popen([self.node_path, agent_path],
+        self.copilot_subprocess = subprocess.Popen([self.node_path, agent_path, "--stdio"],
                                                    stdin=PIPE,
                                                    stdout=PIPE,
                                                    stderr=None)
@@ -77,14 +81,38 @@ class Copilot:
         self.dispatcher = threading.Thread(target=self.message_dispatcher)
         self.dispatcher.start()
 
-        self.sender.send_request('initialize', {'capabilities': {'workspace': {'workspaceFolders': True}}}, generate_request_id(), init=True)
+        self.wait_id = generate_request_id()
+        self.sender.send_request('initialize', {
+            'processId': os.getpid(),
+            'clientInfo': {
+                "name": "emacs",
+                "version": "lsp-bridge"
+            },
+            'capabilities': {
+                'workspace': {'workspaceFolders': True}
+            },
+            'initializationOptions': {
+                'editorInfo': {
+                    'name': 'Emacs',
+                    'version': '28.0'
+                },
+                'editorPluginInfo': {
+                    'name': 'GitHub Copilot for lsp-bridge',
+                    'version': '0.0.1'
+                },
+                'networkProxy': epc_arg_transformer(self.proxy)
+            },
+        }, self.wait_id, init=True)
+        while self.wait_id is not None:
+            time.sleep(0.1)
+        self.sender.send_notification("initialized", {}, init=True)
+        self.sender.send_notification("workspace/didChangeConfiguration", {
+            'settings': {
+                'telemetryLevel': 'off'
+            }
+        }, init=True)
 
         self.sender.initialized.set()
-
-        editor_info = {'editorInfo': {'name': 'Emacs', 'version': '28.0'},
-                       'editorPluginInfo': {'name': 'lsp-bridge', 'version': '0.0.1'},
-                       'networkProxy': epc_arg_transformer(self.proxy)}
-        self.sender.send_request('setEditorInfo', editor_info, generate_request_id())
 
         self.is_initialized = True
 
@@ -238,12 +266,12 @@ class Copilot:
             time.sleep(0.1)
         result = self.wait_response['result']
         message_emacs(f'Copilot status: {result["status"]}' + \
-                      f' as user {result["user"]}' if 'user' in result else '')
+                      f' as user {result["user"]}' if 'user' in result else 'NotSignedIn')
 
     def login(self):
         self.start_copilot()
         self.wait_id = generate_request_id()
-        self.sender.send_request('signInInitiate', {'dummy': "signInInitiate"}, self.wait_id)
+        self.sender.send_request('signIn', {'dummy': "signInInitiate"}, self.wait_id)
         while self.wait_id is not None:
             time.sleep(0.1)
         result = self.wait_response['result']
