@@ -1,6 +1,7 @@
 import os
 import time
 import subprocess
+import uuid
 from core.utils import epc_arg_transformer, message_emacs, get_emacs_vars, get_os_name, generate_request_id, path_to_uri, eval_in_emacs, logger
 from subprocess import PIPE
 from core.lspserver import LspServerSender, LspServerReceiver
@@ -44,6 +45,7 @@ class Copilot:
         self.wait_request = []
         self.is_get_info = False
         self.wait_id = None
+        self.accept_commands = {}
 
     def check_node_version(self):
         version = subprocess.check_output([self.node_path, '-v'], stderr=subprocess.STDOUT, universal_newlines=True).strip()
@@ -122,6 +124,13 @@ class Copilot:
 
     def accept(self, id):
         self.sender.send_request('notifyAccepted', [{'id': id}, ], generate_request_id())
+        if id in self.accept_commands:
+            accept_command = self.accept_commands[id]
+            command = accept_command['command']
+            self.sender.send_request("workspace/executeCommand", {
+                "command": command,
+            }, generate_request_id())
+            del self.accept_commands[id]
 
     def message_dispatcher(self):
         try:
@@ -168,6 +177,47 @@ class Copilot:
                         completion_candidates.append(candidate)
 
                     eval_in_emacs("lsp-bridge-search-backend--record-items", "copilot", completion_candidates)
+                elif 'result' in message and 'items' in message['result']:
+
+                    # inline completion response
+                    completion_candidates = []
+
+                    for item in message['result']['items']:
+                        label = item['insertText']
+                        labels = label.strip().split("\n")
+                        first_line = labels[0]
+
+                        document = f"```{self.current_language_id}\n{label}\n```"
+
+                        display_label = first_line
+                        if len(first_line) > self.display_label_max_length:
+                            display_label = "... " + display_label[len(first_line) - self.display_label_max_length:]
+
+                        if len(labels) <= 1 and len(first_line) <= self.display_label_max_length:
+                            document = ""
+
+                        line = item['range']['start']['line']
+                        id = str(uuid.uuid4())
+                        candidate = {
+                            "key": label,
+                            "icon": "copilot",
+                            "label": label,
+                            "displayLabel": first_line,
+                            "annotation": "Copilot",
+                            "backend": "copilot",
+                            "documentation": document,
+                            "id": id,
+                            "line": line,
+                        }
+                        completion_candidates.append(candidate)
+                        # accept the completion command
+                        command = item['command']
+                        self.accept_commands[id] = {
+                            "command": command['command'],
+                            "arguments": command['arguments']
+                        }
+
+                    eval_in_emacs("lsp-bridge-search-backend--record-items", "copilot", completion_candidates)
         except:
             logger.error(traceback.format_exc())
 
@@ -210,36 +260,40 @@ class Copilot:
         if file_path in self.file_versions:
             self.file_versions[file_path] += 1
 
-
         self.sync_file(text, file_path, self.get_language_id(editor_mode))
         self.current_language_id = self.get_language_id(editor_mode)
-        self.message = {
-            "doc":
-            {
-                "version": self.file_versions[file_path],
-                "tabSize": tab_size,
-                "indentSize": tab_size,
-                "insertSpaces": bool(insert_spaces),
-                "path": file_path,
+
+        # inline completions message
+        self.inline_message = {
+            "textDocument": {
                 "uri": path_to_uri(file_path),
-                "relativePath": relative_path,
-                "languageId": self.current_language_id,
-                "position": {"line": position[1], "character": position[3]},
-            }
+                "version": self.file_versions[file_path],
+            },
+            "position": {
+                "line": position[1],
+                "character": position[3]
+            },
+            "context": {
+                "triggerKind": 2,
+            },
+            "formattingOptions": {
+                "tabSize": tab_size,
+                "insertSpaces": bool(insert_spaces),
+            },
         }
+
         self.file_versions[file_path] += 1
 
         self.try_completion_timer = threading.Timer(0.0, self.do_complete)
         self.try_completion_timer.start()
 
     def do_complete(self):
-        request_id = generate_request_id()
+        # send inline completion request
         self.sender.send_request(
-            method='getCompletions',
-            params=self.message,
-            request_id=request_id
+            method='textDocument/inlineCompletion',
+            params=self.inline_message,
+            request_id=generate_request_id(),
         )
-
 
     def get_info(self):
         if self.is_get_info:
