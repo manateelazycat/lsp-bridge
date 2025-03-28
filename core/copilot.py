@@ -120,7 +120,7 @@ class Copilot:
         language_id = editor_mode.replace('-mode', '')
         return COPILOT_MAJOR_MODES_MAP[language_id] if language_id in COPILOT_MAJOR_MODES_MAP else language_id
 
-    def accpet(self, id):
+    def accept(self, id):
         self.sender.send_request('notifyAccepted', [{'id': id}, ], generate_request_id())
 
     def message_dispatcher(self):
