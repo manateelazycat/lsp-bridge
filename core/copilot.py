@@ -46,13 +46,14 @@ class Copilot:
         self.is_get_info = False
         self.wait_id = None
         self.accept_commands = {}
+        self.workspace_folders = {}
 
     def check_node_version(self):
         version = subprocess.check_output([self.node_path, '-v'], stderr=subprocess.STDOUT, universal_newlines=True).strip()
         major_version = int(version.split('.')[0].lstrip('v'))
         return major_version >= 20
 
-    def start_copilot(self):
+    def start_copilot(self, project_path=None):
         self.get_info()
 
         if self.is_run:
@@ -84,14 +85,31 @@ class Copilot:
         self.dispatcher.start()
 
         self.wait_id = generate_request_id()
+        workspace_folders = []
+        if project_path is not None:
+            folder = {
+                "uri": path_to_uri(project_path),
+                "name": os.path.basename(project_path)
+            }
+            workspace_folders.append(folder)
+            self.workspace_folders[project_path] = folder
+
         self.sender.send_request('initialize', {
             'processId': os.getpid(),
+            "workspaceFolders": workspace_folders,
             'clientInfo': {
                 "name": "emacs",
                 "version": "lsp-bridge"
             },
             'capabilities': {
-                'workspace': {'workspaceFolders': True}
+                'workspace': {
+                    'workspaceFolders': True,
+                },
+                'window': {
+                    'showDocument': {
+                        'support': True,
+                    }
+                }
             },
             'initializationOptions': {
                 'editorInfo': {
@@ -260,6 +278,7 @@ class Copilot:
         if file_path in self.file_versions:
             self.file_versions[file_path] += 1
 
+        self.did_focus(file_path)
         self.sync_file(text, file_path, self.get_language_id(editor_mode))
         self.current_language_id = self.get_language_id(editor_mode)
 
@@ -339,3 +358,31 @@ class Copilot:
         self.start_copilot()
         self.sender.send_request('signOut', {"dummy": "signOut"}, generate_request_id())
         message_emacs('Logged out')
+
+    def change_workspace_folder(self, project_path):
+        self.start_copilot(project_path=project_path)
+        if not self.is_initialized:
+            return
+        if project_path not in self.workspace_folders:
+            folder = {
+                "uri": path_to_uri(project_path),
+                "name": os.path.basename(project_path)
+            }
+            self.workspace_folders[project_path] = folder
+            # notify the server
+            self.sender.send_notification('workspace/didChangeWorkspaceFolders', {
+                "event": {
+                    "added": [folder],
+                    "removed": []
+                }
+            })
+
+    def did_focus(self, file_path):
+        if not self.is_initialized:
+            return
+
+        self.sender.send_notification('textDocument/didFocus', {
+            "textDocument": {
+                "uri": path_to_uri(file_path),
+            }
+        })
