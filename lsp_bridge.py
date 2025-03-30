@@ -679,7 +679,8 @@ class LspBridge:
         multi_lang_server = get_emacs_func_result("get-multi-lang-server", project_path, filepath)
 
         # notify change workspace folder to copilot server
-        self.copilot.change_workspace_folder(project_path)
+        if self.copilot.is_initialized:
+            self.copilot.change_workspace_folder(project_path)
 
         if os.path.splitext(filepath)[-1] == '.org':
             single_lang_server = get_emacs_func_result("get-single-lang-server", project_path, filepath)
