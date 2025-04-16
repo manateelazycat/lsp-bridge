@@ -1297,7 +1297,7 @@ So we build this macro to restore postion after code format."
     ;; start epc server and set `lsp-bridge-server-port'
     (lsp-bridge--start-epc-server)
     (let* ((lsp-bridge-args (append
-                             (when (equal lsp-bridge-python-command "pipx")
+                             (when (member lsp-bridge-python-command '("pipx" "uv"))
                                (list "run"))
                              (list lsp-bridge-python-file)
                              (list (number-to-string lsp-bridge-server-port))
