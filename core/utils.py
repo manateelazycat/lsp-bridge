@@ -205,7 +205,7 @@ def eval_in_emacs(method_name, *args):
             "sexp": [sexp]
         })
     else:
-        epc_client.call("eval-in-emacs", [sexp])    # type: ignore
+        eval_sexps_in_emacs([sexp])
 
 def message_emacs(message: str):
     """Message to Emacs with prefix."""
@@ -474,8 +474,11 @@ def split_docker_path(docker_path):
 def is_remote_path(filepath):
     return filepath.startswith("/ssh:") or filepath.startswith("/docker:")
 
-def eval_sexp_in_emacs(sexp):
-    epc_client.call("eval-in-emacs", [sexp])
+def eval_sexps_in_emacs(sexps: list[str]):
+    if isinstance(sexps, str):
+        sexps = [sexps]
+        logger.warning(f"Fixed argument type. The sexp argument should be a list of sexps but got: {sexps}")
+    epc_client.call("eval-in-emacs", sexps)
 
 def string_to_base64(text):
     import base64
