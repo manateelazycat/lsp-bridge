@@ -32,7 +32,7 @@ Advantages of lsp-bridge:
 ## Installation
 
 1. Install Emacs 28 or higher version
-2. Install Python dependencies: `pip3 install epc orjson sexpdata six setuptools paramiko rapidfuzz watchdog packaging` (orjson is optional, orjson is based on Rust, providing faster JSON parsing performance)
+2. Install Python dependencies: `pip3 install epc orjson sexpdata six setuptools paramiko rapidfuzz watchdog packaging` (orjson is optional, orjson is based on Rust, providing faster JSON parsing performance). This step can be skipped if you set `pipx` or `uv` to the lsp-bridge-python-command.
 3. Install Elisp dependencies: [markdown-mode](https://github.com/jrblevin/markdown-mode), [yasnippet](https://github.com/joaotavora/yasnippet)
 
 4. Download this repository using git clone, and replace the load-path path in the configuration below.
@@ -275,7 +275,7 @@ lsp-bridge provides support for more than two language servers for many language
 
 ## Options
 
-- `lsp-bridge-python-command`: The path of the python command, if you use `conda`, you may customize this option. Windows platform using `python.exe` rather than `python3`, if lsp-bridge can’t work, try set to `python3`
+- `lsp-bridge-python-command`: The path of the python command, if you use `conda`, you may customize this option. Windows platform using `python.exe` rather than `python3`, if lsp-bridge can’t work, try set to `python3`. If you set `pipx` or `uv`, these are translated to `pipx run` or `uv run` which execute the lsp_bridge.py in a temporal virtual environment where dependencies are automatically installed.
 - `lsp-bridge-complete-manually`: Only popup completion menu when user call `lsp-bridge-popup-complete-menu` command, default is nil
 - `lsp-bridge-enable-with-tramp`: When this option is enabled, lsp-bridge provides remote autocompletion support for files opened by tramp. It requires the lsp_bridge.py to be installed and started on the server side in advance. Note that this option only uses tramp to open files, it does not use tramp technology to implement autocompletion, because the implementation principle of tramp has serious performance issues. 'One should note that if you usually use the command `lsp-bridge-open-remote-file`, you need to disable the option `lsp-bridge-enable-with-tramp` to ensure that the file opened by the command can correctly jump to the definitions or references.
 - `lsp-bridge-remote-save-password`: Saves the password for remote editing to the netrc file, disabled by default
