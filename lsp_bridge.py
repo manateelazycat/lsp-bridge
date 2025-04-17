@@ -240,12 +240,12 @@ class LspBridge:
         # try to distinguish SSH remote file or docker remote file using server_host
         # if visiting docker remote file, container name is passed as server_host
         if is_valid_ip(server_host):
-            return self._get_remtoe_file_client(server_host, server_port, is_retry)
+            return self._get_remote_file_client(server_host, server_port, is_retry)
         else:
             # server_host is the container_name
             return self._get_docker_file_client(server_host, server_port)
 
-    def _get_remtoe_file_client(self, server_host, server_port, is_retry):
+    def _get_remote_file_client(self, server_host, server_port, is_retry):
         if server_host not in self.host_names:
             message_emacs(f"{server_host} is not connected, try reconnect...")
             self.sync_tramp_remote_complete_event.clear()
@@ -616,7 +616,7 @@ class LspBridge:
     def handle_lsp_message(self, message):
         if message["command"] == "eval-in-emacs":
             # Execute emacs command from remote server.
-            eval_sexp_in_emacs(message["sexp"])
+            eval_sexps_in_emacs(message["sexp"])
 
     @threaded
     def handle_file_elisp_message(self, message):
