@@ -1121,7 +1121,8 @@ So we build this macro to restore postion after code format."
   "Get lang server for file extension."
   ;; Don't search from extension list if filename not include any extension name.
   (when-let* ((dot-pos (cl-position ?. filename))
-              (file-extension (substring filename (1+ dot-pos) (length filename))))
+              (file-extension (when dot-pos
+                                (substring filename (1+ dot-pos) (length filename)))))
     (let (langserver-info)
       ;; Search multi-extension first, to support Angular file, reference https://github.com/manateelazycat/lsp-bridge/pull/1144
       (setq langserver-info (lsp-bridge-find-langserver-info-by-extension file-extension extension-list))
