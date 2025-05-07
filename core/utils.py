@@ -231,7 +231,7 @@ def epc_arg_transformer(arg):
     type_dict_p = len(arg) % 2 == 0
     if type_dict_p:
         for v in arg[::2]:
-            if type(v) != sexpdata.Symbol or not v.value().startswith(":"):
+            if not isinstance(v, sexpdata.Symbol) or not v.value().startswith(":"):
                 type_dict_p = False
                 break
 
