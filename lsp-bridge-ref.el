@@ -276,7 +276,6 @@ used to restore window configuration after apply changed.")
   "Edit keymap used by `lsp-bridge-ref-mode'.")
 
 (define-derived-mode lsp-bridge-ref-mode text-mode "lsp-bridge-ref"
-  (interactive)
   (kill-all-local-variables)
   (setq major-mode 'lsp-bridge-ref-mode)
   (setq mode-name "lsp-bridge-ref")
@@ -363,7 +362,6 @@ Becomes buffer local in `lsp-bridge-ref-mode' buffers.")
 (defun lsp-bridge-ref-popup (references-content references-counter)
   "Rerun rg with customized arguments. This function will give
 user more freedom to use rg with special arguments."
-  (interactive)
   ;; Save window configuration before do search.
   ;; Just save when `lsp-bridge-ref-window-configuration-before-search' is nil
   ;; Or current buffer is not `lsp-bridge-ref-buffer' (that mean user not quit lsp-bridge-ref and search again in other place).
