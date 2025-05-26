@@ -26,5 +26,4 @@ class Diagnostic(Handler):
 
         diagnostics = response.get("items")
 
-        if len(diagnostics) > 0:
-            self.file_action.record_diagnostics(diagnostics, self.server_info["name"])
+        self.file_action.record_diagnostics(diagnostics, self.server_info["name"])
