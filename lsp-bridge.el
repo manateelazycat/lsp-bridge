@@ -571,7 +571,7 @@ If nil, lsp-bridge would try to detect by default."
     (groovy-mode .                                                               "groovy-language-server")
     (haskell-mode .                                                              "hls")
     ((lua-mode lua-ts-mode)  .                                                   lsp-bridge-lua-lsp-server)
-    (markdown-mode .                                                             lsp-bridge-markdown-lsp-server)
+    ((markdown-mode gfm-mode) .                                                  lsp-bridge-markdown-lsp-server)
     (dart-mode .                                                                 "dart-analysis-server")
     (scala-mode .                                                                "metals")
     ((js2-mode js-mode js-ts-mode rjsx-mode) .                                   "javascript")
