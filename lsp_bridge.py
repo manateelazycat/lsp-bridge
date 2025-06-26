@@ -39,6 +39,7 @@ import threading
 import traceback
 import json
 import time
+import socket
 
 from functools import wraps
 from pathlib import Path
@@ -106,6 +107,7 @@ class LspBridge:
         self.client_dict = {}
         self.lsp_client_dict = {}
         self.host_names = {}
+        self.host_ip_dict = {}
 
         # Init event loop.
         self.event_queue = queue.Queue()
@@ -239,6 +241,9 @@ class LspBridge:
         #
         # try to distinguish SSH remote file or docker remote file using server_host
         # if visiting docker remote file, container name is passed as server_host
+        if server_host in self.host_ip_dict:
+            server_host = self.host_ip_dict[server_host]
+
         if is_valid_ip(server_host):
             return self._get_remote_file_client(server_host, server_port, is_retry)
         else:
@@ -246,6 +251,9 @@ class LspBridge:
             return self._get_docker_file_client(server_host, server_port)
 
     def _get_remote_file_client(self, server_host, server_port, is_retry):
+        if server_host in self.host_ip_dict:
+            server_host = self.host_ip_dict[server_host]
+
         if server_host not in self.host_names:
             message_emacs(f"{server_host} is not connected, try reconnect...")
             self.sync_tramp_remote_complete_event.clear()
@@ -394,7 +402,7 @@ class LspBridge:
         tramp_method_prefix = tramp_file_name.rsplit(":", 1)[0]
 
         if tramp_method_prefix.startswith("/ssh"):
-
+            alias = None
             # arguments are passed from emacs using standard TRAMP functions tramp-file-name-<field>
             if server_host in self.host_names:
                 server_host = self.host_names[server_host]['hostname']
@@ -410,7 +418,22 @@ class LspBridge:
                 ssh_conf = ssh_config.lookup(alias)
 
                 server_host = ssh_conf.get('hostname', server_host)
-                self.host_names[alias] = ssh_conf
+
+            if not is_valid_ip(server_host):
+                if server_host in self.host_ip_dict:
+                    server_ip = self.host_ip_dict[server_host]
+                    message_emacs(f"Resolve {server_host} to {server_ip} from host-ip cache")
+                else:
+                    # https://stackoverflow.com/a/2816838
+                    server_ips = [ str(i[4][0]) for i in socket.getaddrinfo(server_host, 0)]
+                    if not server_ips:
+                        message_emacs(f"Could not resolve host {server_host}")
+                    else:
+                        server_ip = server_ips[0]
+                        message_emacs(f"Resolve {server_host} to {server_ip}")
+                        server_host = server_ip
+                        self.host_ip_dict[server_host] = server_ip
+                ssh_conf['hostname'] = server_ip # overwrite
 
             if not is_valid_ip(server_host):
                 message_emacs("HostName Must be IP format.")
@@ -420,6 +443,8 @@ class LspBridge:
             if ssh_port:
                 ssh_conf['port'] = ssh_port
             self.host_names[server_host] = ssh_conf
+            if alias:
+                self.host_names[alias] = ssh_conf
 
             tramp_connection_info = tramp_method_prefix + ":"
             self.remote_sync(server_host, tramp_connection_info)

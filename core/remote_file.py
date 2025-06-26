@@ -52,7 +52,9 @@ class RemoteFileClient(threading.Thread):
         self.callback = callback
         [self.remote_python_command, self.remote_python_file, self.remote_log] = get_emacs_vars(["lsp-bridge-remote-python-command", "lsp-bridge-remote-python-file", "lsp-bridge-remote-log"])
 
-        [self.user_ssh_private_key] = get_emacs_vars(["lsp-bridge-user-ssh-private-key"])
+        [self.user_ssh_private_key,
+         self.user_ssh_agent] = get_emacs_vars(["lsp-bridge-user-ssh-private-key",
+                                                "lsp-bridge-user-ssh-agent"])
 
         self.ssh = self.connect_ssh(
             ssh_conf.get('gssapiauthentication', 'no') in ('yes'),
@@ -91,6 +93,7 @@ class RemoteFileClient(threading.Thread):
         import paramiko
 
         ssh = paramiko.SSHClient()
+        ssh.load_system_host_keys()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         proxy = None
@@ -102,7 +105,8 @@ class RemoteFileClient(threading.Thread):
                 ssh.connect(self.ssh_host, port=self.ssh_port, username=self.ssh_user, gss_auth=True, gss_kex=True, sock=proxy)
             else:
                 # Login server with ssh private key.
-                ssh_private_key = self.ssh_private_key()
+                # Don't specify key_filename with ssh-agent (allow_agent is default to True)
+                ssh_private_key = self.ssh_private_key() if not self.user_ssh_agent else None
                 # look_for_keys defaults to True
                 # when user specify the SSH private key path
                 # disable searching for discoverable private key files in ~/.ssh/
@@ -184,7 +188,7 @@ class RemoteFileClient(threading.Thread):
         _, stdout, stderr = self.ssh.exec_command(
             f"""
             nohup /bin/bash -l -c '
-            pid=$(ps aux | grep -v grep | grep lsp_bridge.py | awk '\\''{{print $2}}'\\'')
+            pid=$(pgrep -f '\\''lsp_bridge.py$'\\'')
             if [ "$pid" == "" ]; then
                 echo -e "Start lsp-bridge process as user $(whoami)" | tee >{remote_log}
                 {remote_python_command} {remote_python_file} >>{remote_log} 2>&1 &
@@ -207,7 +211,7 @@ class RemoteFileClient(threading.Thread):
             self.ssh.exec_command(
                 f"""
                 nohup /bin/bash -l -c '
-                pid=$(ps aux | grep -v grep | grep lsp_bridge.py | awk '\\''{{print $2}}'\\'')
+                pid=$(pgrep -f '\\''lsp_bridge.py$'\\'')
                 echo "try kill $pid" | tee >> {remote_log}
                 if ! [ "$pid" == "" ]; then
                     echo -e "kill lsp-bridge process as user $(whoami)" | tee >>{remote_log}
