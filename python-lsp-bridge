@@ -1,0 +1,4 @@
+#!/bin/bash
+SCRIPT_PATH=$(realpath "$0")
+SCRIPT_DIR_PATH=$(dirname "$SCRIPT_PATH")
+exec uv --directory="$SCRIPT_DIR_PATH" run python "$@"
