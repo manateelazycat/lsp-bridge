@@ -402,7 +402,7 @@ class LspBridge:
         tramp_method_prefix = tramp_file_name.rsplit(":", 1)[0]
 
         if tramp_method_prefix.startswith("/ssh"):
-
+            alias = None
             # arguments are passed from emacs using standard TRAMP functions tramp-file-name-<field>
             if server_host in self.host_names:
                 server_host = self.host_names[server_host]['hostname']
@@ -418,7 +418,6 @@ class LspBridge:
                 ssh_conf = ssh_config.lookup(alias)
 
                 server_host = ssh_conf.get('hostname', server_host)
-                self.host_names[alias] = ssh_conf
 
             if not is_valid_ip(server_host):
                 if server_host in self.host_ip_dict:
@@ -434,6 +433,7 @@ class LspBridge:
                         message_emacs(f"Resolve {server_host} to {server_ip}")
                         server_host = server_ip
                         self.host_ip_dict[server_host] = server_ip
+                ssh_conf['hostname'] = server_ip # overwrite
 
             if not is_valid_ip(server_host):
                 message_emacs("HostName Must be IP format.")
@@ -443,6 +443,8 @@ class LspBridge:
             if ssh_port:
                 ssh_conf['port'] = ssh_port
             self.host_names[server_host] = ssh_conf
+            if alias:
+                self.host_names[alias] = ssh_conf
 
             tramp_connection_info = tramp_method_prefix + ":"
             self.remote_sync(server_host, tramp_connection_info)
