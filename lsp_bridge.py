@@ -39,6 +39,7 @@ import threading
 import traceback
 import json
 import time
+import socket
 
 from functools import wraps
 from pathlib import Path
@@ -106,6 +107,7 @@ class LspBridge:
         self.client_dict = {}
         self.lsp_client_dict = {}
         self.host_names = {}
+        self.host_ip_dict = {}
 
         # Init event loop.
         self.event_queue = queue.Queue()
@@ -239,6 +241,9 @@ class LspBridge:
         #
         # try to distinguish SSH remote file or docker remote file using server_host
         # if visiting docker remote file, container name is passed as server_host
+        if server_host in self.host_ip_dict:
+            server_host = self.host_ip_dict[server_host]
+
         if is_valid_ip(server_host):
             return self._get_remote_file_client(server_host, server_port, is_retry)
         else:
@@ -246,6 +251,9 @@ class LspBridge:
             return self._get_docker_file_client(server_host, server_port)
 
     def _get_remote_file_client(self, server_host, server_port, is_retry):
+        if server_host in self.host_ip_dict:
+            server_host = self.host_ip_dict[server_host]
+
         if server_host not in self.host_names:
             message_emacs(f"{server_host} is not connected, try reconnect...")
             self.sync_tramp_remote_complete_event.clear()
@@ -411,6 +419,21 @@ class LspBridge:
 
                 server_host = ssh_conf.get('hostname', server_host)
                 self.host_names[alias] = ssh_conf
+
+            if not is_valid_ip(server_host):
+                if server_host in self.host_ip_dict:
+                    server_ip = self.host_ip_dict[server_host]
+                    message_emacs(f"Resolve {server_host} to {server_ip} from host-ip cache")
+                else:
+                    # https://stackoverflow.com/a/2816838
+                    server_ips = [ str(i[4][0]) for i in socket.getaddrinfo(server_host, 0)]
+                    if not server_ips:
+                        message_emacs(f"Could not resolve host {server_host}")
+                    else:
+                        server_ip = server_ips[0]
+                        message_emacs(f"Resolve {server_host} to {server_ip}")
+                        server_host = server_ip
+                        self.host_ip_dict[server_host] = server_ip
 
             if not is_valid_ip(server_host):
                 message_emacs("HostName Must be IP format.")
