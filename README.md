@@ -32,7 +32,8 @@ Advantages of lsp-bridge:
 ## Installation
 
 1. Install Emacs 28 or higher version
-2. Install Python dependencies: `pip3 install epc orjson sexpdata six setuptools paramiko rapidfuzz watchdog packaging` (orjson is optional, orjson is based on Rust, providing faster JSON parsing performance). 
+2. Install Python dependencies: `pip3 install epc orjson sexpdata six setuptools paramiko rapidfuzz watchdog packaging` (orjson is optional, orjson is based on Rust, providing faster JSON parsing performance).
+   - If you have [uv](https://docs.astral.sh/uv) installed, you can use the provided `python-lsp-bridge` wrapper from the repository. Simply **create a symbolic link** (do NOT copy) to this wrapper in a directory included in your PATH. lsp-bridge will then use it as the default option.
 3. Install Elisp dependencies: [markdown-mode](https://github.com/jrblevin/markdown-mode), [yasnippet](https://github.com/joaotavora/yasnippet)
 
 4. Download this repository using git clone, and replace the load-path path in the configuration below.

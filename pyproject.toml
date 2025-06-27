@@ -1,0 +1,15 @@
+[project]
+name = "lsp-bridge"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "epc>=0.0.5",
+    "orjson>=3.10.18",
+    "packaging>=25.0",
+    "paramiko>=3.5.1",
+    "rapidfuzz>=3.13.0",
+    "setuptools>=80.9.0",
+    "sexpdata>=1.0.2",
+    "six>=1.17.0",
+    "watchdog>=6.0.0",
+]
