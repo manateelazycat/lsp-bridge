@@ -336,7 +336,7 @@ class FileAction:
         diagnostic_count = 0
         for server_name in self.diagnostics:
             for diagnostic in self.diagnostics[server_name]:
-                if hide_severities and diagnostic["severity"] in hide_severities:
+                if hide_severities and diagnostic.get("severity", 1) in hide_severities:
                     continue
                 diagnostic["server-name"] = server_name
                 diagnostics.append(diagnostic)
