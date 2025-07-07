@@ -12,7 +12,7 @@
 ;; URL: https://github.com/manateelazycat/lsp-bridge
 ;; Keywords:
 ;; Compatibility: emacs-version >= 28
-;; Package-Requires: ((emacs "28") (markdown-mode "2.6"))
+;; Package-Requires: ((emacs "28") (markdown-mode "2.6"))/
 ;;
 ;; Features that might be required by this library:
 ;;
@@ -509,7 +509,9 @@ Possible choices are basedpyright, pyright, pyright-background-analysis, jedi, p
 (defcustom lsp-bridge-python-multi-lsp-server "basedpyright_ruff"
   "Default Multi LSP server for Python.
 Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, python-ms_ruff, and pylsp_ruff."
-  :type 'string)
+If nil the server specified by lsp-bridge-python-lsp-server is used."
+  :type '(choice (string)
+                 (const nil)))
 
 (defcustom lsp-bridge-tex-lsp-server "texlab"
   "Default LSP server for (la)tex, you can choose `texlab', `digestif' or `ltex-ls'."
