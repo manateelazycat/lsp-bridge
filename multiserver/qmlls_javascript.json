@@ -18,5 +18,6 @@
   "document_symbol": "qmlls",
   "workspace_symbol": "qmlls",
   "semantic_tokens": "qmlls",
-  "inlay_hint": "qmlls"
+  "inlay_hint": "qmlls",
+  "imenu": "qmlls"
 }

@@ -18,5 +18,6 @@
   "document_symbol": "volar",
   "workspace_symbol": "volar",
   "semantic_tokens": "volar",
-  "inlay_hint": "volar"
+  "inlay_hint": "volar",
+  "imenu": "volar"
 }

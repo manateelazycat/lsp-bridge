@@ -18,5 +18,6 @@
   "document_symbol": "vscode-css-language-server",
   "workspace_symbol": "vscode-css-language-server",
   "semantic_tokens": "vscode-css-language-server",
-  "inlay_hint": "vscode-css-language-server"
+  "inlay_hint": "vscode-css-language-server",
+  "imenu": "vscode-css-language-server"
 }
