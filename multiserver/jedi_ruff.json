@@ -18,5 +18,6 @@
   "document_symbol": "jedi",
   "workspace_symbol": "jedi",
   "semantic_tokens": "jedi",
-  "inlay_hint": "jedi"
+  "inlay_hint": "jedi",
+  "imenu": "jedi"
 }

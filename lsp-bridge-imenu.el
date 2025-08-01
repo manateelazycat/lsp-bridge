@@ -39,7 +39,7 @@ Possible values: `imenu', `consult-imenu', or `consult-imenu-multi'."
                                           (mapcar (lambda (s) (apply #'dfs s)) res)))
                                        (imenu-create-index-function #'(lambda () index-items))
                                        (last-nonmenu-event 13))
-                                  (call-interactively 'lsp-bridge-imenu-function))))
+                                  (call-interactively lsp-bridge-imenu-function))))
 
 (provide 'lsp-bridge-imenu)
 ;;; lsp-bridge-imenu.el ends here
