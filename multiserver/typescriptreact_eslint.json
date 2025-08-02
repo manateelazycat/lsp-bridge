@@ -19,5 +19,6 @@
   "workspace_symbol": "typescriptreact",
   "semantic_tokens": "typescriptreact",
   "inlay_hint": "typescriptreact",
-  "imenu": "typescriptreact"
+  "imenu": "typescriptreact",
+  "breadcrumb": "typescriptreact"
 }

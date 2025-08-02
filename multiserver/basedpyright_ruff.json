@@ -19,5 +19,6 @@
   "workspace_symbol": "basedpyright",
   "semantic_tokens": "basedpyright",
   "inlay_hint": "basedpyright",
-  "imenu": "basedpyright"
+  "imenu": "basedpyright",
+  "breadcrumb": "basedpyright"
 }

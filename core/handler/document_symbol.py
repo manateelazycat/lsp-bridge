@@ -16,7 +16,8 @@ class DocumentSymbol(Handler):
             try:
                 symbols = []
                 current_defun = ''
-                for symbol in response:
+                while response:
+                    symbol = response.pop()
                     if "range" in symbol:
                         range = symbol["range"]
                     else:
@@ -28,6 +29,8 @@ class DocumentSymbol(Handler):
                             current_defun += '.'
                         current_defun += symbol['name']
                         symbols.append(symbol)
+                    if symbol["children"]:
+                        response.extend(reversed(symbol["children"]))
                 eval_in_emacs("lsp-bridge-symbols--record-current-defun", current_defun)
             except:
                 import traceback

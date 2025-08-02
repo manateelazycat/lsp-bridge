@@ -256,6 +256,7 @@ more detail about using lsp-bridge in devcontainer please refer to [emacs-devcon
 - `lsp-bridge-indent-left`: Indents the pasted text to the left according to the indent values defined in `lsp-bridge-formatting-indent-alist`
 - `lsp-bridge-indent-right`: Indents the pasted text to the right according to the indent values defined in `lsp-bridge-formatting-indent-alist`
 - `lsp-bridge-semantic-tokens-mode`: Enables or disables semantic token highlighting, please ref to [Semantic Tokens Wiki](https://github.com/manateelazycat/lsp-bridge/wiki/Semantic-Tokens)
+- `lsp-bridge-breadcrumb-mode`: Enable or disable breadcrumb headline
 
 ## LSP server options
 lsp-bridge provides support for more than two language servers for many languages. You can customize the following options to choose the language server you prefer:
