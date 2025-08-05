@@ -45,7 +45,7 @@ class Breadcrumb(Handler):
                     ):
                         cursor_symbol = child
 
-                    if child["children"]:
+                    if "children" in child and child["children"]:
                         traverse(child, child["children"])
 
             traverse(None, response)
