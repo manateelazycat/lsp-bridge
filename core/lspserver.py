@@ -451,6 +451,9 @@ class LspServer:
                 "onTypeFormatting": {
                     "dynamicRegistration": True
                 },
+                "documentSymbol": {
+                    "hierarchicalDocumentSymbolSupport": True
+                },
             },
             "window": {
                 "workDoneProgress": True

@@ -19,5 +19,6 @@
   "workspace_symbol": "pyright-background-analysis",
   "semantic_tokens": "pyright-background-analysis",
   "inlay_hint": "pyright-background-analysis",
-  "imenu": "pyright-background-analysis"
+  "imenu": "pyright-background-analysis",
+  "breadcrumb": "pyright-background-analysis"
 }

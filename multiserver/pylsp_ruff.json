@@ -19,5 +19,6 @@
   "workspace_symbol": "pylsp",
   "semantic_tokens": "pylsp",
   "inlay_hint": "pylsp",
-  "imenu": "pylsp"
+  "imenu": "pylsp",
+  "breadcrumb": "pylsp"
 }
