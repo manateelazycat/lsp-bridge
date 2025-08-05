@@ -251,6 +251,7 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 - `lsp-bridge-indent-left`: 根据 `lsp-bridge-formatting-indent-alist` 定义的缩进值, 向左缩进刚刚粘贴的文本
 - `lsp-bridge-indent-right`: 根据 `lsp-bridge-formatting-indent-alist` 定义的缩进值, 向右缩进刚刚粘贴的文本
 - `lsp-bridge-semantic-tokens-mode`: 开启或者关闭语义符号高亮， 自定义请参考 [Semantic Tokens Wiki](https://github.com/manateelazycat/lsp-bridge/wiki/Semantic-Tokens-%5B%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%E7%89%88%5D)
+- `lsp-bridge-breadcrumb-mode`: 开启顶部 breadcrumb 栏
 
 ## LSP 服务器选项
 lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， 您可以通过定制下面的选项来选择你喜欢的语言服务器:
