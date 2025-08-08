@@ -170,6 +170,7 @@ Default matching use snippet filename."
 
 (defun acm-backend-yas-candidates (keyword)
   (when (and acm-enable-yas
+             yas-minor-mode
              (>= (length keyword) acm-backend-yas-candidate-min-length)
              (not (string-empty-p keyword)))
     (when (or acm-backend-yas--cache-expire-p
