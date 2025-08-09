@@ -603,7 +603,7 @@ If nil, lsp-bridge would try to detect by default."
     (elm-mode   .                                                                "elm-language-server")
     ((php-mode php-ts-mode) .                                                    lsp-bridge-php-lsp-server)
     ((yaml-mode yaml-ts-mode) .                                                  "yaml-language-server")
-    (zig-mode .                                                                  "zls")
+    ((zig-mode zig-ts-mode) .                                                    "zls")
     ((dockerfile-mode dockerfile-ts-mode) .                                      "docker-langserver")
     (d-mode .                                                                    "serve-d")
     ((fortran-mode f90-mode) .                                                   "fortls")
