@@ -1,0 +1,10 @@
+{
+  "name": "fish-lsp",
+  "languageId": "fish",
+  "command": [
+    "fish-lsp",
+    "start",
+    "--disable", "signature"
+  ],
+  "settings": {}
+}
