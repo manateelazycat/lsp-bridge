@@ -52,6 +52,11 @@
   :type 'string
   :group 'lsp-bridge-breadcrumb)
 
+(defcustom lsp-bridge-breadcrumb-max-segment-length 20
+  "Max character length for each segment."
+  :type 'integer
+  :group 'lsp-bridge-breadcrumb)
+
 (defvar-local lsp-bridge-breadcrumb--timer nil)
 (defvar-local lsp-bridge-breadcrumb--last-point nil)
 (defvar-local lsp-bridge-breadcrumb--last-update-tick nil)
@@ -67,7 +72,7 @@
       (setq lsp-bridge-breadcrumb--bar-img
             (propertize
              " " 'display
-             (let ((width 1)
+             (let ((width (window-font-width nil 'header-line))
                    (height lsp-bridge-breadcrumb-bar-height)
                    (color (face-background 'header-line nil t)))
                (ignore-errors
@@ -100,38 +105,56 @@
   "Update the breadcrumb for WINDOW."
   (let ((active (eq (selected-window) window)))
     (if lsp-bridge-breadcrumb--last-response
-        (let ((segments
-               (mapcar
-                (lambda (s)
-                  (let ((name (plist-get s :name))
-                        (pos (plist-get s :pos))
-                        (kind (plist-get s :kind)))
-                    (concat
-                     (lsp-bridge-breadcrumb--icon kind active)
-                     (propertize
-                      name
-                      'face (if active 'header-line `(:foreground ,(face-foreground 'mode-line-inactive nil t)))
-                      'mouse-face 'highlight
-                      'help-echo "mouse-1: Go to definition"
-                      'local-map
-                      (let ((map (make-sparse-keymap)))
-                        (define-key
-                         map [header-line mouse-1]
-                         #'(lambda ()
-                             (interactive)
-                             (select-window window)
-                             (when (fboundp 'evil-set-jump) (evil-set-jump))
-                             (goto-char (acm-backend-lsp-position-to-point pos))))
-                        map))
-                     " ")))
-                lsp-bridge-breadcrumb--last-response)))
+        (let* ((segments-face (if active 'header-line `(:foreground ,(face-foreground 'mode-line-inactive nil t))))
+               (segments
+                (mapcar
+                 (lambda (s)
+                   (let* ((name (plist-get s :name))
+                          (name-length (length name))
+                          (pos (plist-get s :pos))
+                          (kind (plist-get s :kind)))
+                     (concat
+                      "\u200b"
+                      (lsp-bridge-breadcrumb--icon kind active)
+                      (propertize
+                       (if (<= name-length lsp-bridge-breadcrumb-max-segment-length) name
+                         (concat (substring name 0 (min name-length (- lsp-bridge-breadcrumb-max-segment-length 1))) "…"))
+                       'face segments-face
+                       'mouse-face 'highlight
+                       'help-echo (concat name "\nmouse-1: Go to definition")
+                       'local-map
+                       (let ((map (make-sparse-keymap)))
+                         (define-key
+                          map [header-line mouse-1]
+                          #'(lambda ()
+                              (interactive)
+                              (select-window window)
+                              (when (fboundp 'evil-set-jump) (evil-set-jump))
+                              (goto-char (acm-backend-lsp-position-to-point pos))))
+                         map))
+                      " ")))
+                 lsp-bridge-breadcrumb--last-response))
+               (segments-text (string-join segments lsp-bridge-breadcrumb-separator))
+               (header-text (concat
+                             (lsp-bridge-breadcrumb--bar-img)
+                             lsp-bridge-breadcrumb-separator
+                             segments-text))
+               (text-width (string-width segments-text))
+               (sep-width (string-width lsp-bridge-breadcrumb-separator))
+               (max-width (- (window-max-chars-per-line window 'header-line) 3 sep-width)))
+          (when (> text-width max-width)
+            (let* ((sub-text (substring header-text (- text-width max-width)))
+                   (first-segment-pos (string-match "\u200b" sub-text))
+                   (sub-text (substring sub-text first-segment-pos)))
+              (setq header-text (concat
+                                 (lsp-bridge-breadcrumb--bar-img)
+                                 lsp-bridge-breadcrumb-separator
+                                 (propertize " … " 'face segments-face)
+                                 lsp-bridge-breadcrumb-separator
+                                 sub-text))))
           (set-window-parameter
            window 'lsp-bridge-breadcrumb--last-header-line
-           (concat
-            " "
-            lsp-bridge-breadcrumb-separator
-            (string-join segments lsp-bridge-breadcrumb-separator)
-            (lsp-bridge-breadcrumb--bar-img))))
+           header-text))
       (set-window-parameter
        window 'lsp-bridge-breadcrumb--last-header-line
        (lsp-bridge-breadcrumb--bar-img)))))
@@ -189,9 +212,11 @@
    (lsp-bridge-breadcrumb-mode
     (when (lsp-bridge-has-lsp-server-p)
       (setq-local window-selection-change-functions (cons #'lsp-bridge-breadcrumb--on-window-change window-selection-change-functions))
+      (setq-local window-size-change-functions (cons #'lsp-bridge-breadcrumb--on-window-change window-size-change-functions))
       (add-to-list 'header-line-format '(:eval (lsp-bridge-breadcrumb--header-line)))))
    (t
     (setq-local window-selection-change-functions (delete #'lsp-bridge-breadcrumb--on-window-change window-selection-change-functions))
+    (setq-local window-size-change-functions (delete #'lsp-bridge-breadcrumb--on-window-change window-size-change-functions))
     (setq header-line-format (delete '(:eval (lsp-bridge-breadcrumb--header-line)) header-line-format)))))
 
 (provide 'lsp-bridge-breadcrumb)
