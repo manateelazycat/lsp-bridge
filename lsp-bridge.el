@@ -599,6 +599,7 @@ If nil, lsp-bridge would try to detect by default."
       clojure-ts-clojurescript-mode
       clojure-ts-clojuredart-mode)  .                                                   "clojure-lsp")
     ((sh-mode bash-mode bash-ts-mode) .                                          "bash-language-server")
+    (fish-mode .                                                                 "fish-lsp")
     ((css-mode css-ts-mode) .                                                    "vscode-css-language-server")
     (elm-mode   .                                                                "elm-language-server")
     ((php-mode php-ts-mode) .                                                    lsp-bridge-php-lsp-server)
@@ -786,6 +787,7 @@ If nil, lsp-bridge would try to detect by default."
     perl-mode-hook
     futhark-mode-hook
     conf-toml-mode-hook
+    fish-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
@@ -920,6 +922,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (sh-mode .            "\$\{")
     (bash-mode .          "\$\{")
     (bash-ts-mode .       "\$\{")
+    (fish-mode .          "\$\{")
     (typst-ts-mode .      "\$\{")
     (typst--base-mode .   "\$\{")
     (typst--code-mode .   "\$\{")
