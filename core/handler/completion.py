@@ -1,3 +1,4 @@
+import re
 import os
 from enum import Enum
 from functools import cmp_to_key
@@ -126,6 +127,28 @@ class Completion(Handler):
             h = (h ^ byte) * 16777219
         return h
 
+    def convert_snippet(self, snippet):
+        '''
+        Convert LSP snippet to YASnippet.
+        LSP snippet is ALMOST a valid yas snippet, but the server might returns
+            ${1:Placeholder} ... ${1:Placeholder}
+        which is not supported. Mirrors can't have placeholder themselves:
+            ${1:Placeholder} ... ${1}
+        https://joaotavora.github.io/yasnippet/snippet-development.html#org087775c
+        '''
+        placeholder_regex = r'\$\{(\d+):([^}]+)\}'
+        placeholders = {}
+
+        def replace(match):
+           index, name = match.groups()
+           if name not in placeholders:
+               placeholders[name] = index
+               return match.group(0)
+           else:
+               return f"${{{placeholders[name]}}}"
+
+        return re.sub(placeholder_regex, replace, snippet)
+
     def process_response(self, response: dict) -> None:
         # Get completion items.
         completion_candidates = []
@@ -179,6 +202,17 @@ class Completion(Handler):
                         format(self.fnv_1a(x["newText"].encode('utf-8')), 'x')[:8]
                         for x in item.get("additionalTextEdits", []))
 
+                insert_text = item.get('insertText', None)
+                text_edit = item.get("textEdit", None)
+
+                if kind == "snippet":
+                    if text_edit is not None:
+                        text_edit["newText"] = self.convert_snippet(text_edit["newText"])
+                    elif insert_text is not None:
+                        insert_text = self.convert_snippet(insert_text)
+                    else:
+                        label = self.convert_snippet(label)
+
                 # Build candidate.
                 candidate = {
                     "key": key,
@@ -186,9 +220,9 @@ class Completion(Handler):
                     "label": label,
                     "displayLabel": self.get_display_label(item, display_new_text),
                     "deprecated": 1 in item.get("tags", []),
-                    "insertText": item.get('insertText', None),
+                    "insertText": insert_text,
                     "insertTextFormat": item.get("insertTextFormat", ''),
-                    "textEdit": item.get("textEdit", None),
+                    "textEdit": text_edit,
                     "score": item.get("score", 1000),
                     "sortText": item.get("sortText", ""),
                     "filterText": item.get("filterText", None),
