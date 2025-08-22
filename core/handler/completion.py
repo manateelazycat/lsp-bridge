@@ -36,7 +36,7 @@ class Completion(Handler):
 
     def compare_candidates(self, x, y):
         prefix = self.prefix.lower()
-        x_label, y_label = x["label"].lower(), y["label"].lower()
+        x_label, y_label = (x["filterText"] or x["label"]).lower(), (y["filterText"] or y["label"]).lower()
         x_icon, y_icon = x["icon"], y["icon"]
         x_score, y_score = x["score"], y["score"]
         x_sort_text, y_sort_text = map(self.parse_sort_value, (x["sortText"], y["sortText"]))
@@ -191,6 +191,7 @@ class Completion(Handler):
                     "textEdit": item.get("textEdit", None),
                     "score": item.get("score", 1000),
                     "sortText": item.get("sortText", ""),
+                    "filterText": item.get("filterText", None),
                     "server": self.method_server_name,
                     "backend": "lsp"
                 }
