@@ -328,6 +328,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 - `acm-enable-citre`: [citre(ctags)](https://github.com/universal-ctags/citre) 补全， 默认关闭
 - `acm-enable-lsp-workspace-symbol`: LSP 符号补全， 默认关闭
 - `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是 20
+- `acm-doc-frame-boundary`: 文档框架的边界约束策略，选项包括 `'parent-frame`、`'display`，默认为 `'parent-frame`。`'parent-frame` 将文档框架限制在父 Emacs 窗口内，`'display` 允许文档框架超出 Emacs 窗口但不超出显示器边界
 - `acm-candidate-match-function`: lsp-bridge 前端对补全候选词的过滤算法， 选项有 `'regexp-quote`, `'orderless-flex`, `'orderless-literal`, `'orderless-prefixes`, `'orderless-regexp`, `'orderless-initialism`, 默认为 `regexp-quote`， orderless-\* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
 - `acm-completion-mode-candidates-merge-order`: 模式补全的显示顺序， 默认是按照 Elisp、 LSP、 Jupyter、 Ctags、 Citre、 ROAM、 单词、 Telegra 的顺序显示， 你可以根据你的需求调整模式补全的显示顺序
 - `acm-backend-lsp-candidate-min-length`: LSP 补全最小的触发字符数, 默认是 0
