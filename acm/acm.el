@@ -175,6 +175,14 @@
   :type 'integer
   :group 'acm)
 
+(defcustom acm-doc-frame-boundary 'parent-frame
+  "Boundary constraint for documentation frame.
+`parent-frame' means constrain within parent Emacs frame.
+`display' means constrain within display screen."
+  :type '(choice (const :tag "Within parent Emacs frame" parent-frame)
+                 (const :tag "Within display screen" display))
+  :group 'acm)
+
 (defcustom acm-frame-background-dark-color "#191a1b"
   "The frame background color for dark theme."
   :type 'string
@@ -1010,34 +1018,44 @@ The key of candidate will change between two LSP results."
           (_ (acm-doc-hide)))))))
 
 (defun acm-doc-frame-adjust ()
-  (let* ((emacs-width (frame-pixel-width))
-         (emacs-height (frame-pixel-height))
+  (let* ((boundary-width (if (eq acm-doc-frame-boundary 'parent-frame)
+                             (frame-pixel-width)
+                           (display-pixel-width)))
+         (boundary-height (if (eq acm-doc-frame-boundary 'parent-frame)
+                              (frame-pixel-height)
+                            (display-pixel-height)))
          (acm-frame-width (frame-pixel-width acm-menu-frame))
          (acm-frame-height (frame-pixel-height acm-menu-frame))
          (acm-frame-pos (frame-position acm-menu-frame))
          (acm-frame-x (car acm-frame-pos))
          (acm-frame-y (cdr acm-frame-pos))
-
          (acm-frame-left-distance acm-frame-x)
-         (acm-frame-right-distance (- emacs-width acm-frame-x acm-frame-width))
+         (acm-frame-right-distance (- boundary-width acm-frame-x acm-frame-width))
          (acm-frame-top-distance acm-frame-y)
-         (acm-frame-bottom-distance (- emacs-height acm-frame-y acm-frame-height))
+         (acm-frame-bottom-distance (- boundary-height acm-frame-y acm-frame-height))
+         (acm-doc-frame-max-width
+          (min (max acm-frame-left-distance acm-frame-right-distance)
+               (frame-pixel-width)))
+         (acm-doc-frame-max-height
+          (min (max acm-frame-top-distance acm-frame-bottom-distance)
+               (frame-pixel-height))))
 
-         (acm-doc-frame-max-width (max acm-frame-left-distance acm-frame-right-distance))
-         (acm-doc-frame-max-height (max acm-frame-top-distance acm-frame-bottom-distance)))
-
-    ;; Make sure doc frame size not out of Emacs area.
+    ;; Convert pixel-size into char-size
     (acm-frame-set-frame-max-size acm-doc-frame
                                   (ceiling (/ acm-doc-frame-max-width (frame-char-width)))
                                   (min (ceiling (/ acm-doc-frame-max-height (window-default-line-height)))
                                        acm-doc-frame-max-lines))
-
     ;; Adjust doc frame with it's size.
     (let* ((acm-doc-frame-width (frame-pixel-width acm-doc-frame))
-           (acm-doc-frame-x (if (> (+ acm-frame-x acm-frame-width acm-doc-frame-max-width) emacs-width)
+           (acm-doc-frame-height (frame-pixel-height acm-doc-frame))
+           (acm-doc-frame-x (if (> (+ acm-frame-x acm-frame-width acm-doc-frame-max-width) boundary-width)
                                 (- acm-frame-x acm-doc-frame-width)
                               (+ acm-frame-x acm-frame-width)))
-           (acm-doc-frame-y acm-frame-y))
+           (acm-doc-frame-y (if (> (+ acm-frame-y acm-doc-frame-height) boundary-height)
+                                (if (> acm-frame-top-distance acm-frame-bottom-distance)
+                                    (max 0 (- acm-frame-y acm-doc-frame-height))
+                                  (- boundary-height acm-doc-frame-height))
+                              acm-frame-y)))
       (acm-frame-set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y))))
 
 (defun acm-menu-current-candidate ()
