@@ -98,6 +98,7 @@
 (require 'lsp-bridge-dart)
 (require 'lsp-bridge-semantic-tokens)
 (require 'lsp-bridge-rust)
+(require 'lsp-bridge-breadcrumb)
 
 (defgroup lsp-bridge nil
   "LSP-Bridge group."

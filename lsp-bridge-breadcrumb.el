@@ -25,7 +25,6 @@
 ;;; Code:
 
 (require 'acm-icon)
-(require 'lsp-bridge)
 
 (defgroup lsp-bridge-breadcrumb nil
   "Show breadcrumb on headerline."
@@ -161,8 +160,11 @@
 
 (defun lsp-bridge-breadcrumb--call ()
   "Call backend."
-  (setq lsp-bridge-breadcrumb--in-process t)
-  (lsp-bridge-call-file-api "breadcrumb" (lsp-bridge--position)))
+  (if (lsp-bridge-call-file-api-p)
+      (progn
+        (setq lsp-bridge-breadcrumb--in-process t)
+        (lsp-bridge-call-file-api "breadcrumb" (lsp-bridge--position)))
+    (lsp-bridge-breadcrumb--disable)))
 
 (defun lsp-bridge-breadcrumb--callback (filename filehost response)
   "RESPONSE callback from backend for FILENAME:FILEHOST."
@@ -204,13 +206,17 @@
     (when (fboundp 'evil-set-jump) (evil-set-jump))
     (goto-char (acm-backend-lsp-position-to-point pos))))
 
+(defun lsp-bridge-breadcrumb--disable ()
+  "Disable `lsp-bridge-breadcrumb-mode'."
+  (lsp-bridge-breadcrumb-mode -1))
+
 ;;;###autoload
 (define-minor-mode lsp-bridge-breadcrumb-mode
   "Minor mode to show symbol breadcrumb on headerline."
   :init-value nil
   (cond
    (lsp-bridge-breadcrumb-mode
-    (when (lsp-bridge-has-lsp-server-p)
+    (when (lsp-bridge-call-file-api-p)
       (setq-local window-selection-change-functions (cons #'lsp-bridge-breadcrumb--on-window-change window-selection-change-functions))
       (setq-local window-size-change-functions (cons #'lsp-bridge-breadcrumb--on-window-change window-size-change-functions))
       (add-to-list 'header-line-format '(:eval (lsp-bridge-breadcrumb--header-line)))))
