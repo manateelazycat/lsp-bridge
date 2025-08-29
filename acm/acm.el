@@ -1017,22 +1017,27 @@ The key of candidate will change between two LSP results."
           ;; Hide doc frame immediately if backend is not LSP.
           (_ (acm-doc-hide)))))))
 
-(defun acm-doc-frame-adjust ()
-  (let* ((boundary-width (if (eq acm-doc-frame-boundary 'parent-frame)
-                             (frame-pixel-width)
-                           (display-pixel-width)))
-         (boundary-height (if (eq acm-doc-frame-boundary 'parent-frame)
-                              (frame-pixel-height)
-                            (display-pixel-height)))
-         (acm-frame-width (frame-pixel-width acm-menu-frame))
+(defun acm-doc-frame-adjust-display-boundary ()
+  "Adjust doc frame position when using display boundary."
+  (let* ((acm-frame-width (frame-pixel-width acm-menu-frame))
          (acm-frame-height (frame-pixel-height acm-menu-frame))
+         ;; Get menu frame position relative to its parent
          (acm-frame-pos (frame-position acm-menu-frame))
          (acm-frame-x (car acm-frame-pos))
          (acm-frame-y (cdr acm-frame-pos))
-         (acm-frame-left-distance acm-frame-x)
-         (acm-frame-right-distance (- boundary-width acm-frame-x acm-frame-width))
-         (acm-frame-top-distance acm-frame-y)
-         (acm-frame-bottom-distance (- boundary-height acm-frame-y acm-frame-height))
+         ;; Get parent frame absolute position
+         (parent-frame (frame-parameter acm-menu-frame 'parent-frame))
+         (parent-abs-pos (and parent-frame (cdr (assq 'outer-position (frame-geometry parent-frame)))))
+         (parent-abs-x (if parent-abs-pos (car parent-abs-pos) 0))
+         (parent-abs-y (if parent-abs-pos (cdr parent-abs-pos) 0))
+         ;; Calculate menu frame absolute position
+         (menu-abs-x (+ parent-abs-x acm-frame-x))
+         (menu-abs-y (+ parent-abs-y acm-frame-y))
+         ;; Calculate distances to display edges
+         (acm-frame-left-distance menu-abs-x)
+         (acm-frame-right-distance (- (display-pixel-width) menu-abs-x acm-frame-width))
+         (acm-frame-top-distance menu-abs-y)
+         (acm-frame-bottom-distance (- (display-pixel-height) menu-abs-y acm-frame-height))
          (acm-doc-frame-max-width
           (min (max acm-frame-left-distance acm-frame-right-distance)
                (frame-pixel-width)))
@@ -1048,15 +1053,60 @@ The key of candidate will change between two LSP results."
     ;; Adjust doc frame with it's size.
     (let* ((acm-doc-frame-width (frame-pixel-width acm-doc-frame))
            (acm-doc-frame-height (frame-pixel-height acm-doc-frame))
-           (acm-doc-frame-x (if (> (+ acm-frame-x acm-frame-width acm-doc-frame-max-width) boundary-width)
+           ;; Calculate doc frame position (relative coordinates)
+           (acm-doc-frame-x (if (> (+ menu-abs-x acm-frame-width acm-doc-frame-max-width) (display-pixel-width))
                                 (- acm-frame-x acm-doc-frame-width)
                               (+ acm-frame-x acm-frame-width)))
-           (acm-doc-frame-y (if (> (+ acm-frame-y acm-doc-frame-height) boundary-height)
+           (acm-doc-frame-y (if (> (+ menu-abs-y acm-doc-frame-height) (display-pixel-height))
                                 (if (> acm-frame-top-distance acm-frame-bottom-distance)
                                     (max 0 (- acm-frame-y acm-doc-frame-height))
-                                  (- boundary-height acm-doc-frame-height))
+                                  ;; Place at display bottom, need to convert to relative coordinates
+                                  (- (display-pixel-height) acm-doc-frame-height parent-abs-y))
+                              acm-frame-y)))
+
+      (acm-frame-set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y))))
+
+(defun acm-doc-frame-adjust-parent-boundary ()
+  "Adjust doc frame position when using parent frame boundary."
+  (let* ((acm-frame-width (frame-pixel-width acm-menu-frame))
+         (acm-frame-height (frame-pixel-height acm-menu-frame))
+         (acm-frame-pos (frame-position acm-menu-frame))
+         (acm-frame-x (car acm-frame-pos))
+         (acm-frame-y (cdr acm-frame-pos))
+         (acm-frame-left-distance acm-frame-x)
+         (acm-frame-right-distance (- (frame-pixel-width) acm-frame-x acm-frame-width))
+         (acm-frame-top-distance acm-frame-y)
+         (acm-frame-bottom-distance (- (frame-pixel-height) acm-frame-y acm-frame-height))
+         (acm-doc-frame-max-width
+          (min (max acm-frame-left-distance acm-frame-right-distance)
+               (frame-pixel-width)))
+         (acm-doc-frame-max-height
+          (min (max acm-frame-top-distance acm-frame-bottom-distance)
+               (frame-pixel-height))))
+
+    ;; Convert pixel-size into char-size
+    (acm-frame-set-frame-max-size acm-doc-frame
+                                  (ceiling (/ acm-doc-frame-max-width (frame-char-width)))
+                                  (min (ceiling (/ acm-doc-frame-max-height (window-default-line-height)))
+                                       acm-doc-frame-max-lines))
+    ;; Adjust doc frame with it's size.
+    (let* ((acm-doc-frame-width (frame-pixel-width acm-doc-frame))
+           (acm-doc-frame-height (frame-pixel-height acm-doc-frame))
+           (acm-doc-frame-x (if (> (+ acm-frame-x acm-frame-width acm-doc-frame-max-width) (frame-pixel-width))
+                                (- acm-frame-x acm-doc-frame-width)
+                              (+ acm-frame-x acm-frame-width)))
+           (acm-doc-frame-y (if (> (+ acm-frame-y acm-doc-frame-height) (frame-pixel-height))
+                                (if (> acm-frame-top-distance acm-frame-bottom-distance)
+                                    (max 0 (- acm-frame-y acm-doc-frame-height))
+                                  (- (frame-pixel-height) acm-doc-frame-height))
                               acm-frame-y)))
       (acm-frame-set-frame-position acm-doc-frame acm-doc-frame-x acm-doc-frame-y))))
+
+(defun acm-doc-frame-adjust ()
+  "Adjust doc frame position based on boundary configuration."
+  (if (eq acm-doc-frame-boundary 'parent-frame)
+      (acm-doc-frame-adjust-parent-boundary)
+    (acm-doc-frame-adjust-display-boundary)))
 
 (defun acm-menu-current-candidate ()
   "Get current candidate with menu index and offset."
