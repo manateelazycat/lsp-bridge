@@ -24,8 +24,23 @@
   :type 'boolean
   :group 'acm-backend-copilot)
 
+(defcustom acm-backend-copilot-launch-mode 'auto
+  "How to launch the Copilot language server.
+`auto' - Automatically detect (try node first, fallback to binary).
+`binary' - Use copilot-language-server binary.
+`node' - Use Node.js to run the language server."
+  :type '(choice (const :tag "Auto detect" auto)
+                 (const :tag "Binary executable" binary)
+                 (const :tag "Node.js" node))
+  :group 'acm-backend-copilot)
+
 (defcustom acm-backend-copilot-node-path "node"
   "The path to node for copilot."
+  :type 'string
+  :group 'acm-backend-copilot)
+
+(defcustom acm-backend-copilot-binary-path "copilot-language-server"
+  "The path to copilot-language-server for copilot."
   :type 'string
   :group 'acm-backend-copilot)
 

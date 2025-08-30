@@ -1,5 +1,6 @@
 import os
 import time
+import shutil
 import subprocess
 import uuid
 from core.utils import epc_arg_transformer, message_emacs, get_emacs_vars, get_os_name, generate_request_id, path_to_uri, eval_in_emacs, logger
@@ -36,9 +37,6 @@ class Copilot:
         self.is_run = False
         self.is_initialized = False
         self.is_get_info = False
-
-        (self.node_path, ) = get_emacs_vars(["acm-backend-copilot-node-path"])
-
         self.try_completion_timer = None
         self.file_versions = {}
         self.counter = 1
@@ -48,32 +46,100 @@ class Copilot:
         self.accept_commands = {}
         self.workspace_folders = {}
 
-    def check_node_version(self):
-        version = subprocess.check_output([self.node_path, '-v'], stderr=subprocess.STDOUT, universal_newlines=True).strip()
-        major_version = int(version.split('.')[0].lstrip('v'))
-        return major_version >= 20
+    def check_node_launch_environment(self):
+        """Check if Node.js launch mode requirements are met
+        Returns: (is_valid, error_message)
+        """
+        (node_path, ) = get_emacs_vars(["acm-backend-copilot-node-path"])
+
+        # 1. Check node version
+        try:
+            version = subprocess.check_output([node_path, '-v'], stderr=subprocess.STDOUT, universal_newlines=True).strip()
+            major_version = int(version.split('.')[0].lstrip('v'))
+            if major_version < 20:
+                return False, "Node version < 20"
+        except:
+            return False, "Node not found"
+
+        # 2. Check npm and copilot-language-server package
+        try:
+            npm_cmd = "npm.cmd" if get_os_name() == "windows" else "npm"
+            npm_package_path = subprocess.check_output([npm_cmd, 'root', '-g'], universal_newlines=True).strip()
+            agent_path = os.path.join(npm_package_path, "@github/copilot-language-server/dist/language-server.js")
+            if not os.path.exists(agent_path):
+                return False, "@github/copilot-language-server not installed"
+            self.node_path = node_path
+            self.agent_path = agent_path
+            return True, None
+        except:
+            return False, "npm not found"
+
+    def check_binary_launch_environment(self):
+        """Check if binary launch mode requirements are met
+        Returns: (is_valid, error_message)
+        """
+        (binary_path, ) = get_emacs_vars(["acm-backend-copilot-binary-path"])
+
+        if os.path.exists(binary_path) and os.access(binary_path, os.X_OK):
+            resolved_path = binary_path
+        else:
+            resolved_path = shutil.which(binary_path)
+
+        if resolved_path:
+            self.binary_path = resolved_path
+            return True, None
+        else:
+            return False, f"copilot-language-server not found or not executable: {binary_path}"
 
     def start_copilot(self, project_path=None):
         self.get_info()
-
         if self.is_run:
             return
         self.is_run = True
 
-        if not self.check_node_version():
-            message_emacs('To use copilot, Please install node version >= 20')
-            return
+        (launch_mode, ) = get_emacs_vars(["acm-backend-copilot-launch-mode"])
 
-        npm_package_path = subprocess.check_output(["npm.cmd" if get_os_name() == "windows" else "npm", 'root', '-g'], universal_newlines=True).strip()
-        agent_path =  os.path.join(npm_package_path, "@github", "copilot-language-server/dist/language-server.js")
-        if not os.path.exists(agent_path):
-            message_emacs('To use copilot, Please install @github/copilot-language-server')
-            return
+        if str(launch_mode) == "auto":
+            node_valid, node_error = self.check_node_launch_environment()
+            binary_valid, binary_error = self.check_binary_launch_environment()
 
-        self.copilot_subprocess = subprocess.Popen([self.node_path, agent_path, "--stdio"],
-                                                   stdin=PIPE,
-                                                   stdout=PIPE,
-                                                   stderr=None)
+            if not node_valid and not binary_valid:
+                message_emacs(
+                    f"Copilot startup failed.\n"
+                    f"Node mode: {node_error}\n"
+                    f"Binary mode: {binary_error}\n"
+                    f"Please either:\n"
+                    f"1. Install Node.js >= 20 and npm install -g @github/copilot-language-server\n"
+                    f"2. Install copilot-language-server binary and add to PATH"
+                )
+                self.is_run = False
+                return
+
+            if node_valid:
+                self.copilot_subprocess = subprocess.Popen([self.node_path, self.agent_path, "--stdio"], stdin=PIPE, stdout=PIPE, stderr=None)
+            elif binary_valid:
+                self.copilot_subprocess = subprocess.Popen([self.binary_path, "--stdio"], stdin=PIPE, stdout=PIPE, stderr=None)
+
+        elif str(launch_mode) == "node":
+            is_valid, error_msg = self.check_node_launch_environment()
+            if not is_valid:
+                if "version" in error_msg:
+                    message_emacs('To use copilot, Please install node version >= 20')
+                else:
+                    message_emacs('To use copilot, Please install @github/copilot-language-server')
+                self.is_run = False
+                return
+
+            self.copilot_subprocess = subprocess.Popen([self.node_path, self.agent_path, "--stdio"], stdin=PIPE, stdout=PIPE, stderr=None)
+
+        elif str(launch_mode) == "binary":
+            is_valid, error_msg = self.check_binary_launch_environment()
+            if not is_valid:
+                message_emacs(f"Copilot binary mode failed: {error_msg}")
+                self.is_run = False
+                return
+
+            self.copilot_subprocess = subprocess.Popen([self.binary_path, "--stdio"], stdin=PIPE, stdout=PIPE, stderr=None)
 
         self.receiver = LspServerReceiver(self.copilot_subprocess, 'copilot')
         self.receiver.start()
