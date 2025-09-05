@@ -208,6 +208,9 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
                                                                 (make-overlay diagnostic-start (1+ diagnostic-start))
                                                               (make-overlay diagnostic-start diagnostic-end)))
                                                    (message (plist-get diagnostic :message))
+                                                   (source (plist-get diagnostic :source))
+                                                   (code (plist-get diagnostic :code))
+
                                                    (overlay-face (cl-case severity
                                                                    (1 'lsp-bridge-diagnostics-error-face)
                                                                    (2 'lsp-bridge-diagnostics-warning-face)
@@ -219,7 +222,7 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
                                               (overlay-put overlay
                                                            'display-message
                                                            (if (> diagnostic-number 1)
-                                                               (format "[%s:%s] %s" (1+ diagnostic-index) diagnostic-number message)
+                                                               (format "[%s:%s] %s %s(%s)" (1+ diagnostic-index) diagnostic-number message source code)
                                                              message))
                                               (push overlay lsp-bridge-diagnostic-overlays))))
 
