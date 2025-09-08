@@ -124,6 +124,7 @@
 	(sass-mode . 37)
 	(ssass-mode . 37)
 	(scala-mode . 38)
+	(scala-ts-mode . 38)
 	(scss-mode . 39)
 	(sh-mode . 40)
 	(ebuild-mode . 40)

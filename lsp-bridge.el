@@ -582,7 +582,7 @@ If nil, lsp-bridge would try to detect by default."
     ((lua-mode lua-ts-mode)  .                                                   lsp-bridge-lua-lsp-server)
     ((markdown-mode gfm-mode) .                                                  lsp-bridge-markdown-lsp-server)
     (dart-mode .                                                                 "dart-analysis-server")
-    (scala-mode .                                                                "metals")
+    ((scala-mode scala-ts-mode) .                                                "metals")
     ((js2-mode js-mode js-ts-mode rjsx-mode) .                                   "javascript")
     (js-jsx-mode .                                                               "javascriptreact")
     ((typescript-tsx-mode tsx-ts-mode) .                                         "typescriptreact")
@@ -682,6 +682,7 @@ If nil, lsp-bridge would try to detect by default."
     haskell-literate-mode-hook
     dart-mode-hook
     scala-mode-hook
+    scala-ts-mode-hook
     typescript-mode-hook
     typescript-tsx-mode-hook
     js2-mode-hook
@@ -893,6 +894,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (rstml-ts-mode              . rust-ts-mode-indent-offset) ; Rust
     (rustic-mode                . rustic-indent-offset)       ; Rust
     (scala-mode                 . scala-indent:step)          ; Scala
+    (scala-ts-mode              . scala-indent:step)          ; Scala
     (powershell-mode            . powershell-indent)      ; PowerShell
     (ess-mode                   . ess-indent-offset)      ; ESS (R)
     (yaml-mode                  . yaml-indent-offset)     ; YAML
