@@ -507,6 +507,11 @@ which refer to https://docs.python.org/3/library/logging.html#levels for more de
 Possible choices are basedpyright, pyright, pyright-background-analysis, jedi, python-ms, pylsp, and ruff."
   :type 'string)
 
+(defcustom lsp-bridge-ruby-lsp-server "solargraph"
+  "Default LSP server for Ruby.
+Possible choices are `solargraph', `ruby-lsp'."
+  :type 'string)
+
 (defcustom lsp-bridge-python-multi-lsp-server "basedpyright_ruff"
   "Default Multi LSP server for Python.
 Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysis_ruff, jedi_ruff, python-ms_ruff, and pylsp_ruff."
@@ -572,7 +577,7 @@ If nil, lsp-bridge would try to detect by default."
     ((java-mode java-ts-mode) .                                                  "jdtls")
     ((julia-mode) .                                                              "julials")
     ((python-mode python-ts-mode) .                                              lsp-bridge-python-lsp-server)
-    ((ruby-mode ruby-ts-mode) .                                                  "solargraph")
+    ((ruby-mode ruby-ts-mode) .                                                  lsp-bridge-ruby-lsp-server)
     ((rust-mode rustic-mode rust-ts-mode rstml-ts-mode) .                        "rust-analyzer")
     (move-mode .                                                                 "move-analyzer")
     ((elixir-mode elixir-ts-mode heex-ts-mode) .                                 lsp-bridge-elixir-lsp-server)
