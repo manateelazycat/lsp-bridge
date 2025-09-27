@@ -40,13 +40,17 @@ def run_batch(args, cwd=BASE_DIR):
     (progn
         (setq network-security-level 'low) ; see https://github.com/jcs090218/setup-emacs-windows/issues/156#issuecomment-932956432
         (setq package-user-dir (expand-file-name "lsp-bridge-test" temporary-file-directory))
-        (require 'package)
-        (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+
+        (with-temp-buffer
+            (url-insert-file-contents "https://raw.githubusercontent.com/quelpa/quelpa/master/quelpa.el")
+            (eval-buffer)
+            (quelpa-self-upgrade))
+
+        (quelpa '(compat :fetcher github :repo "emacs-compat/compat" :commit "cccd41f549fa88031a32deb26253b462021d7e12"))
+        (quelpa '(markdown-mode :fetcher github :repo "jrblevin/markdown-mode" :commit "d51c469133d220823cc6ab50ff8e8743ed6e42fb"))
+        (quelpa '(yasnippet :fetcher github :repo "joaotavora/yasnippet" :commit "dd570a6b22364212fff9769cbf4376bdbd7a63c5"))
+        (quelpa '(tempel :fetcher github :repo "minad/tempel" :commit "aa0f6fab4013d4661c34f9352531ceac1f0973a8"))
         (package-initialize)
-        (package-refresh-contents)
-        (package-install 'markdown-mode)
-        (package-install 'yasnippet)
-        (package-install 'tempel)
 
         ;; for Windows
         (prefer-coding-system 'utf-8-unix)
