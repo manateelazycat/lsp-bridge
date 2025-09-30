@@ -1317,8 +1317,7 @@ So we build this macro to restore postion after code format."
 
 (defun lsp-bridge-start-process ()
   "Start LSP-Bridge process if it isn't started."
-  (if (and (process-live-p lsp-bridge-server)
-           (process-live-p lsp-bridge-internal-process))
+  (if (lsp-bridge-process-live-p)
       (remove-hook 'post-command-hook #'lsp-bridge-start-process)
     ;; start epc server and set `lsp-bridge-server-port'
     (lsp-bridge--start-epc-server)
