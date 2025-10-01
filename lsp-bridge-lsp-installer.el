@@ -90,18 +90,15 @@
                          ((eq system-type 'windows-nt) "omnisharp-win-x64-net6.0.zip")
                          ((eq system-type 'darwin)
                           (if (eq (car (split-string system-configuration "-")) 'aarch64)
-			                        "omnisharp-osx-arm64-net6.0.zip"
-			                      "omnisharp-osx-x64-net6.0.zip"))
+			                  "omnisharp-osx-arm64-net6.0.zip"
+			                "omnisharp-osx-x64-net6.0.zip"))
                          (t "omnisharp-linux-x64-net6.0.zip"))
-		                  "omnisharp-mono.zip"))
-	(url (concat "https://github.com/OmniSharp/omnisharp-roslyn/releases/latest/download/" to-append))
-        (down-des (if (eq system-type 'windows-nt)
+		              "omnisharp-mono.zip"))
+	     (url (concat "https://github.com/OmniSharp/omnisharp-roslyn/releases/latest/download/" to-append))
+         (down-des (if (eq system-type 'windows-nt)
                        (substitute-in-file-name (concat "\\$USERPROFILE\\AppData\\Local\\Temp\\" to-append))
-                    "/tmp/omnisharp-mono.zip"))
-        (install-des (if (eq system-type 'windows-nt)
-                         (expand-file-name (format "%s.cache/omnisharp/" user-emacs-directory))
-                       "~/.emacs.d/.cache/omnisharp/"
-                       (format "%s.cache/omnisharp/" user-emacs-directory))))
+                     "/tmp/omnisharp-mono.zip"))
+         (install-des (expand-file-name (concat user-emacs-directory (file-name-as-directory ".cache") (file-name-as-directory "omnisharp")))))
     (url-copy-file url down-des 1)
     (unless (file-directory-p install-des)
       (make-directory install-des t))
@@ -123,8 +120,8 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
   :type 'boolean)
 
 (defcustom codeium-download-url-prefix "https://github.com/Exafunction/codeium/releases/download/language-server-v"
-   "codeium download url prefix"
-   :type 'string)
+  "codeium download url prefix"
+  :type 'string)
 
 (defun tabnine-bridge--get-target ()
   "Return TabNine's system configuration.  Used for finding the correct binary."
@@ -256,13 +253,13 @@ Only useful on GNU/Linux.  Automatically set if NixOS is detected."
                       "x64")
                      (t "arm")))
          (platform (cond ((eq system-type 'gnu/linux)
-                        "linux")
-                       ((or (eq system-type 'ms-dos)
-                            (eq system-type 'windows-nt)
-                            (eq system-type 'cygwin))
-                        "windows")
-                       ((eq system-type 'darwin)
-                        "macos")))
+                          "linux")
+                         ((or (eq system-type 'ms-dos)
+                              (eq system-type 'windows-nt)
+                              (eq system-type 'cygwin))
+                          "windows")
+                         ((eq system-type 'darwin)
+                          "macos")))
          (extension (if (or (eq system-type 'ms-dos)
                             (eq system-type 'windows-nt)
                             (eq system-type 'cygwin))
