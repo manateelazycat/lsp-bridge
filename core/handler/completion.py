@@ -155,8 +155,9 @@ class Completion(Handler):
         items = {}
 
         if response is not None:
-            # Get match mode to filter candidates.
+            # Get match mode and case mode to filter candidates.
             match_mode = self.file_action.completion_match_mode
+            case_mode = self.file_action.completion_case_mode
 
             # Some LSP server, such as Wen, need assign textEdit/newText to displayLabel.
             display_new_text = self.get_display_new_text()
@@ -178,15 +179,8 @@ class Completion(Handler):
                 # than the number of candidates returned by the LSP server,
                 # it will cause the lsp-bridge to always send the previous batch of candidates
                 # which do not match the users input.
-                if match_mode == "prefix":
-                    if not string_match(label.lower(), self.prefix.lower(), fuzzy=False):
-                        continue
-                elif match_mode == "prefixCaseSensitive":
-                    if not string_match(label, self.prefix, fuzzy=False):
-                        continue
-                else:
-                    if not string_match(label.lower(), self.prefix.lower(), fuzzy=True):
-                        continue
+                if not string_match(label, self.prefix, match_mode, case_mode):
+                    continue
 
                 annotation = kind if kind != "" else detail
 

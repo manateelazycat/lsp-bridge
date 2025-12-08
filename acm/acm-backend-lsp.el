@@ -114,13 +114,39 @@
 `prefix': filter candidates with input prefix, note such as C++, after `std::', candidate's prefix is not `::'
 `prefixCaseSensitive': filter candidates with input prefix, and case sensitive
 `fuzzy': fitler candidates with fuzzy algorithm
+`exact': filter candidates which treated the input as a literal string that must occur in the candidate
+`regex': filter candidates with input as regex expression
+`regex-prefix': filter candidates with input prefix as regex expression
 
-lsp-bridge still will use `fuzzy' algorithm filter candidates if value is not `prefix' `prefixCaseSensitive' or `fuzzy'.
+lsp-bridge still will use `fuzzy' algorithm filter candidates if value is not `prefix' `prefixCaseSensitive' `exact' `regex' `regex-prefix' or `fuzzy'.
 
 The lsp-bridge will continuously filter candidates on the Python side.
 If not filter and the value of `acm-backend-lsp-candidates-max-number' is far smaller than the number of candidates returned by the LSP server,
 it will cause the lsp-bridge to always send the previous batch of candidates which do not match the users input."
-  :type 'string
+  :type '(choice (const :tag "Fuzzy Match" "fuzzy")
+                 (const :tag "Prefix Match" "prefix")
+                 (const :tag "Prefix Match with Case Sensitive" "prefixCaseSensitive")
+                 (const :tag "Exact Match" "exact")
+                 (const :tag "Regex Match" "regex")
+                 (const :tag "Regex Prefix Match" "regex-prefix")
+                 (other :tag "For compatibility, you can use any string. It will fall back to fuzzy match" string))
+  :group 'acm-backend-lsp)
+
+(defcustom acm-backend-lsp-case-mode "ignore"
+  "The case sensitive mode to filter completion candidates.
+
+`ignore': filter case insensitively
+`sensitive': filter case sensitively
+`smart': filter case sensitively if any cased characters in the input is uppercase. Otherwise, filter case sensitively
+
+Cased characters are those with general category property being one of “Lu” (Letter, uppercase), “Ll” (Letter, lowercase), or “Lt” (Letter, titlecase).
+
+lsp-bridge still will use `sensitive' if value is not `ignore' `sensitive' or `smart'."
+  :type '(choice (const :tag "Ignore Case" "ignore")
+                 (const :tag "Smart Case" "smart")
+                 (const :tag "Case Sensitive" "sensitive")
+                 (other :tag "For compatibility, you can use any string. It will fall back to case sensitive" string))
+  ;; :type 'string
   :group 'acm-backend-lsp)
 
 (defcustom acm-backend-lsp-frontend-filter-p nil
