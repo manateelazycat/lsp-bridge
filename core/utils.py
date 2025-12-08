@@ -327,25 +327,14 @@ def _fuzzy_match(string, like_name):
 def _start_match(string, like_name):
     return string.startswith(like_name)
 
-def _exact_match(string, like_name):
+def _substring_match(string, like_name):
     if len(like_name) <= 1:
         return like_name in string
     return string.find(like_name) >= 0
 
-def _regex_match(string, like_name, prefix=True):
-    try:
-        pattern = re.compile(like_name)
-    except re.error as e::
-        logger.error(f"Invalid regular expression: {e}")
-        return False
-    if prefix:
-        return re.match(pattern, string) is not None
-    else:
-        return re.search(pattern, string) is not None
-
 def string_match(string, like_name, match_mode="prefix", case_mode="ignore"):
     # For compatibility reasons: match_mode can be prefixCaseSensitiv
-    if match_mode = "prefixCaseSensitive":
+    if match_mode == "prefixCaseSensitive":
         case_mode = "sensitive"
         match_mode = "prefix"
 
@@ -360,12 +349,8 @@ def string_match(string, like_name, match_mode="prefix", case_mode="ignore"):
     match match_mode:
         case "prefix":
             return _start_match(string, like_name)
-        case "exact":
-            return _exact_match(string, like_name)
-        case "regex-prefix":
-            return _regex_match(string, like_name, prefix=True)
-        case "regex":
-            return _regex_match(string, like_name, prefix=False)
+        case "substring":
+            return _substring_match(string, like_name)
         case _: # fuzzy match
             return _fuzzy_match(string, like_name)
 
