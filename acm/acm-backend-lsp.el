@@ -135,14 +135,10 @@ it will cause the lsp-bridge to always send the previous batch of candidates whi
 `sensitive': filter case sensitively
 `smart': filter case sensitively if any cased characters in the input is uppercase. Otherwise, filter case sensitively
 
-Cased characters are those with general category property being one of “Lu” (Letter, uppercase), “Ll” (Letter, lowercase), or “Lt” (Letter, titlecase).
-
-lsp-bridge still will use `sensitive' if value is not `ignore' `sensitive' or `smart'."
+Cased characters are those with general category property being one of “Lu” (Letter, uppercase), “Ll” (Letter, lowercase), or “Lt” (Letter, titlecase)."
   :type '(choice (const :tag "Ignore Case" "ignore")
                  (const :tag "Smart Case" "smart")
-                 (const :tag "Case Sensitive" "sensitive")
-                 (other :tag "For compatibility, you can use any string. It will fall back to case sensitive" string))
-  ;; :type 'string
+                 (const :tag "Case Sensitive" "sensitive"))
   :group 'acm-backend-lsp)
 
 (defcustom acm-backend-lsp-frontend-filter-p nil
