@@ -350,7 +350,8 @@ lsp-bridge provides support for more than two language servers for many language
 - `acm-backend-yas-candidates-number`: yasnippet display number， 2 by default
 - `acm-backend-citre-keyword-complete`: Completion is performed according to the keywords of each mode defined by `acm-backend-citre-keywords-alist`, which takes effect only after citre is enabled.
 - `acm-backend-search-sdcv-words-dictionary`: StarDict dictionary for word completion, default is `kdic-ec-11w`, you can replace it with StarDict dictionary path, example, if you have dictionary `/usr/share/stardict/dic/stardict-oxford-gb-formated-2.4.2/oxford-gb-formated.ifo`, you need set this value to `/usr/share/stardict/dic/stardict-oxford-gb-formated-2.4.2/oxford-gb-formated`, not include `.ifo` extension.
-- `acm-backend-lsp-match-mode`: The filtering mode for candidates in LSP backend, there are three options: "prefix", "prefixCaseSensitive", and "fuzzy". By default it is "fuzzy"
+- `acm-backend-lsp-match-mode`: The filtering mode for candidates in LSP backend, there are six options: "prefix", "prefixCaseSensitive", "substring" and "fuzzy". By default it is "fuzzy"
+- `acm-backend-lsp-case-mode`: The case sensitive mode for filtering candidates in LSP backend, there are three options: "ignore", "sensitive" and "smart". By default it is "ignore"
 - `acm-backend-lsp-frontend-filter-p`: Since LSP candidates have been filtered in the Python backend, it's not necessary to perform an additional filter on the frontend (refer to option `acm-candidate-match-function`), disable by default, when set to `t`, this option will call the `acm-candidate-match-function` function on the frontend to filter LSP candidates again
 - `acm-backend-lsp-show-progress`: show working progress, disable by default
 - `acm-enable-preview`: enable Tab-and-Go completion, commands like acm-select-* will select and preview other candidate and further input will then commit this candidate, disable by default

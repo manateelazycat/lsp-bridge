@@ -111,16 +111,34 @@
 (defcustom acm-backend-lsp-match-mode "fuzzy"
   "The match mode to filter completion candidates.
 
-`prefix': filter candidates with input prefix, note such as C++, after `std::', candidate's prefix is not `::'
+`prefix': filter candidates with input prefix, note such as C++, after `std::', candidate's prefix is not `::'. For input \"abc\", it will match \"^abc.*\"
 `prefixCaseSensitive': filter candidates with input prefix, and case sensitive
-`fuzzy': fitler candidates with fuzzy algorithm
+`fuzzy': fitler candidates with fuzzy algorithm. For input \"abc\", it will match \".*a.*b.*c.*\".
+`substring': filter candidates which treated the input as a literal string that must occur in the candidate. For input \"abc\", it will match \".*abc.*\"
 
-lsp-bridge still will use `fuzzy' algorithm filter candidates if value is not `prefix' `prefixCaseSensitive' or `fuzzy'.
+lsp-bridge still will use `fuzzy' algorithm filter candidates if value is not `prefix' `prefixCaseSensitive' `substring' or `fuzzy'.
 
 The lsp-bridge will continuously filter candidates on the Python side.
 If not filter and the value of `acm-backend-lsp-candidates-max-number' is far smaller than the number of candidates returned by the LSP server,
 it will cause the lsp-bridge to always send the previous batch of candidates which do not match the users input."
-  :type 'string
+  :type '(choice (const :tag "Fuzzy Match" "fuzzy")
+                 (const :tag "Prefix Match" "prefix")
+                 (const :tag "Prefix Match with Case Sensitive" "prefixCaseSensitive")
+                 (const :tag "Substring Match" "substring")
+                 (other :tag "For compatibility, you can use any string. It will fall back to fuzzy match" string))
+  :group 'acm-backend-lsp)
+
+(defcustom acm-backend-lsp-case-mode "ignore"
+  "The case sensitive mode to filter completion candidates.
+
+`ignore': filter case insensitively
+`sensitive': filter case sensitively
+`smart': filter case sensitively if any cased characters in the input is uppercase. Otherwise, filter case sensitively
+
+Cased characters are those with general category property being one of “Lu” (Letter, uppercase), “Ll” (Letter, lowercase), or “Lt” (Letter, titlecase)."
+  :type '(choice (const :tag "Ignore Case" "ignore")
+                 (const :tag "Smart Case" "smart")
+                 (const :tag "Case Sensitive" "sensitive"))
   :group 'acm-backend-lsp)
 
 (defcustom acm-backend-lsp-frontend-filter-p nil
