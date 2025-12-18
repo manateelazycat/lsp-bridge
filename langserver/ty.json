@@ -1,0 +1,21 @@
+{
+  "name": "ty",
+  "languageId": "python",
+  "command": ["ty", "server"],
+  "initializationOptions": {
+    "logLevel": "info"
+  },
+  "settings": {
+    "ty": {
+      "disableLanguageServices": false,
+      "diagnosticMode": "openFilesOnly",
+      "inlayHints": {
+        "variableTypes": true,
+        "callArgumentNames": true
+      },
+      "completions": {
+        "autoImport": true
+      }
+    }
+  }
+}
