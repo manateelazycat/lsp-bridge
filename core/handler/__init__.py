@@ -73,6 +73,8 @@ from core.handler.inlay_hint import InlayHint  # noqa: F401
 from core.handler.semantic_tokens import SemanticTokens # noqa: F401
 from core.handler.rust_expand_macro import RustExpandMacro # noqa: F401
 from core.handler.rust_reload_workspace import RustReloadWorkspace # noqa: F401
+
 from core.handler.workspace_diagnostics import WorkspaceDiagnostics  # noqa: F401
 from core.handler.diagnostic import Diagnostic # noqa: F401
 from core.handler.breadcrumb import Breadcrumb # noqa: F401
+from core.handler.document_highlight import DocumentHighlight # noqa: F401
