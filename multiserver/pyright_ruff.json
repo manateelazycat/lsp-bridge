@@ -1,9 +1,20 @@
 {
-  "completion": ["pyright"],
-  "completion_item_resolve": ["pyright"],
-  "diagnostics": ["ruff"],
-  "code_action": ["ruff"],
-  "execute_command": ["pyright", "ruff"],
+  "completion": [
+    "pyright"
+  ],
+  "completion_item_resolve": [
+    "pyright"
+  ],
+  "diagnostics": [
+    "ruff"
+  ],
+  "code_action": [
+    "ruff"
+  ],
+  "execute_command": [
+    "pyright",
+    "ruff"
+  ],
   "find_define": "pyright",
   "find_type_define": "pyright",
   "find_implementation": "pyright",
@@ -20,5 +31,10 @@
   "semantic_tokens": "pyright",
   "inlay_hint": "pyright",
   "imenu": "pyright",
-  "breadcrumb": "pyright"
+  "breadcrumb": "pyright",
+  "document_highlight": "pyright",
+  "prepare_call_hierarchy_incoming": "pyright",
+  "prepare_call_hierarchy_outgoing": "pyright",
+  "call_hierarchy_incoming": "pyright",
+  "call_hierarchy_outgoing": "pyright"
 }
