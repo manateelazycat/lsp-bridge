@@ -5,6 +5,7 @@
   "initializationOptions": {
     "logLevel": "info"
   },
+  "support-single-file": false,
   "settings": {
     "ty": {
       "disableLanguageServices": false,
