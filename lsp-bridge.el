@@ -3336,9 +3336,6 @@ SSH tramp file name is like /ssh:user@host#port:path"
 (defun lsp-bridge-document-highlight-setup ()
   (add-hook 'post-command-hook #'lsp-bridge-document-highlight-cleanup nil t))
 
-(add-hook 'lsp-bridge-mode-hook #'lsp-bridge-enable-document-highlight-timer)
-(add-hook 'lsp-bridge-mode-hook #'lsp-bridge-document-highlight-setup)
-
 (provide 'lsp-bridge)
 
 ;;; lsp-bridge.el ends here
