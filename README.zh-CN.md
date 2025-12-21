@@ -292,6 +292,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 - `lsp-bridge-enable-search-words`: 索引打开文件的单词， 默认打开
 - `lsp-bridge-enable-auto-format-code`: 自动格式化代码, 默认关闭
 - `lsp-bridge-enable-signature-help`: 支持函数参数显示， 默认打开
+- `lsp-bridge-enable-document-highlight`: 高亮文档中相同的符号， 默认关闭
 - `lsp-bridge-log-level`: 设置 LSP 消息日志等级， 默认为 `'default`, 除非开发目的， 平常请勿将此选项设置成`debug`, 以避免影响性能
 - `lsp-bridge-enable-debug`: 启用程序调试， 默认关闭
 - `lsp-bridge-disable-backup`: 禁止 emacs 对文件做版本管理， 默认打开

@@ -297,6 +297,7 @@ lsp-bridge provides support for more than two language servers for many language
 - `lsp-bridge-enable-search-words`: index the word of the file, enable by default
 - `lsp-bridge-enable-auto-format-code`: automatic format code, disable by default
 - `lsp-bridge-enable-signature-help`: show function parameter in minibufer, enable by default
+- `lsp-bridge-enable-document-highlight`: highlight identical symbols in the document, disable by default
 - `lsp-bridge-log-level`: set LSP message level. see the `descript-variable lsp-bridge-log-level` for more detail, usually do no set it `debug` to avoid affecting performance
 - `lsp-bridge-enable-debug`: enable program debugging, disable by default
 - `lsp-bridge-disable-backup`: forbidden version manage of emacs, enable by default
