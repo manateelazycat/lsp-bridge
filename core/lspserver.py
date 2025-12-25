@@ -910,6 +910,8 @@ class LspServer:
             return
 
         self.record_message(message)
+        if self.handle_tsserver_request(message):
+            return
         self.handle_diagnostics_message(message)
         self.handle_log_message(message)
         self.handle_id_message(message)
@@ -1024,3 +1026,13 @@ class LspServer:
                 os.kill(self.lsp_subprocess.pid, 9)
             except ProcessLookupError:
                 log_time("LSP server {} ({}) already exited!".format(self.server_info["name"], self.lsp_subprocess.pid))
+
+    def handle_tsserver_request(self, message):
+            # Volar hybrid mode: forward tsserver requests to external TS LSP server.
+            # See: https://github.com/vuejs/language-tools/wiki/Neovim
+            if (self.server_info.get("name") == "volar" and
+                    "method" in message and message["method"] == "tsserver/request"):
+                from core.handler.volar_proxy import VolarProxy
+                VolarProxy.handle_tsserver_request(self, message.get("params"))
+                return True
+            return False

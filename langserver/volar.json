@@ -8,12 +8,6 @@
   "projectFiles": ["package.json"],
   "settings": {},
   "initializationOptions": {
-    "typescript": {
-      "tsdk": "%TSDK_PATH%"
-    },
-    "vue": {
-      "hybridMode": false
-    },
     "languageFeatures": {
       "references": true,
       "implementation": true,
