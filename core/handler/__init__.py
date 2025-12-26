@@ -76,3 +76,4 @@ from core.handler.rust_reload_workspace import RustReloadWorkspace # noqa: F401
 from core.handler.workspace_diagnostics import WorkspaceDiagnostics  # noqa: F401
 from core.handler.diagnostic import Diagnostic # noqa: F401
 from core.handler.breadcrumb import Breadcrumb # noqa: F401
+from core.handler.document_highlight import DocumentHighlight # noqa: F401

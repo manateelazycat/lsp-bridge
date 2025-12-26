@@ -1,9 +1,20 @@
 {
-  "completion": ["basedpyright"],
-  "completion_item_resolve": ["basedpyright"],
-  "diagnostics": ["ruff"],
-  "code_action": ["ruff"],
-  "execute_command": ["basedpyright", "ruff"],
+  "completion": [
+    "basedpyright"
+  ],
+  "completion_item_resolve": [
+    "basedpyright"
+  ],
+  "diagnostics": [
+    "ruff"
+  ],
+  "code_action": [
+    "ruff"
+  ],
+  "execute_command": [
+    "basedpyright",
+    "ruff"
+  ],
   "find_define": "basedpyright",
   "find_type_define": "basedpyright",
   "find_implementation": "basedpyright",
@@ -20,5 +31,10 @@
   "semantic_tokens": "basedpyright",
   "inlay_hint": "basedpyright",
   "imenu": "basedpyright",
-  "breadcrumb": "basedpyright"
+  "breadcrumb": "basedpyright",
+  "document_highlight": "basedpyright",
+  "prepare_call_hierarchy_incoming": "basedpyright",
+  "prepare_call_hierarchy_outgoing": "basedpyright",
+  "call_hierarchy_incoming": "basedpyright",
+  "call_hierarchy_outgoing": "basedpyright"
 }
