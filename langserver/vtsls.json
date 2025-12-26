@@ -1,0 +1,24 @@
+{
+    "name": "vtsls",
+    "languageId": "",
+    "command": [
+        "vtsls",
+        "--stdio"
+    ],
+    "settings": {
+        "vtsls": {
+            "tsserver": {
+                "globalPlugins": [
+                    {
+                        "name": "@vue/typescript-plugin",
+                        "location": "/opt/homebrew/lib/node_modules/@vue/language-server",
+                        "languages": [
+                            "vue"
+                        ],
+                        "configNamespace": "typescript"
+                    }
+                ]
+            }
+        }
+    }
+}
