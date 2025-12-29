@@ -1,24 +1,7 @@
 {
-  "completion": ["pylsp"],
-  "completion_item_resolve": ["pylsp"],
-  "diagnostics": ["ruff"],
-  "code_action": ["ruff"],
+  "default": "pylsp",
+  "diagnostics": ["pylsp", "ruff"],
+  "code_action": ["pylsp", "ruff"],
   "execute_command": ["pylsp", "ruff"],
-  "find_define": "pylsp",
-  "find_type_define": "pylsp",
-  "find_implementation": "pylsp",
-  "find_references": "pylsp",
-  "peek_find_definition": "pylsp",
-  "peek_find_references": "pylsp",
-  "formatting": "ruff",
-  "hover": "pylsp",
-  "signature_help": "pylsp",
-  "prepare_rename": "pylsp",
-  "rename": "pylsp",
-  "document_symbol": "pylsp",
-  "workspace_symbol": "pylsp",
-  "semantic_tokens": "pylsp",
-  "inlay_hint": "pylsp",
-  "imenu": "pylsp",
-  "breadcrumb": "pylsp"
+  "formatting": "ruff"
 }

@@ -1,24 +1,7 @@
 {
-  "completion": ["python-ms"],
-  "completion_item_resolve": ["python-ms"],
-  "diagnostics": ["ruff"],
-  "code_action": ["ruff"],
+  "default": "python-ms",
+  "diagnostics": ["python-ms", "ruff"],
+  "code_action": ["python-ms", "ruff"],
   "execute_command": ["python-ms", "ruff"],
-  "find_define": "python-ms",
-  "find_type_define": "python-ms",
-  "find_implementation": "python-ms",
-  "find_references": "python-ms",
-  "peek_find_definition": "python-ms",
-  "peek_find_references": "python-ms",
-  "formatting": "ruff",
-  "hover": "python-ms",
-  "signature_help": "python-ms",
-  "prepare_rename": "python-ms",
-  "rename": "python-ms",
-  "document_symbol": "python-ms",
-  "workspace_symbol": "python-ms",
-  "semantic_tokens": "python-ms",
-  "inlay_hint": "python-ms",
-  "imenu": "python-ms",
-  "breadcrumb": "python-ms"
+  "formatting": "ruff"
 }

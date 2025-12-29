@@ -1,39 +1,9 @@
 {
-  "servers": [
-    "volar",
-    "vtsls"
-  ],
-  "completion": [
-    "volar",
-    "vtsls"
-  ],
-  "completion_item_resolve": [
-    "volar",
-    "vtsls"
-  ],
-  "diagnostics": [
-    "volar",
-    "vtsls"
-  ],
-  "code_action": [
-    "volar",
-    "vtsls"
-  ],
-  "execute_command": "vtsls",
-  "find_define": "vtsls",
-  "find_type_define": "vtsls",
-  "find_implementation": "vtsls",
-  "find_references": "vtsls",
-  "peek_find_definition": "vtsls",
-  "peek_find_references": "vtsls",
-  "hover": "volar",
-  "signature_help": "vtsls",
-  "inlay_hint": "vtsls",
-  "formatting": "vtsls",
-  "prepare_rename": "vtsls",
-  "rename": "vtsls",
-  "document_symbol": "vtsls",
-  "workspace_symbol": "vtsls",
-  "semantic_tokens": "vtsls",
-  "imenu": "vtsls"
+  "default": "vtsls",
+  "servers": ["volar", "vtsls"],
+  "completion": ["volar", "vtsls"],
+  "completion_item_resolve": ["volar", "vtsls"],
+  "diagnostics": ["volar", "vtsls"],
+  "code_action": ["volar", "vtsls"],
+  "hover": "volar"
 }
