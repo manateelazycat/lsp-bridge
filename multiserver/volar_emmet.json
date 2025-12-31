@@ -1,24 +1,8 @@
 {
+  "default": "volar",
   "completion": ["volar", "emmet-ls"],
   "completion_item_resolve": ["volar", "emmet-ls"],
   "diagnostics": ["volar", "emmet-ls"],
   "code_action": ["volar", "emmet-ls"],
-  "execute_command": ["volar", "emmet-ls"],
-  "find_define": "volar",
-  "find_type_define": "volar",
-  "find_implementation": "volar",
-  "find_references": "volar",
-  "peek_find_definition": "volar",
-  "peek_find_references": "volar",
-  "formatting": "volar",
-  "hover": "volar",
-  "signature_help": "volar",
-  "prepare_rename": "volar",
-  "rename": "volar",
-  "document_symbol": "volar",
-  "workspace_symbol": "volar",
-  "semantic_tokens": "volar",
-  "inlay_hint": "volar",
-  "imenu": "volar",
-  "breadcrumb": "volar"
+  "execute_command": ["volar", "emmet-ls"]
 }

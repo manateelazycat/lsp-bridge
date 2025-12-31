@@ -1,24 +1,7 @@
 {
-  "completion": ["pyright-background-analysis"],
-  "completion_item_resolve": ["pyright-background-analysis"],
-  "diagnostics": ["ruff"],
-  "code_action": ["ruff"],
+  "default": "pyright-background-analysis",
+  "diagnostics": ["pyright-background-analysis", "ruff"],
+  "code_action": ["pyright-background-analysis", "ruff"],
   "execute_command": ["pyright-background-analysis", "ruff"],
-  "find_define": "pyright-background-analysis",
-  "find_type_define": "pyright-background-analysis",
-  "find_implementation": "pyright-background-analysis",
-  "find_references": "pyright-background-analysis",
-  "peek_find_definition": "pyright-background-analysis",
-  "peek_find_references": "pyright-background-analysis",
-  "formatting": "ruff",
-  "hover": "pyright-background-analysis",
-  "signature_help": "pyright-background-analysis",
-  "prepare_rename": "pyright-background-analysis",
-  "rename": "pyright-background-analysis",
-  "document_symbol": "pyright-background-analysis",
-  "workspace_symbol": "pyright-background-analysis",
-  "semantic_tokens": "pyright-background-analysis",
-  "inlay_hint": "pyright-background-analysis",
-  "imenu": "pyright-background-analysis",
-  "breadcrumb": "pyright-background-analysis"
+  "formatting": "ruff"
 }

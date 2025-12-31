@@ -1,24 +1,6 @@
 {
-  "completion": ["typescript"],
-  "completion_item_resolve": ["typescript"],
+  "default": "typescript",
   "diagnostics": ["typescript", "vscode-eslint-language-server"],
   "code_action": ["typescript", "vscode-eslint-language-server"],
-  "execute_command": ["typescript", "vscode-eslint-language-server"],
-  "find_define": "typescript",
-  "find_type_define": "typescript",
-  "find_implementation": "typescript",
-  "find_references": "typescript",
-  "peek_find_definition": "typescript",
-  "peek_find_references": "typescript",
-  "formatting": "typescript",
-  "hover": "typescript",
-  "signature_help": "typescript",
-  "prepare_rename": "typescript",
-  "rename": "typescript",
-  "document_symbol": "typescript",
-  "workspace_symbol": "typescript",
-  "semantic_tokens": "typescript",
-  "inlay_hint": "typescript",
-  "imenu": "typescript",
-  "breadcrumb": "typescript"
+  "execute_command": ["typescript", "vscode-eslint-language-server"]
 }

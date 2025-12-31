@@ -1,24 +1,7 @@
 {
-  "completion": ["jedi"],
-  "completion_item_resolve": ["jedi"],
-  "diagnostics": ["ruff"],
-  "code_action": ["ruff"],
+  "default": "jedi",
+  "diagnostics": ["jedi", "ruff"],
+  "code_action": ["jedi", "ruff"],
   "execute_command": ["jedi", "ruff"],
-  "find_define": "jedi",
-  "find_type_define": "jedi",
-  "find_implementation": "jedi",
-  "find_references": "jedi",
-  "peek_find_definition": "jedi",
-  "peek_find_references": "jedi",
-  "formatting": "ruff",
-  "hover": "jedi",
-  "signature_help": "jedi",
-  "prepare_rename": "jedi",
-  "rename": "jedi",
-  "document_symbol": "jedi",
-  "workspace_symbol": "jedi",
-  "semantic_tokens": "jedi",
-  "inlay_hint": "jedi",
-  "imenu": "jedi",
-  "breadcrumb": "jedi"
+  "formatting": "ruff"
 }

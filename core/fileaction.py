@@ -157,6 +157,16 @@ class FileAction:
                 file_content = f.read()
         return file_content
 
+    def get_method_server_names(self, method: str):
+        default = self.multi_servers_info.get("default", None)
+        if method in ["completion", "completion_item_resolve", "diagnostics", "code_action"]:
+            method_server_names = self.multi_servers_info.get(method, default)
+            if not isinstance(method_server_names, list):
+                method_server_names = [method_server_names]
+        else:
+            method_server_names = [self.multi_servers_info.get(method, default)]
+        return method_server_names
+
     def call(self, method, *args, **kwargs):
         """Call any handler or method of file action."""
         if method in self.handlers:
@@ -164,14 +174,11 @@ class FileAction:
             if self.single_server:
                 self.send_request(self.single_server, method, handler, *args, **kwargs)
             else:
-                if method in ["completion", "completion_item_resolve", "diagnostics", "code_action"]:
-                    method_server_names = self.multi_servers_info[method]
-                elif method in ["execute_command"]:
+                if method in ["execute_command"]:
                     # "execute_command" is trigger by code action, one time only need send request to *ONE* LSP server.
                     method_server_names = [args[0]] # first arguments if server name.
                 else:
-                    method_server_names = [self.multi_servers_info[method]]
-
+                    method_server_names = self.get_method_server_names(method)
                 for method_server_name in method_server_names:
                     method_server = self.multi_servers[method_server_name]
                     self.send_request(method_server, method, handler, *args, **kwargs)
@@ -264,7 +271,7 @@ class FileAction:
     def _do_pull_diagnostics(self):
         """Actually send the diagnostic requests to the servers."""
         if self.multi_servers:
-            for server_name in self.multi_servers_info.get('diagnostics', []):
+            for server_name in self.get_method_server_names('diagnostics'):
                 lsp_server = self.multi_servers[server_name]
                 if lsp_server.diagnostic_provider and lsp_server.enable_diagnostics:
                     self.send_request(lsp_server, 'diagnostic', Diagnostic, lsp_server.server_info["name"])
@@ -287,7 +294,7 @@ class FileAction:
 
         if self.multi_servers:
             for lsp_server in self.multi_servers.values():
-                if lsp_server.server_info["name"] in self.multi_servers_info["completion"]:
+                if lsp_server.server_info["name"] in self.get_method_server_names("completion"):
                     # Send code completion request.
                     self.send_server_request(lsp_server, "completion", lsp_server, position, before_char, prefix, version)
 
@@ -305,7 +312,7 @@ class FileAction:
     def try_formatting(self, start, end, *args, **kwargs):
         if self.multi_servers:
             for lsp_server in self.multi_servers.values():
-                if lsp_server.server_info["name"] in self.multi_servers_info["formatting"]:
+                if lsp_server.server_info["name"] in self.get_method_server_names("formatting"):
                     if start == end:
                         self.send_request(lsp_server, "formatting", Formatting, *args, **kwargs)
                     else:
@@ -321,7 +328,7 @@ class FileAction:
 
         if self.multi_servers:
             for lsp_server in self.multi_servers.values():
-                if lsp_server.server_info["name"] in self.multi_servers_info["code_action"]:
+                if lsp_server.server_info["name"] in self.get_method_server_names("code_action"):
                     self.send_code_action_request(lsp_server, *args, **kwargs)
         else:
             self.send_code_action_request(self.single_server, *args, **kwargs)
@@ -419,7 +426,7 @@ class FileAction:
         self.code_actions[server_name] = actions
 
         self.code_action_counter += 1
-        check_counter = len(self.multi_servers_info.get("code_action", [])) if self.multi_servers else 1
+        check_counter = len(self.get_method_server_names("code_action")) if self.multi_servers else 1
 
         # Only send code action when all LSP server has received response.
         if self.code_action_counter >= check_counter:
@@ -552,10 +559,7 @@ class FileAction:
 
     def get_match_lsp_servers(self, method):
         if self.multi_servers:
-            server_names = self.multi_servers_info[method]    # type: ignore
-            if isinstance(server_names, str):
-                server_names = [server_names]
-
+            server_names = self.get_method_server_names(method)    # type: ignore
             return list(map(lambda server_name: self.multi_servers[server_name], server_names))    # type: ignore
         else:
             return [self.single_server]
