@@ -565,7 +565,7 @@ If nil, lsp-bridge would try to detect by default."
   "Only popup completion menu when user call `lsp-bridge-popup-complete-menu' command.")
 
 (defcustom lsp-bridge-multi-lang-server-mode-list
-  '(((python-mode python-ts-mode) . lsp-bridge-python-multi-lsp-server)
+  '(((ess-r-mode) . "rair_rlanguageserver") ((python-mode python-ts-mode) . lsp-bridge-python-multi-lsp-server)
     ((qml-mode qml-ts-mode) . "qmlls_javascript"))
   "The multi lang server rule for file mode."
   :type 'cons)
