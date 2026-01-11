@@ -712,6 +712,8 @@ class LspBridge:
             lang_server_info = load_single_server_info(single_lang_server)
             #TODO support diagnostic
             lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info, enable_diagnostics=False)
+            if not lsp_server:
+                return False
             create_file_action_with_single_server(filepath, lang_server_info, lsp_server)
         elif multi_lang_server:
             # Try to load multi language server when get-multi-lang-server return match one.
@@ -940,6 +942,8 @@ class LspBridge:
                 lang_server_info = load_single_server_info(current_lang_server)
                 server = self.create_lsp_server(filepath, action.single_server.project_path,
                                                 lang_server_info, enable_diagnostics=False)
+                if not server:
+                    return
                 action.org_lang_servers[lsp_server_name] = server
                 action.org_server_infos[lsp_server_name] = lang_server_info
                 server.attach(action)
