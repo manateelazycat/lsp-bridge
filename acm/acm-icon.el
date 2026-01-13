@@ -173,7 +173,9 @@
     (t . ("material" "smoking-pipe" "#90cef1"))))
 
 (defvar acm-icon-cache (make-hash-table :test 'equal))
-(defvar acm-icon-dir (expand-file-name "icons" (file-name-directory load-file-name)))
+(defvar acm-icon-dir (expand-file-name "icons" (if load-file-name
+                                                   (file-name-directory load-file-name)
+                                                 default-directory)))
 (defvar acm-icon-width 4)
 
 (defun acm-icon-filepath (collection name)
