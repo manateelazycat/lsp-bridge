@@ -1,0 +1,8 @@
+{
+  "name": "wasm-language-tools",
+  "languageId": "wat",
+  "command": [
+    "wat_server"
+  ],
+  "settings": {}
+}

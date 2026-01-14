@@ -648,6 +648,7 @@ If nil, lsp-bridge would try to detect by default."
     (nxml-mode .                                                                 lsp-bridge-xml-lsp-server)
     (robot-mode .                                                                "vscode-rf-language-server")
     (vimrc-mode .                                                                "vim-language-server")
+    (wat-mode .                                                                  "wasm-language-tools")
     (terraform-mode .                                                            "terraform-ls")
     (jsonnet-mode .                                                              "jsonnet-language-server")
     (glsl-mode .                                                                 "glsl-language-server")
@@ -795,6 +796,7 @@ If nil, lsp-bridge would try to detect by default."
     futhark-mode-hook
     conf-toml-mode-hook
     fish-mode-hook
+    wat-mode-hook
     )
   "The default mode hook to enable lsp-bridge."
   :type '(repeat variable))
@@ -877,6 +879,7 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
     (hlasm-mode                 . lsp-bridge-indent-eight-level) ; HLASM
     (yang-mode                  . lsp-bridge-indent-two-level) ; Yang
     (mint-mode                  . lsp-bridge-indent-two-level) ; Mint
+    (wat-mode                   . lsp-bridge-indent-two-level) ; WebAssembly Text Format
     (purescript-mode            . purescript-indent-offset) ; PureScript
     (futhark-mode               . futhark-indent-level)     ; Futhark
     (sgml-mode                  . sgml-basic-offset)        ; SGML
