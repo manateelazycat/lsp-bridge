@@ -1,0 +1,7 @@
+{
+  "default": "rlanguageserver",
+  "diagnostics": "rlanguageserver",
+  "code_action": "rlanguageserver",
+  "execute_command": "rlanguageserver",
+  "formatting": "air"
+}
