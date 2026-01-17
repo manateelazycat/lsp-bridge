@@ -268,13 +268,16 @@ lsp-bridge provides support for more than two language servers for many language
 - `lsp-bridge-php-lsp-server`: PHP language server, you can choose `intelephense` or `phpactor`
 - `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `texlab`, `digestif` or `ltex-ls`
 - `lsp-bridge-csharp-lsp-server`: C# language server, you can choose `omnisharp-mono`, `omnisharp-dotnet` or `csharp-ls`, note that you need to give **execute permissions** to the OmniSharp file
-- `lsp-bridge-python-multi-lsp-server`: Python multi-language servers, you can choose `basedpyright_ruff`, `pyright_ruff`, `jedi_ruff`, `python-ms_ruff`, `pylsp_ruff`, `ty_ruff`
 - `lsp-bridge-nix-lsp-server`: Nix language server, you can choose `rnix-lsp`, `nixd` or `nil`
 - `lsp-bridge-markdown-lsp-server`: Markdown language server, you can choose `vale-ls` or `marksman`
 - `lsp-bridge-lua-lsp-server`: Lua language server, you can choose `sumneko` or `lua-lsp`
 - `lsp-bridge-verilog-lsp-server`: Verilog language server， you can choose `verible`, or `svls`
 - `lsp-bridge-xml-lsp-server`: XML language server， you can choose `lemminx`, or `camells`
 - `lsp-bridge-cmake-lsp-server`: CMake language server， you can choose `cmake-language-server`, or `neocmakelsp`
+- `lsp-bridge-r-lsp-server`: R language server， you can choose `rlanguageserver`, or `air`
+
+- `lsp-bridge-python-multi-lsp-server`: Python multi-language servers, you can choose `basedpyright_ruff`, `pyright_ruff`, `jedi_ruff`, `python-ms_ruff`, `pylsp_ruff`, `ty_ruff`
+- `lsp-bridge-r-multi-lsp-server`: R multi-language servers, you can choose `rlanguageserver_air`
 
 ## Options
 
