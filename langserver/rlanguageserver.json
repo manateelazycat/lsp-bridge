@@ -3,7 +3,7 @@
   "languageId": "r",
   "command": [
       "R",
-      "--slave",
+      "--no-echo",
       "-e",
       "languageserver::run()"
   ],

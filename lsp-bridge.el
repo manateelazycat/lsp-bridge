@@ -549,6 +549,15 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
   "Default LSP server for cmake, you can choose `cmake-language-server', `neocmakelsp'"
   :type 'string)
 
+(defcustom lsp-bridge-r-lsp-server "rlanguageserver"
+  "Default LSP server for R, you can choose `rlanguageserver' or `air'."
+  :type 'string)
+
+(defcustom lsp-bridge-r-multi-lsp-server "rlanguageserver_air"
+  "Default Multi LSP server for R.
+Possible choices are `rlanguageserver_air'."
+  :type 'string)
+
 (defcustom lsp-bridge-tsdk-path nil
   "Tsserver lib*.d.ts directory path in current system needed by some lsp servers.
 If nil, lsp-bridge would try to detect by default."
@@ -566,7 +575,8 @@ If nil, lsp-bridge would try to detect by default."
 
 (defcustom lsp-bridge-multi-lang-server-mode-list
   '(((python-mode python-ts-mode) . lsp-bridge-python-multi-lsp-server)
-    ((qml-mode qml-ts-mode) . "qmlls_javascript"))
+    ((qml-mode qml-ts-mode) . "qmlls_javascript")
+    (ess-r-mode . lsp-bridge-r-multi-lsp-server))
   "The multi lang server rule for file mode."
   :type 'cons)
 
@@ -616,7 +626,7 @@ If nil, lsp-bridge would try to detect by default."
     ((fortran-mode f90-mode) .                                                   "fortls")
     ((nix-mode nix-ts-mode) .                                                    lsp-bridge-nix-lsp-server)
     (nickel-mode .                                                               "nls")
-    (ess-r-mode .                                                                "rlanguageserver")
+    (ess-r-mode .                                                                lsp-bridge-r-lsp-server)
     ((graphql-mode graphql-ts-mode) .                                            "graphql-lsp")
     (swift-mode .                                                                "swift-sourcekit")
     ((csharp-mode csharp-ts-mode) .                                              lsp-bridge-csharp-lsp-server)
