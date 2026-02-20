@@ -401,7 +401,8 @@ class LspBridge:
         # see https://www.gnu.org/software/tramp/#File-name-syntax
         tramp_method_prefix = tramp_file_name.rsplit(":", 1)[0]
 
-        if tramp_method_prefix.startswith("/ssh"):
+        # Treat /rpc: tramp method the same as /ssh: (rpc is an SSH-based transport)
+        if tramp_method_prefix.startswith("/ssh") or tramp_method_prefix.startswith("/rpc"):
             alias = None
             # arguments are passed from emacs using standard TRAMP functions tramp-file-name-<field>
             if server_host in self.host_names:
