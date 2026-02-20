@@ -45,6 +45,7 @@ class RemoteFileClient(threading.Thread):
         threading.Thread.__init__(self)
 
         # Init.
+        self.ssh_conf = ssh_conf
         self.ssh_host = ssh_conf['hostname']
         self.ssh_user = ssh_conf.get('user', "root")
         self.ssh_port = ssh_conf.get('port', 22)
@@ -68,22 +69,26 @@ class RemoteFileClient(threading.Thread):
     def ssh_private_key(self):
         """Retrieves the path to the SSH private key file.
 
-        The user can specify the SSH private key path by setting the
-        `lsp-bridge-user-ssh-private-key` in emacs.
-
-        If this configuration is not set, the function defaults to using the
-        first found public key to determine the private key file in the `.ssh`
-        directory.
+        Priority:
+        1. Emacs variable `lsp-bridge-user-ssh-private-key`
+        2. `identityfile` from the parsed SSH config
+        3. First .pub file found in ~/.ssh/ (original fallback)
         """
-        if not self.user_ssh_private_key:
-            ssh_dir = "~/.ssh"
-            ssh_dir = os.path.expanduser(ssh_dir)
-            pub_keys = glob.glob(os.path.join(ssh_dir, "*.pub"))
-            default_pub_key = pub_keys[0]
-            private_key = default_pub_key[: -len(".pub")]
-        else:
-            private_key = os.path.expanduser(self.user_ssh_private_key)
-        return private_key
+        if self.user_ssh_private_key:
+            return os.path.expanduser(self.user_ssh_private_key)
+
+        # Use identityfile from SSH config if available
+        identity_files = self.ssh_conf.get('identityfile', [])
+        if identity_files:
+            # paramiko returns identityfile as a list; use the first entry
+            return os.path.expanduser(identity_files[0])
+
+        ssh_dir = os.path.expanduser("~/.ssh")
+        pub_keys = glob.glob(os.path.join(ssh_dir, "*.pub"))
+        if pub_keys:
+            return pub_keys[0][: -len(".pub")]
+
+        return None
 
     def connect_ssh(self, use_gssapi, proxy_command):
         """Connect to remote ssh_host
