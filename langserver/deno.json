@@ -1,15 +1,22 @@
 {
   "name": "deno",
   "languageId": "typescript",
-  "command": [
-    "deno",
-    "lsp"
-  ],
+  "command": ["deno", "lsp"],
   "settings": {
     "deno": {
       "enable": true,
       "lint": true,
       "unstable": true
+    },
+    "typescript": {
+      "inlayHints": {
+        "variableTypes": {
+          "enabled": true
+        },
+        "parameterTypes": {
+          "enabled": true
+        }
+      }
     }
   }
 }
