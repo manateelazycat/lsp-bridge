@@ -110,6 +110,38 @@
 
 (defvar lsp-bridge-tramp-connection-info nil)
 
+(defvar lsp-bridge--remote-ip-to-host nil
+  "Alist mapping remote server IPs to hostnames.
+Populated lazily when the remote server sends an IP (via
+`get_lsp_file_host') that doesn't appear in
+`lsp-bridge-tramp-alias-alist'.")
+
+(defun lsp-bridge--resolve-remote-host (host)
+  "Translate HOST to a known hostname if it is an unrecognized IP.
+Returns HOST unchanged when it is already a known key in
+`lsp-bridge-tramp-alias-alist', or the empty string.  Otherwise
+checks a cache and, as a last resort, searches open buffers for a
+remote buffer whose `lsp-bridge-remote-file-host' IS a known key."
+  (cond
+   ((string= host "") host)
+   ;; Already a known hostname.
+   ((assoc host lsp-bridge-tramp-alias-alist) host)
+   ;; Cached IP-to-hostname.
+   ((cdr (assoc host lsp-bridge--remote-ip-to-host)))
+   ;; Unknown IP -- find a remote buffer whose host IS known.
+   (t (let ((resolved
+             (cl-dolist (buf (buffer-list))
+               (with-current-buffer buf
+                 (when (and (boundp 'lsp-bridge-remote-file-host)
+                            lsp-bridge-remote-file-host
+                            (not (string= lsp-bridge-remote-file-host ""))
+                            (assoc lsp-bridge-remote-file-host
+                                   lsp-bridge-tramp-alias-alist))
+                   (cl-return lsp-bridge-remote-file-host))))))
+        (when resolved
+          (push (cons host resolved) lsp-bridge--remote-ip-to-host))
+        (or resolved host)))))
+
 (setq acm-backend-lsp-fetch-completion-item-func 'lsp-bridge-fetch-completion-item-info)
 
 (defun lsp-bridge-fetch-completion-item-info (candidate)
@@ -986,11 +1018,12 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
 (cl-defmacro lsp-bridge--with-file-buffer (filename filehost &rest body)
   "Evaluate BODY in buffer with FILEPATH."
   (declare (indent 1))
-  `(when-let* ((buffer (pcase ,filehost
-                         ("" (lsp-bridge-get-match-buffer-by-filepath ,filename))
-                         (_ (lsp-bridge-get-match-buffer-by-remote-file ,filehost ,filename)))))
-     (with-current-buffer buffer
-       ,@body)))
+  `(let ((resolved-host (lsp-bridge--resolve-remote-host ,filehost)))
+     (when-let* ((buffer (pcase resolved-host
+                           ("" (lsp-bridge-get-match-buffer-by-filepath ,filename))
+                           (_ (lsp-bridge-get-match-buffer-by-remote-file resolved-host ,filename)))))
+       (with-current-buffer buffer
+         ,@body))))
 
 (cl-defmacro lsp-bridge-save-position (&rest body)
   "`save-excursion' not enough for LSP code format.
@@ -2302,8 +2335,9 @@ Then we need call `lsp-bridge--set-mark-ring-in-new-buffer' in new buffer after 
              (not lsp-bridge-enable-with-tramp))
         (lsp-bridge-call-async "open_remote_file" (format "%s:%s" filehost filename) position)
       ;; filehost is not empty or lsp-bridge-enable-with-tramp is t
-      (when (string= filehost "127.0.0.1")
-        (setq filehost lsp-bridge-remote-file-host))
+      ;; Resolve IP-to-hostname for ProxyCommand hosts where the remote
+      ;; server reports client_address IP instead of the SSH hostname.
+      (setq filehost (lsp-bridge--resolve-remote-host filehost))
 
       (let ((match-window (lsp-bridge--with-file-buffer filename filehost (get-buffer-window))))
         ;; select the window to display definition

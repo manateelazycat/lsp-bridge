@@ -245,6 +245,25 @@ class LspBridge:
             server_host = self.host_ip_dict[server_host]
 
         if is_valid_ip(server_host):
+            # When the remote server sends messages back, it tags them with the
+            # SSH client's IP (from client_address).  If we used a ProxyCommand
+            # hostname (not an IP) when registering in host_names, the IP won't
+            # be found directly.  Try to reuse an existing client for the same
+            # port under a different (hostname) key, and cache the IP-to-hostname
+            # mapping for future lookups.
+            if server_host not in self.host_names:
+                # Check if we already have a connected client on this port
+                # under a different hostname key.
+                for client_key in self.client_dict:
+                    if client_key.endswith(f":{server_port}"):
+                        existing_host = client_key.rsplit(":", 1)[0]
+                        if existing_host in self.host_names:
+                            self.host_ip_dict[server_host] = existing_host
+                            server_host = existing_host
+                            break
+            return self._get_remote_file_client(server_host, server_port, is_retry)
+        elif server_host in self.host_names:
+            # Non-IP hostname that was registered via sync_tramp_remote (e.g. ProxyCommand hosts)
             return self._get_remote_file_client(server_host, server_port, is_retry)
         else:
             # server_host is the container_name
@@ -401,7 +420,8 @@ class LspBridge:
         # see https://www.gnu.org/software/tramp/#File-name-syntax
         tramp_method_prefix = tramp_file_name.rsplit(":", 1)[0]
 
-        if tramp_method_prefix.startswith("/ssh"):
+        # Treat /rpc: tramp method the same as /ssh: (rpc is an SSH-based transport)
+        if tramp_method_prefix.startswith("/ssh") or tramp_method_prefix.startswith("/rpc"):
             alias = None
             # arguments are passed from emacs using standard TRAMP functions tramp-file-name-<field>
             if server_host in self.host_names:
@@ -420,9 +440,16 @@ class LspBridge:
                 server_host = ssh_conf.get('hostname', server_host)
 
             if not is_valid_ip(server_host):
-                if server_host in self.host_ip_dict:
+                # When a ProxyCommand is configured, we don't need to resolve the
+                # hostname to an IP -- the proxy handles routing.  Use the hostname
+                # directly as the identifier.
+                if ssh_conf.get('proxycommand', None):
+                    message_emacs(f"Using ProxyCommand for {server_host}, skip IP resolution")
+                elif server_host in self.host_ip_dict:
                     server_ip = self.host_ip_dict[server_host]
                     message_emacs(f"Resolve {server_host} to {server_ip} from host-ip cache")
+                    server_host = server_ip
+                    ssh_conf['hostname'] = server_ip
                 else:
                     # https://stackoverflow.com/a/2816838
                     server_ips = [ str(i[4][0]) for i in socket.getaddrinfo(server_host, 0)]
@@ -433,13 +460,18 @@ class LspBridge:
                         message_emacs(f"Resolve {server_host} to {server_ip}")
                         server_host = server_ip
                         self.host_ip_dict[server_host] = server_ip
-                ssh_conf['hostname'] = server_ip # overwrite
+                        ssh_conf['hostname'] = server_ip
 
-            if not is_valid_ip(server_host):
+            if not is_valid_ip(server_host) and not ssh_conf.get('proxycommand', None):
                 message_emacs("HostName Must be IP format.")
 
             if server_username:
                 ssh_conf['user'] = server_username
+            elif 'user' not in ssh_conf:
+                # Default to current system user instead of "root" when
+                # no user is specified in the tramp path or SSH config.
+                import getpass
+                ssh_conf['user'] = getpass.getuser()
             if ssh_port:
                 ssh_conf['port'] = ssh_port
             self.host_names[server_host] = ssh_conf
