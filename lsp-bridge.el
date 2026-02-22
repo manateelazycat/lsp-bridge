@@ -681,6 +681,8 @@ If nil, lsp-bridge would try to detect by default."
     (ttcn3-mode .                                                                "ntt")
     (v-mode .                                                                    "v-analyzer")
     (cwl-mode .                                                                  "benten")
+    (lean4-mode .                                                                "lean")
+    (lean4-select-mode .                                                         "lean")
     (odin-mode .                                                                 "ols")
     (ballerina-mode .                                                            "ballerina-lang-server")
     (bibtex-mode .                                                               "citation-langserver")
