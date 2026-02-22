@@ -1,0 +1,8 @@
+{
+  "name": "lean",
+  "languageId": "lean",
+  "command": ["lake", "serve"],
+  "settings": {},
+  "support-single-file": false,
+  "projectFiles": ["lean-toolchain", "lakefile.lean", "lakefile.toml"]
+}
