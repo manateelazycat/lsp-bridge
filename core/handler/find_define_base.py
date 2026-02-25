@@ -1,4 +1,5 @@
 import hashlib
+import json
 import os
 import re
 import tempfile
@@ -6,25 +7,119 @@ from urllib.parse import urlparse, unquote
 
 from core.utils import *
 
+
+def _detect_solidity_project_root(start_path):
+    """Walk up from start_path to find the Solidity project root
+    by looking for typical project markers (foundry.toml, hardhat.config, etc.)."""
+    markers = ("foundry.toml", "hardhat.config.js", "hardhat.config.ts",
+               "truffle-config.js", "brownie-config.yaml", "remappings.txt")
+    d = os.path.dirname(os.path.abspath(start_path)) if os.path.isfile(start_path) else os.path.abspath(start_path)
+    fallback = d
+    while True:
+        for marker in markers:
+            if os.path.exists(os.path.join(d, marker)):
+                return d
+        parent = os.path.dirname(d)
+        if parent == d:
+            break
+        d = parent
+    return fallback
+
+
 def _read_solidity_remappings(project_path):
+    """Read Solidity import remappings from remappings.txt and/or foundry.toml."""
     remappings = []
     if not project_path:
         return remappings
 
+    # ── Source 1: remappings.txt ──
     remappings_file = os.path.join(project_path, "remappings.txt")
-    if not os.path.isfile(remappings_file):
-        return remappings
+    if os.path.isfile(remappings_file):
+        try:
+            with open(remappings_file, encoding="utf-8", errors="ignore") as f:
+                for raw_line in f:
+                    line = raw_line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    # Strip optional context: prefix  (e.g. "ctx:@oz/=lib/oz/")
+                    eq_idx = line.index("=")
+                    left = line[:eq_idx]
+                    if ":" in left:
+                        left = left.split(":", 1)[1]
+                    prefix = left.strip().strip("'\"")
+                    target = line[eq_idx + 1:].strip().strip("'\"")
+                    if prefix and target:
+                        remappings.append((prefix, target))
+        except OSError:
+            pass
 
-    with open(remappings_file, encoding="utf-8", errors="ignore") as f:
-            for raw_line in f:
-                line = raw_line.strip()
-                if not line or line.startswith("#") or "=" not in line:
+    # ── Source 2: foundry.toml ──
+    if not remappings:
+        foundry_toml = os.path.join(project_path, "foundry.toml")
+        if os.path.isfile(foundry_toml):
+            try:
+                with open(foundry_toml, encoding="utf-8", errors="ignore") as f:
+                    content = f.read()
+                # Parse remappings = [...] without a TOML library.
+                # Handles single-line and multi-line arrays.
+                m = re.search(r'remappings\s*=\s*\[(.*?)\]', content, re.DOTALL)
+                if m:
+                    for entry in re.findall(r'["\']([^"\' ]+)["\']', m.group(1)):
+                        entry = entry.strip()
+                        if "=" not in entry:
+                            continue
+                        eq_idx = entry.index("=")
+                        left = entry[:eq_idx]
+                        if ":" in left:
+                            left = left.split(":", 1)[1]
+                        prefix = left.strip()
+                        target = entry[eq_idx + 1:].strip()
+                        if prefix and target:
+                            remappings.append((prefix, target))
+            except OSError:
+                pass
+
+    # ── Source 3: auto-detect lib/ subdirectories as implicit remappings ──
+    # Always augment with lib/-based remappings.  Foundry auto-remaps lib/<pkg>/
+    # using the package.json "name" field (e.g. @openzeppelin/contracts-upgradeable).
+    lib_dir = os.path.join(project_path, "lib")
+    if os.path.isdir(lib_dir):
+        existing_prefixes = {p for p, _ in remappings}
+        try:
+            for entry in sorted(os.listdir(lib_dir)):
+                entry_path = os.path.join(lib_dir, entry)
+                if not os.path.isdir(entry_path):
                     continue
-                prefix, target = line.split("=", 1)
-                prefix = prefix.strip().strip("'\"")
-                target = target.strip().strip("'\"")
-                if prefix and target:
-                    remappings.append((prefix, target))
+                src_dir = os.path.join(entry_path, "src")
+                contracts_dir = os.path.join(entry_path, "contracts")
+                if os.path.isdir(src_dir):
+                    target_base = "lib/" + entry + "/src/"
+                elif os.path.isdir(contracts_dir):
+                    target_base = "lib/" + entry + "/contracts/"
+                else:
+                    target_base = "lib/" + entry + "/"
+
+                # Directory-name remapping  (e.g. forge-std/ → lib/forge-std/src/)
+                dir_prefix = entry + "/"
+                if dir_prefix not in existing_prefixes:
+                    remappings.append((dir_prefix, target_base))
+                    existing_prefixes.add(dir_prefix)
+
+                # Read package.json to discover @scope/package name (e.g.
+                # @openzeppelin/contracts-upgradeable → lib/openzeppelin-contracts-upgradeable/contracts/)
+                pkg_json_path = os.path.join(entry_path, "package.json")
+                if os.path.isfile(pkg_json_path):
+                    try:
+                        with open(pkg_json_path, encoding="utf-8", errors="ignore") as pf:
+                            pkg_data = json.load(pf)
+                        pkg_name = pkg_data.get("name", "")
+                        if pkg_name and pkg_name + "/" not in existing_prefixes:
+                            remappings.append((pkg_name + "/", target_base))
+                            existing_prefixes.add(pkg_name + "/")
+                    except (OSError, ValueError, KeyError):
+                        pass
+        except OSError:
+            pass
 
     return remappings
 
@@ -55,6 +150,11 @@ def _resolve_import_file_path(import_path, current_file, project_path):
                 if import_path.startswith(prefix):
                     suffix = import_path[len(prefix):]
                     candidates.append(os.path.normpath(os.path.join(project_path, target, suffix)))
+
+            # node_modules/ fallback (common for Hardhat / npm-based projects)
+            nm_dir = os.path.join(project_path, "node_modules")
+            if os.path.isdir(nm_dir):
+                candidates.append(os.path.normpath(os.path.join(nm_dir, import_path)))
 
     checked = set()
     for candidate in candidates:
@@ -498,6 +598,10 @@ def _try_solidity_fallback(obj, define_jump_handler):
         project_path = raw.decode("utf-8") if isinstance(raw, bytes) else str(raw)
     except Exception:
         project_path = ""
+
+    # If the LSP didn't provide a valid project root, detect it from the file path.
+    if not project_path or not os.path.isdir(project_path):
+        project_path = _detect_solidity_project_root(current_file)
 
     symbol_name = _get_symbol_at_cursor(current_file, obj.pos)
 
