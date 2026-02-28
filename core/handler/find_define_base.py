@@ -357,7 +357,7 @@ def _extract_word_at(line_text, char_pos):
         end += 1
 
     word = line_text[start:end]
-    if not word or not word[0].isalpha():
+    if not word or not (word[0].isalpha() or word[0] == '_'):
         return None
     return word
 
@@ -540,6 +540,83 @@ def _resolve_method_call_definition(current_file, cursor_pos, symbol_name, proje
     return None
 
 
+def _resolve_inherited_function(current_file, symbol_name, project_path):
+    """Resolve a function defined in a parent contract via the `is` inheritance chain.
+
+    For example, when MyToken calls `_mint(...)` and `_mint` is defined in ERC20,
+    this function parses `contract MyToken is ERC20, ERC20Burnable, ...`, resolves
+    each parent type to its source file, and searches for `function _mint` there.
+    Recurses through multi-level inheritance (depth limit 30).
+
+    Returns (filepath, {"line": N, "character": N}) or None.
+    """
+    if not symbol_name or not current_file or not os.path.isfile(current_file):
+        return None
+
+    # BFS/DFS through the inheritance chain
+    visited = set()
+    queue = [current_file]
+    depth = 0
+    max_depth = 30
+
+    while queue and depth < max_depth:
+        depth += 1
+        next_queue = []
+        for src_file in queue:
+            if src_file in visited:
+                continue
+            visited.add(src_file)
+
+            try:
+                with open(src_file, encoding="utf-8", errors="ignore") as f:
+                    content = f.read()
+            except OSError:
+                continue
+
+            # Find `contract/abstract contract/interface/library X is A, B(args), C {`
+            inherit_re = re.compile(
+                r'\b(?:abstract\s+)?(?:contract|interface|library)\s+\w+\s+is\s+([^{]+)\{',
+                re.DOTALL
+            )
+            for m in inherit_re.finditer(content):
+                parents_str = m.group(1)
+                # Split parents by comma, strip constructor args: "ERC20(\"N\", \"S\")" → "ERC20"
+                for parent_entry in parents_str.split(","):
+                    parent_entry = parent_entry.strip()
+                    if not parent_entry:
+                        continue
+                    # Remove constructor arguments: ERC20("Name", "SYM") → ERC20
+                    paren_idx = parent_entry.find("(")
+                    parent_name = parent_entry[:paren_idx].strip() if paren_idx >= 0 else parent_entry.strip()
+                    # Clean up whitespace / newlines
+                    parent_name = parent_name.split()[-1] if parent_name.split() else parent_name
+                    if not parent_name or not (parent_name[0].isalpha() or parent_name[0] == '_'):
+                        continue
+
+                    # Resolve parent type to its source file
+                    parent_file = _find_import_file_for_symbol(src_file, parent_name, project_path)
+                    if not parent_file:
+                        # Try current directory / project search for the type
+                        pos = _find_symbol_in_file(src_file, parent_name)
+                        if pos:
+                            parent_file = src_file
+                    if not parent_file:
+                        continue
+
+                    # Search for the function/modifier/event in the parent file
+                    found_pos = _find_symbol_in_file(parent_file, symbol_name)
+                    if found_pos:
+                        return (parent_file, found_pos)
+
+                    # Queue this parent for further traversal
+                    if parent_file not in visited:
+                        next_queue.append(parent_file)
+
+        queue = next_queue
+
+    return None
+
+
 def _find_solidity_symbol_in_project(current_file, cursor_pos, project_path):
     """When the Solidity LSP returns file:/// and the cursor is not on an import line,
     try to locate the symbol definition by name in project .sol files."""
@@ -630,6 +707,15 @@ def _try_solidity_fallback(obj, define_jump_handler):
     # ── Strategy 2.5: method call resolution (receiver.method) ──
     if symbol_name:
         result = _resolve_method_call_definition(current_file, obj.pos, symbol_name, project_path)
+        if result:
+            target_file, target_pos = result
+            obj.file_action.create_external_file_action(target_file)
+            eval_in_emacs(define_jump_handler, target_file, get_lsp_file_host(), target_pos)
+            return True
+
+    # ── Strategy 2.7: inheritance chain resolution ──
+    if symbol_name:
+        result = _resolve_inherited_function(current_file, symbol_name, project_path)
         if result:
             target_file, target_pos = result
             obj.file_action.create_external_file_action(target_file)
