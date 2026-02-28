@@ -291,7 +291,7 @@ def _parse_all_imports(content):
     return results
 
 
-def _find_import_file_for_symbol(current_file, symbol_name, project_path):
+def _find_import_file_for_symbol(current_file, symbol_name, project_path, _visited=None):
     """Scan ALL import statements in current_file for one that provides symbol_name.
     Returns the resolved file path or None.
 
@@ -302,10 +302,15 @@ def _find_import_file_for_symbol(current_file, symbol_name, project_path):
           MatchProofs
       } from "darkpoolv1-types/Settlement.sol";
       import { Foo as Bar } from "other.sol";
-      import "path.sol";   (wildcard — search inside file)
+      import "path.sol";   (wildcard — search inside file, follows transitive imports)
     """
+    if _visited is None:
+        _visited = set()
     if not current_file or not os.path.isfile(current_file):
         return None
+    if current_file in _visited:
+        return None
+    _visited.add(current_file)
 
     content = get_file_content_from_file_server(current_file)
     if not content:
@@ -327,7 +332,9 @@ def _find_import_file_for_symbol(current_file, symbol_name, project_path):
                 if resolved:
                     return resolved
 
-    # Second pass: check wildcard imports (import "path.sol";) by searching inside the file
+    # Second pass: check wildcard imports (import "path.sol";) by searching inside
+    # the file.  If the symbol is not directly defined there, follow the imported
+    # file's own imports transitively (e.g. ERC20.sol → IERC20.sol).
     for names, import_path in imports:
         if names is not None:
             continue
@@ -336,6 +343,10 @@ def _find_import_file_for_symbol(current_file, symbol_name, project_path):
             found_pos = _find_symbol_in_file(resolved, symbol_name)
             if found_pos:
                 return resolved
+            # Follow transitive imports within the wildcard-imported file
+            transitive = _find_import_file_for_symbol(resolved, symbol_name, project_path, _visited)
+            if transitive:
+                return transitive
 
     return None
 
