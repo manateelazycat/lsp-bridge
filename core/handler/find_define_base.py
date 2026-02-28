@@ -408,6 +408,200 @@ def _find_symbol_in_file(filepath, symbol_name):
     return None
 
 
+def _find_struct_field_in_file(filepath, struct_name, field_name):
+    """Search a .sol file for a field within a struct definition.
+    Returns {"line": N, "character": N} or None."""
+    try:
+        with open(filepath, encoding="utf-8", errors="ignore") as f:
+            content = f.read()
+    except OSError:
+        return None
+
+    lines = content.splitlines()
+    inside_struct = False
+    brace_depth = 0
+    struct_pattern = re.compile(r'\bstruct\s+' + re.escape(struct_name) + r'\s*\{')
+    field_pattern = re.compile(r'\b' + re.escape(field_name) + r'\b')
+
+    for i, line in enumerate(lines):
+        if not inside_struct:
+            m = struct_pattern.search(line)
+            if m:
+                inside_struct = True
+                brace_depth = line.count('{') - line.count('}')
+                # Check if field is on the same line as struct opening
+                fm = field_pattern.search(line, m.end())
+                if fm:
+                    return {"line": i, "character": fm.start()}
+        else:
+            brace_depth += line.count('{') - line.count('}')
+            fm = field_pattern.search(line)
+            if fm:
+                return {"line": i, "character": fm.start()}
+            if brace_depth <= 0:
+                inside_struct = False
+
+    return None
+
+
+def _resolve_struct_field_definition(current_file, cursor_pos, symbol_name, project_path):
+    """Resolve a struct field access like `v2templates[templateId].period`
+    or `someStruct.fieldName`.
+
+    Detects the `.field` pattern, walks backward past brackets to find the
+    root variable name, resolves its type from the declaration (handles
+    mapping, array, and simple types), then locates the field within the
+    struct definition.
+
+    Returns (filepath, {"line": N, "character": N}) or None.
+    """
+    if not symbol_name or not current_file or not os.path.isfile(current_file):
+        return None
+
+    content = get_file_content_from_file_server(current_file)
+    if not content:
+        try:
+            with open(current_file, encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+        except OSError:
+            return None
+
+    lines = content.splitlines()
+    line_num = cursor_pos.get("line", -1) if isinstance(cursor_pos, dict) else -1
+    char_num = cursor_pos.get("character", 0) if isinstance(cursor_pos, dict) else 0
+    if line_num < 0 or line_num >= len(lines):
+        return None
+
+    line_text = lines[line_num]
+
+    # Find start of the symbol (field name)
+    sym_start = char_num
+    while sym_start > 0 and (line_text[sym_start - 1].isalnum() or line_text[sym_start - 1] == '_'):
+        sym_start -= 1
+
+    # Check if preceded by '.'
+    dot_pos = sym_start - 1
+    while dot_pos >= 0 and line_text[dot_pos] == ' ':
+        dot_pos -= 1
+
+    if dot_pos < 0 or line_text[dot_pos] != '.':
+        return None  # Not a field access
+
+    # Walk backward past brackets/indices to find the root variable name
+    pos = dot_pos - 1
+    while pos >= 0 and line_text[pos] == ' ':
+        pos -= 1
+
+    if pos < 0:
+        return None
+
+    # Skip past bracketed expressions: e.g. [templateId]
+    while pos >= 0 and line_text[pos] == ']':
+        bracket_depth = 1
+        pos -= 1
+        while pos >= 0 and bracket_depth > 0:
+            if line_text[pos] == ']':
+                bracket_depth += 1
+            elif line_text[pos] == '[':
+                bracket_depth -= 1
+            pos -= 1
+        # Skip whitespace after removing brackets
+        while pos >= 0 and line_text[pos] == ' ':
+            pos -= 1
+
+    if pos < 0:
+        return None
+
+    # Extract the variable name
+    var_end = pos + 1
+    while pos >= 0 and (line_text[pos].isalnum() or line_text[pos] == '_'):
+        pos -= 1
+    pos += 1
+    var_name = line_text[pos:var_end]
+    if not var_name or not (var_name[0].isalpha() or var_name[0] == '_'):
+        return None
+
+    # Find the variable declaration to get its type
+    _sol_keywords = {
+        'function', 'event', 'modifier', 'return', 'returns', 'if', 'else',
+        'for', 'while', 'do', 'mapping', 'emit', 'require', 'assert', 'revert',
+        'new', 'delete', 'true', 'false', 'import', 'pragma', 'using',
+        'contract', 'interface', 'library', 'struct', 'enum', 'super', 'this',
+    }
+
+    var_type = None
+
+    # Pattern for mapping: mapping(... => TypeName) ... varName
+    mapping_pattern = re.compile(
+        r'\bmapping\s*\([^)]*=>\s*(\w+)\s*\)\s+'
+        r'(?:(?:public|private|internal|external|immutable|constant|override)\s+)*'
+        + re.escape(var_name) + r'\b'
+    )
+    # Pattern for array: TypeName[] ... varName
+    array_pattern = re.compile(
+        r'\b(\w+)\s*\[\s*\]\s+'
+        r'(?:(?:public|private|internal|external|immutable|constant|override|memory|storage|calldata)\s+)*'
+        + re.escape(var_name) + r'\b'
+    )
+    # Pattern for simple: TypeName ... varName
+    simple_pattern = re.compile(
+        r'\b(\w+)\s+'
+        r'(?:(?:public|private|internal|external|immutable|constant|override|memory|storage|calldata)\s+)*'
+        + re.escape(var_name) + r'(?:\s*[;=,)\[]|$)'
+    )
+
+    for fline in lines:
+        m = mapping_pattern.search(fline)
+        if m:
+            var_type = m.group(1)
+            break
+        m = array_pattern.search(fline)
+        if m and m.group(1) not in _sol_keywords:
+            var_type = m.group(1)
+            break
+        m = simple_pattern.search(fline)
+        if m and m.group(1) not in _sol_keywords:
+            var_type = m.group(1)
+            break
+
+    if not var_type:
+        return None
+
+    # Search for the struct field — first in the current file
+    found = _find_struct_field_in_file(current_file, var_type, symbol_name)
+    if found:
+        return (current_file, found)
+
+    # Then via imports
+    type_file = _find_import_file_for_symbol(current_file, var_type, project_path)
+    if type_file:
+        found = _find_struct_field_in_file(type_file, var_type, symbol_name)
+        if found:
+            return (type_file, found)
+
+    # Project-wide search for the struct
+    search_root = project_path if project_path and os.path.isdir(project_path) else os.path.dirname(current_file)
+    struct_def_pat = re.compile(r'\bstruct\s+' + re.escape(var_type) + r'\s*\{')
+    skip_dirs = {"node_modules", ".git", "cache", "artifacts", "out", "build", "__pycache__"}
+    for dirpath, dirnames, filenames in os.walk(search_root):
+        dirnames[:] = [d for d in dirnames if d not in skip_dirs]
+        for fname in filenames:
+            if not fname.endswith(".sol"):
+                continue
+            fpath = os.path.join(dirpath, fname)
+            try:
+                with open(fpath, encoding="utf-8", errors="ignore") as f:
+                    fc = f.read()
+            except OSError:
+                continue
+            if struct_def_pat.search(fc):
+                found = _find_struct_field_in_file(fpath, var_type, symbol_name)
+                if found:
+                    return (fpath, found)
+
+    return None
+
+
 def _resolve_method_call_definition(current_file, cursor_pos, symbol_name, project_path):
     """When cursor is on a method name in a call like `obj.method(...)`,
     resolve by finding the receiver's type, then look for the function
@@ -707,6 +901,15 @@ def _try_solidity_fallback(obj, define_jump_handler):
     # ── Strategy 2.5: method call resolution (receiver.method) ──
     if symbol_name:
         result = _resolve_method_call_definition(current_file, obj.pos, symbol_name, project_path)
+        if result:
+            target_file, target_pos = result
+            obj.file_action.create_external_file_action(target_file)
+            eval_in_emacs(define_jump_handler, target_file, get_lsp_file_host(), target_pos)
+            return True
+
+    # ── Strategy 2.6: struct field resolution (var[idx].field, var.field) ──
+    if symbol_name:
+        result = _resolve_struct_field_definition(current_file, obj.pos, symbol_name, project_path)
         if result:
             target_file, target_pos = result
             obj.file_action.create_external_file_action(target_file)
