@@ -1,4 +1,5 @@
 import hashlib
+import json
 import os
 import re
 import tempfile
@@ -6,25 +7,119 @@ from urllib.parse import urlparse, unquote
 
 from core.utils import *
 
+
+def _detect_solidity_project_root(start_path):
+    """Walk up from start_path to find the Solidity project root
+    by looking for typical project markers (foundry.toml, hardhat.config, etc.)."""
+    markers = ("foundry.toml", "hardhat.config.js", "hardhat.config.ts",
+               "truffle-config.js", "brownie-config.yaml", "remappings.txt")
+    d = os.path.dirname(os.path.abspath(start_path)) if os.path.isfile(start_path) else os.path.abspath(start_path)
+    fallback = d
+    while True:
+        for marker in markers:
+            if os.path.exists(os.path.join(d, marker)):
+                return d
+        parent = os.path.dirname(d)
+        if parent == d:
+            break
+        d = parent
+    return fallback
+
+
 def _read_solidity_remappings(project_path):
+    """Read Solidity import remappings from remappings.txt and/or foundry.toml."""
     remappings = []
     if not project_path:
         return remappings
 
+    # ── Source 1: remappings.txt ──
     remappings_file = os.path.join(project_path, "remappings.txt")
-    if not os.path.isfile(remappings_file):
-        return remappings
+    if os.path.isfile(remappings_file):
+        try:
+            with open(remappings_file, encoding="utf-8", errors="ignore") as f:
+                for raw_line in f:
+                    line = raw_line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    # Strip optional context: prefix  (e.g. "ctx:@oz/=lib/oz/")
+                    eq_idx = line.index("=")
+                    left = line[:eq_idx]
+                    if ":" in left:
+                        left = left.split(":", 1)[1]
+                    prefix = left.strip().strip("'\"")
+                    target = line[eq_idx + 1:].strip().strip("'\"")
+                    if prefix and target:
+                        remappings.append((prefix, target))
+        except OSError:
+            pass
 
-    with open(remappings_file, encoding="utf-8", errors="ignore") as f:
-            for raw_line in f:
-                line = raw_line.strip()
-                if not line or line.startswith("#") or "=" not in line:
+    # ── Source 2: foundry.toml ──
+    if not remappings:
+        foundry_toml = os.path.join(project_path, "foundry.toml")
+        if os.path.isfile(foundry_toml):
+            try:
+                with open(foundry_toml, encoding="utf-8", errors="ignore") as f:
+                    content = f.read()
+                # Parse remappings = [...] without a TOML library.
+                # Handles single-line and multi-line arrays.
+                m = re.search(r'remappings\s*=\s*\[(.*?)\]', content, re.DOTALL)
+                if m:
+                    for entry in re.findall(r'["\']([^"\' ]+)["\']', m.group(1)):
+                        entry = entry.strip()
+                        if "=" not in entry:
+                            continue
+                        eq_idx = entry.index("=")
+                        left = entry[:eq_idx]
+                        if ":" in left:
+                            left = left.split(":", 1)[1]
+                        prefix = left.strip()
+                        target = entry[eq_idx + 1:].strip()
+                        if prefix and target:
+                            remappings.append((prefix, target))
+            except OSError:
+                pass
+
+    # ── Source 3: auto-detect lib/ subdirectories as implicit remappings ──
+    # Always augment with lib/-based remappings.  Foundry auto-remaps lib/<pkg>/
+    # using the package.json "name" field (e.g. @openzeppelin/contracts-upgradeable).
+    lib_dir = os.path.join(project_path, "lib")
+    if os.path.isdir(lib_dir):
+        existing_prefixes = {p for p, _ in remappings}
+        try:
+            for entry in sorted(os.listdir(lib_dir)):
+                entry_path = os.path.join(lib_dir, entry)
+                if not os.path.isdir(entry_path):
                     continue
-                prefix, target = line.split("=", 1)
-                prefix = prefix.strip().strip("'\"")
-                target = target.strip().strip("'\"")
-                if prefix and target:
-                    remappings.append((prefix, target))
+                src_dir = os.path.join(entry_path, "src")
+                contracts_dir = os.path.join(entry_path, "contracts")
+                if os.path.isdir(src_dir):
+                    target_base = "lib/" + entry + "/src/"
+                elif os.path.isdir(contracts_dir):
+                    target_base = "lib/" + entry + "/contracts/"
+                else:
+                    target_base = "lib/" + entry + "/"
+
+                # Directory-name remapping  (e.g. forge-std/ → lib/forge-std/src/)
+                dir_prefix = entry + "/"
+                if dir_prefix not in existing_prefixes:
+                    remappings.append((dir_prefix, target_base))
+                    existing_prefixes.add(dir_prefix)
+
+                # Read package.json to discover @scope/package name (e.g.
+                # @openzeppelin/contracts-upgradeable → lib/openzeppelin-contracts-upgradeable/contracts/)
+                pkg_json_path = os.path.join(entry_path, "package.json")
+                if os.path.isfile(pkg_json_path):
+                    try:
+                        with open(pkg_json_path, encoding="utf-8", errors="ignore") as pf:
+                            pkg_data = json.load(pf)
+                        pkg_name = pkg_data.get("name", "")
+                        if pkg_name and pkg_name + "/" not in existing_prefixes:
+                            remappings.append((pkg_name + "/", target_base))
+                            existing_prefixes.add(pkg_name + "/")
+                    except (OSError, ValueError, KeyError):
+                        pass
+        except OSError:
+            pass
 
     return remappings
 
@@ -55,6 +150,11 @@ def _resolve_import_file_path(import_path, current_file, project_path):
                 if import_path.startswith(prefix):
                     suffix = import_path[len(prefix):]
                     candidates.append(os.path.normpath(os.path.join(project_path, target, suffix)))
+
+            # node_modules/ fallback (common for Hardhat / npm-based projects)
+            nm_dir = os.path.join(project_path, "node_modules")
+            if os.path.isdir(nm_dir):
+                candidates.append(os.path.normpath(os.path.join(nm_dir, import_path)))
 
     checked = set()
     for candidate in candidates:
@@ -191,7 +291,7 @@ def _parse_all_imports(content):
     return results
 
 
-def _find_import_file_for_symbol(current_file, symbol_name, project_path):
+def _find_import_file_for_symbol(current_file, symbol_name, project_path, _visited=None):
     """Scan ALL import statements in current_file for one that provides symbol_name.
     Returns the resolved file path or None.
 
@@ -202,10 +302,15 @@ def _find_import_file_for_symbol(current_file, symbol_name, project_path):
           MatchProofs
       } from "darkpoolv1-types/Settlement.sol";
       import { Foo as Bar } from "other.sol";
-      import "path.sol";   (wildcard — search inside file)
+      import "path.sol";   (wildcard — search inside file, follows transitive imports)
     """
+    if _visited is None:
+        _visited = set()
     if not current_file or not os.path.isfile(current_file):
         return None
+    if current_file in _visited:
+        return None
+    _visited.add(current_file)
 
     content = get_file_content_from_file_server(current_file)
     if not content:
@@ -227,7 +332,9 @@ def _find_import_file_for_symbol(current_file, symbol_name, project_path):
                 if resolved:
                     return resolved
 
-    # Second pass: check wildcard imports (import "path.sol";) by searching inside the file
+    # Second pass: check wildcard imports (import "path.sol";) by searching inside
+    # the file.  If the symbol is not directly defined there, follow the imported
+    # file's own imports transitively (e.g. ERC20.sol → IERC20.sol).
     for names, import_path in imports:
         if names is not None:
             continue
@@ -236,6 +343,10 @@ def _find_import_file_for_symbol(current_file, symbol_name, project_path):
             found_pos = _find_symbol_in_file(resolved, symbol_name)
             if found_pos:
                 return resolved
+            # Follow transitive imports within the wildcard-imported file
+            transitive = _find_import_file_for_symbol(resolved, symbol_name, project_path, _visited)
+            if transitive:
+                return transitive
 
     return None
 
@@ -257,7 +368,7 @@ def _extract_word_at(line_text, char_pos):
         end += 1
 
     word = line_text[start:end]
-    if not word or not word[0].isalpha():
+    if not word or not (word[0].isalpha() or word[0] == '_'):
         return None
     return word
 
@@ -304,6 +415,200 @@ def _find_symbol_in_file(filepath, symbol_name):
         m = definition_pattern.search(fline)
         if m:
             return {"line": i, "character": m.start()}
+
+    return None
+
+
+def _find_struct_field_in_file(filepath, struct_name, field_name):
+    """Search a .sol file for a field within a struct definition.
+    Returns {"line": N, "character": N} or None."""
+    try:
+        with open(filepath, encoding="utf-8", errors="ignore") as f:
+            content = f.read()
+    except OSError:
+        return None
+
+    lines = content.splitlines()
+    inside_struct = False
+    brace_depth = 0
+    struct_pattern = re.compile(r'\bstruct\s+' + re.escape(struct_name) + r'\s*\{')
+    field_pattern = re.compile(r'\b' + re.escape(field_name) + r'\b')
+
+    for i, line in enumerate(lines):
+        if not inside_struct:
+            m = struct_pattern.search(line)
+            if m:
+                inside_struct = True
+                brace_depth = line.count('{') - line.count('}')
+                # Check if field is on the same line as struct opening
+                fm = field_pattern.search(line, m.end())
+                if fm:
+                    return {"line": i, "character": fm.start()}
+        else:
+            brace_depth += line.count('{') - line.count('}')
+            fm = field_pattern.search(line)
+            if fm:
+                return {"line": i, "character": fm.start()}
+            if brace_depth <= 0:
+                inside_struct = False
+
+    return None
+
+
+def _resolve_struct_field_definition(current_file, cursor_pos, symbol_name, project_path):
+    """Resolve a struct field access like `v2templates[templateId].period`
+    or `someStruct.fieldName`.
+
+    Detects the `.field` pattern, walks backward past brackets to find the
+    root variable name, resolves its type from the declaration (handles
+    mapping, array, and simple types), then locates the field within the
+    struct definition.
+
+    Returns (filepath, {"line": N, "character": N}) or None.
+    """
+    if not symbol_name or not current_file or not os.path.isfile(current_file):
+        return None
+
+    content = get_file_content_from_file_server(current_file)
+    if not content:
+        try:
+            with open(current_file, encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+        except OSError:
+            return None
+
+    lines = content.splitlines()
+    line_num = cursor_pos.get("line", -1) if isinstance(cursor_pos, dict) else -1
+    char_num = cursor_pos.get("character", 0) if isinstance(cursor_pos, dict) else 0
+    if line_num < 0 or line_num >= len(lines):
+        return None
+
+    line_text = lines[line_num]
+
+    # Find start of the symbol (field name)
+    sym_start = char_num
+    while sym_start > 0 and (line_text[sym_start - 1].isalnum() or line_text[sym_start - 1] == '_'):
+        sym_start -= 1
+
+    # Check if preceded by '.'
+    dot_pos = sym_start - 1
+    while dot_pos >= 0 and line_text[dot_pos] == ' ':
+        dot_pos -= 1
+
+    if dot_pos < 0 or line_text[dot_pos] != '.':
+        return None  # Not a field access
+
+    # Walk backward past brackets/indices to find the root variable name
+    pos = dot_pos - 1
+    while pos >= 0 and line_text[pos] == ' ':
+        pos -= 1
+
+    if pos < 0:
+        return None
+
+    # Skip past bracketed expressions: e.g. [templateId]
+    while pos >= 0 and line_text[pos] == ']':
+        bracket_depth = 1
+        pos -= 1
+        while pos >= 0 and bracket_depth > 0:
+            if line_text[pos] == ']':
+                bracket_depth += 1
+            elif line_text[pos] == '[':
+                bracket_depth -= 1
+            pos -= 1
+        # Skip whitespace after removing brackets
+        while pos >= 0 and line_text[pos] == ' ':
+            pos -= 1
+
+    if pos < 0:
+        return None
+
+    # Extract the variable name
+    var_end = pos + 1
+    while pos >= 0 and (line_text[pos].isalnum() or line_text[pos] == '_'):
+        pos -= 1
+    pos += 1
+    var_name = line_text[pos:var_end]
+    if not var_name or not (var_name[0].isalpha() or var_name[0] == '_'):
+        return None
+
+    # Find the variable declaration to get its type
+    _sol_keywords = {
+        'function', 'event', 'modifier', 'return', 'returns', 'if', 'else',
+        'for', 'while', 'do', 'mapping', 'emit', 'require', 'assert', 'revert',
+        'new', 'delete', 'true', 'false', 'import', 'pragma', 'using',
+        'contract', 'interface', 'library', 'struct', 'enum', 'super', 'this',
+    }
+
+    var_type = None
+
+    # Pattern for mapping: mapping(... => TypeName) ... varName
+    mapping_pattern = re.compile(
+        r'\bmapping\s*\([^)]*=>\s*(\w+)\s*\)\s+'
+        r'(?:(?:public|private|internal|external|immutable|constant|override)\s+)*'
+        + re.escape(var_name) + r'\b'
+    )
+    # Pattern for array: TypeName[] ... varName
+    array_pattern = re.compile(
+        r'\b(\w+)\s*\[\s*\]\s+'
+        r'(?:(?:public|private|internal|external|immutable|constant|override|memory|storage|calldata)\s+)*'
+        + re.escape(var_name) + r'\b'
+    )
+    # Pattern for simple: TypeName ... varName
+    simple_pattern = re.compile(
+        r'\b(\w+)\s+'
+        r'(?:(?:public|private|internal|external|immutable|constant|override|memory|storage|calldata)\s+)*'
+        + re.escape(var_name) + r'(?:\s*[;=,)\[]|$)'
+    )
+
+    for fline in lines:
+        m = mapping_pattern.search(fline)
+        if m:
+            var_type = m.group(1)
+            break
+        m = array_pattern.search(fline)
+        if m and m.group(1) not in _sol_keywords:
+            var_type = m.group(1)
+            break
+        m = simple_pattern.search(fline)
+        if m and m.group(1) not in _sol_keywords:
+            var_type = m.group(1)
+            break
+
+    if not var_type:
+        return None
+
+    # Search for the struct field — first in the current file
+    found = _find_struct_field_in_file(current_file, var_type, symbol_name)
+    if found:
+        return (current_file, found)
+
+    # Then via imports
+    type_file = _find_import_file_for_symbol(current_file, var_type, project_path)
+    if type_file:
+        found = _find_struct_field_in_file(type_file, var_type, symbol_name)
+        if found:
+            return (type_file, found)
+
+    # Project-wide search for the struct
+    search_root = project_path if project_path and os.path.isdir(project_path) else os.path.dirname(current_file)
+    struct_def_pat = re.compile(r'\bstruct\s+' + re.escape(var_type) + r'\s*\{')
+    skip_dirs = {"node_modules", ".git", "cache", "artifacts", "out", "build", "__pycache__"}
+    for dirpath, dirnames, filenames in os.walk(search_root):
+        dirnames[:] = [d for d in dirnames if d not in skip_dirs]
+        for fname in filenames:
+            if not fname.endswith(".sol"):
+                continue
+            fpath = os.path.join(dirpath, fname)
+            try:
+                with open(fpath, encoding="utf-8", errors="ignore") as f:
+                    fc = f.read()
+            except OSError:
+                continue
+            if struct_def_pat.search(fc):
+                found = _find_struct_field_in_file(fpath, var_type, symbol_name)
+                if found:
+                    return (fpath, found)
 
     return None
 
@@ -440,6 +745,83 @@ def _resolve_method_call_definition(current_file, cursor_pos, symbol_name, proje
     return None
 
 
+def _resolve_inherited_function(current_file, symbol_name, project_path):
+    """Resolve a function defined in a parent contract via the `is` inheritance chain.
+
+    For example, when MyToken calls `_mint(...)` and `_mint` is defined in ERC20,
+    this function parses `contract MyToken is ERC20, ERC20Burnable, ...`, resolves
+    each parent type to its source file, and searches for `function _mint` there.
+    Recurses through multi-level inheritance (depth limit 30).
+
+    Returns (filepath, {"line": N, "character": N}) or None.
+    """
+    if not symbol_name or not current_file or not os.path.isfile(current_file):
+        return None
+
+    # BFS/DFS through the inheritance chain
+    visited = set()
+    queue = [current_file]
+    depth = 0
+    max_depth = 30
+
+    while queue and depth < max_depth:
+        depth += 1
+        next_queue = []
+        for src_file in queue:
+            if src_file in visited:
+                continue
+            visited.add(src_file)
+
+            try:
+                with open(src_file, encoding="utf-8", errors="ignore") as f:
+                    content = f.read()
+            except OSError:
+                continue
+
+            # Find `contract/abstract contract/interface/library X is A, B(args), C {`
+            inherit_re = re.compile(
+                r'\b(?:abstract\s+)?(?:contract|interface|library)\s+\w+\s+is\s+([^{]+)\{',
+                re.DOTALL
+            )
+            for m in inherit_re.finditer(content):
+                parents_str = m.group(1)
+                # Split parents by comma, strip constructor args: "ERC20(\"N\", \"S\")" → "ERC20"
+                for parent_entry in parents_str.split(","):
+                    parent_entry = parent_entry.strip()
+                    if not parent_entry:
+                        continue
+                    # Remove constructor arguments: ERC20("Name", "SYM") → ERC20
+                    paren_idx = parent_entry.find("(")
+                    parent_name = parent_entry[:paren_idx].strip() if paren_idx >= 0 else parent_entry.strip()
+                    # Clean up whitespace / newlines
+                    parent_name = parent_name.split()[-1] if parent_name.split() else parent_name
+                    if not parent_name or not (parent_name[0].isalpha() or parent_name[0] == '_'):
+                        continue
+
+                    # Resolve parent type to its source file
+                    parent_file = _find_import_file_for_symbol(src_file, parent_name, project_path)
+                    if not parent_file:
+                        # Try current directory / project search for the type
+                        pos = _find_symbol_in_file(src_file, parent_name)
+                        if pos:
+                            parent_file = src_file
+                    if not parent_file:
+                        continue
+
+                    # Search for the function/modifier/event in the parent file
+                    found_pos = _find_symbol_in_file(parent_file, symbol_name)
+                    if found_pos:
+                        return (parent_file, found_pos)
+
+                    # Queue this parent for further traversal
+                    if parent_file not in visited:
+                        next_queue.append(parent_file)
+
+        queue = next_queue
+
+    return None
+
+
 def _find_solidity_symbol_in_project(current_file, cursor_pos, project_path):
     """When the Solidity LSP returns file:/// and the cursor is not on an import line,
     try to locate the symbol definition by name in project .sol files."""
@@ -499,6 +881,10 @@ def _try_solidity_fallback(obj, define_jump_handler):
     except Exception:
         project_path = ""
 
+    # If the LSP didn't provide a valid project root, detect it from the file path.
+    if not project_path or not os.path.isdir(project_path):
+        project_path = _detect_solidity_project_root(current_file)
+
     symbol_name = _get_symbol_at_cursor(current_file, obj.pos)
 
     # ── Strategy 1: cursor is on an import line → resolve the import file path ──
@@ -526,6 +912,24 @@ def _try_solidity_fallback(obj, define_jump_handler):
     # ── Strategy 2.5: method call resolution (receiver.method) ──
     if symbol_name:
         result = _resolve_method_call_definition(current_file, obj.pos, symbol_name, project_path)
+        if result:
+            target_file, target_pos = result
+            obj.file_action.create_external_file_action(target_file)
+            eval_in_emacs(define_jump_handler, target_file, get_lsp_file_host(), target_pos)
+            return True
+
+    # ── Strategy 2.6: struct field resolution (var[idx].field, var.field) ──
+    if symbol_name:
+        result = _resolve_struct_field_definition(current_file, obj.pos, symbol_name, project_path)
+        if result:
+            target_file, target_pos = result
+            obj.file_action.create_external_file_action(target_file)
+            eval_in_emacs(define_jump_handler, target_file, get_lsp_file_host(), target_pos)
+            return True
+
+    # ── Strategy 2.7: inheritance chain resolution ──
+    if symbol_name:
+        result = _resolve_inherited_function(current_file, symbol_name, project_path)
         if result:
             target_file, target_pos = result
             obj.file_action.create_external_file_action(target_file)
