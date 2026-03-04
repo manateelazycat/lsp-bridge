@@ -1344,6 +1344,7 @@ def _resolve_method_call_definition(current_file, cursor_pos, symbol_name, proje
         return None
     receiver_name, recv_start, _ = recv_info
 
+    receiver_type_file = None
     receiver_type = _infer_variable_type_from_lines(lines, receiver_name)
 
     # Resolve chained receiver field type, e.g. input.amount.mulDivDown(...)
@@ -1360,6 +1361,15 @@ def _resolve_method_call_definition(current_file, cursor_pos, symbol_name, proje
                 if root_type:
                     receiver_type = _resolve_struct_field_type(current_file, root_type, receiver_name, project_path)
 
+    # Static/member access can also target imported types/libraries directly,
+    # e.g. `console.log(...)` where `console` comes from `import {console} from "...";`.
+    if not receiver_type:
+        receiver_type_file = _find_import_file_for_symbol(current_file, receiver_name, project_path)
+        if not receiver_type_file and _find_symbol_in_file(current_file, receiver_name):
+            receiver_type_file = current_file
+        if receiver_type_file:
+            receiver_type = receiver_name
+
     if not receiver_type:
         return None
 
@@ -1371,7 +1381,7 @@ def _resolve_method_call_definition(current_file, cursor_pos, symbol_name, proje
         return using_result
 
     # Find the source file for the receiver type (via imports / project search)
-    type_file = _find_import_file_for_symbol(current_file, receiver_type, project_path)
+    type_file = receiver_type_file or _find_import_file_for_symbol(current_file, receiver_type, project_path)
     if not type_file:
         # Try current file itself (type may be defined locally)
         if _find_symbol_in_file(current_file, receiver_type):
