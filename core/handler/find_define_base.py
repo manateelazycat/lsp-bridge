@@ -890,9 +890,9 @@ def _find_struct_field_decl_pos_in_line(line, field_name):
 
     _modifiers = r'(?:(?:public|private|internal|external|immutable|constant|override)\s+)*'
     patterns = [
-        re.compile(r'\bmapping\s*\([^)]*=>\s*\w+\s*\)\s+' + _modifiers + r'(' + re.escape(field_name) + r')\b'),
-        re.compile(r'\b\w+\s*\[\s*\]\s+' + _modifiers + r'(' + re.escape(field_name) + r')\b'),
-        re.compile(r'\b\w+\s+' + _modifiers + r'(' + re.escape(field_name) + r')\b'),
+        re.compile(r'\bmapping\s*\([^)]*=>\s*\w+(?:\.\w+)*\s*\)\s+' + _modifiers + r'(' + re.escape(field_name) + r')\b'),
+        re.compile(r'\b\w+(?:\.\w+)*\s*\[\s*\]\s+' + _modifiers + r'(' + re.escape(field_name) + r')\b'),
+        re.compile(r'\b\w+(?:\.\w+)*\s+' + _modifiers + r'(' + re.escape(field_name) + r')\b'),
     ]
 
     for pat in patterns:
@@ -951,17 +951,17 @@ def _infer_variable_type_from_lines(lines, var_name):
     }
 
     mapping_pattern = re.compile(
-        r'\bmapping\s*\([^)]*=>\s*(\w+)\s*\)\s+'
+        r'\bmapping\s*\([^)]*=>\s*(\w+(?:\.\w+)*)\s*\)\s+'
         r'(?:(?:public|private|internal|external|immutable|constant|override)\s+)*'
         + re.escape(var_name) + r'\b'
     )
     array_pattern = re.compile(
-        r'\b(\w+)\s*\[\s*\]\s+'
+        r'\b(\w+(?:\.\w+)*)\s*\[\s*\]\s+'
         r'(?:(?:public|private|internal|external|immutable|constant|override|memory|storage|calldata)\s+)*'
         + re.escape(var_name) + r'\b'
     )
     simple_pattern = re.compile(
-        r'\b(\w+)\s+'
+        r'\b(\w+(?:\.\w+)*)\s+'
         r'(?:(?:public|private|internal|external|immutable|constant|override|memory|storage|calldata)\s+)*'
         + re.escape(var_name) + r'(?:\s*[;=,)\[]|$)'
     )
@@ -999,9 +999,9 @@ def _find_struct_field_type_in_file(filepath, struct_name, field_name):
     inside_struct = False
     brace_depth = 0
     struct_pattern = re.compile(r'\bstruct\s+' + re.escape(struct_name) + r'\s*\{')
-    mapping_pattern = re.compile(r'\bmapping\s*\([^)]*=>\s*(\w+)\s*\)\s+' + re.escape(field_name) + r'\b')
-    array_pattern = re.compile(r'\b(\w+)\s*\[\s*\]\s+' + re.escape(field_name) + r'\b')
-    simple_pattern = re.compile(r'\b(\w+)\s+' + re.escape(field_name) + r'\b')
+    mapping_pattern = re.compile(r'\bmapping\s*\([^)]*=>\s*(\w+(?:\.\w+)*)\s*\)\s+' + re.escape(field_name) + r'\b')
+    array_pattern = re.compile(r'\b(\w+(?:\.\w+)*)\s*\[\s*\]\s+' + re.escape(field_name) + r'\b')
+    simple_pattern = re.compile(r'\b(\w+(?:\.\w+)*)\s+' + re.escape(field_name) + r'\b')
 
     _sol_keywords = {
         'function', 'event', 'modifier', 'return', 'returns', 'if', 'else',
