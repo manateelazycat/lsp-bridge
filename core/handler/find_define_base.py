@@ -1304,6 +1304,41 @@ def _resolve_struct_field_definition(current_file, cursor_pos, symbol_name, proj
     return None
 
 
+def _find_public_variable_in_file(filepath, var_name):
+    """Find a public state variable declaration that auto-generates a getter function.
+    Returns {"line": N, "character": N} or None."""
+    content = _read_text_file(filepath)
+    if not content:
+        return None
+
+    _modifiers = r'(?:(?:public|private|internal|external|immutable|constant|override)\s+)*'
+    mapping_pat = re.compile(
+        r'\bmapping\s*\([^)]*\)\s+' + _modifiers + r'(' + re.escape(var_name) + r')\s*[;=]'
+    )
+    array_pat = re.compile(
+        r'\b\w+(?:\.\w+)*\s*\[\s*\]\s+' + _modifiers + r'(' + re.escape(var_name) + r')\s*[;=]'
+    )
+    simple_pat = re.compile(
+        r'\b\w+(?:\.\w+)*\s+' + _modifiers + r'(' + re.escape(var_name) + r')\s*[;=]'
+    )
+
+    for i, line in enumerate(content.splitlines()):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("//") or stripped.startswith("/*") or stripped.startswith("*") or stripped.startswith("*/"):
+            continue
+        if 'public' not in line:
+            continue
+        if re.match(r'\s*(function|event|modifier|error|constructor)\b', stripped):
+            continue
+        scan = re.sub(r'//.*$', '', line)
+        for pat in [mapping_pat, array_pat, simple_pat]:
+            m = pat.search(scan)
+            if m:
+                return {"line": i, "character": m.start(1)}
+
+    return None
+
+
 def _resolve_method_call_definition(current_file, cursor_pos, symbol_name, project_path, function_arity=None):
     """When cursor is on a method name in a call like `obj.method(...)`,
     resolve by finding the receiver's type, then look for the function
@@ -1419,6 +1454,11 @@ def _resolve_method_call_definition(current_file, cursor_pos, symbol_name, proje
     if found_pos:
         return (type_file, found_pos)
 
+    # Solidity auto-generates getter functions for public state variables.
+    found_pos = _find_public_variable_in_file(type_file, symbol_name)
+    if found_pos:
+        return (type_file, found_pos)
+
     # The interface might inherit from another interface; scan the type file's imports too.
     try:
         with open(type_file, encoding="utf-8", errors="ignore") as f:
@@ -1433,6 +1473,14 @@ def _resolve_method_call_definition(current_file, cursor_pos, symbol_name, proje
             fp = _find_symbol_in_file(resolved, symbol_name, function_arity)
             if fp:
                 return (resolved, fp)
+            fp = _find_public_variable_in_file(resolved, symbol_name)
+            if fp:
+                return (resolved, fp)
+
+    # Follow the receiver type's inheritance chain for function and public variable definitions.
+    result = _resolve_inherited_function(type_file, symbol_name, project_path, function_arity)
+    if result:
+        return result
 
     return None
 
@@ -1502,6 +1550,11 @@ def _resolve_inherited_function(current_file, symbol_name, project_path, functio
 
                     # Search for the function/modifier/event in the parent file
                     found_pos = _find_symbol_in_file(parent_file, symbol_name, function_arity)
+                    if found_pos:
+                        return (parent_file, found_pos)
+
+                    # Also check public state variables (auto-generated getters)
+                    found_pos = _find_public_variable_in_file(parent_file, symbol_name)
                     if found_pos:
                         return (parent_file, found_pos)
 
