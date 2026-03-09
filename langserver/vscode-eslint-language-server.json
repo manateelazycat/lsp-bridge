@@ -3,6 +3,7 @@
   "languageIds": {
     "tsx": "typescriptreact",
     "ts": "typescript",
+    "mts": "typescript",
     "js": "javascript",
     "jsx": "javascriptreact"
   },
