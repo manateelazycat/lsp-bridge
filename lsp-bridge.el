@@ -503,7 +503,7 @@ which refer to https://docs.python.org/3/library/logging.html#levels for more de
 (defcustom lsp-bridge-multi-lang-server-extension-list
   '(
     (("vue") . "volar_emmet")
-    (("ts")  . "typescript_eslint")
+    (("ts" "mts")  . "typescript_eslint")
     (("tsx") . "typescriptreact_eslint")
     (("component.html") . "angular_template_html")
     (("component.ts") . "angular_template_typescript")
