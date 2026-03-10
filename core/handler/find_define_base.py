@@ -980,7 +980,7 @@ def _infer_variable_type_from_lines(lines, var_name):
 
         m = array_pattern.search(scan_line)
         if m and m.group(1) not in _sol_keywords:
-            return m.group(1)
+            return m.group(1) + "[]"
 
         m = simple_pattern.search(scan_line)
         if m and m.group(1) not in _sol_keywords:
@@ -1146,10 +1146,17 @@ def _resolve_using_for_method_definition(current_file, symbol_name, receiver_typ
         if clean_type_expr == "*" or clean_type_expr.endswith(" *"):
             applies = True
         else:
+            # Extract the full type token (may include [] suffix)
             first_token = clean_type_expr.split()[0] if clean_type_expr else ""
             if first_token:
-                normalized_token = _normalize_solidity_type_name(first_token)
-                applies = normalized_token == normalized_receiver
+                # Normalize base type while preserving array suffix
+                base = re.sub(r'\[\]$', '', first_token)
+                suffix = first_token[len(base):]
+                normalized_token = _normalize_solidity_type_name(base) + suffix
+                recv_base = re.sub(r'\[\]$', '', normalized_receiver)
+                recv_suffix = normalized_receiver[len(recv_base):]
+                normalized_recv = _normalize_solidity_type_name(recv_base) + recv_suffix
+                applies = normalized_token == normalized_recv
 
         if applies and lib_name not in library_names:
             library_names.append(lib_name)
@@ -1268,6 +1275,9 @@ def _resolve_struct_field_definition(current_file, cursor_pos, symbol_name, proj
 
     if not var_type:
         return None
+
+    # Strip array suffix for struct lookups (e.g. "MyStruct[]" → "MyStruct")
+    var_type = re.sub(r'\[\]$', '', var_type)
 
     # Search for the struct field — first in the current file
     found = _find_struct_field_in_file(current_file, var_type, symbol_name)
@@ -1394,7 +1404,9 @@ def _resolve_method_call_definition(current_file, cursor_pos, symbol_name, proje
                 root_name = root_recv[0]
                 root_type = _infer_variable_type_from_lines(lines, root_name)
                 if root_type:
-                    receiver_type = _resolve_struct_field_type(current_file, root_type, receiver_name, project_path)
+                    # Strip array suffix for struct field resolution
+                    base_root_type = re.sub(r'\[\]$', '', root_type)
+                    receiver_type = _resolve_struct_field_type(current_file, base_root_type, receiver_name, project_path)
 
     # Static/member access can also target imported types/libraries directly,
     # e.g. `console.log(...)` where `console` comes from `import {console} from "...";`.
