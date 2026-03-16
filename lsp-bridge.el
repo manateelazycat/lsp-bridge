@@ -1448,6 +1448,7 @@ So we build this macro to restore postion after code format."
     (when (get-buffer lsp-bridge-name)
       (kill-buffer lsp-bridge-name))
     (setq lsp-bridge-epc-process nil)
+    (setq lsp-bridge-internal-process nil)
     (message "[LSP-Bridge] Process terminated.")))
 
 (defun lsp-bridge--first-start (lsp-bridge-epc-port)
