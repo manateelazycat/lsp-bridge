@@ -4,7 +4,7 @@
   "command": ["rust-analyzer"],
   "settings": {},
   "projectFiles": ["Cargo.toml"],
-  "orgBabelVirtualFile": "src/main.rs",
+  "orgBabelVirtualFile": "org_examples/src/main.rs",
   "capabilities": {
     "textDocument": {
       "hover": {
