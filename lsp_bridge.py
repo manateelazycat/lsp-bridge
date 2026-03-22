@@ -742,6 +742,12 @@ class LspBridge:
         if os.path.splitext(filepath)[-1] == '.org':
             single_lang_server = get_emacs_func_result("get-single-lang-server", project_path, filepath)
             lang_server_info = load_single_server_info(single_lang_server)
+            # For project-based LSP servers, search upward for projectFiles (e.g. Cargo.toml)
+            # so the LSP server gets the real project root, not just the git root.
+            if "projectFiles" in lang_server_info:
+                project_root = self.find_project_root(filepath, lang_server_info["projectFiles"])
+                if project_root:
+                    project_path = project_root
             #TODO support diagnostic
             lsp_server = self.create_lsp_server(filepath, project_path, lang_server_info, enable_diagnostics=False)
             if not lsp_server:

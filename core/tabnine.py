@@ -32,12 +32,13 @@ from sys import stderr, version_info
 if version_info[1] < 12:
     from distutils.version import StrictVersion
     version_function = StrictVersion
-elif len(version_info) >= 3 and version_info[1] >= 13 and version_info[2] > 1:
-    from packaging.version import Version
-    version_function = Version
 else:
-    from pkg_resources import parse_version
-    version_function = parse_version
+    try:
+        from packaging.version import Version
+        version_function = Version
+    except ImportError:
+        from pkg_resources import parse_version
+        version_function = parse_version
 
 TABNINE_PROTOCOL_VERSION = "1.0.14"
 TABNINE_EXECUTABLE = "TabNine.exe" if get_os_name() == "windows" else "TabNine"
