@@ -306,7 +306,25 @@ If optional MARKER, return a marker instead"
   (save-excursion
     (save-restriction
       (widen)
-      (goto-char (point-min))
+      (goto-char
+       (or (and (bound-and-true-p lsp-bridge-enable-org-babel)
+                (derived-mode-p 'org-mode)
+                ;; Org-babel servers speak in src-block-relative positions, not
+                ;; whole-buffer positions. Start conversion at the current block
+                ;; body so LSP text edits land inside the block instead of near
+                ;; the top of the Org buffer.
+                (or (and (boundp 'lsp-bridge-org-babel--block-bop)
+                         lsp-bridge-org-babel--block-bop)
+                    (when-let* ((element (or (and (boundp 'lsp-bridge-org-babel--info-cache)
+                                                  lsp-bridge-org-babel--info-cache)
+                                             (ignore-errors
+                                               (org-element-lineage (org-element-context) '(src-block) t)))))
+                      (or (org-element-property :contents-begin element)
+                          (save-excursion
+                            (goto-char (org-element-property :begin element))
+                            (forward-line 1)
+                            (point))))))
+           (point-min)))
       (forward-line (min most-positive-fixnum
                          (plist-get pos-plist :line)))
       (unless (eobp) ;; if line was excessive leave point at eob
