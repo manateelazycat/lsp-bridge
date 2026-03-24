@@ -202,6 +202,17 @@ class FileAction:
                 return
             start['line'] -= self.org_line_bias
             end['line'] -= self.org_line_bias
+            if start['line'] < 0 or end['line'] < 0:
+                logger.warning(
+                    "Skip incremental org didChange with invalid rebased range: "
+                    "start=%s end=%s org_line_bias=%s buffer=%s",
+                    start, end, self.org_line_bias, buffer_name
+                )
+                # Org src-block position tracking can drift after commands that
+                # move point outside the cached block. Fall back to a full sync
+                # so we do not send invalid negative positions to the LSP server.
+                self.update_file(buffer_name, self.org_line_bias)
+                return
 
         buffer_content = ''
         # Send didChange request to LSP server.
