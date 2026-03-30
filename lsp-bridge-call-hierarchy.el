@@ -25,6 +25,10 @@
 
 (defvar lsp-bridge-call-hierarchy--local-modelines nil)
 
+(defvar lsp-bridge-call-hierarchy--origin-window nil)
+
+(defvar lsp-bridge-call-hierarchy--preview-window nil)
+
 (defun lsp-bridge-incoming-call-hierarchy ()
   (interactive)
   (lsp-bridge-call-file-api "prepare_call_hierarchy_incoming"
@@ -82,6 +86,7 @@
 (defun lsp-bridge-call-hierarchy--popup (response)
   (interactive)
   (setq lsp-bridge-call-hierarchy--popup-response response)
+  (setq lsp-bridge-call-hierarchy--origin-window (selected-window))
   (lsp-bridge-call-hierarchy-make-frame (get-buffer-create "*lsp-bridge-call-hierarchy*"))
 
   (with-current-buffer "*lsp-bridge-call-hierarchy*"
@@ -92,6 +97,7 @@
   (when (> lsp-bridge-call-hierarchy-preview-height 0)
     (split-window (selected-window) nil 'down)
     (other-window 1)
+    (setq lsp-bridge-call-hierarchy--preview-window (selected-window))
     (set-window-text-height (selected-window)  (1- lsp-bridge-call-hierarchy-preview-height))
     (other-window -1))
 
@@ -148,16 +154,28 @@
 
 (defun lsp-bridge-call-hierarchy-quit ()
   (interactive)
+  (let ((origin-window lsp-bridge-call-hierarchy--origin-window)
+        (preview-window lsp-bridge-call-hierarchy--preview-window))
+    (acm-frame-delete-frame lsp-bridge-call-hierarchy--frame)
+    (when (get-buffer "*lsp-bridge-call-hierarchy*")
+      (kill-buffer "*lsp-bridge-call-hierarchy*"))
 
-  (acm-frame-delete-frame lsp-bridge-call-hierarchy--frame)
-  (kill-buffer "*lsp-bridge-call-hierarchy*")
+    (when (window-live-p preview-window)
+      (delete-window preview-window))
+
+    (when (window-live-p origin-window)
+      (select-window origin-window)
+      (select-frame-set-input-focus (window-frame origin-window))))
 
   (dolist (buffer-modeline lsp-bridge-call-hierarchy--local-modelines)
     (with-current-buffer (car buffer-modeline)
       (setq-local mode-line-format (cdr buffer-modeline))))
 
   (dolist (buffer lsp-bridge-call-hierarchy--temp-buffers)
-    (kill-buffer buffer)))
+    (kill-buffer buffer))
+
+  (setq lsp-bridge-call-hierarchy--origin-window nil)
+  (setq lsp-bridge-call-hierarchy--preview-window nil))
 
 (defun lsp-bridge-call-hierarchy-show ()
   (let* ((call  (nth lsp-bridge-call-hierarchy--index lsp-bridge-call-hierarchy--popup-response))
