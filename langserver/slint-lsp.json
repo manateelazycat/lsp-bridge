@@ -1,0 +1,6 @@
+{
+    "name": "slint-lsp",
+    "languageId": "slint",
+    "command": ["slint-lsp"],
+    "settings": {}
+}
