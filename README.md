@@ -598,39 +598,40 @@ The following is the framework of lsp-bridge:
 
 The following is the directory structure of the lsp-bridge project:
 
-| Filename                              | Purpose                                                                                                             |
+| Path                                  | Purpose                                                                                                             |
 |:--------------------------------------|:--------------------------------------------------------------------------------------------------------------------|
-| lsp-bridge.el                         | The main Elisp logic part of lsp-bridge, providing custom options and Elisp functions for the python subprocess, such as code jump, rename, etc. |
-| lsp-bridge-epc.el                     | Code for communicating with the lsp-bridge python subprocess, mainly implementing Elisp IPC to dock with Python EPC, realizing data serialization, sending, receiving, and deserialization |
-| lsp-bridge-call-hierarchy.el          | Display the call order relationship of the code in the pop-up Frame                                                 |
-| lsp-bridge-code-action.el             | Code related to code correction                                                                                     |
-| lsp-bridge-diagnostic.el              | Diagnostic information related code                                                                                 |
-| lsp-bridge-ref.el                     | Code reference viewing framework, providing reference viewing, batch renaming, reference result regular filtering, etc., core code forked from color-rg.el |
-| lsp-bridge-inlay-hint.el              | Provides code type hints, more useful for static languages, such as Rust or Haskell                                 |
-| lsp-bridge-semantic-tokens.el         | Provides semantic tokens, more syntax highlighting                                 |
-| lsp-bridge-jdtls.el                   | Provides third-party library jump function for Java language                                                         |
-| lsp-bridge-dart.el                    | Provides support for Dart's private protocols, such as Dart's Closing Labels protocol                                |
-| lsp-bridge-semantic-tokens.el         | Flexible display of certain semantic symbols is especially useful for static languages such as C or C++.             |
-| lsp-bridge-lsp-installer.el           | Install TabNine and Omnisharp                                                                                       |
-| lsp-bridge-peek.el                    | Use peek windows to view definitions and references, similar to the experience of Code Lens in VSCode                                                                 |
-| lsp-bridge.py                         | The main Python logic part of lsp-bridge, providing event loops, message scheduling, and status management          |
-| acm/acm.el                            | Asynchronous completion menu, designed specifically for the lsp-bridge backend, supporting lsp, elisp, words, TabNine and other backends |
-| core/fileaction.py                    | Mainly records the status of each file, processes LSP response messages, and calls Emacs Elisp functions            |
-| core/lspserver.py                     | LSP message processing module, mainly for parsing, sending and receiving LSP messages, and ensuring that LSP requests are in order according to LSP protocol specifications |
-| core/remote_file.py                   | Used to handle remote server file access and synchronization                                                        |
-| core/utils.py                         | Some global utility functions, convenient for various modules to call                                               |
-| core/mergedeep.py                     | JSON information merging, mainly used to send custom options to the LSP server                                      |
-| core/handler/                         | Implementation of LSP message sending and receiving, where `__init__.py` is the base class                           |
-| core/tabnine.py                       | TabNine backend search and completion                                                                               |
-| core/codeium.py                       | Codeium backend search and completion                                                                               |
-| core/copilot.py                       | Copilot backend search and completion                                                                               |
-| core/search_file_words.py             | Asynchronous backend for file word search                                                                           |
-| core/search_paths.py                  | Asynchronous backend for file path search                                                                           |
-| core/search_sdcv_words.py             | English word search backend, can be replaced with StarDict dictionaries of other languages                          |
-| core/search_list.py                   | Asynchronous search framework, can be used to write your own asynchronous search backend                             |
-| langserver                            | Mainly places the configuration of the LSP server, each server has a json file, defining the server's name, language ID, startup command, and setting options, etc. |
-| multiserver                           | Mainly places the configuration of multiple LSP servers                                                             |
-| resources                             | English dictionary data, mainly serving Chinese users                                                               |
+| lsp-bridge.el                         | Main Elisp entry, including user options, mode integration, and RPC entry points to the Python backend             |
+| lsp-bridge-epc.el                     | Elisp EPC transport layer used to talk to the Python subprocess                                                     |
+| lsp-bridge-breadcrumb.el              | Breadcrumb UI integration for the current symbol and location                                                       |
+| lsp-bridge-imenu.el                   | Imenu support backed by LSP document symbols                                                                        |
+| lsp-bridge-call-hierarchy.el          | Call hierarchy UI                                                                                                   |
+| lsp-bridge-code-action.el             | Code action commands and UI                                                                                         |
+| lsp-bridge-diagnostic.el              | Diagnostics rendering, navigation, and related commands                                                             |
+| lsp-bridge-ref.el                     | Reference viewer, batch rename flow, and related filtering                                                          |
+| lsp-bridge-peek.el                    | Peek windows for definitions and references                                                                         |
+| lsp-bridge-inlay-hint.el              | Inlay hint rendering                                                                                                |
+| lsp-bridge-semantic-tokens.el         | Semantic tokens highlighting                                                                                        |
+| lsp-bridge-jdtls.el                   | Java-specific helpers such as third-party library jumps                                                             |
+| lsp-bridge-dart.el                    | Dart-specific protocol support                                                                                      |
+| lsp-bridge-org-babel.el               | LSP support for source blocks in Org Babel                                                                          |
+| lsp-bridge-rust.el                    | Rust-specific integration helpers                                                                                   |
+| lsp-bridge-lsp-installer.el           | Helpers for installing TabNine and OmniSharp                                                                        |
+| lsp_bridge.py                         | Main Python backend, including the event loop, request scheduling, and state management                             |
+| python-lsp-bridge                     | Shell launcher that runs the Python backend through `uv`                                                            |
+| acm/                                  | Async completion menu frontend and completion UI used by lsp-bridge                                                 |
+| core/fileaction.py                    | Per-file state machine that routes requests, handles responses, and coordinates editor state                        |
+| core/lspserver.py                     | LSP transport layer for each server process, including request/response ordering                                    |
+| core/handler/                         | Concrete handlers for LSP methods and editor actions                                                                |
+| core/remote_file.py                   | Remote file synchronization and remote editing support                                                              |
+| core/utils.py, core/mergedeep.py      | Shared helpers and deep-merge utilities for settings and protocol data                                              |
+| core/search_*.py                      | Async search backends for file words, paths, and dictionary lookups                                                 |
+| core/tabnine.py, core/codeium.py, core/copilot.py | AI completion backends                                                                                   |
+| langserver/                           | Single-server JSON configs: executable, language ID, startup args, and settings                                     |
+| multiserver/                          | Multi-server composition configs, such as combining completion and diagnostics servers                              |
+| resources/                            | Dictionary and auxiliary data files                                                                                 |
+| test/                                 | Python and Elisp tests for completion, jump-to-definition, byte compilation, and related flows                      |
+| pyproject.toml, uv.lock               | Python dependency and environment metadata used by `uv`                                                             |
+| .github/                              | CI workflows and repository automation                                                                              |
 
 Please read below articles first:
 
