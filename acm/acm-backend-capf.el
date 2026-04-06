@@ -106,6 +106,7 @@
                                         cider-repl-mode
                                         ess-mode
                                         slime-mode
+                                        sly-mrepl-mode
                                         ggtags-mode
                                         gdscript-mode
                                         robe-mode
