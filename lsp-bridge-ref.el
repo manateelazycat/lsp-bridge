@@ -123,6 +123,14 @@ Default is nil, set this variable to t if you like this feature."
   :type 'boolean
   :group 'lsp-bridge-ref)
 
+(defcustom lsp-bridge-ref-popup-window-handler #'lsp-bridge-ref-popup-window-default-handler
+  "The handler for creating and opening a new lsp-bridge-ref window.
+
+Default is `lsp-bridge-ref-popup-window-default-handler'."
+  :type 'function
+  :group 'lsp-bridge-ref)
+
+
 (defface lsp-bridge-ref-font-lock-header-line-text
   '((t (:foreground "Green3" :bold t)))
   "Face for header line text."
@@ -422,16 +430,8 @@ user more freedom to use rg with special arguments."
 
     (read-only-mode 1))
 
-  ;; Pop search buffer.
-  (if lsp-bridge-ref-delete-other-windows
-      (delete-other-windows))
-
-  ;; Set `window-resize-pixelwise' with non-nil will cause `split-window' failed.
-  (let (window-resize-pixelwise)
-    (split-window nil (* 0.618 (window-pixel-height)) nil t))
-  (other-window 1)
-  (switch-to-buffer lsp-bridge-ref-buffer)
-  (goto-char (point-min)))
+  ;; Create window
+  (funcall lsp-bridge-ref-popup-window-handler))
 
 (defun lsp-bridge-ref-find-next-position (regexp)
   (save-excursion
@@ -667,6 +667,19 @@ user more freedom to use rg with special arguments."
           (goto-char next-change)))
       hit-count)))
 
+(defun lsp-bridge-ref-popup-window-default-handler ()
+  "Default function for `lsp-bridge-ref-popup-window-handler'."
+  ;; Pop search buffer.
+  (if lsp-bridge-ref-delete-other-windows
+      (delete-other-windows))
+
+  ;; Set `window-resize-pixelwise' with non-nil will cause `split-window' failed.
+  (let (window-resize-pixelwise)
+    (select-window
+     (split-window nil (* 0.618 (window-pixel-height)) nil t)))
+  (switch-to-buffer lsp-bridge-ref-buffer)
+  (goto-char (point-min)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Interactive functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defalias 'lsp-bridge-ref-search-input-in-project 'lsp-bridge-ref-search-project)
 
@@ -823,12 +836,8 @@ user more freedom to use rg with special arguments."
   (setq ref-buffer-window (get-buffer-window lsp-bridge-ref-buffer))
   (if ref-buffer-window
       (select-window ref-buffer-window)
-    (if lsp-bridge-ref-delete-other-windows
-        (delete-other-windows))
-    ;; Split window and select if color-buffer is not exist in windows.
-    (split-window)
-    (other-window 1)
-    (switch-to-buffer lsp-bridge-ref-buffer)))
+    ;; Create window if `lsp-bridge-ref-buffer' is not exist in windows.
+    (funcall lsp-bridge-ref-popup-window-handler)))
 
 (defun lsp-bridge-ref-open-file (&optional stay)
   (interactive)
