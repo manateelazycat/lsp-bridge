@@ -525,8 +525,8 @@ which refer to https://docs.python.org/3/library/logging.html#levels for more de
   "Default LSP server for C language, you can choose `clangd' or `ccls'."
   :type 'string)
 
-(defcustom lsp-bridge-elixir-lsp-server "elixirLS"
-  "Default LSP server for Elixir language, you can choose `elixirLS', `lexical' or `nextls'."
+(defcustom lsp-bridge-elixir-lsp-server "dexter"
+  "Default LSP server for Elixir language, you can choose `dexter', `elixirLS', `lexical' or `nextls'."
   :type 'string
   :safe #'stringp)
 
