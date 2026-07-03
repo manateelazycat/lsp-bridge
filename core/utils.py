@@ -125,10 +125,13 @@ def get_lsp_file_host():
 def get_buffer_content(filename, buffer_name):
     global lsp_bridge_server
 
+    content = ""
     if lsp_bridge_server and lsp_bridge_server.file_server:
-        return lsp_bridge_server.file_server.get_file_content(filename)
-    else:
-        return get_emacs_func_result('get-buffer-content', buffer_name)
+        content = lsp_bridge_server.file_server.get_file_content(filename)
+    if not content:
+        # Fallback to Emacs buffer for local files (e.g. org-babel)
+        content = get_emacs_func_result('get-buffer-content', buffer_name)
+    return content
 
 def get_file_content_from_file_server(filename):
     global lsp_bridge_server
