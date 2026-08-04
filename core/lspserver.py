@@ -519,7 +519,10 @@ class LspServer:
         (relative to project root) that the .org content should masquerade as,
         e.g. "src/main.rs" for rust-analyzer."""
         if filepath.endswith('.org') and "orgBabelVirtualFile" in self.server_info:
-            virtual_file = os.path.join(self.project_path, self.server_info["orgBabelVirtualFile"])
+            base = self.project_path
+            if not os.path.isdir(base):
+                base = os.path.dirname(base)
+            virtual_file = os.path.join(base, self.server_info["orgBabelVirtualFile"])
             return path_to_uri(virtual_file)
         return path_to_uri(filepath)
 

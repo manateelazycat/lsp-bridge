@@ -426,7 +426,16 @@ The beginnings of each symbol are replaced by ace strings with
     (if (not (member buf-name lsp-bridge-peek--temp-buffer-alist))
 	    (let ((buf (generate-new-buffer buf-name)))
 	      (with-current-buffer buf
-	        (insert-file-contents file)
+	        (let ((file-size
+	               (condition-case nil
+	                   (cadr (insert-file-contents file))
+	                 (file-error 0))))
+	          (when (and (= file-size 0)
+	                     (boundp 'my/peek-src-buffer)
+	                     (buffer-live-p my/peek-src-buffer))
+	            ;; Virtual file (e.g. org-babel src/main.groovy) is empty
+	            ;; or doesn't exist: use the stored C-c ' buffer content.
+	            (insert-buffer-substring my/peek-src-buffer)))
 	        (let ((buffer-file-name file))
 	          (delay-mode-hooks
 		        (set-auto-mode)))

@@ -1050,7 +1050,9 @@ So we build this macro to restore postion after code format."
        lsp-bridge-remote-file-flag))
 
 (defun lsp-bridge-get-buffer-file-name-text ()
-  (lsp-bridge-buffer-file-name buffer-file-name))
+  (or (lsp-bridge-buffer-file-name buffer-file-name)
+      (when (bound-and-true-p org-src-mode)
+        org-src-source-file-name)))
 
 (defun lsp-bridge-buffer-file-name (name)
   ;; `buffer-file-name' may contain face property, we need use `substring-no-properties' remove those face from buffer name.
@@ -1155,7 +1157,23 @@ So we build this macro to restore postion after code format."
         (and lsp-bridge-org-babel--info-cache
              (org-element-property :value lsp-bridge-org-babel--info-cache))
       (with-current-buffer buf
-        (buffer-substring-no-properties (point-min) (point-max))))))
+        (if (and (eq major-mode 'org-mode) buffer-file-name)
+            ;; Org buffer: prefer active C-c ' sub-buffer content.
+            ;; When a C-c ' buffer is editing a src block in this org file,
+            ;; return the pure src block content (no org markup).
+            (let ((c-sub (car (delq nil
+                              (mapcar (lambda (b)
+                                        (with-current-buffer b
+                                          (when (and (bound-and-true-p org-src-mode)
+                                                     org-src--beg-marker
+                                                     (eq (marker-buffer org-src--beg-marker) buf))
+                                            b)))
+                                      (buffer-list))))))
+              (if c-sub
+                  (with-current-buffer c-sub
+                    (buffer-substring-no-properties (point-min) (point-max)))
+                (buffer-substring-no-properties (point-min) (point-max))))
+          (buffer-substring-no-properties (point-min) (point-max)))))))
 
 (defun lsp-bridge--get-current-line-func ()
   (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
@@ -1251,19 +1269,40 @@ So we build this macro to restore postion after code format."
     (lsp-bridge-get-symbol-string-value (cdr langserver-info))))
 
 (defun lsp-bridge-get-single-lang-server-by-file-mode (filename)
-  "Get lang server for file mode."
-  (let* ((mode (lsp-brige-get-mode filename))
-         (langserver-info (lsp-bridge-lang-server-by-mode mode lsp-bridge-single-lang-server-mode-list)))
-    (cond (langserver-info
-           (lsp-bridge-get-symbol-string-value (cdr langserver-info)))
-          ((eq mode 'org-mode)
-           (cond
-            (lsp-bridge-use-wenls-in-org-mode
-             "wen")
-            (lsp-bridge-use-ds-pinyin-in-org-mode
-             "ds-pinyin")
-            (lsp-bridge-enable-org-babel
-             (lsp-bridge-org-babel-check-lsp-server)))))))
+  "Get lang server for file mode.
+For .org files, scan all buffers for an active C-c ' (org-src-mode)
+sub-buffer editing this file and use its major-mode (e.g.
+groovy-mode) for server lookup.  This avoids depending on the
+calling buffer's local variables, which may not be set when
+Python queries get-single-lang-server."
+  (if (string-suffix-p ".org" filename)
+      (let ((c-sub (car (delq nil
+                        (mapcar (lambda (b)
+                                  (with-current-buffer b
+                                    (when (and (bound-and-true-p org-src-mode)
+                                               org-src--beg-marker
+                                               (let ((obuf (marker-buffer org-src--beg-marker)))
+                                                 (and obuf (equal (buffer-file-name obuf) filename))))
+                                      b)))
+                                (buffer-list))))))
+        (when c-sub
+          (with-current-buffer c-sub
+            (when-let* ((info (lsp-bridge-lang-server-by-mode
+                               major-mode
+                               lsp-bridge-single-lang-server-mode-list)))
+              (lsp-bridge-get-symbol-string-value (cdr info))))))
+    (let* ((mode (lsp-brige-get-mode filename))
+           (langserver-info (lsp-bridge-lang-server-by-mode mode lsp-bridge-single-lang-server-mode-list)))
+      (cond (langserver-info
+             (lsp-bridge-get-symbol-string-value (cdr langserver-info)))
+            ((eq mode 'org-mode)
+             (cond
+              (lsp-bridge-use-wenls-in-org-mode
+               "wen")
+              (lsp-bridge-use-ds-pinyin-in-org-mode
+               "ds-pinyin")
+              (lsp-bridge-enable-org-babel
+               (lsp-bridge-org-babel-check-lsp-server))))))))
 
 (defun lsp-bridge-has-lsp-server-p ()
   (cond ((and lsp-bridge-enable-org-babel (eq major-mode 'org-mode))
