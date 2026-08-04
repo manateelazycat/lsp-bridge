@@ -33,7 +33,10 @@ class Completion(Handler):
         return dict(position=position, context=context)
 
     def parse_sort_value(self, sort_text):
-        return ''.join(c for c in sort_text if c.isdigit() or c == '.').rstrip('.')
+        # Return sortText as-is per LSP spec (lexicographic comparison).
+        # Some LSP servers (e.g. Eclipse JDT.LS) use letter-prefixed sortText
+        # like "A0" for classes and "B0" for variables to encode type priority.
+        return sort_text
 
     def compare_candidates(self, x, y):
         prefix = self.prefix.lower()
