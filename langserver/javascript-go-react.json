@@ -1,0 +1,10 @@
+{
+  "name": "javascript-go-react",
+  "languageId": "javascriptreact",
+  "command": [
+    "tsgo",
+    "--lsp",
+    "--stdio"
+  ],
+  "settings": {}
+}

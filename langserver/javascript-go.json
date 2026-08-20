@@ -1,0 +1,10 @@
+{
+  "name": "javascript-go",
+  "languageId": "javascript",
+  "command": [
+    "tsgo",
+    "--lsp",
+    "--stdio"
+  ],
+  "settings": {}
+}

@@ -1,0 +1,31 @@
+{
+  "name": "typescript-go",
+  "languageId": "typescript",
+  "command": [
+    "tsgo",
+    "--lsp",
+    "--stdio"
+  ],
+  "settings": {
+    "typescript": {
+      "inlayHints": {
+        "includeInlayParameterNameHints": "all",
+        "includeInlayParameterNameHintsWhenArgumentMatchesName": true,
+        "includeInlayFunctionParameterTypeHints": true,
+        "includeInlayVariableTypeHints": true,
+        "includeInlayVariableTypeHintsWhenTypeMatchesName": true,
+        "includeInlayPropertyDeclarationTypeHints": true,
+        "includeInlayFunctionLikeReturnTypeHints": true,
+        "includeInlayEnumMemberValueHints": true
+      }
+    }
+  },
+  "initializationOptions": {
+    "userPreferences": {
+      "includeCompletionsForModuleExports": false,
+      "logVerbosity": "info",
+      "disablePushDiagnostics": false,
+      "enableTelemetry": false
+    }
+  }
+}

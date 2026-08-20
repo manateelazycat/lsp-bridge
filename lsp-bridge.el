@@ -591,6 +591,26 @@ Possible choices are basedpyright_ruff, pyright_ruff, pyright-background-analysi
 Possible choices are `rlanguageserver_air'."
   :type 'string)
 
+(defcustom lsp-bridge-javascript-lsp-server "javascript"
+  "Default Multi LSP server for JavaScript.
+Possible choices are `javascript' or `javascript-go'."
+  :type 'string)
+
+(defcustom lsp-bridge-javascript-react-lsp-server "javascriptreact"
+  "Default Multi LSP server for .jsx files.
+Possible choices are `javascriptreact' or `javascript-go-react'."
+  :type 'string)
+
+(defcustom lsp-bridge-typescript-lsp-server "typescript"
+  "Default Multi LSP server for TypeScript.
+Possible choices are `typescript' or `typescript-go'."
+  :type 'string)
+
+(defcustom lsp-bridge-typescript-react-lsp-server "typescriptreact"
+  "Default Multi LSP server for .tsx files.
+Possible choices are `typescriptreact' or `typescript-go-react'."
+  :type 'string)
+
 (defcustom lsp-bridge-tsdk-path nil
   "Tsserver lib*.d.ts directory path in current system needed by some lsp servers.
 If nil, lsp-bridge would try to detect by default."
@@ -631,10 +651,10 @@ If nil, lsp-bridge would try to detect by default."
     ((markdown-mode gfm-mode) .                                                  lsp-bridge-markdown-lsp-server)
     (dart-mode .                                                                 "dart-analysis-server")
     ((scala-mode scala-ts-mode) .                                                "metals")
-    ((js2-mode js-mode js-ts-mode rjsx-mode) .                                   "javascript")
-    (js-jsx-mode .                                                               "javascriptreact")
-    ((typescript-tsx-mode tsx-ts-mode) .                                         "typescriptreact")
-    ((typescript-mode typescript-ts-mode) .                                      "typescript")
+    ((js2-mode js-mode js-ts-mode rjsx-mode) .                                   lsp-bridge-javascript-lsp-server)
+    (js-jsx-mode .                                                               lsp-bridge-javascript-react-lsp-server)
+    ((typescript-tsx-mode tsx-ts-mode) .                                         lsp-bridge-typescript-react-lsp-server)
+    ((typescript-mode typescript-ts-mode) .                                      lsp-bridge-typescript-lsp-server)
     ((js-json-mode json-ts-mode json-mode) .                                     "vscode-json-language-server")
     (tuareg-mode .                                                               "ocamllsp")
     (erlang-mode .                                                               "erlang-ls")
