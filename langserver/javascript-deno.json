@@ -1,0 +1,9 @@
+{
+  "name": "javascript-deno",
+  "languageId": "javascript",
+  "command": [
+    "deno", 
+    "lsp"
+  ],
+  "settings": {}
+}

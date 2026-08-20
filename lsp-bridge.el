@@ -593,22 +593,22 @@ Possible choices are `rlanguageserver_air'."
 
 (defcustom lsp-bridge-javascript-lsp-server "javascript"
   "Default Multi LSP server for JavaScript.
-Possible choices are `javascript' or `javascript-go'."
+Possible choices are `javascript', `javascript-go' or `javascript-deno'."
   :type 'string)
 
 (defcustom lsp-bridge-javascript-react-lsp-server "javascriptreact"
   "Default Multi LSP server for .jsx files.
-Possible choices are `javascriptreact' or `javascript-go-react'."
+Possible choices are `javascriptreact', `javascript-go-react' or `javascript-deno-react'."
   :type 'string)
 
 (defcustom lsp-bridge-typescript-lsp-server "typescript"
   "Default Multi LSP server for TypeScript.
-Possible choices are `typescript' or `typescript-go'."
+Possible choices are `typescript', `typescript-go' or `typescript-deno'."
   :type 'string)
 
 (defcustom lsp-bridge-typescript-react-lsp-server "typescriptreact"
   "Default Multi LSP server for .tsx files.
-Possible choices are `typescriptreact' or `typescript-go-react'."
+Possible choices are `typescriptreact', `typescript-go-react' or `typescript-deno-react'."
   :type 'string)
 
 (defcustom lsp-bridge-tsdk-path nil

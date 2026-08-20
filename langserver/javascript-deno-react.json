@@ -1,0 +1,9 @@
+{
+  "name": "javascript-deno-react",
+  "languageId": "javascriptreact",
+  "command": [
+    "deno", 
+    "lsp"
+  ],
+  "settings": {}
+}
