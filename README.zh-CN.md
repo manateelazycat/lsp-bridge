@@ -270,10 +270,12 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 - `lsp-bridge-xml-lsp-server`: XML 语言的服务器， 可以选择 `lemminx` 或者 `camells`
 - `lsp-bridge-cmake-lsp-server`: CMake 语言的服务器， 可以选择 `cmake-language-server`, 或者 `neocmakelsp`
 - `lsp-bridge-r-lsp-server`: R 语言的服务器， 可以选择 `rlanguageserver` 或者 `air`
-
 - `lsp-bridge-python-multi-lsp-server`: Python 多语言服务器， 可以选择 `basedpyright_ruff`, `pyright_ruff`, `pyright-background-analysis_ruff`, `jedi_ruff`, `python-ms_ruff`, `pylsp_ruff`, `ty_ruff`
 - `lsp-bridge-r-multi-lsp-server`: R 多语言服务器, 可以选择 `rlanguageserver_air`
-
+- `lsp-bridge-javascript-lsp-server`: JavaScript 语言的服务器， 可以选择 `javascript` (typescript-language-server), `javascript-go` (tsgo --lsp) 或者 `javascript-deno`
+- `lsp-bridge-javascript-react-lsp-server`: .jsx 语言的服务器， 可以选择 `javascriptreact` (typescript-language-server), `javascript-go-react` (tsgo --lsp) 或者 `javascript-deno-react`
+- `lsp-bridge-typescript-lsp-server`: TypeScript 语言的服务器， 可以选择 `typescript` (typescript-language-server), `typescript-go` (tsgo --lsp) 或者 `typescript-deno`
+- `lsp-bridge-typescript-react-lsp-server`: .tsx 语言的服务器， 可以选择 `typescriptreact` (typescript-language-server), `typescript-go-react` (tsgo --lsp) 或者 `typescript-deno-react`
 
 ## 选项
 
@@ -416,6 +418,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 | Javascript  | [typescript](https://github.com/microsoft/TypeScript)             | `npm i -g typescript`                                                                                                                                                                                                                               |
 |             | [typescript-language-server](https://github.com/typescript-language-server/typescript-language-server) | `npm i -g typescript-language-server`                                                                                                                                                                                                                               |
 |             | [vscode-eslint-language-server](https://github.com/microsoft/vscode-eslint)                        | 用于 `typescript_eslint` 和 `typescriptreact_eslint` 多语言服务器定义                                                                                                                                                       |
+|             | [typescript-go](https://github.com/microsoft/typescript-go) |                                                                                                                                                                                                                               |
 | JSON        | [vscode-json-language-server](https://github.com/hrsh7th/vscode-langservers-extracted)             | `npm i -g vscode-langservers-extracted`                                                                                                                                                                                       |
 | Jsonnet        | [jsonnet-language-server](https://github.com/grafana/jsonnet-language-server)             |                                                                                                                                                                                        |
 | Julia       | [julials](https://github.com/julia-vscode/LanguageServer.jl)                                       |                                                                                                                                                                                                                               |
@@ -480,6 +483,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 | TTCN-3  | [ntt](https://github.com/nokia/ntt)             |                                                                                                                                                                                                                               |
 | Typescript  | [typescript](https://github.com/typescript-language-server/typescript-language-server)             |                                                                                                                                                                                                                               |
 |             | [vtsls](https://github.com/yioneko/vtsls)                                                          | `npm install -g @vtsls/language-server`， 可用于 `volar_vtsls`                                                                                                                                                               |
+|             | [typescript-go](https://github.com/microsoft/typescript-go) |                                                                                                                                                                                                                               |
 | Typst       | [typst-lsp](https://github.com/nvarner/typst-lsp)                                                  |                                                                                                                                                                                                                               |
 |        | [tinymist](https://github.com/Myriad-Dreamin/tinymist)                                                  |                                                                                                                                                                                                                               |
 | V     | [v-analyzer](https://github.com/vlang/vscode-vlang)                                                |                                                                                                                                                                                                                               |

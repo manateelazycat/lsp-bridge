@@ -1,0 +1,9 @@
+{
+  "name": "typescript-deno",
+  "languageId": "typescript",
+  "command": [
+    "deno", 
+    "lsp"
+  ],
+  "settings": {}
+}
