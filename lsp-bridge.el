@@ -635,7 +635,7 @@ If nil, lsp-bridge would try to detect by default."
 
 (defcustom lsp-bridge-single-lang-server-mode-list
   '(
-    ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode c-or-c++-ts-mode) .        lsp-bridge-c-lsp-server)
+    ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode c-or-c++-mode c-or-c++-ts-mode) . lsp-bridge-c-lsp-server)
     ((cmake-mode cmake-ts-mode) .                                                lsp-bridge-cmake-lsp-server)
     ((java-mode java-ts-mode) .                                                  "jdtls")
     ((julia-mode) .                                                              "julials")
