@@ -1,0 +1,7 @@
+{
+  "name": "unocss",
+  "languageId": "",
+  "command": ["unocss-language-server", "--stdio"],
+  "settings": {},
+  "support-single-file": false
+}
