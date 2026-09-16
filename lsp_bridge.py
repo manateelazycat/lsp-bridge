@@ -748,6 +748,9 @@ class LspBridge:
 
         if os.path.splitext(filepath)[-1] == '.org':
             single_lang_server = get_emacs_func_result("get-single-lang-server", project_path, filepath)
+            # Point may leave the source block before this queued request runs.
+            if not isinstance(single_lang_server, str) or not single_lang_server:
+                return False
             lang_server_info = load_single_server_info(single_lang_server)
             # For project-based LSP servers, search upward for projectFiles (e.g. Cargo.toml)
             # so the LSP server gets the real project root, not just the git root.
