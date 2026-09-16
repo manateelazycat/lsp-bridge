@@ -33,6 +33,8 @@ def test_entrypoint():
     sys.exit(run_batch_sync([
         '-l', os.path.join(BASE_DIR, 'lsp-bridge.el'),
         '-l', os.path.join(BASE_DIR, 'test', 'lsp-bridge-test.el'),
+        '-l', os.path.join(BASE_DIR, 'test', 'lsp-bridge-org-babel-test.el'),
+        '--eval', '(unless (zerop (ert-stats-completed-unexpected (ert-run-tests-batch t))) (kill-emacs 1))',
         '--eval', setup_eval,
         '--eval', '(lsp-bridge-start-test)'
     ]))
