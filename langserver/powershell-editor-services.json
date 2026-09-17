@@ -19,7 +19,7 @@
     "-LogPath",
     "$LSP_BRIDGE_POWERSHELL_LOG_PATH",
     "-LogLevel",
-    "Normal",
+    "Information",
     "-SessionDetailsPath",
     "$LSP_BRIDGE_POWERSHELL_SESSION_DETAILS_PATH",
     "-Stdio",
