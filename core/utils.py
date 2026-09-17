@@ -524,7 +524,7 @@ def replace_template(arg, project_path=None):
         else:
             user_emacs_dir = get_emacs_func_result("get-user-emacs-directory")
         return arg.replace("%USER_EMACS_DIRECTORY%", user_emacs_dir)
-    elif "$HOME" in arg:
+    elif "$" in arg:
         return os.path.expandvars(arg)
     elif "%FILEHASH%" in arg:
         # pyright use `--cancellationReceive` option enable "background analyze" to improve completion performance.

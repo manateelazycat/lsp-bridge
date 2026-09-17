@@ -2,8 +2,6 @@ Below LSP server haven't supported, PR are welcome. ;)
 
 1. **JavaScript (Flow)**: [github.com/flowtype/flow-for-vscode](https://github.com/flowtype/flow-for-vscode) (avoid conflig with other javascript lsp server)
 
-2. **PowerShell**: [github.com/PowerShell/PowerShellEditorServices](https://github.com/PowerShell/PowerShellEditorServices) (need env to test start command)
-
 3. **Coq**: coq-lsp (Looks is multiple language LSP server)
 
 4. **Delphi**: Embarcadero (Proprietary - DelphiLSP) (Need find the full path of DelphiLSP.exe in Windows)

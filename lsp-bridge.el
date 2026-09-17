@@ -646,6 +646,7 @@ If nil, lsp-bridge would try to detect by default."
     ((elixir-mode elixir-ts-mode heex-ts-mode) .                                 lsp-bridge-elixir-lsp-server)
     ((go-mode go-ts-mode) .                                                      "gopls")
     (groovy-mode .                                                               "groovy-language-server")
+    (powershell-mode .                                                           "powershell-editor-services")
     (haskell-mode .                                                              "hls")
     ((lua-mode lua-ts-mode)  .                                                   lsp-bridge-lua-lsp-server)
     ((markdown-mode gfm-mode) .                                                  lsp-bridge-markdown-lsp-server)
@@ -790,6 +791,7 @@ If nil, lsp-bridge would try to detect by default."
     yaml-mode-hook
     zig-mode-hook
     groovy-mode-hook
+    powershell-mode-hook
     dockerfile-mode-hook
     dockerfile-ts-mode-hook
     d-mode-hook
