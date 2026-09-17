@@ -167,12 +167,15 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
 
 启动开发容器， 并使用 `file-find` `/docker:user@container:/path/to/file` 打开文件。
 
-更多详细信息， 请参阅 [devcontainer-feature-emacs-lsp-bridge](https://github.com/nohzafk/devcontainer-feature-emacs-lsp-bridge)。
-
 如果您使用 `apheleia` 作为 Formatter， `lsp-bridge` 现在支持自动格式化 devcontainer 上的文件。
 
 ```elisp
-(use-package! apheleia
+;; 为远程命令执行设置 PATH
+(with-eval-after-load 'tramp
+  (add-to-list 'tramp-remote-path "~/.nix-profile/bin")
+  (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
+
+(use-package apheleia
   :config
   ;; which formatter to use
   (setf (alist-get 'python-mode apheleia-mode-alist) 'ruff)
@@ -182,6 +185,8 @@ lsp-bridge 开箱即用， 安装好语言对应的 [LSP 服务器](https://gith
   ;; run the formatter inside container
   (setq apheleia-remote-algorithm 'remote))
 ```
+
+关于在 devcontainer 中使用 lsp-bridge 的更多信息， 请参阅 [emacs-devcontainer](https://github.com/nohzafk/emacs-devcontainer)。
 
 ## 按键
 
@@ -279,7 +284,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 
 ## 选项
 
-- `lsp-bridge-python-command`: Python 命令的路径, 如果你用 `conda`， 你也许会定制这个选项。 Windows 平台用的是 `python.exe` 而不是 `python3`, 如果 lsp-bridge 不能工作， 可以尝试改成 `python3`
+- `lsp-bridge-python-command`: Python 命令的路径, 如果你用 `conda`， 你也许会定制这个选项。 Windows 平台用的是 `python.exe` 而不是 `python3`, 如果 lsp-bridge 不能工作， 可以尝试改成 `python3`。如果设置为 `pipx` 或 `uv`，它们会分别转换为 `pipx run` 或 `uv run`，并在临时虚拟环境中运行 lsp_bridge.py，所需依赖会自动安装。
 - `lsp-bridge-complete-manually`: 只有当用户手动调用 `lsp-bridge-popup-complete-menu` 命令的时候才弹出补全菜单， 默认关闭
 - `lsp-bridge-enable-with-tramp`: 打开这个选项后， lsp-bridge 会对 tramp 打开的文件提供远程补全支持， 需要提前在服务端安装并启动 lsp_bridge.py, 注意的是这个选项只是用 tramp 打开文件， 并不会用 tramp 技术来实现补全， 因为 tramp 的实现原理有严重的性能问题。 需要注意的是， 如果你平常用 `lsp-bridge-open-remote-file` 命令， 需要关闭 `lsp-bridge-enable-with-tramp` 这个选项， 保证 `lsp-bridge-open-remote-file` 命令打开的文件可以正常跳转定义或者引用的位置。
 - `lsp-bridge-remote-save-password`: 远程编辑时， 把密码保存到 netrc 文件， 默认关闭
@@ -449,6 +454,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 | Perl        | [perl-language-server](https://github.com/richterger/Perl-LanguageServer)                          |                                                                                                                                                                                                       |
 | PHP         | [intelephense](https://github.com/bmewburn/vscode-intelephense)                                    | `npm i intelephense -g`                                                                                                                                                                                                       |
 |             | [Phpactor](https://github.com/phpactor/phpactor)                                                   | lsp-bridge-php-lsp-server 设置成 `phpactor`                                                                                                                                                                                   |
+| PowerShell  | [PowerShell Editor Services](https://github.com/PowerShell/PowerShellEditorServices)                | 安装 `powershell-mode`、`pwsh` 和 PowerShell Editor Services 发布包。将 `LSP_BRIDGE_POWERSHELL_EDITOR_SERVICES_DIR` 设为解压后的发布包根目录，将 `LSP_BRIDGE_POWERSHELL_LOG_PATH` 设为可写的日志目录，并将 `LSP_BRIDGE_POWERSHELL_SESSION_DETAILS_PATH` 设为可写的会话详情文件。 |
 | PureScript  | [purescript-language-server](https://github.com/nwolverson/purescript-language-server)                                           |                                                                         |
 | Python      | [jedi](https://github.com/pappasam/jedi-language-server)                                           | `lsp-bridge-python-lsp-server` 设置成 `jedi`                                                                                                                                                                                  |
 |             | [pylsp](https://github.com/python-lsp/python-lsp-server)                                           | lsp-bridge-python-lsp-server 设置成 `pylsp`                                                                                                                                                                                   |
@@ -457,7 +463,7 @@ lsp-bridge 针对许多语言都提供 2 个以上的语言服务器支持， �
 |             | [pyright-background-analysis](https://github.com/microsoft/pyright)                                | `lsp-bridge-python-lsp-server` 设置成 `pyright-background-analysis`， 有时候更快， 但是无法返回诊断信息                                                                                                                       |
 |             | [ty](https://github.com/astral-sh/ty)                                   | An extremely fast Python type checker and language server                                                                                                                                                                                                                                  |
 |             | [python-ms](https://github.com/microsoft/python-language-server)                                   | 支持 Python2 的 lsp                                                                                                                                                                                                           |
-|             | [ruff](https://github.com/charliermarsh/ruff-lsp)                                                  | `pip install ruff-lsp`， `lsp-bridge-python-lsp-server` 设置成 `ruff`， 只具备 linter 的功能。 如需补全等功能， 安装其他的 Python 语言服务器， 并把 `lsp-bridge-python-multi-lsp-server` 设置成 `[相应的语言服务器名称]_ruff` |
+|             | [ruff](https://github.com/astral-sh/ruff)                                                          | `pip install ruff`， `lsp-bridge-python-lsp-server` 设置成 `ruff`， 只具备 linter 的功能。 如需补全等功能， 安装其他的 Python 语言服务器， 并把 `lsp-bridge-python-multi-lsp-server` 设置成 `[相应的语言服务器名称]_ruff` |
 | QML         | [qmlls](https://github.com/qt/qtdeclarative/tree/dev/tools/qmlls)                                  | QT 6.3.0 之后的版本自带 qmlls， 将 qmlls 所在目录加到 PATH 中                                                                                                                                                                 |
 | Puppet           | [puppet-languageserver](https://github.com/puppetlabs/puppet-editor-services)                                |                                                                                                                                                                                                                               |
 | R           | [rlanguageserver](https://github.com/REditorSupport/languageserver)                                |                                                                                                                                                                                                                               |
