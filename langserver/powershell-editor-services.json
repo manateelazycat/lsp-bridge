@@ -1,0 +1,32 @@
+{
+  "name": "powershell-editor-services",
+  "languageId": "powershell",
+  "command": [
+    "pwsh",
+    "-NoProfile",
+    "-NonInteractive",
+    "-NoLogo",
+    "-OutputFormat",
+    "Text",
+    "-File",
+    "$LSP_BRIDGE_POWERSHELL_EDITOR_SERVICES_DIR/PowerShellEditorServices/Start-EditorServices.ps1",
+    "-HostName",
+    "lsp-bridge",
+    "-HostProfileId",
+    "lsp-bridge",
+    "-HostVersion",
+    "1.0.0",
+    "-LogPath",
+    "$LSP_BRIDGE_POWERSHELL_LOG_PATH",
+    "-LogLevel",
+    "Normal",
+    "-SessionDetailsPath",
+    "$LSP_BRIDGE_POWERSHELL_SESSION_DETAILS_PATH",
+    "-Stdio",
+    "-BundledModulesPath",
+    "$LSP_BRIDGE_POWERSHELL_EDITOR_SERVICES_DIR",
+    "-FeatureFlags",
+    "@()"
+  ],
+  "settings": {}
+}
