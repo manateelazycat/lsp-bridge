@@ -797,8 +797,10 @@ The key of candidate will change between two LSP results."
 
     (if (fboundp candidate-expand)
         (funcall candidate-expand candidate-info bound-start)
-      (delete-region bound-start (point))
-      (insert (plist-get candidate-info :label))))
+      (let* ((bounds (acm-get-input-prefix-bound))
+             (bound-end (if bounds (cdr bounds) (point))))
+        (delete-region bound-start (max (point) bound-end))
+        (insert (plist-get candidate-info :label)))))
 
   (when (overlayp acm-preview-overlay)
     (delete-overlay acm-preview-overlay))
