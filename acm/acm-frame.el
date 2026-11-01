@@ -88,7 +88,7 @@
                    (parent-frame . ,parent)
                    (no-accept-focus . ,no-accept-focus)
                    (no-focus-on-map . ,no-accept-focus)
-                   (minibuffer . nil)
+                   (minibuffer . ,(minibuffer-window parent))
                    (min-width . t)
                    (min-height . t)
                    (width . 0)
