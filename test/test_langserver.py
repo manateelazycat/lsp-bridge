@@ -40,6 +40,39 @@ class LangServerJson(unittest.TestCase):
             "$LSP_BRIDGE_POWERSHELL_SESSION_DETAILS_PATH", config["command"]
         )
 
+    def test_surge_configs(self) -> None:
+        expected_language_ids = {
+            "conf": "surge",
+            "sgconf": "surge",
+            "dconf": "surge",
+            "sgmodule": "surge-module",
+            "list": "surge-ruleset",
+        }
+        expected_watch_files = [
+            "**/*.conf",
+            "**/*.sgconf",
+            "**/*.dconf",
+            "**/*.sgmodule",
+            "**/*.list",
+            "**/*.js",
+        ]
+        commands = {
+            "surge.json": "surge-cli",
+            "surge_darwin.json": (
+                "/Applications/Surge.app/Contents/Applications/surge-cli"
+            ),
+        }
+
+        for filename, command in commands.items():
+            with self.subTest(file=filename):
+                with open(_LANG_SERVER_DIR / filename, "r", encoding="utf-8") as f:
+                    config = json.load(f)
+                self.assertEqual(config["name"], "surge")
+                self.assertEqual(config["languageId"], "surge")
+                self.assertEqual(config["languageIds"], expected_language_ids)
+                self.assertEqual(config["command"], [command, "lsp", "--stdio"])
+                self.assertEqual(config["watchFiles"], expected_watch_files)
+
     def test_command_template_expands_environment_variables(self) -> None:
         with patch.dict(os.environ, {"LSP_BRIDGE_TEST_DIR": "/tmp/lsp-bridge"}):
             self.assertEqual(

@@ -1,0 +1,24 @@
+{
+  "name": "surge",
+  "languageId": "surge",
+  "languageIds": {
+    "conf": "surge",
+    "sgconf": "surge",
+    "dconf": "surge",
+    "sgmodule": "surge-module",
+    "list": "surge-ruleset"
+  },
+  "command": [
+    "surge-cli",
+    "lsp",
+    "--stdio"
+  ],
+  "watchFiles": [
+    "**/*.conf",
+    "**/*.sgconf",
+    "**/*.dconf",
+    "**/*.sgmodule",
+    "**/*.list",
+    "**/*.js"
+  ]
+}

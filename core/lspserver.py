@@ -27,6 +27,7 @@ import re
 import subprocess
 import threading
 import traceback
+from pathlib import Path
 from subprocess import PIPE
 from sys import stderr
 from typing import TYPE_CHECKING, Dict
@@ -35,6 +36,7 @@ if platform.system() == "Darwin":
     from watchdog.observers.kqueue import KqueueObserver
 else:
     from watchdog.observers import Observer
+from watchdog.observers.api import ObservedWatch
 from watchdog.events import FileSystemEventHandler
 
 from core.handler import Handler
@@ -75,6 +77,67 @@ class MultiFileHandler(FileSystemEventHandler):
     def _handle_event(self, event, change_type):
         if not event.is_directory and event.src_path in self.file_path_dict:
             self.lsp_server.send_workspace_did_change_watched_files(event.src_path, change_type)
+
+class ProjectFileHandler(FileSystemEventHandler):
+    """Batch explicitly configured project file changes for one server."""
+    def __init__(self, lsp_server, root, patterns):
+        self.lsp_server = lsp_server
+        self.root = Path(root).resolve()
+        self.patterns = patterns
+        self.lock = threading.Lock()
+        self.pending = []
+        self.last_change_types = {}
+        self.timer = None
+        self.stopped = False
+
+    def on_created(self, event):
+        if not event.is_directory:
+            self.queue_change(event.src_path, 1)
+
+    def on_modified(self, event):
+        if not event.is_directory:
+            self.queue_change(event.src_path, 2)
+
+    def on_deleted(self, event):
+        if not event.is_directory:
+            self.queue_change(event.src_path, 3)
+
+    def on_moved(self, event):
+        if not event.is_directory:
+            self.queue_change(event.src_path, 3)
+            self.queue_change(event.dest_path, 1)
+
+    def queue_change(self, filepath, change_type):
+        path = Path(filepath).resolve()
+        if not path.is_relative_to(self.root) or not any(path.match(pattern) for pattern in self.patterns):
+            return
+        with self.lock:
+            if self.stopped:
+                return
+            filepath = str(path)
+            if self.last_change_types.get(filepath) != change_type:
+                self.pending.append((filepath, change_type))
+                self.last_change_types[filepath] = change_type
+            if self.timer is None:
+                self.timer = threading.Timer(0.1, self.flush)
+                self.timer.daemon = True
+                self.timer.start()
+
+    def flush(self):
+        with self.lock:
+            if not self.stopped and self.pending:
+                self.lsp_server.send_workspace_did_change_watched_files_batch(self.pending)
+            self.pending = []
+            self.last_change_types = {}
+            self.timer = None
+
+    def stop(self):
+        with self.lock:
+            self.stopped = True
+            if self.timer is not None:
+                self.timer.cancel()
+            self.pending = []
+            self.last_change_types = {}
 
 class LspServerSender(MessageSender):
     def __init__(self, process: subprocess.Popen, server_name, project_name):
@@ -306,6 +369,12 @@ class LspServer:
 
         self.workspace_file_watcher = None
         self.workspace_file_watch_handler = None
+        self.project_file_watch_handler = None
+        self.project_file_watch_patterns = server_info.get("watchFiles", [])
+        if not isinstance(self.project_file_watch_patterns, list) or any(
+                not isinstance(pattern, str) or not pattern or Path(pattern).is_absolute()
+                or ".." in Path(pattern).parts for pattern in self.project_file_watch_patterns):
+            raise ValueError("watchFiles must be a list of relative file glob patterns")
 
         self.code_action_kinds = [
             "quickfix",
@@ -353,6 +422,7 @@ class LspServer:
             # STEP 1: Say hello to LSP server.
             # Send 'initialize' request.
             self.send_initialize_request()
+            self.start_project_watch_files()
 
         # STEP 4: Tell LSP server open file.
         # We need send 'textDocument/didOpen' notification,
@@ -609,11 +679,12 @@ class LspServer:
             self.sender.send_notification("textDocument/didSave", args)
 
     def send_workspace_did_change_watched_files(self, filepath, change_type):
+        self.send_workspace_did_change_watched_files_batch([(filepath, change_type)])
+
+    def send_workspace_did_change_watched_files_batch(self, changes):
         self.sender.send_notification("workspace/didChangeWatchedFiles", {
-            "changes": [{
-                "uri": path_to_uri(filepath),
-                "type": change_type
-            }]
+            "changes": [{"uri": path_to_uri(filepath), "type": change_type}
+                        for filepath, change_type in changes]
         })
 
     def send_did_change_notification(self, filepath, version, start, end, range_length, text):
@@ -980,10 +1051,36 @@ class LspServer:
         if self.workspace_file_watch_handler is None:
             self.workspace_file_watch_handler = MultiFileHandler(self)
 
+    def start_project_watch_files(self):
+        if (self.project_file_watch_patterns and self.project_file_watch_handler is None
+                and os.path.isdir(self.project_path)):
+            observer_created = self.workspace_file_watcher is None
+            self.start_workspace_watch_files()
+            handler = ProjectFileHandler(self, self.project_path, self.project_file_watch_patterns)
+            assert self.workspace_file_watcher is not None
+            watch = ObservedWatch(str(handler.root), recursive=True)
+            try:
+                self.workspace_file_watcher.schedule(handler, watch.path, recursive=True)
+            except OSError as error:
+                handler.stop()
+                if observer_created:
+                    self.stop_workspace_watch_files()
+                else:
+                    self.workspace_file_watcher.remove_handler_for_watch(handler, watch)
+                message = "Cannot watch project files in {}: {}".format(self.project_path, error)
+                log_time(message)
+                message_emacs(message)
+                return
+            self.project_file_watch_handler = handler
+
     def stop_workspace_watch_files(self):
+        if self.project_file_watch_handler is not None:
+            self.project_file_watch_handler.stop()
+            self.project_file_watch_handler = None
         if self.workspace_file_watcher:
             self.workspace_file_watcher.unschedule_all()
             self.workspace_file_watcher.stop()
+            self.workspace_file_watcher.join()
 
             self.workspace_file_watcher = None
             self.workspace_file_watch_handler = None
@@ -992,6 +1089,8 @@ class LspServer:
         if len(file_paths) > 0:
             # Init workspace watch files vars.
             self.start_workspace_watch_files()
+            assert self.workspace_file_watch_handler is not None
+            assert self.workspace_file_watcher is not None
 
             # Add workspace file in monitor list.
             for file_path in file_paths:
@@ -1067,6 +1166,7 @@ class LspServer:
             self.exit()
 
     def exit(self):
+        self.stop_workspace_watch_files()
         self.send_shutdown_request()
         self.send_exit_notification()
         # Don't need to wait LSP server response, kill immediately.

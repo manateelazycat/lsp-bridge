@@ -583,9 +583,25 @@ lsp-bridge 每种语言的服务器配置存储在 [lsp-bridge/langserver](https
   (lsp-bridge-mode))
 ```
 
+### 可选的项目文件监听
+
+如果服务器需要文件通知，但不会主动注册监听器，可以在服务器 JSON 配置中添加 `watchFiles`：
+
+```json
+"watchFiles": ["**/*.conf", "**/*.dconf", "**/*.js"]
+```
+
+该选项默认关闭。模式使用 Python `pathlib.Path.match` 语法，不支持花括号备选项。监听器递归监听服务器的项目目录，排除解析后位于项目目录外的路径。单独打开文件不会启用该监听器；需要使用包含 `.git` 或 `.dir-locals.el` 等标记的项目根目录。
+
+同一项目和服务器的 buffer 共用一个监听器。文件创建、修改、删除及移动会生成标准 `workspace/didChangeWatchedFiles` 事件。事件在 100 毫秒内合并发送，同一文件的连续同类型事件会去重。服务器停止或重启时，监听器停止并丢弃待发事件。该选项补充现有的服务器动态注册监听机制。
+
+服务器决定文件通知是否刷新诊断。例如，实测的 Surge CLI 会在外部修改后刷新独立配置节的引用诊断，但创建、删除及移动文件后不会刷新；这些情况下需要保存主配置来刷新诊断。
+
+内置 `surge` 配置支持 `surge-conf-mode`、`surge-module-mode` 和 `surge-ruleset-mode`。macOS 使用 Surge.app 附带的 CLI；其他系统要求 `surge-cli` 位于 `PATH`。常规文件后缀通过 `languageIds` 选择对应的 Surge language ID；文件 mode 与后缀不对应时，需要自定义 `lsp-bridge-get-language-id`。
+
 ### 添加新的编程语言支持?
 
-1. 在 lsp-bridge/langserver 目录下创建配置文件， 比如`pyright.json`就是 pyright 服务器的配置文件 (windows 平台用`pyright_windows.json`, macOS 平台用`pyright_darwin.json`)。
+1. 在 lsp-bridge/langserver 目录下创建配置文件， 比如`pyright.json`就是 pyright 服务器的配置文件 (windows 平台用`pyright_windows.json`, macOS 平台用`pyright_darwin.json`)。同一个 server 对不同后缀使用不同 language ID 时，在 `languageIds` 对象中声明映射。
 2. 添加 `(mode . server_name)` 到 `lsp-bridge.el` 文件中的 `lsp-bridge-single-lang-server-mode-list` 选项中, 比如 `(python-mode . "pyright")`。
 3. 添加新的 mode-hook 到 `lsp-bridge.el` 文件中的 `lsp-bridge-default-mode-hooks` 选项中。
 4. 添加新的缩进变量到 `lsp-bridge.el` 文件中的 `lsp-bridge-formatting-indent-alist` 选项中。
