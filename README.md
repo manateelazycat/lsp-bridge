@@ -586,9 +586,25 @@ We can set the value of lsp-bridge-user-langserver-dir or lsp-bridge-user-multis
   (lsp-bridge-mode))
 ```
 
+### Optional project file watching
+
+For a server that needs file notifications without registering watchers, add `watchFiles` to its JSON configuration:
+
+```json
+"watchFiles": ["**/*.conf", "**/*.dconf", "**/*.js"]
+```
+
+This option is disabled by default. Patterns use Python `pathlib.Path.match` syntax; brace alternatives are not supported. The watcher runs recursively inside the server's project directory and rejects paths that resolve outside that directory. A standalone file does not start this watcher; use a project root such as a directory containing `.git` or `.dir-locals.el`.
+
+Buffers sharing a project and server share one watcher. File creation, modification, deletion and moves produce standard `workspace/didChangeWatchedFiles` events. Events are batched over 100 ms; repeated events of the same type for one file are coalesced. Stopping or restarting the server discards pending events and stops the watcher. This option supplements the existing server-registered watchers.
+
+The server controls how these notifications affect diagnostics. For example, the tested Surge CLI refreshes detached-section references after external modifications, but does not refresh them after file creation, deletion or moves. Save the parent configuration to refresh diagnostics in those cases.
+
+The built-in `surge` configurations support `surge-conf-mode`, `surge-module-mode` and `surge-ruleset-mode`. On macOS, lsp-bridge uses the CLI bundled with Surge.app; other systems expect `surge-cli` on `PATH`. Conventional file extensions select the corresponding Surge language ID through `languageIds`; customize `lsp-bridge-get-language-id` for files whose mode and extension do not correspond.
+
 ### Add support for new language?
 
-1. Create a configuration file in the lsp-bridge/langserver directory. For example, `pyright.json` is the configuration file for the pyright server (use `pyright_windows.json` for Windows and `pyright_darwin.json` for macOS).
+1. Create a configuration file in the lsp-bridge/langserver directory. For example, `pyright.json` is the configuration file for the pyright server (use `pyright_windows.json` for Windows and `pyright_darwin.json` for macOS). If one server uses different language IDs for different extensions, declare them in the `languageIds` object.
 2. Add `(mode . server_name)` to the `lsp-bridge-single-lang-server-mode-list` option in the lsp-bridge.el file, for example, `(python-mode . "pyright")`.
 3. Add a new mode-hook to the `lsp-bridge-default-mode-hooks` option in the lsp-bridge.el file.
 4. Add a new indentation variable to the `lsp-bridge-formatting-indent-alist` option in the lsp-bridge.el file.

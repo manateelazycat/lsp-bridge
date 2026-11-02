@@ -693,6 +693,7 @@ If nil, lsp-bridge would try to detect by default."
     (racket-mode    .                                                            "racket-langserver")
     (mojo-mode    .                                                              "mojo-lsp-server")
     (solidity-mode .                                                             "solidity")
+    ((surge-conf-mode surge-module-mode surge-ruleset-mode) .                    "surge")
     (gleam-ts-mode .                                                             "gleam")
     (ada-mode .                                                                  "ada-language-server")
     (hyprlang-ts-mode .                                                          "hyprls")
@@ -833,6 +834,9 @@ If nil, lsp-bridge would try to detect by default."
     beancount-mode-hook
     mojo-mode-hook
     solidity-mode-hook
+    surge-conf-mode-hook
+    surge-module-mode-hook
+    surge-ruleset-mode-hook
     gleam-ts-mode-hook
     ada-mode-hook
     hyprlang-ts-mode-hook
