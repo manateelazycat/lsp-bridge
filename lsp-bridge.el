@@ -1551,16 +1551,26 @@ If no sub-buffer is active, use the Org buffer for inline Babel lookup."
 (defvar-local lsp-bridge-cursor-before-command 0)
 (defvar-local lsp-bridge-cursor-after-command 0)
 
+(defun lsp-bridge-command-name (command)
+  "Return the name of COMMAND, empty string if COMMAND is not a symbol.
+COMMAND is usually `this-command' or `last-command'.  Only symbols have a
+name, a command can also be an anonymous closure, and formatting that closure
+prints the whole object graph it captured, which can block Emacs for seconds
+and use gigabytes of memory."
+  (if (symbolp command)
+      (symbol-name command)
+    ""))
+
 (defun lsp-bridge-monitor-pre-command ()
   (setq-local lsp-bridge-cursor-before-command (point))
 
   ;; Tab-and-go
   (when (and acm-preview-overlay
-             (not (string-prefix-p "acm" (format "%s" this-command))))
+             (not (string-prefix-p "acm" (lsp-bridge-command-name this-command))))
     (acm-complete))
 
   (when acm-filter-overlay
-    (let ((this-command-string (format "%s" this-command)))
+    (let ((this-command-string (lsp-bridge-command-name this-command)))
       (cond ((member this-command-string '("self-insert-command" "org-self-insert-command"))
              (setq this-command 'acm-filter-insert-char)
              (setq last-command 'acm-filter-insert-char))
@@ -1572,7 +1582,7 @@ If no sub-buffer is active, use the Org buffer for inline Babel lookup."
 (defun lsp-bridge-monitor-post-command ()
   (setq-local lsp-bridge-cursor-after-command (point))
 
-  (let ((this-command-string (format "%s" this-command)))
+  (let ((this-command-string (lsp-bridge-command-name this-command)))
     (when (and lsp-bridge-mode
                (member this-command-string '("self-insert-command" "org-self-insert-command" "lsp-bridge-popup-complete-menu")))
       (lsp-bridge-try-completion))
@@ -1756,7 +1766,7 @@ If no sub-buffer is active, use the Org buffer for inline Babel lookup."
 (defun lsp-bridge--not-match-stop-commands ()
   "Hide completion if `lsp-bridge-last-change-command' match commands in `lsp-bridge-completion-stop-commands'."
   (not (or (member lsp-bridge-last-change-command lsp-bridge-completion-stop-commands)
-           (member (format "%s" last-command) lsp-bridge-completion-stop-commands))))
+           (member (lsp-bridge-command-name last-command) lsp-bridge-completion-stop-commands))))
 
 (defun lsp-bridge-string-interpolation-p (string-interpolation-open-chars-alist)
   "Check if the cursor position is subject to string interpolation"
@@ -1803,8 +1813,8 @@ If no sub-buffer is active, use the Org buffer for inline Babel lookup."
 (defun lsp-bridge--not-follow-complete ()
   "Hide completion if last command is `acm-complete'."
   (or
-   (not (member (format "%s" last-command) '("acm-complete" "acm-complete-quick-access")))
-   (member (format "%s" this-command) '("self-insert-command" "org-self-insert-command"))
+   (not (member (lsp-bridge-command-name last-command) '("acm-complete" "acm-complete-quick-access")))
+   (member (lsp-bridge-command-name this-command) '("self-insert-command" "org-self-insert-command"))
    ))
 
 (defun lsp-bridge--not-only-blank-before-cursor ()
@@ -1970,7 +1980,7 @@ The line number is relative to the beginning of the source block."
           (unless lsp-bridge-revert-buffer-flag
             (let ((change-text (buffer-substring-no-properties begin end)))
               ;; Record last command to `lsp-bridge-last-change-command'.
-              (setq lsp-bridge-last-change-command (format "%s" this-command))
+              (setq lsp-bridge-last-change-command (lsp-bridge-command-name this-command))
 
               ;; Record last change position to avoid popup outdate completions.
               (lsp-bridge-record-last-change-position)
@@ -2024,7 +2034,7 @@ The line number is relative to the beginning of the source block."
               )))))))
 
 (defun lsp-bridge-complete-other-backends ()
-  (let* ((this-command-string (format "%s" this-command))
+  (let* ((this-command-string (lsp-bridge-command-name this-command))
          (current-word (thing-at-point 'word t))
          (current-symbol (thing-at-point 'symbol t)))
     ;; TabNine search.
